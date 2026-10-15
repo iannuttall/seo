@@ -764,18 +764,6 @@ export async function crawlSite(
       })
     }
 
-    const agentDiscovery =
-      !cancelled && !stoppedForMemory && config.checkAgentDiscovery
-        ? await deps.collectAgentDiscovery({
-            startUrl: config.url,
-            pages,
-            timeoutMs: config.timeoutMs,
-            fetch: deps.fetch,
-            signal,
-            concurrency: Math.min(config.concurrency, 4),
-          })
-        : undefined
-
     const siteCheckResult =
       !healthStrategy && !cancelled && !stoppedForMemory
         ? await collectCrawlSiteChecks({
@@ -824,7 +812,6 @@ export async function crawlSite(
             additionalIssues: siteCheckResult.issues,
           }
         : {}),
-      ...(agentDiscovery ? { agentDiscovery } : {}),
       status: reportStatus,
       warnings,
       caveats: crawlCaveats({

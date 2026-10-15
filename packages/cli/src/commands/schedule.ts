@@ -1,106 +1,12 @@
-import { ensureSeoCliDirs, SeoError } from '@seo/core'
+import { ensureSeoCliDirs } from '@seo/core'
 import { defineCommand } from 'citty'
-import { jsonFlag, listArg, numberArg, projectArg, stringArg } from '../args.js'
+import { jsonFlag, numberArg, projectArg, stringArg } from '../args.js'
 import { resolveClientSelection } from '../selection.js'
 import { printJson, printKeyValue } from '../utils.js'
 import { startUrlForSite } from './shared.js'
 
 function quote(value: string): string {
   return JSON.stringify(value)
-}
-
-type RankCronCadence = 'daily' | 'weekly' | 'monthly'
-
-export function rankTrackingCronLine(input: {
-  projectId: string
-  set: string
-  targetDomain: string
-  tag?: string
-  devices?: string[]
-  depth?: number
-  keywordLimit?: number
-  provider?: string
-  cadence?: string
-  hour: number
-  minute: number
-  weekday: number
-  day: number
-}) {
-  const cadence = (input.cadence ?? 'weekly') as RankCronCadence
-  if (!['daily', 'weekly', 'monthly'].includes(cadence)) {
-    throw new SeoError(
-      'INVALID_INPUT',
-      'Rank tracking cron cadence must be daily, weekly, or monthly.',
-    )
-  }
-  const devices = input.devices?.length
-    ? [...new Set(input.devices)]
-    : undefined
-  if (
-    devices?.some((device) => !['desktop', 'mobile'].includes(device)) ||
-    (devices?.length ?? 0) > 2
-  ) {
-    throw new SeoError(
-      'INVALID_INPUT',
-      'Rank tracking devices must be desktop, mobile, or both.',
-    )
-  }
-  if (
-    input.depth !== undefined &&
-    (!Number.isSafeInteger(input.depth) || input.depth < 1 || input.depth > 100)
-  ) {
-    throw new SeoError(
-      'INVALID_INPUT',
-      'Rank tracking depth must be from 1 to 100.',
-    )
-  }
-  if (
-    input.provider !== undefined &&
-    !['dataforseo', 'serpbase'].includes(input.provider)
-  ) {
-    throw new SeoError(
-      'INVALID_INPUT',
-      'Exact rank collection supports dataforseo or serpbase.',
-    )
-  }
-  const maximumKeywords = input.provider === 'serpbase' ? 25 : 1_000
-  if (
-    input.keywordLimit !== undefined &&
-    (!Number.isSafeInteger(input.keywordLimit) ||
-      input.keywordLimit < 1 ||
-      input.keywordLimit > maximumKeywords)
-  ) {
-    throw new SeoError(
-      'INVALID_INPUT',
-      input.provider === 'serpbase'
-        ? 'Live SerpBase rank tracking can collect 1 to 25 keywords per run.'
-        : 'Queued rank tracking can collect 1 to 1000 keywords per run.',
-    )
-  }
-  const params = {
-    projectId: input.projectId,
-    set: input.set,
-    targetDomain: input.targetDomain,
-    ...(input.tag ? { tag: input.tag } : {}),
-    ...(devices ? { devices } : {}),
-    ...(input.provider ? { provider: input.provider } : {}),
-    collectionMethod: input.provider === 'serpbase' ? 'live' : 'queued',
-    cadence,
-    ...(input.depth === undefined ? {} : { depth: input.depth }),
-    ...(input.keywordLimit === undefined
-      ? {}
-      : { keywordLimit: input.keywordLimit }),
-    start: true,
-  }
-  return {
-    name: 'rank-tracking',
-    cron: `${input.minute} ${input.hour} * * *`,
-    command: [
-      'seo reports run rank-tracking',
-      `--params ${quote(JSON.stringify(params))}`,
-      '--json',
-    ].join(' '),
-  }
 }
 
 export const scheduleCommand = defineCommand({
@@ -151,44 +57,6 @@ export const scheduleCommand = defineCommand({
           description:
             'Weekly technical-watch day. Defaults to client setting, then Monday.',
         },
-        day: {
-          type: 'string',
-          description:
-            'Monthly report day. Defaults to client setting, then 1.',
-        },
-        'rank-set': {
-          type: 'string',
-          description:
-            'Saved keyword set to collect with the rank-tracking report.',
-        },
-        'rank-domain': {
-          type: 'string',
-          description: 'Target domain for exact rank matching.',
-        },
-        'rank-tag': {
-          type: 'string',
-          description: 'Optional saved keyword tag to track.',
-        },
-        'rank-devices': {
-          type: 'string',
-          description: 'Comma-separated desktop and mobile devices.',
-        },
-        'rank-depth': {
-          type: 'string',
-          description: 'Organic result depth from 1 to 100.',
-        },
-        'rank-limit': {
-          type: 'string',
-          description: 'Maximum saved keywords from 1 to 1000.',
-        },
-        'rank-provider': {
-          type: 'string',
-          description: 'Connected provider for exact rank collection.',
-        },
-        'rank-cadence': {
-          type: 'string',
-          description: 'Rank collection cadence: daily, weekly, or monthly.',
-        },
         json: {
           type: 'boolean',
           default: false,
@@ -211,7 +79,6 @@ export const scheduleCommand = defineCommand({
         const minute = numberArg(args.minute) ?? 0
         const weekday =
           numberArg(args.weekday) ?? selection.client?.technicalWeekday ?? 1
-        const day = numberArg(args.day) ?? selection.client?.reportDay ?? 1
         const identityArg = selection.client
           ? `--project ${quote(selection.client.id)}`
           : `--site ${quote(site)}`
@@ -232,46 +99,7 @@ export const scheduleCommand = defineCommand({
               .filter(Boolean)
               .join(' '),
           },
-          {
-            name: 'monthly-report',
-            cron: `${minute} ${hour} ${day} * *`,
-            command: ['seo monthly-report', identityArg, '--json'].join(' '),
-          },
         ]
-        const rankSet = stringArg(args['rank-set'])
-        const rankDomain = stringArg(args['rank-domain'])
-        if (rankSet || rankDomain) {
-          if (!rankSet || !rankDomain) {
-            throw new SeoError(
-              'INVALID_INPUT',
-              'Pass both --rank-set and --rank-domain for scheduled rank tracking.',
-            )
-          }
-          if (!selection.client) {
-            throw new SeoError(
-              'INVALID_INPUT',
-              'Scheduled rank tracking needs a saved project profile.',
-            )
-          }
-          lines.push(
-            rankTrackingCronLine({
-              projectId: selection.client.id,
-              set: rankSet,
-              targetDomain: rankDomain,
-              tag: stringArg(args['rank-tag']),
-              devices: listArg(args['rank-devices']),
-              depth: numberArg(args['rank-depth']),
-              keywordLimit: numberArg(args['rank-limit']),
-              provider: stringArg(args['rank-provider']),
-              cadence: stringArg(args['rank-cadence']),
-              hour,
-              minute,
-              weekday,
-              day,
-            }),
-          )
-        }
-
         if (json) {
           printJson({ site, lines })
           return

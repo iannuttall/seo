@@ -1,7 +1,28 @@
-import type {
-  PseoObservedPatternKind,
-  PseoPatternKind,
-} from '../pseo-pattern-contract.js'
+type PseoPatternKind =
+  | 'alternatives'
+  | 'comparison'
+  | 'conversion'
+  | 'count-statistic'
+  | 'curation'
+  | 'directory'
+  | 'docs-how-to'
+  | 'examples'
+  | 'glossary'
+  | 'integration'
+  | 'list-facet'
+  | 'location'
+  | 'meaning-origin'
+  | 'no-login'
+  | 'persona'
+  | 'pricing'
+  | 'profile'
+  | 'rarity-popularity'
+  | 'reviews-community'
+  | 'template'
+  | 'utility'
+  | 'workflow-action'
+  | 'custom'
+type PseoObservedPatternKind = PseoPatternKind | 'learned-theme' | 'general'
 
 export type PseoQueryPattern = {
   kind: PseoObservedPatternKind

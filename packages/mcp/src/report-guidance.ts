@@ -1,6 +1,5 @@
 import { REPORT_DEPTH, type ReportDepth } from './report-depth.js'
 import { REPORT_GUIDANCE_DOMAIN_RESEARCH } from './report-guidance-domain-research.js'
-import { REPORT_GUIDANCE_PSEO } from './report-guidance-pseo.js'
 
 export type { RelatedReport, ReportDepth } from './report-depth.js'
 
@@ -19,7 +18,6 @@ export type FullReportGuidance = ReportGuidance & ReportDepth
 
 export const REPORT_GUIDANCE = {
   ...REPORT_GUIDANCE_DOMAIN_RESEARCH,
-  ...REPORT_GUIDANCE_PSEO,
   'affected-urls': {
     name: 'URLs affected by a crawl issue',
     description:
@@ -35,35 +33,6 @@ export const REPORT_GUIDANCE = {
     outcome:
       'A focused list of affected URLs with the evidence for each match.',
   },
-  'agent-readiness': {
-    name: 'AI agent readiness',
-    description:
-      'Check whether a content site gives agents useful raw HTML, safe missing pages, clear public guidance, stable Markdown, and discovery files.',
-    useWhen: [
-      'You want to test raw HTML, missing-page recovery, trust pages, Markdown alternatives, Agent Skills, llms.txt, identity, and crawler access together.',
-      'You need evidence that the agent-facing version of a content site matches its public HTML routes.',
-    ],
-    avoidWhen: [
-      'You need an AI visibility, mention, citation, or ranking report.',
-      'You are auditing a public API, interactive application, or commerce flow rather than a content site.',
-    ],
-    outcome:
-      'An unscored content-site assessment with failed routes, evidence, and clear next actions.',
-  },
-  'ai-readiness': {
-    name: 'AI search technical readiness',
-    description:
-      'Check whether crawl, index, or snippet controls could block pages from Google AI search features.',
-    useWhen: [
-      'You want to check technical access before investigating AI search visibility.',
-      'You need page-level evidence for robots, indexability, or snippet restrictions.',
-    ],
-    avoidWhen: [
-      'You want a visibility score or a prediction of AI citations.',
-      'You need evidence of visits from AI products.',
-    ],
-    outcome: 'A technical blocker list with affected pages and clear limits.',
-  },
   'ai-referrals': {
     name: 'AI referral traffic',
     description:
@@ -78,53 +47,6 @@ export const REPORT_GUIDANCE = {
     ],
     outcome:
       'A source and landing-page breakdown of identifiable AI referrals.',
-  },
-  'ai-mention-research': {
-    name: 'AI mention research',
-    description:
-      'Compare provider-indexed mentions, source domains, and question samples for one AI surface, location, and language.',
-    useWhen: [
-      'You need independent AI mention and citation research beyond referral traffic or technical readiness.',
-      'You want to compare a named target with a small explicit competitor set in the same provider dataset.',
-      'You want to check bounded question samples against existing Search Console demand before planning content.',
-    ],
-    avoidWhen: [
-      'You need a current answer from a fixed prompt. Use prompt observation rather than an indexed mention dataset.',
-      'You want a universal visibility score or proof that an AI product never mentions a target.',
-    ],
-    outcome:
-      'Provider-indexed comparison metrics, cited sources, bounded question evidence, optional first-party overlap, costs, and programmatic research prompts.',
-  },
-  'ai-prompt-observations': {
-    name: 'Fixed AI prompt observations',
-    description:
-      'Run a small fixed set of prompts against explicit models, retain answer and citation evidence locally, and compare only like-for-like observations.',
-    useWhen: [
-      'You need a current answer sample for an exact prompt, model, market label, and web-search setting.',
-      'You want to track target and competitor mentions or citations without turning samples into a universal visibility score.',
-      'You want to compare repeated supporting-search themes with retained Search Console demand before researching content or programmatic templates.',
-    ],
-    avoidWhen: [
-      'You need broad provider-indexed mention estimates rather than current fixed prompt samples.',
-      'You cannot supply current model names or do not want to start explicitly bounded paid requests.',
-    ],
-    outcome:
-      'Current answer samples, target and competitor observations, cited domains, supporting-search themes, optional first-party overlap, exact response costs, and defensible local change states.',
-  },
-  'ai-search-scorecard': {
-    name: 'AI search scorecard',
-    description:
-      "Score AI-search technical readiness 0-100 from one crawl using this tool's own weighted checks, with observed evidence kept separate.",
-    useWhen: [
-      'You want a single scored summary of the AI-search technical evidence this tool already collects.',
-      'You need per-check pass, warn, fail, or unknown states with the exact weights and formula.',
-    ],
-    avoidWhen: [
-      'You want a Google or AI-engine eligibility verdict, a ranking prediction, or proof of citations.',
-      'You need per-page fixes rather than a scored overview.',
-    ],
-    outcome:
-      'A 0-100 heuristic score with per-check evidence, unknown exclusions, and a partial flag.',
   },
   'audit-page': {
     name: 'Single-page SEO audit',
@@ -155,21 +77,6 @@ export const REPORT_GUIDANCE = {
     ],
     outcome: 'Consistent technical checks for each supplied URL.',
   },
-  'bing-webmaster-overview': {
-    name: 'Bing Webmaster overview',
-    description:
-      'Review bounded Bing traffic trends, crawl changes, and query and page opportunities for one verified site.',
-    useWhen: [
-      'You want processed search and crawl insights observed by Bing.',
-      'You need a second search-engine view beside Search Console.',
-    ],
-    avoidWhen: [
-      'Bing Webmaster is not connected for this installation.',
-      'You need URL-level backlink rows or proof that a page is indexed.',
-    ],
-    outcome:
-      'Prioritized Bing findings with traffic comparisons, crawl changes, query and page opportunities, provider coverage, and caveats.',
-  },
   'link-evidence': {
     name: 'Referring link evidence',
     description:
@@ -186,21 +93,6 @@ export const REPORT_GUIDANCE = {
     outcome:
       'Provider summary counts, representative links, target-page search and crawl context, and bounded technical findings with explicit source coverage.',
   },
-  'server-log-analysis': {
-    name: 'Server log crawler analysis',
-    description:
-      'Stream a local access log to see observed search and AI crawler requests, statuses, and paths.',
-    useWhen: [
-      'You need evidence of crawler requests that reached the web server.',
-      'You want to find crawler-facing 4xx or 5xx responses in a local access log.',
-    ],
-    avoidWhen: [
-      'You do not have a combined or JSONL access log.',
-      'You need to prove crawler identity from a user-agent string alone.',
-    ],
-    outcome:
-      'Bounded crawler, status, and path aggregates with file coverage and parser limits kept visible.',
-  },
   cannibalisation: {
     name: 'Query and URL overlap',
     description:
@@ -215,21 +107,6 @@ export const REPORT_GUIDANCE = {
     ],
     outcome:
       'A ranked review list of queries, URLs, and their share of search exposure.',
-  },
-  'community-intent': {
-    name: 'Community and review intent',
-    description:
-      'Find Search Console queries that explicitly ask for reviews, comparisons, recommendations, or real experience.',
-    useWhen: [
-      'You want to see where searchers ask for proof, opinions, or comparisons.',
-      'You are planning content that answers community-style questions.',
-    ],
-    avoidWhen: [
-      'You want the tool to guess intent without explicit query wording.',
-      'You need proof that a new page will rank.',
-    ],
-    outcome:
-      'A review list of real queries grouped by the intent language they contain.',
   },
   'compare-crawls': {
     name: 'Compare saved crawls',
@@ -345,21 +222,6 @@ export const REPORT_GUIDANCE = {
     outcome:
       'A ranked investigation list with before-and-after search evidence.',
   },
-  'entity-readiness': {
-    name: 'Entity signal review',
-    description:
-      'Check names, authors, dates, structured data, and profile links that help identify who created a page.',
-    useWhen: [
-      'You want to review publisher, organization, or author signals across crawled pages.',
-      'You need examples of missing or inconsistent entity evidence.',
-    ],
-    avoidWhen: [
-      'You want a knowledge graph or ranking guarantee.',
-      'You have not saved or supplied a crawl.',
-    ],
-    outcome:
-      'Page-level entity observations with examples that need human review.',
-  },
   'explain-crawl-issue': {
     name: 'Explain a crawl issue',
     description:
@@ -374,36 +236,6 @@ export const REPORT_GUIDANCE = {
     ],
     outcome:
       'A plain-English rule explanation with fix and verification steps.',
-  },
-  'generate-llms-txt': {
-    name: 'Generate an llms.txt draft',
-    description:
-      'Create a concise llms.txt draft from selected public pages in a crawl report.',
-    useWhen: [
-      'You want a human-reviewed navigation file for useful public pages.',
-      'You have a current crawl that identifies suitable canonical URLs.',
-    ],
-    avoidWhen: [
-      'You expect the file to improve rankings, indexing, or AI citations.',
-      'The source crawl is old, partial, or aimed at the wrong site section.',
-    ],
-    outcome:
-      'An editable llms.txt draft with source and size limits kept visible.',
-  },
-  'geo-gaps': {
-    name: 'Google AI search controls',
-    description:
-      'Find crawl, index, and snippet settings that could restrict pages in Google AI search features.',
-    useWhen: [
-      'You want to find technical restrictions that apply to Google AI search.',
-      'You need affected pages for a crawl, index, or preview control.',
-    ],
-    avoidWhen: [
-      'You want a generic AI visibility score.',
-      'You need referral traffic or citation monitoring.',
-    ],
-    outcome:
-      'A focused list of technical restrictions and the pages where they appear.',
   },
   'index-coverage-plan': {
     name: 'URL Inspection coverage plan',
@@ -494,21 +326,6 @@ export const REPORT_GUIDANCE = {
     outcome:
       'A ranked recovery list with current URL checks and prior search value.',
   },
-  'llms-txt-audit': {
-    name: 'Audit llms.txt',
-    description:
-      'Check whether llms.txt exists, whether its links work, and how well it reflects useful public pages.',
-    useWhen: [
-      'The site publishes llms.txt and you want to verify it.',
-      'You are deciding whether a concise navigation file would help agents.',
-    ],
-    avoidWhen: [
-      'You expect llms.txt to improve Google rankings or indexing.',
-      'You need to generate a new draft rather than audit the current file.',
-    ],
-    outcome:
-      'File, link, and page coverage findings with no visibility claims.',
-  },
   'measure-change': {
     name: 'Measure an SEO change',
     description:
@@ -523,77 +340,6 @@ export const REPORT_GUIDANCE = {
     ],
     outcome:
       'A before-and-after search comparison with confounders and data limits shown.',
-  },
-  'monthly-action-plan': {
-    name: 'Monthly SEO action plan',
-    description:
-      'Review a calendar month of search performance and turn the evidence into next actions.',
-    useWhen: [
-      'You need a recurring monthly review with clear priorities.',
-      'The selected month has final Search Console data.',
-    ],
-    avoidWhen: [
-      'You only need a client-ready summary without an action queue.',
-      'The month is still incomplete.',
-    ],
-    outcome: 'A monthly performance summary followed by a focused action plan.',
-  },
-  'monthly-report': {
-    name: 'Monthly SEO report',
-    description:
-      'Turn one calendar month of search evidence into a concise report for clients or teams.',
-    useWhen: [
-      'You need a readable monthly summary of organic search performance.',
-      'The selected month has final Search Console data.',
-    ],
-    avoidWhen: [
-      'You need a rolling period rather than a calendar month.',
-      'You want a detailed technical site audit.',
-    ],
-    outcome:
-      'A clear monthly narrative with wins, losses, caveats, and next steps.',
-  },
-  'narrative-report': {
-    name: 'Client-ready SEO narrative',
-    description:
-      'Turn search, change, and monitoring evidence into a readable update without hiding caveats.',
-    useWhen: [
-      'You need to explain recent SEO performance to a client or team.',
-      'You want one narrative built from several available evidence sources.',
-    ],
-    avoidWhen: [
-      'You need raw rows for further analysis.',
-      'You want unsupported forecasts or causal claims.',
-    ],
-    outcome:
-      'A concise written report with evidence, limits, and practical next steps.',
-  },
-  'okf-build': {
-    name: 'Build site knowledge for agents',
-    description:
-      'Create a compact OKF v0.2 site knowledge pack with source provenance from public pages in a crawl.',
-    useWhen: [
-      'An agent needs reliable site facts with links back to source pages.',
-      'You want a portable knowledge pack from selected crawl content.',
-    ],
-    avoidWhen: [
-      'The crawl contains private, stale, or irrelevant pages.',
-      'You want the tool to invent missing facts.',
-    ],
-    outcome:
-      'An OKF v0.2 manifest and optional Markdown files with source, generation, and validation evidence.',
-  },
-  'okf-validate': {
-    name: 'Validate a site knowledge pack',
-    description:
-      'Check supplied OKF Markdown files using the generic format or stricter SEO export profile.',
-    useWhen: [
-      'You created or edited an OKF pack and want to check it.',
-      'An agent needs to verify files before loading them.',
-    ],
-    avoidWhen: ['You need to build the pack from a crawl first.'],
-    outcome:
-      'A validation result with format compatibility, exact issues, provenance, trust, lifecycle, freshness, and attestation summaries.',
   },
   'page-opportunities': {
     name: 'Opportunities for one page',
@@ -670,37 +416,6 @@ export const REPORT_GUIDANCE = {
     ],
     outcome:
       'A bounded keyword set with discovery sources, provider estimates, evidence states, and research follow-ups.',
-  },
-  'local-search-demand': {
-    name: 'Local search demand',
-    description:
-      'Find location-specific Search Console demand and add optional landing-page geography and exact local result evidence.',
-    useWhen: [
-      'You want to find retained queries that name a service area, use a proximity phrase, or contain a postcode or ZIP code.',
-      'You need to connect local demand with current landing pages and repeated programmatic page patterns.',
-      'You want optional Analytics landing-page geography or city and device-specific result evidence without replacing first-party performance data or assigning a location to a query.',
-    ],
-    avoidWhen: [
-      'You need Google Business Profile performance or a complete business listing audit.',
-      'You want the searcher location inferred from a place name in the query.',
-    ],
-    outcome:
-      'A bounded local-intent query and page queue, repeated local template signals, optional landing-page geography, and optional local competitor and listing evidence.',
-  },
-  'saved-keywords': {
-    name: 'Saved keyword set',
-    description:
-      'Review one local keyword set with metric freshness, tags, page mappings, and explicit view limits.',
-    useWhen: [
-      'You want to continue earlier keyword research from a saved project set.',
-      'You need to review stale, unmapped, or tagged terms before deeper research.',
-    ],
-    avoidWhen: [
-      'You need independent keyword discovery or a current result snapshot.',
-      'You plan to treat user-managed tags as proof of shared search intent.',
-    ],
-    outcome:
-      'A bounded local research view with saved evidence, freshness state, planning mappings, and next steps.',
   },
   'query-clusters': {
     name: 'Search query clusters',
@@ -805,22 +520,6 @@ export const REPORT_GUIDANCE = {
     outcome:
       'A bounded result snapshot with exact retained ranks, domain repetition, query corrections, features, cost, and coverage.',
   },
-  'rank-tracking': {
-    name: 'Exact rank tracking',
-    description:
-      'Collect and compare exact organic positions for a saved keyword set without mixing markets, devices, or Search Console averages.',
-    useWhen: [
-      'You need repeatable exact-rank snapshots for a fixed market and device.',
-      'You want new, lost, improved, declined, or ranking URL change evidence over time.',
-      'A recurring set needs local history. Use queued collection only when the selected provider supports it.',
-    ],
-    avoidWhen: [
-      'You need first-party clicks, impressions, or average position; use a Search Console report.',
-      'One current query needs result-page inspection but no history; use live search results.',
-    ],
-    outcome:
-      'A bounded exact-rank comparison with explicit depth, pending and failed states, provider cost, and local retention evidence.',
-  },
   'segment-impact': {
     name: 'Search impact by segment',
     description:
@@ -835,21 +534,6 @@ export const REPORT_GUIDANCE = {
     ],
     outcome:
       'A segment comparison showing where clicks and impressions changed.',
-  },
-  'seo-to-ai-query': {
-    name: 'AI monitoring prompt ideas',
-    description:
-      'Turn real Search Console query wording into a repeatable set of prompts for external AI monitoring.',
-    useWhen: [
-      'You need prompt ideas grounded in the way people already find the site.',
-      'You want a stable prompt set for manual or third-party monitoring.',
-    ],
-    avoidWhen: [
-      'You want proof of demand inside AI products.',
-      'You want citation or visibility results from this report.',
-    ],
-    outcome:
-      'A prompt set linked back to its source queries and search metrics.',
   },
   'setup-check': {
     name: 'Check local setup',

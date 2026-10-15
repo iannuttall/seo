@@ -22,7 +22,6 @@ import type {
   CrawlRequestObservation,
   ExternalLinkCheckState,
 } from '../monitoring/types.js'
-import type { CrawlAgentDiscovery } from './agent-discovery.js'
 import { auditCrawlPages, auditCrawlRequests } from './audit.js'
 import {
   type CrawlSkippedUrlsByImpact,
@@ -62,7 +61,6 @@ export type CrawlConfig = {
   respectRobots: boolean
   useSitemap: boolean
   checkExternal: boolean
-  checkAgentDiscovery: boolean
   js: JavaScriptRenderingMode
   refresh: boolean
   fetchRate: CrawlFetchRateConfig
@@ -324,7 +322,6 @@ export type CrawlReport = {
   sitemapDiscovery?: CrawlSitemapDiscovery
   externalLinkVerification?: CrawlExternalLinkVerification
   siteChecks?: CrawlSiteChecks
-  agentDiscovery?: CrawlAgentDiscovery
   warnings: string[]
   caveats: string[]
 }
@@ -389,8 +386,6 @@ export function normalizeCrawlConfig(input: CrawlConfigInput): CrawlConfig {
     useSitemap: input.useSitemap ?? true,
     checkExternal:
       strategy === 'health' ? false : (input.checkExternal ?? true),
-    checkAgentDiscovery:
-      strategy === 'health' ? false : (input.checkAgentDiscovery ?? false),
     js:
       strategy === 'health'
         ? 'off'
@@ -911,7 +906,6 @@ export function createCrawlReport(input: {
   sitemapDiscovery?: CrawlSitemapDiscovery
   externalLinkVerification?: CrawlExternalLinkVerification
   siteChecks?: CrawlSiteChecks
-  agentDiscovery?: CrawlAgentDiscovery
   status?: CrawlReport['status']
   warnings?: string[]
   caveats?: string[]
@@ -1001,13 +995,6 @@ export function createCrawlReport(input: {
     ...(input.siteChecks
       ? {
           siteChecks: sanitizeTenantValue(input.siteChecks) as CrawlSiteChecks,
-        }
-      : {}),
-    ...(input.agentDiscovery
-      ? {
-          agentDiscovery: sanitizeTenantValue(
-            input.agentDiscovery,
-          ) as CrawlAgentDiscovery,
         }
       : {}),
     warnings: sanitizeMessages(input.warnings).sort(compareText),

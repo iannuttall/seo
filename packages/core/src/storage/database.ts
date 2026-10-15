@@ -1,9 +1,6 @@
 import { chmodSync, existsSync, mkdirSync } from 'node:fs'
 import { dirname } from 'node:path'
-import { AI_PROMPT_OBSERVATION_SCHEMA_SQL } from '../ai-prompt-observations/schema.js'
-import { KEYWORD_SET_SCHEMA_SQL } from '../keyword-sets/schema.js'
 import { fileSize, getSeoCliPaths } from '../paths.js'
-import { RANK_TRACKING_SCHEMA_SQL } from '../rank-tracking/schema.js'
 import type { CacheStats } from '../types.js'
 import {
   CACHE_MAINTENANCE_WRITE_BYTES,
@@ -13,7 +10,6 @@ import {
   compactCacheDatabase,
   runCacheMaintenance,
 } from './cache-maintenance.js'
-import { migrateProviderIds } from './provider-id-migration.js'
 import { PROVIDER_SPEND_SCHEMA_SQL } from './provider-spend-schema.js'
 import Database from './sqlite.js'
 
@@ -330,9 +326,6 @@ function initDb(database: Database.Database, isNewDatabase: boolean): void {
   }
   const migrate = database.transaction(() => {
     database.exec(CREATE_SQL)
-    database.exec(AI_PROMPT_OBSERVATION_SCHEMA_SQL)
-    database.exec(KEYWORD_SET_SCHEMA_SQL)
-    database.exec(RANK_TRACKING_SCHEMA_SQL)
     database.exec(PROVIDER_SPEND_SCHEMA_SQL)
     database.exec(`DELETE FROM semrush_cache WHERE request_json LIKE '%"key"%'`)
     ensureColumn(database, 'crawl_pages', 'snapshot_json', 'TEXT')
@@ -367,7 +360,6 @@ function initDb(database: Database.Database, isNewDatabase: boolean): void {
     `)
   })
   migrate.immediate()
-  migrateProviderIds(database)
   runCacheMaintenance(database, {
     compact: true,
     allowFullVacuum: true,

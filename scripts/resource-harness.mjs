@@ -113,7 +113,6 @@ try {
     concurrency: CONCURRENCY,
     js: 'off',
     checkExternal: false,
-    checkAgentDiscovery: false,
     refresh: false,
   })
   const durationMs = performance.now() - startedAt

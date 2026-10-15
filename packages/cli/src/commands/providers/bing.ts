@@ -4,7 +4,6 @@ import {
   BING_API_KEY_SECRET,
   BingWebmasterClient,
   type BingWebmasterSite,
-  bingWebmasterOverview,
   bingWebmasterSiteUrl,
   createBingWebmasterClient,
   deleteProviderSecret,
@@ -23,7 +22,6 @@ import {
   printKeyValue,
   printTable,
 } from '../../utils.js'
-import { printReportSummary } from '../output.js'
 
 function verifiedSites(sites: BingWebmasterSite[]): BingWebmasterSite[] {
   return sites.filter((site) => site.isVerified)
@@ -261,114 +259,12 @@ const sitesCommand = defineCommand({
   },
 })
 
-const reportCommand = defineCommand({
-  meta: {
-    name: 'report',
-    description: 'Find Bing traffic, crawl, query, and page insights',
-  },
-  args: {
-    ...selectionArgs,
-    json: {
-      type: 'boolean',
-      default: false,
-      description: 'Print machine-readable JSON.',
-    },
-  },
-  run: async ({ args }) => {
-    const json = jsonFlag(args)
-    const project = await resolveClient({
-      project: projectArg(args),
-      options: { json },
-    })
-    const site = stringArg(args.site) ?? bingWebmasterSiteUrl(project)
-    if (!site) {
-      throw new SeoError(
-        'INVALID_INPUT',
-        'Pass --site or connect Bing Webmaster to a saved project first.',
-      )
-    }
-    const report = await bingWebmasterOverview({ site })
-    if (json) {
-      printJson(report)
-      return
-    }
-    const traffic =
-      report.traffic.status === 'unavailable' ? undefined : report.traffic.data
-    const crawl =
-      report.crawl.status === 'unavailable' ? undefined : report.crawl.data
-    const comparison = traffic?.analysis
-    printReportSummary({
-      title: 'Bing Webmaster report',
-      target: report.site,
-      status:
-        report.dataStatus === 'complete'
-          ? report.summary.warnings > 0
-            ? 'warning'
-            : 'pass'
-          : 'unknown',
-      summary:
-        report.summary.findings > 0
-          ? `${report.summary.findings} findings need review across Bing traffic and crawl evidence.`
-          : 'No findings were returned by the available Bing evidence.',
-      metrics: [
-        { label: 'Evidence', value: report.dataStatus },
-        {
-          label: '28-day clicks',
-          value: comparison?.current.clicks ?? 'Unavailable',
-        },
-        {
-          label: 'Click change',
-          value:
-            comparison?.changes.clicksPercent === null ||
-            comparison?.changes.clicksPercent === undefined
-              ? 'Unavailable'
-              : `${comparison.changes.clicksPercent.toFixed(1)}%`,
-        },
-        {
-          label: '28-day impressions',
-          value: comparison?.current.impressions ?? 'Unavailable',
-        },
-        {
-          label: 'Impression change',
-          value:
-            comparison?.changes.impressionsPercent === null ||
-            comparison?.changes.impressionsPercent === undefined
-              ? 'Unavailable'
-              : `${comparison.changes.impressionsPercent.toFixed(1)}%`,
-        },
-        {
-          label: 'Crawled pages',
-          value: crawl?.latest?.crawledPages ?? 'Unavailable',
-        },
-        {
-          label: '4xx responses',
-          value: crawl?.latest?.code4xx ?? 'Unavailable',
-        },
-        { label: 'Findings', value: report.summary.findings },
-      ],
-      diagnostics: [
-        {
-          title: 'Review first',
-          items: report.findings.slice(0, 5).map((finding) => ({
-            status: finding.severity === 'warning' ? 'warning' : 'info',
-            title: finding.title,
-            explanation: finding.interpretation,
-            evidence: [finding.verification],
-          })),
-        },
-      ],
-      notes: report.caveats,
-    })
-  },
-})
-
 export const bingProviderCommand = defineCommand({
-  meta: { name: 'bing', description: 'Connect and report on Bing Webmaster' },
+  meta: { name: 'bing', description: 'Connect Bing Webmaster' },
   subCommands: {
     connect: connectCommand,
     status: statusCommand,
     disconnect: disconnectCommand,
     sites: sitesCommand,
-    report: reportCommand,
   },
 })

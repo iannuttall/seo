@@ -3,7 +3,7 @@ import type { CrawlReport } from '../crawler/report.js'
 import {
   clusterPseoTemplates,
   type PseoTemplateCluster,
-} from '../pseo/templates.js'
+} from '../url-templates.js'
 import type { CrawlPageSnapshot } from './types.js'
 
 export type IndexCoverageSourceCompleteness =

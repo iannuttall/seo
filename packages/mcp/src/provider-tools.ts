@@ -1,6 +1,5 @@
 import type { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js'
 import {
-  bingWebmasterOverview,
   collectAhrefsLinkEvidence,
   collectBingLinkEvidence,
   collectDataForSeoLinkEvidence,
@@ -12,81 +11,7 @@ import {
 import * as z from 'zod/v4'
 import { toolError, toolSuccess } from './tool-result.js'
 
-const MAX_AGENT_ROWS_PER_SECTION = 14
-
-type BingOverview = Awaited<ReturnType<typeof bingWebmasterOverview>>
-
-function compactRows<
-  T extends {
-    rows: unknown[]
-    outputSelection?: {
-      strategy: 'most-recent'
-      availableRows: number
-      returnedRows: number
-      omittedRows: number
-    }
-  },
->(data: T) {
-  if (data.rows.length <= MAX_AGENT_ROWS_PER_SECTION && data.outputSelection) {
-    return data
-  }
-  const rows = data.rows.slice(-MAX_AGENT_ROWS_PER_SECTION)
-  return {
-    ...data,
-    rows,
-    outputSelection: {
-      strategy: 'most-recent' as const,
-      availableRows: data.rows.length,
-      returnedRows: rows.length,
-      omittedRows: Math.max(0, data.rows.length - rows.length),
-    },
-  }
-}
-
-export function compactBingWebmasterOverview(result: BingOverview) {
-  return {
-    ...result,
-    traffic:
-      result.traffic.status === 'unavailable'
-        ? result.traffic
-        : {
-            ...result.traffic,
-            data: compactRows(result.traffic.data),
-          },
-    crawl:
-      result.crawl.status === 'unavailable'
-        ? result.crawl
-        : {
-            ...result.crawl,
-            data: compactRows(result.crawl.data),
-          },
-    outputBudget: result.outputBudget,
-  }
-}
-
 export function registerProviderTools(server: McpServer): void {
-  server.registerTool(
-    'seo_bing_webmaster_overview',
-    {
-      description:
-        'Find bounded Bing traffic, crawl, query, and page insights for one verified site',
-      inputSchema: {
-        site: z.string().url().max(2_000),
-      },
-    },
-    async ({ site }) => {
-      try {
-        const result = await bingWebmasterOverview({ site })
-        const firstFinding = result.findings[0]?.title
-        return toolSuccess(
-          `Bing evidence is ${result.dataStatus} with ${result.summary.findings} findings.${firstFinding ? ` Review first: ${firstFinding}.` : ''}`,
-          compactBingWebmasterOverview(result),
-        )
-      } catch (error) {
-        return toolError(error)
-      }
-    },
-  )
   server.registerTool(
     'seo_link_evidence',
     {

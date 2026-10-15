@@ -34,50 +34,6 @@ const REPORT_DEPTH_PRIMARY = {
       { id: 'crawl-report', reason: 'Opens the source crawl snapshot.' },
     ],
   },
-  'agent-readiness': {
-    readOrder: [
-      'profile, profileApplicability, dataStatus, and crawl caveats',
-      'summary and topActions',
-      'raw HTML, missing-page recovery, trust-page, and HTML and Markdown representation checks with affected URLs',
-      'Agent Skills, llms.txt, route manifest, crawler access, and identity evidence',
-      'endpoint checks for Link headers and optional well-known files, where info means absent and optional',
-      'for any failed or warning check, request seo_describe_report with the check id to get fix guidance',
-    ],
-    doNotClaim: [
-      'A clean content profile is not proof of indexing, rankings, AI mentions, citations, or selection.',
-      'API, application, and commerce checks marked notApplicable were outside this content-site run. They did not fail.',
-      'Crawler access, optional discovery files, and emerging endpoints do not prove that a service fetched or used the page.',
-      'Trust-page length and same-origin developer links do not prove legitimacy or clean-search discoverability.',
-    ],
-    verify:
-      'Run the same content profile against the same public route scope after deployment and confirm each failed or warning check changed.',
-    related: [
-      { id: 'ai-readiness', reason: 'Checks AI search technical eligibility.' },
-      { id: 'llms-txt-audit', reason: 'Inspects llms.txt in more detail.' },
-      { id: 'entity-readiness', reason: 'Reviews identity evidence.' },
-      { id: 'site-crawl', reason: 'Creates a reusable crawl baseline.' },
-    ],
-  },
-  'ai-readiness': {
-    readOrder: [
-      'dataStatus and crawl caveats',
-      'each check evaluated flag',
-      'hard access, indexability, and snippet conflicts',
-      'semantic structure and answerable content as observations',
-    ],
-    doNotClaim: [
-      'unknown means evidence was unavailable, not a pass or a fail.',
-      'Valid JSON-LD is syntax evidence, not entity recognition or rich-result eligibility.',
-      'A clean report is not indexing, ranking, AI visibility, selection, or citations.',
-    ],
-    verify:
-      'Re-crawl at the same scope after a change and confirm the access or indexability signal resolved.',
-    related: [
-      { id: 'geo-gaps', reason: 'Lists affected URLs for access rules.' },
-      { id: 'entity-readiness', reason: 'Reviews identity signals.' },
-      { id: 'ai-search-scorecard', reason: 'Scores the same evidence.' },
-    ],
-  },
   'ai-referrals': {
     readOrder: [
       'dataStatus, range, methodology, and dataSource partialReasons',
@@ -92,30 +48,7 @@ const REPORT_DEPTH_PRIMARY = {
     ],
     verify:
       'Compare complete like-for-like Google Analytics periods and check whether high-session landing pages answer the referring context.',
-    related: [
-      { id: 'seo-to-ai-query', reason: 'Builds monitoring prompts.' },
-      { id: 'ai-readiness', reason: 'Checks technical AI access.' },
-    ],
-  },
-  'ai-search-scorecard': {
-    readOrder: [
-      'partial, crawlComplete, and excluded before the number',
-      'score, which is null when no check had known evidence',
-      'each check status, observed evidence, and finding',
-      'methodology weights, statusCredit, and formula',
-    ],
-    doNotClaim: [
-      "The score is a heuristic over this tool's own checks, not a Google or AI-engine requirement, eligibility verdict, or ranking prediction.",
-      'unknown checks are excluded from the score and are never failures.',
-      'A blocked AI crawler token can be an intentional publisher choice.',
-    ],
-    verify:
-      'Re-crawl at the same scope after a change and confirm the per-check evidence moved.',
-    related: [
-      { id: 'ai-readiness', reason: 'Gives the per-page evidence.' },
-      { id: 'geo-gaps', reason: 'Lists affected URLs.' },
-      { id: 'entity-readiness', reason: 'Reviews identity signals.' },
-    ],
+    related: [],
   },
   'audit-page': {
     readOrder: [
@@ -156,32 +89,6 @@ const REPORT_DEPTH_PRIMARY = {
       { id: 'redirect-trace', reason: 'Traces a redirecting URL.' },
     ],
   },
-  'bing-webmaster-overview': {
-    readOrder: [
-      'dataStatus and provenance',
-      'summary and findings, including verification steps',
-      'traffic analysis current and previous periods, then changes',
-      'crawl analysis current and previous snapshots, then changes',
-      'query and page coverage before movements or opportunities',
-      'outputBudget, per-section outputSelection, and caveats',
-    ],
-    doNotClaim: [
-      'Bing evidence does not describe Google or the whole search market, and inIndex is not URL-level proof of indexing.',
-      'A missing weekly top-list entry is not zero traffic, and movements require observation in every week of both periods.',
-      'Opportunity thresholds prioritize review and are not Bing requirements.',
-      'Partial, capped, invalid, or unavailable rows cannot support an all-clear.',
-    ],
-    verify:
-      'Check the same verified site in Bing Webmaster Tools and investigate the exact dates behind any crawl or traffic change.',
-    related: [
-      {
-        id: 'search-performance-overview',
-        reason: 'Adds Search Console evidence.',
-      },
-      { id: 'site-crawl', reason: 'Checks the current site directly.' },
-      { id: 'link-recovery', reason: 'Finds broken search-value URLs.' },
-    ],
-  },
   'link-evidence': {
     readOrder: [
       'dataStatus, provenance, warnings, and caveats',
@@ -208,28 +115,6 @@ const REPORT_DEPTH_PRIMARY = {
       },
     ],
   },
-  'server-log-analysis': {
-    readOrder: [
-      'dataStatus, provenance coverage, warnings, and caveats',
-      'summary and statusCodes',
-      'crawlers, then the bounded crawlerPaths list and selection',
-    ],
-    doNotClaim: [
-      'A user-agent match does not verify the crawler identity or source IP.',
-      'The supplied file does not prove that every server or time period is represented.',
-      'Path rankings are partial when path tracking reached its limit.',
-    ],
-    verify:
-      'Check important crawler errors against the original log line and deployment or server configuration before changing the site.',
-    related: [
-      { id: 'site-crawl', reason: 'Checks the current site directly.' },
-      { id: 'crawler-rules', reason: 'Explains current crawl checks.' },
-      {
-        id: 'redirect-trace',
-        reason: 'Traces one failing or redirecting path.',
-      },
-    ],
-  },
   cannibalisation: {
     readOrder: [
       'dataStatus and both source.pageExposure and source.propertyDemand with validation counts and completeness',
@@ -250,25 +135,6 @@ const REPORT_DEPTH_PRIMARY = {
       { id: 'query-clusters', reason: 'Groups related query themes.' },
       { id: 'internal-links', reason: 'Clarifies link ownership.' },
       { id: 'content-optimization', reason: 'Differentiates page intent.' },
-    ],
-  },
-  'community-intent': {
-    readOrder: [
-      'dataStatus, source.completeness, warnings, and caveats',
-      'selection.classifiedRows for every match and selection.returnedRows for the limited set',
-      'per-item intent, signals, and matchedTerms',
-    ],
-    doNotClaim: [
-      'Intent labels are low-confidence English language heuristics, not verified intent.',
-      'The classifier does not inspect the live SERP or identify the ranking URL.',
-      'A capped or partial zero is inconclusive, not absence of demand.',
-    ],
-    verify:
-      'Retrieve GSC query and page rows to find the ranking URL and check its content against the observed query language.',
-    related: [
-      { id: 'content-optimization', reason: 'Turns intent into a brief.' },
-      { id: 'query-clusters', reason: 'Groups the demand themes.' },
-      { id: 'page-opportunities', reason: 'Reviews one ranking URL.' },
     ],
   },
   'compare-crawls': {
@@ -426,26 +292,6 @@ const REPORT_DEPTH_PRIMARY = {
       { id: 'measure-change', reason: 'Evaluates a fix later.' },
     ],
   },
-  'entity-readiness': {
-    readOrder: [
-      'dataStatus, evaluatedPages versus crawlPages, and caveats',
-      'entities.schemaTypes',
-      'sameAs, sameAsByType, and socialProfiles',
-      'authors',
-    ],
-    doNotClaim: [
-      'Checks are informational observations with coverage, not pass or fail requirements.',
-      'Skipped or non-indexable pages are not evidence of absence.',
-      'These signals do not prove Knowledge Graph inclusion, ownership, expertise, rankings, or citations.',
-    ],
-    verify:
-      'Confirm names, URLs, authorship, and dates with the publisher, then re-crawl the same scope.',
-    related: [
-      { id: 'ai-readiness', reason: 'Checks technical AI access.' },
-      { id: 'ai-search-scorecard', reason: 'Scores the evidence.' },
-      { id: 'geo-gaps', reason: 'Lists affected URLs.' },
-    ],
-  },
   'explain-crawl-issue': {
     readOrder: [
       'category, default severity, and why it matters',
@@ -463,44 +309,6 @@ const REPORT_DEPTH_PRIMARY = {
       { id: 'affected-urls', reason: 'Returns URLs for the rule.' },
       { id: 'crawler-rules', reason: 'Finds a rule id.' },
       { id: 'top-fixes', reason: 'Ranks the fix queue.' },
-    ],
-  },
-  'generate-llms-txt': {
-    readOrder: [
-      'content, includedUrls, estimatedTokens, and sections',
-      'the generated titles and descriptions against the source pages',
-      'the source crawl date, cap, failures, and caveats',
-    ],
-    doNotClaim: [
-      'Reaching maxUrls, the token budget, or the output byte budget is possible truncation, not a complete inventory.',
-      'A valid draft does not prove search or AI benefit, selection, indexing, or citations.',
-      'The crawler cannot determine publisher intent.',
-    ],
-    verify:
-      'After human review, fetch the published file and validate its links with llms-txt-audit.',
-    related: [
-      { id: 'llms-txt-audit', reason: 'Audits the published file.' },
-      { id: 'crawl-report', reason: 'Inspects the source crawl.' },
-      { id: 'okf-build', reason: 'Builds a richer knowledge pack.' },
-    ],
-  },
-  'geo-gaps': {
-    readOrder: [
-      'dataStatus, source.partialReasons, and selection evaluated, matched, returned, and truncated counts',
-      'per-URL issues separated from searchEligibility',
-      'access states, where null means unknown',
-    ],
-    doNotClaim: [
-      'A null access state means unknown, not allowed.',
-      'Semantic HTML and structured data do not override a hard access restriction or create eligibility.',
-      'An empty gap list does not prove indexing, visibility, selection, or complete coverage; confirm intent before treating noindex, robots, canonicals, or snippet limits as defects.',
-    ],
-    verify:
-      'Fix unintended response or access conflicts, then re-check the exact URL and directive after deployment.',
-    related: [
-      { id: 'ai-readiness', reason: 'Gives the readiness overview.' },
-      { id: 'affected-urls', reason: 'Lists URLs for a rule.' },
-      { id: 'index-coverage', reason: 'Checks index signals.' },
     ],
   },
   'index-coverage': {
@@ -617,25 +425,6 @@ const REPORT_DEPTH_PRIMARY = {
       { id: 'redirect-trace', reason: 'Traces one URL chain.' },
       { id: 'decaying-pages', reason: 'Shows click declines.' },
       { id: 'audit-urls', reason: 'Runs bounded checks.' },
-    ],
-  },
-  'llms-txt-audit': {
-    readOrder: [
-      'exists, resolved file URL, response status, headline, and issues',
-      'recommendedPages',
-      'the source crawl date, cap, partial state, failed requests, and caveats',
-    ],
-    doNotClaim: [
-      'llms.txt presence is not a ranking signal and its absence is not a technical defect.',
-      'A short recommendation list from a capped crawl is not sitewide evidence.',
-      'Adding the file does not improve indexing, rankings, traffic, AI selection, or citations.',
-    ],
-    verify:
-      'If the file exists, confirm its URLs are current, canonical, public, and aligned with publisher intent.',
-    related: [
-      { id: 'generate-llms-txt', reason: 'Drafts a new file.' },
-      { id: 'crawl-report', reason: 'Inspects the source crawl.' },
-      { id: 'okf-build', reason: 'Builds a knowledge pack.' },
     ],
   },
   'measure-change': {

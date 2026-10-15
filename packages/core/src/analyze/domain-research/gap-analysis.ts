@@ -4,7 +4,7 @@ import {
   canonicalPseoTerm,
   pseoQueryThemeTerms,
 } from '../pseo/query-insights.js'
-import { clusterPseoTemplates, templateForUrl } from '../pseo/templates.js'
+import { clusterPseoTemplates, templateForUrl } from '../url-templates.js'
 import type { GapAcquisition } from './gap-acquisition.js'
 import { compareText, normalizedKeyword, value } from './shared.js'
 

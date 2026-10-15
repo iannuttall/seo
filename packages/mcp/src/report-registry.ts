@@ -9,15 +9,6 @@ import { registerKeywordTools } from './keyword-tools.js'
 import { registerMonitoringTools } from './monitoring-tools.js'
 import { registerOpportunityTools } from './opportunity-tools.js'
 import { registerProviderTools } from './provider-tools.js'
-import { registerPseoTools } from './pseo-tools.js'
-import {
-  aiMentionResearchInputSchema,
-  createAiMentionResearchHandler,
-} from './report-definitions/ai-mention-research.js'
-import {
-  aiPromptObservationsInputSchema,
-  createAiPromptObservationsHandler,
-} from './report-definitions/ai-prompt-observations.js'
 import {
   competitiveOpportunitiesInputSchema,
   createCompetitiveOpportunitiesHandler,
@@ -27,20 +18,11 @@ import {
   domainRatingInputSchema,
 } from './report-definitions/domain-rating.js'
 import {
-  createLocalSearchDemandHandler,
-  localSearchDemandInputSchema,
-} from './report-definitions/local-search-demand.js'
-import {
-  createPseoPatternsHandler,
-  pseoPatternsInputSchema,
-} from './report-definitions/pseo-patterns.js'
-import {
   getReportGuidance,
   REPORT_GUIDANCE,
   type RelatedReport,
 } from './report-guidance.js'
 import { registerReportTools } from './report-tools.js'
-import { registerServerLogTools } from './server-log-tools.js'
 import type { ToolResult } from './tool-result.js'
 import { registerWorkflowTools } from './workflow-tools.js'
 
@@ -93,30 +75,6 @@ const directReports: readonly DirectReport[] = [
     inputSchema: domainRatingInputSchema,
     handler: createDomainRatingHandler(),
   },
-  {
-    id: 'ai-mention-research',
-    category: 'ai-search',
-    inputSchema: aiMentionResearchInputSchema,
-    handler: createAiMentionResearchHandler(),
-  },
-  {
-    id: 'ai-prompt-observations',
-    category: 'ai-search',
-    inputSchema: aiPromptObservationsInputSchema,
-    handler: createAiPromptObservationsHandler(),
-  },
-  {
-    id: 'local-search-demand',
-    category: 'opportunities',
-    inputSchema: localSearchDemandInputSchema,
-    handler: createLocalSearchDemandHandler(),
-  },
-  {
-    id: 'pseo-patterns',
-    category: 'opportunities',
-    inputSchema: pseoPatternsInputSchema,
-    handler: createPseoPatternsHandler(),
-  },
 ] as const
 
 const legacyReportGroups: readonly ReportGroup[] = [
@@ -154,8 +112,6 @@ const legacyReportGroups: readonly ReportGroup[] = [
       'seo_keyword_metrics',
       'seo_keyword_opportunities',
       'seo_keyword_research',
-      'seo_rank_tracking',
-      'seo_saved_keywords',
       'seo_serp_results',
     ],
   },
@@ -175,38 +131,23 @@ const legacyReportGroups: readonly ReportGroup[] = [
     register: registerAiOpportunityTools,
     names: [
       'seo_ai_referrals',
-      'seo_community_intent',
       'seo_content_optimization',
       'seo_page_opportunities',
       'seo_performance_audit',
-      'seo_to_ai_query',
     ],
-  },
-  {
-    category: 'ai-search',
-    register: registerCrawlerTools,
-    names: ['seo_ai_search_scorecard'],
   },
   {
     category: 'crawl',
     register: registerCrawlerTools,
     names: [
       'seo_affected_urls',
-      'seo_agent_readiness',
-      'seo_ai_readiness',
       'seo_audit_urls',
       'seo_compare_crawl_reports',
       'seo_crawl_site',
-      'seo_entity_readiness',
       'seo_explain_issue',
-      'seo_geo_gaps',
       'seo_get_crawl_report',
       'seo_list_crawl_reports',
       'seo_list_rules',
-      'seo_llms_txt_audit',
-      'seo_llms_txt_generate',
-      'seo_okf_build',
-      'seo_okf_validate',
       'seo_top_fixes',
     ],
   },
@@ -226,22 +167,12 @@ const legacyReportGroups: readonly ReportGroup[] = [
   {
     category: 'monitoring',
     register: registerProviderTools,
-    names: ['seo_bing_webmaster_overview', 'seo_link_evidence'],
-  },
-  {
-    category: 'monitoring',
-    register: registerServerLogTools,
-    names: ['seo_server_log_analysis'],
+    names: ['seo_link_evidence'],
   },
   {
     category: 'reporting',
     register: registerReportTools,
-    names: [
-      'seo_audit_page',
-      'seo_monthly_report',
-      'seo_report_narrative',
-      'seo_second_page',
-    ],
+    names: ['seo_audit_page', 'seo_second_page'],
   },
   {
     category: 'experiments',
@@ -249,16 +180,10 @@ const legacyReportGroups: readonly ReportGroup[] = [
     names: ['seo_measure_change'],
   },
   {
-    category: 'reporting',
-    register: registerPseoTools,
-    names: ['seo_pseo_audit', 'seo_pseo_opportunities'],
-  },
-  {
     category: 'workflows',
     register: registerWorkflowTools,
     names: [
       'seo_workflow_diagnose_property',
-      'seo_workflow_monthly_report',
       'seo_workflow_refresh_priorities',
       'seo_workflow_technical_watch',
       'seo_workflow_update_postmortem',
@@ -290,15 +215,11 @@ const REPORT_ID_OVERRIDES = {
   decaying: 'decaying-pages',
   'crawl-site': 'site-crawl',
   'link-recover': 'link-recovery',
-  'llms-txt-generate': 'generate-llms-txt',
   'query-cluster': 'query-clusters',
-  'report-narrative': 'narrative-report',
-  'to-ai-query': 'seo-to-ai-query',
   'workflow-refresh-priorities': 'refresh-priorities',
   'workflow-technical-watch': 'technical-watch',
   'workflow-update-postmortem': 'update-postmortem',
   'workflow-diagnose-property': 'search-performance-overview',
-  'workflow-monthly-report': 'monthly-action-plan',
   doctor: 'setup-check',
   'update-correlate': 'update-correlation',
   'compare-crawl-reports': 'compare-crawls',

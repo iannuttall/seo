@@ -65,7 +65,6 @@ test('health strategy uses an explicit sitemap and limits analysis to responses'
       sitemapUrl,
       maxPages: 10,
       checkExternal: true,
-      checkAgentDiscovery: true,
       js: 'on',
     },
     {
@@ -89,7 +88,6 @@ test('health strategy uses an explicit sitemap and limits analysis to responses'
   assert.equal(report.config.sitemapUrl, sitemapUrl)
   assert.equal(report.config.js, 'off')
   assert.equal(report.config.checkExternal, false)
-  assert.equal(report.config.checkAgentDiscovery, false)
   assert.equal(report.config.refresh, true)
   assert.equal(report.sitemapDiscovery?.roots[0]?.source, 'explicit')
   assert.equal(report.summary.totalPages, 3)
@@ -101,7 +99,6 @@ test('health strategy uses an explicit sitemap and limits analysis to responses'
   assert.equal(report.dataSources?.analytics.status, 'skipped')
   assert.equal(report.ai, undefined)
   assert.equal(report.externalLinkVerification, undefined)
-  assert.equal(report.agentDiscovery, undefined)
   assert.equal(report.pages[0]?.responseHeaders, undefined)
   assert.equal(report.pages[0]?.fetchDiagnostics, undefined)
   assert.equal(report.pages[0]?.robotsTxt, undefined)

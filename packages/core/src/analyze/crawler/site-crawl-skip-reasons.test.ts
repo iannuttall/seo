@@ -85,7 +85,6 @@ test('crawlSite returns partial evidence before memory use becomes unsafe', asyn
   const externalUrl = 'https://external.example/link'
   let memoryChecks = 0
   let providerCalls = 0
-  let agentDiscoveryCalls = 0
   let externalLinkCalls = 0
   const report = await crawlSite(
     {
@@ -96,7 +95,6 @@ test('crawlSite returns partial evidence before memory use becomes unsafe', asyn
       googleAnalyticsPropertyId: 'properties/123',
       useSitemap: false,
       checkExternal: true,
-      checkAgentDiscovery: true,
       maxPages: urls.length,
       concurrency: 1,
     },
@@ -126,10 +124,6 @@ test('crawlSite returns partial evidence before memory use becomes unsafe', asyn
         providerCalls += 1
         throw new Error('analytics provider should not run')
       },
-      collectAgentDiscovery: async () => {
-        agentDiscoveryCalls += 1
-        throw new Error('agent discovery should not run')
-      },
       totalMemory: () => 16 * 1024 * 1024 * 1024,
       memoryUsage: () => {
         const pressured = memoryChecks++ > 0
@@ -152,10 +146,8 @@ test('crawlSite returns partial evidence before memory use becomes unsafe', asyn
     },
   ])
   assert.equal(providerCalls, 0)
-  assert.equal(agentDiscoveryCalls, 0)
   assert.equal(externalLinkCalls, 0)
   assert.equal(report.externalLinkVerification, undefined)
-  assert.equal(report.agentDiscovery, undefined)
   assert.match(
     report.dataSources?.searchConsole.warning ?? '',
     /memory safety limit/,

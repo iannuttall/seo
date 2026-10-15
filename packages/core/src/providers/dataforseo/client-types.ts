@@ -7,9 +7,6 @@ export type DataForSeoAccountSnapshot = {
   timezone: string | null
   balanceMicros: number | null
   depositedMicros: number | null
-  accountDailySpendMicros: number | null
-  accountDailySpendPeriod: string | null
-  accountDailyLimitMicros: number | null
   apiVersion: string | null
   requestCostMicros: number
   taskIds: string[]

@@ -134,13 +134,6 @@ export class DataForSeoClient {
       timezone: account.timezone ?? null,
       balanceMicros: dataForSeoUsdToMicros(account.money?.balance),
       depositedMicros: dataForSeoUsdToMicros(account.money?.total),
-      accountDailySpendMicros: dataForSeoUsdToMicros(
-        account.money?.statistics?.day?.total,
-      ),
-      accountDailySpendPeriod: account.money?.statistics?.day?.value ?? null,
-      accountDailyLimitMicros: dataForSeoUsdToMicros(
-        account.money?.limits?.day?.total,
-      ),
       apiVersion: response.version ?? null,
       requestCostMicros: dataForSeoUsdToMicros(response.cost) ?? 0,
       taskIds: response.tasks.flatMap((task) => (task.id ? [task.id] : [])),

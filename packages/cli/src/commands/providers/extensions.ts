@@ -3,8 +3,6 @@ import {
   deleteProviderExtensionAccount,
   deleteProviderExtensionCredentials,
   describeInstalledProviderExtension,
-  getProviderSpendLimits,
-  getProviderSpendSummary,
   inspectProviderPackage,
   installProviderPackage,
   listInstalledProviderExtensions,
@@ -14,7 +12,6 @@ import {
   runProviderExtensionAction,
   SeoError,
   type SeoProviderJson,
-  setProviderSpendLimits,
   uninstallProviderExtension,
   verifyProviderExtension,
   writeProviderExtensionAccount,
@@ -29,7 +26,6 @@ import {
   printKeyValue,
   printTable,
 } from '../../utils.js'
-import { boundedIntegerArg, formatUsd, usdMicrosArg } from './shared.js'
 
 function parseAccount(value: string | undefined): Record<string, string> {
   if (!value) return {}
@@ -624,145 +620,6 @@ const runCommand = defineCommand({
   },
 })
 
-const limitsCommand = defineCommand({
-  meta: {
-    name: 'limits',
-    description: 'Show or change local limits for one installed provider',
-  },
-  args: {
-    id: {
-      type: 'positional',
-      required: true,
-      description: 'Installed provider id.',
-    },
-    'daily-notice': {
-      type: 'string',
-      description: 'UTC daily notice in USD, or off.',
-    },
-    'daily-limit': {
-      type: 'string',
-      description: 'UTC daily hard limit in USD, or off.',
-    },
-    'monthly-limit': {
-      type: 'string',
-      description: 'UTC monthly hard limit in USD, or off.',
-    },
-    requests: {
-      type: 'string',
-      description: 'Maximum provider requests in one report run.',
-    },
-    rows: {
-      type: 'string',
-      description: 'Maximum requested provider rows in one report run.',
-    },
-    json: {
-      type: 'boolean',
-      default: false,
-      description: 'Print machine-readable JSON.',
-    },
-  },
-  run: async ({ args }) => {
-    const id = stringArg(args.id) ?? ''
-    await installedProvider(id)
-    const current = getProviderSpendLimits(id)
-    const update = {
-      dailyNoticeMicros: usdMicrosArg(args['daily-notice'], '--daily-notice', {
-        notice: true,
-      }),
-      dailyHardLimitMicros: usdMicrosArg(args['daily-limit'], '--daily-limit'),
-      monthlyHardLimitMicros: usdMicrosArg(
-        args['monthly-limit'],
-        '--monthly-limit',
-      ),
-      maxRequestsPerReport: boundedIntegerArg(
-        args.requests,
-        '--requests',
-        1,
-        100,
-      ),
-      maxRowsPerReport: boundedIntegerArg(args.rows, '--rows', 1, 100_000),
-    }
-    const changed = Object.values(update).some((value) => value !== undefined)
-    const limits = changed
-      ? setProviderSpendLimits(id, {
-          dailyNoticeMicros:
-            update.dailyNoticeMicros ?? current.dailyNoticeMicros,
-          dailyHardLimitMicros:
-            update.dailyHardLimitMicros === undefined
-              ? current.dailyHardLimitMicros
-              : update.dailyHardLimitMicros,
-          monthlyHardLimitMicros:
-            update.monthlyHardLimitMicros === undefined
-              ? current.monthlyHardLimitMicros
-              : update.monthlyHardLimitMicros,
-          maxRequestsPerReport:
-            update.maxRequestsPerReport ?? current.maxRequestsPerReport,
-          maxRowsPerReport: update.maxRowsPerReport ?? current.maxRowsPerReport,
-        })
-      : current
-    const result = { provider: id, changed, limits }
-    if (jsonFlag(args)) {
-      printJson(result)
-      return
-    }
-    printKeyValue([
-      [
-        'UTC daily notice',
-        limits.dailyNoticeMicros === 0
-          ? 'off'
-          : formatUsd(limits.dailyNoticeMicros),
-      ],
-      [
-        'UTC daily hard limit',
-        limits.dailyHardLimitMicros === null
-          ? 'off'
-          : formatUsd(limits.dailyHardLimitMicros),
-      ],
-      [
-        'UTC monthly hard limit',
-        limits.monthlyHardLimitMicros === null
-          ? 'off'
-          : formatUsd(limits.monthlyHardLimitMicros),
-      ],
-      ['Requests per report', String(limits.maxRequestsPerReport)],
-      ['Rows per report', String(limits.maxRowsPerReport)],
-    ])
-  },
-})
-
-const spendCommand = defineCommand({
-  meta: {
-    name: 'spend',
-    description: 'Show locally recorded spend for one installed provider',
-  },
-  args: {
-    id: {
-      type: 'positional',
-      required: true,
-      description: 'Installed provider id.',
-    },
-    json: {
-      type: 'boolean',
-      default: false,
-      description: 'Print machine-readable JSON.',
-    },
-  },
-  run: async ({ args }) => {
-    const id = stringArg(args.id) ?? ''
-    await installedProvider(id)
-    const result = { provider: id, local: getProviderSpendSummary(id) }
-    if (jsonFlag(args)) {
-      printJson(result)
-      return
-    }
-    printKeyValue([
-      ['Today', formatUsd(result.local.today.effectiveCostMicros)],
-      ['This month', formatUsd(result.local.month.effectiveCostMicros)],
-      ['Requests today', String(result.local.today.requests)],
-    ])
-  },
-})
-
 const doctorCommand = defineCommand({
   meta: {
     name: 'doctor',
@@ -812,7 +669,5 @@ export const providerExtensionCommands = {
   status: statusCommand,
   disconnect: disconnectCommand,
   run: runCommand,
-  limits: limitsCommand,
-  spend: spendCommand,
   doctor: doctorCommand,
 }

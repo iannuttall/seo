@@ -27,11 +27,11 @@ Show the Google Analytics search landing pages for example.com
 
 The agent runs `seo_data` with Google Analytics as the source and the numeric property ID, which `seo_sites` lists. It returns landing pages for sessions in the Organic Search channel, for the last 28 days unless you ask for other dates, with sessions, users, engaged sessions and key events. The result says when Google Analytics hid small rows or grouped some into "(other)".
 
-**CLI.** `seo start` signs you in with Google and can save a Google Analytics property with your project. To read it yourself:
+**CLI.** `seo start` signs you in with Google. List your properties to find the numeric property ID, then pass it to a report:
 
 ```sh
 seo analytics google properties
-seo analytics google report --help
+seo analytics google report --property 123456789
 ```
 
 In the CLI, `seo data` reads Search Console or Bing rows. Use `seo analytics google report` for Google Analytics.
@@ -45,10 +45,10 @@ seo providers install @seoskill/clicky-provider
 seo providers connect clicky --account '{"siteId":"123456789"}'
 ```
 
-The sitekey goes into your system keychain, or a private local file where there is no keychain. Then read Clicky reports, or run `seo start` to use Clicky as the analytics source for a project:
+The sitekey goes into your system keychain, or a private local file where there is no keychain. Then read Clicky reports with the same site ID:
 
 ```sh
-seo analytics clicky report --project example --start-date 2026-09-01 --end-date 2026-09-28
+seo analytics clicky report --site-id 123456789 --start-date 2026-09-01 --end-date 2026-09-28
 ```
 
 Clicky counts visitors, not Google Analytics sessions or users, so compare the two with care.

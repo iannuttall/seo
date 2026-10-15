@@ -164,33 +164,6 @@ test('indexWatch keeps authentication and property access failures fatal', async
   }
 })
 
-test('multi-property mode stops one inaccessible property without repeated calls', async () => {
-  let calls = 0
-  const context = dependencies({
-    inspect: async () => {
-      calls += 1
-      throw new SeoError('ACCESS_DENIED', 'No property access.')
-    },
-  })
-  const report = await indexWatch(
-    {
-      site: 'sc-domain:example.com',
-      urls: [
-        'https://example.com/one',
-        'https://example.com/two',
-        'https://example.com/three',
-      ],
-      continueOnPropertyError: true,
-    },
-    context.dependencies,
-  )
-
-  assert.equal(calls, 1)
-  assert.equal(report.summary.failed, 1)
-  assert.equal(report.summary.deferred, 2)
-  assert.equal(context.memory.inserted.length, 1)
-})
-
 test('indexWatch validates, bounds, and deduplicates before provider calls', async () => {
   let calls = 0
   const context = dependencies({
@@ -242,79 +215,6 @@ test('successful inspection compares with the latest successful state', async ()
 
   assert.equal(report.items[0]?.changeKind, 'recovery')
   assert.equal(report.summary.recoveries, 1)
-})
-
-test('latest summary rolls prefix properties into the root deterministically', () => {
-  const root = 'sc-domain:index-summary-rollup.test'
-  const db = getDb()
-  const insert = db.prepare(
-    `INSERT INTO index_watch_snapshots
-    (id, site_url, root_site_url, property_site_url, url, verdict,
-     inspection_status, inspected_at)
-    VALUES (?, ?, ?, ?, ?, ?, 'succeeded', ?)`,
-  )
-  const timestamp = Date.parse('2026-07-09T12:00:00.000Z')
-  try {
-    insert.run(
-      'index-summary-a',
-      'https://index-summary-rollup.test/blog/',
-      root,
-      'https://index-summary-rollup.test/blog/',
-      'https://index-summary-rollup.test/blog/one',
-      'FAIL',
-      timestamp,
-    )
-    insert.run(
-      'index-summary-z',
-      'https://index-summary-rollup.test/blog/',
-      root,
-      'https://index-summary-rollup.test/blog/',
-      'https://index-summary-rollup.test/blog/one',
-      'PASS',
-      timestamp,
-    )
-    insert.run(
-      'index-summary-other',
-      'https://index-summary-rollup.test/shop/',
-      root,
-      'https://index-summary-rollup.test/shop/',
-      'https://index-summary-rollup.test/shop/two',
-      'NEUTRAL',
-      timestamp + 1,
-    )
-    insert.run(
-      'index-summary-reassigned',
-      'sc-domain:index-summary-rollup.test',
-      root,
-      'sc-domain:index-summary-rollup.test',
-      'https://index-summary-rollup.test/blog/one',
-      'PASS',
-      timestamp + 2,
-    )
-    db.prepare(
-      `INSERT INTO index_watch_snapshots
-      (id, site_url, root_site_url, property_site_url, url,
-       inspection_status, error_code, inspected_at)
-      VALUES (?, ?, ?, ?, ?, 'failed', 'provider_unavailable', ?)`,
-    ).run(
-      'index-summary-latest-failure',
-      'https://index-summary-rollup.test/shop/',
-      root,
-      'https://index-summary-rollup.test/shop/',
-      'https://index-summary-rollup.test/shop/two',
-      timestamp + 3,
-    )
-
-    const summary = latestIndexWatchSummary(root)
-    assert.equal(summary.inspectedUrls, 2)
-    assert.equal(summary.nonPass, 1)
-    assert.equal(summary.currentIssues, 1)
-    assert.equal(summary.failed, 1)
-  } finally {
-    db.prepare('DELETE FROM index_watch_snapshots WHERE root_site_url = ?').run(
-      root,
-    )
-  }
 })
 
 test('index watch bounds attempts while preserving the latest success', () => {

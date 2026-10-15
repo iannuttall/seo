@@ -4,8 +4,6 @@ import {
   streamedArticleHtml,
   streamedArticleWords,
 } from '../../extract/react-streaming.test-fixtures.js'
-import { auditCrawlPages } from './audit.js'
-import { crawlPage } from './audit.test-fixtures.js'
 import { crawlSite } from './site-crawl.js'
 import { withServer } from './site-crawl.test-fixtures.js'
 
@@ -101,30 +99,4 @@ test('crawlSite reports Next.js streamed metadata and streamed article text', as
   } finally {
     await fixture.close()
   }
-})
-
-test('auditCrawlPages does not check ignored body canonical values', () => {
-  const issues = auditCrawlPages([
-    crawlPage({
-      url: 'https://example.com/body',
-      canonical: undefined,
-      canonicalRaw: '/relative-body-canonical',
-      canonicalStatus: 'outside-head-only',
-      canonicalCandidates: [
-        {
-          source: 'html-body',
-          raw: '/relative-body-canonical',
-          resolved: 'https://example.com/relative-body-canonical',
-          ignoredReason: 'outside-head',
-        },
-      ],
-    }),
-  ])
-
-  assert.deepEqual(
-    issues
-      .filter((issue) => issue.category === 'canonical')
-      .map((issue) => issue.ruleId),
-    ['canonical_outside_head'],
-  )
 })

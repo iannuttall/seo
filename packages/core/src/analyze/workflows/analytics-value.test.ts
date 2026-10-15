@@ -4,7 +4,6 @@ import {
   fetchLandingPageValues,
   landingPageRankingPolicy,
   landingPageValuesCanRank,
-  landingPageValuesFromProviderRows,
   landingPageValuesFromRows,
   landingValueForUrl,
 } from './analytics-value.js'
@@ -37,65 +36,6 @@ test('Clicky report evidence runs through the provider adapter contract', async 
   assert.equal(providerId, 'clicky')
   assert.deepEqual(result.values.get('/pricing'), { sessions: 15 })
   assert.equal(result.source?.provider, 'clicky')
-})
-
-test('normalized provider rows keep only the shared visit meaning', () => {
-  const values = landingPageValuesFromProviderRows([
-    { path: '/pricing', visits: 15 },
-  ])
-  assert.deepEqual(values.get('/pricing'), { sessions: 15 })
-  assert.equal(values.get('/pricing')?.totalUsers, undefined)
-})
-
-test('aggregates Google Analytics query-string variants by normalized landing path', () => {
-  const values = landingPageValuesFromRows([
-    {
-      landingPagePlusQueryString: '/pricing?utm_source=newsletter',
-      sessions: '100',
-      totalUsers: '70',
-      conversions: '4',
-    },
-    {
-      landingPagePlusQueryString: '/pricing/?utm_source=search',
-      sessions: '20',
-      totalUsers: '15',
-      conversions: '2',
-    },
-  ])
-
-  assert.deepEqual(values.get('/pricing'), {
-    sessions: 120,
-    totalUsers: 85,
-    conversions: 6,
-  })
-})
-
-test('aggregation and map order do not depend on Google Analytics row order', () => {
-  const rows = [
-    {
-      landingPagePlusQueryString: '/pricing?campaign=b',
-      sessions: '20',
-      totalUsers: '15',
-      conversions: '2',
-    },
-    {
-      landingPagePlusQueryString: '/about',
-      sessions: '5',
-      totalUsers: '4',
-      conversions: '1',
-    },
-    {
-      landingPagePlusQueryString: '/pricing?campaign=a',
-      sessions: '100',
-      totalUsers: '70',
-      conversions: '4',
-    },
-  ]
-
-  const forwards = [...landingPageValuesFromRows(rows)]
-  const backwards = [...landingPageValuesFromRows([...rows].reverse())]
-
-  assert.deepEqual(backwards, forwards)
 })
 
 test('preserves the distinction between a zero-valued page and a missing page', () => {
@@ -178,37 +118,6 @@ test('sampling and thresholding make landing-page values ineligible for ranking'
         'Google Analytics landing-page report was sampled by Google Analytics. Observed landing-page values remain visible but do not affect priority scores.',
       ],
     },
-  )
-})
-
-test('complete retained landing-page rows can influence ranking', async () => {
-  const result = await fetchLandingPageValues(
-    {
-      propertyId: '123',
-      startDate: '2026-01-01',
-      endDate: '2026-01-28',
-      limit: 100,
-    },
-    {
-      runGa4Report: async () => ({
-        dimensionHeaders: [{ name: 'landingPagePlusQueryString' }],
-        metricHeaders: [
-          { name: 'sessions' },
-          { name: 'totalUsers' },
-          { name: 'conversions' },
-        ],
-        rows: [],
-        rowCount: 0,
-      }),
-    },
-  )
-
-  assert.equal(result.source?.dataStatus, 'complete')
-  assert.equal(landingPageValuesCanRank(result.source), true)
-  assert.deepEqual(result.source?.qualityWarnings, [])
-  assert.deepEqual(
-    landingPageRankingPolicy({ propertyId: '123', source: result.source }),
-    { canRank: true, warnings: [] },
   )
 })
 

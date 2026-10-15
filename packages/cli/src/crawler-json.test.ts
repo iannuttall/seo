@@ -379,7 +379,9 @@ test('crawler CLI exposes the fast sitemap health pass and JUnit output', async 
     assert.ok(userAgents.length > 0)
     assert.ok(
       userAgents.every((value) =>
-        /^SEO-Skill\/\d+\.\d+\.\d+ \(\+https:\/\/seoskill\.dev\)$/.test(value),
+        /^SEO-Skill\/\d+\.\d+\.\d+(-[\w.]+)? \(\+https:\/\/seoskill\.dev\)$/.test(
+          value,
+        ),
       ),
       `Unexpected crawler user-agent: ${JSON.stringify(userAgents)}`,
     )

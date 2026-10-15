@@ -28,39 +28,67 @@ pnpm deploy:web:dry-run
   and return partial or capped states rather than hiding them. The Astro
   integration writes Markdown alternatives during the build. Cloudflare zone
   Transform Rules handle `Accept: text/markdown` requests. Do not add an
-  account system, remote MCP server, cookies, or another hosted product
-  surface without an explicit product decision.
+  account system, cookies, analytics, or another hosted product surface
+  without an explicit product decision. The hosted MCP at
+  `seoskill.dev/mcp` is a separate Worker in `apps/mcp`; it owns `/mcp`,
+  `/mcp/*`, `/oauth/*` and `/.well-known/oauth-*`, so the site must never
+  publish pages on those paths.
 - Keep canonical metadata, structured data, navigation, and footer markup in
-  `src/layouts/BaseLayout.astro`. Marketing, docs, reports, policy pages, and
-  the 404 page all use that layout.
-- Docs are a custom Astro content collection in `src/content/docs/docs/`.
-  Navigation lives in `src/content/docs-nav.ts`; shared MDX components live in
+  `src/layouts/BaseLayout.astro`, with the shared `Header.astro` and
+  `Footer.astro`. The home page, docs, tools, stats, policy pages, and the
+  404 page all use that layout.
+- Docs are an Astro content collection of MDX files in `src/content/docs/`.
+  The reading order, docs index groups, breadcrumbs, previous and next
+  links, sitemap, and llms.txt all come from `src/content/docs-nav.mjs`. Each
+  of the eight commands has one page under `/docs/commands/`. The `seo index`
+  page lives at `/docs/commands/indexing` because Cloudflare folds any
+  `/index` path into its parent. Shared MDX components live in
   `src/components/docs/`.
-- Brand tokens and all shared typography live in `src/styles/globals.css`.
-  Match the current site system: Martian Grotesk for prose, Martian Mono for
-  code and headings, an orange accent, automatic light/dark mode, the shared
-  `max-w-4xl` reading frame, hard borders, and dotted offset shadows.
-- Reuse the site components before writing page-specific markup. Page headers
-  use `PageHeader.astro`, framed surfaces use `DottedCard.astro`, navigation
-  cards use `NavCard.astro`, accordions use `FaqAccordion.astro`, and copyable
-  examples use `docs/CopyCode.astro` or `InlineCode.astro`. Extend a shared
-  component when the same visual pattern needs richer content. Do not recreate
-  these patterns with one-page border, spacing, or interaction code.
-- Documentation tables use the shared `docs-prose` table styling inside a
-  `table-frame`. Documentation and report sections use the established heading
-  scale and vertical rhythm from `ReportGuide.astro`. Do not invent separate
-  table, heading, metric-card, or code-block treatments for a new page.
+- The design system is copied from Ian's ilo web app. Tokens and shared
+  typography live in `src/styles/globals.css`: Inter for text, JetBrains
+  Mono for code, neutral oklch surfaces, one cyan primary, automatic light
+  and dark mode, and one `--frame-max` (48rem) page frame applied with the
+  `site-frame` class. Surfaces are soft `bg-muted` panels with rounded
+  corners, not borders or shadows. Do not bring back the old brutalist
+  look (Martian fonts, orange accent, hard borders, dotted shadows).
+- Reuse the site components before writing page-specific markup. Page
+  headers use `PageHeader.astro`, section intros use `SectionHeading.astro`,
+  icon cards use `HomeCard.astro` with Hugeicons through `HugeIcon.astro`,
+  framed tool surfaces use `Card.astro`, buttons use `Button.astro` or
+  `getButtonClasses` from `components/ui/button.ts`, accordions use
+  `FaqAccordion.astro`, copyable examples use `CodeBlock.astro`, and the
+  one-click MCP and CLI commands use `SetupCommands.astro`. Extend a shared
+  component when the same visual pattern needs richer content. Do not
+  recreate these patterns with one-page border, spacing, or interaction
+  code.
+- Documentation tables and code blocks use the shared `docs-prose` styling.
+  Markdown code blocks get their copy button from
+  `scripts/rehype-code-frame.mjs`. Do not invent separate table, heading,
+  metric-card, or code-block treatments for a new page.
+- Report ids live in `src/content/telemetry/report-ids.mjs`. The Worker
+  accepts every id in that list for anonymous telemetry, because installed
+  older clients keep sending them, so never remove an id. The same file maps
+  each id to the command page that covers it, and
+  `scripts/build-redirects.mjs` turns that map into permanent redirects in
+  `public/_redirects`.
 - Keep canonical URLs slashless through `src/lib/urls.ts`, Astro config, and
   Wrangler asset handling.
 - Generate exact sitemap XML into `public/` with
   `scripts/build-sitemap.mjs`. `/sitemap.xml` is the only sitemap.
-- Render privacy, terms, security, and trademark copy from the canonical
-  repository Markdown files. Do not duplicate those policies in site pages.
+- Render privacy and terms copy from the canonical repository Markdown
+  files. Do not duplicate those policies in site pages. The site has no
+  security or trademark page: `/security` redirects to the GitHub security
+  policy and `/trademarks` to the home page.
 - Questions and ordinary support go to GitHub Issues. Vulnerabilities go to
   GitHub private vulnerability reporting. Do not add an email address.
 - Teach the published package path first: `npm i -g seo`, then `seo start`.
   Keep source-build instructions lower down.
-- Do not document a hosted service or remote MCP until it exists.
+- Teach the hosted MCP next to the CLI: `claude mcp add --transport http
+  seoskill https://seoskill.dev/mcp`, `codex mcp add seoskill --url
+  https://seoskill.dev/mcp`, or the URL as a remote MCP server. Keep hosted
+  facts in step with `apps/mcp/README.md`: Google sign-in, nothing stored,
+  keys never stored. Wherever Domain Rating appears, credit it as Domain
+  Rating by Ahrefs with a link to ahrefs.com.
 - Generate `/.well-known/agent-skills/` from the root `skills/` directory.
   Never hand-edit or commit the generated files.
 - Use plain, human copy with sentence-case headings. Lead with the outcome,
@@ -69,14 +97,10 @@ pnpm deploy:web:dry-run
   product vocabulary, instructions, report pages, and SEO copy.
 - Do not expose report-contract or implementation language in public copy.
   Field names, implementation limits and registry terminology belong in agent
-  or developer output. Shared data caveats live on the reports overview. A
-  report page only adds a short limitation when it changes how that specific
-  result should be used.
-- Keep client-side JavaScript limited to real interactions: install tabs,
-  copy buttons, accordions, and the example report panel.
-- The home page example panels (`src/components/FeatureShowcase.astro` and
-  `src/components/FeatureDemo.astro`) must only show real commands from the
-  shipped CLI catalog and stay labelled as example data.
+  or developer output. A command page only adds a short limitation when it
+  changes how that specific result should be used.
+- Keep client-side JavaScript limited to real interactions: setup tabs,
+  copy buttons, accordions, the stats loader, and the free tools.
 - After a visual change, inspect the rendered desktop and mobile pages. Passing
   an Astro build is not a substitute for checking layout, wrapping, spacing,
   component reuse, and dark mode.

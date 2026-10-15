@@ -1,22 +1,22 @@
 ---
 import Button from '@/components/Button.astro'
-import DottedCard from '@/components/DottedCard.astro'
+import Card from '@/components/Card.astro'
 import FormSelect from '@/components/FormSelect.astro'
 import { SCHEMA_GENERATOR_TYPES } from '@/lib/schema-markup'
 import SchemaFieldControl from './SchemaFieldControl.astro'
 ---
 
 <section data-schema-generator class="space-y-6">
-  <DottedCard patternId="schema-generator-form">
+  <Card>
     <div class="space-y-5 p-5 sm:p-6">
       <div class="space-y-1">
-        <h2 class="font-mono text-lg font-normal">Configure the page markup</h2>
-        <p class="font-sans text-sm font-light leading-6 text-foreground-muted">
+        <h2 class="text-lg font-medium">Configure the page markup</h2>
+        <p class="text-sm leading-6 text-foreground-muted">
           Choose the page type, then enter only information that visitors can see on the page.
         </p>
       </div>
 
-      <label class="block space-y-2 font-sans text-sm font-medium">
+      <label class="block space-y-2 text-sm font-medium">
         <span>Schema type</span>
         <FormSelect data-schema-type>
           {
@@ -27,10 +27,10 @@ import SchemaFieldControl from './SchemaFieldControl.astro'
         </FormSelect>
       </label>
 
-      <div class="border border-border bg-background-subtle p-4">
-        <strong data-type-name class="font-mono text-sm font-normal"></strong>
-        <p data-type-description class="mt-1 font-sans text-xs font-light leading-5 text-foreground-muted"></p>
-        <p data-type-caveat hidden class="mt-2 font-sans text-xs font-medium leading-5 text-amber-800 dark:text-amber-300"></p>
+      <div class="rounded-lg bg-muted p-4">
+        <strong data-type-name class="text-sm font-medium"></strong>
+        <p data-type-description class="mt-1 text-xs leading-5 text-foreground-muted"></p>
+        <p data-type-caveat hidden class="mt-2 text-xs font-medium leading-5 text-amber-800 dark:text-amber-300"></p>
       </div>
 
       {
@@ -56,7 +56,7 @@ import SchemaFieldControl from './SchemaFieldControl.astro'
                 >
                   <div data-repeater={repeater.name} class="space-y-3">
                     {Array.from({ length: repeater.minimum }, (_, index) => (
-                      <fieldset data-repeat-row={index} class="space-y-4 border border-border bg-background-subtle p-4">
+                      <fieldset data-repeat-row={index} class="space-y-4 rounded-lg bg-muted p-4">
                         <div class="flex items-center justify-between gap-3">
                           <legend data-repeat-legend class="font-mono text-xs">
                             {repeater.label} {index + 1}
@@ -80,7 +80,7 @@ import SchemaFieldControl from './SchemaFieldControl.astro'
                     {repeater.addLabel}
                   </Button>
                   <template data-repeat-template={repeater.name}>
-                    <fieldset data-repeat-row="__INDEX__" class="space-y-4 border border-border bg-background-subtle p-4">
+                    <fieldset data-repeat-row="__INDEX__" class="space-y-4 rounded-lg bg-muted p-4">
                       <div class="flex items-center justify-between gap-3">
                         <legend data-repeat-legend class="font-mono text-xs">{repeater.label}</legend>
                         <Button data-remove-row type="button" class="px-3 py-2 text-xs">Remove</Button>
@@ -102,24 +102,24 @@ import SchemaFieldControl from './SchemaFieldControl.astro'
         ))
       }
     </div>
-  </DottedCard>
+  </Card>
 
-  <DottedCard patternId="schema-generator-output" inverted>
+  <Card inverted>
     <div class="space-y-5 p-5 sm:p-6">
       <div class="space-y-1">
-        <h2 class="font-mono text-lg font-normal">Generated JSON-LD</h2>
-        <p data-validation-summary class="font-sans text-xs font-light leading-5 text-panel-foreground/70"></p>
+        <h2 class="text-lg font-medium">Generated JSON-LD</h2>
+        <p data-validation-summary class="text-xs leading-5 text-foreground-muted"></p>
       </div>
-      <pre class="max-h-[42rem] min-h-72 overflow-auto border border-panel-foreground/30 bg-black/20 p-4 text-xs leading-6"><code data-output></code></pre>
+      <pre class="max-h-[42rem] min-h-72 overflow-auto border border-border bg-black/20 p-4 text-xs leading-6"><code data-output></code></pre>
       <div class="flex flex-wrap gap-2">
         <Button data-validate-generated type="button" class="px-3 py-2.5 text-xs">Validate this markup</Button>
         <Button data-copy-script type="button" class="px-3 py-2.5 text-xs">Copy script</Button>
         <Button data-copy-json type="button" class="px-3 py-2.5 text-xs">Copy JSON</Button>
         <Button data-download type="button" class="px-3 py-2.5 text-xs">Download JSON-LD</Button>
       </div>
-      <p data-action-status class="font-sans text-xs font-light leading-5 text-panel-foreground/65" aria-live="polite"></p>
+      <p data-action-status class="text-xs leading-5 text-foreground-muted" aria-live="polite"></p>
     </div>
-  </DottedCard>
+  </Card>
 </section>
 
 <script>

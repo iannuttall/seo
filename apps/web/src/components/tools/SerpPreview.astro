@@ -1,6 +1,6 @@
 ---
 import Button from '@/components/Button.astro'
-import DottedCard from '@/components/DottedCard.astro'
+import Card from '@/components/Card.astro'
 import FormInput from '@/components/FormInput.astro'
 import FormSelect from '@/components/FormSelect.astro'
 import FormTextarea from '@/components/FormTextarea.astro'
@@ -13,12 +13,12 @@ import {
 ---
 
 <section data-serp-preview class="space-y-6">
-  <DottedCard patternId="serp-preview-input">
+  <Card>
     <form data-serp-form class="space-y-6 p-5 sm:p-6">
       <div class="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
         <div class="space-y-1">
-          <h2 class="font-mono text-lg font-normal">Draft the search result</h2>
-          <p class="font-sans text-sm font-light leading-6 text-foreground-muted">The preview measures rendered text width. Google can still create a different title link or snippet for a specific search.</p>
+          <h2 class="text-lg font-medium">Draft the search result</h2>
+          <p class="text-sm leading-6 text-foreground-muted">The preview measures rendered text width. Google can still create a different title link or snippet for a specific search.</p>
         </div>
         <div class="flex gap-2">
           <Button data-use-example type="button" class="px-3 py-2 text-xs">Use example</Button>
@@ -27,39 +27,39 @@ import {
       </div>
 
       <div class="grid gap-4 sm:grid-cols-2">
-        <label class="space-y-2 font-sans text-sm font-medium sm:col-span-2">
+        <label class="space-y-2 text-sm font-medium sm:col-span-2">
           <span>Page URL</span>
           <div class="flex flex-col gap-2 sm:flex-row">
-            <FormInput data-url class="min-h-12 flex-1" type="url" maxlength={SERP_PREVIEW_LIMITS.urlCharacters} placeholder="https://example.com/guides/field-notes" autocapitalize="none" spellcheck="false" />
-            <Button data-load-page type="button" class="min-h-12 shrink-0 px-5 text-xs">Load page</Button>
+            <FormInput data-url class="min-h-10 flex-1" type="url" maxlength={SERP_PREVIEW_LIMITS.urlCharacters} placeholder="https://example.com/guides/field-notes" autocapitalize="none" spellcheck="false" />
+            <Button data-load-page type="button" class="min-h-10 shrink-0 px-5 text-xs">Load page</Button>
           </div>
-          <span data-load-status hidden class="block text-xs font-light leading-5 text-foreground-muted" role="status" aria-live="polite"></span>
+          <span data-load-status hidden class="block text-xs leading-5 text-foreground-muted" role="status" aria-live="polite"></span>
         </label>
-        <label class="space-y-2 font-sans text-sm font-medium">
+        <label class="space-y-2 text-sm font-medium">
           <span>Site name</span>
           <FormInput data-site-name type="text" maxlength="100" placeholder="Field Journal" />
         </label>
-        <label class="space-y-2 font-sans text-sm font-medium">
+        <label class="space-y-2 text-sm font-medium">
           <span>Preview size</span>
           <FormSelect data-device>
             {SERP_PREVIEW_DEVICES.map((choice) => <option value={choice.value}>{choice.label}</option>)}
           </FormSelect>
         </label>
-        <label class="space-y-2 font-sans text-sm font-medium sm:col-span-2">
+        <label class="space-y-2 text-sm font-medium sm:col-span-2">
           <span>Title tag</span>
           <FormInput data-title type="text" maxlength={SERP_PREVIEW_LIMITS.titleCharacters} placeholder="Coastal field notes and recording guide" />
-          <span data-title-status class="block text-xs font-light text-foreground-muted" aria-live="polite"></span>
+          <span data-title-status class="block text-xs text-foreground-muted" aria-live="polite"></span>
         </label>
-        <label class="space-y-2 font-sans text-sm font-medium sm:col-span-2">
+        <label class="space-y-2 text-sm font-medium sm:col-span-2">
           <span>Meta description</span>
           <FormTextarea data-description class="min-h-28" maxlength={SERP_PREVIEW_LIMITS.descriptionCharacters} placeholder="Record coastal wildlife with a practical checklist for locations, weather, equipment, and verified observations." />
-          <span data-description-status class="block text-xs font-light text-foreground-muted" aria-live="polite"></span>
+          <span data-description-status class="block text-xs text-foreground-muted" aria-live="polite"></span>
         </label>
-        <label class="space-y-2 font-sans text-sm font-medium">
-          <span>Words to emphasize <span class="font-light text-foreground-muted">(optional)</span></span>
+        <label class="space-y-2 text-sm font-medium">
+          <span>Words to emphasize <span class="text-foreground-muted">(optional)</span></span>
           <FormInput data-query type="text" maxlength={SERP_PREVIEW_LIMITS.queryCharacters} placeholder="coastal field notes" />
         </label>
-        <label class="space-y-2 font-sans text-sm font-medium">
+        <label class="space-y-2 text-sm font-medium">
           <span>Result details</span>
           <FormSelect data-addition>
             {SERP_PREVIEW_ADDITIONS.map((choice) => <option value={choice.value}>{choice.label}</option>)}
@@ -67,16 +67,16 @@ import {
         </label>
       </div>
 
-      <p class="font-sans text-xs font-light leading-5 text-foreground-muted">Your edits stay in this browser tab. Loading a page sends its URL to this server so it can read the public HTML and favicon. Pixel budgets are preview guides, not limits published by Google.</p>
+      <p class="text-xs leading-5 text-foreground-muted">Your edits stay in this browser tab. Loading a page sends its URL to this server so it can read the public HTML and favicon. Pixel budgets are preview guides, not limits published by Google.</p>
     </form>
-  </DottedCard>
+  </Card>
 
-  <DottedCard patternId="serp-preview-result">
+  <Card>
     <div class="space-y-5 p-5 sm:p-6">
       <div class="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
         <div class="space-y-1">
-          <h2 class="font-mono text-lg font-normal">Search result preview</h2>
-          <p class="font-sans text-xs font-light leading-5 text-foreground-muted">This is a drafting aid. Google can choose different text for each search.</p>
+          <h2 class="text-lg font-medium">Search result preview</h2>
+          <p class="text-xs leading-5 text-foreground-muted">This is a drafting aid. Google can choose different text for each search.</p>
         </div>
         <Button data-copy-tags type="button" class="px-4 py-2.5 text-xs">Copy HTML tags</Button>
       </div>
@@ -143,9 +143,9 @@ import {
         </div>
       </div>
 
-      <pre data-meta-output class="overflow-auto whitespace-pre-wrap border border-border bg-background-subtle p-4 font-mono text-xs leading-6"></pre>
+      <pre data-meta-output class="overflow-auto whitespace-pre-wrap rounded-lg bg-muted p-4 font-mono text-xs leading-6"></pre>
     </div>
-  </DottedCard>
+  </Card>
 </section>
 
 <style>

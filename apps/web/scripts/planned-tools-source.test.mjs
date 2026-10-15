@@ -9,25 +9,19 @@ const webRoot = resolve(fileURLToPath(new URL('..', import.meta.url)))
 const tools = [
   {
     file: 'SeoReportTemplateBuilder.astro',
-    components: ['Button', 'DottedCard', 'FormInput', 'FormSelect'],
+    components: ['Button', 'Card', 'FormInput', 'FormSelect'],
   },
   {
     file: 'HreflangGenerator.astro',
-    components: ['Button', 'DottedCard', 'FormInput', 'FormSelect'],
+    components: ['Button', 'Card', 'FormInput', 'FormSelect'],
   },
   {
     file: 'SerpPreview.astro',
-    components: [
-      'Button',
-      'DottedCard',
-      'FormInput',
-      'FormSelect',
-      'FormTextarea',
-    ],
+    components: ['Button', 'Card', 'FormInput', 'FormSelect', 'FormTextarea'],
   },
   {
     file: 'CanonicalChecker.astro',
-    components: ['Button', 'DottedCard', 'FormInput', 'FormTextarea'],
+    components: ['Button', 'Card', 'FormInput', 'FormTextarea'],
   },
 ]
 
@@ -43,6 +37,6 @@ for (const tool of tools) {
     }
     assert.doesNotMatch(source, /<select\b/u)
     assert.doesNotMatch(source, /lg:grid-cols-2/u)
-    assert.equal(source.match(/<DottedCard\b/gu)?.length, 2)
+    assert.equal(source.match(/<Card\b/gu)?.length, 2)
   })
 }

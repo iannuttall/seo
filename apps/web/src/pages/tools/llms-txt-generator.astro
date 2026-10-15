@@ -38,7 +38,6 @@ const breadcrumbs: SchemaBreadcrumb[] = [
     <PageHeader
       title="llms.txt generator"
       description="Start with a sitemap or add links yourself, choose the pages an agent should read first, then copy or download an llms.txt file."
-      align="left"
     />
 
     <LlmsTxtGenerator />
@@ -72,27 +71,18 @@ const breadcrumbs: SchemaBreadcrumb[] = [
         {' '}for that distinction.
       </p>
 
-      <h2>Generate a draft from a real crawl</h2>
+      <h2>Choose the pages yourself</h2>
       <p>
         This web tool reads URLs from the sitemap files you submit. It does not
-        crawl the pages or decide which ones matter. If you want automatic page
-        selection from indexable crawl evidence, install the package and use the{' '}
-        <a href="/docs/reports/llms-txt-generator">crawl-driven llms.txt generator</a>.
-        Review the selected URLs before publishing either result.
+        crawl the pages or decide which ones matter, so review the selected URLs
+        before you publish the file.
       </p>
-      <pre><code>npm i -g seo
-seo start
-seo llms generate --project example --output llms.txt</code></pre>
 
       <h2>Check the published file</h2>
       <p>
-        Check the Markdown shape first with the{' '}
-        <a href="/tools/llms-txt-validator">llms.txt validator</a>. After
-        publishing, run the{' '}
-        <a href="/docs/reports/llms-txt-audit">llms.txt audit</a> to check the
-        response, content type, links, redirects, duplicates, and crawl coverage.
-        The audit records those observations without turning the optional file
-        into a search requirement.
+        Check the Markdown shape with the{' '}
+        <a href="/tools/llms-txt-validator">llms.txt validator</a> before and
+        after you publish it.
       </p>
     </div>
   </main>

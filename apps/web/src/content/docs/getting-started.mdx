@@ -1,0 +1,63 @@
+---
+title: Getting started
+description: Connect the free hosted MCP or install the seo CLI, sign in with Google, and ask your agent for your first SEO report.
+lead: Connect the hosted MCP or install the CLI, sign in with Google, and ask your agent for the SEO report. It takes about a minute.
+---
+
+## What you need
+
+- A Google account that can see at least one Search Console property.
+- An AI agent that supports MCP, such as Claude Code, Codex or Cursor.
+- For the CLI only: a terminal with Node 22 or newer.
+
+Google Analytics, other analytics tools and keyword data are optional. You can add them later.
+
+## Pick the hosted MCP or the CLI
+
+Both run the same reports and return the same facts. The hosted MCP is the quickest start. The CLI runs on your machine and adds a site crawl and internal links.
+
+| | Hosted MCP | CLI |
+| --- | --- | --- |
+| Install | Nothing | `npm i -g seo && seo start` |
+| Where it runs | seoskill.dev | Your machine |
+| Sign in | Google, in your browser | Google, during `seo start` |
+| Crawl and internal links | No | Yes |
+| What it keeps | Nothing | Local files on your machine |
+
+## Connect the hosted MCP
+
+Pick your agent and copy the command. Each one adds the server and opens the Google sign-in the first time it connects.
+
+<SetupCommands id="getting-started-setup" />
+
+The [hosted MCP guide](/docs/mcp) covers other clients, the tools and how sign-in works.
+
+## Or install the CLI
+
+Install the package and run setup in one line:
+
+```sh
+npm i -g seo && seo start
+```
+
+Setup signs you in with Google, saves a project for your site, and can add the skill and MCP server to your agents (if you skip that step, you can add them later). The [CLI guide](/docs/cli) explains each choice. For cloud agents and CI machines that start fresh each time, follow the [cloud agents guide](/docs/cloud-agents) instead.
+
+## Ask for your first report
+
+Ask your agent in plain words:
+
+```text
+Run the SEO report for example.com
+```
+
+The agent calls the report without a section first. You get an overview of clicks, impressions, click-through rate and position against the previous period, plus a count and the top rows for each section. Then ask for the section that looks interesting:
+
+```text
+Show me the quick wins for example.com
+```
+
+## Facts, not advice
+
+Every result says what the data shows, such as a page at position 6 with a click-through rate below your site's own curve. It does not tell you what to change. Your agent shows you the facts and you decide what to do with them.
+
+Start with the [SEO report](/docs/report), then use the [other commands](/docs#docs-commands) when you have a narrower question.

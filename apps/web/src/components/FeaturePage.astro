@@ -1,0 +1,56 @@
+---
+import Breadcrumbs from '@/components/Breadcrumbs.astro'
+import HomeCard from '@/components/HomeCard.astro'
+import PageHeader from '@/components/PageHeader.astro'
+import SetupCommands from '@/components/SetupCommands.astro'
+import BaseLayout from '@/layouts/BaseLayout.astro'
+import type { SchemaBreadcrumb } from '@/lib/schema'
+
+type Related = {
+  title: string
+  text: string
+  href: string
+  icon: Parameters<typeof HomeCard>[0]['icon']
+}
+
+type Props = {
+  title: string
+  description: string
+  path: string
+  lead: string
+  related: Related[]
+}
+
+const { title, description, path, lead, related } = Astro.props
+const breadcrumbs: SchemaBreadcrumb[] = [
+  { label: 'Home', href: '/' },
+  { label: 'Features', href: '/features' },
+  { label: title.replace(/ for AI agents$/, '') },
+]
+---
+
+<BaseLayout
+  {title}
+  {description}
+  canonicalPath={path}
+  {breadcrumbs}
+>
+  <main data-agent-content>
+    <Breadcrumbs {breadcrumbs} />
+
+    <PageHeader {title} description={lead} />
+
+    <SetupCommands id="feature-setup" />
+
+    <article class="docs-prose mt-14 min-w-0">
+      <slot />
+    </article>
+
+    <section class="mt-16" aria-labelledby="related-docs">
+      <h2 id="related-docs" class="text-2xl/8 font-medium tracking-normal">Read the docs</h2>
+      <div class="mt-6 grid grid-cols-1 gap-2 sm:grid-cols-2">
+        {related.map((item) => <HomeCard {...item} />)}
+      </div>
+    </section>
+  </main>
+</BaseLayout>

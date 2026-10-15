@@ -8,60 +8,38 @@ import { fileURLToPath } from 'node:url'
 const appRoot = resolve(dirname(fileURLToPath(import.meta.url)), '..')
 const repoRoot = resolve(appRoot, '../..')
 const dist = resolve(appRoot, 'dist')
-const { reportIds: routeReportIds } = await import(
-  resolve(appRoot, 'src/content/reports/manifest.mjs')
-)
+const {
+  legacyReportAliases,
+  reportCommands,
+  reportDestination,
+  reportIds,
+  reportSlugs,
+} = await import(resolve(appRoot, 'src/content/telemetry/report-ids.mjs'))
 const { tools } = await import(
   resolve(appRoot, 'src/content/tools/manifest.mjs')
 )
+const { docsPaths } = await import(resolve(appRoot, 'src/content/docs-nav.mjs'))
+const pagePath = (path) =>
+  path === '/' ? 'index.html' : `${path.slice(1)}/index.html`
 const expectedPages = new Map([
   ['index.html', 'https://seoskill.dev'],
-  ['features/index.html', 'https://seoskill.dev/features'],
-  ['features/mcp/index.html', 'https://seoskill.dev/features/mcp'],
-  ['features/seo-audit/index.html', 'https://seoskill.dev/features/seo-audit'],
-  [
-    'features/search-console/index.html',
-    'https://seoskill.dev/features/search-console',
-  ],
-  [
-    'features/keyword-research/index.html',
-    'https://seoskill.dev/features/keyword-research',
-  ],
+  ...[
+    '/features',
+    '/features/mcp',
+    '/features/search-console',
+    '/features/keyword-research',
+    '/features/seo-audit',
+  ].map((path) => [pagePath(path), `https://seoskill.dev${path}`]),
   ['tools/index.html', 'https://seoskill.dev/tools'],
   ...tools.map((tool) => [
     `${tool.path.slice(1)}/index.html`,
     `https://seoskill.dev${tool.path}`,
   ]),
-  ['docs/index.html', 'https://seoskill.dev/docs'],
-  [
-    'docs/getting-started/index.html',
-    'https://seoskill.dev/docs/getting-started',
-  ],
-  ['docs/cli/index.html', 'https://seoskill.dev/docs/cli'],
-  ['docs/crawler/index.html', 'https://seoskill.dev/docs/crawler'],
-  ['docs/google/index.html', 'https://seoskill.dev/docs/google'],
-  ['docs/html-reports/index.html', 'https://seoskill.dev/docs/html-reports'],
-  ['docs/indexnow/index.html', 'https://seoskill.dev/docs/indexnow'],
-  ['docs/typescript/index.html', 'https://seoskill.dev/docs/typescript'],
-  ['docs/mcp/index.html', 'https://seoskill.dev/docs/mcp'],
-  ['docs/reports/index.html', 'https://seoskill.dev/docs/reports'],
-  ['docs/skill/index.html', 'https://seoskill.dev/docs/skill'],
-  ['docs/agents/index.html', 'https://seoskill.dev/docs/agents'],
-  ['docs/ai-search/index.html', 'https://seoskill.dev/docs/ai-search'],
-  ['docs/ai-visibility/index.html', 'https://seoskill.dev/docs/ai-visibility'],
-  ['docs/bing/index.html', 'https://seoskill.dev/docs/bing'],
-  ['blog/index.html', 'https://seoskill.dev/blog'],
-  ['blog/seo-agent/index.html', 'https://seoskill.dev/blog/seo-agent'],
-  [
-    'blog/seo-mcp-servers/index.html',
-    'https://seoskill.dev/blog/seo-mcp-servers',
-  ],
+  ...docsPaths.map((path) => [pagePath(path), `https://seoskill.dev${path}`]),
   ['stats/index.html', 'https://seoskill.dev/stats'],
   ['telemetry/index.html', 'https://seoskill.dev/telemetry'],
   ['privacy/index.html', 'https://seoskill.dev/privacy'],
   ['terms/index.html', 'https://seoskill.dev/terms'],
-  ['security/index.html', 'https://seoskill.dev/security'],
-  ['trademarks/index.html', 'https://seoskill.dev/trademarks'],
   ['cookies/index.html', 'https://seoskill.dev/cookies'],
   ['404.html', 'https://seoskill.dev/404'],
 ])
@@ -146,7 +124,7 @@ test('build contains every public route with one complete SEO contract', () => {
 
 test('home prefixes the brand in its page and social titles', () => {
   const html = readFileSync(resolve(dist, 'index.html'), 'utf8')
-  const title = 'SEO Skill | Open source SEO audit tool for AI agents'
+  const title = 'SEO Skill | Free SEO data for AI agents'
 
   const escapedTitle = escapeRegExp(title)
 
@@ -159,7 +137,7 @@ test('home prefixes the brand in its page and social titles', () => {
     html,
     new RegExp(`<meta name="twitter:title" content="${escapedTitle}"`),
   )
-  assert.match(html, />The only SEO skill your agent needs<\/h1>/i)
+  assert.match(html, />\s*Give your AI agent your real SEO data\s*<\/h1>/i)
 })
 
 test('every non-home page suffixes the site name', () => {
@@ -171,38 +149,91 @@ test('every non-home page suffixes the site name', () => {
   }
 })
 
-test('built links keep whitespace before the following word', () => {
+test('internal links in the built pages are relative', () => {
+  // Canonical, Open Graph and JSON-LD URLs live in <head> and stay absolute,
+  // as do the sitemap, llms.txt and Markdown copies. Copyable commands are
+  // text, not links. Every link a person clicks on the site is a path.
+  const absolute = /<a\b[^>]*\shref="https?:\/\/(?:www\.)?seoskill\.dev[^"]*"/g
+  const failures = []
   for (const file of walkFiles(dist, (path) => path.endsWith('.html'))) {
-    const relativePath = file.slice(dist.length + 1)
-    assert.doesNotMatch(
-      readFileSync(file, 'utf8'),
-      /<\/a>[A-Za-z]/,
-      `${relativePath} joins a link to the following word`,
-    )
+    for (const match of readFileSync(file, 'utf8').matchAll(absolute)) {
+      failures.push(`${file.slice(dist.length + 1)}: ${match[0]}`)
+    }
   }
+  assert.deepEqual(failures, [])
+  assert.doesNotMatch(
+    readFileSync(resolve(dist, 'docs/keys/index.html'), 'utf8'),
+    /mcp\/keys/,
+  )
 })
 
-test('stats page uses the canonical report names', () => {
+test('built text keeps a space around inline elements', () => {
+  // A source line that ends in text and a next line that starts with an
+  // inline element (or the reverse) can lose the space between them. Scan
+  // the visible markup and the Markdown copies for words that touch.
+  const inline = 'a|code|strong|em|span|b|i'
+  const opening = new RegExp(`[A-Za-z0-9.,;:)]<(?:${inline})[\\s>]`, 'g')
+  const closing = new RegExp(`</(?:${inline})>[A-Za-z0-9(]`, 'g')
+  const failures = []
+
+  for (const file of walkFiles(dist, (path) => path.endsWith('.html'))) {
+    const visible = readFileSync(file, 'utf8').replace(
+      /<(script|style|pre|template|svg|textarea|head)\b[\s\S]*?<\/\1>/g,
+      '',
+    )
+    for (const pattern of [opening, closing]) {
+      for (const match of visible.matchAll(pattern)) {
+        failures.push(
+          `${file.slice(dist.length + 1)}: ${visible.slice(Math.max(0, match.index - 30), match.index + 30)}`,
+        )
+      }
+    }
+  }
+
+  const markdownJoins =
+    /[A-Za-z0-9.,;:)]\[[^\]\n]+\]\(|\]\([^)\s]+\)(?:[A-Za-z0-9(]|\[(?!\s))|[A-Za-z0-9]`[^`\s]+`|`[^`\s]+`[A-Za-z0-9(]/g
+  const markdownFiles = [
+    ...walkFiles(dist, (path) => path.endsWith('.md')),
+    resolve(dist, 'llms.txt'),
+  ]
+  for (const file of markdownFiles) {
+    const text = readFileSync(file, 'utf8').replace(/```[\s\S]*?```/g, '')
+    for (const match of text.matchAll(markdownJoins)) {
+      failures.push(
+        `${file.slice(dist.length + 1)}: ${text.slice(Math.max(0, match.index - 30), match.index + 30)}`,
+      )
+    }
+  }
+
+  assert.deepEqual(failures, [])
+})
+
+test('stats page maps every report id to the command that covers it', () => {
   const html = readFileSync(resolve(dist, 'stats/index.html'), 'utf8')
-  const encoded = html.match(/data-report-labels="([^"]+)"/)?.[1]
-  assert.ok(encoded, 'Missing report labels on the stats page.')
-  const labels = JSON.parse(
+  const encoded = html.match(/data-report-map="([^"]+)"/)?.[1]
+  assert.ok(encoded, 'Missing report map on the stats page.')
+  const map = JSON.parse(
     encoded.replaceAll('&quot;', '"').replaceAll('&amp;', '&'),
   )
 
-  assert.equal(labels['ai-readiness'], 'AI search readiness')
-  assert.equal(labels['ctr-underperformers'], 'CTR underperformers')
-  assert.equal(labels['affected-urls'], 'Affected URLs')
+  assert.deepEqual(Object.keys(map).sort(), [...reportIds].sort())
+  assert.deepEqual(map['ctr-underperformers'], {
+    command: 'seo report',
+    path: '/docs/report',
+  })
+  assert.deepEqual(map['affected-urls'], {
+    command: 'seo crawl',
+    path: '/docs/crawl',
+  })
+  assert.deepEqual(map['ai-readiness'], {
+    command: 'Removed reports',
+    path: '/docs',
+  })
+  assert.match(html, /data-command-table/)
 })
 
 test('legal and error pages are noindex but remain crawlable', () => {
-  for (const page of [
-    'privacy',
-    'terms',
-    'security',
-    'trademarks',
-    'cookies',
-  ]) {
+  for (const page of ['privacy', 'terms', 'cookies']) {
     const html = readFileSync(resolve(dist, page, 'index.html'), 'utf8')
     assert.match(html, /<meta name="robots" content="noindex, follow">/)
   }
@@ -238,11 +269,11 @@ test('every content page has one deterministic Markdown alternative', () => {
   assert.equal(
     manifest.pages.filter((page) => page.htmlPath.startsWith('/docs/reports/'))
       .length,
-    routeReportIds.length,
+    0,
   )
   assert.deepEqual(
     manifest.pages.filter((page) => page.noindex).map((page) => page.htmlPath),
-    ['/cookies', '/privacy', '/security', '/terms', '/trademarks'],
+    ['/cookies', '/privacy', '/terms'],
   )
   assert.equal(representedHtml.length, manifest.pages.length)
 
@@ -350,7 +381,10 @@ test('llms.txt is a short curated map generated from the route manifest', async 
       0,
     ),
   )
-  assert.doesNotMatch(actual, /Last generated|crawl id|\/privacy|\/terms/u)
+  assert.doesNotMatch(
+    actual,
+    /Last generated|crawl id|seoskill\.dev\/privacy|seoskill\.dev\/terms/u,
+  )
   assert.doesNotMatch(actual, /<urlset|<sitemapindex/u)
 
   const manifestMarkdown = new Set(
@@ -362,6 +396,7 @@ test('llms.txt is a short curated map generated from the route manifest', async 
     const url = new URL(href)
     if (url.pathname.startsWith('/.well-known/')) {
       assert.ok(existsSync(resolve(dist, url.pathname.slice(1))), href)
+    } else if (url.toString() === 'https://seoskill.dev/mcp') {
     } else {
       assert.ok(manifestMarkdown.has(url.toString()), href)
     }
@@ -417,7 +452,7 @@ test('every content page publishes one connected identity graph', () => {
   }
 })
 
-test('sitemap is exact and contains only indexable canonical pages', async () => {
+test('sitemap is exact and contains only indexable canonical pages', () => {
   const sitemap = readFileSync(resolve(dist, 'sitemap.xml'), 'utf8')
   const locations = matches(sitemap, /<loc>([^<]+)<\/loc>/g).map(
     (match) => match[1],
@@ -426,7 +461,6 @@ test('sitemap is exact and contains only indexable canonical pages', async () =>
     .filter(
       ([path]) =>
         path === 'index.html' ||
-        path.startsWith('blog/') ||
         path.startsWith('docs/') ||
         path.startsWith('features/') ||
         path.startsWith('tools/') ||
@@ -434,19 +468,9 @@ test('sitemap is exact and contains only indexable canonical pages', async () =>
         path === 'telemetry/index.html',
     )
     .map(([, canonical]) => canonical)
-  const { listReportDefinitions } = await import(
-    resolve(repoRoot, 'packages/mcp/dist/report-registry.js')
-  )
-  const { reportSlugs } = await import(
-    resolve(appRoot, 'src/content/reports/manifest.mjs')
-  )
-  indexable.push(
-    ...listReportDefinitions().map(
-      ({ id }) => `https://seoskill.dev/docs/reports/${reportSlugs[id] ?? id}`,
-    ),
-  )
 
   assert.deepEqual(locations.sort(), indexable.sort())
+  assert.doesNotMatch(sitemap, /\/docs\/reports\/|\/docs\/commands|\/blog/)
   assert.match(
     readFileSync(resolve(dist, 'robots.txt'), 'utf8'),
     /Sitemap: https:\/\/seoskill\.dev\/sitemap\.xml/,
@@ -457,226 +481,159 @@ test('sitemap is exact and contains only indexable canonical pages', async () =>
   )
 })
 
-test('report library covers the live registry and keeps legacy routes', async () => {
-  const { getReportDefinition, listReportDefinitions } = await import(
-    resolve(repoRoot, 'packages/mcp/dist/report-registry.js')
-  )
-  const { legacyReportAliases, reportIds, reportSlugs } = await import(
-    resolve(appRoot, 'src/content/reports/manifest.mjs')
-  )
-  const guideDirectory = resolve(appRoot, 'src/content/reports')
-  const guideSource = readdirSync(guideDirectory)
-    .filter((name) => /^guide-overrides-.+\.ts$/.test(name))
-    .sort()
-    .map((name) => readFileSync(resolve(guideDirectory, name), 'utf8'))
-    .join('\n')
-  const liveIds = listReportDefinitions()
-    .map(({ id }) => id)
-    .sort()
-  const catalogHtml = readFileSync(
-    resolve(dist, 'docs/reports/index.html'),
-    'utf8',
-  )
-  const homeHtml = readFileSync(resolve(dist, 'index.html'), 'utf8')
-
-  assert.deepEqual([...reportIds].sort(), liveIds)
-  assert.match(homeHtml, new RegExp(`${liveIds.length} reports and tools`))
-  assert.match(homeHtml, new RegExp(`Run ${liveIds.length} reports across`))
-  assert.equal(matches(guideSource, /^ {4}seo: \{/gm).length, liveIds.length)
-  assert.equal(
-    matches(guideSource, /^ {6}primaryKeyword: /gm).length,
-    liveIds.length,
-  )
-  assert.equal(
-    matches(guideSource, /^ {4}alternatives: \[/gm).length,
-    liveIds.length,
-  )
-  for (const [, reportId] of matches(guideSource, /reportId: '([^']+)'/g)) {
-    assert.ok(liveIds.includes(reportId), `Unknown alternative ${reportId}`)
-  }
-
-  for (const id of liveIds) {
-    const slug = reportSlugs[id] ?? id
-    const relativePath = `docs/reports/${slug}/index.html`
-    const html = readFileSync(resolve(dist, relativePath), 'utf8')
-    const markdown = readFileSync(
-      resolve(dist, `docs/reports/${slug}.md`),
-      'utf8',
-    )
-    const title = html.match(/<title>([^<]+)<\/title>/)?.[1]
-    const heading = html.match(/<h1[^>]*>([^<]+)<\/h1>/)?.[1]
-    const description = html.match(
-      /<meta name="description" content="([^"]+)"\s*\/?>/,
-    )?.[1]
-
-    assert.ok(title, id)
-    assert.ok(heading, id)
-    assert.match(markdown, new RegExp(`^# ${escapeRegExp(heading)}$`, 'm'), id)
-    assert.match(markdown, new RegExp(`seo reports describe ${id} --json`), id)
-    assert.match(markdown, new RegExp(`seo reports run ${id} --params`), id)
-    for (const usageHeading of ['CLI', 'MCP', 'TypeScript']) {
-      assert.equal(
-        matches(markdown, new RegExp(`^### ${usageHeading}$`, 'gmu')).length,
-        1,
-        `${id} ${usageHeading}`,
-      )
-    }
-    assert.doesNotMatch(
-      markdown,
-      /Copy |Demo of|nav-card-tooltip|clipped-dot|dither/iu,
-      id,
-    )
-    assert.equal(title, `${heading} | SEO Skill`, id)
-    assert.equal(title.includes(':'), false, id)
-    assert.ok(
-      description && description.length >= 140 && description.length <= 160,
-      id,
-    )
-    assert.match(catalogHtml, new RegExp(`href="/docs/reports/${slug}"`))
-    assert.match(
-      html,
-      new RegExp(
-        `<link rel="canonical" href="https://seoskill\\.dev/docs/reports/${slug}"\\s*/?>`,
-      ),
-    )
-    assert.match(html, /Install and (?:run|generate|validate)/)
-    assert.match(html, /npm i -g seo/)
-    assert.match(html, /seo start/)
-    assert.match(html, /What you need before you run it/)
-    assert.match(html, /See how report data works/)
-    assert.match(html, /Use a different report for these jobs/)
-    assert.match(
-      html,
-      /Use the (?:audit|report|monitor|check|tool|generator|export|validator) with an agent or in code/,
-    )
-    assert.match(
-      html,
-      /aria-label="Ways to run the (?:audit|report|monitor|check|tool|generator|export|validator)"/,
-    )
-    assert.match(html, /usage-tab-cli/)
-    assert.match(html, /usage-tab-mcp/)
-    assert.match(html, /usage-tab-typescript/)
-    assert.match(html, /What to do next/)
-    assert.match(html, /Related reports/)
-    if (id === 'site-crawl') {
-      assert.match(
-        html,
-        /<h1[^>]*>Sitemap health check and technical site crawl<\/h1>/,
-      )
-      assert.match(
-        html,
-        /seo crawl --sitemap-url https:\/\/example\.com\/sitemap\.xml --health/,
-      )
-      assert.match(html, /Move to the full crawl/)
-      assert.match(html, /What you get from this audit/)
-    }
-    assert.doesNotMatch(html, /Command facts/)
-    assert.doesNotMatch(html, /JSON is the source of truth/)
-    assert.doesNotMatch(html, /What this report helps you decide/)
-    assert.doesNotMatch(html, /Run the report from the CLI/)
-    assert.doesNotMatch(html, /Keep the next step tied to the evidence/)
-    assert.doesNotMatch(html, /These reports reuse nearby evidence/)
-    assert.doesNotMatch(html, /What the result cannot prove/)
-    assert.match(html, new RegExp(`seo reports describe ${id}`))
-    assert.match(html, new RegExp(`seo reports run ${id}`))
-    assert.doesNotMatch(
-      html.match(/<head>([\s\S]*?)<\/head>/)?.[1] ?? '',
-      /<meta name="robots" content="noindex/,
-    )
-    assert.doesNotMatch(
-      html,
-      /Choose a report whose stated purpose matches the decision/,
-    )
-
-    const commandStart = `seo reports run ${id} --params &#39;`
-    const paramsStart = html.indexOf(commandStart)
-    const paramsEnd = html.indexOf('&#39; --json', paramsStart)
-    assert.ok(paramsStart >= 0 && paramsEnd > paramsStart)
-    const encodedParams = html.slice(
-      paramsStart + commandStart.length,
-      paramsEnd,
-    )
-    const params = JSON.parse(
-      encodedParams
-        .replaceAll('&quot;', '"')
-        .replaceAll('&#x22;', '"')
-        .replaceAll('&#x27;', "'")
-        .replaceAll('&#x26;', '&')
-        .replaceAll('&#x3C;', '<')
-        .replaceAll('&#x3E;', '>'),
-    )
-    const definition = getReportDefinition(id)
-    assert.ok(definition)
-    assert.equal(definition.inputSchema.safeParse(params).success, true, id)
-  }
-
-  const pseo = readFileSync(
-    resolve(dist, 'docs/reports/pseo-audit/index.html'),
-    'utf8',
-  )
-  assert.match(pseo, /<title>Programmatic SEO audit \| SEO Skill<\/title>/)
-  assert.match(
-    pseo,
-    /<meta name="description" content="Audit programmatic SEO templates, repeated URL patterns and Search Console demand\. Review representative pages before changing a whole template\."\s*\/?>/,
-  )
-  assert.match(pseo, /<h1[^>]*>Programmatic SEO audit<\/h1>/)
-  assert.match(
-    pseo,
-    /No report should condemn a template from word count or one sampled URL\./,
-  )
-  assert.match(
-    pseo,
-    /manually review whether those pages satisfy their search intent, provide distinct value, and deserve to exist\./,
-  )
-
-  const pseoPatterns = readFileSync(
-    resolve(dist, 'docs/reports/pseo-patterns/index.html'),
-    'utf8',
-  )
-  assert.match(
-    pseoPatterns,
-    /<title>Programmatic SEO patterns \| SEO Skill<\/title>/,
-  )
-  assert.match(pseoPatterns, /<h1[^>]*>Programmatic SEO patterns<\/h1>/)
-  assert.match(
-    pseoPatterns,
-    /If you already have a list of topics you want to cover, the report checks which pages exist, which ideas overlap and which are still missing\./,
-  )
-  assert.match(
-    pseoPatterns,
-    /You can provide a list, pairs such as Product A versus Product B, or combinations such as one tool for several file types\./,
-  )
-
-  for (const [id, slug] of Object.entries(reportSlugs)) {
-    const html = readFileSync(
-      resolve(dist, 'docs/reports', id, 'index.html'),
-      'utf8',
-    )
-    assert.match(html, new RegExp(`/docs/reports/${slug}`))
-  }
-
-  for (const [alias, target] of Object.entries(legacyReportAliases)) {
-    const html = readFileSync(
-      resolve(dist, 'docs/reports', alias, 'index.html'),
-      'utf8',
-    )
-    const destination = target.startsWith('/')
-      ? target
-      : `/docs/reports/${target}`
-    assert.match(html, new RegExp(destination))
-  }
-})
-
-test('published report count stays tied to the implementation', async () => {
+test('telemetry accepts every report id the live registry can send', async () => {
   const { listReportDefinitions } = await import(
     resolve(repoRoot, 'packages/mcp/dist/report-registry.js')
   )
-  const home = readFileSync(resolve(dist, 'index.html'), 'utf8')
-  const homeText = home.replace(/<[^>]+>/g, ' ').replace(/\s+/g, ' ')
+  const accepted = new Set(reportIds)
+  for (const { id } of listReportDefinitions()) {
+    assert.ok(accepted.has(id), `Telemetry would reject ${id}`)
+  }
+  assert.equal(accepted.size, reportIds.length)
+  for (const id of reportIds) {
+    assert.ok(reportCommands[id], `${id} has no command`)
+  }
+})
 
-  const implementedCount = listReportDefinitions().length
-  assert.equal(implementedCount, routeReportIds.length)
-  assert.match(homeText, new RegExp(`${implementedCount} reports`))
+test('every old report URL redirects permanently to its command page', () => {
+  const rules = new Map(
+    readFileSync(resolve(dist, '_redirects'), 'utf8')
+      .split('\n')
+      .filter((line) => line && !line.startsWith('#'))
+      .map((line) => {
+        const [from, to, status] = line.split(' ')
+        assert.equal(status, '301', line)
+        return [from, to]
+      }),
+  )
+  const expected = {
+    report: [
+      'search-performance-overview',
+      'quick-wins',
+      'ctr-underperformers',
+      'striking-distance',
+      'second-page',
+      'decaying-pages',
+      'refresh-priorities',
+      'cannibalisation',
+      'traffic-anomaly',
+      'query-clusters',
+      'community-intent',
+      'ai-referrals',
+      'keyword-opportunities',
+      'monthly-report',
+      'monthly-action-plan',
+      'narrative-report',
+    ],
+    page: [
+      'audit-page',
+      'page-opportunities',
+      'content-optimization',
+      'performance-audit',
+      'redirect-trace',
+      'audit-urls',
+    ],
+    compare: [
+      'measure-change',
+      'segment-impact',
+      'update-correlation',
+      'update-postmortem',
+    ],
+    indexing: [
+      'index-coverage',
+      'index-watch',
+      'index-monitor',
+      'index-coverage-plan',
+      'link-recovery',
+    ],
+    research: [
+      'serp-results',
+      'keyword-metrics',
+      'keyword-research',
+      'domain-overview',
+      'ranked-keywords',
+      'serp-competitors',
+      'competitor-keyword-gap',
+      'competitive-opportunities',
+      'ranking-pages',
+      'link-evidence',
+      'domain-rating',
+      'saved-keywords',
+      'rank-tracking',
+    ],
+    crawl: [
+      'site-crawl',
+      'crawl-report',
+      'crawl-history',
+      'crawl-diff',
+      'compare-crawls',
+      'affected-urls',
+      'top-fixes',
+      'explain-crawl-issue',
+      'crawler-rules',
+      'technical-watch',
+    ],
+    'internal-links': ['internal-links'],
+  }
+  const covered = new Set(['setup-check'])
+  for (const [page, ids] of Object.entries(expected)) {
+    for (const id of ids) {
+      covered.add(id)
+      const slug = reportSlugs[id] ?? id
+      const destination = `/docs/${page}`
+      assert.equal(rules.get(`/docs/reports/${slug}`), destination, id)
+      assert.equal(rules.get(`/docs/reports/${slug}.md`), `${destination}.md`)
+      assert.equal(reportDestination(id), destination, id)
+    }
+  }
+  assert.equal(rules.get('/docs/reports/setup-check'), '/docs/getting-started')
+  for (const id of reportIds.filter((value) => !covered.has(value))) {
+    assert.equal(rules.get(`/docs/reports/${id}`), '/docs', `${id} is removed`)
+  }
+  assert.equal(rules.get('/docs/reports/index-coverage-plan'), '/docs/indexing')
+  for (const alias of Object.keys(legacyReportAliases)) {
+    assert.ok(rules.has(`/docs/reports/${alias}`), alias)
+  }
+  assert.equal(rules.get('/docs/reports/*'), '/docs')
+  assert.equal(rules.get('/docs/commands/report'), '/docs/report')
+  assert.equal(rules.get('/docs/commands'), '/docs')
+  assert.equal(rules.get('/docs/clicky'), '/docs/analytics')
+  // The feature pages keep their URLs, so nothing may redirect them.
+  for (const path of [
+    '/features',
+    '/features/mcp',
+    '/features/search-console',
+    '/features/keyword-research',
+    '/features/seo-audit',
+  ]) {
+    assert.equal(rules.has(path), false, path)
+    assert.ok(existsSync(resolve(dist, pagePath(path))), path)
+  }
+  assert.equal(
+    [...rules.keys()].some((from) => from.startsWith('/features')),
+    false,
+  )
+  assert.equal(rules.get('/blog/seo-mcp-servers'), '/docs/mcp')
+
+  assert.equal(
+    rules.get('/security'),
+    'https://github.com/iannuttall/seo/security/policy',
+  )
+  assert.equal(rules.get('/trademarks'), '/')
+  for (const [from, to] of rules) {
+    if (from.includes('*') || to.startsWith('https://')) continue
+    const target = to.endsWith('.md')
+      ? resolve(dist, to.slice(1))
+      : resolve(dist, pagePath(to))
+    assert.ok(existsSync(target), `${from} redirects to missing ${to}`)
+    if (!from.endsWith('.md')) {
+      assert.equal(
+        existsSync(resolve(dist, pagePath(from))),
+        false,
+        `${from} still has a page`,
+      )
+    }
+  }
 })
 
 test('well-known discovery publishes canonical skills with verified digests', () => {
@@ -798,34 +755,62 @@ test('site has no retired Kiwa or React runtime', () => {
   }
 })
 
-test('site uses the keep-brutal visual system and copyable install choices', () => {
+test('site uses the ilo visual system and one-click setup commands', () => {
   const home = readFileSync(resolve(dist, 'index.html'), 'utf8')
   const css = readFileSync(resolve(appRoot, 'src/styles/globals.css'), 'utf8')
+  const layout = readFileSync(
+    resolve(appRoot, 'src/layouts/BaseLayout.astro'),
+    'utf8',
+  )
 
-  assert.match(home, /data-install-picker/)
-  assert.match(home, /data-copy-install-command/)
-  assert.match(home, /<a[^>]+href="\/cookies"[^>]*>Cookies<\/a>/)
-  assert.match(home, /npm i -g seo/)
-  assert.match(home, /seo start/)
-  assert.match(home, /The only SEO skill/)
-  assert.match(home, /your agent needs/)
-  assert.match(
-    home,
-    /<h1[^>]*data-glitch[^>]*>\s*The only SEO skill your agent needs\s*<\/h1>/,
-  )
-  assert.match(
-    home,
-    /Run an SEO audit from any agent that supports local MCP, or use your\s+terminal\. Find what needs attention, fix it in your code, and check\s+what changed\./,
-  )
-  assert.match(home, /data-glitch/)
-  assert.match(home, /requestAnimationFrame\(enhanceHeadline\)/)
-  assert.match(home, /prefers-reduced-motion: reduce/)
+  assert.match(home, /data-setup-commands/)
+  for (const command of [
+    'claude mcp add --transport http seoskill https://seoskill.dev/mcp',
+    'codex mcp add seoskill --url https://seoskill.dev/mcp',
+    'https://seoskill.dev/mcp',
+    'npm i -g seo &amp;&amp; seo start',
+  ]) {
+    assert.match(
+      home,
+      new RegExp(`data-copy-value="${escapeRegExp(command)}"`),
+      command,
+    )
+  }
+  assert.match(home, /role="tablist" aria-label="MCP client"/)
+  // Client panels share one grid cell, so switching never changes height.
+  assert.match(home, /\[grid-area:1\/1\]/)
+  assert.doesNotMatch(home, /data-setup-panel="[^"]+"[^>]*\shidden[\s>=]/)
+  assert.doesNotMatch(home, /data-copy-value="npm i -g seo"/)
+  assert.match(home, /Your data and keys are never stored\./)
+  assert.doesNotMatch(home, /Nothing stored/)
+  for (const feature of [
+    'search-console',
+    'keyword-research',
+    'seo-audit',
+    'mcp',
+  ]) {
+    assert.match(home, new RegExp(`href="/features/${feature}"`))
+  }
+  assert.doesNotMatch(home, /href="\/(?:security|trademarks)"/)
+  for (const command of [
+    'report',
+    'page',
+    'compare',
+    'indexing',
+    'research',
+    'data',
+    'crawl',
+    'internal-links',
+  ]) {
+    assert.match(home, new RegExp(`href="/docs/${command}"`))
+  }
+
   assert.match(home, /data-faq-accordion/)
-  assert.match(home, /<button[^>]+aria-controls="faq-content-1"/)
+  assert.match(home, /<button[^>]+aria-controls="home-faq-content-1"/)
   assert.match(home, /aria-expanded="false"[^>]+data-faq-trigger/)
   assert.match(
     home,
-    /role="region" aria-labelledby="faq-trigger-1" aria-hidden="true"/,
+    /role="region" aria-labelledby="home-faq-trigger-1" aria-hidden="true"/,
   )
   assert.match(home, /grid-template-rows:0fr/)
   assert.match(home, /grid-template-rows:1fr/)
@@ -833,36 +818,26 @@ test('site uses the keep-brutal visual system and copyable install choices', () 
   assert.match(home, /ArrowUp/)
   assert.match(home, /setAttribute\([`'"]aria-hidden[`'"],String\(!\w+\)\)/)
   assert.doesNotMatch(home, /<details/)
-  assert.doesNotMatch(home, /data-accordion(?:-|=)/)
   assert.doesNotMatch(home, /kiwa-ui/)
-  assert.match(
-    home,
-    /Chat with your SEO data to find out what works and what doesn&#39;t\./,
-  )
-  assert.match(home, /Claude \/ keep\.md/)
-  assert.match(home, /Codex \/ keep\.md/)
-  assert.match(home, /seo report --project keep/)
-  assert.match(home, /data-chat-part="spinner"/)
-  assert.match(home, /metadata findings/)
-  assert.match(home, /indexability changes/)
-  assert.match(home, /Search Console/)
-  assert.match(home, /AI crawler access/)
-  assert.match(home, /llms\.txt/)
-  assert.match(home, /import/)
-  assert.match(home, /auditPage/)
-  assert.match(home, /Correlation only, not a causal claim/)
   assert.doesNotMatch(home, /npx seo/)
-  assert.doesNotMatch(home, /data-install-option="skills"/)
-  assert.doesNotMatch(home, /data-install-option="npm"/)
-  assert.match(css, /font-family: "Martian Grotesk"/)
-  assert.match(css, /font-family: "Martian Mono"/)
-  assert.match(css, /--nav-bg: #171717/)
-  assert.match(css, /--primary: #ff4500/)
-  assert.match(
-    readFileSync(resolve(appRoot, 'src/layouts/BaseLayout.astro'), 'utf8'),
-    /max-w-4xl/,
-  )
+
+  assert.match(css, /font-family: "InterVariable"/)
+  assert.match(css, /font-family: "JetBrains Mono"/)
+  assert.match(css, /--primary: oklch\(60\.9% 0\.126 221\.723\)/)
+  assert.match(css, /--frame-max: 48rem/)
   assert.match(css, /prefers-color-scheme: dark/)
+  assert.doesNotMatch(css, /Martian|dither|clipped-dot/)
+  assert.match(css, /:root:not\(\[data-theme="light"\]\)/)
+  assert.match(css, /:root\[data-theme="dark"\]/)
+  assert.doesNotMatch(
+    readFileSync(resolve(appRoot, 'public/favicon.svg'), 'utf8'),
+    /focus-point/,
+  )
+  assert.match(layout, /site-frame/)
+  assert.doesNotMatch(
+    readdirSync(resolve(appRoot, 'public/fonts')).join(' '),
+    /Martian/,
+  )
 })
 
 test('text entry controls disable ambiguous font ligatures', () => {
@@ -976,7 +951,8 @@ test('telemetry prose and stats keep a stable readable first render', () => {
 test('published guidance does not teach disposable npx CLI installs', () => {
   const guides = [
     resolve(repoRoot, 'README.md'),
-    resolve(appRoot, 'src/content/docs/docs/mcp.mdx'),
+    resolve(appRoot, 'src/content/docs/mcp.mdx'),
+    resolve(appRoot, 'src/content/docs/cli.mdx'),
     resolve(repoRoot, 'apps/web/AGENTS.md'),
     resolve(repoRoot, 'AGENTS.md'),
     resolve(appRoot, 'assets/og-source.svg'),
@@ -989,8 +965,8 @@ test('published guidance does not teach disposable npx CLI installs', () => {
 
 test('bundled fonts ship with their open font licenses', () => {
   const fonts = [
-    ['MartianGroteskVF.woff2', 'MartianMono-OFL.txt'],
-    ['MartianMonoVF.woff2', 'MartianMono-OFL.txt'],
+    ['InterVF.woff2', 'LICENSE-inter.txt'],
+    ['JetBrainsMonoVF.woff2', 'LICENSE-jetbrains-mono.txt'],
   ]
 
   for (const [fontName, licenseName] of fonts) {
@@ -1001,6 +977,6 @@ test('bundled fonts ship with their open font licenses', () => {
     )
 
     assert.ok(statSync(font).size > 20_000)
-    assert.match(license, /SIL OPEN FONT LICENSE Version 1\.1/)
+    assert.match(license, /SIL Open Font License, Version 1\.1/)
   }
 })

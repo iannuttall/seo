@@ -16,7 +16,12 @@ import {
 import { maybeExitCancelled } from '../../utils.js'
 import { loginWithGuidance } from '../google-login.js'
 import { detectMcpClients } from '../mcp-clients.js'
-import { installMcpConfig } from '../mcp-config.js'
+import {
+  HOSTED_MCP_URL,
+  installHostedMcpConfig,
+  installMcpConfig,
+  supportsHostedMcp,
+} from '../mcp-config.js'
 import { installSeoSkill } from '../skill-install.js'
 
 export type SetupAuthResult = {
@@ -26,7 +31,7 @@ export type SetupAuthResult = {
 export type SetupMcpInstall = {
   client: string
   path: string
-  server: 'local'
+  server: 'hosted' | 'local'
   changed: boolean
   error?: string
 }
@@ -165,16 +170,32 @@ export async function maybeInstallSkill(): Promise<SetupSkillInstall> {
   return installSeoSkill()
 }
 
+type McpServerChoice = 'hosted' | 'local' | 'skip'
+
+// Offer the free hosted server first. A client that cannot take a remote
+// URL in its config file gets the local server instead.
 export async function maybeInstallMcp(): Promise<SetupMcpInstall[]> {
   const detected = detectMcpClients()
   if (detected.length === 0) return []
-  const shouldInstall = maybeExitCancelled(
-    await confirm({
-      message: 'Add the seo MCP server to your agents?',
-      initialValue: true,
+  const choice = maybeExitCancelled(
+    await select<McpServerChoice>({
+      message: 'Add an MCP server to your agents?',
+      options: [
+        {
+          value: 'hosted',
+          label: 'Free hosted server (recommended)',
+          hint: `${HOSTED_MCP_URL}, your agent asks you to sign in with Google`,
+        },
+        {
+          value: 'local',
+          label: 'Local server',
+          hint: 'Runs on this machine with the sign-in from this setup',
+        },
+        { value: 'skip', label: 'Skip for now' },
+      ],
     }),
   )
-  if (!shouldInstall) return []
+  if (choice === 'skip') return []
 
   const selected = maybeExitCancelled(
     await multiselect({
@@ -188,19 +209,35 @@ export async function maybeInstallMcp(): Promise<SetupMcpInstall[]> {
     }),
   )
 
-  return detected
+  const installs = detected
     .filter((target) => selected.includes(target.client))
-    .map((target) => {
+    .map((target): SetupMcpInstall => {
+      const server =
+        choice === 'hosted' && supportsHostedMcp(target) ? 'hosted' : 'local'
       try {
-        return { ...installMcpConfig(target), server: 'local' as const }
+        const result =
+          server === 'hosted'
+            ? installHostedMcpConfig(target)
+            : installMcpConfig(target)
+        return { ...result, server }
       } catch (error) {
         return {
           client: target.client,
           path: target.path,
-          server: 'local' as const,
+          server,
           changed: false,
           error: error instanceof Error ? error.message : String(error),
         }
       }
     })
+  if (
+    choice === 'hosted' &&
+    installs.some((install) => install.client === 'claude-desktop')
+  ) {
+    note(
+      `Claude Desktop got the local server. To use the hosted one there, open Settings, then Connectors, and add ${HOSTED_MCP_URL} as a custom connector.`,
+      'Claude Desktop',
+    )
+  }
+  return installs
 }

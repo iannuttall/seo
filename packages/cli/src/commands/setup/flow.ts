@@ -7,6 +7,7 @@ import {
   printJson,
   printKeyValue,
 } from '../../utils.js'
+import { HOSTED_MCP_URL } from '../mcp-config.js'
 import {
   maybeConnectAuth,
   maybeInstallMcp,
@@ -24,7 +25,7 @@ const NEXT = ['seo sites', 'seo report --site <site>']
 
 const STEPS = [
   'Sign in with Google (read-only Search Console and Google Analytics).',
-  'Add an MCP server to the agents found on this machine.',
+  `Add the free hosted MCP server (${HOSTED_MCP_URL}) or a local one to your agents.`,
   'Install the SEO skill for your agents.',
 ]
 

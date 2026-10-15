@@ -836,7 +836,7 @@ const RULE_DEFINITIONS = [
         'issue.evidence.missingTerms',
         'issue.evidence.coverage',
       ],
-      suggestedCommands: ['seo crawl <url> --project <id> --json'],
+      suggestedCommands: ['seo crawl <url> --site <site> --json'],
     },
   },
   {

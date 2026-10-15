@@ -1,6 +1,5 @@
 import { confirm, intro, note, outro, password, text } from '@clack/prompts'
 import {
-  analyticsConnection,
   CLICKY_SITEKEY_ENV,
   deleteClickySiteKey,
   deleteProviderExtensionCredentials,
@@ -10,24 +9,15 @@ import {
   type RegisteredProviderExtension,
   readClickySiteKey,
   readProviderExtensionCredentials,
-  removeClientAnalyticsConnection,
   runProviderExtensionAction,
   SeoError,
-  setClientAnalyticsConnection,
   verifyAnalyticsProvider,
   writeClickySiteKey,
   writeProviderExtensionAccount,
   writeProviderExtensionCredentials,
 } from '@seo/core'
 import { defineCommand } from 'citty'
-import {
-  booleanArg,
-  jsonFlag,
-  numberArg,
-  projectArg,
-  stringArg,
-} from '../../../args.js'
-import { resolveClient } from '../../../selection.js'
+import { booleanArg, jsonFlag, numberArg, stringArg } from '../../../args.js'
 import {
   canPrompt,
   maybeExitCancelled,
@@ -111,28 +101,11 @@ async function clickyProvider(input: {
   return provider
 }
 
-async function resolveClickySiteId(input: {
-  siteId?: string
-  project?: string
-  json?: boolean
-}): Promise<string> {
-  if (input.siteId) return input.siteId
-  const client = await resolveClient({
-    client: input.project,
-    options: { json: input.json },
-  })
-  const connection = analyticsConnection(client)
-  if (connection?.provider === 'clicky') return connection.siteId
-  if (
-    connection?.provider === 'extension' &&
-    connection.providerId === 'clicky' &&
-    connection.account.siteId
-  ) {
-    return connection.account.siteId
-  }
+function requireClickySiteId(siteId: string | undefined): string {
+  if (siteId) return siteId
   throw new SeoError(
     'INVALID_INPUT',
-    'No Clicky site is selected. Pass --site-id or use a project connected to Clicky.',
+    'No Clicky site given. Pass --site-id with the numeric Clicky site ID.',
   )
 }
 
@@ -163,8 +136,6 @@ const connectCommand = defineCommand({
   },
   args: {
     'site-id': { type: 'string', description: 'Numeric Clicky site ID.' },
-    project: { type: 'string', description: 'Saved project id or name.' },
-    client: { type: 'string', description: 'Legacy alias for --project.' },
     json: {
       type: 'boolean',
       default: false,
@@ -175,22 +146,9 @@ const connectCommand = defineCommand({
     const json = jsonFlag(args)
     const provider = await clickyProvider({ json })
     const interactive = canPrompt({ json })
-    const requestedProject = projectArg(args)
-    const project = requestedProject
-      ? await resolveClient({ project: requestedProject, options: { json } })
-      : undefined
     if (interactive) intro('Connect Clicky')
-    const currentConnection = analyticsConnection(project)
-    const currentSiteId =
-      currentConnection?.provider === 'clicky'
-        ? currentConnection.siteId
-        : currentConnection?.provider === 'extension' &&
-            currentConnection.providerId === 'clicky'
-          ? currentConnection.account.siteId
-          : undefined
     const siteId =
       stringArg(args['site-id']) ??
-      currentSiteId ??
       (interactive
         ? maybeExitCancelled(
             await text({
@@ -205,7 +163,7 @@ const connectCommand = defineCommand({
     if (!siteId) {
       throw new SeoError(
         'INVALID_INPUT',
-        'Pass --site-id when the selected project is not already connected to Clicky.',
+        'No Clicky site given. Pass --site-id with the numeric Clicky site ID.',
       )
     }
     const existing = await savedCredentials(provider, siteId)
@@ -241,28 +199,16 @@ const connectCommand = defineCommand({
       credentials: { sitekey: siteKey },
     })
     writeProviderExtensionAccount('clicky', { siteId })
-    const savedProject = project
-      ? setClientAnalyticsConnection(project.id, {
-          provider: 'extension',
-          providerId: 'clicky',
-          account: { siteId },
-        })
-      : undefined
     const result = {
       siteId,
       connected: true,
       credentialSource: source,
-      project: savedProject
-        ? { id: savedProject.id, name: savedProject.name }
-        : undefined,
     }
     if (json) {
       printJson(result)
       return
     }
-    const message = savedProject
-      ? `Connection verified and attached to ${savedProject.name}. Saved in the ${credentialSourceLabel(source)}.`
-      : `Connection verified. Saved in the ${credentialSourceLabel(source)}.`
+    const message = `Connection verified. Saved in the ${credentialSourceLabel(source)}.`
     if (interactive) outro(message)
     else process.stdout.write(`${message}\n`)
   },
@@ -272,8 +218,6 @@ const statusCommand = defineCommand({
   meta: { name: 'status', description: 'Show the local Clicky connection' },
   args: {
     'site-id': { type: 'string', description: 'Numeric Clicky site ID.' },
-    project: { type: 'string', description: 'Saved project id or name.' },
-    client: { type: 'string', description: 'Legacy alias for --project.' },
     check: {
       type: 'boolean',
       default: false,
@@ -288,11 +232,7 @@ const statusCommand = defineCommand({
   run: async ({ args }) => {
     const json = jsonFlag(args)
     const provider = await clickyProvider({ json })
-    const siteId = await resolveClickySiteId({
-      siteId: stringArg(args['site-id']),
-      project: projectArg(args),
-      json,
-    })
+    const siteId = requireClickySiteId(stringArg(args['site-id']))
     const credential = await savedCredentials(provider, siteId)
     const check = booleanArg(args.check)
     if (check && credential.siteKey) {
@@ -332,8 +272,6 @@ const reportCommand = defineCommand({
   },
   args: {
     'site-id': { type: 'string', description: 'Numeric Clicky site ID.' },
-    project: { type: 'string', description: 'Saved project id or name.' },
-    client: { type: 'string', description: 'Legacy alias for --project.' },
     type: {
       type: 'string',
       default: 'pages-entrance',
@@ -368,11 +306,7 @@ const reportCommand = defineCommand({
   run: async ({ args }) => {
     const json = jsonFlag(args)
     const provider = await clickyProvider({ json })
-    const siteId = await resolveClickySiteId({
-      siteId: stringArg(args['site-id']),
-      project: projectArg(args),
-      json,
-    })
+    const siteId = requireClickySiteId(stringArg(args['site-id']))
     const credential = await savedCredentials(provider, siteId)
     const action = await runProviderExtensionAction({
       providerId: 'clicky',
@@ -432,8 +366,6 @@ const disconnectCommand = defineCommand({
   meta: { name: 'disconnect', description: 'Remove a saved Clicky sitekey' },
   args: {
     'site-id': { type: 'string', description: 'Numeric Clicky site ID.' },
-    project: { type: 'string', description: 'Saved project id or name.' },
-    client: { type: 'string', description: 'Legacy alias for --project.' },
     json: {
       type: 'boolean',
       default: false,
@@ -443,11 +375,7 @@ const disconnectCommand = defineCommand({
   run: async ({ args }) => {
     const json = jsonFlag(args)
     await clickyProvider({ json })
-    const siteId = await resolveClickySiteId({
-      siteId: stringArg(args['site-id']),
-      project: projectArg(args),
-      json,
-    })
+    const siteId = requireClickySiteId(stringArg(args['site-id']))
     await deleteClickySiteKey(siteId)
     await deleteProviderExtensionCredentials({
       providerId: 'clicky',
@@ -469,58 +397,6 @@ const disconnectCommand = defineCommand({
   },
 })
 
-const detachCommand = defineCommand({
-  meta: {
-    name: 'detach',
-    description: 'Remove Clicky from one project without deleting its sitekey',
-  },
-  args: {
-    project: {
-      type: 'string',
-      required: true,
-      description: 'Saved project id or name.',
-    },
-    client: { type: 'string', description: 'Legacy alias for --project.' },
-    json: {
-      type: 'boolean',
-      default: false,
-      description: 'Print machine-readable JSON.',
-    },
-  },
-  run: async ({ args }) => {
-    const json = jsonFlag(args)
-    const project = await resolveClient({
-      project: projectArg(args),
-      options: { json },
-    })
-    const selected = analyticsConnection(project)
-    const provider =
-      selected?.provider === 'extension' && selected.providerId === 'clicky'
-        ? ('extension:clicky' as const)
-        : selected?.provider === 'clicky'
-          ? ('clicky' as const)
-          : undefined
-    if (!project || !provider) {
-      throw new SeoError(
-        'INVALID_INPUT',
-        'The selected project is not attached to Clicky.',
-      )
-    }
-    const updated = removeClientAnalyticsConnection(project.id, provider)
-    const result = {
-      project: { id: updated.id, name: updated.name },
-      detached: true,
-      selectedAnalytics: updated.analytics.selected,
-      savedSitekey: true,
-    }
-    if (json) printJson(result)
-    else
-      process.stdout.write(
-        `Clicky detached from ${updated.name}. The saved sitekey was kept.\n`,
-      )
-  },
-})
-
 export const clickyAnalyticsCommand = defineCommand({
   meta: {
     name: 'clicky',
@@ -530,7 +406,6 @@ export const clickyAnalyticsCommand = defineCommand({
     connect: connectCommand,
     status: statusCommand,
     report: reportCommand,
-    detach: detachCommand,
     disconnect: disconnectCommand,
   },
 })

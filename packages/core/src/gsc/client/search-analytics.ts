@@ -1,7 +1,6 @@
 import { searchAnalyticsRows } from '../../google/api.js'
 import { getDb, hashKey, noteCacheWrite } from '../../storage/database.js'
 import type { GscRow } from '../../types.js'
-import { searchConsoleAccountForSite } from '../auth/account-selection.js'
 import { finalGscDateRange } from '../dates.js'
 import { getAuthorized, googleFetchFor, LOCAL_SIGN_IN } from './fetch.js'
 import type {
@@ -45,9 +44,7 @@ export async function querySearchAnalytics(
   body: SearchAnalyticsRequest,
   opts: SearchAnalyticsOptions = {},
 ): Promise<SearchAnalyticsResult> {
-  const { client, identity } = await getAuthorized(
-    opts.accountEmail ?? searchConsoleAccountForSite(site),
-  )
+  const { client, identity } = await getAuthorized(opts.accountEmail)
   const db = getDb()
   const queryHash = hashKey([site, identity, body])
   const cached = db

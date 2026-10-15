@@ -37,24 +37,25 @@ export const REMOVED: Record<string, string | null> = {
   'report-narrative': 'seo report',
   'seo-to-ai-query': null,
   'server-logs': null,
-  'client keyword-sets': null,
   links: 'seo research backlinks --target <domain>',
   'export knowledge': null,
   'export monthly': 'seo report --json',
   'export narrative': 'seo report --json',
   'export pseo': null,
   indexnow: null,
-  'project keyword-sets': null,
-  'projects keyword-sets': null,
   'providers semrush': 'seo providers',
   'providers limits': null,
   'providers spend': null,
   'providers dataforseo limits': null,
   'providers dataforseo spend': null,
   'providers ahrefs limits': null,
-  // Removed after 0.3.0: commands that saved history or decisions. The
-  // agent keeps its own notes now.
+  // Removed after 0.3.0: saved projects and the commands that saved
+  // history or decisions. Commands take --site, and the agent keeps its own
+  // notes.
   'change-log': null,
+  client: null,
+  project: null,
+  projects: null,
   'content-groups': null,
   'crawl-diff': 'seo crawl',
   'crawl-reports': 'seo crawl',
@@ -71,6 +72,8 @@ export const REMOVED: Record<string, string | null> = {
 const HISTORY_REASON =
   'It saved history between runs. Your agent keeps its own notes now.'
 
+const PROJECT_REASON = 'Commands take --site now instead of a saved project.'
+
 const SPEND_REASON =
   'Spend is controlled in your provider account. Set limits in DataForSEO, Ahrefs or the other provider.'
 
@@ -82,6 +85,9 @@ const REMOVED_REASONS: Record<string, string> = {
   'providers dataforseo spend': SPEND_REASON,
   'providers ahrefs limits': SPEND_REASON,
   'change-log': HISTORY_REASON,
+  client: PROJECT_REASON,
+  project: PROJECT_REASON,
+  projects: PROJECT_REASON,
   'content-groups': HISTORY_REASON,
   'crawl-diff': HISTORY_REASON,
   'crawl-reports': HISTORY_REASON,
@@ -127,7 +133,7 @@ export function removedNotice(args: string[]): string | null {
   const next = replacement
     ? `Use \`${replacement}\` instead.`
     : PROJECT_ALIASES.has(group)
-      ? 'Run `seo projects --help` for the project commands.'
+      ? 'Run `seo sites` to list your Search Console properties.'
       : group === 'providers'
         ? 'Run `seo providers --help` for the provider commands.'
         : 'Run `seo help` for the commands.'
@@ -135,4 +141,13 @@ export function removedNotice(args: string[]): string | null {
     ? REMOVED_REASONS[command]
     : 'SEO Skill now focuses on Search Console, analytics and keyword data.'
   return `\`seo ${command}\` was removed. ${reason} ${next}`
+}
+
+// --project and --client selected a saved project. Both are gone.
+export function removedFlagNotice(args: string[]): string | null {
+  const flag = args.find((arg) =>
+    ['--project', '--client'].includes(arg.split('=')[0] ?? ''),
+  )
+  if (!flag) return null
+  return `\`${flag.split('=')[0]}\` was removed. ${PROJECT_REASON} Pass --site with a domain, URL or sc-domain: property, or run \`seo sites\` to list your Search Console properties.`
 }

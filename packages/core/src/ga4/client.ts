@@ -3,7 +3,6 @@ import {
   listAnalyticsAccounts,
   runAnalyticsReport,
 } from '../google/api.js'
-import { googleAnalyticsAccountForProperty } from '../gsc/auth/account-selection.js'
 import { createGoogleAccessTokenClient } from '../gsc/auth.js'
 import { googleFetchFor, LOCAL_SIGN_IN } from '../gsc/client/fetch.js'
 import { getDb, hashKey, noteCacheWrite } from '../storage/database.js'
@@ -73,7 +72,7 @@ export async function runGa4Report(
   opts: { refresh?: boolean; accountEmail?: string } = {},
 ): Promise<Ga4RunReportResult> {
   const { client, identity } = await createGoogleAccessTokenClient(
-    opts.accountEmail ?? googleAnalyticsAccountForProperty(propertyId),
+    opts.accountEmail,
   )
   const db = getDb()
   const queryHash = hashKey([propertyId, identity, body])
@@ -132,9 +131,7 @@ export async function listGa4DataStreams(
   propertyId: string,
   accountEmail?: string,
 ): Promise<Ga4DataStream[]> {
-  const { client } = await createGoogleAccessTokenClient(
-    accountEmail ?? googleAnalyticsAccountForProperty(propertyId),
-  )
+  const { client } = await createGoogleAccessTokenClient(accountEmail)
   const streams: Ga4DataStream[] = []
   let pageToken: string | undefined
   let pageCount = 0

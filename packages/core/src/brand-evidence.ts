@@ -206,7 +206,7 @@ export function resolveReportBrandTerms(input: {
       evidence: provided.map((term) => ({
         term,
         source: 'provided',
-        reason: 'Supplied by the caller or saved project profile.',
+        reason: 'Supplied by the caller.',
       })),
       excluded: [],
       heuristic: false,

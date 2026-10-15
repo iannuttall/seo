@@ -1,7 +1,6 @@
 import { performanceAudit, SeoError } from '@seo/core'
 import { defineCommand } from 'citty'
-import { booleanArg, jsonFlag, projectArg, stringArg } from '../args.js'
-import { resolveClient } from '../selection.js'
+import { booleanArg, jsonFlag, stringArg } from '../args.js'
 import { printJson } from '../utils.js'
 import { printActionDetails, printNotes, printReportSummary } from './output.js'
 
@@ -45,11 +44,8 @@ export const performanceCommand = defineCommand({
       args: {
         url: {
           type: 'string',
-          description:
-            'URL to audit. Defaults to the selected project crawl URL.',
+          description: 'URL to audit.',
         },
-        client: { type: 'string', description: 'Legacy alias for --project.' },
-        project: { type: 'string', description: 'Saved project id or name.' },
         strategy: {
           type: 'string',
           default: 'mobile',
@@ -79,15 +75,9 @@ export const performanceCommand = defineCommand({
       },
       run: async ({ args }) => {
         const json = jsonFlag(args)
-        const project = await resolveClient({
-          client: projectArg(args),
-          options: { json },
-        })
-        const url = stringArg(args.url) ?? project?.startUrl
+        const url = stringArg(args.url)
         if (!url) {
-          throw new Error(
-            'No URL selected. Pass --url or use --project with a crawl URL.',
-          )
+          throw new SeoError('INVALID_INPUT', 'No URL given. Pass --url.')
         }
         const report = await performanceAudit({
           url,

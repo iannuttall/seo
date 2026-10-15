@@ -5,10 +5,9 @@ import {
   jsonFlag,
   listArg,
   numberArg,
-  projectArg,
   stringArg,
 } from '../../args.js'
-import { resolveClientSelection } from '../../selection.js'
+import { requireSite } from '../../selection.js'
 import { printJson, printTable } from '../../utils.js'
 import { printNotes, printReportSummary, truncate } from '../output.js'
 
@@ -19,14 +18,6 @@ export const indexCoverageCommand = defineCommand({
       'Find crawlable pages that deserve a closer Google index check',
   },
   args: {
-    project: {
-      type: 'string',
-      description: 'Saved project id or name.',
-    },
-    client: {
-      type: 'string',
-      description: 'Legacy alias for --project.',
-    },
     site: {
       type: 'string',
       description: 'GSC property URL, for example sc-domain:example.com.',
@@ -70,14 +61,10 @@ export const indexCoverageCommand = defineCommand({
   },
   run: async ({ args }) => {
     const json = jsonFlag(args)
-    const selection = await resolveClientSelection({
-      client: projectArg(args),
-      site: stringArg(args.site),
-      options: { json, refresh: booleanArg(args.refresh) },
-    })
+    const site = requireSite(stringArg(args.site))
     const sitemapValues = listArg(args.sitemaps)
     const report = await indexCoverageSignals({
-      site: selection.site,
+      site,
       url: stringArg(args.url),
       sitemaps: sitemapValues.length ? sitemapValues : undefined,
       days: numberArg(args.days),

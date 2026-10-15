@@ -20,7 +20,6 @@ import { defineCommand, runCommand, runMain } from 'citty'
 import { analyticsCommand } from './commands/analytics/index.js'
 import { authCommand } from './commands/auth.js'
 import { cacheCommand } from './commands/cache.js'
-import { clientCommand, projectCommand } from './commands/clients/index.js'
 import { contentCommand } from './commands/content.js'
 import {
   compareCommand,
@@ -81,7 +80,7 @@ import {
   updatePostmortemCommand,
 } from './commands/workflows/index.js'
 import { buildErrorFeedbackUrl, telemetryOperation } from './error-feedback.js'
-import { removedNotice, renamedNotice } from './renames.js'
+import { removedFlagNotice, removedNotice, renamedNotice } from './renames.js'
 import { maybeOfferSelfUpdate } from './self-update.js'
 import { showUpgradeNotice } from './upgrade-notice.js'
 import { printCatalog, printHeading, printSection } from './utils.js'
@@ -100,7 +99,7 @@ const helpSections: HelpSection[] = [
   {
     title: 'Start here',
     commands: [
-      ['seo start', 'Connect Search Console and save a project profile'],
+      ['seo start', 'Sign in with Google, then add the MCP server and skill'],
       ['seo report', 'The main report: overview and every section'],
       [
         'seo report --section quick-wins',
@@ -126,7 +125,6 @@ const helpSections: HelpSection[] = [
   {
     title: 'Setup',
     commands: [
-      ['seo projects list', 'List saved project profiles'],
       ['seo sites', 'List Search Console properties'],
       ['seo mcp install', 'Add the local MCP server to your agents'],
       ['seo providers', 'Connect DataForSEO or Ahrefs'],
@@ -209,10 +207,7 @@ const main = defineCommand({
     logs: logsCommand,
     crawl: crawlCommand,
     'crawl-queue': crawlQueueCommand,
-    client: clientCommand,
     content: contentCommand,
-    project: projectCommand,
-    projects: projectCommand,
     providers: providersCommand,
     export: exportCommand,
     'index-coverage': indexCoverageCommand,
@@ -325,7 +320,7 @@ function telemetryReportId(args: string[]): string | undefined {
 
 const argv = process.argv.slice(2)
 showUpgradeNotice(argv)
-const removed = removedNotice(argv)
+const removed = removedNotice(argv) ?? removedFlagNotice(argv)
 if (removed) {
   process.stderr.write(`${removed}\n`)
   process.exit(2)

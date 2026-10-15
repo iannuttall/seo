@@ -157,12 +157,7 @@ export const reportSurfaces = [
       file: 'packages/mcp/src/opportunity-tools.ts',
       marker: "'seo_ctr_underperformers'",
     },
-    options: [
-      common.site,
-      common.minImpressions,
-      common.includeBrand,
-      opt('brandTerms', 'brandTerms:', 'brandTerms: z'),
-    ],
+    options: [common.site, common.minImpressions, common.includeBrand],
   },
   {
     id: 'decaying',
@@ -299,7 +294,6 @@ export const reportSurfaces = [
       common.includeBrand,
       common.minImpressions,
       common.limit,
-      opt('brandTerms', 'brandTerms:', 'brandTerms: z'),
     ],
   },
   {

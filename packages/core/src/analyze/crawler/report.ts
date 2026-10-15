@@ -69,7 +69,6 @@ export type CrawlConfig = {
 export type CrawlConfigInput = Omit<Partial<CrawlConfig>, 'url' | 'js'> & {
   url: string
   js?: JavaScriptRenderingInput
-  projectId?: string
   site?: string
   searchMetricsLimit?: number
   googleAnalyticsPropertyId?: string
@@ -302,7 +301,6 @@ export type CrawlAccessSummary = {
 export type CrawlReport = {
   id: string
   definitionId: string
-  projectId?: string
   site?: string
   googleAnalyticsPropertyId?: string
   analyticsConnection?: AnalyticsConnection
@@ -898,7 +896,6 @@ export function createCrawlReport(input: {
   additionalIssues?: CrawlIssue[]
   linkGraph?: CrawlLinkGraph
   ai?: CrawlAiSignals
-  projectId?: string
   site?: string
   googleAnalyticsPropertyId?: string
   analyticsConnection?: AnalyticsConnection
@@ -947,7 +944,6 @@ export function createCrawlReport(input: {
   return {
     id: input.id ?? crawlRunId(),
     definitionId,
-    projectId: input.projectId,
     site: input.site,
     googleAnalyticsPropertyId: input.googleAnalyticsPropertyId,
     analyticsConnection: input.analyticsConnection,

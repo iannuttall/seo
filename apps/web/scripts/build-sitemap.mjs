@@ -1,40 +1,27 @@
 import { writeFileSync } from 'node:fs'
 import { resolve } from 'node:path'
-import { reportIds, reportSlugs } from '../src/content/reports/manifest.mjs'
+import { docsPaths } from '../src/content/docs-nav.mjs'
 import { toolPaths } from '../src/content/tools/manifest.mjs'
 
 const site = (process.env.SITE_URL ?? 'https://seoskill.dev').replace(/\/$/, '')
 const publicDirectory = resolve(import.meta.dirname, '..', 'public')
-const paths = [
-  '/',
+// The feature pages target search phrases from the earlier site and keep
+// their URLs. src/content/features.ts lists the same pages.
+const featurePaths = [
   '/features',
   '/features/mcp',
-  '/features/seo-audit',
   '/features/search-console',
   '/features/keyword-research',
+  '/features/seo-audit',
+]
+const paths = [
+  '/',
+  ...featurePaths,
   '/tools',
   ...toolPaths,
-  '/docs',
-  '/docs/agents',
-  '/docs/ai-search',
-  '/docs/ai-visibility',
-  '/docs/bing',
-  '/docs/cli',
-  '/docs/crawler',
-  '/docs/getting-started',
-  '/docs/google',
-  '/docs/html-reports',
-  '/docs/indexnow',
-  '/docs/typescript',
-  '/docs/mcp',
-  '/docs/reports',
-  '/docs/skill',
-  '/blog',
-  '/blog/seo-agent',
-  '/blog/seo-mcp-servers',
+  ...docsPaths,
   '/stats',
   '/telemetry',
-  ...reportIds.map((id) => `/docs/reports/${reportSlugs[id] ?? id}`),
 ]
 
 function escapeXml(value) {

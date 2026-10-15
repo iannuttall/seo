@@ -1,0 +1,27 @@
+{
+  "$schema": "./node_modules/wrangler/config-schema.json",
+  // The hosted MCP. It stores nothing: Google tokens travel inside sealed
+  // tokens that the MCP client keeps, and provider keys arrive as request
+  // headers on each call.
+  "name": "seo-mcp",
+  "main": "./src/index.ts",
+  "account_id": "ab5ec097e2579c5f3639612c755e6f15",
+  "compatibility_date": "2026-07-15",
+  "compatibility_flags": ["nodejs_compat", "global_fetch_strictly_public"],
+  "workers_dev": false,
+  "preview_urls": false,
+  "routes": [
+    { "pattern": "seoskill.dev/mcp", "zone_name": "seoskill.dev" },
+    { "pattern": "seoskill.dev/mcp/*", "zone_name": "seoskill.dev" },
+    { "pattern": "seoskill.dev/oauth/*", "zone_name": "seoskill.dev" },
+    {
+      "pattern": "seoskill.dev/.well-known/oauth-*",
+      "zone_name": "seoskill.dev"
+    }
+  ],
+  "limits": { "cpu_ms": 60000 },
+  "vars": { "PUBLIC_URL": "https://seoskill.dev" },
+  // No Workers Logs: the server promises to store nothing, logs included.
+  "observability": { "enabled": false }
+  // Secrets: GOOGLE_CLIENT_ID, GOOGLE_CLIENT_SECRET, SEAL_KEY, AHREFS_DR_KEY.
+}

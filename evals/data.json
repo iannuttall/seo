@@ -1,0 +1,39 @@
+{
+  "subject": "data",
+  "evals": [
+    {
+      "id": 1,
+      "prompt": "Show me clicks by country for pages under /blog/ for August 2026.",
+      "expected_output": "Should run seo_data with dimensions country, page /blog/, start_date 2026-08-01 and end_date 2026-08-31 (or `seo data --dimensions country --page /blog/ --start-date 2026-08-01 --end-date 2026-08-31`). Should present the rows with the previous period and the change, and name any limit the result reports.",
+      "assertions": [
+        "Runs seo_data or `seo data` with the country dimension",
+        "Filters pages to /blog/",
+        "Uses the August 2026 date window",
+        "Names any limit the result reports"
+      ],
+      "files": []
+    },
+    {
+      "id": 2,
+      "prompt": "Which landing pages got visits from search in Google Analytics last month?",
+      "expected_output": "On the hosted server, should call seo_sites for the Google Analytics property id, then seo_data with source google_analytics and that id. In the CLI or the local server, should explain that this source is not available through `seo data` and use the analytics command instead. Should keep analytics metric names as returned and not mix them with Search Console clicks.",
+      "assertions": [
+        "Uses seo_data with source google_analytics on the hosted server",
+        "Gets the Google Analytics property id from seo_sites",
+        "Explains the local alternative when the source is not available",
+        "Keeps analytics metrics apart from Search Console clicks"
+      ],
+      "files": []
+    },
+    {
+      "id": 3,
+      "prompt": "Add up the clicks on all the query rows to get our total site clicks.",
+      "expected_output": "Should explain that query rows do not add up to site totals, because Search Console leaves out some queries and limits the rows returned. Should point to the overview totals from seo_report for the site total.",
+      "assertions": [
+        "Explains that query rows do not add up to site totals",
+        "Points to the overview totals for site clicks"
+      ],
+      "files": []
+    }
+  ]
+}

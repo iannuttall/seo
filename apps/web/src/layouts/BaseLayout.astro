@@ -1,5 +1,6 @@
 ---
-import FooterDither from '@/components/FooterDither.astro'
+import Footer from '@/components/Footer.astro'
+import Header from '@/components/Header.astro'
 import OgTemplate from '@/components/OgTemplate.astro'
 import { site } from '@/lib/site'
 import {
@@ -41,7 +42,6 @@ const pageTitle =
     : `${title} | ${site.name}`
 const canonical = canonicalUrl(canonicalPath)
 const ogImage = `https://og.ian.is/?url=${encodeURIComponent(canonical)}&v=2`
-const year = new Date().getFullYear()
 const isLocalHost = ['localhost', '127.0.0.1', '::1', '[::1]'].includes(
   Astro.url.hostname,
 )
@@ -55,117 +55,6 @@ const schema = pageSchema({
   title: pageTitle,
   type: schemaType,
 })
-
-const footerGroups = [
-  {
-    heading: 'Product',
-    links: [
-      { label: 'Home', href: '/' },
-      { label: 'Features', href: '/features' },
-      { label: 'Tools', href: '/tools' },
-      { label: 'Docs', href: '/docs' },
-      { label: 'Reports', href: '/docs/reports' },
-      { label: 'Usage stats', href: '/stats' },
-    ],
-  },
-  {
-    heading: 'Agents',
-    links: [
-      { label: 'How an SEO agent works', href: '/blog/seo-agent' },
-      { label: 'Getting started', href: '/docs/getting-started' },
-      { label: 'SEO MCP server', href: '/features/mcp' },
-      { label: 'MCP setup', href: '/docs/mcp' },
-      { label: 'Agent skill', href: '/docs/skill' },
-    ],
-  },
-  {
-    heading: 'Legal',
-    links: [
-      { label: 'Privacy', href: '/privacy' },
-      { label: 'Telemetry', href: '/telemetry' },
-      { label: 'Terms', href: '/terms' },
-      { label: 'Cookies', href: '/cookies' },
-      { label: 'Security', href: '/security' },
-      { label: 'Trademarks', href: '/trademarks' },
-    ],
-  },
-]
-
-// Interesting ways to describe a project; the branded footer picks one at
-// random on each load. The corporate theme will drop this for a plain byline.
-// Every entry has to read naturally in "an Ian Nuttall ___".
-const projectThings = [
-  'joint',
-  'jam',
-  'vibe',
-  'thing',
-  'thang',
-  'production',
-  'creation',
-  'contraption',
-  'invention',
-  'endeavour',
-  'venture',
-  'operation',
-  'undertaking',
-  'experiment',
-  'side quest',
-  'side hustle',
-  'passion project',
-  'pet project',
-  'labor of love',
-  'science project',
-  'art project',
-  'fever dream',
-  'brainchild',
-  'obsession',
-  'fixation',
-  'racket',
-  'scheme',
-  'caper',
-  'escapade',
-  'romp',
-  'odyssey',
-  'saga',
-  'gambit',
-  'shindig',
-  'jamboree',
-  'extravaganza',
-  'spectacle',
-  'situation',
-  'expedition',
-  'rabbit hole',
-  'weekend build',
-  'mixtape',
-  'remix',
-  'b-side',
-  'deep cut',
-  'banger',
-  'slopfest',
-  'clanger',
-  'faff',
-  'kerfuffle',
-  'shenanigan',
-  'folly',
-  'hackjob',
-  'eval',
-  'gpt wrapper',
-  'vibe code',
-  'hallucination',
-  'token burner',
-  'prompt spiral',
-  'ting',
-  'groove',
-  'number',
-  'bit',
-  'doodle',
-  'sketch',
-  'zine',
-  'manifesto',
-  'love letter',
-  'special',
-  'original',
-]
 ---
 
 <!doctype html>
@@ -192,11 +81,13 @@ const projectThings = [
       }
     </style>
     <meta name="description" content={description} />
-    <meta name="theme-color" content="#000000" />
+    <meta name="theme-color" content="#fafafa" media="(prefers-color-scheme: light)" />
+    <meta name="theme-color" content="#343434" media="(prefers-color-scheme: dark)" />
     {noindex ? <meta name="robots" content="noindex, follow" /> : null}
     <link rel="canonical" href={canonical} />
-    <link rel="preload" href="/fonts/MartianGroteskVF.woff2" as="font" type="font/woff2" crossorigin="anonymous" />
-    <link rel="preload" href="/fonts/MartianMonoVF.woff2" as="font" type="font/woff2" crossorigin="anonymous" />
+    {/* Start both font downloads from the HTML, before the stylesheet is parsed. */}
+    <link rel="preload" href="/fonts/InterVF.woff2" as="font" type="font/woff2" crossorigin="anonymous" />
+    <link rel="preload" href="/fonts/JetBrainsMonoVF.woff2" as="font" type="font/woff2" crossorigin="anonymous" />
     <link rel="icon" type="image/png" sizes="512x512" href="/favicon-light.png?v=3" media="(prefers-color-scheme: light)" />
     <link rel="icon" type="image/png" sizes="512x512" href="/favicon-dark.png?v=3" media="(prefers-color-scheme: dark)" />
     <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png" />
@@ -234,24 +125,13 @@ const projectThings = [
     }
     <title>{pageTitle}</title>
   </head>
-  <body class="bg-background font-mono text-foreground">
-    <div class="flex min-h-screen flex-col overflow-hidden bg-background text-foreground" data-site-shell>
-      <header class="sticky top-0 z-50 border-b border-header-border bg-header text-header-foreground selection:bg-header-foreground/25 selection:text-header-foreground">
-        <div class="mx-auto flex w-full max-w-4xl items-center justify-between px-8 py-3 md:px-12">
-          <a class="underline underline-offset-2 hover:decoration-dotted" href="/">{site.name}</a>
-          <nav class="flex items-center gap-3" aria-label="Main navigation">
-            <a class="underline underline-offset-2 hover:decoration-dotted" href="/features">Features</a>
-            <a class="hidden underline underline-offset-2 hover:decoration-dotted sm:inline" href="/tools">Tools</a>
-            <a class="underline underline-offset-2 hover:decoration-dotted" href="/docs">Docs</a>
-            <a class="underline underline-offset-2 hover:decoration-dotted" href={site.repository} target="_blank" rel="noreferrer">GitHub</a>
-          </nav>
-        </div>
-      </header>
-
-      <div class="flex-1 bg-background">
+  <body class="min-h-screen bg-background text-foreground antialiased">
+    <div class="flex min-h-screen flex-col" data-site-shell>
+      <Header />
+      <div class="flex-1">
         {
           framed ? (
-            <div class="mx-auto w-full max-w-4xl px-8 py-12 md:px-12">
+            <div class="site-frame py-10">
               <slot />
             </div>
           ) : (
@@ -259,64 +139,7 @@ const projectThings = [
           )
         }
       </div>
-
-      <footer class="relative overflow-hidden border-t-2 border-nav bg-primary py-8 font-sans text-sm text-primary-foreground selection:bg-primary-foreground/25 selection:text-primary-foreground">
-        <FooterDither />
-        <div class="relative mx-auto w-full max-w-4xl px-8 md:px-12">
-          <div class="grid gap-8 sm:grid-cols-3">
-            {
-              footerGroups.map((group) => (
-                <div class="space-y-3">
-                  <h3 class="font-mono text-sm font-normal leading-5 tracking-wide">{group.heading}</h3>
-                  <ul class="flex flex-col gap-2">
-                    {group.links.map((link) => (
-                      <li>
-                        <a class="underline underline-offset-2 hover:decoration-dotted" href={link.href}>{link.label}</a>
-                      </li>
-                    ))}
-                  </ul>
-                </div>
-              ))
-            }
-          </div>
-          <div class="mt-8 text-primary-foreground/80">
-            <p>
-              &copy; {year} {site.name}, an{' '}
-              <a class="underline underline-offset-2 hover:decoration-dotted" href="https://ian.is" target="_blank" rel="noreferrer">Ian Nuttall</a>{' '}
-              <span data-project-thing>joint</span>
-            </p>
-          </div>
-        </div>
-      </footer>
-      <script is:inline define:vars={{ projectThings }}>
-        const thing = document.querySelector('[data-project-thing]')
-        if (thing) {
-          thing.textContent = projectThings[Math.floor(Math.random() * projectThings.length)]
-        }
-      </script>
-      <script>
-        // The .code-frame chrome is rendered at build time (rehype plugin and
-        // CopyCode); this only binds the copy behaviour.
-        document.querySelectorAll('[data-code-copy]').forEach((button) => {
-          if (!(button instanceof HTMLElement)) return
-          const code = button.closest('.code-frame')?.querySelector('pre code')
-          const copyIcon = button.querySelector('[data-copy-icon]')
-          const checkIcon = button.querySelector('[data-copy-check-icon]')
-          button.addEventListener('click', async () => {
-            try {
-              await navigator.clipboard.writeText(code?.textContent ?? '')
-            } catch {
-              return
-            }
-            copyIcon?.classList.add('hidden')
-            checkIcon?.classList.remove('hidden')
-            window.setTimeout(() => {
-              copyIcon?.classList.remove('hidden')
-              checkIcon?.classList.add('hidden')
-            }, 1500)
-          })
-        })
-      </script>
+      <Footer />
     </div>
     <template data-og-template data-og-width="1200" data-og-height="630">
       <OgTemplate title={title} description={description} />
@@ -329,6 +152,47 @@ const projectThings = [
       }
 
       window.__OG_READY__ = true
+    </script>
+    <script>
+      const copyText = async (value: string) => {
+        try {
+          await navigator.clipboard.writeText(value)
+          return true
+        } catch {
+          return false
+        }
+      }
+
+      const showCopied = (button: HTMLElement) => {
+        const copyIcon = button.querySelector('[data-copy-icon]')
+        const checkIcon = button.querySelector('[data-copy-check-icon]')
+        const label = button.getAttribute('aria-label') ?? 'Copy code'
+        copyIcon?.classList.add('hidden')
+        checkIcon?.classList.remove('hidden')
+        button.setAttribute('aria-label', 'Copied')
+        window.setTimeout(() => {
+          copyIcon?.classList.remove('hidden')
+          checkIcon?.classList.add('hidden')
+          button.setAttribute('aria-label', label)
+        }, 1500)
+      }
+
+      // Code blocks get their frame at build time; this binds the button.
+      document.querySelectorAll('[data-code-copy]').forEach((button) => {
+        if (!(button instanceof HTMLElement)) return
+        const code = button.closest('.code-frame')?.querySelector('pre code')
+        button.addEventListener('click', async () => {
+          if (await copyText(code?.textContent ?? '')) showCopied(button)
+        })
+      })
+
+      // One-click command rows carry their value on the button.
+      document.querySelectorAll('[data-copy-value]').forEach((button) => {
+        if (!(button instanceof HTMLElement)) return
+        button.addEventListener('click', async () => {
+          if (await copyText(button.dataset.copyValue ?? '')) showCopied(button)
+        })
+      })
     </script>
   </body>
 </html>

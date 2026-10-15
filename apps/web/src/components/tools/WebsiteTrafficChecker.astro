@@ -1,22 +1,22 @@
 ---
 import Button from '@/components/Button.astro'
-import DottedCard from '@/components/DottedCard.astro'
+import Card from '@/components/Card.astro'
 import FormInput from '@/components/FormInput.astro'
 import FormSelect from '@/components/FormSelect.astro'
 import TurnstileWidget from '@/components/tools/TurnstileWidget.astro'
 ---
 
 <section data-traffic-checker class="space-y-6">
-  <DottedCard patternId="website-traffic-input">
+  <Card>
     <form data-traffic-form class="space-y-5 p-5 sm:p-6" novalidate>
       <div class="space-y-1">
-        <h2 class="font-mono text-lg font-normal">Estimate organic search traffic</h2>
-        <p class="font-sans text-sm font-light leading-6 text-foreground-muted">
+        <h2 class="text-lg font-medium">Estimate organic search traffic</h2>
+        <p class="text-sm leading-6 text-foreground-muted">
           See estimated organic traffic, ranking keywords, and position changes for the last twelve months.
         </p>
       </div>
       <div class="grid gap-4 sm:grid-cols-[minmax(0,1fr)_14rem]">
-        <label class="block space-y-2 font-sans text-sm font-medium">
+        <label class="block space-y-2 text-sm font-medium">
           <span>Domain</span>
           <FormInput
             data-target
@@ -30,7 +30,7 @@ import TurnstileWidget from '@/components/tools/TurnstileWidget.astro'
             required
           />
         </label>
-        <label class="block space-y-2 font-sans text-sm font-medium">
+        <label class="block space-y-2 text-sm font-medium">
           <span>Google market</span>
           <FormSelect data-market>
             <option value="2840:en:United States">United States</option>
@@ -48,60 +48,60 @@ import TurnstileWidget from '@/components/tools/TurnstileWidget.astro'
       </div>
       <TurnstileWidget action="website-traffic" />
       <div class="flex justify-end">
-        <Button data-submit type="submit" class="min-h-12 shrink-0 px-5 text-xs">Check traffic</Button>
+        <Button data-submit type="submit" class="min-h-10 shrink-0 px-5 text-xs">Check traffic</Button>
       </div>
-      <p data-error hidden class="font-sans text-sm leading-6 text-red-700 dark:text-red-400" role="alert"></p>
+      <p data-error hidden class="text-sm leading-6 text-red-700 dark:text-red-400" role="alert"></p>
     </form>
-  </DottedCard>
+  </Card>
 
   <div data-results hidden class="space-y-6">
-    <DottedCard patternId="website-traffic-summary" inverted>
+    <Card inverted>
       <div class="space-y-5 p-5 sm:p-6">
         <div class="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
           <div>
-            <p class="font-sans text-xs font-light text-panel-foreground/65">Estimated monthly Google organic traffic</p>
-            <p data-traffic class="mt-1 font-mono text-5xl font-normal text-primary"></p>
-            <p data-period class="mt-2 font-sans text-sm font-light text-panel-foreground/70"></p>
+            <p class="text-xs text-foreground-muted">Estimated monthly Google organic traffic</p>
+            <p data-traffic class="mt-1 text-5xl font-medium text-primary"></p>
+            <p data-period class="mt-2 text-sm text-foreground-muted"></p>
           </div>
           <div class="grid gap-2 sm:grid-cols-2">
             <Button data-copy type="button" class="min-h-10 px-4 text-xs">Copy summary</Button>
             <Button data-download type="button" class="min-h-10 px-4 text-xs">Download CSV</Button>
           </div>
         </div>
-        <dl class="grid grid-cols-2 gap-4 border-t border-panel-foreground/30 pt-5 sm:grid-cols-3">
+        <dl class="grid grid-cols-2 gap-4 border-t border-border pt-5 sm:grid-cols-3">
           <div>
-            <dt class="font-sans text-xs font-light text-panel-foreground/65">Ranking keywords</dt>
+            <dt class="text-xs text-foreground-muted">Ranking keywords</dt>
             <dd data-keywords class="mt-1 font-mono text-lg"></dd>
           </div>
           <div>
-            <dt class="font-sans text-xs font-light text-panel-foreground/65">Traffic value</dt>
+            <dt class="text-xs text-foreground-muted">Traffic value</dt>
             <dd data-value class="mt-1 font-mono text-lg"></dd>
           </div>
           <div>
-            <dt class="font-sans text-xs font-light text-panel-foreground/65">Market</dt>
+            <dt class="text-xs text-foreground-muted">Market</dt>
             <dd data-result-market class="mt-1 font-mono text-xs"></dd>
           </div>
         </dl>
-        <div class="space-y-2 border-t border-panel-foreground/30 pt-5">
+        <div class="space-y-2 border-t border-border pt-5">
           <p data-data-status class="font-mono text-xs"></p>
-          <p data-checked-at class="font-sans text-xs font-light text-panel-foreground/65"></p>
-          <ul data-warnings class="list-disc space-y-1 pl-5 font-sans text-xs font-light leading-5 text-panel-foreground/70"></ul>
+          <p data-checked-at class="text-xs text-foreground-muted"></p>
+          <ul data-warnings class="list-disc space-y-1 pl-5 text-xs leading-5 text-foreground-muted"></ul>
         </div>
-        <p data-action-status class="font-sans text-xs font-light text-panel-foreground/65" aria-live="polite"></p>
+        <p data-action-status class="text-xs text-foreground-muted" aria-live="polite"></p>
       </div>
-    </DottedCard>
+    </Card>
 
-    <DottedCard patternId="website-traffic-history">
+    <Card>
       <div class="space-y-5 p-5 sm:p-6">
         <div class="space-y-1">
-          <h3 class="font-mono text-sm font-normal">Twelve-month estimate</h3>
-          <p class="font-sans text-xs font-light leading-5 text-foreground-muted">
+          <h3 class="text-sm font-medium">Twelve-month estimate</h3>
+          <p class="text-xs leading-5 text-foreground-muted">
             Compare monthly traffic and keyword movement to spot gains, losses, and trend changes.
           </p>
         </div>
         <div class="overflow-x-auto">
           <table class="w-full min-w-[68rem] border-collapse text-left">
-            <thead class="border-b border-border font-sans text-xs font-medium text-foreground-muted">
+            <thead class="border-b border-border text-xs font-medium text-foreground-muted">
               <tr>
                 <th class="pb-2 pr-4">Month</th>
                 <th class="pb-2 pr-4 text-right">Traffic</th>
@@ -114,21 +114,21 @@ import TurnstileWidget from '@/components/tools/TurnstileWidget.astro'
                 <th class="pb-2 text-right">Lost</th>
               </tr>
             </thead>
-            <tbody data-history class="divide-y divide-border font-sans text-xs"></tbody>
+            <tbody data-history class="divide-y divide-border text-xs"></tbody>
           </table>
         </div>
       </div>
-    </DottedCard>
+    </Card>
 
-    <DottedCard patternId="website-traffic-keywords">
+    <Card>
       <div class="space-y-5 p-5 sm:p-6">
         <div class="space-y-1">
-          <h3 class="font-mono text-sm font-normal">Top ranking keywords</h3>
-          <p class="font-sans text-xs font-light leading-5 text-foreground-muted">A small current sample for context, not a complete keyword export.</p>
+          <h3 class="text-sm font-medium">Top ranking keywords</h3>
+          <p class="text-xs leading-5 text-foreground-muted">A small current sample for context, not a complete keyword export.</p>
         </div>
         <div class="overflow-x-auto">
           <table class="w-full min-w-[48rem] border-collapse text-left">
-            <thead class="border-b border-border font-sans text-xs font-medium text-foreground-muted">
+            <thead class="border-b border-border text-xs font-medium text-foreground-muted">
               <tr>
                 <th class="pb-2 pr-4">Keyword</th>
                 <th class="pb-2 pr-4 text-right">Position</th>
@@ -136,12 +136,12 @@ import TurnstileWidget from '@/components/tools/TurnstileWidget.astro'
                 <th class="pb-2">Ranking URL</th>
               </tr>
             </thead>
-            <tbody data-top-keywords class="divide-y divide-border font-sans text-xs"></tbody>
+            <tbody data-top-keywords class="divide-y divide-border text-xs"></tbody>
           </table>
         </div>
-        <p data-no-keywords hidden class="font-sans text-sm font-light text-foreground-muted">No current keyword sample was available.</p>
+        <p data-no-keywords hidden class="text-sm text-foreground-muted">No current keyword sample was available.</p>
       </div>
-    </DottedCard>
+    </Card>
   </div>
 </section>
 

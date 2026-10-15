@@ -1,6 +1,7 @@
 import { sign } from 'node:crypto'
 import { readFileSync } from 'node:fs'
 import { SeoError } from '../../errors.js'
+import { readJson, readJsonOrUndefined } from '../../http/read-json.js'
 import {
   GOOGLE_READONLY_SCOPES,
   type GoogleAccessTokenClient,
@@ -224,9 +225,10 @@ async function requestServiceAccountToken(
   })
 
   if (!response.ok) {
-    const payload = (await response.json().catch(() => undefined)) as
-      | { error?: unknown }
-      | undefined
+    const payload = (await readJsonOrUndefined(
+      response,
+      'Google service account sign-in',
+    )) as { error?: unknown } | undefined
     const reason =
       typeof payload?.error === 'string' ? ` (${payload.error})` : ''
     if (
@@ -249,7 +251,10 @@ async function requestServiceAccountToken(
     )
   }
 
-  const payload = (await response.json()) as {
+  const payload = (await readJson(
+    response,
+    'Google service account sign-in',
+  )) as {
     access_token?: unknown
     expires_in?: unknown
   }

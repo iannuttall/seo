@@ -1,0 +1,40 @@
+{
+  "subject": "page",
+  "evals": [
+    {
+      "id": 1,
+      "prompt": "Why is https://example.com/pricing not getting much search traffic?",
+      "expected_output": "Should run seo_page with url https://example.com/pricing (or `seo page --url https://example.com/pricing`). Should present the live page facts (status, redirect, title, description, H1, canonical, robots), Google's index status from URL Inspection, and the page's queries against the previous period. Should show these facts and not claim a single cause.",
+      "assertions": [
+        "Runs seo_page or `seo page` with the URL",
+        "Presents live page facts and Google index status",
+        "Presents the page's queries against the previous period",
+        "Does not claim a single cause without evidence"
+      ],
+      "files": []
+    },
+    {
+      "id": 2,
+      "prompt": "seo page shows a noindex tag on our old landing page. That is a bug, remove it.",
+      "expected_output": "Should treat the noindex as an observation until the person confirms it is wrong. Should ask whether the page is meant to be out of search before suggesting a change. Should not edit the page without approval.",
+      "assertions": [
+        "Treats the noindex as an observation",
+        "Asks whether the noindex is intended",
+        "Does not edit the page without approval"
+      ],
+      "files": []
+    },
+    {
+      "id": 3,
+      "prompt": "Is https://example.com/blog/new-post indexed yet?",
+      "expected_output": "Should run seo_page on the URL and report Google's index status from URL Inspection with the time it was checked. Should not promise that the page will be indexed or say when. If the property for the URL is not available, should say so instead of guessing.",
+      "assertions": [
+        "Runs seo_page or `seo page` on the URL",
+        "Reports the URL Inspection index status",
+        "Does not promise indexing or a date",
+        "Says so when the property for the URL is not available"
+      ],
+      "files": []
+    }
+  ]
+}

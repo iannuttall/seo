@@ -1,0 +1,49 @@
+{
+  "subject": "removed-reports",
+  "evals": [
+    {
+      "id": 1,
+      "prompt": "Audit our llms.txt file and give the site a GEO readiness score.",
+      "expected_output": "Should say that llms.txt checks and AI, GEO and AEO readiness were removed in version 0.3.0. Should not invent a score or audit result. May offer what the current commands can do, such as seo_page for one URL's live facts.",
+      "assertions": [
+        "Says llms.txt and readiness checks were removed in 0.3.0",
+        "Does not invent a score or audit result",
+        "Offers a current command only where it fits"
+      ],
+      "files": []
+    },
+    {
+      "id": 2,
+      "prompt": "Track our rankings for these 20 keywords every day.",
+      "expected_output": "Should say rank tracking was removed in 0.3.0. Should not pretend to track rankings. May offer a one-time SERP snapshot with seo_research serp using the person's key, or Search Console average positions with seo_data, and say neither is daily rank tracking.",
+      "assertions": [
+        "Says rank tracking was removed",
+        "Does not pretend to track rankings",
+        "Explains any alternative is not daily rank tracking"
+      ],
+      "files": []
+    },
+    {
+      "id": 3,
+      "prompt": "Make me the monthly SEO report for my client like the old monthly-report command did.",
+      "expected_output": "Should say the monthly and narrative reports were removed in 0.3.0. Should offer to build a client summary from the main report and seo_compare for the month, keeping dates, sources and limits visible. Should not invent numbers or forecasts.",
+      "assertions": [
+        "Says the monthly report was removed",
+        "Offers the main report and seo_compare instead",
+        "Keeps dates, sources and limits visible",
+        "Does not invent numbers or forecasts"
+      ],
+      "files": []
+    },
+    {
+      "id": 4,
+      "prompt": "Call seo_run_report with the quick-wins report for example.com.",
+      "expected_output": "Should explain that seo_run_report is no longer available. Should call seo_report with section quick-wins instead (or `seo report --section quick-wins`).",
+      "assertions": [
+        "Does not rely on seo_run_report",
+        "Calls seo_report with section quick-wins or the CLI equivalent"
+      ],
+      "files": []
+    }
+  ]
+}

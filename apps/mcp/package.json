@@ -1,0 +1,23 @@
+{
+  "name": "@seo/hosted-mcp",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "deploy": "wrangler deploy",
+    "dev": "wrangler dev",
+    "test": "node --test src/*.test.ts",
+    "typecheck": "wrangler types src/worker-configuration.d.ts --include-runtime false --env-file .dev.vars.example --check && tsc -p tsconfig.json",
+    "types": "wrangler types src/worker-configuration.d.ts --include-runtime false --env-file .dev.vars.example"
+  },
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.31.0",
+    "@seo/core": "workspace:*",
+    "zod": "4.4.3"
+  },
+  "devDependencies": {
+    "@cloudflare/workers-types": "5.20260719.1",
+    "typescript": "^6.0.3",
+    "wrangler": "^4.112.0"
+  }
+}

@@ -30,15 +30,15 @@ test('CTR analysis uses site peers without benchmarking a row against itself', (
     url: 'https://example.com/audit',
     clicks: 0,
     impressions: 10_000,
-    position: 9,
+    position: 3,
   })
-  const peers = [20, 18, 15, 12, 10].map((clicks, index) =>
+  const peers = [120, 108, 90, 72, 60].map((clicks, index) =>
     row({
       query: `seo peer ${index}`,
       url: `https://example.com/peer-${index}`,
       clicks,
       impressions: 1000,
-      position: 9,
+      position: 3,
     }),
   )
 
@@ -51,11 +51,11 @@ test('CTR analysis uses site peers without benchmarking a row against itself', (
     (underperformer) => underperformer.query === candidate.keys[0],
   )
   assert.ok(item)
-  assert.equal(item.expectedCtr, 0.018)
+  assert.equal(item.expectedCtr, 0.108)
   assert.equal(item.benchmark.source.includes('leave_target_url_out'), true)
   assert.equal(item.benchmark.peerRows, 5)
   assert.equal(item.benchmark.qualifiedPeerImpressions, 5000)
-  assert.equal(item.clickShortfall, 180)
+  assert.equal(item.clickShortfall, 1080)
 })
 
 test('CTR analysis excludes every target URL row from its benchmark', () => {
@@ -64,22 +64,22 @@ test('CTR analysis excludes every target URL row from its benchmark', () => {
     url: 'https://example.com/audit',
     clicks: 0,
     impressions: 10_000,
-    position: 9,
+    position: 3,
   })
   const samePage = row({
     query: 'seo audit service',
     url: 'https://example.com/audit#details',
     clicks: 900,
     impressions: 1000,
-    position: 9,
+    position: 3,
   })
-  const peers = [20, 18, 15, 12, 10].map((clicks, index) =>
+  const peers = [120, 108, 90, 72, 60].map((clicks, index) =>
     row({
       query: `seo peer ${index}`,
       url: `https://example.com/peer-${index}`,
       clicks,
       impressions: 1000,
-      position: 9,
+      position: 3,
     }),
   )
 
@@ -92,7 +92,7 @@ test('CTR analysis excludes every target URL row from its benchmark', () => {
   )
 
   assert.ok(item)
-  assert.equal(item.expectedCtr, 0.018)
+  assert.equal(item.expectedCtr, 0.108)
   assert.equal(item.benchmark.peerRows, 5)
   assert.equal(item.benchmark.peerImpressions, 5000)
 })
@@ -103,15 +103,15 @@ test('CTR analysis keeps brand and junk rows out of the peer benchmark', () => {
     url: 'https://example.com/audit',
     clicks: 0,
     impressions: 10_000,
-    position: 9,
+    position: 3,
   })
-  const peers = [20, 18, 15, 12, 10].map((clicks, index) =>
+  const peers = [120, 108, 90, 72, 60].map((clicks, index) =>
     row({
       query: `seo peer ${index}`,
       url: `https://example.com/peer-${index}`,
       clicks,
       impressions: 1000,
-      position: 9,
+      position: 3,
     }),
   )
   const excludedPeers = [
@@ -121,7 +121,7 @@ test('CTR analysis keeps brand and junk rows out of the peer benchmark', () => {
         url: `https://example.com/brand-${index}`,
         clicks: 900,
         impressions: 1000,
-        position: 9,
+        position: 3,
       }),
     ),
     row({
@@ -129,7 +129,7 @@ test('CTR analysis keeps brand and junk rows out of the peer benchmark', () => {
       url: 'https://example.com/operator',
       clicks: 900,
       impressions: 1000,
-      position: 9,
+      position: 3,
     }),
   ]
 
@@ -143,7 +143,7 @@ test('CTR analysis keeps brand and junk rows out of the peer benchmark', () => {
     (underperformer) => underperformer.query === candidate.keys[0],
   )
   assert.ok(item)
-  assert.equal(item.expectedCtr, 0.018)
+  assert.equal(item.expectedCtr, 0.108)
   assert.equal(item.benchmark.peerRows, 5)
 })
 
@@ -153,7 +153,7 @@ test('qualified rows below the reporting threshold still inform benchmarks', () 
     url: 'https://example.com/audit',
     clicks: 0,
     impressions: 10_000,
-    position: 9,
+    position: 3,
   })
   const peers = Array.from({ length: 10 }, (_, index) =>
     row({
@@ -161,7 +161,7 @@ test('qualified rows below the reporting threshold still inform benchmarks', () 
       url: `https://example.com/peer-${index}`,
       clicks: index < 5 ? 2 : 1,
       impressions: 100,
-      position: 9,
+      position: 3,
     }),
   )
 
@@ -187,21 +187,21 @@ test('CTR analysis breaks complete ties by query and URL', () => {
         url: 'https://example.com/b',
         clicks: 0,
         impressions: 1000,
-        position: 5,
+        position: 3,
       }),
       row({
         query: 'alpha query',
         url: 'https://example.com/z',
         clicks: 0,
         impressions: 1000,
-        position: 5,
+        position: 3,
       }),
       row({
         query: 'alpha query',
         url: 'https://example.com/a',
         clicks: 0,
         impressions: 1000,
-        position: 5,
+        position: 3,
       }),
     ],
     site: 'sc-domain:example.com',
@@ -225,21 +225,21 @@ test('CTR analysis excludes brand, junk, and low-impression candidates', () => {
         url: 'https://example.com/login',
         clicks: 0,
         impressions: 1000,
-        position: 5,
+        position: 3,
       }),
       row({
         query: 'site:example.com',
         url: 'https://example.com/',
         clicks: 0,
         impressions: 1000,
-        position: 5,
+        position: 3,
       }),
       row({
         query: 'technical seo audit',
         url: 'https://example.com/audit',
         clicks: 0,
-        impressions: 199,
-        position: 5,
+        impressions: 29,
+        position: 3,
       }),
     ],
     site: 'sc-domain:example.com',
@@ -247,6 +247,12 @@ test('CTR analysis excludes brand, junk, and low-impression candidates', () => {
   })
 
   assert.deepEqual(result.items, [])
+  // 2,029 retained impressions scale below the CTR floor, so the default
+  // minimum is the floor of 30 and the 29-impression row is excluded.
+  assert.equal(result.minImpressions, 30)
+  assert.equal(result.minImpressionsPolicy.source, 'scaled-default')
+  assert.equal(result.minImpressionsPolicy.basisImpressions, 2029)
+  assert.equal(result.selection.belowMinimumRows, 1)
 })
 
 test('aggregates repeated query/page rows before CTR and position analysis', () => {
@@ -256,14 +262,14 @@ test('aggregates repeated query/page rows before CTR and position analysis', () 
       url: 'https://example.com/audit',
       clicks: 0,
       impressions: 100,
-      position: 4,
+      position: 2,
     }),
     row({
       query: 'technical seo audit',
       url: 'https://example.com/audit#section',
       clicks: 0,
       impressions: 300,
-      position: 6,
+      position: 3,
     }),
   ]
   const forward = analyzeCtrUnderperformersFromRows({
@@ -283,7 +289,7 @@ test('aggregates repeated query/page rows before CTR and position analysis', () 
   assert.equal(forward.items[0]?.query, 'Technical SEO Audit')
   assert.equal(forward.items[0]?.impressions, 400)
   assert.equal(forward.items[0]?.actualCtr, 0)
-  assert.equal(forward.items[0]?.position, 5.5)
+  assert.equal(forward.items[0]?.position, 2.75)
 })
 
 test('keeps zero clicks while excluding invalid rows with stable provenance', () => {
@@ -292,7 +298,7 @@ test('keeps zero clicks while excluding invalid rows with stable provenance', ()
     url: 'https://example.com/audit',
     clicks: 0,
     impressions: 1000,
-    position: 5,
+    position: 3,
   })
   const invalidRows: GscRow[] = [
     { ...zeroClick, keys: ['missing page'] },
@@ -314,13 +320,13 @@ test('keeps zero clicks while excluding invalid rows with stable provenance', ()
 })
 
 test('bounds pure-analysis options and limits after ranking all candidates', () => {
-  const rows = ['charlie', 'alpha', 'bravo'].map((query) =>
+  const rows = ['charlie guide', 'alpha guide', 'bravo guide'].map((query) =>
     row({
       query,
-      url: `https://example.com/${query}`,
+      url: `https://example.com/${query.replace(' ', '-')}`,
       clicks: 0,
       impressions: 1000,
-      position: 5,
+      position: 3,
     }),
   )
   const result = analyzeCtrUnderperformersFromRows({
@@ -335,9 +341,9 @@ test('bounds pure-analysis options and limits after ranking all candidates', () 
   assert.equal(result.selection.eligibleUnderperformers, 3)
   assert.equal(result.selection.returnedUnderperformers, 1)
   assert.equal(result.selection.limitedUnderperformers, 2)
-  assert.equal(result.items[0]?.query, 'alpha')
-  assert.equal(result.totalClickShortfall, 150)
-  assert.equal(result.returnedClickShortfall, 50)
+  assert.equal(result.items[0]?.query, 'alpha guide')
+  assert.equal(result.totalClickShortfall, 300)
+  assert.equal(result.returnedClickShortfall, 100)
 })
 
 test('report publishes bounded retained-row and validation provenance', async () => {
@@ -353,7 +359,7 @@ test('report publishes bounded retained-row and validation provenance', async ()
             url: 'https://example.com/audit',
             clicks: 0,
             impressions: 1000,
-            position: 5,
+            position: 3,
           }),
           {
             ...row({
@@ -361,7 +367,7 @@ test('report publishes bounded retained-row and validation provenance', async ()
               url: 'https://example.com/bad',
               clicks: 0,
               impressions: 1000,
-              position: 5,
+              position: 3,
             }),
             ctr: 2,
           },
@@ -407,7 +413,7 @@ test('a retained-row cap cannot produce a definitive CTR all-clear', async () =>
           url: 'https://example.com/healthy',
           clicks: 100,
           impressions: 1000,
-          position: 5,
+          position: 3,
         }),
       ],
       calls: 4,
@@ -442,4 +448,77 @@ test('report validates numeric options before calling Search Console', async () 
     /minImpressions must be a whole number/,
   )
   assert.equal(calls, 0)
+})
+
+test('a mid-size site gets a scaled default minimum and keeps low-CTR rows', async () => {
+  // Regression: a fixed 200-impression default returned no rows for a site
+  // with about 150,000 retained impressions, where page-one rows carry 30 to
+  // 150 impressions each.
+  const candidates = Array.from({ length: 20 }, (_, index) =>
+    row({
+      query: `widget question ${String(index).padStart(2, '0')}`,
+      url: `https://example.com/widgets/${index}`,
+      clicks: 0,
+      impressions: 30 + index * 6,
+      position: 1 + (index % 3),
+    }),
+  )
+  const deeper = Array.from({ length: 300 }, (_, index) =>
+    row({
+      query: `deep topic ${index}`,
+      url: `https://example.com/deep/${index}`,
+      clicks: 1,
+      impressions: 494,
+      position: 25,
+    }),
+  )
+  const rows = [
+    ...candidates,
+    ...deeper,
+    row({
+      query: 'deep remainder',
+      url: 'https://example.com/deep/remainder',
+      clicks: 0,
+      impressions: 60,
+      position: 30,
+    }),
+  ]
+  const dependencies: CtrUnderperformerDependencies = {
+    searchAnalytics: async () => ({ rows, calls: 1, rowsFetched: rows.length }),
+    now: () => new Date('2026-07-09T12:00:00.000Z'),
+  }
+
+  const report = await ctrUnderperformersReport(
+    { site: 'sc-domain:example.com' },
+    dependencies,
+  )
+
+  assert.deepEqual(report.minImpressionsPolicy, {
+    effective: 30,
+    source: 'scaled-default',
+    basisImpressions: 150_000,
+    scale: {
+      share: 0.0002,
+      floor: 30,
+      ceiling: 200,
+      basis: 'sum_of_retained_query_page_impressions',
+      heuristic: true,
+    },
+  })
+  assert.equal(report.summary.minImpressions, 30)
+  assert.equal(report.summary.underperformers, 20)
+  assert.equal(report.dataStatus, 'complete')
+  assert.match(
+    report.caveats.join('\n'),
+    /scaled from 150000 retained impressions \(1 in 5,000, between 30 and 200\)/,
+  )
+
+  const fixed = await ctrUnderperformersReport(
+    { site: 'sc-domain:example.com', minImpressions: 200 },
+    dependencies,
+  )
+  assert.equal(fixed.minImpressionsPolicy.source, 'explicit')
+  assert.equal(fixed.summary.underperformers, 0)
+  assert.equal(fixed.selection.belowMinimumRows, 20)
+  assert.match(fixed.caveats.join('\n'), /200 \(requested\)/)
 })

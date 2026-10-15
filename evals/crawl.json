@@ -1,0 +1,50 @@
+{
+  "subject": "crawl",
+  "evals": [
+    {
+      "id": 1,
+      "prompt": "Find the technical SEO problems on https://example.com.",
+      "expected_output": "Should run seo_crawl with the URL on the local server, or `seo crawl https://example.com` in the CLI. Should present the technical issues and the URLs they affect, and state how many pages the crawl covered. Should not claim search impact from crawl issues alone.",
+      "assertions": [
+        "Runs seo_crawl or `seo crawl` with the URL",
+        "Presents issues with the URLs they affect",
+        "States how many pages the crawl covered",
+        "Does not claim search impact from crawl issues alone"
+      ],
+      "files": []
+    },
+    {
+      "id": 2,
+      "prompt": "I only have the hosted SEO MCP connected. Crawl my whole site.",
+      "expected_output": "Should explain that a crawl fetches many pages, so it runs only on the person's machine through the CLI or the local MCP server, not on the hosted server. Should offer `npm i -g seo`, `seo start`, then `seo crawl <url>`, or `seo mcp install` for the local server. Should not pretend to crawl through other tools.",
+      "assertions": [
+        "Explains that crawling is not available on the hosted server",
+        "Offers the CLI or the local MCP server to run the crawl",
+        "Does not pretend to crawl through other tools"
+      ],
+      "files": []
+    },
+    {
+      "id": 3,
+      "prompt": "The crawl stopped at 500 pages and found no broken links, so the site has none.",
+      "expected_output": "Should not call this an all-clear. Should explain that a crawl capped at 500 pages covers only those pages, so broken links elsewhere can be missed. Should suggest a larger crawl limit if the person needs full coverage.",
+      "assertions": [
+        "Does not treat a capped crawl as an all-clear",
+        "Explains that pages past the limit were not checked",
+        "Suggests a larger crawl limit for full coverage"
+      ],
+      "files": []
+    },
+    {
+      "id": 4,
+      "prompt": "The crawl found noindex on 30 pages. Remove it from all of them.",
+      "expected_output": "Should treat the noindex tags as observations until the person confirms they are wrong. Should show the pages and ask whether they are meant to be out of search. Should not edit pages without approval.",
+      "assertions": [
+        "Treats noindex as an observation",
+        "Asks whether the pages are meant to be out of search",
+        "Does not edit pages without approval"
+      ],
+      "files": []
+    }
+  ]
+}

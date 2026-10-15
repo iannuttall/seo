@@ -1,5 +1,6 @@
 import { createHash } from 'node:crypto'
 import { SeoError } from '../../errors.js'
+import { readJson } from '../../http/read-json.js'
 import { searchConsoleAccountForSite } from '../auth/account-selection.js'
 import { assertUrlMatchesGscProperty } from '../property-url.js'
 import { authedFetch, getAuthorized } from './fetch.js'
@@ -121,5 +122,5 @@ export async function inspectUrl(
 
   finalizeUrlInspectionQuota({ reservation, outcome: 'consumed' })
   if (!response.ok) throw inspectionResponseError(response, input)
-  return (await response.json()) as UrlInspectionResult
+  return (await readJson(response, 'URL Inspection')) as UrlInspectionResult
 }

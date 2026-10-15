@@ -15,6 +15,16 @@
       "types": "./src/server-logs/browser.ts",
       "browser": "./src/server-logs/browser.ts",
       "import": "./dist/server-logs/browser.js"
+    },
+    "./hosted": {
+      "types": "./src/hosted.ts",
+      "workerd": "./src/hosted.ts",
+      "import": "./dist/hosted.js"
+    },
+    "./commands": {
+      "types": "./src/commands/index.ts",
+      "workerd": "./src/commands/index.ts",
+      "import": "./dist/commands/index.js"
     }
   },
   "files": [
@@ -34,6 +44,7 @@
     "consola": "^3.4.2",
     "debug": "^4.4.3",
     "defuddle": "^0.19.1",
+    "htmlparser2": "10.1.0",
     "jsonc-parser": "^3.3.1",
     "libsql": "^0.5.29",
     "lighthouse": "13.4.1",
@@ -47,7 +58,7 @@
     "proper-lockfile": "^4.1.2",
     "robots-parser": "^3.0.1",
     "schema-dts": "^2.0.0",
-    "undici": "^8.9.0",
+    "undici": "^8.10.2",
     "yaml": "^2.9.0",
     "zod": "^4.4.3"
   }

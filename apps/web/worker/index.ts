@@ -1,5 +1,5 @@
 import { Hono } from 'hono'
-import { reportIds } from '../src/content/reports/manifest.mjs'
+import { reportIds } from '../src/content/telemetry/report-ids.mjs'
 import { applyDailyToolQuota } from './tools/daily-tool-quota.ts'
 import { handleFaviconCheck } from './tools/favicon-checker.ts'
 import { handleLlmsTxtFetch } from './tools/llms-txt.ts'
@@ -127,12 +127,14 @@ export const TELEMETRY_OPERATIONS = [
   'url-inspect',
 ] as const
 
+// "hosted" marks runs from the hosted MCP at seoskill.dev/mcp.
 const PLATFORMS = [
   'aix',
   'android',
   'darwin',
   'freebsd',
   'haiku',
+  'hosted',
   'linux',
   'openbsd',
   'sunos',
@@ -142,6 +144,7 @@ const PLATFORMS = [
 const ARCHITECTURES = [
   'arm',
   'arm64',
+  'hosted',
   'ia32',
   'loong64',
   'mips',

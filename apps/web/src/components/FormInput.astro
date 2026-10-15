@@ -8,7 +8,10 @@ const { class: className, ...attrs } = Astro.props
 
 <input
   class:list={[
-    'min-h-12 w-full border border-border bg-background px-3 py-3 font-mono text-sm font-normal text-foreground outline-none transition-colors hover:border-foreground focus-visible:border-primary',
+    'flex h-10 w-full min-w-0 rounded-lg border border-input bg-card px-3 py-1 text-base text-foreground outline-none transition-[color,box-shadow,background-color] placeholder:text-foreground-soft md:text-sm',
+    'focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/20',
+    'disabled:pointer-events-none disabled:cursor-not-allowed disabled:opacity-50',
+    'aria-invalid:border-destructive aria-invalid:ring-destructive/20',
     className,
   ]}
   {...attrs}

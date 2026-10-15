@@ -94,8 +94,8 @@ provider packages optional capability adapters
   provider-specific API clients and tests in their package repositories.
 - `apps/web`: static Astro documentation and landing site for seoskill.dev.
 - `skills/seo/SKILL.md`: the single router skill agents install. It teaches
-  discovery, the jobs table, and evidence rules; per-report depth lives in the
-  registry.
+  the eight commands, the report-first flow, the jobs table, and evidence
+  rules.
 - `evals/`: behaviour evals keyed by report id or job, shipped in the package.
 - `scripts`: package, release, quality, OAuth injection, and local utilities.
 - `docs`: git-ignored local notes, audit evidence, and working material.
@@ -128,6 +128,16 @@ Useful CLI areas:
 
 Useful core areas:
 
+- `packages/core/src/commands`: the one engine for the eight commands and the
+  MCP tools (`tools.ts`). Runs in Node and in Workers. Surfaces pass a
+  `ToolSurface` (Google fetch, keys, sign-in hint); they add no report logic.
+- `packages/core/src/google/api.ts`: every Search Console, URL Inspection and
+  Google Analytics call, shared by the CLI, both MCP servers and any other
+  host. The Node binding adds the local sign-in, cache and quotas.
+- `packages/core/src/commands-node.ts`: the Node functions the CLI and local
+  MCP pass to the commands.
+- `packages/core/src/http/read-json.ts`: read every JSON API response through
+  `readJson`, never `response.json()`.
 - `packages/core/src/analyze/reports`: narrative report assembly.
 - `packages/core/src/analyze/workflows`: focused agent workflow reports.
 - `packages/core/src/analyze/crawler`: crawl analysis and readiness reports.
@@ -147,6 +157,22 @@ Useful core areas:
   Analytics”.
 - `packages/core/src/clicky`: Clicky API adapter and sitekey storage boundary.
   Profiles store the site ID only. Keep sitekeys in the managed secret store.
+
+## One Way To Run
+
+Keep every report, tool and command simple and linear, for people and for
+agents.
+
+- A report needs only its target (site, URL or property) and, optionally, a
+  date window. It returns everything it has.
+- Do not add flags, options or environment switches that change what a
+  report returns or means. Choices such as brand terms, minimums, page checks
+  and redirect merges are automatic, deterministic and shown in the output.
+- More detail comes only through progressive disclosure: summary, then rows,
+  then every field.
+- Each report may end by naming the report to run next. That is the only
+  routing.
+- When a new option seems necessary, first try to make the default right.
 
 ## Product Rules
 
@@ -201,6 +227,21 @@ The guided flow should not ask humans for implementation details.
 
 ## MCP Rules
 
+- There are two MCP servers with one tool set. The hosted server in
+  `apps/mcp` (`https://seoskill.dev/mcp`) and the local stdio server in
+  `packages/mcp` (`seo mcp serve`) both serve `seo_sites` and the shared
+  tools defined once in `packages/core/src/commands/tools.ts`: `seo_report`,
+  `seo_page`, `seo_compare`, `seo_index`, `seo_research` and `seo_data`.
+- Each server only supplies a `ToolSurface`: how it reaches Google, resolves
+  a site and reads provider keys. Tool names, inputs, descriptions and result
+  text come from the shared definition, so both servers stay identical.
+- Only the local server adds `seo_crawl`, `seo_internal_links` and the
+  provider package tools (`seo_list_providers`, `seo_describe_provider`,
+  `seo_run_provider`), because they need the person's machine.
+- The hosted server stores nothing. No database, no account, and no log of
+  user data. Google tokens and provider keys are sealed into the token the
+  client keeps or arrive as request headers, and are used for that request
+  only.
 - Keep `seo mcp install` interactive for humans. Require explicit targets in
   JSON and CI mode.
 - Preserve unrelated client settings, create backups, and refuse to replace
@@ -272,7 +313,7 @@ Every report must be technically defensible and useful to another program.
 
 - TypeScript ESM only.
 - Keep CLI and MCP wrappers thin. Reusable behavior belongs in `packages/core`.
-- Register structured reports once so CLI discovery, MCP discovery, and skills stay in sync.
+- Define commands and MCP tools once in `packages/core/src/commands` so the CLI, both MCP servers, and the skill stay in sync.
 - Prefer structured APIs and schemas over string parsing.
 - Prefer small modules with one clear responsibility. Split files when a real
   boundary appears; do not create abstract layers that only rename calls.
@@ -299,29 +340,40 @@ Every report must be technically defensible and useful to another program.
 ## Skills And MCP
 
 The package ships exactly one skill, the router at `skills/seo/SKILL.md`. Do
-not add per-report skills. Per-report guidance lives in the registry depth
-tables (`packages/mcp/src/report-depth*.ts`) and is served at runtime by
-`seo reports describe` and `seo_describe_report`.
+not add per-report skills. The skill teaches the eight commands, the matching
+MCP tools, the one-report flow and the evidence rules.
 
 - Follow the format rules in `skills/README.md`.
-- A new report registers once with its schema and depth guidance (readOrder,
-  doNotClaim, verify, related); no skill file is added for it.
+- The public surface is eight commands (`seo report`, `seo page`,
+  `seo compare`, `seo index`, `seo research`, `seo data`, `seo crawl`,
+  `seo internal-links`) plus `seo start`. For the six shared commands, the
+  CLI command in `packages/cli/src/commands/core-commands.ts` and the MCP
+  tool in `packages/core/src/commands/tools.ts` call the same `run*`
+  function in `packages/core/src/commands`, with the same result text. Crawl
+  and internal links run the same core reports from the CLI and the local
+  server.
+- Add new analysis as a section of `seo report` or as part of an existing
+  command first. A new command or MCP tool changes the product contract.
+- Define a new MCP tool once in `packages/core/src/commands/tools.ts` so both
+  servers serve it. Register a tool in only one server when it needs the
+  local machine, such as a crawl.
+- Do not bring back report discovery tools (`seo_list_reports`,
+  `seo_describe_report`, `seo_run_report`). Each result ends with the command
+  to run next; that is the only routing. `seo reports list`, `describe` and
+  `run` stay in the CLI for the remaining catalog, served by the registry
+  depth tables in `packages/mcp/src/report-depth*.ts`.
 - Keep the router description broad enough to trigger on any SEO-adjacent
   request, and keep its body under roughly a thousand words.
-- Teach agents to start compact, inspect evidence, then request detail through
-  describe.
-- Behaviour evals live in `evals/` (see `evals/README.md`) and are validated
-  by `scripts/validate-skills.mjs`.
-- Skills and MCP must call the same core functions as the CLI.
-- Keep the MCP discovery surface compact. Avoid exposing dozens of near-identical
-  tools when discovery plus a report id can cover them cleanly.
-- New reports must use the existing list, describe, and run tools. Do not add a
-  report-specific public MCP tool unless the product contract explicitly changes.
-- Define new reports directly in the shared registry. Do not register a fake MCP
-  tool only to capture its schema and handler for discovery.
+- Teach agents to run the report without a section first, then one section,
+  then the next command the result names. More detail comes from `rows` with
+  an offset, then `full`.
+- Behaviour evals live in `evals/`, one file per command, report section or
+  job (see `evals/README.md`), and are validated by
+  `scripts/validate-skills.mjs`.
 - Bound inputs and outputs. Large pages, issue inventories, and raw provider
   rows should be opt-in.
-- Preserve structured error and report schemas across CLI and MCP surfaces.
+- Preserve structured error and result shapes across the CLI and both MCP
+  servers.
 
 ## Project Selection
 
@@ -389,15 +441,11 @@ node dist/cli.js projects --help
 node dist/cli.js start --help
 ```
 
-Root help must keep this curated path:
-
-- `seo start`
-- `seo report`
-- `seo projects list`
-- `seo refresh-priorities`
-- `seo quick-wins`
-- `seo second-page`
-- `seo technical-watch`
+Root help must keep this curated path: `seo start`, `seo report`, then the
+eight commands (`seo page`, `seo compare`, `seo index`, `seo research`,
+`seo data`, `seo crawl`, `seo internal-links`) and setup commands. Old report
+names are not taught; they print their new command for one release
+(`packages/cli/src/renames.ts`).
 
 Do not let `seo help` return `Unknown command help`.
 

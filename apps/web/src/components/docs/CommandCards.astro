@@ -1,0 +1,18 @@
+---
+import HomeCard from '@/components/HomeCard.astro'
+import { commands } from '@/content/commands'
+---
+
+<div class="mt-6 grid grid-cols-1 gap-2 sm:grid-cols-2">
+  {
+    commands.map((item) => (
+      <HomeCard
+        title={item.command}
+        code={item.command}
+        text={item.text}
+        icon={item.icon}
+        href={item.path}
+      />
+    ))
+  }
+</div>

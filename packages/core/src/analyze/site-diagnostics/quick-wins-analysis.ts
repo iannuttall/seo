@@ -1,5 +1,18 @@
-import { createCtrBenchmarkContext } from '../opportunity-primitives.js'
-import { CTR_BASELINE } from '../shared.js'
+import { resolveReportBrandTerms } from '../../brand-evidence.js'
+import {
+  CTR_MIN_IMPRESSIONS_SCALE,
+  resolveMinImpressionsPolicy,
+} from '../min-impressions-policy.js'
+import {
+  countQueryFlags,
+  QUERY_FLAG_METHOD,
+  queryFlags,
+} from '../query-quality.js'
+import {
+  CTR_SPLIT_POSITION,
+  createSiteCtrCurve,
+  SITE_CTR_CURVE_METHOD,
+} from '../site-ctr-curve.js'
 import {
   boundedInteger,
   compareQuickWinItems,
@@ -20,31 +33,34 @@ export type {
   QuickWinSelection,
 } from './quick-wins-types.js'
 
-const DEFAULT_MIN_IMPRESSIONS = 200
 const MAX_MIN_IMPRESSIONS = 1_000_000_000
 const DEFAULT_LIMIT = 25
 const MAX_LIMIT = 100
-const FALLBACK_SOURCE = 'builtin_position_ctr_curve_v1'
 
 export function analyzeQuickWinsFromRows(
   input: AnalyzeQuickWinsInput,
 ): QuickWinAnalysis {
-  const minImpressions = boundedInteger(
-    input.minImpressions,
-    DEFAULT_MIN_IMPRESSIONS,
-    0,
-    MAX_MIN_IMPRESSIONS,
-  )
-  const limit = boundedInteger(input.limit, DEFAULT_LIMIT, 1, MAX_LIMIT)
-  const selected = selectBenchmarkRows(input)
-  const benchmarkContext = createCtrBenchmarkContext(selected.rows, {
-    samplePopulation: 'all_qualified_url_samples',
-    fallbackSource: FALLBACK_SOURCE,
+  const minImpressionsPolicy = resolveMinImpressionsPolicy({
+    explicit: input.minImpressions,
+    rows: input.rows,
+    scale: CTR_MIN_IMPRESSIONS_SCALE,
+    minimum: 0,
+    maximum: MAX_MIN_IMPRESSIONS,
   })
+  const minImpressions = minImpressionsPolicy.effective
+  const limit = boundedInteger(input.limit, DEFAULT_LIMIT, 1, MAX_LIMIT)
+  const brand = resolveReportBrandTerms({
+    siteUrl: input.site,
+    rows: input.rows,
+    brandTerms: input.brandTerms,
+    includeBrand: input.includeBrand,
+  })
+  const selected = selectBenchmarkRows(input, brand.terms)
+  const benchmarkContext = createSiteCtrCurve(selected.rows)
   const eligibleItems: QuickWinItem[] = []
 
   for (const row of selected.rows) {
-    if (row.position < 4) {
+    if (row.position < CTR_SPLIT_POSITION) {
       selected.selection.outsideCandidatePositionRows++
       continue
     }
@@ -58,9 +74,17 @@ export function analyzeQuickWinsFromRows(
       selected.selection.atOrAboveTargetRows++
       continue
     }
-    eligibleItems.push(quickWinItem({ row, benchmark, excludedTargetRows }))
+    eligibleItems.push(
+      quickWinItem({
+        row,
+        benchmark,
+        excludedTargetRows,
+        queryFlags: queryFlags(row.keys[0] ?? '', { siteUrl: input.site }),
+      }),
+    )
     selected.selection.eligibleRows++
   }
+  Object.assign(selected.selection, countQueryFlags(eligibleItems))
 
   eligibleItems.sort(compareQuickWinItems)
   const items = eligibleItems.slice(0, limit)
@@ -70,6 +94,7 @@ export function analyzeQuickWinsFromRows(
   return {
     site: input.site,
     minImpressions,
+    minImpressionsPolicy,
     limit,
     dataStatus:
       input.rows.length === 0
@@ -86,44 +111,28 @@ export function analyzeQuickWinsFromRows(
         minimumInclusive: 4,
         maximumInclusive: 10,
       },
-      benchmark: {
-        method: 'position_bucket_url_p75_v2',
-        samplePopulation: 'all_qualified_url_samples',
-        leaveOut: 'target_url',
-        minimumUrlImpressions: 30,
-        minimumQualifiedImpressions: 1000,
-        minimumUrlSamples: 5,
-        minimumPositiveUrlSamples: 3,
-        fallback: {
-          id: 'seo_builtin_position_ctr',
-          version: 1,
-          kind: 'built_in_heuristic',
-          curve: Object.fromEntries(
-            Object.entries(CTR_BASELINE).map(([position, ctr]) => [
-              position,
-              ctr,
-            ]),
-          ),
-        },
-        heuristic: true,
-      },
+      benchmark: SITE_CTR_CURVE_METHOD,
       priority: {
         method: 'impressions_x_target_ctr_shortfall',
         formula: 'impressions * max(0, target CTR - observed CTR)',
         heuristic: true,
         estimatedClickLift: false,
       },
+      queryFlags: QUERY_FLAG_METHOD,
     },
+    brand,
     provenance: {
       inputScope: 'provided_rows',
       selectionOrder: [
         'valid_row',
+        'fragment_and_duplicate_merge',
         'benchmark_position',
         'query_quality',
         'brand',
         'candidate_position',
         'minimum_impressions',
         'target_ctr_shortfall',
+        'query_flag_ranking',
         'limit',
       ],
       selection: selected.selection,

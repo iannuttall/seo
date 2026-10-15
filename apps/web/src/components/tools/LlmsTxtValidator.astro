@@ -1,26 +1,26 @@
 ---
 import Button from '@/components/Button.astro'
-import DottedCard from '@/components/DottedCard.astro'
+import Card from '@/components/Card.astro'
 ---
 
 <section data-llms-txt-validator class="space-y-6">
-  <DottedCard patternId="llms-txt-validator-input">
+  <Card>
     <div class="space-y-5 p-5 sm:p-6">
       <div class="space-y-1">
-        <h2 class="font-mono text-lg font-normal">Validate an llms.txt file</h2>
-        <p class="font-sans text-sm font-light leading-6 text-foreground-muted">
+        <h2 class="text-lg font-medium">Validate an llms.txt file</h2>
+        <p class="text-sm leading-6 text-foreground-muted">
           Check a published file, paste its contents, or open one from your computer.
         </p>
       </div>
 
-      <div class="flex gap-2" role="tablist" aria-label="Input method">
+      <div class="inline-flex w-fit gap-1 rounded-lg bg-muted p-0.5" role="tablist" aria-label="Input method">
         <button
           data-input-tab="url"
           type="button"
           role="tab"
           aria-selected="true"
           aria-controls="llms-url-panel"
-          class="border border-primary bg-primary px-4 py-2 font-sans text-xs font-medium text-primary-foreground transition-colors"
+          class="rounded-md px-3 py-1.5 text-sm font-medium transition-colors bg-card text-foreground shadow-xs"
         >From URL</button>
         <button
           data-input-tab="paste"
@@ -29,40 +29,40 @@ import DottedCard from '@/components/DottedCard.astro'
           aria-selected="false"
           aria-controls="llms-paste-panel"
           tabindex="-1"
-          class="border border-border bg-background-subtle px-4 py-2 font-sans text-xs font-medium text-foreground-muted transition-colors hover:text-foreground"
+          class="rounded-md px-3 py-1.5 text-sm font-medium transition-colors text-foreground-muted hover:text-foreground"
         >Paste content</button>
       </div>
 
       <div id="llms-url-panel" data-input-panel="url" role="tabpanel">
         <form data-url-form class="space-y-3" novalidate>
-          <label for="llms-validator-url" class="block font-sans text-sm font-medium">llms.txt URL</label>
+          <label for="llms-validator-url" class="block text-sm font-medium">llms.txt URL</label>
           <div class="flex flex-col gap-2 sm:flex-row">
             <input
               id="llms-validator-url"
               data-url-input
-              class="min-h-12 min-w-0 flex-1 border border-border bg-background px-4 py-3 font-mono text-sm font-normal text-foreground outline-none focus:border-primary"
+              class="min-h-10 min-w-0 flex-1 rounded-lg border border-input bg-card px-4 py-3 font-mono text-sm font-normal text-foreground outline-none focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/20"
               type="url"
               inputmode="url"
               autocomplete="url"
               maxlength="2048"
               placeholder="https://example.com/llms.txt"
             />
-            <Button data-check-url type="submit" class="min-h-12 px-5 text-xs sm:min-w-32">Check URL</Button>
+            <Button data-check-url type="submit" class="min-h-10 px-5 text-xs sm:min-w-32">Check URL</Button>
           </div>
-          <p data-url-status class="font-sans text-xs font-light leading-5 text-foreground-muted" aria-live="polite">
+          <p data-url-status class="text-xs leading-5 text-foreground-muted" aria-live="polite">
             We fetch one public HTTPS text file up to 100,000 bytes. Links inside it are not opened.
           </p>
-          <p data-url-error hidden class="font-sans text-sm font-medium leading-6 text-red-700 dark:text-red-400" role="alert"></p>
+          <p data-url-error hidden class="text-sm font-medium leading-6 text-red-700 dark:text-red-400" role="alert"></p>
         </form>
       </div>
 
       <div id="llms-paste-panel" data-input-panel="paste" role="tabpanel" hidden>
         <div class="space-y-3">
-          <label for="llms-validator-content" class="block font-sans text-sm font-medium">llms.txt content</label>
+          <label for="llms-validator-content" class="block text-sm font-medium">llms.txt content</label>
           <textarea
             id="llms-validator-content"
             data-validator-input
-            class="min-h-64 w-full resize-y border border-border bg-background px-4 py-3 font-mono text-xs font-normal leading-6 text-foreground outline-none focus:border-primary"
+            class="min-h-64 w-full resize-y rounded-lg border border-input bg-card px-4 py-3 font-mono text-xs font-normal leading-6 text-foreground outline-none focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/20"
             maxlength="100000"
             rows="11"
             spellcheck="false"
@@ -75,58 +75,58 @@ import DottedCard from '@/components/DottedCard.astro'
               <button
                 data-open-file
                 type="button"
-                class="border border-border bg-background-subtle px-3 py-2 font-sans text-xs font-medium text-foreground transition-colors hover:border-foreground"
+                class="rounded-lg bg-muted px-3 py-2 text-xs font-medium text-foreground transition-colors hover:border-border-strong"
               >Open file</button>
               <button
                 data-use-example
                 type="button"
-                class="px-2 py-2 font-sans text-xs text-foreground-muted underline underline-offset-4 hover:text-foreground hover:decoration-dotted"
+                class="px-2 py-2 text-xs text-foreground-muted underline underline-offset-4 hover:text-foreground hover:text-primary-hover"
               >Use example</button>
               <button
                 data-clear-input
                 type="button"
-                class="px-2 py-2 font-sans text-xs text-foreground-muted underline underline-offset-4 hover:text-foreground hover:decoration-dotted"
+                class="px-2 py-2 text-xs text-foreground-muted underline underline-offset-4 hover:text-foreground hover:text-primary-hover"
               >Clear</button>
             </div>
-            <p data-local-status class="font-sans text-xs font-light leading-5 text-foreground-muted" aria-live="polite">
+            <p data-local-status class="text-xs leading-5 text-foreground-muted" aria-live="polite">
               Pasted text and local files stay in this browser tab.
             </p>
           </div>
         </div>
       </div>
     </div>
-  </DottedCard>
+  </Card>
 
   <div data-result-card hidden>
-    <DottedCard patternId="llms-txt-validator-result" inverted>
+    <Card inverted>
       <div class="space-y-5 p-5 sm:p-6">
         <div class="flex flex-col gap-2 sm:flex-row sm:items-baseline sm:gap-4">
-          <strong data-result-verdict class="font-mono text-2xl font-normal text-primary">Valid</strong>
-          <p data-result-summary class="font-sans text-sm font-light leading-6 text-panel-foreground/75" aria-live="polite"></p>
+          <strong data-result-verdict class="text-2xl font-medium text-primary">Valid</strong>
+          <p data-result-summary class="text-sm leading-6 text-foreground-muted" aria-live="polite"></p>
         </div>
 
-        <dl class="grid grid-cols-2 gap-4 border-t border-panel-foreground/30 pt-5 sm:grid-cols-4">
+        <dl class="grid grid-cols-2 gap-4 border-t border-border pt-5 sm:grid-cols-4">
           <div>
-            <dt class="font-sans text-xs font-light text-panel-foreground/65">Bytes</dt>
+            <dt class="text-xs text-foreground-muted">Bytes</dt>
             <dd data-stat-bytes class="mt-1 font-mono text-lg">0</dd>
           </div>
           <div>
-            <dt class="font-sans text-xs font-light text-panel-foreground/65">Lines</dt>
+            <dt class="text-xs text-foreground-muted">Lines</dt>
             <dd data-stat-lines class="mt-1 font-mono text-lg">0</dd>
           </div>
           <div>
-            <dt class="font-sans text-xs font-light text-panel-foreground/65">Sections</dt>
+            <dt class="text-xs text-foreground-muted">Sections</dt>
             <dd data-stat-sections class="mt-1 font-mono text-lg">0</dd>
           </div>
           <div>
-            <dt class="font-sans text-xs font-light text-panel-foreground/65">Links</dt>
+            <dt class="text-xs text-foreground-muted">Links</dt>
             <dd data-stat-links class="mt-1 font-mono text-lg">0</dd>
           </div>
         </dl>
 
-        <div data-result-messages class="border-t border-panel-foreground/30 pt-5" hidden></div>
+        <div data-result-messages class="border-t border-border pt-5" hidden></div>
       </div>
-    </DottedCard>
+    </Card>
   </div>
 </section>
 
@@ -152,16 +152,8 @@ Start with the quick start before opening the full reference.
 - [Full reference](https://example.com/reference): Complete API documentation.
 `
 
-  const activeTabClasses = [
-    'border-primary',
-    'bg-primary',
-    'text-primary-foreground',
-  ]
-  const inactiveTabClasses = [
-    'border-border',
-    'bg-background-subtle',
-    'text-foreground-muted',
-  ]
+  const activeTabClasses = ['bg-card', 'text-foreground', 'shadow-xs']
+  const inactiveTabClasses = ['text-foreground-muted']
 
   type ValidationIssue = { message: string; line?: number }
   type LlmsTxtFetchResult = {
@@ -265,15 +257,15 @@ Start with the quick start before opening the full reference.
       if (!messages || items.length === 0) return
       messages.hidden = false
       const section = document.createElement('section')
-      section.className = 'border-t border-panel-foreground/30 pt-5 first:border-t-0 first:pt-0'
+      section.className = 'border-t border-border pt-5 first:border-t-0 first:pt-0'
       const heading = document.createElement('h3')
-      heading.className = 'font-mono text-sm font-normal'
+      heading.className = 'text-sm font-medium'
       heading.textContent = `${title} (${items.length.toLocaleString()})`
       const list = document.createElement('ol')
       list.className = 'mt-3 divide-y divide-panel-foreground/20'
       for (const item of items) {
         const row = document.createElement('li')
-        row.className = 'py-3 first:pt-0 last:pb-0 font-sans text-xs leading-5 text-panel-foreground/80'
+        row.className = 'py-3 first:pt-0 last:pb-0 text-xs leading-5 text-foreground-muted'
         if (item.line) {
           const line = document.createElement('span')
           line.className = 'mr-2 font-mono text-xs text-primary'

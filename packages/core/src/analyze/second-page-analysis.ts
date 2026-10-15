@@ -1,4 +1,5 @@
 import { shouldExcludeBrandQuery } from '../brand.js'
+import { resolveReportBrandTerms } from '../brand-evidence.js'
 import type { GscRow } from '../types/pages.js'
 import { detectPageTemplate } from './page-patterns.js'
 import type {
@@ -183,6 +184,12 @@ export function analyzeSecondPageRows(
     limitedPages: 0,
   }
   const grouped = new Map<string, GscRow[]>()
+  const brand = resolveReportBrandTerms({
+    siteUrl: input.site,
+    rows: input.rows,
+    brandTerms: input.brandTerms,
+    includeBrand: input.includeBrand,
+  })
 
   for (const row of input.rows) {
     const query = row.keys[0]?.trim() ?? ''
@@ -195,7 +202,7 @@ export function analyzeSecondPageRows(
       shouldExcludeBrandQuery({
         query,
         siteUrl: input.site,
-        brandTerms: input.brandTerms,
+        brandTerms: brand.terms,
         includeBrand: input.includeBrand,
       })
     ) {
@@ -242,6 +249,7 @@ export function analyzeSecondPageRows(
     site: input.site,
     minImpressions,
     limit,
+    brand,
     dataStatus:
       input.rows.length === 0
         ? 'empty'

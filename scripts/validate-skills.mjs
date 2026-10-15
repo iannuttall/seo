@@ -136,13 +136,15 @@ const reportIds = new Set([
   }),
 ])
 const mcpSource = [
-  await text('packages/mcp/src/discovery-tools.ts'),
+  await text('packages/mcp/src/shared-tools.ts'),
   await text('packages/mcp/src/provider-extension-tools.ts'),
+  await text('packages/core/src/commands/tools.ts'),
 ].join('\n')
 const mcpTools = new Set(
-  [...mcpSource.matchAll(/registerTool\(\s*'([^']+)'/g)].map(
-    (match) => match[1],
-  ),
+  [
+    ...mcpSource.matchAll(/registerTool\(\s*'([^']+)'/g),
+    ...mcpSource.matchAll(/name: '(seo_[a-z_]+)'/g),
+  ].map((match) => match[1]),
 )
 
 // The package ships exactly one skill: skills/seo. It is a router that names
@@ -176,13 +178,9 @@ if (skillWords < 300) {
   )
 }
 
-for (const tool of [
-  'seo_list_reports',
-  'seo_describe_report',
-  'seo_run_report',
-]) {
+for (const tool of ['seo_sites', 'seo_report']) {
   if (!skillSource.includes(`\`${tool}\``)) {
-    fail(`${skillPath}: missing MCP discovery tool ${tool}`)
+    fail(`${skillPath}: missing MCP tool ${tool}`)
   }
 }
 

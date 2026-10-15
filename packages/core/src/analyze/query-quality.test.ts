@@ -1,6 +1,12 @@
 import assert from 'node:assert/strict'
 import { test } from 'node:test'
-import { isLowActionabilityQuery } from './query-quality.js'
+import {
+  isLikelyAutomatedQuery,
+  isLikelyNavigationalOtherQuery,
+  isLowActionabilityQuery,
+  QUERY_FLAG_METHOD,
+  queryFlags,
+} from './query-quality.js'
 
 test('isLowActionabilityQuery keeps normal SEO queries', () => {
   assert.equal(isLowActionabilityQuery('x search'), false)
@@ -35,4 +41,57 @@ test('isLowActionabilityQuery drops currency and operator dumps', () => {
 
 test('isLowActionabilityQuery drops leaked ranking snippets', () => {
   assert.equal(isLowActionabilityQuery('"ranking/303" "moved up" "$"'), true)
+})
+
+test('likely-automated flags identifier dumps and keyword lists only', () => {
+  assert.equal(
+    isLikelyAutomatedQuery(
+      'aieos v1.1 skill.md manifest spec openai anthropic google llama mistral prompt',
+    ),
+    true,
+  )
+  assert.equal(
+    isLikelyAutomatedQuery(
+      'organization_full_name_founded_by_author_allowing_creatives_locality_put_skills',
+    ),
+    true,
+  )
+  assert.equal(
+    isLikelyAutomatedQuery(
+      'how to install python on windows 10 without admin rights',
+    ),
+    false,
+  )
+  assert.equal(isLikelyAutomatedQuery('flux image generation api'), false)
+  assert.equal(
+    isLikelyAutomatedQuery('cómo instalar python en windows sin permisos'),
+    false,
+  )
+})
+
+test('navigational-other flags other sites and keeps own host and topics', () => {
+  const context = { siteUrl: 'sc-domain:inference.sh' }
+  for (const query of [
+    'skills sh',
+    'agentskills.io directory',
+    'pruna',
+    'google gemini 3',
+    'replicate login',
+  ]) {
+    assert.equal(isLikelyNavigationalOtherQuery(query, context), true, query)
+  }
+  for (const query of [
+    'inference sh',
+    'inference.sh pricing',
+    'docs.inference.sh api',
+    'google gemini 3 api',
+    'install skill.md file',
+    'flux image generation api',
+    'transcription',
+  ]) {
+    assert.equal(isLikelyNavigationalOtherQuery(query, context), false, query)
+  }
+  assert.deepEqual(queryFlags('skills sh', context), ['navigational-other'])
+  assert.deepEqual(queryFlags('flux image api', context), [])
+  assert.equal(QUERY_FLAG_METHOD.heuristic, true)
 })

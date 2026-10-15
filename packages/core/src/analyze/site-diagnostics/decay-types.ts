@@ -1,3 +1,4 @@
+import type { ReportBrandTerms } from '../../brand-evidence.js'
 import type { Recommendation } from '../../types.js'
 import type { PageTemplate, TemplateSummary } from '../page-patterns.js'
 
@@ -86,6 +87,7 @@ export interface AnalyzeDecayInput {
 }
 
 export interface DecayAnalysis {
+  brand: ReportBrandTerms
   selection: DecaySelection
   totals: {
     eligibleObservedRetainedQueryClickLoss: number
@@ -98,6 +100,9 @@ export interface DecayAnalysis {
 
 export interface DecayReport {
   schemaVersion: 1
+  // Optional only so pre-existing fixtures stay valid; decaying reports
+  // always set it.
+  brand?: ReportBrandTerms
   site: string
   generatedAt: string
   comparison: DecayComparison

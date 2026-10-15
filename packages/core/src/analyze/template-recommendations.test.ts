@@ -31,6 +31,7 @@ function item(query: string, url: string): QuickWinItem {
       confidence: 'fallback',
       heuristic: true,
     },
+    queryFlags: [],
     estimatedCtrClickShortfall: 80,
     priority: {
       method: 'impressions_x_target_ctr_shortfall',

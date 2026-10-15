@@ -19,13 +19,55 @@ function validationMessage(error: z.ZodError): string {
     .join('; ')
 }
 
+// Reports removed in 0.3.0. Their code stays until 0.4.0, but the catalog
+// no longer lists or runs them.
+export const REMOVED_REPORT_IDS = new Set([
+  'agent-readiness',
+  'ai-mention-research',
+  'ai-prompt-observations',
+  'ai-readiness',
+  'ai-search-scorecard',
+  'bing-webmaster-overview',
+  'community-intent',
+  'entity-readiness',
+  'generate-llms-txt',
+  'geo-gaps',
+  'llms-txt-audit',
+  'local-search-demand',
+  'monthly-action-plan',
+  'monthly-report',
+  'narrative-report',
+  'okf-build',
+  'okf-validate',
+  'pseo-audit',
+  'pseo-opportunities',
+  'pseo-patterns',
+  'rank-tracking',
+  'saved-keywords',
+  'seo-to-ai-query',
+  'server-log-analysis',
+])
+
+function activeReport(id: string) {
+  if (REMOVED_REPORT_IDS.has(id)) {
+    throw new SeoError(
+      'INVALID_INPUT',
+      `The ${id} report was removed in 0.3.0. Run \`seo help\` for the commands.`,
+    )
+  }
+  const report = getReportDefinition(id)
+  if (!report) throw new SeoError('INVALID_INPUT', `Unknown report: ${id}.`)
+  return report
+}
+
 export function listReports(category?: ReportCategory): ReportSummary[] {
-  return listReportDefinitions(category)
+  return listReportDefinitions(category).filter(
+    (report) => !REMOVED_REPORT_IDS.has(report.id),
+  )
 }
 
 export function describeReportCheck(id: string, check: string) {
-  const report = getReportDefinition(id)
-  if (!report) throw new SeoError('INVALID_INPUT', `Unknown report: ${id}.`)
+  const report = activeReport(id)
   const fixableChecks = listFixableChecks(report.id)
   if (fixableChecks.length === 0) {
     throw new SeoError(
@@ -50,8 +92,7 @@ export function describeReportCheck(id: string, check: string) {
 }
 
 export function describeReport(id: string) {
-  const report = getReportDefinition(id)
-  if (!report) throw new SeoError('INVALID_INPUT', `Unknown report: ${id}.`)
+  const report = activeReport(id)
   const fixableChecks = listFixableChecks(report.id)
   return {
     id: report.id,
@@ -88,8 +129,7 @@ export async function executeReport(
   params: Record<string, unknown> = {},
   options: { view?: 'full' | 'actions' } = {},
 ): Promise<ToolResult> {
-  const report = getReportDefinition(id)
-  if (!report) throw new SeoError('INVALID_INPUT', `Unknown report: ${id}.`)
+  const report = activeReport(id)
 
   const parsed = report.inputSchema.safeParse(params)
   if (!parsed.success) {

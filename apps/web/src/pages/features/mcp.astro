@@ -1,104 +1,56 @@
 ---
-import Breadcrumbs from '@/components/Breadcrumbs.astro'
-import DottedCard from '@/components/DottedCard.astro'
-import FeatureCta from '@/components/FeatureCta.astro'
-import NavCard from '@/components/NavCard.astro'
-import PageHeader from '@/components/PageHeader.astro'
-import BaseLayout from '@/layouts/BaseLayout.astro'
-import type { SchemaBreadcrumb } from '@/lib/schema'
+import {
+  ComputerTerminal01Icon,
+  Key01Icon,
+  LockKeyIcon,
+  McpServerIcon,
+} from '@hugeicons/core-free-icons'
+import FeaturePage from '@/components/FeaturePage.astro'
 
-const breadcrumbs: SchemaBreadcrumb[] = [
-  { label: 'Home', href: '/' },
-  { label: 'Features', href: '/features' },
-  { label: 'SEO MCP server' },
+const related = [
+  { title: 'Hosted MCP', text: 'Connect seoskill.dev/mcp to Claude Code, Codex or any remote MCP client.', href: '/docs/mcp', icon: McpServerIcon },
+  { title: 'CLI and local MCP', text: 'Install seo and add the local MCP server to your agents.', href: '/docs/cli', icon: ComputerTerminal01Icon },
+  { title: 'API keys', text: 'Add DataForSEO or Ahrefs for keyword and competitor research.', href: '/docs/keys', icon: Key01Icon },
+  { title: 'What is stored', text: 'What the hosted MCP and the CLI keep, and what they never keep.', href: '/docs/privacy', icon: LockKeyIcon },
 ]
-
-const prompts = [
-  'Why did search clicks fall, and which pages explain the change?',
-  'Which page-two queries already have enough impressions to work on?',
-  'Crawl the site and show the technical issues with the widest reach.',
-  'Which competitors appear most often for these keywords?',
-] as const
 ---
 
-<BaseLayout
+<FeaturePage
   title="SEO MCP server for AI agents"
-  description="Connect an open source SEO MCP server to any agent that supports local MCP. Run audits with crawl, Search Console, analytics, keyword, and competitor evidence."
-  canonicalPath="/features/mcp"
-  {breadcrumbs}
+  description="Connect a free SEO MCP server to Claude, Codex, Cursor or any agent. Read Search Console, Google Analytics and keyword data. Your data and keys are never stored."
+  path="/features/mcp"
+  lead="Ask your agent what changed, what is broken and where the opportunities are. It reads your own search data before it answers."
+  {related}
 >
-  <main data-agent-content>
-    <Breadcrumbs {breadcrumbs} />
-    <PageHeader
-      title="SEO MCP server for AI agents"
-      description="Ask your agent what changed, what is broken, and what to fix next. It can inspect your crawl, Search Console, Google Analytics, and optional research data before it answers."
-      align="left"
-    />
+  <h2>Hosted or local, same tools</h2>
+  <p>
+    The hosted MCP at <code>https://seoskill.dev/mcp</code> needs nothing
+    installed: add it to your agent and sign in with Google. The local MCP runs
+    on your machine with the CLI. Run <code>seo mcp install</code> after setup
+    to add it to your agents. Both serve the same tools, and the local one adds
+    the site crawl and internal links.
+  </p>
 
-    <DottedCard patternId="mcp-prompts">
-      <div class="p-6 pb-10">
-        <ul class="space-y-3 font-sans text-sm leading-6">
-          {prompts.map((prompt) => <li>“{prompt}”</li>)}
-        </ul>
-      </div>
-      <span slot="label">Questions worth asking</span>
-    </DottedCard>
+  <h2>The tools your agent gets</h2>
+  <table>
+    <thead><tr><th>Tool</th><th>What it returns</th></tr></thead>
+    <tbody>
+      <tr><td><code>seo_sites</code></td><td>The Search Console and Google Analytics properties you can read.</td></tr>
+      <tr><td><code>seo_report</code></td><td>The main Search Console report: an overview, then one section.</td></tr>
+      <tr><td><code>seo_page</code></td><td>One URL: live page facts, Google index status and its queries.</td></tr>
+      <tr><td><code>seo_compare</code></td><td>Before and after a date, with Google updates in the window.</td></tr>
+      <tr><td><code>seo_index</code></td><td>Pages that lost their clicks, checked live and with URL Inspection.</td></tr>
+      <tr><td><code>seo_research</code></td><td>Keyword and competitor data from your DataForSEO or Ahrefs key.</td></tr>
+      <tr><td><code>seo_data</code></td><td>Raw Search Console rows, or Google Analytics landing pages.</td></tr>
+      <tr><td><code>seo_crawl</code>, <code>seo_internal_links</code></td><td>The site crawl and internal links. Local MCP only.</td></tr>
+    </tbody>
+  </table>
 
-    <section class="docs-prose mt-14" aria-labelledby="work-in-your-agent">
-      <h2 id="work-in-your-agent">Do the SEO work inside your agent</h2>
-      <p>
-        The SEO MCP server works with any agent or client that can start a local stdio MCP server. Your agent can discover the available reports, choose the right one, inspect structured evidence, and suggest the next useful check.
-      </p>
-      <p>
-        You do not need to copy charts, export spreadsheets, or explain every SEO field to the model. The same report logic works in MCP, the command line, and the TypeScript package.
-      </p>
-      <p>
-        The guided installer covers Codex, Claude Code, Claude Desktop, and Cursor. These are examples, not the full compatibility list. Other MCP clients can start <code>seo mcp serve</code> through their local server configuration.
-      </p>
-
-      <h2>Use evidence that can support the answer</h2>
-      <ul>
-        <li>A live or saved crawl shows page content, links, directives, and technical issues.</li>
-        <li>Google Search Console shows clicks, impressions, CTR, position, queries, pages, and URL inspection results.</li>
-        <li>Google Analytics adds landing-page, engagement, and conversion context when you connect it.</li>
-        <li>Optional providers add keyword, SERP, domain, competitor, and backlink estimates with clear source labels.</li>
-      </ul>
-      <p>
-        Missing or partial data stays missing or partial. The report does not turn an unavailable source into a zero or claim that one observation proves a ranking change.
-      </p>
-
-      <h2>Keep the work local</h2>
-      <p>
-        The server runs on your computer. Project profiles, Google tokens, reports, crawls, and caches stay there. The Google connection is read-only. Optional providers receive only the requests needed for the research you choose to run.
-      </p>
-
-      <h2>Connect it without editing config files by hand</h2>
-      <p>
-        Run <code>seo mcp install</code>. The guided flow finds clients with built-in setup, keeps unrelated settings, creates a backup, and refuses to replace an MCP entry it does not manage.
-      </p>
-      <p>
-        Follow the <a href="/docs/mcp">SEO MCP setup guide</a> for client commands and checks. If you are comparing options first, read the <a href="/blog/seo-mcp-servers">SEO MCP server guide</a>.
-      </p>
-    </section>
-
-    <div class="mt-14 grid gap-6 sm:grid-cols-2">
-      <NavCard
-        title="Google Search Console MCP"
-        heading="Ask about your own search performance"
-        description="Find query and page opportunities with your Google data."
-        href="/features/search-console"
-      />
-      <NavCard
-        title="SEO audit tool"
-        heading="Turn findings into fixes"
-        description="Crawl the site and give your coding agent the affected URLs and evidence."
-        href="/features/seo-audit"
-      />
-    </div>
-
-    <FeatureCta
-      title="Connect your SEO MCP server"
-      description="Install the command, run seo start, then run seo mcp install to connect your agent."
-    />
-  </main>
-</BaseLayout>
+  <h2>What the hosted server keeps</h2>
+  <p>
+    Your data and keys are never stored. Your Google sign-in and any keys are
+    sealed into the tokens your MCP client keeps, and the server uses them for
+    one request at a time. The only thing kept is an anonymous count of what
+    ran. <a href="/docs/privacy">What is stored</a> has the details.
+  </p>
+</FeaturePage>

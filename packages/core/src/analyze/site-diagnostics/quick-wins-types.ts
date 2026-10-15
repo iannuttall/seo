@@ -1,10 +1,19 @@
+import type { ReportBrandTerms } from '../../brand-evidence.js'
 import type { GscRow, Recommendation } from '../../types.js'
 import type { QueryContentCoverage } from '../content-coverage.js'
+import type { MinImpressionsPolicy } from '../min-impressions-policy.js'
 import type { PageTemplate } from '../page-patterns.js'
+import type { QUERY_FLAG_METHOD, QueryFlag } from '../query-quality.js'
+import type { SITE_CTR_CURVE_METHOD } from '../site-ctr-curve.js'
 
 export type QuickWinSelection = {
   sourceRows: number
   invalidRows: number
+  /** Source rows whose page URL had a #fragment; merged into the base URL. */
+  fragmentRows: number
+  /** Rows merged into another row with the same query and base URL. */
+  duplicateRows: number
+  aggregatedRows: number
   outsideBenchmarkPositionRows: number
   lowActionabilityRows: number
   brandRows: number
@@ -13,6 +22,11 @@ export type QuickWinSelection = {
   belowMinimumRows: number
   atOrAboveTargetRows: number
   eligibleRows: number
+  /** Eligible rows with the heuristic likely-automated flag. */
+  likelyAutomatedRows: number
+  /** Eligible rows with the heuristic navigational-other flag. */
+  navigationalOtherRows: number
+  flaggedRows: number
   returnedRows: number
   limitedRows: number
 }
@@ -42,6 +56,8 @@ export interface QuickWinItem {
   ctr: number
   targetCtr: number
   benchmark: QuickWinBenchmark
+  /** Heuristic labels; flagged rows rank after unflagged rows. */
+  queryFlags: QueryFlag[]
   estimatedCtrClickShortfall: number
   priority: {
     method: 'impressions_x_target_ctr_shortfall'
@@ -81,6 +97,7 @@ export type QuickWinTemplateRecommendation = {
 export type QuickWinAnalysis = {
   site: string
   minImpressions: number
+  minImpressionsPolicy: MinImpressionsPolicy
   limit: number
   dataStatus: 'empty' | 'filtered' | 'available'
   selection: QuickWinSelection
@@ -92,39 +109,28 @@ export type QuickWinAnalysis = {
       minimumInclusive: 4
       maximumInclusive: 10
     }
-    benchmark: {
-      method: 'position_bucket_url_p75_v2'
-      samplePopulation: 'all_qualified_url_samples'
-      leaveOut: 'target_url'
-      minimumUrlImpressions: 30
-      minimumQualifiedImpressions: 1000
-      minimumUrlSamples: 5
-      minimumPositiveUrlSamples: 3
-      fallback: {
-        id: 'seo_builtin_position_ctr'
-        version: 1
-        kind: 'built_in_heuristic'
-        curve: Record<string, number>
-      }
-      heuristic: true
-    }
+    benchmark: typeof SITE_CTR_CURVE_METHOD
     priority: {
       method: 'impressions_x_target_ctr_shortfall'
       formula: 'impressions * max(0, target CTR - observed CTR)'
       heuristic: true
       estimatedClickLift: false
     }
+    queryFlags: typeof QUERY_FLAG_METHOD
   }
+  brand: ReportBrandTerms
   provenance: {
     inputScope: 'provided_rows'
     selectionOrder: readonly [
       'valid_row',
+      'fragment_and_duplicate_merge',
       'benchmark_position',
       'query_quality',
       'brand',
       'candidate_position',
       'minimum_impressions',
       'target_ctr_shortfall',
+      'query_flag_ranking',
       'limit',
     ]
     selection: QuickWinSelection

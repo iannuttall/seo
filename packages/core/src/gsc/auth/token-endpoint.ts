@@ -1,4 +1,10 @@
+import { readJson, readJsonOrUndefined } from '../../http/read-json.js'
 import type { OAuthClientConfig } from './types.js'
+
+// A web or desktop OAuth client; source only matters to the CLI.
+export type GoogleClientCredentials = Omit<OAuthClientConfig, 'source'> & {
+  source?: OAuthClientConfig['source']
+}
 
 export const GOOGLE_TOKEN_ENDPOINT = 'https://oauth2.googleapis.com/token'
 
@@ -14,7 +20,7 @@ export class GoogleTokenEndpointError extends Error {
     readonly oauthError?: string,
   ) {
     super(
-      `Google token refresh failed with ${status}${oauthError ? ` (${oauthError})` : ''}.`,
+      `Google token request failed with ${status}${oauthError ? ` (${oauthError})` : ''}.`,
     )
     this.name = 'GoogleTokenEndpointError'
   }
@@ -22,7 +28,7 @@ export class GoogleTokenEndpointError extends Error {
 
 export async function requestGoogleAccessToken(
   input: {
-    clientConfig: OAuthClientConfig
+    clientConfig: GoogleClientCredentials
     refreshToken: string
   },
   fetchImpl: typeof fetch = fetch,
@@ -39,7 +45,7 @@ export async function requestGoogleAccessToken(
   })
 
   if (!response.ok) {
-    const payload = (await response.json().catch(() => undefined)) as
+    const payload = (await readJsonOrUndefined(response, 'Google sign-in')) as
       | { error?: unknown }
       | undefined
     throw new GoogleTokenEndpointError(
@@ -48,7 +54,7 @@ export async function requestGoogleAccessToken(
     )
   }
 
-  const payload = (await response.json()) as {
+  const payload = (await readJson(response, 'Google sign-in')) as {
     access_token?: unknown
     expires_in?: unknown
     refresh_token?: unknown
@@ -70,4 +76,49 @@ export async function requestGoogleAccessToken(
     expiresIn: payload.expires_in,
     refreshToken: payload.refresh_token,
   }
+}
+
+export type GoogleCodeTokens = {
+  access_token: string
+  refresh_token?: string
+  token_type: string
+  expires_in: number
+  scope: string
+  id_token?: string
+}
+
+// Swaps a Google sign-in code for tokens. The CLI sends a PKCE verifier; the
+// hosted MCP, a confidential web client, does not.
+export async function exchangeGoogleCode(
+  input: {
+    clientConfig: GoogleClientCredentials
+    code: string
+    redirectUri: string
+    verifier?: string
+  },
+  fetchImpl: typeof fetch = fetch,
+): Promise<GoogleCodeTokens> {
+  const response = await fetchImpl(GOOGLE_TOKEN_ENDPOINT, {
+    method: 'POST',
+    headers: { 'content-type': 'application/x-www-form-urlencoded' },
+    body: new URLSearchParams({
+      grant_type: 'authorization_code',
+      client_id: input.clientConfig.clientId,
+      client_secret: input.clientConfig.clientSecret,
+      code: input.code,
+      redirect_uri: input.redirectUri,
+      ...(input.verifier ? { code_verifier: input.verifier } : {}),
+    }),
+  })
+  if (!response.ok) {
+    const payload = await readJsonOrUndefined<{ error?: unknown }>(
+      response,
+      'Google sign-in',
+    )
+    throw new GoogleTokenEndpointError(
+      response.status,
+      typeof payload?.error === 'string' ? payload.error : undefined,
+    )
+  }
+  return readJson<GoogleCodeTokens>(response, 'Google sign-in')
 }

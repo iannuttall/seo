@@ -1,0 +1,50 @@
+---
+title: Keyword and competitor research
+description: Get keyword metrics, ranked keywords, SERPs, competitors and backlinks from your own DataForSEO or Ahrefs key with seo research.
+heading: seo research
+lead: Keyword metrics, rankings, SERPs, competitors and backlinks from your own DataForSEO or Ahrefs account.
+---
+
+Use it when you need data from outside your own site: search volume for a keyword, who ranks for it, or what a competitor ranks for. You need a key from DataForSEO or Ahrefs, and each request uses your credits with them. For the hosted MCP, the [API keys guide](/docs/keys) shows how to add one. For the CLI, connect a provider once:
+
+```sh
+seo providers dataforseo connect
+seo providers ahrefs connect
+```
+
+## What you can ask for
+
+| Action | Give it | What comes back |
+| --- | --- | --- |
+| `keyword_metrics` | Up to 100 keywords | Search volume, keyword difficulty and cost per click |
+| `ranked_keywords` | A domain or URL | The keywords it ranks for |
+| `serp` | Up to 5 keywords | The pages that rank for each one |
+| `competitors` | A domain or URL | Domains that rank for the same keywords |
+| `backlinks` | A domain or URL | Referring domains |
+
+Each request also takes a two-letter country code. The default is `us`.
+
+## Run research
+
+Ask your agent and name the provider you have a key for:
+
+```text
+Use Ahrefs to show the keywords competitor.com ranks for in the UK
+```
+
+The hosted MCP runs `seo_research`. In a terminal, put the action first:
+
+```sh
+seo research keyword_metrics --keywords "seo audit,seo report" --country us
+seo research ranked_keywords --provider ahrefs --target competitor.com --country gb
+```
+
+Without `--provider`, the CLI uses the first provider with a saved key.
+
+## Domain Rating column
+
+Rows with a domain, and the target itself, get a free Domain Rating column. It is Domain Rating by [Ahrefs](https://ahrefs.com), and you do not need an Ahrefs key for it.
+
+## Estimates, not your data
+
+Provider numbers are estimates from their own index. They are kept apart from your Search Console data and never mixed into it. When you need to know what your own pages actually get, use the [SEO report](/docs/report) or [`seo data`](/docs/data).

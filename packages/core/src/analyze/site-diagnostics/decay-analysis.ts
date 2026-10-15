@@ -1,4 +1,5 @@
 import { shouldExcludeBrandQuery } from '../../brand.js'
+import { resolveReportBrandTerms } from '../../brand-evidence.js'
 import { summarizeTemplates } from '../page-patterns.js'
 import { isSearchArtifactQuery } from '../query-quality.js'
 import {
@@ -35,6 +36,12 @@ export function analyzeDecay(input: AnalyzeDecayInput): DecayAnalysis {
     1_000_000_000,
   )
   const limit = Math.floor(boundedDecayNumber(input.limit, 25, 1, 100))
+  const brand = resolveReportBrandTerms({
+    siteUrl: input.site,
+    rows: [...input.previousRows, ...input.currentRows],
+    brandTerms: input.brandTerms,
+    includeBrand: input.includeBrand,
+  })
   const current = aggregateDecayRows(input.currentRows)
   const previous = aggregateDecayRows(input.previousRows)
   const selection = {
@@ -87,7 +94,7 @@ export function analyzeDecay(input: AnalyzeDecayInput): DecayAnalysis {
       shouldExcludeBrandQuery({
         query,
         siteUrl: input.site,
-        brandTerms: input.brandTerms,
+        brandTerms: brand.terms,
         includeBrand: input.includeBrand,
       })
     ) {
@@ -150,6 +157,7 @@ export function analyzeDecay(input: AnalyzeDecayInput): DecayAnalysis {
   selection.returnedGroups = groups.length
   selection.limitedGroups = eligibleGroups.length - groups.length
   return {
+    brand,
     selection,
     totals: {
       eligibleObservedRetainedQueryClickLoss,

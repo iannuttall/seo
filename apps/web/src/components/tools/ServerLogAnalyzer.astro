@@ -1,22 +1,22 @@
 ---
 import Button from '@/components/Button.astro'
-import DottedCard from '@/components/DottedCard.astro'
+import Card from '@/components/Card.astro'
 import FormSelect from '@/components/FormSelect.astro'
 ---
 
 <section data-server-log-analyzer class="space-y-6">
-  <DottedCard patternId="server-log-input">
+  <Card>
     <form data-analyzer-form class="space-y-5 p-5 sm:p-6">
       <div class="space-y-1">
-        <h2 class="font-mono text-lg font-normal">Choose an access log</h2>
-        <p class="font-sans text-sm font-light leading-6 text-foreground-muted">
+        <h2 class="text-lg font-medium">Choose an access log</h2>
+        <p class="text-sm leading-6 text-foreground-muted">
           Open a combined Apache or NGINX log, or a JSONL export up to 250 MB.
         </p>
       </div>
 
       <div
         data-file-drop
-        class="border border-border bg-background-subtle p-5 transition-colors focus-within:border-primary"
+        class="rounded-lg bg-muted p-5 transition-colors focus-within:border-primary"
       >
         <input
           data-file-input
@@ -27,20 +27,20 @@ import FormSelect from '@/components/FormSelect.astro'
         <div class="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
           <div class="min-w-0 space-y-1">
             <p data-file-name class="truncate font-mono text-sm">No file selected</p>
-            <p data-file-detail class="font-sans text-xs font-light leading-5 text-foreground-muted">
+            <p data-file-detail class="text-xs leading-5 text-foreground-muted">
               Drop a file here or choose one from your computer.
             </p>
           </div>
           <button
             data-choose-file
             type="button"
-            class="shrink-0 border border-border bg-background px-4 py-2.5 font-sans text-xs font-medium text-foreground transition-colors hover:border-foreground"
+            class="shrink-0 rounded-lg border border-border bg-card px-4 py-2.5 text-xs font-medium text-foreground transition-colors hover:border-border-strong"
           >Choose file</button>
         </div>
       </div>
 
       <div class="grid gap-4 sm:grid-cols-[minmax(0,1fr)_auto] sm:items-end">
-        <label class="block space-y-2 font-sans text-sm font-medium">
+        <label class="block space-y-2 text-sm font-medium">
           <span>Log format</span>
           <FormSelect
             data-format
@@ -50,11 +50,11 @@ import FormSelect from '@/components/FormSelect.astro'
             <option value="jsonl">JSONL or NDJSON</option>
           </FormSelect>
         </label>
-        <Button data-analyze type="submit" class="min-h-12 px-5 text-xs" disabled>Analyze log</Button>
+        <Button data-analyze type="submit" class="min-h-10 px-5 text-xs" disabled>Analyze log</Button>
       </div>
 
       <div class="space-y-2">
-        <p data-status class="font-sans text-xs font-light leading-5 text-foreground-muted" aria-live="polite">
+        <p data-status class="text-xs leading-5 text-foreground-muted" aria-live="polite">
           The raw log stays in this browser tab. Nothing is uploaded.
         </p>
         <div data-progress-track class="hidden h-1.5 overflow-hidden bg-border" aria-hidden="true">
@@ -62,52 +62,52 @@ import FormSelect from '@/components/FormSelect.astro'
         </div>
       </div>
     </form>
-  </DottedCard>
+  </Card>
 
   <div data-results hidden>
-    <DottedCard patternId="server-log-results" inverted>
+    <Card inverted>
       <div class="space-y-6 p-5 sm:p-6">
         <div class="flex flex-col gap-2 sm:flex-row sm:items-baseline sm:justify-between sm:gap-4">
           <div class="space-y-1">
-            <strong data-result-title class="font-mono text-2xl font-normal text-primary">Log analyzed</strong>
-            <p data-result-period class="font-sans text-sm font-light leading-6 text-panel-foreground/70"></p>
+            <strong data-result-title class="text-2xl font-medium text-primary">Log analyzed</strong>
+            <p data-result-period class="text-sm leading-6 text-foreground-muted"></p>
           </div>
-          <span data-coverage class="font-mono text-xs text-panel-foreground/70"></span>
+          <span data-coverage class="font-mono text-xs text-foreground-muted"></span>
         </div>
 
-        <dl class="grid grid-cols-2 gap-4 border-t border-panel-foreground/30 pt-5 sm:grid-cols-4">
+        <dl class="grid grid-cols-2 gap-4 border-t border-border pt-5 sm:grid-cols-4">
           <div>
-            <dt class="font-sans text-xs font-light text-panel-foreground/65">Parsed requests</dt>
+            <dt class="text-xs text-foreground-muted">Parsed requests</dt>
             <dd data-stat-parsed class="mt-1 font-mono text-lg">0</dd>
           </div>
           <div>
-            <dt class="font-sans text-xs font-light text-panel-foreground/65">Crawler requests</dt>
+            <dt class="text-xs text-foreground-muted">Crawler requests</dt>
             <dd data-stat-crawlers class="mt-1 font-mono text-lg">0</dd>
           </div>
           <div>
-            <dt class="font-sans text-xs font-light text-panel-foreground/65">Crawler families</dt>
+            <dt class="text-xs text-foreground-muted">Crawler families</dt>
             <dd data-stat-families class="mt-1 font-mono text-lg">0</dd>
           </div>
           <div>
-            <dt class="font-sans text-xs font-light text-panel-foreground/65">Invalid rows</dt>
+            <dt class="text-xs text-foreground-muted">Invalid rows</dt>
             <dd data-stat-invalid class="mt-1 font-mono text-lg">0</dd>
           </div>
         </dl>
 
-        <div data-warnings class="hidden border-t border-panel-foreground/30 pt-5">
-          <h3 class="font-mono text-sm font-normal">Check the file coverage</h3>
-          <ul data-warning-list class="mt-3 space-y-2 font-sans text-xs font-light leading-5 text-panel-foreground/75"></ul>
+        <div data-warnings class="hidden border-t border-border pt-5">
+          <h3 class="text-sm font-medium">Check the file coverage</h3>
+          <ul data-warning-list class="mt-3 space-y-2 text-xs leading-5 text-foreground-muted"></ul>
         </div>
 
-        <section class="border-t border-panel-foreground/30 pt-5" aria-labelledby="crawler-activity-heading">
+        <section class="border-t border-border pt-5" aria-labelledby="crawler-activity-heading">
           <div class="flex flex-col gap-1 sm:flex-row sm:items-baseline sm:justify-between">
-            <h3 id="crawler-activity-heading" class="font-mono text-sm font-normal">Crawler activity</h3>
-            <p class="font-sans text-xs font-light text-panel-foreground/65">Matched from user-agent strings</p>
+            <h3 id="crawler-activity-heading" class="text-sm font-medium">Crawler activity</h3>
+            <p class="text-xs text-foreground-muted">Matched from user-agent strings</p>
           </div>
-          <p data-no-crawlers class="mt-3 hidden font-sans text-sm font-light leading-6 text-panel-foreground/75"></p>
+          <p data-no-crawlers class="mt-3 hidden text-sm leading-6 text-foreground-muted"></p>
           <div data-crawler-table class="mt-4 overflow-x-auto">
             <table class="w-full min-w-[36rem] border-collapse text-left">
-              <thead class="border-b border-panel-foreground/30 font-sans text-xs font-medium text-panel-foreground/65">
+              <thead class="border-b border-border text-xs font-medium text-foreground-muted">
                 <tr>
                   <th class="pb-2 pr-4">Crawler</th>
                   <th class="pb-2 pr-4">Type</th>
@@ -116,20 +116,20 @@ import FormSelect from '@/components/FormSelect.astro'
                   <th class="pb-2 text-right">5xx</th>
                 </tr>
               </thead>
-              <tbody data-crawler-rows class="divide-y divide-panel-foreground/20 font-sans text-xs"></tbody>
+              <tbody data-crawler-rows class="divide-y divide-panel-foreground/20 text-xs"></tbody>
             </table>
           </div>
         </section>
 
-        <section class="border-t border-panel-foreground/30 pt-5" aria-labelledby="crawler-errors-heading">
+        <section class="border-t border-border pt-5" aria-labelledby="crawler-errors-heading">
           <div class="flex flex-col gap-1 sm:flex-row sm:items-baseline sm:justify-between">
-            <h3 id="crawler-errors-heading" class="font-mono text-sm font-normal">Crawler error paths</h3>
-            <p class="font-sans text-xs font-light text-panel-foreground/65">Highest 4xx and 5xx counts first</p>
+            <h3 id="crawler-errors-heading" class="text-sm font-medium">Crawler error paths</h3>
+            <p class="text-xs text-foreground-muted">Highest 4xx and 5xx counts first</p>
           </div>
-          <p data-no-errors class="mt-3 hidden font-sans text-sm font-light leading-6 text-panel-foreground/75"></p>
+          <p data-no-errors class="mt-3 hidden text-sm leading-6 text-foreground-muted"></p>
           <div data-error-table class="mt-4 overflow-x-auto">
             <table class="w-full min-w-[42rem] border-collapse text-left">
-              <thead class="border-b border-panel-foreground/30 font-sans text-xs font-medium text-panel-foreground/65">
+              <thead class="border-b border-border text-xs font-medium text-foreground-muted">
                 <tr>
                   <th class="pb-2 pr-4">Crawler</th>
                   <th class="pb-2 pr-4">Path</th>
@@ -138,28 +138,28 @@ import FormSelect from '@/components/FormSelect.astro'
                   <th class="pb-2 text-right">5xx</th>
                 </tr>
               </thead>
-              <tbody data-error-rows class="divide-y divide-panel-foreground/20 font-sans text-xs"></tbody>
+              <tbody data-error-rows class="divide-y divide-panel-foreground/20 text-xs"></tbody>
             </table>
           </div>
         </section>
 
-        <section class="border-t border-panel-foreground/30 pt-5" aria-labelledby="csv-heading">
+        <section class="border-t border-border pt-5" aria-labelledby="csv-heading">
           <div class="space-y-1">
-            <h3 id="csv-heading" class="font-mono text-sm font-normal">Download CSV files</h3>
-            <p class="font-sans text-xs font-light leading-5 text-panel-foreground/65">
+            <h3 id="csv-heading" class="text-sm font-medium">Download CSV files</h3>
+            <p class="text-xs leading-5 text-foreground-muted">
               Exports contain crawler aggregates. They do not include raw requests or full user-agent strings.
             </p>
           </div>
           <div class="mt-4 grid gap-2 sm:grid-cols-2">
-            <Button data-export="crawler-summary" type="button" class="w-full px-3 py-2.5 font-sans text-xs disabled:cursor-wait disabled:opacity-60">Crawler summary</Button>
-            <Button data-export="crawler-paths" type="button" class="w-full px-3 py-2.5 font-sans text-xs disabled:cursor-wait disabled:opacity-60">Crawler paths</Button>
-            <Button data-export="crawler-errors" type="button" class="w-full px-3 py-2.5 font-sans text-xs disabled:cursor-wait disabled:opacity-60">Crawler errors</Button>
-            <Button data-export="status-codes" type="button" class="w-full px-3 py-2.5 font-sans text-xs disabled:cursor-wait disabled:opacity-60">Status codes</Button>
+            <Button data-export="crawler-summary" type="button" class="w-full px-3 py-2.5 text-xs disabled:cursor-wait disabled:opacity-60">Crawler summary</Button>
+            <Button data-export="crawler-paths" type="button" class="w-full px-3 py-2.5 text-xs disabled:cursor-wait disabled:opacity-60">Crawler paths</Button>
+            <Button data-export="crawler-errors" type="button" class="w-full px-3 py-2.5 text-xs disabled:cursor-wait disabled:opacity-60">Crawler errors</Button>
+            <Button data-export="status-codes" type="button" class="w-full px-3 py-2.5 text-xs disabled:cursor-wait disabled:opacity-60">Status codes</Button>
           </div>
-          <p data-export-status class="mt-3 font-sans text-xs font-light leading-5 text-panel-foreground/65" aria-live="polite"></p>
+          <p data-export-status class="mt-3 text-xs leading-5 text-foreground-muted" aria-live="polite"></p>
         </section>
       </div>
-    </DottedCard>
+    </Card>
   </div>
 </section>
 

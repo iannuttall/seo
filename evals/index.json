@@ -1,0 +1,38 @@
+{
+  "subject": "index",
+  "evals": [
+    {
+      "id": 1,
+      "prompt": "Some of our pages seem to have vanished from Google. Which ones?",
+      "expected_output": "Should run seo_index (or `seo index`). Should describe the result as pages that lost most of their clicks, checked live and with URL Inspection, and show which ones broke, redirect, block indexing or dropped out of Google. Should suggest seo_page for one URL as the next step.",
+      "assertions": [
+        "Runs seo_index or `seo index`",
+        "Describes pages that lost most of their clicks with live and URL Inspection checks",
+        "Suggests seo_page or `seo page` for one URL"
+      ],
+      "files": []
+    },
+    {
+      "id": 2,
+      "prompt": "seo index shows one lost page now redirects. That is why it lost traffic, so fix it.",
+      "expected_output": "Should treat the redirect as an observation. Should ask the person whether the redirect is intended before suggesting any change. Should not claim the redirect is the whole cause without more evidence.",
+      "assertions": [
+        "Treats the redirect as an observation",
+        "Asks whether the redirect is intended",
+        "Does not claim the redirect is the whole cause"
+      ],
+      "files": []
+    },
+    {
+      "id": 3,
+      "prompt": "seo index returned no pages, so none of our pages have indexing problems.",
+      "expected_output": "Should not treat an empty result as an all-clear. Should explain that the command only looks at pages that had clicks in the previous period and lost most of them, so pages that never had clicks are not covered. Should suggest seo_page for a specific URL in doubt.",
+      "assertions": [
+        "Does not treat the empty result as an all-clear",
+        "Explains the command only covers pages that had clicks before",
+        "Suggests seo_page for a specific URL"
+      ],
+      "files": []
+    }
+  ]
+}

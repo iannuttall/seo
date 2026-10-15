@@ -209,6 +209,7 @@ test('the release workflow automates trusted publishing, tagging, and release-on
   assert.match(release, /node-version: 24/)
   assert.match(release, /package-manager-cache: false/)
   assert.match(release, /npm publish --access public --provenance/)
+  assert.match(release, /\*-\*\) DIST_TAG=next/)
   assert.doesNotMatch(release, /NPM_TOKEN|NODE_AUTH_TOKEN/)
   assert.match(release, /secrets\.SEO_GOOGLE_CLIENT_ID/)
   assert.match(release, /secrets\.SEO_GOOGLE_CLIENT_SECRET/)

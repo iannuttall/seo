@@ -389,8 +389,8 @@ const REPORT_DEPTH_PRIMARY = {
   'ctr-underperformers': {
     readOrder: [
       'dataStatus, range, source.completeness, possiblyTruncated, and validation counts',
-      'selection before the queue',
-      'per-item query, URL, impressions, position, observed CTR, target CTR, and benchmark source',
+      'brand terms used, then selection before the queue; rows at average position 4 or worse belong to quick-wins',
+      'per-item query, URL, impressions, position, observed CTR, target CTR, benchmark source, and queryFlags',
       'estimated shortfall',
     ],
     doNotClaim: [

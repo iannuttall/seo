@@ -8,7 +8,51 @@ dates laid over it, plus keyword data from your own DataForSEO or Ahrefs key.
 The results are facts. Your agent shows you what matters and asks before it
 changes a page.
 
-### New
+To stay on the old version, run `npm i -g seo@0.2.41`.
+
+### New since 0.3.0-beta.2
+
+- **Bing Webmaster Tools is back in the CLI and local MCP server.** Save a
+  Bing Webmaster API key with `seo providers bing connect`, or set
+  `SEO_BING_API_KEY` for agents and CI. `seo providers bing status` and
+  `seo providers bing disconnect` show and remove it. The hosted server shows
+  no Bing for now. When an agent asks it for Bing, it names the CLI command
+  to run instead.
+- **Google and Bing side by side.** The `seo report` overview adds a line
+  with Google and Bing clicks and impressions for the same dates, and each
+  engine's share of those clicks. When Bing is not connected, it says how to
+  connect it. The numbers are never added together.
+- **A `bing` report section.** It lists Bing's top queries and pages with
+  Google's clicks, impressions and position for the same rows beside them.
+  Bing lists only its top rows by week, so a row missing from Bing's list is
+  unknown, not zero.
+- **Raw Bing rows.** `seo data --source bing` and `seo_data` with source
+  `bing` return Bing query or page rows with the previous period.
+- **Bing sites in `seo_sites`.** On the local MCP server, it shows the Bing
+  site for each property and any Bing sites with no Search Console property.
+- **Hosted account page.** `https://seoskill.dev/account` lists your linked
+  Google accounts and lets you add another, save or remove
+  DataForSEO and Ahrefs keys, delete everything, or sign out. Your first
+  Google sign-in is your account. There is no password.
+- **More than one Google account.** On the hosted server, each request uses
+  the linked account that can read the site. `seo_sites` lists properties
+  from every linked account, and an access error names the linked accounts
+  and links to the account page.
+
+### Changed since 0.3.0-beta.2
+
+- The hosted server now keeps a small encrypted store: your person id, your
+  linked Google accounts, and any DataForSEO or Ahrefs keys you save. It
+  keeps no report data, no Search Console or analytics rows, no site lists
+  and no request logs. Delete everything on the account page,
+  or revoke SEO Skill in your Google account.
+- Hosted keys are saved on the account page instead of the sign-in page.
+  Key headers still work, win over saved keys, and are used for that request
+  only.
+- Existing hosted connections must sign in with Google once more.
+- Bing links and IndexNow stay removed.
+
+### New in 0.3
 
 - **Eight commands.** `seo report`, `seo page --url`, `seo compare --date`,
   `seo index`, `seo research <action>`, `seo data`, `seo crawl` and

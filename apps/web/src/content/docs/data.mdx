@@ -30,6 +30,16 @@ Add `--start-date` and `--end-date` for other dates, and `--detail rows` with `-
 
 In the hosted MCP, `seo_data` also reads Google Analytics landing pages for visits from search, with your Google sign-in. Google Analytics keeps its own metric names, such as sessions and users, so compare them with Search Console clicks with care. The [analytics guide](/docs/analytics) covers Google Analytics and Clicky.
 
-In the CLI, `seo data` reads Search Console rows.
+In the CLI, `seo data` reads Search Console rows, or Bing rows with `--source bing`.
+
+## Bing rows
+
+With [Bing connected](/docs/bing) in the CLI or the local MCP server, ask for Bing as the source to get Bing's query or page rows with the previous period:
+
+```sh
+seo data --site example.com --source bing --dimensions page
+```
+
+Bing lists only its top rows, by week, so a row missing from Bing is unknown, not zero. The hosted MCP has no Bing for now, so it tells your agent to run the CLI for these rows.
 
 For the usual questions, start with the [SEO report](/docs/report). It already sorts the rows that matter most.

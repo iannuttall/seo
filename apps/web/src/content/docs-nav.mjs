@@ -25,13 +25,19 @@ export const docsSections = [
         path: '/docs/keys',
         label: 'API keys',
         description:
-          'Add your own DataForSEO, Ahrefs or analytics key. Keys are never stored.',
+          'Add your own DataForSEO or Ahrefs key on your account page or as a header.',
       },
       {
         path: '/docs/analytics',
         label: 'Analytics',
         description:
           'Google Analytics on the hosted MCP and the CLI, and Clicky or other tools on your machine.',
+      },
+      {
+        path: '/docs/bing',
+        label: 'Bing',
+        description:
+          'Add Bing clicks, queries and pages beside Search Console in the report.',
       },
       {
         path: '/docs/cli',
@@ -84,7 +90,7 @@ export const docsSections = [
         path: '/docs/data',
         label: 'seo data',
         description:
-          'Raw Search Console rows, or landing pages from your analytics.',
+          'Raw Search Console or Bing rows, or landing pages from your analytics.',
       },
       {
         path: '/docs/crawl',
@@ -106,7 +112,7 @@ export const docsSections = [
         path: '/docs/privacy',
         label: 'What is stored',
         description:
-          'What the hosted MCP and the CLI keep, and what never leaves your control.',
+          'What the hosted MCP and the CLI keep, and how to delete it.',
       },
     ],
   },

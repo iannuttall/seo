@@ -1,12 +1,12 @@
 ---
 name: seo
-description: Use and read this skill immediately if the user request is in any way related to SEO or a site's organic search. That includes clicks or traffic changes, quick wins, CTR, rankings, content decay, cannibalization, Google update impact, indexing problems, one page's performance, keyword research, competitors, backlinks, crawling, redirects, metadata, internal links, Search Console, Google Analytics or Clicky questions, and client SEO reporting. Routes to first-party search data through the seo CLI and MCP tools.
+description: Free Google Search Console MCP server and CLI for AI agents. Reads your real Search Console, Google Analytics and Bing Webmaster Tools data, plus DataForSEO and Ahrefs keyword research. Use it for any SEO question - why Google traffic or clicks dropped, organic traffic decline, quick wins, low CTR, striking distance keywords, content decay and declining pages, keyword cannibalization, indexing and URL inspection, one page's queries, Google update impact, competitor keywords, backlinks, technical SEO crawls, redirects, internal links and client SEO reports. Returns facts from your own data, never guesses.
 ---
 
 # seo
 
-SEO Skill returns facts from the person's own Search Console and analytics,
-with Google update dates, plus keyword and competitor data from their own
+SEO Skill returns facts from the person's own Search Console, Bing Webmaster
+Tools and analytics, with Google update dates, plus keyword and competitor data from their own
 DataForSEO or Ahrefs key. It gives no advice. You read the facts, show the
 person what matters, and decide with them what to change.
 
@@ -18,8 +18,8 @@ There are two ways to reach the same commands:
   run `npm i -g seo`, then `seo start` to sign in with Google. Add `--json`
   for machine-readable output; JSON mode never prompts.
 
-Crawls and internal links run only on the person's machine, through the CLI
-or the local MCP server.
+Crawls, internal links and Bing run only on the person's machine, through
+the CLI or the local MCP server.
 
 ## The commands
 
@@ -30,7 +30,7 @@ or the local MCP server.
 | `seo compare --date <date>` | `seo_compare` | Equal periods before and after a date, with Google updates |
 | `seo index` | `seo_index` | Pages that lost most of their clicks, checked live and with URL Inspection |
 | `seo research <action>` | `seo_research` | Keyword metrics, ranked keywords, SERP, competitors, backlinks |
-| `seo data` | `seo_data` | Raw Search Console rows; the MCP tool also reads analytics landing pages |
+| `seo data` | `seo_data` | Raw Search Console or Bing rows (source `bing`); the MCP tool also reads analytics landing pages |
 | `seo crawl` | `seo_crawl` | A site crawl with technical issues and the URLs they affect |
 | `seo internal-links --url <url>` | `seo_internal_links` | Pages that could link to a target page |
 
@@ -44,8 +44,8 @@ Sites can be given as `example.com`, a URL or `sc-domain:example.com`.
    count with top rows for each section.
 2. Pick the one section that matters and run it with `--section <id>` (or
    `section`). Sections: overview, quick-wins, low-ctr, striking-distance,
-   second-page, content-decay, cannibalization, traffic-drop. Page sections
-   check their top 20 URLs live and merge same-site redirects.
+   second-page, content-decay, cannibalization, traffic-drop, bing. Page
+   sections check their top 20 URLs live and merge same-site redirects.
 3. Use `detail` `rows` with `offset` for the next page of rows, or `full` for
    every field. Start with the summary; ask for more only when you need it.
 4. Each result ends with the command to run next. Follow it when it fits the
@@ -71,11 +71,21 @@ in the output.
 | Internal links to a page | `internal-links` |
 | A question the report does not answer | `data` |
 
+## Bing
+
+The report overview shows Google and Bing clicks for the same dates. The
+`bing` section puts Bing's top queries and pages beside Google's numbers. Never
+add Bing to Google. Bing lists only its top rows by week, so a missing row is
+unknown, not zero. Bing runs in the CLI and local MCP server: connect it once
+with `seo providers bing connect` (or `SEO_BING_API_KEY`). The hosted server
+has no Bing yet; run `npx -y seo report --site <site> --section bing --json`.
+
 ## Research keys
 
-Research costs the person's own provider credits. On the hosted server, keys
-come from the sign-in page or from client headers. In the CLI and the local
-server, keys come from `seo providers <name> connect`. Domain Rating appears
+Research costs the person's own provider credits. On the hosted server, add
+keys and missing Google accounts at `https://seoskill.dev/account`, or send
+keys as client headers. In the CLI and local server, run
+`seo providers <name> connect`. Domain Rating appears
 as a free column next to domains; credit it as "Domain Rating by Ahrefs".
 
 ## Evidence rules

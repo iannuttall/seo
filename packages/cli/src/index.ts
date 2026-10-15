@@ -96,6 +96,7 @@ import {
 import { buildErrorFeedbackUrl, telemetryOperation } from './error-feedback.js'
 import { removedNotice, renamedNotice } from './renames.js'
 import { maybeOfferSelfUpdate } from './self-update.js'
+import { showUpgradeNotice } from './upgrade-notice.js'
 import { printCatalog, printHeading, printSection } from './utils.js'
 
 const pkg = {
@@ -367,6 +368,7 @@ function telemetryReportId(args: string[]): string | undefined {
 }
 
 const argv = process.argv.slice(2)
+showUpgradeNotice(argv)
 const removed = removedNotice(argv)
 if (removed) {
   process.stderr.write(`${removed}\n`)

@@ -1,11 +1,13 @@
 // The eight public commands, shared by the CLI, the local MCP and the hosted
 // MCP. Worker-safe: no Node built-ins.
 
+export * from '../bing/api.js'
 export type {
   SearchAnalyticsQuery,
   SearchAnalyticsRequest,
 } from '../gsc/client/types.js'
 export * from './analytics.js'
+export * from './bing.js'
 export * from './domain-rating.js'
 export * from './page-facts.js'
 export * from './present.js'

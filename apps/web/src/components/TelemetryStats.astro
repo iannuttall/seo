@@ -45,15 +45,14 @@ const metrics = [
   <PageHeader
     title="Anonymous usage stats"
     description="Aggregate event counts from installs that leave anonymous telemetry enabled. No user, machine, site, URL, report content, Google data, or location is attached to any event."
-  >
-    <p slot="actions" class="animate-pulse text-sm text-foreground-muted" data-stats-status data-stats-loading data-agent-markdown="exclude" aria-live="polite">
-      Fetching current totals.
-    </p>
-    <p slot="actions" hidden data-agent-markdown="only">
-      Agents can fetch current values as JSON with a GET request to
-      https://seoskill.dev/api/stats.
-    </p>
-  </PageHeader>
+  />
+  <p class="-mt-6 mb-10 animate-pulse text-sm text-foreground-muted" data-stats-status data-stats-loading data-agent-markdown="exclude" aria-live="polite">
+    Fetching current totals.
+  </p>
+  <p hidden data-agent-markdown="only">
+    Agents can fetch current values as JSON with a GET request to
+    https://seoskill.dev/api/stats.
+  </p>
 
   <section class="mb-14" aria-label="Usage totals" data-agent-markdown="exclude">
     <div class="grid items-stretch gap-2 sm:auto-rows-fr sm:grid-cols-2 lg:grid-cols-3">

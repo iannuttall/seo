@@ -1,43 +1,15 @@
-import { exchangeGoogleCode, requestGoogleAccessToken } from '@seo/core/hosted'
-import { page } from './page.ts'
-import {
-  type Keys,
-  type Sealed,
-  seal,
-  sha256Base64Url,
-  unseal,
-} from './seal.ts'
+import { view } from './page.ts'
+import { googleSignedIn, googleSignInUrl } from './providers.ts'
+import { type Sealed, seal, sha256Base64Url, unseal } from './seal.ts'
+import { createUser, linkAccount, ownerOf, userExists } from './store.ts'
 
-// OAuth for MCP clients, with Google as the only sign-in. Nothing is stored:
-// the client id, sign-in state, code and tokens are sealed values that the
-// client carries. Our access token wraps a Google access token, and our
-// refresh token wraps the Google refresh token.
-
-export const GOOGLE_SCOPES = [
-  'https://www.googleapis.com/auth/webmasters.readonly',
-  'https://www.googleapis.com/auth/analytics.readonly',
-]
-
-// Keys a person can add on the sign-in page. They are sealed into the tokens
-// their agent keeps, and sent to tools as these request headers.
-export const KEY_FIELDS: { header: string; label: string; secret: boolean }[] =
-  [
-    {
-      header: 'x-dataforseo-login',
-      label: 'DataForSEO API login',
-      secret: false,
-    },
-    {
-      header: 'x-dataforseo-password',
-      label: 'DataForSEO API password',
-      secret: true,
-    },
-    { header: 'x-ahrefs-key', label: 'Ahrefs API key', secret: true },
-  ]
+// OAuth for MCP clients, with Google as the sign-in. The client id, sign-in
+// state and code are sealed values the client carries. Our tokens carry only
+// the person's id; their Google and Bing sign-ins and keys stay in D1.
 
 const FLOW_TTL = 10 * 60_000
 const CODE_TTL = 2 * 60_000
-const EARLY = 60_000
+const ACCESS_TTL = 60 * 60_000
 
 const json = (body: unknown, status = 200, headers: HeadersInit = {}) =>
   Response.json(body, {
@@ -155,9 +127,15 @@ export async function authorize(request: Request, env: Env): Promise<Response> {
   const client = await unseal(env.SEAL_KEY, clientId, 'client')
   const redirectUri = params.get('redirect_uri') ?? ''
   if (!client?.redirectUris.includes(redirectUri)) {
-    return page(
-      'Sign-in link not valid',
-      '<p>This sign-in link is not valid. Start again from your agent.</p>',
+    return view(
+      env,
+      {
+        view: 'notice',
+        notice: {
+          title: 'Sign-in link not valid',
+          text: 'This sign-in link is not valid. Start again from your agent.',
+        },
+      },
       400,
     )
   }
@@ -188,19 +166,10 @@ export async function authorize(request: Request, env: Env): Promise<Response> {
     exp: Date.now() + FLOW_TTL,
   })
   const host = new URL(redirectUri).host || new URL(redirectUri).protocol
-  return page(
-    'Connect SEO Skill',
-    `<h1>Connect SEO Skill</h1>
-<p><strong>${escapeHtml(client.name)}</strong> wants to read your Search Console and Google Analytics data through SEO Skill. After you sign in, Google sends you back to <strong>${escapeHtml(host)}</strong>.</p>
-<p>SEO Skill stores nothing. Your agent keeps the sign-in, and you can remove it at any time in your <a href="https://myaccount.google.com/connections">Google account</a>.</p>
-<form method="post" action="${escapeHtml(env.PUBLIC_URL)}/oauth/google"><input type="hidden" name="flow" value="${escapeHtml(flow)}">
-<details><summary>Add your own API keys (optional)</summary>
-<p class="small">For keyword, competitor and analytics data from your own accounts. The keys are sealed into your agent's sign-in, not saved here. To change them, connect again.</p>
-${KEY_FIELDS.map((field) => `<label>${field.label}<input name="${field.header}" type="${field.secret ? 'password' : 'text'}" autocomplete="off" spellcheck="false"></label>`).join('\n')}
-</details>
-<button type="submit">Continue with Google</button></form>
-<p class="small">Only continue if you started this from your own agent.</p>`,
-  )
+  return view(env, {
+    view: 'connect',
+    connect: { client: client.name, host, flow },
+  })
 }
 
 export async function toGoogle(request: Request, env: Env): Promise<Response> {
@@ -212,48 +181,72 @@ export async function toGoogle(request: Request, env: Env): Promise<Response> {
     'flow',
   )
   if (!flow) {
-    return page(
-      'Sign-in expired',
-      '<p>This sign-in has expired. Start again from your agent.</p>',
+    return view(
+      env,
+      {
+        view: 'notice',
+        notice: {
+          title: 'Sign-in expired',
+          text: 'This sign-in has expired. Start again from your agent.',
+        },
+      },
       400,
     )
   }
-  const keys: Keys = {}
-  for (const field of KEY_FIELDS) {
-    const value = form?.get(field.header)
-    if (typeof value === 'string' && value.trim()) {
-      keys[field.header] = value.trim().slice(0, 500)
-    }
-  }
-  const state = await seal(env.SEAL_KEY, {
-    ...flow,
-    ...(Object.keys(keys).length ? { keys } : {}),
+  return Response.redirect(
+    googleSignInUrl(env, await seal(env.SEAL_KEY, flow)),
+    302,
+  )
+}
+
+// The person who owns a Google account, created on first sign-in. The
+// account's tokens are saved for them.
+export async function signInPerson(
+  env: Env,
+  code: string,
+  into: string | null,
+): Promise<string | null> {
+  const signedIn = await googleSignedIn(env, code)
+  if (!signedIn) return null
+  const userId =
+    into ??
+    (await ownerOf(env, 'google', signedIn.subject)) ??
+    (await createUser(env))
+  await linkAccount(env, userId, {
+    provider: 'google',
+    subject: signedIn.subject,
+    label: signedIn.email,
+    refresh: signedIn.refresh,
+    access: signedIn.access,
+    accessExp: signedIn.accessExp,
   })
-  const url = new URL('https://accounts.google.com/o/oauth2/v2/auth')
-  url.searchParams.set('client_id', env.GOOGLE_CLIENT_ID)
-  url.searchParams.set('redirect_uri', `${env.PUBLIC_URL}/oauth/callback`)
-  url.searchParams.set('response_type', 'code')
-  url.searchParams.set('scope', GOOGLE_SCOPES.join(' '))
-  url.searchParams.set('access_type', 'offline')
-  url.searchParams.set('prompt', 'consent select_account')
-  url.searchParams.set('state', state)
-  return Response.redirect(url.toString(), 302)
+  return userId
 }
 
-function googleClient(env: Env) {
-  return {
-    clientId: env.GOOGLE_CLIENT_ID,
-    clientSecret: env.GOOGLE_CLIENT_SECRET,
-  }
-}
-
-export async function callback(request: Request, env: Env): Promise<Response> {
+// Google sends both MCP sign-ins and account page sign-ins here.
+export async function callback(
+  request: Request,
+  env: Env,
+  web: (
+    request: Request,
+    state: Extract<Sealed, { k: 'web' }>,
+  ) => Promise<Response>,
+): Promise<Response> {
   const params = new URL(request.url).searchParams
-  const flow = await unseal(env.SEAL_KEY, params.get('state'), 'flow')
+  const state = params.get('state')
+  const fromPage = await unseal(env.SEAL_KEY, state, 'web')
+  if (fromPage) return web(request, fromPage)
+  const flow = await unseal(env.SEAL_KEY, state, 'flow')
   if (!flow) {
-    return page(
-      'Sign-in expired',
-      '<p>This sign-in has expired. Start again from your agent.</p>',
+    return view(
+      env,
+      {
+        view: 'notice',
+        notice: {
+          title: 'Sign-in expired',
+          text: 'This sign-in has expired. Start again from your agent.',
+        },
+      },
       400,
     )
   }
@@ -266,12 +259,8 @@ export async function callback(request: Request, env: Env): Promise<Response> {
     back.searchParams.set('error_description', 'Google sign-in was cancelled.')
     return Response.redirect(back.toString(), 302)
   }
-  const tokens = await exchangeGoogleCode({
-    clientConfig: googleClient(env),
-    code,
-    redirectUri: `${env.PUBLIC_URL}/oauth/callback`,
-  }).catch(() => null)
-  if (!tokens?.refresh_token) {
+  const userId = await signInPerson(env, code, null)
+  if (!userId) {
     back.searchParams.set('error', 'server_error')
     back.searchParams.set(
       'error_description',
@@ -279,7 +268,6 @@ export async function callback(request: Request, env: Env): Promise<Response> {
     )
     return Response.redirect(back.toString(), 302)
   }
-  const now = Date.now()
   back.searchParams.set(
     'code',
     await seal(env.SEAL_KEY, {
@@ -287,12 +275,8 @@ export async function callback(request: Request, env: Env): Promise<Response> {
       clientId: flow.clientId,
       redirectUri: flow.redirectUri,
       challenge: flow.challenge,
-      refreshToken: tokens.refresh_token,
-      accessToken: tokens.access_token,
-      accessExp: now + tokens.expires_in * 1000 - EARLY,
-      scope: tokens.scope ?? '',
-      keys: flow.keys,
-      exp: now + CODE_TTL,
+      userId,
+      exp: Date.now() + CODE_TTL,
     }),
   )
   return Response.redirect(back.toString(), 302)
@@ -300,34 +284,21 @@ export async function callback(request: Request, env: Env): Promise<Response> {
 
 async function issue(
   env: Env,
-  input: {
-    clientId: string
-    accessToken: string
-    accessExp: number
-    refreshToken: string
-    scope: string
-    keys?: Keys
-  },
+  input: { clientId: string; userId: string },
 ): Promise<Response> {
-  const access: Sealed = {
-    k: 'access',
-    token: input.accessToken,
-    scope: input.scope,
-    keys: input.keys,
-    exp: input.accessExp,
-  }
   return json({
-    access_token: await seal(env.SEAL_KEY, access),
-    token_type: 'Bearer',
-    expires_in: Math.max(60, Math.floor((input.accessExp - Date.now()) / 1000)),
-    refresh_token: await seal(env.SEAL_KEY, {
-      k: 'refresh',
-      clientId: input.clientId,
-      token: input.refreshToken,
-      scope: input.scope,
-      keys: input.keys,
+    access_token: await seal(env.SEAL_KEY, {
+      k: 'user-access',
+      userId: input.userId,
+      exp: Date.now() + ACCESS_TTL,
     }),
-    scope: input.scope,
+    token_type: 'Bearer',
+    expires_in: ACCESS_TTL / 1000,
+    refresh_token: await seal(env.SEAL_KEY, {
+      k: 'user-refresh',
+      clientId: input.clientId,
+      userId: input.userId,
+    }),
   })
 }
 
@@ -348,35 +319,22 @@ export async function token(request: Request, env: Env): Promise<Response> {
     ) {
       return oauthError('invalid_grant', 'The code is not valid or expired.')
     }
-    return issue(env, { ...code, clientId: code.clientId })
+    return issue(env, code)
   }
   if (grant === 'refresh_token') {
     const refresh = await unseal(
       env.SEAL_KEY,
       field('refresh_token'),
-      'refresh',
+      'user-refresh',
     )
-    if (!refresh || refresh.clientId !== field('client_id')) {
-      return oauthError('invalid_grant', 'The refresh token is not valid.')
+    if (
+      !refresh ||
+      refresh.clientId !== field('client_id') ||
+      !(await userExists(env, refresh.userId))
+    ) {
+      return oauthError('invalid_grant', 'Sign in again.')
     }
-    const tokens = await requestGoogleAccessToken({
-      clientConfig: googleClient(env),
-      refreshToken: refresh.token,
-    }).catch(() => null)
-    if (!tokens) {
-      return oauthError(
-        'invalid_grant',
-        'Google refused the refresh. Sign in again.',
-      )
-    }
-    return issue(env, {
-      clientId: refresh.clientId,
-      accessToken: tokens.accessToken,
-      accessExp: Date.now() + tokens.expiresIn * 1000 - EARLY,
-      refreshToken: tokens.refreshToken ?? refresh.token,
-      scope: refresh.scope,
-      keys: refresh.keys,
-    })
+    return issue(env, refresh)
   }
   return oauthError(
     'unsupported_grant_type',
@@ -384,16 +342,15 @@ export async function token(request: Request, env: Env): Promise<Response> {
   )
 }
 
-// The Google access token inside a bearer token, or null.
-export async function googleAccess(
+// The person a bearer token belongs to, or null.
+export async function userOf(
   request: Request,
   env: Env,
-): Promise<{ token: string; scope: string; keys: Keys } | null> {
+): Promise<string | null> {
   const bearer = request.headers.get('authorization')?.match(/^Bearer (.+)$/i)
-  const access = await unseal(env.SEAL_KEY, bearer?.[1], 'access')
-  return access
-    ? { token: access.token, scope: access.scope, keys: access.keys ?? {} }
-    : null
+  return (
+    (await unseal(env.SEAL_KEY, bearer?.[1], 'user-access'))?.userId ?? null
+  )
 }
 
 export function escapeHtml(value: string): string {

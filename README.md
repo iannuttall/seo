@@ -8,7 +8,7 @@
 <h1 align="center">SEO Skill</h1>
 
 <p align="center">
-  The SEO command for AI agents. Give your agent your own Search Console and analytics data, with Google update dates beside it, and keyword data from your own provider key.
+  The SEO command for AI agents. A free Google Search Console MCP server and CLI: your agent reads your real Search Console, Google Analytics and Bing data, with Google update dates beside it, plus keyword research from your own DataForSEO or Ahrefs key.
 </p>
 
 <p align="center">
@@ -17,8 +17,6 @@
   <a href="https://seoskill.dev/docs/mcp">Hosted MCP</a>
   ·
   <a href="https://seoskill.dev/docs">Documentation</a>
-  ·
-  <a href="https://seoskill.dev/docs/mcp">Hosted MCP</a>
   ·
   <a href="https://www.npmjs.com/package/seo">npm</a>
   ·
@@ -43,8 +41,8 @@
 </p>
 
 Ask your agent what is happening in search and get an answer built from your
-own Search Console, Google Analytics and Clicky data, with Google update dates
-laid over it. Add your own DataForSEO or Ahrefs key when you need keyword,
+own Search Console, Bing Webmaster Tools, Google Analytics and Clicky data,
+with Google update dates laid over it. Add your own DataForSEO or Ahrefs key when you need keyword,
 SERP, competitor or backlink data.
 
 The results are facts with their dates and limits. There is no advice baked
@@ -81,15 +79,22 @@ claude mcp add --transport http seoskill https://seoskill.dev/mcp
 codex mcp add seoskill --url https://seoskill.dev/mcp
 ```
 
-Sign in with Google when the client asks. The server stores nothing. Your
-sign-in and any provider keys are sealed into the token your MCP client
-keeps, or sent as headers on each request. The
+Sign in with Google when the client asks. That first Google account is your
+account, so there is no password or separate signup. The server keeps only
+your linked Google accounts and any API keys you save, encrypted. It keeps no
+report data, no Search Console or analytics rows and no request logs.
+
+Your [account page](https://seoskill.dev/account) lets you add more Google
+accounts, save DataForSEO or Ahrefs keys, or delete everything.
+Each request uses the linked Google account that can read the site. The
 [hosted MCP guide](https://seoskill.dev/docs/mcp) covers other clients, and the
 [API keys guide](https://seoskill.dev/docs/keys) shows how to add a key
 without pasting it into a chat.
 
 A crawl fetches many pages, so `seo crawl` and `seo internal-links` run only
-on your machine, through the CLI or the local MCP server.
+on your machine, through the CLI or the local MCP server. Bing data also runs
+only there for now; when you ask the hosted server for Bing, it tells your
+agent which CLI command to run.
 
 ## The eight commands
 
@@ -100,7 +105,7 @@ on your machine, through the CLI or the local MCP server.
 | `seo compare --date <date>` | `seo_compare` | Equal periods before and after a date, with the Google updates in the window |
 | `seo index` | `seo_index` | Pages that lost most of their clicks, checked live and with URL Inspection |
 | `seo research <action>` | `seo_research` | Keyword metrics, ranked keywords, SERPs, competitors and backlinks from your key |
-| `seo data` | `seo_data` | Raw Search Console rows; the hosted tool also reads analytics landing pages |
+| `seo data` | `seo_data` | Raw Search Console rows, or Bing rows in the CLI and local server; the hosted tool also reads analytics landing pages |
 | `seo crawl <url>` | `seo_crawl` | A site crawl with technical issues and the URLs they affect (local only) |
 | `seo internal-links --url <url>` | `seo_internal_links` | Pages that could link to a target page (local only) |
 
@@ -129,8 +134,8 @@ seo report --section quick-wins
 ```
 
 The sections are `overview`, `quick-wins`, `low-ctr`, `striking-distance`,
-`second-page`, `content-decay`, `cannibalization` and `traffic-drop`. Page
-sections check their top 20 URLs live and merge same-site redirects.
+`second-page`, `content-decay`, `cannibalization`, `traffic-drop` and `bing`.
+Page sections check their top 20 URLs live and merge same-site redirects.
 
 Each result ends with the command to run next. A traffic drop usually leads to
 `seo compare` with the date it started, then `seo page` for the URLs that
@@ -162,7 +167,9 @@ seo providers dataforseo connect
 seo providers ahrefs connect
 ```
 
-Then ask for one action:
+On the hosted server, save the keys on your
+[account page](https://seoskill.dev/account) or send them as headers. Then ask
+for one action:
 
 ```sh
 seo research keyword_metrics --keywords "invoice software,invoice template"
@@ -176,6 +183,27 @@ Rows with a domain get a free Domain Rating column, credited "Domain Rating by
 Ahrefs". The hosted server adds it for everyone; the CLI adds it when you have
 saved an Ahrefs key. Provider numbers are estimates. Search Console stays the
 record of what your own site actually got.
+
+## Add Bing Webmaster Tools
+
+Bing data is free. It works in the CLI and the local MCP server. Save a Bing
+Webmaster API key (Bing Webmaster Tools, then Settings, then API access):
+
+```sh
+seo providers bing connect
+```
+
+Agents and CI can set `SEO_BING_API_KEY` instead. `seo providers bing status`
+shows the connection and `seo providers bing disconnect` removes it. The
+hosted server has no Bing for now. When you ask it for Bing, it tells your
+agent to run the CLI instead, the same way it does for a crawl.
+
+`seo report` then shows Google and Bing clicks and impressions for the same
+dates, and each engine's share of those clicks. The `bing` section puts Bing's
+top queries and pages beside Google's numbers for the same rows, and
+`seo data --source bing` returns the raw Bing rows. Bing and Google numbers sit
+side by side and are never added together. Bing lists only its top queries
+and pages by week, so a row missing from Bing's list is unknown, not zero.
 
 ## Add your analytics
 
@@ -227,7 +255,7 @@ installed provider packages.
 
 - Missing, partial, capped and filtered data is named. It never becomes a zero
   or an all-clear.
-- Search Console, analytics, live page checks and provider estimates stay
+- Search Console, Bing, analytics, live page checks and provider estimates stay
   apart. Query rows do not add up to site totals.
 - Flags such as likely automated queries and CTR gaps against the site's own
   curve are heuristics. They point at rows worth a look.
@@ -243,10 +271,11 @@ the same command again over a later, complete window.
 Version 0.3.0 moved most reports into the eight commands. Old names such as
 `seo quick-wins` still run in 0.3 and print the new command to use. They stop
 working in 0.4.0. Some reports and commands were removed, including rank
-tracking, programmatic SEO, AI search readiness, llms.txt, Bing Webmaster,
+tracking, programmatic SEO, AI search readiness, llms.txt, Bing links,
 IndexNow, Semrush, local search, server logs and the monthly and narrative
-reports. The old research reports became `seo research`. The
-[changelog](CHANGELOG.md) lists every old name and where it went.
+reports. Bing Webmaster search data came back in 0.3.0-beta.3. The old
+research reports became `seo research`. The [changelog](CHANGELOG.md) lists
+every old name and where it went.
 
 ## Use it in CI and scripts
 
@@ -314,7 +343,8 @@ seo auth logout --all
 seo reset
 ```
 
-The hosted server keeps no data at all. Read the
+The hosted server keeps only your linked sign-ins and saved keys, encrypted,
+and no report data or logs. Read the
 [privacy policy](https://seoskill.dev/privacy) for every network boundary and
 the [telemetry page](https://seoskill.dev/telemetry) for the anonymous usage
 counts and how to turn them off.
@@ -328,6 +358,7 @@ vulnerabilities privately through the process in [SECURITY.md](SECURITY.md).
 - [Getting started](https://seoskill.dev/docs/getting-started)
 - [Hosted MCP](https://seoskill.dev/docs/mcp)
 - [API keys](https://seoskill.dev/docs/keys)
+- [Your hosted account](https://seoskill.dev/account)
 - [CLI](https://seoskill.dev/docs/cli)
 - [Commands](https://seoskill.dev/docs)
 - [What is stored](https://seoskill.dev/docs/privacy)

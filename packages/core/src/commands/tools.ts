@@ -1,6 +1,6 @@
 import { z } from 'zod'
-import type { GoogleFetch } from '../google/api.js'
-import { runAnalyticsRows } from './analytics.js'
+import { analyticsSignIn, runAnalyticsRows } from './analytics.js'
+import { runBingRows } from './bing.js'
 import { runReport, SECTION_IDS, SECTIONS } from './report.js'
 import {
   RESEARCH_ACTIONS,
@@ -11,7 +11,7 @@ import {
 import { KEY_HEADERS } from './research-providers.js'
 import { DIMENSIONS, runRows } from './rows.js'
 import { LOST_PAGES_RULE, runCompare, runLostPages, runPage } from './site.js'
-import { runSites } from './sites.js'
+import { type GoogleAccount, runSites } from './sites.js'
 import {
   type Caller,
   type CommandDeps,
@@ -24,6 +24,7 @@ import {
 // the local MCP. Each surface supplies how it reaches Google and the keys.
 
 export type ToolSurface = {
+  // Includes Bing calls when Bing is connected.
   deps: CommandDeps
   // The Search Console property that covers a site or URL.
   resolveSite: (site: string) => Promise<string>
@@ -31,10 +32,12 @@ export type ToolSurface = {
   keys: () => Promise<Headers>
   // The Ahrefs key for the free Domain Rating column, when there is one.
   drKey?: string | null
-  // Google API calls with this surface's sign-in, for Google Analytics.
-  google: () => Promise<GoogleFetch>
+  // Every Google sign-in on this surface, for listing and Google Analytics.
+  accounts: () => Promise<GoogleAccount[]>
   // What to do when Google rejects the sign-in.
   signIn: string
+  // Where to add a Google account, Bing or a key on this surface.
+  connect: string
 }
 
 const site = z
@@ -72,7 +75,11 @@ const detail = {
     .describe('rows only: the first row to return.'),
 }
 
-export const DATA_SOURCES = ['search_console', 'google_analytics'] as const
+export const DATA_SOURCES = [
+  'search_console',
+  'google_analytics',
+  'bing',
+] as const
 
 // Other analytics sources run on the person's machine through provider
 // packages, like crawls. Agents with a shell use the CLI for them.
@@ -105,10 +112,16 @@ export const SHARED_TOOLS: SharedTool[] = [
     command: 'data',
     title: 'List sites',
     description:
-      'Lists the Search Console and Google Analytics properties this Google sign-in can read, and which research keys are set. Call it first.',
+      'Lists the Search Console and Google Analytics properties the connected Google accounts can read, the Bing Webmaster site for each, and which research keys are set. Call it first.',
     input: z.object({}),
     run: async (surface) =>
-      runSites(await surface.google(), await surface.keys(), surface.signIn),
+      runSites({
+        accounts: await surface.accounts(),
+        keys: await surface.keys(),
+        signIn: surface.signIn,
+        bing: surface.deps.bing ? await surface.deps.bing() : undefined,
+        connect: surface.connect,
+      }),
   }),
   tool({
     name: 'seo_report',
@@ -237,20 +250,20 @@ export const SHARED_TOOLS: SharedTool[] = [
     name: 'seo_data',
     command: 'data',
     title: 'Raw rows',
-    description: `Raw rows for questions the report does not answer. search_console (default): rows for any dimensions, each with the previous period and the change; page and query narrow to rows whose URL or query contains that text. google_analytics: landing pages for visits from search, with Google Analytics’ own metric names. ${LOCAL_ANALYTICS}`,
+    description: `Raw rows for questions the report does not answer. search_console (default): rows for any dimensions, each with the previous period and the change; page and query narrow to rows whose URL or query contains that text. google_analytics: landing pages for visits from search, with Google Analytics’ own metric names. bing: Bing Webmaster query or page rows (first dimension) for the same site, by week. ${LOCAL_ANALYTICS}`,
     input: z.object({
       source: z.enum(DATA_SOURCES).default('search_console'),
       site: z
         .string()
         .min(1)
         .describe(
-          'search_console: the property or site. google_analytics: numeric property id from seo_sites.',
+          'search_console and bing: the property or site. google_analytics: numeric property id from seo_sites.',
         ),
       dimensions: z
         .array(z.enum(DIMENSIONS))
         .max(4)
         .default(['query'])
-        .describe('search_console only.'),
+        .describe('search_console; bing uses the first, query or page.'),
       page: z
         .string()
         .min(1)
@@ -265,6 +278,19 @@ export const SHARED_TOOLS: SharedTool[] = [
       ...detail,
     }),
     run: async (surface, input) => {
+      if (input.source === 'bing') {
+        return runBingRows(
+          {
+            site: input.site,
+            dimension: input.dimensions[0] === 'page' ? 'page' : 'query',
+            startDate: input.start_date,
+            endDate: input.end_date,
+            detail: input.detail,
+            offset: input.offset,
+          },
+          surface.deps,
+        )
+      }
       if (input.source === 'google_analytics') {
         return runAnalyticsRows(
           {
@@ -274,7 +300,11 @@ export const SHARED_TOOLS: SharedTool[] = [
             detail: input.detail,
             offset: input.offset,
           },
-          await surface.google(),
+          await analyticsSignIn(
+            await surface.accounts(),
+            input.site,
+            surface.signIn,
+          ),
           {
             signIn: surface.signIn,
             call: (offset) =>
@@ -336,8 +366,8 @@ export async function runSharedTool(
   return tool.run(surface, parsed.data as never)
 }
 
-export const MCP_INSTRUCTIONS = `SEO Skill reads the person's own Search Console, Google Analytics and optional keyword and analytics accounts, and returns facts with their dates and limits. It gives no advice.
-1. seo_sites: the properties this sign-in can read.
+export const MCP_INSTRUCTIONS = `SEO Skill reads the person's own Search Console, Google Analytics, Bing Webmaster Tools and optional keyword and analytics accounts, and returns facts with their dates and limits. It gives no advice.
+1. seo_sites: the properties the connected accounts can read.
 2. seo_report: the main report. Run it without a section first; it shows the overview and every section's count and top rows. Then ask for the one section you need.
 3. seo_page for one URL, seo_compare for before and after a date, seo_index for pages that lost their clicks, seo_research for keyword, competitor and backlink data from the person's own DataForSEO or Ahrefs key, seo_data for raw rows.
 Show the person the facts that matter, for example in a table or a small dashboard, and decide with them what to change. Do not edit pages without their approval.`

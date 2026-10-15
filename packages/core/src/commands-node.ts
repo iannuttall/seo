@@ -1,3 +1,4 @@
+import { type BingCall, bingCall } from './bing/api.js'
 import type {
   Caller,
   CommandDeps,
@@ -21,6 +22,7 @@ import { inspectUrl } from './gsc/client/inspection.js'
 import { querySearchAnalytics } from './gsc/client/search-analytics.js'
 import { listSites } from './gsc/client/sites.js'
 import { readAhrefsApiKey } from './providers/ahrefs/credentials.js'
+import { readBingApiKey } from './providers/bing/credentials.js'
 import { readDataForSeoCredentials } from './providers/dataforseo/credentials.js'
 
 // The core commands' functions for the CLI and the local MCP: Search Console
@@ -53,7 +55,26 @@ export function nodeCommandDeps(options: {
       }
     },
     call: options.call,
+    bing: localBing,
+    bingConnect: LOCAL_BING_CONNECT,
   }
+}
+
+export const LOCAL_BING_CONNECT =
+  'Run `seo providers bing connect` with an API key from Bing Webmaster Tools (Settings, API access).'
+
+let bing: Promise<BingCall | null> | undefined
+
+// Bing Webmaster calls with the saved API key, or null without one.
+export function localBing(): Promise<BingCall | null> {
+  bing ??= readBingApiKey()
+    .catch(() => undefined)
+    .then((key) =>
+      key
+        ? bingCall({ apiKey: key.apiKey }, { signIn: LOCAL_BING_CONNECT })
+        : null,
+    )
+  return bing
 }
 
 // Provider keys from the local secret store, as header-style names. Keys go

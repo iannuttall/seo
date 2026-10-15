@@ -1,0 +1,28 @@
+---
+import Logo from './Logo.astro'
+import { getButtonClasses } from './ui/button'
+import { site } from '@/lib/site'
+
+const navClass =
+  'text-sm text-foreground-muted underline-offset-4 hover:text-foreground hover:underline'
+---
+
+<header class="site-frame flex items-center justify-between gap-6 py-4">
+  <a href="/" class="flex items-center gap-2 text-foreground no-underline">
+    <Logo class="size-7" />
+    <span class="text-base font-medium">{site.name}</span>
+  </a>
+  <nav class="flex items-center gap-4 sm:gap-5" aria-label="Main navigation">
+    <a class={navClass} href="/docs">Docs</a>
+    <a class={navClass} href="/tools">Tools</a>
+    <a class:list={[navClass, 'hidden sm:inline']} href="/stats">Stats</a>
+    <a
+      class={getButtonClasses('secondary', 'sm')}
+      href={site.repository}
+      target="_blank"
+      rel="noreferrer"
+    >
+      GitHub
+    </a>
+  </nav>
+</header>

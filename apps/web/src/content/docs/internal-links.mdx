@@ -1,0 +1,26 @@
+---
+title: Find internal link opportunities
+description: Find pages on your site that could link to a page you choose with seo internal-links, using Search Console queries and a live check for existing links.
+heading: seo internal-links
+lead: Find pages on your site that could link to a page you choose. CLI only.
+---
+
+Use it when a page deserves more links from the rest of your site. Pick the target page and the command looks for pages that cover the same topic but do not link to it yet.
+
+## Run it
+
+Install the CLI and run setup if you have not yet, then ask your agent or run it with the page that should get the links:
+
+```sh
+seo internal-links --url https://example.com/pricing --site sc-domain:example.com
+```
+
+It looks at the last 28 days of Search Console data. Change that with `--days`.
+
+## What comes back
+
+- Pages whose Search Console queries overlap with the target page's topic.
+- A live check of those pages, keeping only the ones that do not already link to the target.
+- The queries behind each suggestion, so you can see why it was picked.
+
+The order is a rough guide, not a forecast. Read the source page, add a link only where it helps a reader, and run a [crawl](/docs/crawl) afterwards to confirm it is there.

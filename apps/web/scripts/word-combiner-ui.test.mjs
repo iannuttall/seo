@@ -13,10 +13,7 @@ test('word combiner uses shared controls and keeps export actions above the resu
   )
 
   assert.match(source, /import Button from '@\/components\/Button\.astro'/u)
-  assert.match(
-    source,
-    /import DottedCard from '@\/components\/DottedCard\.astro'/u,
-  )
+  assert.match(source, /import Card from '@\/components\/Card\.astro'/u)
   assert.match(
     source,
     /import FormInput from '@\/components\/FormInput\.astro'/u,
@@ -51,7 +48,7 @@ test('word combiner uses shared controls and keeps export actions above the resu
   assert.match(source, /const exampleLists = \[/u)
   assert.match(
     source,
-    /class="flex min-h-12 items-center gap-3 self-end font-sans text-sm font-medium"/u,
+    /class="flex min-h-10 items-center gap-3 self-end text-sm font-medium"/u,
   )
   assert.doesNotMatch(
     source,

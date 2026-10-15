@@ -14,6 +14,8 @@
 <p align="center">
   <a href="#install-and-run-setup">Get started</a>
   ·
+  <a href="https://seoskill.dev/docs/mcp">Hosted MCP</a>
+  ·
   <a href="https://seoskill.dev/docs">Documentation</a>
   ·
   <a href="https://seoskill.dev/docs/mcp">Hosted MCP</a>
@@ -108,7 +110,7 @@ window. Commands that return rows also take `--detail summary|rows|full` and
 for you and shown in the output, so there is nothing else to tune.
 
 Run `seo help` for the short list, or `seo <command> --help` for one command.
-The [command docs](https://seoskill.dev/docs/commands) explain each one.
+The [command docs](https://seoskill.dev/docs) explain each one.
 
 ## Start with one report
 
@@ -326,7 +328,7 @@ vulnerabilities privately through the process in [SECURITY.md](SECURITY.md).
 - [Hosted MCP](https://seoskill.dev/docs/mcp)
 - [API keys](https://seoskill.dev/docs/keys)
 - [CLI](https://seoskill.dev/docs/cli)
-- [Commands](https://seoskill.dev/docs/commands)
+- [Commands](https://seoskill.dev/docs)
 - [What is stored](https://seoskill.dev/docs/privacy)
 - [Privacy policy](https://seoskill.dev/privacy)
 - [Public usage stats](https://seoskill.dev/stats)

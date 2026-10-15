@@ -1,266 +1,245 @@
 ---
-import DottedCard from '@/components/DottedCard.astro'
-import FaqAccordion from '@/components/FaqAccordion.astro'
-import FeatureShowcase from '@/components/FeatureShowcase.astro'
-import InstallPicker from '@/components/InstallPicker.astro'
-import SectionHeading from '@/components/SectionHeading.astro'
-import { reports } from '@/content/reports'
 import {
-  reportCollectionIds,
-  reportCollections,
-} from '@/content/reports/collections'
-import { reportPath } from '@/content/reports/helpers'
+  Analytics01Icon,
+  Calendar03Icon,
+  Key01Icon,
+} from '@hugeicons/core-free-icons'
+import FaqAccordion from '@/components/FaqAccordion.astro'
+import HomeCard from '@/components/HomeCard.astro'
+import SectionHeading from '@/components/SectionHeading.astro'
+import SetupCommands from '@/components/SetupCommands.astro'
+import { getButtonClasses } from '@/components/ui/button'
+import { commands } from '@/content/commands'
+import { features } from '@/content/features'
+import { toolIcon } from '@/content/tool-icons'
+import { tools } from '@/content/tools/manifest.mjs'
 import BaseLayout from '@/layouts/BaseLayout.astro'
-import { site } from '@/lib/site'
 
-const catalogIds = reports.map((report) => report.id)
-const reportCountLabel = String(reports.length)
-if (
-  new Set(reportCollectionIds).size !== reportCollectionIds.length ||
-  [...reportCollectionIds].sort().join('\n') !== [...catalogIds].sort().join('\n')
-) {
-  throw new Error('Home report groups do not match the live report catalog.')
-}
+const sources = [
+  {
+    title: 'Your own search data',
+    icon: Analytics01Icon,
+    text: 'Search Console and Google Analytics through your Google sign-in. Clicky and other analytics tools run on your machine with the CLI.',
+  },
+  {
+    title: 'Google update dates',
+    icon: Calendar03Icon,
+    text: 'Known Google algorithm updates sit next to your traffic, so you can see when the timing lines up.',
+  },
+  {
+    title: 'Research with your key',
+    icon: Key01Icon,
+    text: 'Keyword, SERP, competitor and backlink data from your own DataForSEO or Ahrefs account.',
+  },
+]
+
+const surfaces = [
+  {
+    title: 'Hosted MCP',
+    text: 'Free, with Google sign-in and nothing to install. Your data and keys are never stored.',
+    code: 'seoskill.dev/mcp',
+    href: '/docs/mcp',
+  },
+  {
+    title: 'CLI',
+    text: 'Open source and local. Adds a site crawl and internal links.',
+    code: 'npm i -g seo && seo start',
+    href: '/docs/cli',
+  },
+  {
+    title: 'API keys',
+    text: 'Optional. Your own DataForSEO or Ahrefs account, never stored.',
+    code: null,
+    href: '/docs/keys',
+  },
+  {
+    title: 'What is stored',
+    text: 'None of your data or keys. Only anonymous usage counts.',
+    code: null,
+    href: '/docs/privacy',
+  },
+]
+
+const featuredToolIds = [
+  'domain-rating-checker',
+  'website-traffic-checker',
+  'robots-txt-validator',
+  'sitemap-extractor',
+  'schema-markup-generator',
+  'serp-preview',
+]
+const featuredTools = featuredToolIds.flatMap((id) => {
+  const tool = tools.find((item) => item.id === id)
+  return tool ? [tool] : []
+})
 
 const faqs = [
   {
-    question: 'Does the SEO skill include an AI agent?',
+    question: 'Is it free?',
     answer:
-      'No. It gives any compatible agent better SEO context. Codex, Claude, ChatGPT, and Cursor are common examples. The model still does the reasoning, writing, and implementation work. The CLI supplies crawl, Search Console, Google Analytics, and optional research-provider evidence.',
+      'Yes. The hosted MCP and the CLI are free. Research data from DataForSEO or Ahrefs uses your own account with them, so they bill you for what you use.',
   },
   {
-    question: 'Why not build another SEO dashboard?',
+    question: 'What does the hosted MCP store?',
     answer:
-      'Dashboards are useful when you want to click around, but the CLI is built for the way agents work. They discover reports, run them, and read the results without leaving your editor or terminal.',
+      'None of your data and none of your keys. Your Google sign-in and any keys are sealed into the tokens your agent keeps, and the server uses them for one request at a time. The only thing kept is an anonymous count of what ran.',
   },
   {
-    question: 'What does my agent actually get back?',
+    question: 'Does it tell me what to fix?',
     answer:
-      'It gets JSON or Markdown with the date range, units, caveats, evidence, recommendations, and useful next commands. That gives the model enough context to explain the problem and help fix it.',
+      'No. It returns facts from your data, such as which pages lost clicks or which queries sit at position 4 to 10 with a low click-through rate. Your agent shows you the facts and you decide what to change.',
   },
   {
-    question: 'Why connect Search Console?',
+    question: 'Should I use the hosted MCP or the CLI?',
     answer:
-      'Search Console proves you can access the site and gives reports real search demand. That lets your agent find page-two queries, weak CTR, decaying pages, cannibalisation, and indexing candidates using your own data. The CLI requests read-only access.',
+      'Start with the hosted MCP if you want the quickest setup. Use the CLI if you want everything on your machine, or need the site crawl and internal links, which only run locally.',
   },
   {
-    question: 'Is Google Analytics required?',
+    question: 'Which agents does it work with?',
     answer:
-      'No. Crawls and Search Console reports work without Google Analytics. Connect it when traffic, landing-page, engagement, or conversion context would change how you prioritise the work.',
-  },
-  {
-    question: 'Do keyword and competitor reports cost money?',
-    answer:
-      'Some optional provider requests are charged by the provider. The CLI shows estimated and actual cost, uses a local cache, and enforces local daily, monthly, request, and row limits. Crawl and Google reports do not require a research provider.',
-  },
-  {
-    question: 'Does my site data leave my machine?',
-    answer:
-      'Reports, project profiles, tokens, crawls, and caches stay local. Optional anonymous usage events contain a fixed event name, report id, tool version, agent, coarse platform details, and install week. They never contain URLs, report content, Google data, or identifiers, and you can disable them with seo telemetry disable or DO_NOT_TRACK=1.',
-  },
-  {
-    question: 'Can it change my site?',
-    answer:
-      'The CLI does not publish changes by itself. It gives your agent the evidence it needs to edit code or content, draft a fix, or open a ticket inside the tools you already use.',
-  },
-  {
-    question: 'Do I need MCP?',
-    answer:
-      'No. Use the CLI directly, import the package in TypeScript, or run it in CI. MCP is the easiest way to give a compatible agent the same local report engine.',
-  },
-  {
-    question: 'Why one skill instead of a skill per report?',
-    answer:
-      'Fifty skill files would sit in your agent context window on every session, whether or not you are doing SEO work. This is one short skill that teaches your agent to discover the tools at runtime. The agent asks the CLI to describe a report only when it is about to run it, so it gets the full detail at the moment it matters and nothing before that.',
-  },
-  {
-    question: 'Which report should I run first?',
-    answer:
-      'Run seo report after setup. It checks the evidence available for the project, explains skipped sections, ranks the first investigation queue, and points to focused follow-up reports.',
-  },
-  {
-    question: 'How is this different from generic SEO advice?',
-    answer:
-      'Generic advice guesses from best practices, but your agent works from the site, crawl, queries, search demand, and analytics data in front of it. It can inspect the evidence behind each finding instead of trusting a generic score.',
-  },
-  {
-    question: 'Who is the SEO skill for?',
-    answer:
-      'Developers, founders, SEO consultants, agencies, and technical teams who want their agents to work from clean SEO evidence instead of screenshots or copied dashboard rows.',
+      'Any agent that supports remote MCP servers, including Claude Code, Codex, Cursor and Claude on the web. The CLI also adds a skill that teaches your agent which command to run.',
   },
 ]
 ---
 
 <BaseLayout
-  title="Open source SEO audit tool for AI agents"
+  title="Free SEO data for AI agents"
   titleBrandPosition="prefix"
-  description={site.description}
+  description="Give your AI agent facts from your own Search Console, Google Analytics and keyword data. Connect the free hosted MCP in one command or install the open source CLI."
+  canonicalPath="/"
   framed={false}
 >
-  <main data-agent-content="true">
-    <section class="border-b-2 border-nav">
-      <div class="hero-shell mx-auto w-full max-w-4xl px-8 md:px-12">
-        <div class="hero-copy">
-          <h1
-            class="text-center text-pretty text-4xl font-normal leading-tight tracking-tight max-[420px]:text-[7.2vw] sm:text-5xl"
-            data-glitch
-          >
-            The only SEO skill your agent needs
-          </h1>
-          <p class="text-center text-pretty font-sans text-xl leading-7 tracking-tight text-foreground-muted sm:text-2xl sm:leading-8">
-            Run an SEO audit from any agent that supports local MCP, or use your
-            terminal. Find what needs attention, fix it in your code, and check
-            what changed.
+  <main data-agent-content>
+    <section class="pt-4">
+      <div class="site-frame flex flex-col items-center pt-14 text-center sm:pt-20">
+        <h1 class="max-w-3xl text-pretty text-4xl/tight font-medium -tracking-[0.8px] xl:text-5xl/tight xl:-tracking-[1px]">
+          Give your AI agent your real SEO data
+        </h1>
+        <p class="mt-4 max-w-2xl text-pretty text-xl/8 font-medium -tracking-[0.2px] text-foreground-muted">
+          Facts from your Search Console, analytics and keyword data, ready
+          for Claude, Codex or any agent. No advice, no guesswork. You decide
+          what to change.
+        </p>
+      </div>
+
+      <div class="site-frame mt-10 sm:mt-12">
+        <SetupCommands id="home-setup" />
+        <p class="mt-6 text-center text-sm text-foreground-muted">
+          Free. Sign in with Google, no account. Your data and keys are never stored.
+        </p>
+      </div>
+    </section>
+
+    <div class="space-y-24 py-24 sm:space-y-32 sm:py-32">
+      <section class="site-frame" aria-labelledby="commands-heading">
+        <SectionHeading
+          id="commands-heading"
+          title="What your agent can do"
+          text="Eight commands. Start with the report, then ask about one page, one date or one keyword."
+        />
+        <div class="grid grid-cols-1 gap-2 sm:grid-cols-2">
+          {
+            commands.map((item) => (
+              <HomeCard
+                title={item.command}
+                code={item.command}
+                text={item.text}
+                icon={item.icon}
+                href={item.path}
+              />
+            ))
+          }
+        </div>
+      </section>
+
+      <section class="site-frame" aria-labelledby="features-heading">
+        <SectionHeading
+          id="features-heading"
+          title="Pick the SEO job"
+          text="A Search Console MCP, keyword research, a site audit, or the MCP server that ties them together."
+        />
+        <div class="grid grid-cols-1 gap-2 sm:grid-cols-2">
+          {
+            features.map((item) => (
+              <HomeCard title={item.title} text={item.text} icon={item.icon} href={item.path} />
+            ))
+          }
+        </div>
+      </section>
+
+      <section class="site-frame" aria-labelledby="sources-heading">
+        <SectionHeading
+          id="sources-heading"
+          title="Facts from data you own"
+          text="Every row says where it came from, and outside estimates never mix with your own numbers."
+        />
+        <div class="grid grid-cols-1 gap-2 sm:grid-cols-3">
+          {sources.map((item) => <HomeCard title={item.title} text={item.text} icon={item.icon} />)}
+        </div>
+      </section>
+
+      <section class="site-frame grid gap-8 sm:grid-cols-[1fr_1.15fr] sm:items-start">
+        <div class="sm:sticky sm:top-24">
+          <h2 class="text-pretty text-2xl font-medium -tracking-[0.4px] text-foreground xl:text-3xl xl:-tracking-[0.6px]">
+            Two ways in, same reports
+          </h2>
+          <p class="mt-4 text-base leading-7 text-foreground-muted">
+            The hosted MCP and the CLI run the same code and return the same
+            facts. Pick the one that suits how you work (you can switch later).
           </p>
         </div>
-        <InstallPicker />
-      </div>
-    </section>
-
-    <FeatureShowcase />
-
-    <section class="mb-12 border-b-2 border-nav bg-panel text-panel-foreground">
-      <div class="mx-auto w-full max-w-4xl px-8 md:px-12">
-        <div class="px-6 py-12 sm:px-8">
-          <div class="mb-10 space-y-4 text-center">
-            <h2 class="text-pretty text-3xl font-normal leading-tight tracking-tight sm:text-4xl">
-              Reports for a complete SEO audit
-            </h2>
-            <p class="mx-auto max-w-2xl text-pretty font-sans text-lg leading-7 tracking-tight text-panel-foreground/70 sm:text-xl sm:leading-8">
-              {reportCountLabel} reports and tools across crawl health, Search Console performance,
-              keywords, competitors, programmatic SEO, AI readiness, and monitoring.
-            </p>
-          </div>
-          <div class="grid grid-cols-1 gap-x-10 gap-y-8 sm:auto-rows-fr sm:grid-cols-2">
-            {
-              reportCollections.map((group, index) => (
-                <DottedCard inverted patternId={`report-group-${index}`}>
-                  <span slot="label">{group.title}</span>
-                  <ul class="flex flex-col gap-1.5 p-5 pb-8 font-sans text-sm">
-                    {group.reports.map(([id, label]) => (
-                      <li>
-                        <a class="underline underline-offset-2 hover:decoration-dotted" href={reportPath(id)}>{label}</a>
-                      </li>
-                    ))}
-                  </ul>
-                </DottedCard>
-              ))
-            }
-          </div>
-        </div>
-      </div>
-    </section>
-
-    <section>
-      <div class="mx-auto w-full max-w-4xl px-8 py-12 md:px-12">
-        <SectionHeading
-          eyebrow="Questions about the CLI, MCP, and your data"
-          text="Give any compatible agent better SEO evidence. Codex, Claude, ChatGPT, and Cursor are common examples."
-        />
-        <DottedCard patternId="faq-card">
-          <FaqAccordion items={faqs} />
-        </DottedCard>
-      </div>
-    </section>
-  </main>
-  <script is:inline>
-    ;(() => {
-      const headline = document.querySelector('[data-glitch]')
-      const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)')
-      if (!headline || reducedMotion.matches) return
-
-      const enhanceHeadline = () => {
-        const source = headline.textContent?.trim()
-        if (!source) return
-
-        const breakAt = source.indexOf(' your ')
-        const lines = breakAt === -1
-          ? [source]
-          : [source.slice(0, breakAt), source.slice(breakAt + 1)]
-        const characters = []
-
-        headline.textContent = ''
-        headline.setAttribute('aria-label', source)
-
-        for (const sourceLine of lines) {
-          const line = document.createElement('span')
-          line.className = 'block whitespace-nowrap'
-          line.setAttribute('aria-hidden', 'true')
-          headline.append(line)
-
-          for (const [wordIndex, word] of sourceLine.split(' ').entries()) {
-            if (wordIndex > 0) line.append(' ')
-
-            const wordSpan = document.createElement('span')
-            wordSpan.style.display = 'inline-block'
-            wordSpan.style.whiteSpace = 'nowrap'
-            line.append(wordSpan)
-
-            for (const character of word) {
-              const span = document.createElement('span')
-              span.textContent = character
-              span.style.display = 'inline-block'
-              span.style.width = '1ch'
-              span.dataset.source = character
-              wordSpan.append(span)
-              characters.push(span)
-            }
+        <ul class="divide-y divide-border rounded-lg bg-muted px-6">
+          {
+            surfaces.map((item) => (
+              <li>
+              <a
+                class="group block py-4 no-underline focus-visible:outline-none focus-visible:ring-[3px] focus-visible:ring-ring/20"
+                href={item.href}
+              >
+                <span class="flex items-center justify-between gap-4">
+                  <span class="text-sm font-medium text-foreground group-hover:underline">{item.title}</span>{' '}
+                  {item.code ? (
+                    <code class="truncate rounded-md bg-background px-2 py-0.5 font-mono text-xs text-foreground-muted">{item.code}</code>
+                  ) : (
+                    <span aria-hidden="true" class="text-foreground-soft group-hover:text-foreground">&rarr;</span>
+                  )}
+                </span>{' '}
+                <span class="mt-1 block text-sm leading-6 text-foreground-muted">{item.text}</span>
+              </a>
+              </li>
+            ))
           }
-        }
+        </ul>
+      </section>
 
-        const glyphs = '0123456789_<>/[]{}'
-        const random = (minimum, range) => minimum + Math.random() * range
+      <section class="site-frame" aria-labelledby="tools-heading">
+        <SectionHeading
+          id="tools-heading"
+          title="Free SEO tools"
+          text="Check a website, a technical file or a keyword list in your browser. No sign-in."
+        />
+        <div class="grid grid-cols-1 gap-2 sm:grid-cols-2 lg:grid-cols-3">
+          {
+            featuredTools.map((tool) => (
+              <HomeCard title={tool.title} text={tool.description} icon={toolIcon(tool.id)} href={tool.path} />
+            ))
+          }
+        </div>
+        <a class:list={[getButtonClasses('secondary', 'lg'), 'mt-6']} href="/tools">
+          See all {tools.length} tools
+        </a>
+      </section>
 
-        const schedule = () => {
-          window.setTimeout(() => {
-            if (!document.hidden) {
-              const available = [...characters]
-              const count = 2 + Math.floor(Math.random() * 3)
-              const simultaneous = Math.random() < 0.2
-              let offset = random(0, 120)
-
-              for (let index = 0; index < count; index += 1) {
-                const position = Math.floor(Math.random() * available.length)
-                const character = available.splice(position, 1)[0]
-                if (!character) continue
-
-                if (index > 0 && !simultaneous) {
-                  offset +=
-                    Math.random() < 0.3 ? random(10, 35) : random(90, 220)
-                }
-
-                window.setTimeout(() => {
-                  character.textContent = glyphs[Math.floor(Math.random() * glyphs.length)]
-                  window.setTimeout(() => {
-                    character.textContent = character.dataset.source ?? ''
-                  }, random(70, 130))
-                }, offset)
-              }
-            }
-
-            schedule()
-          }, random(1800, 3800))
-        }
-
-        schedule()
-      }
-
-      window.requestAnimationFrame(enhanceHeadline)
-    })()
-  </script>
-  <style>
-    .hero-shell {
-      display: flex;
-      flex-direction: column;
-      gap: clamp(2rem, 4vh, 4rem);
-      padding-top: clamp(2.5rem, 5vh, 4.5rem);
-      padding-bottom: clamp(4.5rem, 8vh, 7rem);
-    }
-
-    .hero-copy {
-      display: flex;
-      flex-direction: column;
-      gap: clamp(1.5rem, 3vh, 2.5rem);
-    }
-  </style>
+      <section class="site-frame" aria-labelledby="faq-heading">
+        <div class="max-w-2xl">
+          <h2 id="faq-heading" class="text-pretty text-2xl font-medium -tracking-[0.4px] text-foreground xl:text-3xl xl:-tracking-[0.6px]">
+            Questions about SEO Skill
+          </h2>
+        </div>
+        <div class="mt-10">
+          <FaqAccordion items={faqs} id="home-faq" />
+        </div>
+      </section>
+    </div>
+  </main>
 </BaseLayout>

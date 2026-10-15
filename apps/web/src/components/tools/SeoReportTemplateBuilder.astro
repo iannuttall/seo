@@ -1,6 +1,6 @@
 ---
 import Button from '@/components/Button.astro'
-import DottedCard from '@/components/DottedCard.astro'
+import Card from '@/components/Card.astro'
 import FormInput from '@/components/FormInput.astro'
 import FormSelect from '@/components/FormSelect.astro'
 import {
@@ -13,45 +13,45 @@ import {
 ---
 
 <section data-report-template-builder class="space-y-6">
-  <DottedCard patternId="seo-report-template-input">
+  <Card>
     <form data-report-form class="space-y-6 p-5 sm:p-6">
       <div class="space-y-1">
-        <h2 class="font-mono text-lg font-normal">Choose what the report needs to explain</h2>
-        <p class="font-sans text-sm font-light leading-6 text-foreground-muted">
+        <h2 class="text-lg font-medium">Choose what the report needs to explain</h2>
+        <p class="text-sm leading-6 text-foreground-muted">
           The finished outline contains prompts and evidence tables. It does not invent traffic, ranking, or revenue numbers.
         </p>
       </div>
 
       <div class="grid gap-4 sm:grid-cols-2">
-        <label class="space-y-2 font-sans text-sm font-medium">
+        <label class="space-y-2 text-sm font-medium">
           <span>Site or project name</span>
           <FormInput data-site-name type="text" maxlength={SEO_REPORT_TEMPLATE_LIMITS.text} placeholder="Field Journal" />
         </label>
-        <label class="space-y-2 font-sans text-sm font-medium">
-          <span>Report title <span class="font-light text-foreground-muted">(optional)</span></span>
+        <label class="space-y-2 text-sm font-medium">
+          <span>Report title <span class="text-foreground-muted">(optional)</span></span>
           <FormInput data-report-title type="text" maxlength={SEO_REPORT_TEMPLATE_LIMITS.text} placeholder="Field Journal monthly SEO report" />
         </label>
-        <label class="space-y-2 font-sans text-sm font-medium">
+        <label class="space-y-2 text-sm font-medium">
           <span>Period starts</span>
           <FormInput data-period-start type="date" />
         </label>
-        <label class="space-y-2 font-sans text-sm font-medium">
+        <label class="space-y-2 text-sm font-medium">
           <span>Period ends</span>
           <FormInput data-period-end type="date" />
         </label>
-        <label class="space-y-2 font-sans text-sm font-medium">
+        <label class="space-y-2 text-sm font-medium">
           <span>Reader</span>
           <FormSelect data-audience>
             {SEO_REPORT_AUDIENCES.map((choice) => <option value={choice.value}>{choice.label}</option>)}
           </FormSelect>
         </label>
-        <label class="space-y-2 font-sans text-sm font-medium">
+        <label class="space-y-2 text-sm font-medium">
           <span>Comparison</span>
           <FormSelect data-comparison>
             {SEO_REPORT_COMPARISONS.map((choice) => <option value={choice.value}>{choice.label}</option>)}
           </FormSelect>
         </label>
-        <label class="space-y-2 font-sans text-sm font-medium sm:col-span-2">
+        <label class="space-y-2 text-sm font-medium sm:col-span-2">
           <span>Output format</span>
           <FormSelect data-format>
             {SEO_REPORT_FORMATS.map((choice) => <option value={choice.value}>{choice.label}</option>)}
@@ -59,11 +59,11 @@ import {
         </label>
       </div>
 
-      <fieldset class="space-y-4 border border-border bg-background-subtle p-4">
+      <fieldset class="space-y-4 rounded-lg bg-muted p-4">
         <div class="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
           <div class="space-y-1">
-            <legend class="font-mono text-sm font-normal">Report sections</legend>
-            <p class="font-sans text-xs font-light leading-5 text-foreground-muted">Keep only the sections supported by useful evidence this period.</p>
+            <legend class="text-sm font-medium">Report sections</legend>
+            <p class="text-xs leading-5 text-foreground-muted">Keep only the sections supported by useful evidence this period.</p>
           </div>
           <div class="flex gap-2">
             <Button data-select-all type="button" class="px-3 py-2 text-xs">Select all</Button>
@@ -72,38 +72,38 @@ import {
         </div>
         <div class="grid gap-3 sm:grid-cols-2">
           {SEO_REPORT_SECTIONS.map((section) => (
-            <label class="flex gap-3 border border-border bg-background p-3 font-sans text-sm">
+            <label class="flex gap-3 rounded-lg border border-border bg-card p-3 text-sm">
               <input data-section type="checkbox" value={section.id} checked class="mt-1 size-4 shrink-0 accent-primary" />
               <span>
                 <strong class="block font-medium">{section.label}</strong>
-                <span class="mt-1 block text-xs font-light leading-5 text-foreground-muted">{section.description}</span>
+                <span class="mt-1 block text-xs leading-5 text-foreground-muted">{section.description}</span>
               </span>
             </label>
           ))}
         </div>
       </fieldset>
 
-      <p class="font-sans text-xs font-light leading-5 text-foreground-muted">
+      <p class="text-xs leading-5 text-foreground-muted">
         Everything runs in this browser tab. The report details are not uploaded.
       </p>
     </form>
-  </DottedCard>
+  </Card>
 
-  <DottedCard patternId="seo-report-template-output" inverted>
+  <Card inverted>
     <div class="space-y-5 p-5 sm:p-6">
       <div class="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
         <div class="space-y-1">
-          <h2 class="font-mono text-lg font-normal">Report template</h2>
-          <p data-output-summary class="font-sans text-sm font-light leading-6 text-panel-foreground/70" aria-live="polite"></p>
+          <h2 class="text-lg font-medium">Report template</h2>
+          <p data-output-summary class="text-sm leading-6 text-foreground-muted" aria-live="polite"></p>
         </div>
         <div class="grid w-full gap-2 sm:w-auto sm:grid-cols-2">
           <Button data-copy type="button" class="px-4 py-2.5 text-xs">Copy template</Button>
           <Button data-download type="button" class="px-4 py-2.5 text-xs">Download</Button>
         </div>
       </div>
-      <pre data-output class="max-h-[36rem] overflow-auto whitespace-pre-wrap border border-panel-foreground/30 bg-panel p-4 font-mono text-xs leading-6"></pre>
+      <pre data-output class="max-h-[36rem] overflow-auto whitespace-pre-wrap rounded-lg bg-muted p-4 font-mono text-xs leading-6"></pre>
     </div>
-  </DottedCard>
+  </Card>
 </section>
 
 <script>

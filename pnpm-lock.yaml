@@ -163,6 +163,9 @@ importers:
       '@astrojs/mdx':
         specifier: ^7.0.3
         version: 7.0.3(@astrojs/markdown-satteri@0.3.4)(astro@7.3.5(@astrojs/markdown-remark@7.3.1)(@types/node@26.1.1)(jiti@2.7.0)(yaml@2.9.0))
+      '@hugeicons/core-free-icons':
+        specifier: 4.2.3
+        version: 4.2.3
       '@iannuttall/seo-graph-astro':
         specifier: ^0.0.4
         version: 0.0.4(astro@7.3.5(@astrojs/markdown-remark@7.3.1)(@types/node@26.1.1)(jiti@2.7.0)(yaml@2.9.0))(typescript@6.0.3)
@@ -989,6 +992,9 @@ packages:
     engines: {node: '>=20'}
     peerDependencies:
       hono: 4.13.5
+
+  '@hugeicons/core-free-icons@4.2.3':
+    resolution: {integrity: sha512-fpiU0qFZkv4ABi23xJ2m4qNr0BBfuIaYjPboN8WDA6aj9D+OzXa7eykxKOpACZRuGbDz1U9S5DsNx1d5KNnsgA==}
 
   '@iannuttall/seo-graph-astro@0.0.4':
     resolution: {integrity: sha512-dv0GI+4vtI7w+IeInS+OgxAf7Hl83ckz6d0Lu6uEJbFuGAZnf34tjUVTImBFePkaflEp6G3QSpLStGUenwdzWA==}
@@ -5568,6 +5574,8 @@ snapshots:
   '@hono/node-server@2.0.11(hono@4.13.5)':
     dependencies:
       hono: 4.13.5
+
+  '@hugeicons/core-free-icons@4.2.3': {}
 
   '@iannuttall/seo-graph-astro@0.0.4(astro@7.3.5(@astrojs/markdown-remark@7.3.1)(@types/node@26.1.1)(jiti@2.7.0)(yaml@2.9.0))(typescript@6.0.3)':
     dependencies:

@@ -1,5 +1,5 @@
 import { Hono } from 'hono'
-import { reportIds } from '../src/content/reports/manifest.mjs'
+import { reportIds } from '../src/content/telemetry/report-ids.mjs'
 import { applyDailyToolQuota } from './tools/daily-tool-quota.ts'
 import { handleFaviconCheck } from './tools/favicon-checker.ts'
 import { handleLlmsTxtFetch } from './tools/llms-txt.ts'

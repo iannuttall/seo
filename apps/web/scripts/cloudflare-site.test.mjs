@@ -169,14 +169,7 @@ test('Cloudflare limits the Worker to telemetry, bounded tools, and static asset
       ),
     ),
   )
-  assert.match(
-    headers,
-    new RegExp(
-      escapeRegExp(
-        '/blog/*.md\n  Link: <https://seoskill.dev/blog/:splat>; rel="canonical"',
-      ),
-    ),
-  )
+  assert.doesNotMatch(headers, /\/blog/)
   assert.doesNotMatch(headers, /X-Markdown-Tokens:/)
   assert.doesNotMatch(headers, /Generated agent markdown headers/)
 
@@ -194,7 +187,6 @@ test('Cloudflare limits the Worker to telemetry, bounded tools, and static asset
   for (const page of manifest.pages) {
     assert.ok(Number.isInteger(page.tokens) && page.tokens > 0)
     if (
-      page.markdownPath.startsWith('/blog/') ||
       page.markdownPath.startsWith('/docs/') ||
       page.markdownPath.startsWith('/features/') ||
       page.markdownPath.startsWith('/tools/')
@@ -206,13 +198,7 @@ test('Cloudflare limits the Worker to telemetry, bounded tools, and static asset
     )
   }
 
-  for (const page of [
-    'cookies',
-    'privacy',
-    'security',
-    'terms',
-    'trademarks',
-  ]) {
+  for (const page of ['cookies', 'privacy', 'terms']) {
     assert.match(
       headers,
       new RegExp(

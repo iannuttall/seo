@@ -1,6 +1,6 @@
 ---
 import Button from '@/components/Button.astro'
-import DottedCard from '@/components/DottedCard.astro'
+import Card from '@/components/Card.astro'
 import FormInput from '@/components/FormInput.astro'
 import FormSelect from '@/components/FormSelect.astro'
 import {
@@ -16,12 +16,12 @@ const exampleRows = [
 ---
 
 <section data-hreflang-generator class="space-y-6">
-  <DottedCard patternId="hreflang-generator-input">
+  <Card>
     <form data-hreflang-form class="space-y-6 p-5 sm:p-6">
       <div class="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
         <div class="space-y-1">
-          <h2 class="font-mono text-lg font-normal">Add each localized version</h2>
-          <p class="font-sans text-sm font-light leading-6 text-foreground-muted">Every version must list itself and the other versions. This generator creates the complete set.</p>
+          <h2 class="text-lg font-medium">Add each localized version</h2>
+          <p class="text-sm leading-6 text-foreground-muted">Every version must list itself and the other versions. This generator creates the complete set.</p>
         </div>
         <div class="flex flex-wrap gap-2">
           <Button data-add-row type="button" class="px-3 py-2 text-xs">Add version</Button>
@@ -32,64 +32,64 @@ const exampleRows = [
 
       <div data-rows class="space-y-3">
         {exampleRows.slice(0, 2).map((row) => (
-          <div data-hreflang-row class="grid gap-3 border border-border bg-background-subtle p-3 sm:grid-cols-[10rem_1fr_auto] sm:items-end">
-            <label class="space-y-2 font-sans text-sm font-medium">
+          <div data-hreflang-row class="grid gap-3 rounded-lg bg-muted p-3 sm:grid-cols-[10rem_1fr_auto] sm:items-end">
+            <label class="space-y-2 text-sm font-medium">
               <span>Language or locale</span>
               <FormInput data-code type="text" maxlength="12" value={row.code} placeholder="en-GB" autocapitalize="none" spellcheck="false" />
             </label>
-            <label class="space-y-2 font-sans text-sm font-medium">
+            <label class="space-y-2 text-sm font-medium">
               <span>Complete page URL</span>
               <FormInput data-url type="url" maxlength={HREFLANG_LIMITS.urlCharacters} value={row.url} placeholder="https://example.com/en-gb/page" autocapitalize="none" spellcheck="false" />
             </label>
-            <Button data-remove-row type="button" class="min-h-12 px-3 text-xs">Remove</Button>
+            <Button data-remove-row type="button" class="min-h-10 px-3 text-xs">Remove</Button>
           </div>
         ))}
       </div>
 
       <template data-row-template>
-        <div data-hreflang-row class="grid gap-3 border border-border bg-background-subtle p-3 sm:grid-cols-[10rem_1fr_auto] sm:items-end">
-          <label class="space-y-2 font-sans text-sm font-medium">
+        <div data-hreflang-row class="grid gap-3 rounded-lg bg-muted p-3 sm:grid-cols-[10rem_1fr_auto] sm:items-end">
+          <label class="space-y-2 text-sm font-medium">
             <span>Language or locale</span>
             <FormInput data-code type="text" maxlength="12" placeholder="en-GB" autocapitalize="none" spellcheck="false" />
           </label>
-          <label class="space-y-2 font-sans text-sm font-medium">
+          <label class="space-y-2 text-sm font-medium">
             <span>Complete page URL</span>
             <FormInput data-url type="url" maxlength={HREFLANG_LIMITS.urlCharacters} placeholder="https://example.com/en-gb/page" autocapitalize="none" spellcheck="false" />
           </label>
-          <Button data-remove-row type="button" class="min-h-12 px-3 text-xs">Remove</Button>
+          <Button data-remove-row type="button" class="min-h-10 px-3 text-xs">Remove</Button>
         </div>
       </template>
 
       <div class="grid gap-4 sm:grid-cols-[1fr_auto] sm:items-end">
-        <label class="space-y-2 font-sans text-sm font-medium">
+        <label class="space-y-2 text-sm font-medium">
           <span>Implementation format</span>
           <FormSelect data-format>
             {HREFLANG_OUTPUT_FORMATS.map((choice) => <option value={choice.value}>{choice.label}</option>)}
           </FormSelect>
         </label>
-        <Button data-generate type="submit" class="min-h-12 px-5 text-xs">Generate hreflang</Button>
+        <Button data-generate type="submit" class="min-h-10 px-5 text-xs">Generate hreflang</Button>
       </div>
 
-      <p class="font-sans text-xs font-light leading-5 text-foreground-muted">Language codes use ISO 639-1. Add an optional ISO region such as en-GB, a script such as zh-Hant, or x-default. Up to {HREFLANG_LIMITS.entries} rows are checked locally.</p>
+      <p class="text-xs leading-5 text-foreground-muted">Language codes use ISO 639-1. Add an optional ISO region such as en-GB, a script such as zh-Hant, or x-default. Up to {HREFLANG_LIMITS.entries} rows are checked locally.</p>
     </form>
-  </DottedCard>
+  </Card>
 
-  <DottedCard patternId="hreflang-generator-output" inverted>
+  <Card inverted>
     <div class="space-y-5 p-5 sm:p-6">
       <div class="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
         <div class="space-y-1">
-          <h2 data-result-title class="font-mono text-lg font-normal">Generated hreflang</h2>
-          <p data-result-summary class="font-sans text-sm font-light leading-6 text-panel-foreground/70" aria-live="polite">Add at least two localized URLs.</p>
+          <h2 data-result-title class="text-lg font-medium">Generated hreflang</h2>
+          <p data-result-summary class="text-sm leading-6 text-foreground-muted" aria-live="polite">Add at least two localized URLs.</p>
         </div>
         <div class="grid w-full gap-2 sm:w-auto sm:grid-cols-2">
           <Button data-copy type="button" class="px-4 py-2.5 text-xs" disabled>Copy</Button>
           <Button data-download type="button" class="px-4 py-2.5 text-xs" disabled>Download</Button>
         </div>
       </div>
-      <ul data-issues class="space-y-2 font-sans text-xs font-light leading-5"></ul>
-      <pre data-output class="max-h-[32rem] min-h-28 overflow-auto whitespace-pre-wrap border border-panel-foreground/30 bg-panel p-4 font-mono text-xs leading-6"></pre>
+      <ul data-issues class="space-y-2 text-xs leading-5"></ul>
+      <pre data-output class="max-h-[32rem] min-h-28 overflow-auto whitespace-pre-wrap rounded-lg bg-muted p-4 font-mono text-xs leading-6"></pre>
     </div>
-  </DottedCard>
+  </Card>
 </section>
 
 <script>

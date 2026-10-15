@@ -1,24 +1,36 @@
 ---
 import type { HTMLAttributes } from 'astro/types'
+import {
+  type ButtonSize,
+  type ButtonVariant,
+  getButtonClasses,
+} from '@/components/ui/button'
 
+type Shared = { variant?: ButtonVariant; size?: ButtonSize }
 type Props =
-  | (HTMLAttributes<'button'> & { href?: undefined })
-  | (HTMLAttributes<'a'> & { href: string })
+  | (HTMLAttributes<'button'> & Shared & { href?: undefined })
+  | (HTMLAttributes<'a'> & Shared & { href: string })
 
-const { class: className, ...props } = Astro.props as Props
-const anchorProps = typeof props.href === 'string' ? (props as HTMLAttributes<'a'>) : undefined
-const buttonProps = anchorProps ? undefined : (props as HTMLAttributes<'button'>)
-
-// The Turbopuffer button in brand colors: inset highlight and shade give the
-// 3D face, active presses it inward. Selection colors are pinned so the
-// global primary-tinted selection never clashes with the primary background.
-const classes = [
-  'group relative grid cursor-pointer items-center justify-center whitespace-nowrap border border-primary-active bg-primary font-medium text-primary-foreground',
-  'shadow-btn transition-all hover:bg-primary-hover hover:shadow-btn-hover active:bg-primary-active active:shadow-btn-active',
-  'focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary',
-  'selection:bg-primary-foreground selection:text-primary',
-  className,
-]
+const {
+  class: className,
+  variant: requestedVariant,
+  size = 'default',
+  ...props
+} = Astro.props as Props
+// As in ilo, the main action is primary and side actions are quieter.
+// Links and submit buttons are primary unless a page asks otherwise. Side
+// actions use the outline button so they show on white and muted panels.
+const variant: ButtonVariant =
+  requestedVariant ??
+  (typeof props.href === 'string' || props.type === 'submit'
+    ? 'default'
+    : 'outline')
+const anchorProps =
+  typeof props.href === 'string' ? (props as HTMLAttributes<'a'>) : undefined
+const buttonProps = anchorProps
+  ? undefined
+  : (props as HTMLAttributes<'button'>)
+const classes = [getButtonClasses(variant, size), className]
 ---
 
 {

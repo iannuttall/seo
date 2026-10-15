@@ -1,0 +1,50 @@
+---
+title: API keys for the hosted MCP
+description: Add your own DataForSEO or Ahrefs key to the hosted MCP for keyword and competitor research. Keys are never stored.
+heading: API keys
+lead: Keyword and competitor research uses your own DataForSEO or Ahrefs account. SEO Skill never stores a key.
+---
+
+Search Console and Google Analytics come with your Google sign-in. Research is optional and uses a key from your own account, so the provider bills you directly for what you use.
+
+## What each key adds
+
+| Provider | What it adds | Tool |
+| --- | --- | --- |
+| DataForSEO or Ahrefs | Keyword metrics, ranked keywords, SERPs, competitors and backlinks | `seo_research` |
+
+Analytics tools other than Google Analytics, such as Clicky, run on your own machine with the CLI. The [analytics guide](/docs/analytics) explains how.
+
+Research rows also get a free Domain Rating column, with no key needed. It is Domain Rating by [Ahrefs](https://ahrefs.com).
+
+## Add keys on the sign-in page
+
+This works in every client.
+
+1. Remove the SEO Skill server from your agent, then add it again with `https://seoskill.dev/mcp`.
+2. On the sign-in page, open **Add your own API keys** and enter the keys you want.
+3. Continue with Google.
+
+The keys are sealed into the sign-in your agent keeps. To change them, remove the server and connect again.
+
+## Or send keys as headers
+
+Clients such as Claude Code, Codex, Cursor and VS Code can send headers with each request. A header wins over a key from the sign-in page.
+
+```sh
+claude mcp add --transport http seoskill https://seoskill.dev/mcp \
+  --header "X-Ahrefs-Key: ${AHREFS_API_KEY}"
+```
+
+| Provider | Headers |
+| --- | --- |
+| DataForSEO | `X-DataForSEO-Login`, `X-DataForSEO-Password` |
+| Ahrefs | `X-Ahrefs-Key` |
+
+Keep keys in your shell environment or keychain, never in a chat or a repository file. On cloud agents and CI, put them in the platform secrets and follow the [cloud agents guide](/docs/cloud-agents).
+
+## How keys are handled
+
+A key arrives sealed inside your sign-in token or as a header on the request. The server uses it for that request only and never saves it. The [what is stored page](/docs/privacy) covers the rest.
+
+When the hosted MCP needs a key it does not have, its message links to this page.

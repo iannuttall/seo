@@ -1,6 +1,6 @@
 ---
 import Button from '@/components/Button.astro'
-import DottedCard from '@/components/DottedCard.astro'
+import Card from '@/components/Card.astro'
 import FormInput from '@/components/FormInput.astro'
 import FormSelect from '@/components/FormSelect.astro'
 import FormTextarea from '@/components/FormTextarea.astro'
@@ -8,23 +8,23 @@ import { ROBOTS_CRAWLER_PRESETS } from '@/lib/robots-txt-validator'
 ---
 
 <section data-robots-validator class="space-y-6">
-  <DottedCard patternId="robots-validator-input">
+  <Card>
     <form data-validator-form class="space-y-6 p-5 sm:p-6" novalidate>
       <div class="space-y-1">
-        <h2 class="font-mono text-lg font-normal">Check robots.txt rules</h2>
-        <p class="font-sans text-sm font-light leading-6 text-foreground-muted">
+        <h2 class="text-lg font-medium">Check robots.txt rules</h2>
+        <p class="text-sm leading-6 text-foreground-muted">
           Fetch the live file or test a draft before you publish it.
         </p>
       </div>
 
-      <div class="flex gap-2" role="tablist" aria-label="robots.txt input method">
+      <div class="inline-flex w-fit gap-1 rounded-lg bg-muted p-0.5" role="tablist" aria-label="robots.txt input method">
         <button
           data-input-tab="live"
           type="button"
           role="tab"
           aria-selected="true"
           aria-controls="robots-live-panel"
-          class="cursor-pointer border border-primary bg-primary px-4 py-2 font-sans text-xs font-medium text-primary-foreground transition-colors"
+          class="rounded-md px-3 py-1.5 text-sm font-medium transition-colors bg-card text-foreground shadow-xs"
         >Live file</button>
         <button
           data-input-tab="custom"
@@ -33,12 +33,12 @@ import { ROBOTS_CRAWLER_PRESETS } from '@/lib/robots-txt-validator'
           aria-selected="false"
           aria-controls="robots-custom-panel"
           tabindex="-1"
-          class="cursor-pointer border border-border bg-background-subtle px-4 py-2 font-sans text-xs font-medium text-foreground-muted transition-colors hover:text-foreground"
+          class="rounded-md px-3 py-1.5 text-sm font-medium transition-colors text-foreground-muted hover:text-foreground"
         >Custom rules</button>
       </div>
 
       <div id="robots-live-panel" data-input-panel="live" role="tabpanel">
-        <label class="block space-y-2 font-sans text-sm font-medium">
+        <label class="block space-y-2 text-sm font-medium">
           <span>Domain or page URL</span>
           <FormInput
             data-live-url
@@ -51,14 +51,14 @@ import { ROBOTS_CRAWLER_PRESETS } from '@/lib/robots-txt-validator'
             placeholder="https://example.com"
           />
         </label>
-        <p class="mt-2 font-sans text-xs font-light leading-5 text-foreground-muted">
+        <p class="mt-2 text-xs leading-5 text-foreground-muted">
           Enter any page or domain and the checker will load the robots.txt file from the site root.
         </p>
       </div>
 
       <div id="robots-custom-panel" data-input-panel="custom" role="tabpanel" hidden class="space-y-4">
         <div class="space-y-2">
-          <label class="block space-y-2 font-sans text-sm font-medium">
+          <label class="block space-y-2 text-sm font-medium">
             <span>Site origin</span>
             <FormInput
               data-custom-origin
@@ -73,13 +73,13 @@ import { ROBOTS_CRAWLER_PRESETS } from '@/lib/robots-txt-validator'
             />
           </label>
           <div class="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
-            <p data-custom-fetch-status class="font-sans text-xs font-light leading-5 text-foreground-muted" aria-live="polite">
+            <p data-custom-fetch-status class="text-xs leading-5 text-foreground-muted" aria-live="polite">
               Start with the example or load this site's live file into the editor.
             </p>
             <Button data-fetch-custom type="button" class="min-h-10 shrink-0 px-4 py-2 text-xs">Fetch into editor</Button>
           </div>
         </div>
-        <label class="block space-y-2 font-sans text-sm font-medium">
+        <label class="block space-y-2 text-sm font-medium">
           <span>robots.txt content</span>
           <FormTextarea
             data-custom-content
@@ -89,13 +89,13 @@ import { ROBOTS_CRAWLER_PRESETS } from '@/lib/robots-txt-validator'
             spellcheck="false"
           />
         </label>
-        <p class="font-sans text-xs font-light leading-5 text-foreground-muted">
+        <p class="text-xs leading-5 text-foreground-muted">
           Your draft stays in this browser tab.
         </p>
       </div>
 
       <div class="grid gap-4 border-t border-border pt-5 sm:grid-cols-2">
-        <label class="space-y-2 font-sans text-sm font-medium">
+        <label class="space-y-2 text-sm font-medium">
           <span>User agent</span>
           <FormSelect data-user-agent>
             {ROBOTS_CRAWLER_PRESETS.map((crawler) => (
@@ -103,7 +103,7 @@ import { ROBOTS_CRAWLER_PRESETS } from '@/lib/robots-txt-validator'
             ))}
           </FormSelect>
         </label>
-        <label data-custom-user-agent-label hidden class="space-y-2 font-sans text-sm font-medium">
+        <label data-custom-user-agent-label hidden class="space-y-2 text-sm font-medium">
           <span>Custom user agent</span>
           <FormInput
             data-custom-user-agent
@@ -115,7 +115,7 @@ import { ROBOTS_CRAWLER_PRESETS } from '@/lib/robots-txt-validator'
         </label>
       </div>
 
-      <label class="block space-y-2 font-sans text-sm font-medium">
+      <label class="block space-y-2 text-sm font-medium">
         <span>URLs or paths to test</span>
         <FormTextarea
           data-test-urls
@@ -125,81 +125,81 @@ import { ROBOTS_CRAWLER_PRESETS } from '@/lib/robots-txt-validator'
           placeholder="/&#10;/private/page&#10;https://example.com/products/widget"
         />
       </label>
-      <p class="font-sans text-xs font-light leading-5 text-foreground-muted">
+      <p class="text-xs leading-5 text-foreground-muted">
         Enter one URL or root-relative path per line, up to 100. Rules apply only to the exact protocol, host, and port shown above.
       </p>
 
       <div class="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-        <p data-form-status class="font-sans text-sm font-light leading-6 text-foreground-muted" aria-live="polite">
+        <p data-form-status class="text-sm leading-6 text-foreground-muted" aria-live="polite">
           Ready to check the live file.
         </p>
-        <Button data-run-check type="submit" class="min-h-12 shrink-0 px-5 text-xs">Check rules</Button>
+        <Button data-run-check type="submit" class="min-h-10 shrink-0 px-5 text-xs">Check rules</Button>
       </div>
-      <p data-form-error hidden class="font-sans text-sm leading-6 text-red-700 dark:text-red-400" role="alert"></p>
+      <p data-form-error hidden class="text-sm leading-6 text-red-700 dark:text-red-400" role="alert"></p>
     </form>
-  </DottedCard>
+  </Card>
 
   <div data-results hidden class="space-y-6">
-    <DottedCard patternId="robots-validator-summary" inverted>
+    <Card inverted>
       <div class="space-y-6 p-5 sm:p-6">
         <div class="space-y-1">
-          <strong data-result-title class="font-mono text-2xl font-normal text-primary">Rules parsed</strong>
-          <p data-result-summary class="font-sans text-sm font-light leading-6 text-panel-foreground/70"></p>
+          <strong data-result-title class="text-2xl font-medium text-primary">Rules parsed</strong>
+          <p data-result-summary class="text-sm leading-6 text-foreground-muted"></p>
         </div>
 
-        <dl class="grid grid-cols-2 gap-4 border-t border-panel-foreground/30 pt-5 sm:grid-cols-5">
+        <dl class="grid grid-cols-2 gap-4 border-t border-border pt-5 sm:grid-cols-5">
           <div>
-            <dt class="font-sans text-xs font-light text-panel-foreground/65">Groups</dt>
+            <dt class="text-xs text-foreground-muted">Groups</dt>
             <dd data-stat-groups class="mt-1 font-mono text-lg">0</dd>
           </div>
           <div>
-            <dt class="font-sans text-xs font-light text-panel-foreground/65">Rules</dt>
+            <dt class="text-xs text-foreground-muted">Rules</dt>
             <dd data-stat-rules class="mt-1 font-mono text-lg">0</dd>
           </div>
           <div>
-            <dt class="font-sans text-xs font-light text-panel-foreground/65">Errors</dt>
+            <dt class="text-xs text-foreground-muted">Errors</dt>
             <dd data-stat-errors class="mt-1 font-mono text-lg">0</dd>
           </div>
           <div>
-            <dt class="font-sans text-xs font-light text-panel-foreground/65">Warnings</dt>
+            <dt class="text-xs text-foreground-muted">Warnings</dt>
             <dd data-stat-warnings class="mt-1 font-mono text-lg">0</dd>
           </div>
           <div>
-            <dt class="font-sans text-xs font-light text-panel-foreground/65">URLs tested</dt>
+            <dt class="text-xs text-foreground-muted">URLs tested</dt>
             <dd data-stat-tested class="mt-1 font-mono text-lg">0</dd>
           </div>
         </dl>
 
-        <section class="border-t border-panel-foreground/30 pt-5" aria-labelledby="robots-source-heading">
-          <h3 id="robots-source-heading" class="font-mono text-sm font-normal">Source details</h3>
+        <section class="border-t border-border pt-5" aria-labelledby="robots-source-heading">
+          <h3 id="robots-source-heading" class="text-sm font-medium">Source details</h3>
           <dl class="mt-4 grid gap-4 sm:grid-cols-2 lg:grid-cols-6">
             <div class="min-w-0 lg:col-span-3">
-              <dt class="font-sans text-xs font-light text-panel-foreground/65">Requested</dt>
+              <dt class="text-xs text-foreground-muted">Requested</dt>
               <dd class="mt-1 min-w-0"><a data-source-requested class="cursor-pointer break-all font-mono text-xs text-primary underline decoration-primary/50 underline-offset-4 hover:decoration-primary" target="_blank" rel="noreferrer"></a></dd>
             </div>
             <div class="min-w-0 lg:col-span-3">
-              <dt class="font-sans text-xs font-light text-panel-foreground/65">Final source</dt>
+              <dt class="text-xs text-foreground-muted">Final source</dt>
               <dd class="mt-1 min-w-0"><a data-source-final class="cursor-pointer break-all font-mono text-xs text-primary underline decoration-primary/50 underline-offset-4 hover:decoration-primary" target="_blank" rel="noreferrer"></a></dd>
             </div>
             <div class="lg:col-span-2">
-              <dt class="font-sans text-xs font-light text-panel-foreground/65">Response</dt>
+              <dt class="text-xs text-foreground-muted">Response</dt>
               <dd data-source-response class="mt-1 font-mono text-xs"></dd>
             </div>
             <div class="lg:col-span-2">
-              <dt class="font-sans text-xs font-light text-panel-foreground/65">File</dt>
+              <dt class="text-xs text-foreground-muted">File</dt>
               <dd data-source-file class="mt-1 font-mono text-xs"></dd>
             </div>
             <div class="lg:col-span-2">
-              <dt class="font-sans text-xs font-light text-panel-foreground/65">Redirects</dt>
+              <dt class="text-xs text-foreground-muted">Redirects</dt>
               <dd data-source-redirects class="mt-1 font-mono text-xs"></dd>
             </div>
           </dl>
         </section>
 
-        <section class="border-t border-panel-foreground/30 pt-5" aria-labelledby="robots-export-heading">
+        <section class="border-t border-border pt-5" aria-labelledby="robots-export-heading">
           <div class="space-y-1">
-            <h3 id="robots-export-heading" class="font-mono text-sm font-normal">Copy or download the report</h3>
-            <p class="font-sans text-xs font-light leading-5 text-panel-foreground/65">
+            <h3 id="robots-export-heading" class="text-sm font-medium">Copy or download the report</h3>
+            <p class="text-xs leading-5 text-foreground-muted">
               JSON includes the source, parsed groups, line findings, limits, and every URL verdict.
             </p>
           </div>
@@ -208,22 +208,22 @@ import { ROBOTS_CRAWLER_PRESETS } from '@/lib/robots-txt-validator'
             <Button data-download-json type="button" class="w-full px-3 py-2.5 text-xs">Download JSON</Button>
             <Button data-download-csv type="button" class="w-full px-3 py-2.5 text-xs">Download URL CSV</Button>
           </div>
-          <p data-export-status class="mt-3 font-sans text-xs font-light leading-5 text-panel-foreground/65" aria-live="polite"></p>
+          <p data-export-status class="mt-3 text-xs leading-5 text-foreground-muted" aria-live="polite"></p>
         </section>
       </div>
-    </DottedCard>
+    </Card>
 
-    <DottedCard patternId="robots-validator-url-tests">
+    <Card>
       <div class="space-y-5 p-5 sm:p-6">
         <div class="space-y-1">
-          <h3 class="font-mono text-sm font-normal">URL test results</h3>
-          <p class="font-sans text-xs font-light leading-5 text-foreground-muted">
+          <h3 class="text-sm font-medium">URL test results</h3>
+          <p class="text-xs leading-5 text-foreground-muted">
             A result covers robots.txt matching only. It does not test a firewall, login, page response, or indexing state.
           </p>
         </div>
         <div data-url-table-frame class="overflow-x-auto">
           <table class="w-full min-w-[58rem] border-collapse text-left">
-            <thead class="border-b border-border font-sans text-xs font-medium text-foreground-muted">
+            <thead class="border-b border-border text-xs font-medium text-foreground-muted">
               <tr>
                 <th class="pb-2 pr-4">URL</th>
                 <th class="pb-2 pr-4">Result</th>
@@ -231,26 +231,26 @@ import { ROBOTS_CRAWLER_PRESETS } from '@/lib/robots-txt-validator'
                 <th class="pb-2">Reason</th>
               </tr>
             </thead>
-            <tbody data-url-results class="divide-y divide-border font-sans text-xs"></tbody>
+            <tbody data-url-results class="divide-y divide-border text-xs"></tbody>
           </table>
         </div>
-        <p data-no-url-results hidden class="font-sans text-sm font-light text-foreground-muted">
+        <p data-no-url-results hidden class="text-sm text-foreground-muted">
           URL tests were not run because the live response did not establish which rules currently apply.
         </p>
       </div>
-    </DottedCard>
+    </Card>
 
-    <DottedCard patternId="robots-validator-findings">
+    <Card>
       <div class="space-y-5 p-5 sm:p-6">
         <div class="space-y-1">
-          <h3 class="font-mono text-sm font-normal">Line findings</h3>
-          <p class="font-sans text-xs font-light leading-5 text-foreground-muted">
+          <h3 class="text-sm font-medium">Line findings</h3>
+          <p class="text-xs leading-5 text-foreground-muted">
             Parseable rules remain active even when another line is ignored.
           </p>
         </div>
         <div data-issue-table-frame class="overflow-x-auto">
           <table class="w-full min-w-[42rem] border-collapse text-left">
-            <thead class="border-b border-border font-sans text-xs font-medium text-foreground-muted">
+            <thead class="border-b border-border text-xs font-medium text-foreground-muted">
               <tr>
                 <th class="pb-2 pr-4">Level</th>
                 <th class="pb-2 pr-4">Line</th>
@@ -258,30 +258,30 @@ import { ROBOTS_CRAWLER_PRESETS } from '@/lib/robots-txt-validator'
                 <th class="pb-2">Details</th>
               </tr>
             </thead>
-            <tbody data-issue-results class="divide-y divide-border font-sans text-xs"></tbody>
+            <tbody data-issue-results class="divide-y divide-border text-xs"></tbody>
           </table>
         </div>
-        <p data-no-issues hidden class="font-sans text-sm font-light text-foreground-muted">
+        <p data-no-issues hidden class="text-sm text-foreground-muted">
           No line-level problems were found in the parsed content.
         </p>
       </div>
-    </DottedCard>
+    </Card>
 
-    <DottedCard patternId="robots-validator-groups">
+    <Card>
       <div class="space-y-5 p-5 sm:p-6">
         <div class="space-y-1">
-          <h3 class="font-mono text-sm font-normal">Parsed groups and sitemaps</h3>
-          <p class="font-sans text-xs font-light leading-5 text-foreground-muted">
+          <h3 class="text-sm font-medium">Parsed groups and sitemaps</h3>
+          <p class="text-xs leading-5 text-foreground-muted">
             Repeated groups for the same specific crawler are combined when a URL is tested.
           </p>
         </div>
         <div data-group-list class="space-y-4"></div>
         <div data-sitemap-section hidden class="border-t border-border pt-5">
-          <h4 class="font-mono text-xs font-normal">Declared sitemaps</h4>
+          <h4 class="text-xs font-medium">Declared sitemaps</h4>
           <ul data-sitemap-list class="mt-3 space-y-2 font-mono text-xs text-foreground-muted"></ul>
         </div>
       </div>
-    </DottedCard>
+    </Card>
   </div>
 </section>
 
@@ -396,8 +396,8 @@ Sitemap: https://example.com/sitemap.xml`
 /private/public-page`
     }
 
-    const activeTabClasses = ['border-primary', 'bg-primary', 'text-primary-foreground']
-    const inactiveTabClasses = ['border-border', 'bg-background-subtle', 'text-foreground-muted']
+    const activeTabClasses = ['bg-card', 'text-foreground', 'shadow-xs']
+    const inactiveTabClasses = ['text-foreground-muted']
     const worker = new RobotsValidatorWorker()
     let mode: 'live' | 'custom' = 'live'
     let currentReport: CompleteReport | undefined
@@ -560,16 +560,16 @@ Sitemap: https://example.com/sitemap.xml`
       groupList.replaceChildren()
       if (analysis.document.groups.length === 0) {
         const empty = document.createElement('p')
-        empty.className = 'font-sans text-sm font-light text-foreground-muted'
+        empty.className = 'text-sm text-foreground-muted'
         empty.textContent = 'No parseable user-agent groups were found.'
         groupList.append(empty)
       }
       analysis.document.groups.forEach((group, index) => {
         const details = document.createElement('details')
-        details.className = 'border border-border bg-background-subtle'
+        details.className = 'rounded-lg bg-muted'
         details.open = group.rules.length <= 20
         const summary = document.createElement('summary')
-        summary.className = 'cursor-pointer px-4 py-3 font-mono text-xs font-normal'
+        summary.className = 'cursor-pointer px-4 py-3 text-xs font-medium'
         const ruleLabel = group.rules.length === 1 ? 'rule' : 'rules'
         summary.textContent = `Group ${index + 1}: ${group.userAgents.map((entry) => entry.value).join(', ')} (${group.rules.length.toLocaleString()} ${ruleLabel})`
         const rules = document.createElement('ul')

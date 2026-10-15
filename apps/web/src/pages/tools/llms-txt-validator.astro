@@ -38,7 +38,6 @@ const breadcrumbs: SchemaBreadcrumb[] = [
     <PageHeader
       title="llms.txt validator"
       description="Enter a public llms.txt URL, paste the content, or open a local file. Get line-specific format and link-list checks."
-      align="left"
     />
 
     <LlmsTxtValidator />
@@ -62,9 +61,7 @@ const breadcrumbs: SchemaBreadcrumb[] = [
       <p>
         When you enter a URL, this tool downloads that llms.txt file. It does
         not request the pages listed inside it, inspect their response headers,
-        or confirm that an agent uses the file. Use the{' '}
-        <a href="/docs/reports/llms-txt-audit">published llms.txt audit</a> when
-        you need that live evidence.
+        or confirm that an agent uses the file.
       </p>
 
       <h2>llms.txt is optional for AI search</h2>
@@ -87,8 +84,7 @@ const breadcrumbs: SchemaBreadcrumb[] = [
         Fix a small file with the{' '}
         <a href="/tools/llms-txt-generator">llms.txt generator</a>. It creates
         the same basic shape from links you choose and can import page URLs from
-        a sitemap. For automatic selection from a site crawl, use the{' '}
-        <a href="/docs/reports/llms-txt-generator">crawl-driven generator</a>.
+        a sitemap.
       </p>
     </div>
   </main>

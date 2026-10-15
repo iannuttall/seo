@@ -5,9 +5,9 @@ import { getSeoCliPaths } from '@seo/core'
 // A one-time notice for people who used 0.2 and now run 0.3, in a terminal
 // only. It is shown once, then a marker file in the config folder stops it.
 
-const NOTICE = '0.3'
+const NOTICE = '0.4'
 
-const TEXT = `SEO Skill 0.3: eight commands replace the 70+ old reports, and old report names print the command to use instead.
+const TEXT = `SEO Skill 0.4: eight commands replace the old reports, and projects are gone: every command takes --site (run \`seo sites\` to list yours). Old command names print what to use instead.
 Free hosted MCP server, nothing to install: https://seoskill.dev/docs/mcp
 To stay on the old version: npm i -g seo@0.2.41
 What changed: https://github.com/iannuttall/seo/blob/main/CHANGELOG.md

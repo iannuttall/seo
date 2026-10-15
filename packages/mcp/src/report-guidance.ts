@@ -1,5 +1,4 @@
 import { REPORT_DEPTH, type ReportDepth } from './report-depth.js'
-import { REPORT_GUIDANCE_DOMAIN_RESEARCH } from './report-guidance-domain-research.js'
 
 export type { RelatedReport, ReportDepth } from './report-depth.js'
 
@@ -17,7 +16,6 @@ export type ReportGuidance = {
 export type FullReportGuidance = ReportGuidance & ReportDepth
 
 export const REPORT_GUIDANCE = {
-  ...REPORT_GUIDANCE_DOMAIN_RESEARCH,
   'affected-urls': {
     name: 'URLs affected by a crawl issue',
     description:
@@ -76,22 +74,6 @@ export const REPORT_GUIDANCE = {
       'You only need a deep review of one page.',
     ],
     outcome: 'Consistent technical checks for each supplied URL.',
-  },
-  'link-evidence': {
-    name: 'Referring link evidence',
-    description:
-      'Review bounded referring-link evidence from a live provider, Bing Webmaster or a local export.',
-    useWhen: [
-      'You want concrete referring URLs and anchor text where available.',
-      'You want to compare a live provider summary with saved crawl and Search Console evidence for linked target pages.',
-      'You need one normalized view of DataForSEO, Bing or an exported CSV, JSON, or JSONL file.',
-    ],
-    avoidWhen: [
-      'You need a complete backlink index or a universal authority score.',
-      'You want to find broken internal links during a crawl.',
-    ],
-    outcome:
-      'Provider summary counts, representative links, target-page search and crawl context, and bounded technical findings with explicit source coverage.',
   },
   cannibalisation: {
     name: 'Query and URL overlap',
@@ -371,52 +353,6 @@ export const REPORT_GUIDANCE = {
     outcome:
       'Lab diagnostics plus clearly labelled field metrics when available.',
   },
-  'keyword-metrics': {
-    name: 'Keyword metrics',
-    description:
-      'Compare market-specific keyword demand, trend, cost, competition, difficulty, intent, and result-count estimates.',
-    useWhen: [
-      'You have a bounded keyword list and need independent market estimates.',
-      'You want recent demand history before deciding which terms deserve deeper research.',
-    ],
-    avoidWhen: [
-      'You need first-party evidence of how your own pages perform.',
-      'You need an exact current rank or a current result-page comparison.',
-    ],
-    outcome:
-      'Provider-neutral keyword evidence with missing values, costs, coverage, and trend heuristics kept visible.',
-  },
-  'keyword-opportunities': {
-    name: 'Enriched keyword opportunities',
-    description:
-      'Combine existing Search Console opportunity evidence with optional market estimates and programmatic SEO cluster context.',
-    useWhen: [
-      'You want quick-win, second-page, and striking-distance evidence from one bounded Search Console acquisition.',
-      'You want to add independent keyword estimates without replacing first-party evidence or its existing scores.',
-      'You need candidate query clusters and repeatable page patterns to validate before expanding a template.',
-    ],
-    avoidWhen: [
-      'You only need independent metrics for a supplied keyword list.',
-      'You need a current result snapshot, exact rank, competitor comparison, or external provider work without explicit paid-request intent.',
-    ],
-    outcome:
-      'Bounded first-party opportunity sections, optional typed provider evidence, discrepancy findings, and programmatic SEO validation prompts.',
-  },
-  'keyword-research': {
-    name: 'Keyword research',
-    description:
-      'Expand a small seed list into market-specific keyword ideas with source, metric, coverage, and cost evidence.',
-    useWhen: [
-      'You need candidate terms beyond the queries already visible in Search Console.',
-      'You want to compare several bounded provider discovery methods before deeper result-page research.',
-    ],
-    avoidWhen: [
-      'You need exact current rankings or pages in the live results.',
-      'You plan to turn every discovered term into a page without checking intent or fit.',
-    ],
-    outcome:
-      'A bounded keyword set with discovery sources, provider estimates, evidence states, and research follow-ups.',
-  },
   'query-clusters': {
     name: 'Search query clusters',
     description:
@@ -504,21 +440,6 @@ export const REPORT_GUIDANCE = {
     ],
     outcome:
       'A ranked URL list with query, click, impression, and position evidence.',
-  },
-  'serp-results': {
-    name: 'Live search results',
-    description:
-      'Inspect one location and device-specific search snapshot with exact organic ranks, domains, result features, and provider evidence.',
-    useWhen: [
-      'A keyword needs a current result-page review before content or targeting decisions.',
-      'You need exact snapshot ranks kept separate from Search Console average position.',
-    ],
-    avoidWhen: [
-      'You need rank history or scheduled tracking across many keywords.',
-      'You want a domain strength, content quality, or ranking feasibility verdict.',
-    ],
-    outcome:
-      'A bounded result snapshot with exact retained ranks, domain repetition, query corrections, features, cost, and coverage.',
   },
   'segment-impact': {
     name: 'Search impact by segment',

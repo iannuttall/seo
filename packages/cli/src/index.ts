@@ -45,7 +45,6 @@ import {
 import { exportCommand } from './commands/export/index.js'
 import { indexNowCommand } from './commands/indexnow.js'
 import { initCommand } from './commands/init.js'
-import { linksCommand } from './commands/links.js'
 import { logsCommand } from './commands/logs.js'
 import { mcpCommand } from './commands/mcp.js'
 import {
@@ -250,7 +249,6 @@ const main = defineCommand({
     'index-coverage': indexCoverageCommand,
     'index-watch': indexWatchCommand,
     'link-recover': linkRecoverCommand,
-    links: linksCommand,
     monitoring: monitoringCommand,
     rules: rulesCommand,
     explain: explainCommand,
@@ -321,7 +319,6 @@ const directReportIds = new Set([
   'index-coverage',
   'index-watch',
   'internal-links',
-  'link-evidence',
   'page-opportunities',
   'quick-wins',
   'redirect-trace',
@@ -361,7 +358,6 @@ function telemetryReportId(args: string[]): string | undefined {
   if (command === 'change-log' && subcommand === 'measure') {
     return 'measure-change'
   }
-  if (command === 'links') return 'link-evidence'
   if (command === 'monitoring' && subcommand === 'run') {
     return 'technical-watch'
   }

@@ -89,32 +89,6 @@ const REPORT_DEPTH_PRIMARY = {
       { id: 'redirect-trace', reason: 'Traces a redirecting URL.' },
     ],
   },
-  'link-evidence': {
-    readOrder: [
-      'dataStatus, provenance, warnings, and caveats',
-      'providerSummary and providerEvidence coverage, cache, cost, filters, and observation time when present',
-      'selection, outputBudget, and retained summary counts',
-      'findings and targetContext with crawl and Search Console evidence states',
-      'targetCounts, then the bounded representative links list and provider-native metrics',
-    ],
-    doNotClaim: [
-      'The retained rows are not a complete backlink index, and missing rows do not prove a link does not exist.',
-      'Observed links do not establish quality, authority, value, or ranking impact.',
-      'Provider rank and spam metrics keep their provider-specific scales. They are not search-engine ranking factors or interchangeable authority scores.',
-      'A missing Search Console row is not zero, and a saved crawl finding does not prove the target still has that state.',
-    ],
-    verify:
-      'Open a selected referring URL to confirm the link, then check any flagged target live with redirect-trace or audit-page before changing it.',
-    related: [
-      { id: 'link-recovery', reason: 'Finds broken search-value URLs.' },
-      { id: 'redirect-trace', reason: 'Checks a target redirect chain.' },
-      { id: 'site-crawl', reason: 'Checks internal links and live pages.' },
-      {
-        id: 'search-performance-overview',
-        reason: 'Adds broader first-party search context.',
-      },
-    ],
-  },
   cannibalisation: {
     readOrder: [
       'dataStatus and both source.pageExposure and source.propertyDemand with validation counts and completeness',

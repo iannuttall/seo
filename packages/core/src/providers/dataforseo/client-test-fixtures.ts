@@ -1,8 +1,4 @@
 import assert from 'node:assert/strict'
-import { PROVIDER_SPEND_SCHEMA_SQL } from '../../storage/provider-spend-schema.js'
-import Database from '../../storage/sqlite.js'
-import type { ProviderSpendLimits } from '../cost-limits.js'
-import type { DataForSeoClient } from './client.js'
 
 export type UserDataAccountFixture = {
   login: string
@@ -228,89 +224,4 @@ export function firstAccount(fixture: UserDataFixture): UserDataAccountFixture {
   const account = firstTask(fixture).result[0]
   assert.ok(account)
   return account
-}
-
-export function database(): Database.Database {
-  const db = new Database(':memory:')
-  db.exec(PROVIDER_SPEND_SCHEMA_SQL)
-  db.exec(`
-    CREATE TABLE provider_cache (
-      provider TEXT NOT NULL, credential_scope TEXT NOT NULL,
-      operation TEXT NOT NULL, request_hash TEXT NOT NULL,
-      request_json TEXT NOT NULL, response_json TEXT NOT NULL,
-      row_count INTEGER, source_cost_micros INTEGER,
-      task_ids_json TEXT NOT NULL, fetched_at INTEGER NOT NULL,
-      expires_at INTEGER NOT NULL,
-      PRIMARY KEY(provider, credential_scope, operation, request_hash)
-    ) WITHOUT ROWID;
-  `)
-  return db
-}
-
-export function spendLimits(
-  overrides: Partial<ProviderSpendLimits> = {},
-): ProviderSpendLimits {
-  return {
-    dailyNoticeMicros: 5_000_000,
-    dailyHardLimitMicros: null,
-    monthlyHardLimitMicros: null,
-    maxRequestsPerReport: 20,
-    maxRowsPerReport: 10_000,
-    ...overrides,
-  }
-}
-
-export function keywordOverviewFixture(
-  input: {
-    statusCode?: number
-    tasksError?: number
-    cost?: number
-    items?: unknown[] | null
-  } = {},
-) {
-  const statusCode = input.statusCode ?? 20000
-  return {
-    status_code: 20000,
-    status_message: 'Ok.',
-    cost: input.cost ?? 0.0202,
-    tasks_count: 1,
-    tasks_error: input.tasksError ?? 0,
-    tasks: [
-      {
-        id: 'keyword-task-id',
-        status_code: statusCode,
-        status_message: statusCode === 20000 ? 'Ok.' : 'Task failed.',
-        cost: input.cost ?? 0.0202,
-        result_count: statusCode === 20000 ? 1 : 0,
-        result:
-          statusCode === 20000
-            ? [
-                {
-                  items_count: input.items === null ? 0 : 2,
-                  items:
-                    input.items === undefined
-                      ? [
-                          { keyword: 'first query' },
-                          { keyword: 'second query' },
-                        ]
-                      : input.items,
-                },
-              ]
-            : null,
-      },
-    ],
-  }
-}
-
-export function keywordRequest(
-  overrides: Partial<Parameters<DataForSeoClient['keywordOverview']>[0]> = {},
-) {
-  return {
-    keywords: ['first query', 'second query'],
-    languageCode: 'en',
-    locationCode: 2840,
-    reportId: 'keyword-metrics',
-    reportRunId: 'run-1',
-    ...overrides,
-  }
 }

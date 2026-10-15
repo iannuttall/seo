@@ -3,20 +3,9 @@ import * as z from 'zod/v4'
 import { registerAiOpportunityTools } from './ai-opportunity-tools.js'
 import { registerCrawlerTools } from './crawler-tools.js'
 import { registerDiagnosisTools } from './diagnosis-tools.js'
-import { registerDomainResearchTools } from './domain-research-tools.js'
 import { registerExperimentTools } from './experiment-tools.js'
-import { registerKeywordTools } from './keyword-tools.js'
 import { registerMonitoringTools } from './monitoring-tools.js'
 import { registerOpportunityTools } from './opportunity-tools.js'
-import { registerProviderTools } from './provider-tools.js'
-import {
-  competitiveOpportunitiesInputSchema,
-  createCompetitiveOpportunitiesHandler,
-} from './report-definitions/competitive-opportunities.js'
-import {
-  createDomainRatingHandler,
-  domainRatingInputSchema,
-} from './report-definitions/domain-rating.js'
 import {
   getReportGuidance,
   REPORT_GUIDANCE,
@@ -62,20 +51,8 @@ type DirectReport = {
   handler: ReportHandler
 }
 
-const directReports: readonly DirectReport[] = [
-  {
-    id: 'competitive-opportunities',
-    category: 'opportunities',
-    inputSchema: competitiveOpportunitiesInputSchema,
-    handler: createCompetitiveOpportunitiesHandler(),
-  },
-  {
-    id: 'domain-rating',
-    category: 'opportunities',
-    inputSchema: domainRatingInputSchema,
-    handler: createDomainRatingHandler(),
-  },
-] as const
+// Reports defined here directly, with their own schema and handler.
+const directReports: readonly DirectReport[] = []
 
 const legacyReportGroups: readonly ReportGroup[] = [
   {
@@ -103,27 +80,6 @@ const legacyReportGroups: readonly ReportGroup[] = [
       'seo_internal_links',
       'seo_query_cluster',
       'seo_quick_wins',
-    ],
-  },
-  {
-    category: 'opportunities',
-    register: registerKeywordTools,
-    names: [
-      'seo_keyword_metrics',
-      'seo_keyword_opportunities',
-      'seo_keyword_research',
-      'seo_serp_results',
-    ],
-  },
-  {
-    category: 'opportunities',
-    register: registerDomainResearchTools,
-    names: [
-      'seo_competitor_keyword_gap',
-      'seo_domain_overview',
-      'seo_ranked_keywords',
-      'seo_ranking_pages',
-      'seo_serp_competitors',
     ],
   },
   {
@@ -163,11 +119,6 @@ const legacyReportGroups: readonly ReportGroup[] = [
       'seo_link_recover',
       'seo_redirect_trace',
     ],
-  },
-  {
-    category: 'monitoring',
-    register: registerProviderTools,
-    names: ['seo_link_evidence'],
   },
   {
     category: 'reporting',

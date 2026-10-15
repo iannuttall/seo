@@ -21,7 +21,6 @@ export const RENAMED: Record<string, string> = {
   'update-postmortem': 'seo compare --date <date>',
   'link-recover': 'seo index',
   'gsc-query': 'seo data',
-  links: 'seo research backlinks --target <domain>',
 }
 
 // Removed commands, with the command to use instead when there is one. A key
@@ -39,6 +38,7 @@ export const REMOVED: Record<string, string | null> = {
   'seo-to-ai-query': null,
   'server-logs': null,
   'client keyword-sets': null,
+  links: 'seo research backlinks --target <domain>',
   'export knowledge': null,
   'export monthly': 'seo report --json',
   'export narrative': 'seo report --json',

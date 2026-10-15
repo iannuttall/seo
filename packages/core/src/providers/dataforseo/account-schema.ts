@@ -30,90 +30,11 @@ const userDataMoneySchema = z
   })
   .passthrough()
 
-const priceComponentSchema = z
-  .object({
-    cost_type: z.string().min(1).max(100),
-    cost: z.number().finite().nonnegative(),
-  })
-  .passthrough()
-
-const normalPriorityPriceSchema = z
-  .object({
-    priority_normal: z.array(priceComponentSchema).max(20).optional(),
-  })
-  .passthrough()
-
-const livePriceSchema = z
-  .object({
-    live: normalPriorityPriceSchema.optional(),
-  })
-  .passthrough()
-
-const userDataPriceSchema = z
-  .object({
-    ai_optimization: z
-      .object({
-        llm_responses: z
-          .object({
-            live: normalPriorityPriceSchema.optional(),
-          })
-          .passthrough()
-          .optional(),
-        llm_mentions: z
-          .object({
-            target_metrics: livePriceSchema.optional(),
-            multi_target_metrics: livePriceSchema.optional(),
-            search_mentions: livePriceSchema.optional(),
-          })
-          .passthrough()
-          .optional(),
-      })
-      .passthrough()
-      .optional(),
-    backlinks: z
-      .object({
-        summary: livePriceSchema.optional(),
-        backlinks: livePriceSchema.optional(),
-        referring_domains: livePriceSchema.optional(),
-      })
-      .passthrough()
-      .optional(),
-    dataforseo_labs: z
-      .object({
-        keyword_overview: livePriceSchema.optional(),
-        keyword_ideas: livePriceSchema.optional(),
-        keyword_suggestions: livePriceSchema.optional(),
-        related_keywords: livePriceSchema.optional(),
-        domain_rank_overview: livePriceSchema.optional(),
-        ranked_keywords: livePriceSchema.optional(),
-        relevant_pages: livePriceSchema.optional(),
-        serp_competitors: livePriceSchema.optional(),
-      })
-      .passthrough()
-      .optional(),
-    serp: z
-      .object({
-        task_post: normalPriorityPriceSchema.optional(),
-        live: z
-          .object({
-            advanced: normalPriorityPriceSchema.optional(),
-          })
-          .passthrough()
-          .optional(),
-      })
-      .passthrough()
-      .optional(),
-  })
-  .passthrough()
-
 const userDataResultSchema = z
   .object({
     login: z.string().min(1).max(320),
     timezone: z.string().min(1).max(100).optional(),
     money: userDataMoneySchema.optional(),
-    price: userDataPriceSchema.optional(),
-    backlinks_subscription_expiry_date: z.string().nullable().optional(),
-    llm_mentions_subscription_expiry_date: z.string().nullable().optional(),
   })
   .passthrough()
 

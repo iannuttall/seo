@@ -113,9 +113,6 @@ importers:
       update-notifier:
         specifier: ^7.3.1
         version: 7.3.1
-      yaml:
-        specifier: ^2.9.0
-        version: 2.9.0
       zod:
         specifier: ^4.4.3
         version: 4.4.3
@@ -314,9 +311,6 @@ importers:
       undici:
         specifier: ^8.10.2
         version: 8.11.2
-      yaml:
-        specifier: ^2.9.0
-        version: 2.9.0
       zod:
         specifier: ^4.4.3
         version: 4.4.3

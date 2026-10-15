@@ -518,8 +518,12 @@ Do not write tests that check copy, help text, docs, workflow or config file
 contents, constants, types, trivial helpers, or mocks calling mocks. When
 behaviour changes, change the code and the few tests that prove it.
 
-CI is one job named `checks` that runs build, typecheck, lint and test. Do not
-add CI jobs, test shards or scheduled workflows without Ian's approval.
+CI is one job named `checks` that runs build, typecheck, lint and test, and
+it must stay fast and cheap (about two minutes). No browser tests, no
+resource harnesses, no sleeps or network calls in tests, and no step that
+repeats another (lint is Biome and the repo scripts; type checks run once).
+Do not add CI jobs, test shards or scheduled workflows without Ian's
+approval.
 
 Every change passes all four repository gates before it is finished:
 

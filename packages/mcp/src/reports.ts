@@ -18,40 +18,55 @@ function validationMessage(error: z.ZodError): string {
     .join('; ')
 }
 
-// Reports removed in 0.3.0. Their code stays until 0.4.0, but the catalog
-// no longer lists or runs them.
-export const REMOVED_REPORT_IDS = new Set([
-  'agent-readiness',
-  'ai-mention-research',
-  'ai-prompt-observations',
-  'ai-readiness',
-  'ai-search-scorecard',
-  'bing-webmaster-overview',
-  'community-intent',
-  'entity-readiness',
-  'generate-llms-txt',
-  'geo-gaps',
-  'llms-txt-audit',
-  'local-search-demand',
-  'monthly-action-plan',
-  'monthly-report',
-  'narrative-report',
-  'okf-build',
-  'okf-validate',
-  'pseo-audit',
-  'pseo-opportunities',
-  'pseo-patterns',
-  'rank-tracking',
-  'saved-keywords',
-  'seo-to-ai-query',
-  'server-log-analysis',
-])
+// Report ids removed in 0.3.0, with the command to use instead when there
+// is one. Running one fails with a notice instead of `Unknown report`.
+export const REMOVED_REPORT_IDS: Readonly<Record<string, string | null>> = {
+  'agent-readiness': null,
+  'ai-mention-research': null,
+  'ai-prompt-observations': null,
+  'ai-readiness': null,
+  'ai-search-scorecard': null,
+  'bing-webmaster-overview': null,
+  'community-intent': null,
+  'competitive-opportunities': 'seo research',
+  'competitor-keyword-gap': 'seo research competitors',
+  'domain-overview': 'seo research ranked_keywords',
+  'domain-rating': 'seo research',
+  'entity-readiness': null,
+  'generate-llms-txt': null,
+  'geo-gaps': null,
+  'keyword-metrics': 'seo research keyword_metrics',
+  'keyword-opportunities': 'seo research',
+  'keyword-research': 'seo research keyword_metrics',
+  'link-evidence': 'seo research backlinks',
+  'llms-txt-audit': null,
+  'local-search-demand': null,
+  'monthly-action-plan': 'seo report',
+  'monthly-report': 'seo report',
+  'narrative-report': 'seo report',
+  'okf-build': null,
+  'okf-validate': null,
+  'pseo-audit': null,
+  'pseo-opportunities': null,
+  'pseo-patterns': null,
+  'rank-tracking': null,
+  'ranked-keywords': 'seo research ranked_keywords',
+  'ranking-pages': 'seo research ranked_keywords',
+  'saved-keywords': null,
+  'seo-to-ai-query': null,
+  'serp-competitors': 'seo research competitors',
+  'serp-results': 'seo research serp',
+  'server-log-analysis': null,
+}
 
 function activeReport(id: string) {
-  if (REMOVED_REPORT_IDS.has(id)) {
+  if (Object.hasOwn(REMOVED_REPORT_IDS, id)) {
+    const replacement = REMOVED_REPORT_IDS[id]
     throw new SeoError(
       'INVALID_INPUT',
-      `The ${id} report was removed in 0.3.0. Run \`seo help\` for the commands.`,
+      replacement
+        ? `The ${id} report was removed in 0.3.0. Use \`${replacement}\` instead.`
+        : `The ${id} report was removed in 0.3.0. Run \`seo help\` for the commands.`,
     )
   }
   const report = getReportDefinition(id)
@@ -60,9 +75,7 @@ function activeReport(id: string) {
 }
 
 export function listReports(category?: ReportCategory): ReportSummary[] {
-  return listReportDefinitions(category).filter(
-    (report) => !REMOVED_REPORT_IDS.has(report.id),
-  )
+  return listReportDefinitions(category)
 }
 
 export function describeReport(id: string) {

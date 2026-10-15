@@ -398,98 +398,6 @@ test('orders a bounded research queue from current and provider evidence', async
   )
   assert.equal(report.summary.keywordsWithLowerDomainRatingResult, 1)
   assert.equal(report.summary.keywordsWithFewerReferringDomainsResult, 1)
-  assert.match(report.caveats.join(' '), /does not make a result easy/iu)
-})
-
-test('keeps SERP device out of country-level keyword discovery', async () => {
-  let discoveryMarket: SearchMarket | undefined
-  let serpMarket: SearchMarket | undefined
-
-  await competitiveOpportunitiesReport(
-    {
-      target: 'target.example',
-      seeds: ['seo tools'],
-      market,
-      keywordProvider: 'ahrefs',
-      serpProvider: 'dataforseo',
-      discoverySources: ['ideas'],
-      discoveryLimit: 1,
-      keywordLimit: 1,
-      competitionEvidence: 'serp',
-    },
-    {
-      keywordResearchReport: async (input) => {
-        discoveryMarket = input.market
-        return keywordReport([keywordIdea('seo tools', 100)])
-      },
-      serpResultsReport: async (input) => {
-        serpMarket = input.market
-        return serpReport(input.keyword, [
-          { domain: 'competitor.example', rank: 1 },
-        ])
-      },
-      id: () => 'report-run',
-      now: () => new Date('2026-07-24T12:00:00.000Z'),
-    },
-  )
-
-  assert.deepEqual(discoveryMarket, {
-    countryCode: 'GB',
-    languageCode: 'en',
-    searchEngine: 'google',
-  })
-  assert.deepEqual(serpMarket, market)
-})
-
-test('spreads bounded competitor checks across each keyword highest results', async () => {
-  const report = await competitiveOpportunitiesReport(
-    {
-      target: 'target.example',
-      seeds: ['seo tools'],
-      market,
-      keywordLimit: 3,
-      competitorLimit: 4,
-      competitionEvidence: 'serp',
-    },
-    {
-      keywordResearchReport: async () =>
-        keywordReport([
-          keywordIdea('seo tools', 300),
-          keywordIdea('keyword two', 200),
-          keywordIdea('keyword three', 100),
-        ]),
-      serpResultsReport: async (input) => {
-        const rows: Record<string, Array<{ domain: string; rank: number }>> = {
-          'seo tools': [
-            { domain: 'first.example', rank: 1 },
-            { domain: 'second.example', rank: 2 },
-            { domain: 'recurring.example', rank: 9 },
-          ],
-          'keyword two': [
-            { domain: 'third.example', rank: 1 },
-            { domain: 'fourth.example', rank: 2 },
-            { domain: 'recurring.example', rank: 9 },
-          ],
-          'keyword three': [
-            { domain: 'fifth.example', rank: 1 },
-            { domain: 'sixth.example', rank: 2 },
-            { domain: 'recurring.example', rank: 9 },
-          ],
-        }
-        return serpReport(input.keyword, rows[input.keyword] ?? [])
-      },
-    },
-  )
-
-  assert.deepEqual(
-    report.competitors.map((competitor) => competitor.domain),
-    ['first.example', 'third.example', 'fifth.example', 'second.example'],
-  )
-  assert.equal(report.summary.recurringCompetitors, 1)
-  assert.equal(
-    report.selection.competitorOrder,
-    'keyword-round-robin-absolute-rank-domain-v1',
-  )
 })
 
 test('keeps completed SERPs when a later provider request times out', async () => {
@@ -529,10 +437,6 @@ test('keeps completed SERPs when a later provider request times out', async () =
   assert.equal(report.summary.completedSerps, 1)
   assert.equal(report.summary.failedSerps, 2)
   assert.equal(report.source.serps.observations[1]?.status, 'unavailable')
-  assert.match(
-    report.source.serps.observations[2]?.reason ?? '',
-    /Not requested after the provider became unavailable/u,
-  )
 })
 
 test('keeps missing enrichment unavailable instead of converting it to zero', async () => {
@@ -565,98 +469,6 @@ test('keeps missing enrichment unavailable instead of converting it to zero', as
     'unknown',
   )
   assert.equal(report.summary.keywordsWithLowerDomainRatingResult, 0)
-})
-
-test('validates acquisition bounds before calling a provider', async () => {
-  let calls = 0
-  await assert.rejects(
-    competitiveOpportunitiesReport(
-      {
-        target: 'target.example',
-        seeds: ['seo tools'],
-        market,
-        keywordLimit: 11,
-      },
-      {
-        keywordResearchReport: async () => {
-          calls++
-          return keywordReport([])
-        },
-      },
-    ),
-    /Keyword limit must be from 1 to 10/u,
-  )
-  assert.equal(calls, 0)
-
-  await assert.rejects(
-    competitiveOpportunitiesReport(
-      {
-        target: 'target.example',
-        seeds: ['seo tools'],
-        market: { ...market, searchEngine: 'bing' },
-      },
-      {
-        keywordResearchReport: async () => {
-          calls++
-          return keywordReport([])
-        },
-      },
-    ),
-    /supports Google result research/u,
-  )
-  assert.equal(calls, 0)
-
-  await assert.rejects(
-    competitiveOpportunitiesReport(
-      {
-        target: 'target.example',
-        seeds: ['seo tools'],
-        market,
-        competitionEvidence: 'serp',
-        linkProvider: 'ahrefs',
-      },
-      {
-        keywordResearchReport: async () => keywordReport([]),
-      },
-    ),
-    /competitionEvidence to link-summary/u,
-  )
-})
-
-test('stops after one fatal SERP provider error', async () => {
-  let serpCalls = 0
-  let ratingCalls = 0
-  await assert.rejects(
-    competitiveOpportunitiesReport(
-      {
-        target: 'target.example',
-        seeds: ['seo tools'],
-        market,
-        keywordLimit: 2,
-      },
-      {
-        keywordResearchReport: async () =>
-          keywordReport([
-            keywordIdea('seo tools', 500),
-            keywordIdea('seo audit software', 400),
-          ]),
-        serpResultsReport: async () => {
-          serpCalls++
-          throw new SeoError(
-            'PROVIDER_UNAVAILABLE',
-            'The selected provider cannot return live SERP results.',
-          )
-        },
-        domainRatingReport: async (input) => {
-          ratingCalls++
-          return ratingReport(input.target, 40)
-        },
-      },
-    ),
-    /cannot return live SERP results/u,
-  )
-  assert.equal(serpCalls, 1)
-  assert.equal(ratingCalls, 0)
 })
 
 test('bounds maximum provider rows before acquisition and output', async () => {

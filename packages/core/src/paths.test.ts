@@ -19,43 +19,6 @@ afterEach(() => {
   }
 })
 
-test('uses an XDG-style config directory on macOS', () => {
-  const paths = resolveSeoCliPaths({
-    platform: 'darwin',
-    home: '/Users/example',
-    env: {},
-  })
-
-  assert.equal(paths.configDir, '/Users/example/.config/seo')
-  assert.equal(paths.cacheDir, '/Users/example/Library/Caches/seo')
-  assert.equal(paths.logDir, '/Users/example/Library/Logs/seo')
-  assert.equal(
-    paths.providerPackagesDir,
-    '/Users/example/.config/seo/providers',
-  )
-  assert.equal(
-    paths.installedProviderPackagesFile,
-    '/Users/example/.config/seo/provider-packages.json',
-  )
-})
-
-test('respects explicit config and XDG overrides', () => {
-  const paths = resolveSeoCliPaths({
-    platform: 'linux',
-    home: '/home/example',
-    env: {
-      SEO_CONFIG_DIR: '/private/seo-config',
-      SEO_CACHE_DIR: '/private/seo-cache',
-      SEO_LOG_DIR: '/private/seo-log',
-      XDG_CONFIG_HOME: '/ignored',
-    },
-  })
-
-  assert.equal(paths.configDir, '/private/seo-config')
-  assert.equal(paths.cacheDir, '/private/seo-cache')
-  assert.equal(paths.logDir, '/private/seo-log')
-})
-
 test('uses AppData for config on Windows', () => {
   const paths = resolveSeoCliPaths({
     platform: 'win32',

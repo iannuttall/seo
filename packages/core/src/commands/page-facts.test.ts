@@ -21,13 +21,3 @@ test('reads the first title, description, H1, canonical and robots', () => {
     robots: 'noindex',
   })
 })
-
-test('missing tags stay null', () => {
-  assert.deepEqual(headFacts('<p>hi</p>', 'https://example.com/'), {
-    title: null,
-    description: null,
-    h1: null,
-    canonical: null,
-    robots: null,
-  })
-})

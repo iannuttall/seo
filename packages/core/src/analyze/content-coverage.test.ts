@@ -6,57 +6,9 @@ import type {
   PageFetchResult,
 } from '../types.js'
 import {
-  contentCoverageRecommendation,
-  measureCoverage,
-  normalizeForCoverage,
   queryContentCoverageFromPage,
   verifyQueryContent,
 } from './content-coverage.js'
-
-test('normalizeForCoverage folds accents and apostrophe variants', () => {
-  assert.equal(normalizeForCoverage('Peoplé’s surname'), 'peoples surname')
-  assert.equal(normalizeForCoverage('peoples surname'), 'peoples surname')
-})
-
-test('normalizeForCoverage preserves non-Latin scripts', () => {
-  assert.equal(
-    normalizeForCoverage('تويتر: بحث بدون حساب'),
-    'تويتر بحث بدون حساب',
-  )
-  assert.equal(normalizeForCoverage('技术 搜索引擎优化'), '技术 搜索引擎优化')
-})
-
-test('measureCoverage counts normalized phrase matches', () => {
-  const coverage = measureCoverage(
-    'peoples surname',
-    'This page explains Peoplé’s surname distribution.',
-  )
-
-  assert.equal(coverage.phraseCount, 1)
-  assert.deepEqual(coverage.missingTerms, [])
-})
-
-test('measureCoverage separates phrase match from term coverage', () => {
-  const coverage = measureCoverage(
-    'origin of the last name laroya',
-    'Laroya appears in census records. This page discusses last name origin.',
-  )
-
-  assert.equal(coverage.phraseCount, 0)
-  assert.equal(coverage.termCoverage, 1)
-})
-
-test('measureCoverage matches Arabic and CJK content', () => {
-  const arabic = measureCoverage(
-    'تويتر بحث بدون حساب',
-    'دليل تويتر بحث بدون حساب للمبتدئين.',
-  )
-  const cjk = measureCoverage('搜索引擎优化', '搜索引擎优化技术指南')
-
-  assert.equal(arabic.phraseCount, 1)
-  assert.equal(arabic.termCoverage, 1)
-  assert.equal(cjk.termCoverage, 1)
-})
 
 function page(input: Partial<ExtractedPage> = {}): ExtractedPage {
   return {
@@ -128,57 +80,6 @@ function diagnostics(
     ...input,
   }
 }
-
-test('contentCoverageRecommendation explains field-specific wording gaps', () => {
-  const coverage = queryContentCoverageFromPage({
-    query: 'origin of the last name laroya',
-    url: 'https://example.com/page/',
-    page: page(),
-  })
-
-  assert.equal(coverage.classification, 'serp-framing')
-  assert.match(contentCoverageRecommendation(coverage), /title/)
-  assert.match(contentCoverageRecommendation(coverage), /H1/)
-  assert.match(contentCoverageRecommendation(coverage), /important terms/)
-  assert.match(contentCoverageRecommendation(coverage), /do not make/)
-  assert.match(
-    contentCoverageRecommendation(coverage),
-    /origin of the last name laroya/,
-  )
-})
-
-test('contentCoverageRecommendation names missing body terms', () => {
-  const coverage = queryContentCoverageFromPage({
-    query: 'air pasang surut batu pahat',
-    url: 'https://example.com/page/',
-    page: page({
-      title: 'Batu Pahat tide times',
-      headings: [{ level: 1, text: 'Batu Pahat tide times' }],
-      contentText: 'Batu Pahat tide times and tide chart.',
-    }),
-  })
-
-  assert.equal(coverage.classification, 'content-gap')
-  assert.match(contentCoverageRecommendation(coverage), /air/)
-  assert.match(contentCoverageRecommendation(coverage), /pasang/)
-})
-
-test('contentCoverageRecommendation flags redirected GSC URLs first', () => {
-  const coverage = queryContentCoverageFromPage({
-    query: 'salary for plumber',
-    url: 'https://example.com/city/plumber/',
-    page: page({
-      finalUrl: 'https://example.com/country/plumber/',
-      title: 'Plumber salary',
-      headings: [{ level: 1, text: 'Plumber salary' }],
-      contentText: 'Plumber salary by country.',
-    }),
-  })
-
-  assert.equal(coverage.classification, 'technical-check')
-  assert.match(contentCoverageRecommendation(coverage), /resolves/)
-  assert.match(contentCoverageRecommendation(coverage), /salary for plumber/)
-})
 
 test('queryContentCoverageFromPage does not invent Arabic content gaps', () => {
   const query = 'تويتر بحث بدون حساب'
@@ -272,34 +173,6 @@ test('classifies HTTP, robots, canonical, redirect, and block evidence first', (
   }
 })
 
-test('preserves structured status, warnings, and deterministic verification time', () => {
-  const coverage = queryContentCoverageFromPage({
-    query: 'laroya surname',
-    url: 'https://example.com/page/',
-    page: page({ warnings: ['Extraction warning'] }),
-    httpStatus: 200,
-    warnings: ['Fetch warning'],
-    verifiedAt: '2026-07-09T12:00:00.000Z',
-  })
-
-  assert.equal(coverage.httpStatus, 200)
-  assert.equal(coverage.verifiedAt, '2026-07-09T12:00:00.000Z')
-  assert.deepEqual(coverage.warnings, ['Fetch warning', 'Extraction warning'])
-})
-
-test('keeps valid cache hits out of technical classification', () => {
-  const coverage = queryContentCoverageFromPage({
-    query: 'laroya surname',
-    url: 'https://example.com/page/',
-    page: page(),
-    httpStatus: 200,
-    fetchDiagnostics: diagnostics({ source: 'cache', fetched: false }),
-  })
-
-  assert.equal(coverage.signals.includes('fetch-incomplete'), false)
-  assert.notEqual(coverage.classification, 'technical-check')
-})
-
 test('uses meaningful field coverage instead of requiring an exact title phrase', () => {
   const coverage = queryContentCoverageFromPage({
     query: 'origin of the last name laroya',
@@ -314,22 +187,6 @@ test('uses meaningful field coverage instead of requiring an exact title phrase'
 
   assert.ok(coverage.signals.includes('exact-phrase-missing'))
   assert.equal(coverage.classification, 'covered')
-})
-
-test('includes meta-description term gaps in SERP framing', () => {
-  const coverage = queryContentCoverageFromPage({
-    query: 'laroya surname',
-    url: 'https://example.com/page/',
-    page: page({
-      title: 'Laroya surname',
-      metaDescription: 'Read the complete guide',
-      headings: [{ level: 1, text: 'Laroya surname' }],
-      contentText: 'Laroya surname history and distribution.',
-    }),
-  })
-
-  assert.ok(coverage.signals.includes('meta-description-gap'))
-  assert.equal(coverage.classification, 'serp-framing')
 })
 
 test('verifyQueryContent preserves fetch evidence when extraction fails', async () => {

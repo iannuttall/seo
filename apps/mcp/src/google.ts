@@ -38,8 +38,17 @@ export function accountUrl(env: Env): string {
   return `${env.PUBLIC_URL}/account`
 }
 
+// What an agent should do with an account page link: open it for the person,
+// wait for them, then try the call again.
+export function openForPerson(url: string, task: string): string {
+  return `Open ${url} in the person's browser (with \`open <url>\`, \`xdg-open <url>\` or \`start <url>\` when you have a shell, otherwise show them the link), ask them to ${task}, then run the same call again.`
+}
+
 export function signInHint(env: Env): string {
-  return `Add or reconnect the account at ${accountUrl(env)}.`
+  return openForPerson(
+    `${accountUrl(env)}#google`,
+    'add or reconnect the Google account',
+  )
 }
 
 function tokenFor(env: Env, account: Account): () => Promise<string> {
@@ -193,7 +202,7 @@ export class Directory {
     if (found) return found
     throw new CommandError(
       'NO_ACCESS',
-      `None of the connected Google accounts (${this.google.map((linked) => linked.email).join(', ')}) has a Search Console property for ${site}. Add the Google account that can read it at ${accountUrl(this.env)}, then call seo_sites.`,
+      `None of the connected Google accounts (${this.google.map((linked) => linked.email).join(', ')}) has a Search Console property for ${site}. ${openForPerson(`${accountUrl(this.env)}#google`, 'add the Google account that can read it')}`,
     )
   }
 

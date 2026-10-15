@@ -194,6 +194,10 @@ type TelemetryWriteDatabase = {
 // Day by day use since days were recorded, month by month before that, and
 // the daily skills.sh check.
 export type Timeline = {
+  // Hosted MCP accounts that exist now, and the day each was created.
+  // Deleted accounts are gone from both.
+  hostedAccounts: number
+  hostedSignups: Array<{ day: string; count: number }>
   daily: Array<{
     day: string
     installs: number
@@ -672,6 +676,7 @@ export function timeline(input: {
   daily: StatsRow[]
   monthly: StatsRow[]
   skills: StatsRow[]
+  signups: StatsRow[]
 }): Timeline {
   const days = new Map<string, Timeline['daily'][number]>()
   for (const row of input.daily) {
@@ -737,7 +742,13 @@ export function timeline(input: {
         (a.position ?? 999) - (b.position ?? 999) ||
         a.query.localeCompare(b.query),
     )
+  const hostedSignups = input.signups
+    .map((row) => ({ day: rowString(row, 'day'), count: rowCount(row) }))
+    .filter((row) => row.day)
+    .sort((a, b) => a.day.localeCompare(b.day))
   return {
+    hostedAccounts: hostedSignups.reduce((total, row) => total + row.count, 0),
+    hostedSignups,
     daily: [...days.values()].sort((a, b) => a.day.localeCompare(b.day)),
     monthly: [...months.values()].sort((a, b) =>
       a.month.localeCompare(b.month),
@@ -915,6 +926,15 @@ async function liveStats(env: Env): Promise<Stats & { timeline: Timeline }> {
     monthly,
     skills,
   ] = results.map((result) => result.results)
+  // Every account counts toward the total; the chart shows the last 90 days.
+  const signups = await env.ACCOUNTS_DB.prepare(
+    `SELECT date(created_at / 1000, 'unixepoch') AS day, COUNT(*) AS count
+     FROM users
+     GROUP BY day`,
+  )
+    .all<StatsRow>()
+    .then((result) => result.results)
+    .catch(() => [] as StatsRow[])
   return {
     ...aggregateStats({
       events,
@@ -925,7 +945,7 @@ async function liveStats(env: Env): Promise<Stats & { timeline: Timeline }> {
       failureCategories,
       failureDetails,
     }),
-    timeline: timeline({ daily, monthly, skills }),
+    timeline: timeline({ daily, monthly, skills, signups }),
   }
 }
 

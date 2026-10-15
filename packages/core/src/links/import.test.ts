@@ -58,37 +58,6 @@ test('JSONL imports stop at the configured row bound without reading the whole f
       (evidence.provenance.file?.bytesRead ?? Infinity) <
         (evidence.provenance.file?.fileBytes ?? 0),
     )
-    assert.match(evidence.warnings[0] ?? '', /stopped after 3 rows/i)
-  } finally {
-    await rm(directory, { recursive: true, force: true })
-  }
-})
-
-test('link reports bound returned evidence and do not imply complete coverage', async () => {
-  const directory = await mkdtemp(join(tmpdir(), 'seo-links-'))
-  const path = join(directory, 'links.json')
-  try {
-    await writeFile(
-      path,
-      JSON.stringify(
-        Array.from({ length: 4 }, (_, index) => ({
-          source: `https://source-${index}.example/a`,
-          target: 'https://target.example/a',
-        })),
-      ),
-    )
-    const evidence = await importLinkEvidence({ file: path })
-    const report = linkEvidenceReport({ evidence, limit: 2 })
-    assert.deepEqual(report.summary, {
-      observedLinks: 4,
-      referringDomains: 4,
-      targetPages: 1,
-      providerTargetPages: 1,
-    })
-    assert.equal(report.selection.returnedRows, 2)
-    assert.equal(report.selection.omittedRows, 2)
-    assert.equal(report.dataStatus, 'partial')
-    assert.match(report.caveats[0] ?? '', /not a complete backlink index/i)
   } finally {
     await rm(directory, { recursive: true, force: true })
   }

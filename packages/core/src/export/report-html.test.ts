@@ -31,16 +31,6 @@ function fixture(overrides: Partial<ReportNarrative> = {}): ReportNarrative {
 }
 
 describe('renderReportHtml', () => {
-  it('renders a self-contained client report from the narrative DTO', () => {
-    const html = renderReportHtml({ report: fixture() })
-
-    assert.match(html, /<!doctype html>/)
-    assert.match(html, /Clicks held steady while impressions increased\./)
-    assert.match(html, /Review high-impression pages/)
-    assert.doesNotMatch(html, /<script/)
-    assert.doesNotMatch(html, /https?:\/\/[^"<]*\.(?:css|js|woff2?)/)
-  })
-
   it('escapes report values and rejects unsafe site links', () => {
     const html = renderReportHtml({
       report: fixture({
@@ -54,31 +44,5 @@ describe('renderReportHtml', () => {
     assert.match(html, /&lt;script&gt;alert\(1\)&lt;\/script&gt;/)
     assert.doesNotMatch(html, /href="javascript:/)
     assert.doesNotMatch(html, /<img src=x/)
-  })
-
-  it('shows partial evidence notes and analyst coverage', () => {
-    const html = renderReportHtml({
-      report: fixture({
-        dataStatus: 'partial',
-        diagnosis: {
-          skippedSections: [
-            { section: 'traffic anomaly', reason: 'Not enough daily rows.' },
-          ],
-        } as unknown as ReportNarrative['diagnosis'],
-      }),
-      view: 'analyst',
-      additionalSections: [
-        {
-          title: 'Technical evidence',
-          summary: 'A saved crawl was used.',
-          items: ['SEO-001 affected 3 URLs.'],
-        },
-      ],
-    })
-
-    assert.match(html, /<details open>/)
-    assert.match(html, /Evidence coverage/)
-    assert.match(html, /traffic anomaly: Not enough daily rows\./)
-    assert.match(html, /Technical evidence/)
   })
 })

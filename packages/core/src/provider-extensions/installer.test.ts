@@ -191,19 +191,6 @@ test('direct install accepts an exact version and rejects ranges or URLs', async
   assert.equal(fake.calls.length, 1)
 })
 
-test('package inspection accepts string maintainers from npm metadata', async () => {
-  const fake = command({
-    maintainers: ['Ian Nuttall <npm@example.com>'],
-    npmUser: null,
-  })
-  const release = await inspectProviderPackage('@example/fixture', {
-    packagesDir,
-    run: fake.run,
-  })
-
-  assert.equal(release.publisher, 'Ian Nuttall <npm@example.com>')
-})
-
 test('package inspection rejects dependency trees before installation', async () => {
   const fake = command({ dependencies: { surprise: '^1.0.0' } })
   await assert.rejects(

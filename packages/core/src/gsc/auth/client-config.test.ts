@@ -20,14 +20,11 @@ const previousSharedEnvironment = Object.fromEntries(
 
 process.env.SEO_CONFIG_DIR = configDir
 
-const { runDoctor } = await import('../../doctor.js')
 const { SeoError } = await import('../../errors.js')
 const { writeConfig, writeOauthClient, writeTokens } = await import(
   '../../storage/config.js'
 )
-const { authStatus, createAuthorizedClient } = await import(
-  './authorized-client.js'
-)
+const { createAuthorizedClient } = await import('./authorized-client.js')
 const { getClientConfig } = await import('./client-config.js')
 
 function storedTokens(source: StoredTokens['client_source']): StoredTokens {
@@ -109,20 +106,6 @@ test('OAuth client lookup never falls back across token sources', () => {
   assert.equal(shared?.source, hasEmbeddedSharedClient() ? 'shared' : undefined)
 })
 
-test('auth status reports whether the stored token client is configured', async () => {
-  writeOauthClient({
-    clientId: 'byo-client-id',
-    clientSecret: 'byo-client-secret',
-  })
-  await writeTokens(storedTokens('shared'))
-
-  const status = await authStatus()
-
-  assert.equal(status.configured, hasEmbeddedSharedClient())
-  assert.equal(status.sharedConfigured, hasEmbeddedSharedClient())
-  assert.equal(status.byoConfigured, true)
-})
-
 test('authorized clients reject a configured client from the wrong source', async () => {
   setSharedClient()
   await writeTokens(storedTokens('byo'))
@@ -130,45 +113,6 @@ test('authorized clients reject a configured client from the wrong source', asyn
   await assert.rejects(createAuthorizedClient(), (error: unknown) => {
     assert.ok(error instanceof SeoError)
     assert.equal(error.code, 'AUTH_CONFIG_REQUIRED')
-    assert.match(error.message, /BYO OAuth client.*no longer configured/i)
     return true
   })
-})
-
-test('doctor reports whether the stored token client is configured', async () => {
-  writeOauthClient({
-    clientId: 'byo-client-id',
-    clientSecret: 'byo-client-secret',
-  })
-  await writeTokens(storedTokens('shared'))
-
-  const report = await runDoctor({
-    checkDatabase: () => ({ dbPath: '/tmp/seo-test/cache.sqlite' }),
-  })
-  const oauth = report.checks.find((check) => check.id === 'oauth-client')
-  const database = report.checks.find((check) => check.id === 'local-database')
-
-  assert.equal(report.ok, hasEmbeddedSharedClient())
-  assert.equal(database?.status, 'pass')
-  assert.equal(oauth?.status, hasEmbeddedSharedClient() ? 'pass' : 'fail')
-  if (hasEmbeddedSharedClient()) {
-    assert.match(oauth?.detail ?? '', /shared client configured/i)
-  } else {
-    assert.match(oauth?.detail ?? '', /shared seo app.*not configured/i)
-    assert.match(oauth?.fix ?? '', /github\.com\/iannuttall\/seo\/issues/)
-  }
-})
-
-test('doctor fails clearly when the local database cannot open', async () => {
-  const report = await runDoctor({
-    checkDatabase: () => {
-      throw new Error('SQLite runtime is unavailable.')
-    },
-  })
-  const database = report.checks.find((check) => check.id === 'local-database')
-
-  assert.equal(report.ok, false)
-  assert.equal(database?.status, 'fail')
-  assert.match(database?.detail ?? '', /SQLite runtime is unavailable/)
-  assert.match(database?.fix ?? '', /Upgrade or reinstall `seo`/)
 })

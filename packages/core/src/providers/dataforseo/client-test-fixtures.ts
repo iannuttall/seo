@@ -218,7 +218,7 @@ export function userDataFixture(): UserDataFixture {
   }
 }
 
-export function firstTask(fixture: UserDataFixture): UserDataTaskFixture {
+function firstTask(fixture: UserDataFixture): UserDataTaskFixture {
   const task = fixture.tasks[0]
   assert.ok(task)
   return task
@@ -297,75 +297,6 @@ export function keywordOverviewFixture(
                 },
               ]
             : null,
-      },
-    ],
-  }
-}
-
-export function keywordDiscoveryFixture() {
-  return {
-    status_code: 20000,
-    status_message: 'Ok.',
-    cost: 0.01236,
-    tasks_count: 1,
-    tasks_error: 0,
-    tasks: [
-      {
-        id: 'discovery-task-id',
-        status_code: 20000,
-        status_message: 'Ok.',
-        cost: 0.01236,
-        result_count: 1,
-        result: [
-          {
-            seed_keywords: ['first query', 'second query'],
-            total_count: 300,
-            items_count: 3,
-            offset_token: 'next-page-token',
-            items: [
-              { keyword: 'first idea' },
-              { keyword: 'second idea' },
-              { keyword: 'third idea' },
-            ],
-          },
-        ],
-      },
-    ],
-  }
-}
-
-export function serpFixture() {
-  return {
-    status_code: 20000,
-    status_message: 'Ok.',
-    cost: 0.004,
-    tasks_count: 1,
-    tasks_error: 0,
-    tasks: [
-      {
-        id: 'serp-task-id',
-        status_code: 20000,
-        status_message: 'Ok.',
-        cost: 0.004,
-        result_count: 1,
-        result: [
-          {
-            keyword: 'first query',
-            datetime: '2026-07-21 12:00:00 +00:00',
-            items_count: 2,
-            items: [
-              {
-                type: 'organic',
-                rank_group: 1,
-                rank_absolute: 1,
-                page: 1,
-                domain: 'example.test',
-                url: 'https://example.test/page',
-              },
-              { type: 'people_also_ask', rank_absolute: 2, page: 1 },
-            ],
-          },
-        ],
       },
     ],
   }

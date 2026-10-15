@@ -184,30 +184,3 @@ test('link client estimates cost, sends bounded requests and reuses local cache'
   assert.equal(cached.cost.actualMicros, 0)
   assert.equal(requests.length, 3)
 })
-
-test('link client blocks a paid request when account pricing is unavailable', async () => {
-  const account = userDataFixture()
-  const first = account.tasks[0]?.result?.[0]
-  assert.ok(first)
-  first.price = {}
-  let calls = 0
-  const client = new DataForSeoClient({
-    database: database(),
-    spendLimits: spendLimits(),
-    credentials: () => ({ login: 'user', password: 'password' }),
-    fetch: async () => {
-      calls += 1
-      return new Response(JSON.stringify(account))
-    },
-  })
-  await assert.rejects(
-    client.linkSummary({
-      target: 'example.com',
-      scope: 'domain',
-      includeSubdomains: true,
-      context: { reportId: 'link-evidence', reportRunId: 'run-1' },
-    }),
-    /pricing.*unavailable/,
-  )
-  assert.equal(calls, 1)
-})

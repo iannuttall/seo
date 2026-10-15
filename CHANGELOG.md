@@ -118,6 +118,8 @@ names the command to use instead when there is one, and stops.
 - Bing Webmaster (`seo providers bing`)
 - IndexNow (`seo indexnow`)
 - `seo reports describe --check`, which only covered agent readiness checks
+- Local spend limits and records (the `limits` and `spend` provider
+  commands). Set spend limits in your provider account.
 
 `seo reset` still deletes Semrush, SerpBase, Bing and IndexNow keys that an
 older version saved.

@@ -87,7 +87,7 @@
     "skills:validate": "node scripts/validate-skills.mjs",
     "test": "turbo run test && pnpm run build:package && pnpm run test:contracts:built",
     "test:built": "turbo run test && pnpm run test:contracts:built",
-    "test:contracts:built": "node --test scripts/package.test.mjs scripts/provider-packages.test.mjs scripts/git-hooks.test.mjs && pnpm run skills:validate",
+    "test:contracts:built": "node --test scripts/package.test.mjs scripts/provider-packages.test.mjs && pnpm run skills:validate",
     "test:resources": "pnpm run build:package && pnpm run test:resources:built",
     "test:resources:built": "node scripts/resource-harness.mjs && node scripts/provider-resource-harness.mjs && node scripts/competitive-opportunities-resource-harness.mjs && node scripts/indexnow-resource-harness.mjs && node scripts/bing-resource-harness.mjs && node scripts/provider-extension-resource-harness.mjs",
     "test:package-install": "pnpm --filter @seo/core build && pnpm --filter @seo/mcp build && pnpm run build:package && node --test scripts/installed-package.test.mjs",

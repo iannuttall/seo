@@ -140,3 +140,20 @@ async function facts(url: string): Promise<PageFacts> {
 export function checkPages(urls: string[]): Promise<PageFacts[]> {
   return Promise.all(urls.slice(0, MAX_PAGES).map(facts))
 }
+
+// A note, not a defect: same-site 302 and 307 redirects are temporary, and a
+// permanent move (such as adding a trailing slash) usually uses 301 or 308.
+export function temporaryRedirectNote(
+  pages: Pick<PageFacts, 'url' | 'status' | 'redirects_to'>[],
+): string | null {
+  const temporary = pages.filter(
+    (page) =>
+      (page.status === 302 || page.status === 307) &&
+      page.redirects_to !== null &&
+      new URL(page.redirects_to).host === new URL(page.url).host,
+  )
+  if (!temporary.length) return null
+  return `Note: 302 and 307 are temporary redirects; a permanent move usually uses 301 or 308. Temporary redirects here: ${temporary
+    .map((page) => `${page.url} (${page.status} to ${page.redirects_to})`)
+    .join('; ')}.`
+}

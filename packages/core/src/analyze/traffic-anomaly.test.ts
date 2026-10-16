@@ -124,11 +124,13 @@ test('aggregates duplicate dates deterministically and exposes provider provenan
 // Regression: a sustained cliff on 4 May was placed on the last 7 days of
 // the default 90-day window, compared with a baseline that held the
 // post-cliff days, and matched to a core update that started 17 days later.
+// One spike day (8x on 5 March) once hid the cliff and left a -90% drop
+// labelled normal.
 test('finds a sustained cliff at its real start date and checks updates there', () => {
   const weekly = [1, 1.08, 1.1, 1.06, 0.98, 0.78, 0.74]
   const rows = Array.from({ length: 90 }, (_, index) => {
     const level = index < 63 ? 300 : 18
-    const noise = 1 + (((index * 37) % 11) - 5) / 100
+    const noise = (1 + (((index * 37) % 11) - 5) / 100) * (index === 3 ? 8 : 1)
     const date = new Date(Date.UTC(2026, 2, 2 + index))
     return row(
       date.toISOString().slice(0, 10),

@@ -91,18 +91,19 @@ test('build contains every public route with one complete SEO contract', () => {
       new RegExp(`<link rel="canonical" href="${canonical}"\\s*/?>`),
     )
     assert.match(html, /<meta property="og:title" content="[^"]+"\s*\/?>/)
-    const ogImage = `https://og.ian.is/?url=${encodeURIComponent(canonical)}&v=2`
-    const escapedOgImage = escapeRegExp(ogImage).replaceAll('&', '(?:&|&amp;)')
-    assert.match(
+    // Each page's sharing card is a file in the build, the same for X.
+    const ogImage = /<meta property="og:image" content="([^"]+)"/.exec(
       html,
-      new RegExp(
-        `<meta property="og:image" content="${escapedOgImage}"\\s*/?>`,
-      ),
+    )?.[1]
+    assert.ok(ogImage, `${relativePath} og:image`)
+    assert.ok(
+      existsSync(resolve(dist, `.${new URL(ogImage).pathname}`)),
+      `${relativePath} card`,
     )
     assert.match(
       html,
       new RegExp(
-        `<meta name="twitter:image" content="${escapedOgImage}"\\s*/?>`,
+        `<meta name="twitter:image" content="${escapeRegExp(ogImage)}"\\s*/?>`,
       ),
     )
     assert.match(

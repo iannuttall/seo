@@ -209,9 +209,9 @@ seo analytics google properties
 seo ai-referrals --property 123456789
 ```
 
-For Clicky, save each site's site ID and sitekey on your
-[account page](https://seoskill.dev/account#clicky). The hosted server and a
-CLI linked with `seo login` both read it:
+For Clicky, save your Clicky account login (every site) or one site's ID and
+sitekey on your [account page](https://seoskill.dev/account#clicky). The
+hosted server and a CLI linked with `seo login` both read them:
 
 ```sh
 seo data --source clicky --site example.com

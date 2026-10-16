@@ -2,6 +2,7 @@ import { type BingCall, bingCall } from './bing/api.js'
 import { readClickySiteKeys } from './clicky/credentials.js'
 import {
   cloudBing,
+  cloudCredentials,
   cloudGoogleEmails,
   cloudGoogleToken,
   cloudKeys,
@@ -121,6 +122,14 @@ export async function localResearchKeys(): Promise<Headers> {
   }
   if (ahrefs?.apiKey) keys.set('x-ahrefs-key', ahrefs.apiKey)
   return keys
+}
+
+// Asks the seoskill.dev account to read its saved Clicky account's sites
+// again, then returns this machine's keys. Null when not linked.
+export async function localRefreshClicky(): Promise<Headers | null> {
+  if (!cloudLinked()) return null
+  await cloudCredentials({ refreshClicky: true })
+  return localResearchKeys()
 }
 
 // The Search Console property this Google login can read that covers a site

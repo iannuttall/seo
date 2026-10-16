@@ -23,8 +23,8 @@ no password or separate signup.
 Sign in with Google at `https://seoskill.dev/account` to:
 
 - **Accounts:** see your linked Google accounts and Bing, and add another,
-- **Keys:** save or remove DataForSEO and Ahrefs keys and Clicky sites
-  (never shown again),
+- **Keys:** save or remove DataForSEO and Ahrefs keys, a Clicky account
+  login and Clicky sites (never shown again),
 - **Machines:** approve a `seo login`, remove a linked machine, or make a
   token for a cloud agent,
 - delete everything, which also revokes the Google sign-ins, or sign out.
@@ -39,8 +39,13 @@ links to the account page.
 DataForSEO and Ahrefs use your own key. Clicky uses each site's site ID and
 sitekey; saving one checks it with Clicky and records the site's domain from
 one recent page, so `seo_data` can match the site by domain or site ID. Each
-Clicky site is one key, `x-clicky-<site id>`. Other analytics tools run on
-your own machine with the `seo` CLI and a provider package.
+Clicky site is one key, `x-clicky-<site id>`. A saved Clicky account login
+(`x-clicky-account`, `src/clicky.ts`) adds every site in the account, marked
+as from the account. When `seo_data` asks for a Clicky site that is not
+saved, the server reads the account's site list again (a linked CLI asks for
+this with `/account/cli/credentials?clicky=refresh`). The login never leaves
+the server. Other analytics tools run on your own machine with the `seo` CLI
+and a provider package.
 
 There are two ways to give a key, and neither puts it in a chat:
 
@@ -103,6 +108,8 @@ A small Cloudflare D1 database (`migrations/`) keeps only:
 - each linked Bing account's tokens and a name made from its sites,
 - your DataForSEO and Ahrefs keys, if you save them,
 - your Clicky sites, if you save them: site ID, sitekey and domain,
+- your Clicky account login, if you save it: username and password, used
+  only to read your Clicky site list,
 - machines linked with `seo login` (a name from the host name and the date
   last used).
 

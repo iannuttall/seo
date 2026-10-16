@@ -14,6 +14,7 @@ import { z } from 'zod'
 // The same skills/seo/SKILL.md that `npx skills add` installs, bundled as
 // text by the Text rule in wrangler.jsonc.
 import skill from '../../../skills/seo/SKILL.md'
+import { refreshClicky } from './clicky.ts'
 import { accountUrl, openForPerson, signInHint } from './google.ts'
 import { events, send } from './telemetry.ts'
 import { deps } from './tools/deps.ts'
@@ -33,6 +34,16 @@ function sharedTool(shared: SharedTool): Tool {
           deps: deps(context.env, context.directory),
           resolveSite: (site) => context.directory.resolve(site),
           keys: async () => context.headers,
+          refreshClicky: async () => {
+            const change = await refreshClicky(context.env, context.userId)
+            if (!change) return null
+            const keys = new Headers(context.headers)
+            for (const name of change.removed) keys.delete(name)
+            for (const [name, value] of Object.entries(change.set)) {
+              keys.set(name, value)
+            }
+            return keys
+          },
           drKey: context.env.AHREFS_DR_KEY,
           accounts: async () => context.directory.accounts(),
           signIn: signInHint(context.env),

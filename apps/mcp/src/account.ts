@@ -4,12 +4,14 @@ import {
   ClickyError,
   clickyDomain,
   clickyKeyValue,
+  clickyLogin,
   clickySites,
   isClickySiteId,
   isClickySitekey,
   listBingSites,
 } from '@seo/core/commands'
 import { loginUrl, newToken } from './cli.ts'
+import { importClicky, removeClickyAccount } from './clicky.ts'
 import { signInPerson } from './oauth.ts'
 import { view } from './page.ts'
 import {
@@ -128,10 +130,10 @@ async function accountPage(
       keys: KEY_FIELDS.map((field) => field.header).filter(
         (name) => keys[name],
       ),
-      clicky: clickySites(new Headers(keys)).map(({ siteId, domain }) => ({
-        siteId,
-        domain,
-      })),
+      clicky: clickySites(new Headers(keys)).map(
+        ({ siteId, domain, account }) => ({ siteId, domain, account }),
+      ),
+      clickyAccount: clickyLogin(new Headers(keys))?.username ?? null,
       machines: machines.map((machine) => ({
         id: machine.id,
         label: machine.label,
@@ -301,6 +303,42 @@ export async function account(
       )
       return redirect(`${home}#clicky`)
     }
+    case '/account/clicky/account': {
+      const username = field('clicky-username').slice(0, 200)
+      const password = String(data?.get('clicky-password') ?? '').slice(0, 200)
+      if (!username || !password) {
+        return accountPage(
+          env,
+          userId,
+          'Clicky needs your Clicky username or email and your Clicky password.',
+          { tab: 'keys' },
+        )
+      }
+      const change = await importClicky(env, userId, {
+        username,
+        password,
+      }).catch((failure: unknown) => failure as Error)
+      if (change instanceof Error) {
+        return accountPage(
+          env,
+          userId,
+          change instanceof ClickyError && change.code === 'auth'
+            ? 'Clicky did not accept that username and password. If you sign in to Clicky with Google, set a Clicky password first, or add each site below.'
+            : 'Could not reach Clicky. Try again in a minute.',
+          { tab: 'keys' },
+        )
+      }
+      const count = Object.keys(change.set).length - 1
+      return accountPage(
+        env,
+        userId,
+        `Clicky account saved: ${count} site${count === 1 ? '' : 's'}. New Clicky sites appear when an agent asks for them.`,
+        { tab: 'keys' },
+      )
+    }
+    case '/account/clicky/account/remove':
+      await removeClickyAccount(env, userId)
+      return redirect(`${home}#clicky`)
     case '/account/clicky/remove': {
       const siteId = field('id')
       if (isClickySiteId(siteId)) {

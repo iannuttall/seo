@@ -1,5 +1,6 @@
 import {
   localError,
+  localRefreshClicky,
   localResearchKeys,
   nodeCommandDeps,
   SeoError,
@@ -336,6 +337,7 @@ export const dataCommand = defineCommand({
           {
             connect:
               'save it at https://seoskill.dev/account#keys and run `seo login`, or run `seo analytics clicky connect` to keep it on this machine only.',
+            refresh: localRefreshClicky,
             call: (offset) =>
               cliCall('data', {
                 source: 'clicky',

@@ -1,6 +1,6 @@
 import { account, accountCallback, bingCallback } from './account.ts'
 import { Directory } from './google.ts'
-import { serveMcp } from './mcp.ts'
+import { serveMcp, serverCard } from './mcp.ts'
 import {
   authorize,
   callback,
@@ -14,8 +14,8 @@ import {
 } from './oauth.ts'
 import { accountsOf, keysOf } from './store.ts'
 
-// seoskill.dev routes /mcp, /oauth/*, /account and /.well-known/oauth-* to
-// this Worker.
+// seoskill.dev routes /mcp, /oauth/*, /account, /.well-known/oauth-* and
+// /.well-known/mcp/* to this Worker.
 // The static site Worker serves everything else.
 
 const cors = {
@@ -56,6 +56,7 @@ async function route(
   if (pathname.startsWith('/.well-known/oauth-authorization-server')) {
     return serverMetadata(env)
   }
+  if (pathname === '/.well-known/mcp/server-card.json') return serverCard()
   if (pathname === '/oauth/register' && method === 'POST') {
     return register(request, env)
   }

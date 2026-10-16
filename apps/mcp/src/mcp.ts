@@ -10,6 +10,7 @@ import {
   type SharedTool,
   SKILL_RESOURCE,
 } from '@seo/core/commands'
+import { z } from 'zod'
 // The same skills/seo/SKILL.md that `npx skills add` installs, bundled as
 // text by the Text rule in wrangler.jsonc.
 import skill from '../../../skills/seo/SKILL.md'
@@ -49,15 +50,34 @@ export const TOOLS: Tool[] = SHARED_TOOLS.map(sharedTool)
 const instructions = (env: Env) => `${MCP_INSTRUCTIONS}
 Crawls and Bing data run on the person's own machine with the open-source CLI, not on this server. ${LOCAL_BING} If you have a shell, run \`npx -y seo crawl https://example.com --json\` or \`npx -y seo internal-links --url https://example.com/page --json\`. When a site or key is missing, open ${accountUrl(env)} in the person's browser (with \`open <url>\` on macOS, \`xdg-open\` on Linux or \`start\` on Windows when you have a shell, otherwise show the link), let them add the Google account or key there, then run the same call again. This server keeps only those sign-ins and keys, encrypted, and no report data.`
 
+const SERVER_INFO = { name: 'seo', title: 'SEO Skill', version: '1.0.0' }
+
+// The static server card at /.well-known/mcp/server-card.json, so
+// directories such as Smithery can list the tools without signing in.
+export function serverCard(): Response {
+  return Response.json({
+    serverInfo: SERVER_INFO,
+    authentication: { required: true, schemes: ['oauth2'] },
+    tools: TOOLS.map((tool) => ({
+      name: tool.name,
+      title: tool.title,
+      description: tool.description,
+      inputSchema: z.toJSONSchema(tool.input, { io: 'input' }),
+      annotations: { readOnlyHint: true, openWorldHint: true },
+    })),
+    resources: [SKILL_RESOURCE],
+    prompts: [],
+  })
+}
+
 // A new stateless server for each request, with JSON responses.
 export async function serveMcp(
   request: Request,
   context: ToolContext,
 ): Promise<Response> {
-  const server = new McpServer(
-    { name: 'seo', title: 'SEO Skill', version: '1.0.0' },
-    { instructions: instructions(context.env) },
-  )
+  const server = new McpServer(SERVER_INFO, {
+    instructions: instructions(context.env),
+  })
   const { name, uri, ...meta } = SKILL_RESOURCE
   server.registerResource(name, uri, meta, async (url) => ({
     contents: [{ uri: url.href, mimeType: meta.mimeType, text: skill }],

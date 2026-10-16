@@ -15,6 +15,7 @@ import {
   enginesText,
   NO_BING_HERE,
 } from './bing.js'
+import { temporaryRedirectNote } from './page-facts.js'
 import { type Detail, presentReport, preview, table } from './present.js'
 import {
   type DateInput,
@@ -437,7 +438,7 @@ export function pageFactsTable(
   checked: PageFacts[],
   origin: string | null,
 ): string {
-  return table(
+  const rows = table(
     checked as unknown as Record<string, unknown>[],
     [
       'url',
@@ -453,6 +454,8 @@ export function pageFactsTable(
     origin,
     320,
   )
+  const note = temporaryRedirectNote(checked)
+  return note ? `${rows}\n${note}` : rows
 }
 
 export type ReportInput = DateInput & {

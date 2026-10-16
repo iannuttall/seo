@@ -1,4 +1,5 @@
 import { latestFinalGscDate, shiftIsoDate } from '../gsc/dates.js'
+import { temporaryRedirectNote } from './page-facts.js'
 import type { Detail } from './present.js'
 import { table } from './present.js'
 import { overviewText, pageFactsTable, siteOverview } from './report.js'
@@ -265,9 +266,12 @@ export async function runLostPages(
         ? table(rows, Object.keys(rows[0] ?? {}), originOf(input.site))
         : 'No pages lost their clicks.',
       'Live checks are fetched now with no redirects followed. Index status is from URL Inspection; Google allows about 2,000 inspections a day per property.',
+      temporaryRedirectNote(rows),
       `Next: ${deps.call('page')} for one URL; ${deps.call('report', { site: input.site, section: 'content-decay' })} for pages that lost part of their clicks.`,
       FACTS_ONLY,
-    ].join('\n\n'),
+    ]
+      .filter(Boolean)
+      .join('\n\n'),
     data: {
       range,
       comparisonRange: before,

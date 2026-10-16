@@ -72,6 +72,10 @@ pnpm deploy:web:dry-run
   each id to the command page that covers it, and
   `scripts/build-redirects.mjs` turns that map into permanent redirects in
   `public/_redirects`.
+- Sharing images are drawn at build time by `src/lib/og-images.ts` with
+  Takumi, one card per indexed page from its H1, written beside its HTML
+  (`/docs/report/index.png`). Pages kept out of search use the home card.
+  Do not bring back a third-party image service.
 - Keep canonical URLs slashless through `src/lib/urls.ts`, Astro config, and
   Wrangler asset handling.
 - Generate exact sitemap XML into `public/` with

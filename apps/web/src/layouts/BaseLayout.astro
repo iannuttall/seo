@@ -1,7 +1,7 @@
 ---
+import { ogImageUrl } from '@/lib/og-image-format'
 import Footer from '@/components/Footer.astro'
 import Header from '@/components/Header.astro'
-import OgTemplate from '@/components/OgTemplate.astro'
 import { site } from '@/lib/site'
 import {
   type PageSchemaType,
@@ -44,7 +44,8 @@ const pageTitle =
     ? `${site.name} | ${title}`
     : `${title} | ${site.name}`
 const canonical = canonicalUrl(canonicalPath)
-const ogImage = `https://og.ian.is/?url=${encodeURIComponent(canonical)}&v=2`
+// Pages kept out of search share the home page's card.
+const ogImage = ogImageUrl(noindex ? canonicalUrl('/') : canonical)
 const isLocalHost = ['localhost', '127.0.0.1', '::1', '[::1]'].includes(
   Astro.url.hostname,
 )
@@ -66,24 +67,6 @@ const schema = pageSchema({
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width" />
-    <script is:inline>
-      if (new URLSearchParams(window.location.search).has('og')) {
-        document.documentElement.dataset.ogPreview = 'true'
-      }
-    </script>
-    <style is:global>
-      html[data-og-preview='true'] [data-site-shell] {
-        display: none;
-      }
-
-      html[data-og-preview='true'],
-      html[data-og-preview='true'] body {
-        width: 1200px;
-        height: 630px;
-        margin: 0;
-        overflow: hidden;
-      }
-    </style>
     <meta name="description" content={description} />
     <meta name="theme-color" content="#fafafa" media="(prefers-color-scheme: light)" />
     <meta name="theme-color" content="#343434" media="(prefers-color-scheme: dark)" />
@@ -130,7 +113,7 @@ const schema = pageSchema({
     <title>{pageTitle}</title>
   </head>
   <body class="min-h-screen bg-background text-foreground antialiased">
-    <div class="flex min-h-screen flex-col" data-site-shell>
+    <div class="flex min-h-screen flex-col">
       <Header />
       <div class="flex-1">
         {
@@ -145,18 +128,6 @@ const schema = pageSchema({
       </div>
       <Footer />
     </div>
-    <template data-og-template data-og-width="1200" data-og-height="630">
-      <OgTemplate title={title} description={description} />
-    </template>
-    <script is:inline>
-      const template = document.querySelector('template[data-og-template]')
-
-      if (document.documentElement.dataset.ogPreview === 'true' && template) {
-        document.body.replaceChildren(template.content.cloneNode(true))
-      }
-
-      window.__OG_READY__ = true
-    </script>
     <script>
       const copyText = async (value: string) => {
         try {

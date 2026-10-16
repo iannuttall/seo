@@ -7,6 +7,7 @@ import { defineConfig } from 'astro/config'
 import rehypeCodeFrame from './scripts/rehype-code-frame.mjs'
 import rehypeRelativeLinks from './scripts/rehype-relative-links.mjs'
 import { llmsTxt } from './llms.config.mjs'
+import { ogImages } from './src/lib/og-images.ts'
 
 export default defineConfig({
   site: process.env.SITE_URL ?? 'https://seoskill.dev',
@@ -18,6 +19,7 @@ export default defineConfig({
   },
   integrations: [
     mdx(),
+    ogImages(),
     agentMarkdown({
       llmsTxt,
       cloudflareHeaders: false,

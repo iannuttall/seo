@@ -43,6 +43,7 @@
     "@seo/mcp": "workspace:*",
     "@types/alpinejs": "^3.13.11",
     "tailwindcss": "^4.3.3",
+    "takumi-js": "2.14.0",
     "typescript": "^6.0.3",
     "wrangler": "^4.112.0"
   }

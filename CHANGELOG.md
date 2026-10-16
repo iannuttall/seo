@@ -1,5 +1,20 @@
 # Changelog
 
+## 0.4.1
+
+Replaces 0.4.0 and 0.3.0, which were removed from npm. Same features.
+
+### Fixed
+
+- The `bing` section says why it has no data: Bing has no data for the
+  site yet, the site is not verified, or it is not in the Bing account.
+- `seo data --source bing` and the `bing` section run without a Google
+  sign-in.
+- Research `competitors` leaves out the target and 12 large platforms such
+  as YouTube and Reddit, and says how many rows it left out.
+- Live page checks note same-site 302 and 307 redirects as temporary.
+- `traffic-drop`: one spike day before a drop no longer hides the drop.
+
 ## 0.4.0
 
 SEO Skill is now only the data layer. Each command fetches your data and

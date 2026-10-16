@@ -6,6 +6,8 @@ import type { z } from 'zod'
 
 export type ToolContext = {
   env: Env
+  // The signed-in person's id.
+  userId: string
   // The person's linked Google and Bing accounts.
   directory: LinkedAccounts
   // The request headers plus stored research keys; headers win.

@@ -92,7 +92,10 @@ export type View =
         bingReady: boolean
         keys: string[]
         // Saved Clicky sites; the domain is null when Clicky had no pages.
-        clicky: { siteId: string; domain: string | null }[]
+        // account is true for a site that came from the Clicky account.
+        clicky: { siteId: string; domain: string | null; account: boolean }[]
+        // The saved Clicky account's username, never its password.
+        clickyAccount: string | null
         // Machines linked with `seo login`.
         machines: { id: string; label: string; usedAt: number | null }[]
         // A `seo login` waiting for this person to approve it.

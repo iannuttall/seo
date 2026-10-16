@@ -120,6 +120,7 @@ async function route(
     for (const [name, value] of request.headers) headers.set(name, value)
     return serveMcp(request, {
       env,
+      userId,
       directory: directory(env, accounts),
       headers,
       waitUntil: (promise) => ctx.waitUntil(promise),

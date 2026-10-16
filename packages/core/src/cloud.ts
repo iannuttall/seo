@@ -76,15 +76,20 @@ function expiresSoon(value: CloudCredentials): boolean {
 }
 
 // The account's linked sign-ins and keys, fetched once and again when a
-// token is about to expire.
-export async function cloudCredentials(): Promise<CloudCredentials> {
+// token is about to expire. With refreshClicky, the account first reads its
+// saved Clicky account's site list again.
+export async function cloudCredentials(
+  options: { refreshClicky?: boolean } = {},
+): Promise<CloudCredentials> {
   const current = credentials ? await credentials.catch(() => null) : null
-  if (current && !expiresSoon(current)) return current
+  if (current && !expiresSoon(current) && !options.refreshClicky) {
+    return current
+  }
   credentials = (async () => {
     const token = cloudToken()
     if (!token) throw new SeoError('AUTH_REQUIRED', notSignedIn())
     const result = await call<CloudCredentials & { message?: string }>(
-      '/account/cli/credentials',
+      `/account/cli/credentials${options.refreshClicky ? '?clicky=refresh' : ''}`,
       { token },
     )
     if (result.status === 401) {

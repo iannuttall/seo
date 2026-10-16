@@ -227,10 +227,50 @@ const keys: { name: string; label: string; type: 'text' | 'password' }[] = [
           <h2 class={heading}>Clicky</h2>
           <p class={note}>
             Adds Clicky visits by landing page, traffic sources and search
-            engines. Add each site with its site ID and sitekey from Clicky
-            (Preferences, Info). Sitekeys are encrypted and never shown again.
+            engines. Add your whole Clicky account, or one site at a time.
           </p>
           <ul class="mt-4 divide-y divide-border text-sm" data-clicky-list></ul>
+
+          <h3 class="mt-6 text-sm font-medium text-foreground">Your Clicky account</h3>
+          <p class={note}>
+            Adds every site in your Clicky account. Sites you add to Clicky
+            later appear when an agent asks for them. Your Clicky password is
+            encrypted and kept for this, so use one you use nowhere else. To
+            stop, remove the account here and change your password at Clicky.
+            It does not work if you sign in to Clicky with Google.
+          </p>
+          <div class="mt-3 flex items-center justify-between gap-4 text-sm" data-clicky-account-row hidden>
+            <span class="min-w-0 break-all text-foreground">
+              <span data-clicky-account></span>
+              <span class="text-primary">saved</span>
+            </span>
+            <form method="post" data-action="/account/clicky/account/remove">
+              <input type="hidden" name="form" />
+              <button type="submit" class={quiet}>Remove account and its sites</button>
+            </form>
+          </div>
+          <form method="post" data-action="/account/clicky/account" class="mt-4 flex flex-col gap-4">
+            <input type="hidden" name="form" />
+            <div class="grid gap-4 sm:grid-cols-2">
+              <label class="flex flex-col gap-1.5 text-sm font-medium text-foreground">
+                <span>Clicky username or email</span>
+                <FormInput name="clicky-username" type="text" autocomplete="off" spellcheck="false" />
+              </label>
+              <label class="flex flex-col gap-1.5 text-sm font-medium text-foreground">
+                <span>Clicky password</span>
+                <FormInput name="clicky-password" type="password" autocomplete="off" spellcheck="false" />
+              </label>
+            </div>
+            <div class="flex flex-wrap gap-3">
+              <button type="submit" class={outline}>Save Clicky account</button>
+            </div>
+          </form>
+
+          <h3 class="mt-6 text-sm font-medium text-foreground">One site</h3>
+          <p class={note}>
+            Use the site ID and sitekey from Clicky (Preferences, Info). The
+            sitekey is encrypted and never shown again.
+          </p>
           <form method="post" data-action="/account/clicky" class="mt-4 flex flex-col gap-4">
             <input type="hidden" name="form" />
             <div class="grid gap-4 sm:grid-cols-2">
@@ -356,7 +396,8 @@ const keys: { name: string; label: string; type: 'text' | 'password' }[] = [
       bing: { label: string; subject: string }[]
       bingReady: boolean
       keys: string[]
-      clicky: { siteId: string; domain: string | null }[]
+      clicky: { siteId: string; domain: string | null; account?: boolean }[]
+      clickyAccount?: string | null
       machines: { id: string; label: string; usedAt: number | null }[]
       login?: { code: string; label: string }
       token?: string
@@ -427,11 +468,16 @@ const keys: { name: string; label: string; type: 'text' | 'password' }[] = [
         const domain = copy.querySelector('[data-clicky-domain]')
         if (domain) domain.textContent = site.domain ?? `Site ${site.siteId}`
         const id = copy.querySelector('[data-clicky-id]')
-        if (id && site.domain) id.textContent = ` · site ${site.siteId}`
+        if (id) {
+          id.textContent = [site.domain ? ` · site ${site.siteId}` : '', site.account ? ' · from account' : ''].join('')
+        }
         const input = copy.querySelector<HTMLInputElement>('[data-clicky-input]')
         if (input) input.value = site.siteId
         clickyList?.append(copy)
       }
+      const clickyAccount = root.querySelector('[data-clicky-account]')
+      if (clickyAccount) clickyAccount.textContent = account.clickyAccount ?? ''
+      show(root.querySelector('[data-clicky-account-row]'), Boolean(account.clickyAccount))
       const machineRow = root.querySelector<HTMLTemplateElement>('[data-machine-row]')
       const machineList = root.querySelector('[data-machine-list]')
       for (const machine of account.machines) {

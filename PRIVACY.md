@@ -39,8 +39,15 @@ Cloudflare D1 with only these things:
 - **Your API keys, if you save them.** A DataForSEO login and password and an
   Ahrefs key.
 - **Your Clicky sites, if you save them.** Each site's numeric site ID,
-  sitekey and domain. The domain comes from one recent page in Clicky when
-  you save the site, so agents can name the site.
+  sitekey and domain. The domain comes from Clicky when you save the site,
+  so agents can name the site.
+- **Your Clicky account login, if you save it.** Your Clicky username or
+  email and your Clicky password. Clicky has no other way to list an
+  account's sites, so the server keeps the password, encrypted, and uses it
+  only to read your Clicky site list: when you save it, and again when an
+  agent asks for a Clicky site that is not saved yet. The password is never
+  sent to a linked machine. Remove it on the account page, and change your
+  password at Clicky if you want to be sure it no longer works.
 - **Machines you link with `seo login`.** A name such as "seo on
   my-laptop", made from the machine's host name, and the date it was last
   used. A linked machine asks for short-lived Google and Bing tokens and your
@@ -67,7 +74,9 @@ Request logs are turned off.
   encrypted person id for up to 30 days.
 - **Outside services.** Google answers its own requests. The provider you
   choose receives your research request under its own policy. Clicky
-  receives the site ID, sitekey, report types and dates for a Clicky request.
+  receives the site ID, sitekey, report types and dates for a Clicky request,
+  and your Clicky username and password when the server reads your Clicky
+  site list.
   Ahrefs receives the domains in research rows for the free Domain Rating
   column. Cloudflare runs the server, stores the encrypted data and handles
   the network requests.

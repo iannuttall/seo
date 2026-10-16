@@ -1,6 +1,7 @@
 import {
   ClickyError,
   type ClickyItem,
+  type ClickyLogin,
   type ClickySite,
   clickyDomain,
   clickyStats,
@@ -16,13 +17,46 @@ import { CommandError, type CommandResult } from './types.js'
 // Nothing here turns them into Google Analytics sessions, users or events.
 
 // Each saved Clicky site is one key, x-clicky-<site id>. Its value is the
-// sitekey, or JSON with the sitekey and the site's domain when it is known.
+// sitekey, or JSON with the sitekey, the site's domain when it is known and
+// whether it came from the saved Clicky account.
 export const CLICKY_KEY_PREFIX = 'x-clicky-'
 
-export type SavedClickySite = ClickySite & { domain: string | null }
+// A saved Clicky account login, as JSON. Its sites are saved as site keys,
+// and read again when a site is not found, so new Clicky sites appear.
+export const CLICKY_ACCOUNT_KEY = 'x-clicky-account'
 
-export function clickyKeyValue(sitekey: string, domain: string | null) {
-  return JSON.stringify({ sitekey, domain })
+export type SavedClickySite = ClickySite & {
+  domain: string | null
+  account: boolean
+}
+
+export function clickyKeyValue(
+  sitekey: string,
+  domain: string | null,
+  account = false,
+) {
+  return JSON.stringify(
+    account ? { sitekey, domain, account } : { sitekey, domain },
+  )
+}
+
+export function clickyLoginValue(login: ClickyLogin) {
+  return JSON.stringify(login)
+}
+
+export function clickyLogin(keys: Headers): ClickyLogin | null {
+  try {
+    const parsed = JSON.parse(keys.get(CLICKY_ACCOUNT_KEY) ?? '') as {
+      username?: unknown
+      password?: unknown
+    }
+    return typeof parsed.username === 'string' &&
+      typeof parsed.password === 'string'
+      ? { username: parsed.username, password: parsed.password }
+      : null
+  } catch {
+    return null
+  }
 }
 
 export function clickySites(keys: Headers): SavedClickySite[] {
@@ -33,19 +67,24 @@ export function clickySites(keys: Headers): SavedClickySite[] {
     if (!isClickySiteId(siteId)) continue
     let sitekey = value.trim()
     let domain: string | null = null
+    let account = false
     if (sitekey.startsWith('{')) {
       try {
         const parsed = JSON.parse(sitekey) as {
           sitekey?: unknown
           domain?: unknown
+          account?: unknown
         }
         sitekey = typeof parsed.sitekey === 'string' ? parsed.sitekey : ''
         domain = typeof parsed.domain === 'string' ? parsed.domain : null
+        account = parsed.account === true
       } catch {
         continue
       }
     }
-    if (isClickySitekey(sitekey)) sites.push({ siteId, sitekey, domain })
+    if (isClickySitekey(sitekey)) {
+      sites.push({ siteId, sitekey, domain, account })
+    }
   }
   return sites.sort((left, right) =>
     left.siteId < right.siteId ? -1 : left.siteId > right.siteId ? 1 : 0,
@@ -70,21 +109,26 @@ function hostOf(value: string): string {
 }
 
 // The saved Clicky site with this site ID, or whose domain is the site's.
-// A site saved without its domain (on this machine) is looked up once.
+// When none matches and a Clicky account is saved, its site list is read
+// again once. A site saved without its domain (on this machine) is looked
+// up once.
 export async function pickClickySite(
-  sites: SavedClickySite[],
+  saved: SavedClickySite[],
   target: string,
   connect: string,
+  refresh?: () => Promise<SavedClickySite[] | null>,
 ): Promise<SavedClickySite> {
-  if (!sites.length) {
-    throw new CommandError(
-      'NO_KEY',
-      `No Clicky site is saved. Add its site ID and sitekey (Clicky, Preferences, Info): ${connect}`,
-    )
-  }
   const host = hostOf(target)
   const match = (site: SavedClickySite) =>
     site.siteId === target.trim() || site.domain === host
+  let sites = saved
+  if (!sites.some(match) && refresh) sites = (await refresh()) ?? sites
+  if (!sites.length) {
+    throw new CommandError(
+      'NO_KEY',
+      `No Clicky site is saved. Add your Clicky account, or one site's ID and sitekey (Clicky, Preferences, Info): ${connect}`,
+    )
+  }
   const found = sites.find(match)
   if (found) return found
   if (!isClickySiteId(target)) {
@@ -166,12 +210,23 @@ const LIMIT = 1000
 export async function runClickyRows(
   input: ClickyRowsInput,
   keys: Headers,
-  options: { connect: string; call: (offset: number) => string },
+  options: {
+    connect: string
+    call: (offset: number) => string
+    // Reads the saved Clicky account's sites again; null without one.
+    refresh?: () => Promise<Headers | null>
+  },
 ): Promise<CommandResult> {
+  const refresh = options.refresh
   const site = await pickClickySite(
     clickySites(keys),
     input.site,
     options.connect,
+    refresh &&
+      (async () => {
+        const fresh = await refresh().catch(() => null)
+        return fresh && clickySites(fresh)
+      }),
   )
   const range = clickyRange(input)
   const offset = input.offset ?? 0

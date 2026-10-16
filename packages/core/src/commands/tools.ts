@@ -30,6 +30,9 @@ export type ToolSurface = {
   resolveSite: (site: string) => Promise<string>
   // Provider keys as header-style names, such as x-ahrefs-key.
   keys: () => Promise<Headers>
+  // Reads the saved Clicky account's sites again and returns the new keys,
+  // or null when no Clicky account is saved.
+  refreshClicky?: () => Promise<Headers | null>
   // The Ahrefs key for the free Domain Rating column, when there is one.
   drKey?: string | null
   // Every Google sign-in on this surface, for listing and Google Analytics.
@@ -290,6 +293,7 @@ export const SHARED_TOOLS: SharedTool[] = [
             connect: surface.connect,
             call: (offset) =>
               `seo_data with source "clicky", site "${input.site}", detail "rows", offset ${offset}`,
+            refresh: surface.refreshClicky,
           },
         )
       }

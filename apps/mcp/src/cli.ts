@@ -1,3 +1,5 @@
+import { CLICKY_ACCOUNT_KEY } from '@seo/core/commands'
+import { refreshClicky } from './clicky.ts'
 import { freshAccess } from './google.ts'
 import { seal, unseal } from './seal.ts'
 import {
@@ -128,11 +130,17 @@ export async function credentials(
 ): Promise<Response> {
   const link = await linkOf(request, env)
   if (!link) return unlinked()
-  const [accounts, keys] = await Promise.all([
+  // The CLI asks again with ?clicky=refresh when a Clicky site is missing.
+  if (new URL(request.url).searchParams.get('clicky') === 'refresh') {
+    await refreshClicky(env, link.userId).catch(() => null)
+  }
+  const [accounts, saved] = await Promise.all([
     accountsOf(env, link.userId),
     keysOf(env, link.userId),
     touchCliLink(env, link.id),
   ])
+  // The Clicky account login stays on the server; machines get its sites.
+  const { [CLICKY_ACCOUNT_KEY]: _, ...keys } = saved
   const linked = await Promise.all(
     accounts.map(async (account) => {
       const fresh = await freshAccess(env, account).catch(

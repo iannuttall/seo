@@ -103,3 +103,81 @@ export async function clickyDomain(site: ClickySite): Promise<string | null> {
     return null
   }
 }
+
+// A Clicky account login: the username or email and the account password.
+// Clicky has no token for the account API, and an account that signs in to
+// Clicky with Google has no password, so this does not work for it.
+export type ClickyLogin = { username: string; password: string }
+
+export type ClickyAccountSite = ClickySite & { domain: string | null }
+
+// The password goes in the POST body, not in the web address.
+const ACCOUNT_ENDPOINT =
+  'https://api.clicky.com/api/account/sites?output=json&app=seo'
+
+// Every site in a Clicky account, with its site ID, sitekey and domain.
+// The admin sitekeys Clicky also returns are dropped here.
+export async function clickyAccountSites(
+  login: ClickyLogin,
+): Promise<ClickyAccountSite[]> {
+  const response = await fetch(ACCOUNT_ENDPOINT, {
+    method: 'POST',
+    headers: { 'content-type': 'application/x-www-form-urlencoded' },
+    body: new URLSearchParams({
+      username: login.username,
+      password: login.password,
+    }),
+  }).catch(() => {
+    throw new ClickyError('remote', 'Could not reach Clicky. Try again.')
+  })
+  if (!response.ok) {
+    throw new ClickyError('remote', `Clicky returned ${response.status}.`)
+  }
+  const body = await readJson<unknown>(response, 'Clicky', {
+    maxBytes: MAX_BYTES,
+  })
+  const items: Record<string, unknown>[] = []
+  const walk = (value: unknown) => {
+    if (Array.isArray(value)) value.forEach(walk)
+    else if (value && typeof value === 'object') {
+      const record = value as Record<string, unknown>
+      if ('error' in record || 'site_id' in record || 'sitekey' in record) {
+        items.push(record)
+      }
+      for (const nested of ['items', 'dates', 'sites']) walk(record[nested])
+    }
+  }
+  walk(body)
+  const failed = items.find((item) => typeof item.error === 'string')
+  if (failed) {
+    throw /password|username|match|login|google/iu.test(String(failed.error))
+      ? new ClickyError(
+          'auth',
+          'Clicky did not accept that username and password.',
+        )
+      : new ClickyError(
+          'remote',
+          `Clicky: ${String(failed.error).slice(0, 200)}`,
+        )
+  }
+  const sites: ClickyAccountSite[] = []
+  for (const item of items) {
+    const siteId = String(item.site_id ?? item.id ?? '').trim()
+    const sitekey = String(item.sitekey ?? '').trim()
+    if (!isClickySiteId(siteId) || !isClickySitekey(sitekey)) continue
+    sites.push({ siteId, sitekey, domain: hostOf(item.hostname ?? item.url) })
+  }
+  return sites
+}
+
+function hostOf(value: unknown): string | null {
+  if (typeof value !== 'string' || !value.trim()) return null
+  const text = value.trim().toLowerCase()
+  try {
+    return new URL(
+      text.includes('://') ? text : `https://${text}`,
+    ).hostname.replace(/^www\./u, '')
+  } catch {
+    return null
+  }
+}

@@ -118,7 +118,7 @@ const helpSections: HelpSection[] = [
         'seo research <action>',
         'Keyword, SERP, competitor and backlink data from your key',
       ],
-      ['seo data', 'Raw Search Console or Bing rows'],
+      ['seo data', 'Raw Search Console, Bing or Clicky rows'],
       ['seo crawl', 'Crawl a site and list technical issues'],
       ['seo internal-links', 'Pages that could link to a target page'],
     ],

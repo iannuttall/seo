@@ -14,6 +14,7 @@ import {
   type ResearchAction,
   type ResearchProvider,
   runBingRows,
+  runClickyRows,
   runCompare,
   runLostPages,
   runPage,
@@ -274,7 +275,7 @@ export const dataCommand = defineCommand({
   meta: {
     name: 'data',
     description:
-      'Raw Search Console or Bing rows for any dimensions, beside the previous period',
+      'Raw Search Console or Bing rows beside the previous period, or Clicky landing pages',
   },
   args: {
     site: {
@@ -284,7 +285,7 @@ export const dataCommand = defineCommand({
     source: {
       type: 'string',
       description:
-        'search_console (default) or bing. Bing takes the first dimension, query or page.',
+        'search_console (default), bing or clicky. Bing takes the first dimension, query or page. Clicky takes the site or its Clicky site ID.',
     },
     dimensions: {
       type: 'string',
@@ -314,8 +315,38 @@ export const dataCommand = defineCommand({
       )
     }
     const source = stringArg(args.source) ?? 'search_console'
-    if (!['search_console', 'bing'].includes(source)) {
-      throw new SeoError('INVALID_INPUT', '--source is search_console or bing.')
+    if (!['search_console', 'bing', 'clicky'].includes(source)) {
+      throw new SeoError(
+        'INVALID_INPUT',
+        '--source is search_console, bing or clicky.',
+      )
+    }
+    if (source === 'clicky') {
+      const site = requireSite(stringArg(args.site))
+      await run(args, async () =>
+        runClickyRows(
+          {
+            site,
+            startDate: stringArg(args['start-date']),
+            endDate: stringArg(args['end-date']),
+            detail: detailArg(args),
+            offset: numberArg(args.offset),
+          },
+          await localResearchKeys(),
+          {
+            connect:
+              'save it at https://seoskill.dev/account#keys and run `seo login`, or run `seo analytics clicky connect` to keep it on this machine only.',
+            call: (offset) =>
+              cliCall('data', {
+                source: 'clicky',
+                site,
+                detail: 'rows',
+                offset,
+              }),
+          },
+        ),
+      )
+      return
     }
     // Bing needs only Bing: its own site list matches the site.
     if (source === 'bing') {

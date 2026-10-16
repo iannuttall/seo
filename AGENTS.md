@@ -168,8 +168,10 @@ Useful core areas:
   naming inside this implementation boundary only. Product commands, config,
   report fields, MCP inputs, docs, and UI use `googleAnalytics` or “Google
   Analytics”.
-- `packages/core/src/clicky`: Clicky API adapter and sitekey storage boundary.
-  Commands take the site ID. Keep sitekeys in the managed secret store.
+- `packages/core/src/clicky`: the Clicky API client (`api.ts`, Worker-safe)
+  and the local sitekey store. `seo_data` and `seo data --source clicky`
+  read a saved Clicky site (key `x-clicky-<site id>`) by its domain or
+  site ID through `packages/core/src/commands/clicky.ts`.
 
 ## One Way To Run
 
@@ -256,8 +258,8 @@ It then prints `seo sites`, then `seo report --site <site>`.
   provider package tools (`seo_list_providers`, `seo_describe_provider`,
   `seo_run_provider`), because they need the person's machine.
 - The hosted server keeps only a person id, the linked Google and Bing
-  accounts, saved research keys and machines linked with `seo login`, sealed
-  with `SEAL_KEY` in Cloudflare D1.
+  accounts, saved research keys, saved Clicky sites and machines linked with
+  `seo login`, sealed with `SEAL_KEY` in Cloudflare D1.
   It keeps no report data, provider rows, site lists or request logs, and
   Workers Logs stay off. The token the client keeps carries only the person
   id. Key headers win over saved keys and are used for that request only.

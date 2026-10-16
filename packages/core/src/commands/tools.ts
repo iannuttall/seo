@@ -1,6 +1,7 @@
 import { z } from 'zod'
 import { analyticsSignIn, runAnalyticsRows } from './analytics.js'
 import { runBingRows } from './bing.js'
+import { clickyLabel, clickySites, runClickyRows } from './clicky.js'
 import { runReport, SECTION_IDS, SECTIONS } from './report.js'
 import {
   RESEARCH_ACTIONS,
@@ -78,12 +79,8 @@ export const DATA_SOURCES = [
   'search_console',
   'google_analytics',
   'bing',
+  'clicky',
 ] as const
-
-// Other analytics sources run on the person's machine through provider
-// packages, like crawls. Agents with a shell use the CLI for them.
-export const LOCAL_ANALYTICS =
-  'Clicky and other analytics run on the person’s machine with the CLI and a provider package: `npx -y seo providers install @seoskill/clicky-provider`, connect it once with `seo providers connect clicky`, then `npx -y seo analytics clicky report --json`. `seo providers list` shows installed providers.'
 
 export type SharedTool = {
   name: string
@@ -117,6 +114,7 @@ export const SHARED_TOOLS: SharedTool[] = [
       runSites({
         accounts: await surface.accounts(),
         keys: await surface.keys(),
+        clicky: clickySites(await surface.keys()).map(clickyLabel),
         signIn: surface.signIn,
         bing: surface.deps.bing ? await surface.deps.bing() : undefined,
         connect: surface.connect,
@@ -250,14 +248,14 @@ export const SHARED_TOOLS: SharedTool[] = [
     name: 'seo_data',
     command: 'data',
     title: 'Raw rows',
-    description: `Raw rows for questions the report does not answer. search_console (default): rows for any dimensions, each with the previous period and the change; page and query narrow to rows whose URL or query contains that text. google_analytics: landing pages for visits from search, with Google Analytics’ own metric names. bing: Bing Webmaster query or page rows (first dimension) for the same site, by week. ${LOCAL_ANALYTICS}`,
+    description: `Raw rows for questions the report does not answer. search_console (default): rows for any dimensions, each with the previous period and the change; page and query narrow to rows whose URL or query contains that text. google_analytics: landing pages for visits from search, with Google Analytics’ own metric names. bing: Bing Webmaster query or page rows (first dimension) for the same site, by week. clicky: landing-page visits, traffic sources and search engines from a Clicky site the person saved (site is its domain or Clicky site ID; at most 31 days).`,
     input: z.object({
       source: z.enum(DATA_SOURCES).default('search_console'),
       site: z
         .string()
         .min(1)
         .describe(
-          'search_console and bing: the property or site. google_analytics: numeric property id from seo_sites.',
+          'search_console and bing: the property or site. google_analytics: numeric property id from seo_sites. clicky: the site or its Clicky site ID.',
         ),
       dimensions: z
         .array(z.enum(DIMENSIONS))
@@ -278,6 +276,23 @@ export const SHARED_TOOLS: SharedTool[] = [
       ...detail,
     }),
     run: async (surface, input) => {
+      if (input.source === 'clicky') {
+        return runClickyRows(
+          {
+            site: input.site,
+            startDate: input.start_date,
+            endDate: input.end_date,
+            detail: input.detail,
+            offset: input.offset,
+          },
+          await surface.keys(),
+          {
+            connect: surface.connect,
+            call: (offset) =>
+              `seo_data with source "clicky", site "${input.site}", detail "rows", offset ${offset}`,
+          },
+        )
+      }
       if (input.source === 'bing') {
         return runBingRows(
           {
@@ -366,10 +381,10 @@ export async function runSharedTool(
   return tool.run(surface, parsed.data as never)
 }
 
-export const MCP_INSTRUCTIONS = `SEO Skill reads the person's own Search Console, Google Analytics, Bing Webmaster Tools and optional keyword and analytics accounts, and returns facts with their dates and limits. It gives no advice.
+export const MCP_INSTRUCTIONS = `SEO Skill reads the person's own Search Console, Google Analytics, Bing Webmaster Tools, Clicky and optional keyword accounts, and returns facts with their dates and limits. It gives no advice.
 1. seo_sites: the properties the connected accounts can read.
 2. seo_report: the main report. Run it without a section first; it shows the overview and every section's count and top rows. Then ask for the one section you need.
-3. seo_page for one URL, seo_compare for before and after a date, seo_index for pages that lost their clicks, seo_research for keyword, competitor and backlink data from the DataForSEO or Ahrefs key the person saved, seo_data for raw rows.
+3. seo_page for one URL, seo_compare for before and after a date, seo_index for pages that lost their clicks, seo_research for keyword, competitor and backlink data from the DataForSEO or Ahrefs key the person saved, seo_data for raw rows, including Google Analytics, Bing and Clicky.
 Show the person the facts that matter, for example in a table or a small dashboard, and decide with them what to change. Do not edit pages without their approval.`
 
 // How an MCP surface writes "run this next": the tool name and its inputs.

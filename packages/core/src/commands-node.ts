@@ -1,4 +1,5 @@
 import { type BingCall, bingCall } from './bing/api.js'
+import { readClickySiteKeys } from './clicky/credentials.js'
 import {
   cloudBing,
   cloudGoogleEmails,
@@ -14,6 +15,7 @@ import type {
   IndexStatus,
 } from './commands/index.js'
 import {
+  CLICKY_KEY_PREFIX,
   CommandError,
   checkPages,
   indexStatusFrom,
@@ -101,12 +103,18 @@ export async function localAccounts(): Promise<GoogleAccount[]> {
 // Provider keys, as header-style names: keys saved on this machine win over
 // the seoskill.dev account's. Keys go only to their provider.
 export async function localResearchKeys(): Promise<Headers> {
-  const [dataForSeo, ahrefs, saved] = await Promise.all([
+  const [dataForSeo, ahrefs, clicky, saved] = await Promise.all([
     readDataForSeoCredentials().catch(() => undefined),
     readAhrefsApiKey().catch(() => undefined),
+    readClickySiteKeys().catch(() => ({})),
     cloudLinked() ? cloudKeys().catch(() => ({})) : {},
   ])
   const keys = new Headers(saved)
+  // A Clicky site saved on the account also knows its domain, so it stays.
+  for (const [siteId, sitekey] of Object.entries(clicky)) {
+    const name = `${CLICKY_KEY_PREFIX}${siteId}`
+    if (!keys.has(name)) keys.set(name, sitekey)
+  }
   if (dataForSeo) {
     keys.set('x-dataforseo-login', dataForSeo.login)
     keys.set('x-dataforseo-password', dataForSeo.password)

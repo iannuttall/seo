@@ -8,6 +8,7 @@ import {
   pendingCloudLogin,
   startCloudLogin,
 } from '@seo/core'
+import { CLICKY_KEY_PREFIX } from '@seo/core/commands'
 import { defineCommand } from 'citty'
 import { jsonFlag } from '../args.js'
 import { canPrompt, printJson } from '../utils.js'
@@ -25,7 +26,13 @@ async function linkedSummary() {
     status: 'linked' as const,
     google: google.map((item) => item.email),
     bing: bing.length,
-    keys: Object.keys(keys).filter((name) => name !== 'x-dataforseo-login'),
+    keys: Object.keys(keys).filter(
+      (name) =>
+        name !== 'x-dataforseo-login' && !name.startsWith(CLICKY_KEY_PREFIX),
+    ),
+    clicky: Object.keys(keys).filter((name) =>
+      name.startsWith(CLICKY_KEY_PREFIX),
+    ).length,
   }
 }
 
@@ -35,6 +42,7 @@ function describe(summary: Awaited<ReturnType<typeof linkedSummary>>) {
     `Google: ${summary.google.join(', ') || 'none'}.`,
     `Bing: ${summary.bing ? `${summary.bing} linked` : `not connected (add it at ${CLOUD_URL}/account)`}.`,
     `Keys: ${summary.keys.length ? summary.keys.map((key) => key.replace(/^x-|-(key|password)$/g, '')).join(', ') : 'none'}.`,
+    `Clicky: ${summary.clicky ? `${summary.clicky} site${summary.clicky === 1 ? '' : 's'}` : 'none'}.`,
     'Next: seo sites, then seo report --site <site>.',
   ].join('\n')
 }

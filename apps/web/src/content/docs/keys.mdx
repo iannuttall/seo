@@ -1,6 +1,6 @@
 ---
 title: API keys for the hosted MCP
-description: Add your own DataForSEO or Ahrefs key to the hosted MCP for keyword and competitor research. Save it encrypted on your account page, or send it as a header.
+description: Add your own DataForSEO or Ahrefs key for keyword and competitor research, and your Clicky sites for analytics. Save them encrypted on your account page.
 heading: API keys
 lead: Keyword and competitor research uses your own DataForSEO or Ahrefs account. Save the key on your account page, or send it as a header.
 ---
@@ -12,8 +12,9 @@ Search Console and Google Analytics come with your Google sign-in. Research is o
 | Provider | What it adds | Tool |
 | --- | --- | --- |
 | DataForSEO or Ahrefs | Keyword metrics, ranked keywords, SERPs, competitors and backlinks | `seo_research` |
+| Clicky | Visits by landing page, traffic sources and search engines | `seo_data` |
 
-Analytics tools other than Google Analytics, such as Clicky, run on your own machine with the CLI. The [analytics guide](/docs/analytics) explains how.
+Clicky needs one entry per site: its site ID and sitekey. The [analytics guide](/docs/analytics#clicky) explains how to find them.
 
 Research rows also get a free Domain Rating column, with no key needed. It is Domain Rating by [Ahrefs](https://ahrefs.com).
 
@@ -22,9 +23,9 @@ Research rows also get a free Domain Rating column, with no key needed. It is Do
 This works in every client, and you never paste a key into a chat.
 
 1. Open your [account page](https://seoskill.dev/account) and sign in with Google.
-2. Under **API keys**, enter the keys you want and choose **Save keys**.
+2. Open the **Keys** tab. Enter the DataForSEO or Ahrefs keys you want and choose **Save keys**, or add a Clicky site.
 
-Saved keys are encrypted and never shown again. To change one, enter the new value and save. **Remove all keys** deletes them.
+Saved keys are encrypted and never shown again. To change one, enter the new value and save. **Remove these keys** deletes the DataForSEO and Ahrefs keys, and **Remove** next to a Clicky site deletes that site.
 
 The CLI uses the same keys once you link it to your account with `seo login`.
 

@@ -1,4 +1,14 @@
-import { bingCall, listBingSites } from '@seo/core/commands'
+import {
+  bingCall,
+  CLICKY_KEY_PREFIX,
+  ClickyError,
+  clickyDomain,
+  clickyKeyValue,
+  clickySites,
+  isClickySiteId,
+  isClickySitekey,
+  listBingSites,
+} from '@seo/core/commands'
 import { loginUrl, newToken } from './cli.ts'
 import { signInPerson } from './oauth.ts'
 import { view } from './page.ts'
@@ -24,8 +34,8 @@ import {
 } from './store.ts'
 
 // The account page: the person's linked Google accounts, Bing, research
-// keys and machines linked with `seo login`, with add, remove and delete
-// everything. Google sign-in only; a cookie holds the sealed person id for
+// keys, Clicky sites and machines linked with `seo login`, with add, remove
+// and delete everything. Google sign-in only; a cookie holds the sealed person id for
 // 30 days.
 
 const SESSION_TTL = 30 * 24 * 60 * 60_000
@@ -88,7 +98,7 @@ async function accountPage(
   env: Env,
   userId: string,
   message = '',
-  extra: { link?: string; token?: string } = {},
+  extra: { link?: string; token?: string; tab?: string } = {},
 ): Promise<Response> {
   const [accounts, keys, machines, login] = await Promise.all([
     accountsOf(env, userId),
@@ -118,6 +128,10 @@ async function accountPage(
       keys: KEY_FIELDS.map((field) => field.header).filter(
         (name) => keys[name],
       ),
+      clicky: clickySites(new Headers(keys)).map(({ siteId, domain }) => ({
+        siteId,
+        domain,
+      })),
       machines: machines.map((machine) => ({
         id: machine.id,
         label: machine.label,
@@ -127,6 +141,7 @@ async function accountPage(
         ? { login: { code: login.code ?? '', label: login.label } }
         : {}),
       ...(extra.token ? { token: extra.token } : {}),
+      ...(extra.tab ? { tab: extra.tab } : {}),
     },
   })
 }
@@ -220,7 +235,7 @@ export async function account(
       }
       await removeAccount(env, userId, provider, target.subject)
       if (provider === 'google') await revokeGoogle(target.refresh)
-      return redirect(home)
+      return redirect(`${home}#${provider}`)
     }
     case '/account/link': {
       const code = linkCode(field('code'))
@@ -249,10 +264,50 @@ export async function account(
         const value = field(key.header)
         if (value) await setKey(env, userId, key.header, value.slice(0, 500))
       }
-      return redirect(home)
+      return redirect(`${home}#keys`)
     case '/account/keys/remove':
       for (const key of KEY_FIELDS) await setKey(env, userId, key.header, null)
-      return redirect(home)
+      return redirect(`${home}#keys`)
+    case '/account/clicky': {
+      const siteId = field('clicky-site')
+      const sitekey = field('clicky-sitekey')
+      if (!isClickySiteId(siteId) || !isClickySitekey(sitekey)) {
+        return accountPage(
+          env,
+          userId,
+          'Clicky needs the numeric site ID and the sitekey from Clicky (Preferences, Info).',
+          { tab: 'keys' },
+        )
+      }
+      // Checks the key, and finds the site's domain so agents can name it.
+      const domain = await clickyDomain({ siteId, sitekey }).catch(
+        (failure: unknown) => failure as Error,
+      )
+      if (domain instanceof Error) {
+        return accountPage(
+          env,
+          userId,
+          domain instanceof ClickyError && domain.code === 'auth'
+            ? 'Clicky did not accept that site ID and sitekey. Check them in Clicky (Preferences, Info).'
+            : 'Could not check the key with Clicky. Try again in a minute.',
+          { tab: 'keys' },
+        )
+      }
+      await setKey(
+        env,
+        userId,
+        `${CLICKY_KEY_PREFIX}${siteId}`,
+        clickyKeyValue(sitekey, domain),
+      )
+      return redirect(`${home}#clicky`)
+    }
+    case '/account/clicky/remove': {
+      const siteId = field('id')
+      if (isClickySiteId(siteId)) {
+        await setKey(env, userId, `${CLICKY_KEY_PREFIX}${siteId}`, null)
+      }
+      return redirect(`${home}#clicky`)
+    }
     case '/account/delete': {
       const accounts = await accountsOf(env, userId)
       await Promise.all(

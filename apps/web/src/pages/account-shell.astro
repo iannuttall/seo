@@ -16,7 +16,12 @@ const panel = 'rounded-lg bg-muted p-6'
 const heading = 'text-base font-medium text-foreground'
 const note = 'mt-1 text-sm/6 text-foreground-muted'
 const description =
-  'The Google accounts, Bing and API keys your agents use, through the hosted MCP server or the seo CLI.'
+  'The Google accounts, Bing, API keys and Clicky sites your agents use, through the hosted MCP server or the seo CLI.'
+const tabs = [
+  { id: 'accounts', label: 'Accounts' },
+  { id: 'keys', label: 'Keys' },
+  { id: 'machines', label: 'Machines' },
+]
 const keys: { name: string; label: string; type: 'text' | 'password' }[] = [
   { name: 'x-dataforseo-login', label: 'DataForSEO API login', type: 'text' },
   {
@@ -94,27 +99,59 @@ const keys: { name: string; label: string; type: 'text' | 'password' }[] = [
     </section>
 
     <section data-view="account" hidden>
-      <div class="flex flex-col gap-4">
-        <div class={panel} data-login hidden>
-          <h2 class={heading}>Link the seo CLI</h2>
-          <p class="mt-1 text-sm/6 text-foreground">
-            <strong class="font-medium" data-login-label></strong> asked to
-            link with code <strong class="font-mono font-medium" data-login-code></strong>.
-          </p>
-          <p class={note}>
-            Only link it if you just ran <code>seo login</code> yourself. That
-            machine can then use your Google accounts, Bing and keys.
-          </p>
-          <div class="mt-4 flex flex-wrap items-center gap-3">
-            <form method="post" data-action="/account/link">
-              <input type="hidden" name="form" />
-              <input type="hidden" name="code" data-login-input />
-              <button type="submit" class={primary}>Link this machine</button>
-            </form>
-            <a href="/account" data-href="/account" class={outline}>Cancel</a>
-          </div>
+      <div class:list={[panel, 'mb-6']} data-login hidden>
+        <h2 class={heading}>Link the seo CLI</h2>
+        <p class="mt-1 text-sm/6 text-foreground">
+          <strong class="font-medium" data-login-label></strong> asked to
+          link with code <strong class="font-mono font-medium" data-login-code></strong>.
+        </p>
+        <p class={note}>
+          Only link it if you just ran <code>seo login</code> yourself. That
+          machine can then use your Google accounts, Bing and keys.
+        </p>
+        <div class="mt-4 flex flex-wrap items-center gap-3">
+          <form method="post" data-action="/account/link">
+            <input type="hidden" name="form" />
+            <input type="hidden" name="code" data-login-input />
+            <button type="submit" class={primary}>Link this machine</button>
+          </form>
+          <a href="/account" data-href="/account" class={outline}>Cancel</a>
         </div>
+      </div>
 
+      {/* The ilo toggle group from SetupCommands. Each tab has a hash, and
+          the #google, #bing, #clicky and #machines links open the tab that
+          holds them. */}
+      <div
+        role="tablist"
+        aria-label="Account sections"
+        class="inline-flex h-9 max-w-full items-center gap-1 overflow-x-auto rounded-lg bg-muted p-0.5 text-foreground-muted"
+      >
+        {
+          tabs.map((tab, index) => (
+            <button
+              type="button"
+              role="tab"
+              id={`account-tab-${tab.id}`}
+              aria-controls={`account-panel-${tab.id}`}
+              aria-selected={index === 0 ? 'true' : 'false'}
+              tabindex={index === 0 ? undefined : -1}
+              data-account-tab={tab.id}
+              class="inline-flex h-8 min-w-7 shrink-0 items-center justify-center rounded-md border border-transparent px-3 text-sm font-medium outline-none transition-colors hover:text-foreground focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/20 aria-selected:bg-card aria-selected:text-foreground aria-selected:shadow-xs"
+            >
+              {tab.label}
+            </button>
+          ))
+        }
+      </div>
+
+      <div
+        role="tabpanel"
+        id="account-panel-accounts"
+        aria-labelledby="account-tab-accounts"
+        data-account-panel="accounts"
+        class="mt-4 flex flex-col gap-4"
+      >
         <div class={panel} id="google">
           <h2 class={heading}>Google accounts</h2>
           <p class={note}>Each report uses the account that can read the site.</p>
@@ -125,7 +162,7 @@ const keys: { name: string; label: string; type: 'text' | 'password' }[] = [
           </form>
         </div>
 
-        <div class={panel} data-bing-panel>
+        <div class={panel} id="bing" data-bing-panel>
           <h2 class={heading}>Bing Webmaster Tools</h2>
           <p class={note}>
             Adds Bing clicks, impressions, queries and pages beside Search
@@ -138,13 +175,22 @@ const keys: { name: string; label: string; type: 'text' | 'password' }[] = [
             <button type="submit" class={outline} data-bing-button>Connect Bing</button>
           </form>
         </div>
+      </div>
 
+      <div
+        role="tabpanel"
+        id="account-panel-keys"
+        aria-labelledby="account-tab-keys"
+        data-account-panel="keys"
+        class="mt-4 flex flex-col gap-4"
+        hidden
+      >
         <div class={panel} id="keys">
-          <h2 class={heading}>API keys</h2>
+          <h2 class={heading}>DataForSEO and Ahrefs</h2>
           <p class={note}>
             For keyword, SERP, competitor and backlink data from your own
-            DataForSEO or Ahrefs account. Each request uses your credits there.
-            Saved keys are encrypted and never shown again.
+            account. Each request uses your credits there. Saved keys are
+            encrypted and never shown again.
           </p>
           <form method="post" data-action="/account/keys" class="mt-4 flex flex-col gap-4">
             <input type="hidden" name="form" />
@@ -173,10 +219,45 @@ const keys: { name: string; label: string; type: 'text' | 'password' }[] = [
           </form>
           <form method="post" data-action="/account/keys/remove" class="mt-3" data-keys-remove hidden>
             <input type="hidden" name="form" />
-            <button type="submit" class={quiet}>Remove all keys</button>
+            <button type="submit" class={quiet}>Remove these keys</button>
           </form>
         </div>
 
+        <div class={panel} id="clicky">
+          <h2 class={heading}>Clicky</h2>
+          <p class={note}>
+            Adds Clicky visits by landing page, traffic sources and search
+            engines. Add each site with its site ID and sitekey from Clicky
+            (Preferences, Info). Sitekeys are encrypted and never shown again.
+          </p>
+          <ul class="mt-4 divide-y divide-border text-sm" data-clicky-list></ul>
+          <form method="post" data-action="/account/clicky" class="mt-4 flex flex-col gap-4">
+            <input type="hidden" name="form" />
+            <div class="grid gap-4 sm:grid-cols-2">
+              <label class="flex flex-col gap-1.5 text-sm font-medium text-foreground">
+                <span>Site ID</span>
+                <FormInput name="clicky-site" type="text" inputmode="numeric" autocomplete="off" spellcheck="false" />
+              </label>
+              <label class="flex flex-col gap-1.5 text-sm font-medium text-foreground">
+                <span>Sitekey</span>
+                <FormInput name="clicky-sitekey" type="password" autocomplete="off" spellcheck="false" />
+              </label>
+            </div>
+            <div class="flex flex-wrap gap-3">
+              <button type="submit" class={outline}>Add Clicky site</button>
+            </div>
+          </form>
+        </div>
+      </div>
+
+      <div
+        role="tabpanel"
+        id="account-panel-machines"
+        aria-labelledby="account-tab-machines"
+        data-account-panel="machines"
+        class="mt-4 flex flex-col gap-4"
+        hidden
+      >
         <div class={panel} id="machines">
           <h2 class={heading}>Linked machines</h2>
           <p class={note}>
@@ -201,24 +282,23 @@ const keys: { name: string; label: string; type: 'text' | 'password' }[] = [
             <button type="submit" class={outline}>Make a token for a cloud agent</button>
           </form>
         </div>
+      </div>
 
-        <div class={panel}>
-          <h2 class={heading}>Delete everything</h2>
-          <p class={note}>
-            Removes your Google and Bing sign-ins, keys and linked machines
-            from SEO Skill and revokes the Google sign-ins. Your agents will ask you to sign in
-            again.
-          </p>
-          <div class="mt-4 flex flex-wrap items-center gap-3">
-            <form method="post" data-action="/account/delete">
-              <input type="hidden" name="form" />
-              <button type="submit" class={danger}>Delete everything</button>
-            </form>
-            <form method="post" data-action="/account/signout">
-              <input type="hidden" name="form" />
-              <button type="submit" class={outline}>Sign out</button>
-            </form>
-          </div>
+      <div class="mt-10 border-t border-border pt-6" id="delete">
+        <p class="text-sm/6 text-foreground-muted">
+          Delete everything removes your Google and Bing sign-ins, keys,
+          Clicky sites and linked machines from SEO Skill and revokes the
+          Google sign-ins. Your agents will ask you to sign in again.
+        </p>
+        <div class="mt-4 flex flex-wrap items-center gap-3">
+          <form method="post" data-action="/account/signout">
+            <input type="hidden" name="form" />
+            <button type="submit" class={outline}>Sign out</button>
+          </form>
+          <form method="post" data-action="/account/delete">
+            <input type="hidden" name="form" />
+            <button type="submit" class={danger}>Delete everything</button>
+          </form>
         </div>
       </div>
     </section>
@@ -230,6 +310,19 @@ const keys: { name: string; label: string; type: 'text' | 'password' }[] = [
           <input type="hidden" name="form" />
           <input type="hidden" name="provider" data-provider />
           <input type="hidden" name="subject" data-subject />
+          <button type="submit" class={quiet}>Remove</button>
+        </form>
+      </li>
+    </template>
+    <template data-clicky-row>
+      <li class="flex items-center justify-between gap-4 py-2.5">
+        <span class="min-w-0 break-all text-foreground">
+          <span data-clicky-domain></span>
+          <span class="text-foreground-muted" data-clicky-id></span>
+        </span>
+        <form method="post" data-action="/account/clicky/remove">
+          <input type="hidden" name="form" />
+          <input type="hidden" name="id" data-clicky-input />
           <button type="submit" class={quiet}>Remove</button>
         </form>
       </li>
@@ -263,9 +356,11 @@ const keys: { name: string; label: string; type: 'text' | 'password' }[] = [
       bing: { label: string; subject: string }[]
       bingReady: boolean
       keys: string[]
+      clicky: { siteId: string; domain: string | null }[]
       machines: { id: string; label: string; usedAt: number | null }[]
       login?: { code: string; label: string }
       token?: string
+      tab?: string
     }
     link?: string
   }
@@ -325,6 +420,18 @@ const keys: { name: string; label: string; type: 'text' | 'password' }[] = [
         if (input) input.placeholder = 'Leave empty to keep the saved key'
       }
       show(root.querySelector('[data-keys-remove]'), account.keys.length > 0)
+      const clickyRow = root.querySelector<HTMLTemplateElement>('[data-clicky-row]')
+      const clickyList = root.querySelector('[data-clicky-list]')
+      for (const site of account.clicky ?? []) {
+        const copy = clickyRow?.content.cloneNode(true) as DocumentFragment
+        const domain = copy.querySelector('[data-clicky-domain]')
+        if (domain) domain.textContent = site.domain ?? `Site ${site.siteId}`
+        const id = copy.querySelector('[data-clicky-id]')
+        if (id && site.domain) id.textContent = ` · site ${site.siteId}`
+        const input = copy.querySelector<HTMLInputElement>('[data-clicky-input]')
+        if (input) input.value = site.siteId
+        clickyList?.append(copy)
+      }
       const machineRow = root.querySelector<HTMLTemplateElement>('[data-machine-row]')
       const machineList = root.querySelector('[data-machine-list]')
       for (const machine of account.machines) {
@@ -393,6 +500,58 @@ const keys: { name: string; label: string; type: 'text' | 'password' }[] = [
     }
     for (const link of all<HTMLAnchorElement>('a[data-href]')) {
       link.href = `${base}${link.dataset.href}`
+    }
+
+    // Tabs: the hash names a tab, or a panel inside one, so links such as
+    // /account#google and the redirects after a change open the right tab.
+    const tabs = all<HTMLButtonElement>('[data-account-tab]')
+    const select = (id: string, focus = false) => {
+      for (const tab of tabs) {
+        const selected = tab.dataset.accountTab === id
+        tab.setAttribute('aria-selected', String(selected))
+        if (selected) tab.removeAttribute('tabindex')
+        else tab.tabIndex = -1
+        if (selected && focus) tab.focus()
+        show(
+          root.querySelector(`[data-account-panel="${tab.dataset.accountTab}"]`),
+          selected,
+        )
+      }
+    }
+    const tabFor = (hash: string) => {
+      const id = hash.replace(/^#/, '')
+      if (!id) return null
+      if (tabs.some((tab) => tab.dataset.accountTab === id)) return id
+      const target = root.querySelector(`[id="${CSS.escape(id)}"]`)
+      return (
+        target?.closest<HTMLElement>('[data-account-panel]')?.dataset
+          .accountPanel ?? null
+      )
+    }
+    if (account) {
+      select(
+        account.token
+          ? 'machines'
+          : (account.tab ?? tabFor(window.location.hash) ?? 'accounts'),
+      )
+    }
+    for (const tab of tabs) {
+      tab.addEventListener('click', () => {
+        const id = tab.dataset.accountTab ?? 'accounts'
+        select(id)
+        history.replaceState(null, '', `#${id}`)
+      })
+      tab.addEventListener('keydown', (event) => {
+        const index = tabs.indexOf(tab)
+        let next = -1
+        if (event.key === 'ArrowRight') next = (index + 1) % tabs.length
+        else if (event.key === 'ArrowLeft') next = (index - 1 + tabs.length) % tabs.length
+        const target = tabs[next]
+        if (!target) return
+        event.preventDefault()
+        select(target.dataset.accountTab ?? 'accounts', true)
+        history.replaceState(null, '', `#${target.dataset.accountTab}`)
+      })
     }
 
     const message = root.querySelector('[data-message]')

@@ -1,9 +1,9 @@
 # Hosted MCP
 
 A free remote MCP server at `https://seoskill.dev/mcp`. It reads your own
-Search Console and Google Analytics data, plus optional keyword accounts, and
-returns facts. It gives no advice. It keeps only your Google sign-ins and saved
-keys, encrypted, and never your data.
+Search Console, Google Analytics and Clicky data, plus optional keyword
+accounts, and returns facts. It gives no advice. It keeps only your sign-ins,
+saved keys and Clicky sites, encrypted, and never your data.
 
 ## Connect
 
@@ -22,8 +22,11 @@ no password or separate signup.
 
 Sign in with Google at `https://seoskill.dev/account` to:
 
-- see your linked Google accounts and add another one,
-- save or remove DataForSEO and Ahrefs keys (never shown again),
+- **Accounts:** see your linked Google accounts and Bing, and add another,
+- **Keys:** save or remove DataForSEO and Ahrefs keys and Clicky sites
+  (never shown again),
+- **Machines:** approve a `seo login`, remove a linked machine, or make a
+  token for a cloud agent,
 - delete everything, which also revokes the Google sign-ins, or sign out.
 
 Each tool call uses the linked Google account that can read the site, the one
@@ -33,12 +36,13 @@ links to the account page.
 
 ## Keys
 
-Clicky and other analytics run on your own machine with the `seo` CLI and a
-provider package, so this server never needs their keys.
+DataForSEO and Ahrefs use your own key. Clicky uses each site's site ID and
+sitekey; saving one checks it with Clicky and records the site's domain from
+one recent page, so `seo_data` can match the site by domain or site ID. Each
+Clicky site is one key, `x-clicky-<site id>`. Other analytics tools run on
+your own machine with the `seo` CLI and a provider package.
 
-
-DataForSEO and Ahrefs use your own key. There are two ways to give a key,
-and neither puts it in a chat:
+There are two ways to give a key, and neither puts it in a chat:
 
 1. **On your account page.** Save the keys at `https://seoskill.dev/account`.
    They are encrypted and work in every client.
@@ -49,6 +53,7 @@ and neither puts it in a chat:
 | --- | --- |
 | DataForSEO | `X-DataForSEO-Login`, `X-DataForSEO-Password` |
 | Ahrefs | `X-Ahrefs-Key` |
+| Clicky | `X-Clicky-<site id>` with the sitekey |
 
 ```sh
 claude mcp add --transport http seoskill https://seoskill.dev/mcp \
@@ -62,13 +67,13 @@ repository.
 
 | Tool | What it returns |
 | --- | --- |
-| `seo_sites` | Search Console and Google Analytics properties from every linked Google account, and which keys are set |
+| `seo_sites` | Search Console and Google Analytics properties from every linked Google account, which keys are set and the saved Clicky sites |
 | `seo_report` | The main report. Without a section: the overview plus each section's count and top rows. Sections: overview, quick-wins, low-ctr, striking-distance, second-page, content-decay, cannibalization, traffic-drop. Page sections check their top 20 URLs live and merge same-site redirects. |
 | `seo_page` | One URL: live page facts, Google index status and its queries against the previous period |
 | `seo_compare` | Equal periods before and after a date, for the site or URLs that contain some text, with Google updates |
 | `seo_index` | Pages that lost most of their clicks, checked live and with URL Inspection |
 | `seo_research` | Keyword metrics, ranked keywords, SERPs, competitors and backlinks from DataForSEO or Ahrefs, with a free Ahrefs Domain Rating column |
-| `seo_data` | Raw Search Console rows, or search landing pages from Google Analytics. Clicky and other analytics run locally with the CLI and a provider package. |
+| `seo_data` | Raw Search Console rows, search landing pages from Google Analytics, or Clicky visits by landing page with traffic sources and search engines. |
 
 Bing Webmaster Tools runs only in the CLI and the local MCP server, because
 Bing blocks this server's network. Bing is still linked here, on the account
@@ -97,6 +102,7 @@ A small Cloudflare D1 database (`migrations/`) keeps only:
 - each linked Google account's email and refresh and access tokens,
 - each linked Bing account's tokens and a name made from its sites,
 - your DataForSEO and Ahrefs keys, if you save them,
+- your Clicky sites, if you save them: site ID, sitekey and domain,
 - machines linked with `seo login` (a name from the host name and the date
   last used).
 

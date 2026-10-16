@@ -42,12 +42,13 @@ export interface TrafficAnomaly {
 export const STEP_CHANGE_RULES = {
   method: 'best-split',
   description:
-    'Heuristic. The change date is the split of the daily series where the mean before and the mean after differ most, weighted by segment length. It counts as a step change only when it is sudden and sustained. Sudden: the median of up to localDays observed days after the date differs from the median of up to localDays days before it by at least minLocalShiftInStdDevs pooled within-segment standard deviations, so one unusual day is not a step and a slow trend is not a step. Sustained: the mean of every day from the date differs from the mean before it by a z-score of at least minZScore, stricter than the recent-window test because the date is chosen from the data. Otherwise the last recentDays are compared with the days before them.',
+    'Heuristic. The change date is the split of the daily series where the mean before and the mean after differ most, weighted by segment length. It counts as a step change only when it is sudden and sustained. Sudden: the median of up to localDays observed days after the date differs from the median of up to localDays days before it by at least minLocalShiftInStdDevs pooled within-segment standard deviations, so one unusual day is not a step and a slow trend is not a step. Sustained: the mean of every day from the date differs from the mean before it by a z-score of at least minZScore, stricter than the recent-window test because the date is chosen from the data. These tests use daily values capped at the capDays and 1 - capDays quantiles, so one spike day cannot hide a lasting step. Otherwise the last recentDays are compared with the days before them.',
   minDaysBefore: 7,
   minDaysAfter: 3,
   localDays: 7,
   minLocalShiftInStdDevs: 2,
   minZScore: 3,
+  capDays: 0.05,
 } as const
 
 export type TrafficAnomalyDetection = typeof STEP_CHANGE_RULES & {
@@ -448,11 +449,23 @@ function sumOfSquaredDeviations(values: number[]): number {
   return values.reduce((sum, value) => sum + (value - average) ** 2, 0)
 }
 
+// Values with the highest and lowest capDays share of days capped, so one
+// spike day can neither pull the change date to itself nor hide a lasting
+// step.
+function capped(values: number[]): number[] {
+  const sorted = [...values].sort((a, b) => a - b)
+  const last = sorted.length - 1
+  const low = sorted[Math.floor(last * STEP_CHANGE_RULES.capDays)] ?? 0
+  const high = sorted[Math.ceil(last * (1 - STEP_CHANGE_RULES.capDays))] ?? 0
+  return values.map((value) => Math.min(high, Math.max(low, value)))
+}
+
 // Finds the most likely level change in observed daily values (date order)
-// and tests it against STEP_CHANGE_RULES. Linear in the number of days. Ties
-// keep the earliest split, so the result does not depend on input order.
+// and tests it against STEP_CHANGE_RULES. One sort, then linear in the
+// number of days. Ties keep the earliest split, so the result does not
+// depend on input order.
 function findStepChange(
-  values: number[],
+  observed: number[],
 ): { index: number; flat: boolean } | null {
   const {
     minDaysBefore,
@@ -461,8 +474,9 @@ function findStepChange(
     minLocalShiftInStdDevs,
     minZScore,
   } = STEP_CHANGE_RULES
-  const count = values.length
+  const count = observed.length
   if (count < minDaysBefore + minDaysAfter) return null
+  const values = capped(observed)
   const sums = [0]
   for (const value of values) sums.push((sums.at(-1) ?? 0) + value)
   const total = sums[count] ?? 0

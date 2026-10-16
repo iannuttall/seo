@@ -31,7 +31,7 @@ export const docsSections = [
         path: '/docs/analytics',
         label: 'Analytics',
         description:
-          'Google Analytics on the hosted MCP and the CLI, and Clicky or other tools on your machine.',
+          'Google Analytics and Clicky on the hosted MCP and the CLI, and other tools on your machine.',
       },
       {
         path: '/docs/bing',

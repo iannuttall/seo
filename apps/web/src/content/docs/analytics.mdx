@@ -1,8 +1,8 @@
 ---
 title: Connect analytics
-description: Read Google Analytics landing pages with the hosted MCP or the CLI, run Clicky on your own machine with its provider package, and build a package for any other tool.
+description: Read Google Analytics and Clicky landing pages with the hosted MCP or the CLI, and build a provider package for any other tool.
 heading: Analytics
-lead: See which landing pages get visits from search. Google Analytics works everywhere. Clicky and other tools run on your own machine.
+lead: See which landing pages get visits. Google Analytics and Clicky work in the hosted MCP and the CLI. Other tools run on your own machine.
 ---
 
 Search Console tells you what happens in Google before the click. Your analytics tells you what happens after it.
@@ -12,10 +12,10 @@ Search Console tells you what happens in Google before the click. Your analytics
 | Tool | Hosted MCP | CLI |
 | --- | --- | --- |
 | Google Analytics | Yes, with your Google sign-in | Yes, `seo analytics google report` |
-| Clicky | No, use the CLI | Yes, with the Clicky provider package |
+| Clicky | Yes, with the site saved on your account page | Yes, `seo data --source clicky` |
 | Fathom, Simple Analytics, Plausible or anything else | No | Not built in. Anyone can build a provider package |
 
-The hosted MCP reads only your Google data and your DataForSEO or Ahrefs research. When you ask it about another analytics tool, or about [Bing](/docs/bing), it tells your agent to use the CLI, the same way it does for a crawl.
+The hosted MCP reads your Google data, your Clicky sites and your DataForSEO or Ahrefs research. When you ask it about another analytics tool, or about [Bing](/docs/bing), it tells your agent to use the CLI, the same way it does for a crawl.
 
 ## Google Analytics
 
@@ -34,27 +34,32 @@ seo analytics google properties
 seo analytics google report --property 123456789
 ```
 
-In the CLI, `seo data` reads Search Console or Bing rows. Use `seo analytics google report` for Google Analytics.
+In the CLI, `seo data` reads Search Console, Bing or Clicky rows. Use `seo analytics google report` for Google Analytics.
 
 ## Clicky
 
-Clicky runs on your own machine through the [Clicky provider package](https://github.com/iannuttall/seoskill-clicky-provider). With the CLI installed, add the package, then connect your Clicky site ID once. Setup asks for the sitekey:
+Save each Clicky site once on your [account page](/account#clicky), under **Keys**. You need its site ID and sitekey, which Clicky shows under Preferences, then Info. The sitekey is checked with Clicky, encrypted and never shown again. Save as many Clicky sites as you need, one entry each.
 
-```sh
-seo providers install @seoskill/clicky-provider
-seo providers connect clicky --account '{"siteId":"123456789"}'
+**Hosted MCP.** Ask your agent:
+
+```text
+Show the Clicky landing pages for example.com
 ```
 
-The sitekey goes into your system keychain, or a private local file where there is no keychain. Then read Clicky reports with the same site ID:
+The agent runs `seo_data` with Clicky as the source and the site's domain or its Clicky site ID. `seo_sites` lists the saved Clicky sites. It returns visits by landing page, with the traffic sources and search engines that sent visits, for the last 28 days unless you ask for other dates. Clicky reads at most 31 days at a time.
+
+**CLI.** Link the CLI to your account with `seo login`, then:
 
 ```sh
-seo analytics clicky report --site-id 123456789 --start-date 2026-09-01 --end-date 2026-09-28
+seo data --source clicky --site example.com
 ```
 
-Clicky counts visitors, not Google Analytics sessions or users, so compare the two with care.
+A Clicky site saved on your machine with `seo analytics clicky connect` (from the [Clicky provider package](https://github.com/iannuttall/seoskill-clicky-provider)) works too, by its site ID.
+
+Clicky counts visits, not Google Analytics sessions or users, so compare the two with care. Clicky does not split landing pages by source, so the landing pages include every visit, not only visits from search.
 
 ## Any other analytics tool
 
-There is no built-in support for Fathom, Simple Analytics, Plausible or any other analytics tool. Anyone can add one by building a provider package with the public provider SDK. The [Clicky provider package](https://github.com/iannuttall/seoskill-clicky-provider) is the example to follow: it shows how a package connects an account, keeps its key in the keychain and returns landing page visits.
+There is no built-in support for Fathom, Simple Analytics, Plausible or any other analytics tool. Anyone can add one to the CLI by building a provider package with the public provider SDK. The [Clicky provider package](https://github.com/iannuttall/seoskill-clicky-provider) is the example to follow: it shows how a package connects an account, keeps its key in the keychain and returns landing page visits.
 
 For one page's queries, use [`seo page`](/docs/page). For raw Search Console rows, use [`seo data`](/docs/data).

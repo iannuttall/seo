@@ -209,18 +209,18 @@ seo analytics google properties
 seo ai-referrals --property 123456789
 ```
 
-Clicky is available through the
-[Clicky provider package](https://github.com/iannuttall/seoskill-clicky-provider).
-Install it, then connect a site with its Clicky site ID:
+For Clicky, save each site's site ID and sitekey on your
+[account page](https://seoskill.dev/account#clicky). The hosted server and a
+CLI linked with `seo login` both read it:
 
 ```sh
-seo providers install @seoskill/clicky-provider
-seo analytics clicky connect --site-id 12345
+seo data --source clicky --site example.com
 ```
 
-The hosted server reads Google Analytics only. Clicky runs on your machine,
-and the hosted server tells your agent to use the CLI for it, as it does for
-crawls. For any other analytics tool, build a provider package with the
+A site saved on your machine with the
+[Clicky provider package](https://github.com/iannuttall/seoskill-clicky-provider)
+(`seo analytics clicky connect --site-id 12345`) works too, by its site ID.
+For any other analytics tool, build a provider package with the
 public provider SDK; the Clicky package is the example. Each source keeps its
 own metric names, so a Clicky visit is never relabelled as a Google Analytics
 user.

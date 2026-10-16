@@ -7,7 +7,7 @@ the hosted MCP server at seoskill.dev/mcp with its account page, and the
 seoskill.dev website.
 
 In short: the hosted MCP keeps only your linked Google and Bing accounts, any
-API keys you save and the machines you link, encrypted, so it can fetch your
+API keys and Clicky sites you save and the machines you link, encrypted, so it can fetch your
 own data when you ask. It never
 keeps your Search Console or analytics data, your reports or a log of your
 requests. The only thing kept about your use is an anonymous usage
@@ -38,6 +38,9 @@ Cloudflare D1 with only these things:
   from its sites.
 - **Your API keys, if you save them.** A DataForSEO login and password and an
   Ahrefs key.
+- **Your Clicky sites, if you save them.** Each site's numeric site ID,
+  sitekey and domain. The domain comes from one recent page in Clicky when
+  you save the site, so agents can name the site.
 - **Machines you link with `seo login`.** A name such as "seo on
   my-laptop", made from the machine's host name, and the date it was last
   used. A linked machine asks for short-lived Google and Bing tokens and your
@@ -52,7 +55,7 @@ The server keeps nothing else. It does not keep reports, Search Console
 or Google Analytics rows, lists of your sites, or the pages it checked.
 Request logs are turned off.
 
-- **Your data.** Search Console, Google Analytics and provider responses are
+- **Your data.** Search Console, Google Analytics, Clicky and provider responses are
   fetched for each request, returned to your MCP client and not kept. Pages checked live are fetched for the request and not kept.
 - **API key headers.** You can send `X-DataForSEO-Login`,
   `X-DataForSEO-Password` and `X-Ahrefs-Key` headers instead of saving keys.
@@ -63,7 +66,8 @@ Request logs are turned off.
   agent. It sets one essential cookie that holds your
   encrypted person id for up to 30 days.
 - **Outside services.** Google answers its own requests. The provider you
-  choose receives your research request under its own policy.
+  choose receives your research request under its own policy. Clicky
+  receives the site ID, sitekey, report types and dates for a Clicky request.
   Ahrefs receives the domains in research rows for the free Domain Rating
   column. Cloudflare runs the server, stores the encrypted data and handles
   the network requests.
@@ -74,8 +78,8 @@ Request logs are turned off.
 ### Delete your hosted data
 
 Sign in at [seoskill.dev/account](https://seoskill.dev/account) and choose
-**Delete everything**. It deletes your person id, linked accounts, keys and
-linked machines,
+**Delete everything**. It deletes your person id, linked accounts, keys,
+Clicky sites and linked machines,
 and revokes the Google sign-ins. Your agents will ask you to sign in again if
 you use the hosted server later. You can also revoke SEO Skill in your
 [Google Account connections](https://myaccount.google.com/connections), which
@@ -111,7 +115,9 @@ including its Limited Use requirements.
 
 ## Clicky data the software can access
 
-Clicky access is optional. If you connect a site, the software sends its numeric
+Clicky access is optional. The hosted server and a CLI linked with
+`seo login` use the Clicky sites saved on your account, as described above.
+If you connect a site on your machine, the software sends its numeric
 site ID, sitekey, requested report type, date range, and row limit directly to
 Clicky over HTTPS. It can read the traffic data that sitekey permits. The
 project maintainer does not receive the request or response.

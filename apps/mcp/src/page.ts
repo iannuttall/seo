@@ -91,12 +91,16 @@ export type View =
         bing: { label: string; subject: string }[]
         bingReady: boolean
         keys: string[]
+        // Saved Clicky sites; the domain is null when Clicky had no pages.
+        clicky: { siteId: string; domain: string | null }[]
         // Machines linked with `seo login`.
         machines: { id: string; label: string; usedAt: number | null }[]
         // A `seo login` waiting for this person to approve it.
         login?: { code: string; label: string }
         // A token just made for a cloud agent, shown once.
         token?: string
+        // The tab to open: accounts, keys, machines or settings.
+        tab?: string
       }
     }
 

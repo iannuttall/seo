@@ -80,6 +80,11 @@ async function storedSiteKeys(): Promise<{
   }
 }
 
+// Every Clicky site saved on this machine, as site ID to sitekey.
+export async function readClickySiteKeys(): Promise<Record<string, string>> {
+  return (await storedSiteKeys()).siteKeys
+}
+
 export async function readClickySiteKey(
   siteIdValue: string,
   input: { env?: NodeJS.ProcessEnv } = {},

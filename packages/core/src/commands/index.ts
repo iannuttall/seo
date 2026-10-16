@@ -2,12 +2,14 @@
 // MCP. Worker-safe: no Node built-ins.
 
 export * from '../bing/api.js'
+export * from '../clicky/api.js'
 export type {
   SearchAnalyticsQuery,
   SearchAnalyticsRequest,
 } from '../gsc/client/types.js'
 export * from './analytics.js'
 export * from './bing.js'
+export * from './clicky.js'
 export * from './domain-rating.js'
 export * from './linked.js'
 export * from './page-facts.js'

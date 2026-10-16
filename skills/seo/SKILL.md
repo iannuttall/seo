@@ -1,6 +1,6 @@
 ---
 name: seo
-description: Free Google Search Console MCP server and CLI for AI agents. Reads your real Search Console, Google Analytics and Bing Webmaster Tools data, plus DataForSEO and Ahrefs keyword research. Use it for any SEO question - why Google traffic or clicks dropped, organic traffic decline, quick wins, low CTR, striking distance keywords, content decay and declining pages, keyword cannibalization, indexing and URL inspection, one page's queries, Google update impact, competitor keywords, backlinks, technical SEO crawls, redirects, internal links and client SEO reports. Returns facts from your own data, never guesses.
+description: Free Google Search Console MCP server and CLI for AI agents. Reads your real Search Console, Google Analytics, Bing Webmaster Tools and Clicky data, plus DataForSEO and Ahrefs keyword research. Use it for any SEO question - why Google traffic or clicks dropped, organic traffic decline, quick wins, low CTR, striking distance keywords, content decay and declining pages, keyword cannibalization, indexing and URL inspection, one page's queries, Google update impact, competitor keywords, backlinks, technical SEO crawls, redirects, internal links and client SEO reports. Returns facts from your own data, never guesses.
 ---
 
 # seo
@@ -33,7 +33,7 @@ server, on any machine with a shell.
 | `seo compare --date <date>` | `seo_compare` | Equal periods before and after a date, with Google updates |
 | `seo index` | `seo_index` | Pages that lost most of their clicks, checked live and with URL Inspection |
 | `seo research <action>` | `seo_research` | Keyword metrics, ranked keywords, SERP, competitors, backlinks |
-| `seo data` | `seo_data` | Raw Search Console or Bing rows (source `bing`); the MCP tool also reads analytics landing pages |
+| `seo data` | `seo_data` | Raw Search Console, Bing (source `bing`) or Clicky (source `clicky`) rows; the MCP tool also reads Google Analytics landing pages |
 | `seo crawl` | `seo_crawl` | A site crawl with technical issues and the URLs they affect |
 | `seo internal-links --url <url>` | `seo_internal_links` | Pages that could link to a target page |
 

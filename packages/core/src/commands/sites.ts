@@ -42,6 +42,8 @@ const hostOf = (value: string) => {
 export async function runSites(input: {
   accounts: GoogleAccount[]
   keys: Headers
+  // Saved Clicky sites, as "site id (domain)".
+  clicky?: string[]
   signIn: string
   // null when Bing is not connected; left out on a surface without Bing.
   bing?: BingCall | null
@@ -138,6 +140,9 @@ export async function runSites(input: {
             ? `Bing Webmaster sites with no Search Console property here (${bingOnly.length}): ${bingOnly.map((site) => site.url).join(', ')}.`
             : `Bing Webmaster: ${bingSites.length} verified sites; the bing column shows each one.`,
     `Research keys: ${research.length ? research.join(', ') : 'none'}.`,
+    input.clicky?.length
+      ? `Clicky sites (seo_data with source "clicky"): ${input.clicky.join(', ')}.`
+      : null,
     `Add a Google account${input.bing === undefined ? '' : ', Bing'} or a key: ${input.connect}`,
     'Next: seo_report with a site.',
   ]
@@ -148,6 +153,7 @@ export async function runSites(input: {
       googleAnalytics: analytics,
       bing: Array.isArray(bing) ? bingSites : null,
       research,
+      clicky: input.clicky ?? [],
     },
   }
 }

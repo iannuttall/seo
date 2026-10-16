@@ -1,6 +1,6 @@
 {
   "$schema": "https://static.modelcontextprotocol.io/schemas/2025-12-11/server.schema.json",
-  "name": "io.github.iannuttall/seo",
+  "name": "dev.seoskill/seo",
   "title": "SEO Skill",
   "description": "Free Google Search Console MCP: your real GSC, Google Analytics and keyword data for AI agents.",
   "websiteUrl": "https://seoskill.dev",
@@ -8,7 +8,7 @@
     "url": "https://github.com/iannuttall/seo",
     "source": "github"
   },
-  "version": "0.4.1",
+  "version": "0.4.2",
   "remotes": [
     {
       "type": "streamable-http",
@@ -19,7 +19,7 @@
     {
       "registryType": "npm",
       "identifier": "seo",
-      "version": "0.4.1",
+      "version": "0.4.2",
       "transport": {
         "type": "stdio"
       },

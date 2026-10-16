@@ -1,7 +1,7 @@
 {
   "name": "seo",
-  "version": "0.4.1",
-  "mcpName": "io.github.iannuttall/seo",
+  "version": "0.4.2",
+  "mcpName": "dev.seoskill/seo",
   "description": "The SEO command for AI agents: a free Google Search Console MCP server and CLI. Reads your real Search Console, Google Analytics and Bing data for traffic drops, quick wins, content decay, cannibalization and indexing, plus DataForSEO and Ahrefs keyword research.",
   "type": "module",
   "license": "Apache-2.0",

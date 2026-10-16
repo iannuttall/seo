@@ -197,8 +197,11 @@ export const bingPageQueries = (call: BingCall, site: string, page: string) =>
   keyed(call, 'GetPageQueryStats', { siteUrl: site, page })
 
 // The Bing site that covers a Search Console property or URL: the same host,
-// with or without www.
-export function bingSiteFor(sites: BingSite[], target: string): string | null {
+// with or without www. A verified site wins over one that is not.
+export function bingSiteFor(
+  sites: BingSite[],
+  target: string,
+): BingSite | null {
   const host = (value: string) => {
     try {
       return new URL(
@@ -213,12 +216,13 @@ export function bingSiteFor(sites: BingSite[], target: string): string | null {
   const wanted = host(target)
   if (!wanted) return null
   const found = sites
-    .filter((site) => site.verified && host(site.url) === wanted)
+    .filter((site) => host(site.url) === wanted)
     .sort(
       (a, b) =>
+        Number(b.verified) - Number(a.verified) ||
         Number(b.url.startsWith('https://')) -
           Number(a.url.startsWith('https://')) ||
         a.url.localeCompare(b.url, 'en'),
     )[0]
-  return found?.url ?? null
+  return found ?? null
 }

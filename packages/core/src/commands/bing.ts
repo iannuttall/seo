@@ -45,6 +45,12 @@ export const LOCAL_BING =
 export const NO_BING_HERE =
   'Bing: not included here, so these totals show Google only. Some sites get most of their search visits from Bing; run `npx -y seo report --site <site> --section bing --json` with the CLI to see them.'
 
+const BING_HOME = 'https://www.bing.com/webmasters'
+
+// Bing has the site but no rows for it yet. Not the same as zero traffic.
+export const noBingData = (site: string) =>
+  `Bing has no data for ${site} yet. Newly added or newly verified sites take a few days to show data in Bing Webmaster Tools.`
+
 export type BingSource =
   | { call: BingCall; site: string }
   | { call: null; site: null; missing: string }
@@ -71,13 +77,14 @@ export async function bingFor(
     sitesSeen.set(call, sites)
   }
   const site = bingSiteFor(await sites, property)
-  return site
-    ? { call, site }
-    : {
-        call: null,
-        site: null,
-        missing: `The connected Bing account has no verified site for ${property.replace(/^sc-domain:/, '')}. Add it in Bing Webmaster Tools; it can import sites from Search Console.`,
-      }
+  if (site?.verified) return { call, site: site.url }
+  return {
+    call: null,
+    site: null,
+    missing: site
+      ? `${site.url} is in the connected Bing account but is not verified, so Bing gives no data for it. Verify it at ${BING_HOME}.`
+      : `The connected Bing account does not have ${property.replace(/^sc-domain:/, '')}. Add and verify it at ${BING_HOME} (it can import sites from Search Console). New sites take a few days to show data.`,
+  }
 }
 
 type Totals = {
@@ -106,6 +113,9 @@ export async function bingTotals(
 > {
   if (!source.call) return { missing: source.missing }
   const traffic = await bingTraffic(source.call, source.site)
+  if (!traffic.rows.length && !traffic.invalidRows) {
+    return { missing: noBingData(source.site) }
+  }
   const sum = (window: DateRange): Totals => {
     const rows = traffic.rows.filter(
       (row) => row.date >= window.startDate && row.date <= window.endDate,
@@ -258,6 +268,7 @@ export async function bingSection(
   const q = sumWeeks(queries.rows, range)
   const p = sumWeeks(pages.rows, range)
   const invalid = queries.invalidRows + pages.invalidRows
+  const empty = !queries.rows.length && !pages.rows.length && !invalid
   return {
     range,
     bingSite: source.site,
@@ -269,6 +280,7 @@ export async function bingSection(
     items: beside(q.rows, googleQueries.rows, 'query'),
     topPages: beside(p.rows, googlePages.rows, 'page'),
     caveats: [
+      ...(empty ? [noBingData(source.site)] : []),
       `Bing weeks counted: ${q.weeks.join(', ') || 'none'} (each date names a week). Google numbers cover ${range.startDate} to ${range.endDate} exactly.`,
       'Google numbers are for the same query text or page URL. 0 means Google showed no row for it in these dates.',
       ...BING_LIMITS,
@@ -326,6 +338,7 @@ export async function runBingRows(
     })
   }
   const notes = [
+    ...(all.rows.length || all.invalidRows ? [] : [noBingData(source.site)]),
     `Bing weeks counted: ${now.weeks.join(', ') || 'none'}; earlier period ${then.weeks.join(', ') || 'none'}. Each date names a week.`,
     ...BING_LIMITS.slice(1),
     ...(all.invalidRows

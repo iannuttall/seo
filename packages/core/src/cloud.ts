@@ -201,7 +201,12 @@ export async function startCloudLogin(): Promise<Pending> {
     expiresIn?: number
   }>('/account/cli/start', {
     method: 'POST',
-    body: JSON.stringify({ label: `seo on ${hostname()}`.slice(0, 60) }),
+    body: JSON.stringify({
+      label: `seo on ${hostname().split('.')[0] || 'this machine'}`.slice(
+        0,
+        60,
+      ),
+    }),
   })
   const { device, code, url, expiresIn } = result.body
   if (!result.ok || !device || !code || !url) {

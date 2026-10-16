@@ -1,5 +1,27 @@
 # Changelog
 
+## 0.5.0
+
+### New
+
+- **`seo login` links the CLI to your seoskill.dev account.** Your Google
+  accounts, Bing and research keys then live in one place, and every machine
+  you link uses them. The CLI gets short-lived tokens from the account and
+  makes the Google and Bing requests itself, so Bing works with an account
+  even though Bing blocks the hosted server. `seo logout` unlinks a machine.
+- In a terminal, `seo login` opens the approval page and waits. An agent or
+  script gets the link, shows it to you, and runs `seo login` again after
+  you approve it.
+- Cloud agents can use a token from the account page as `SEO_TOKEN`.
+- The account page lists linked machines, approves a `seo login`, makes
+  cloud agent tokens and connects Bing again.
+- Sharing images on seoskill.dev are drawn at build time.
+
+### Changed
+
+- The hosted MCP sends agents to `npx -y seo login` for Bing, crawls and
+  internal links, and the research tool no longer teaches key headers.
+
 ## 0.4.2
 
 - The MCP Registry name is now `dev.seoskill/seo`, under the seoskill.dev

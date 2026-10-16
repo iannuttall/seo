@@ -19,7 +19,9 @@
     {
       "pattern": "seoskill.dev/.well-known/oauth-*",
       "zone_name": "seoskill.dev"
-    }
+    },
+    // The static server card for MCP directories.
+    { "pattern": "seoskill.dev/.well-known/mcp/*", "zone_name": "seoskill.dev" }
   ],
   "limits": { "cpu_ms": 60000 },
   // Bundles skills/seo/SKILL.md as text for the skill resource.

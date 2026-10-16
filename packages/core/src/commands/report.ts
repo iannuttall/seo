@@ -99,7 +99,7 @@ function nextFor(section: SectionId, call: Caller): string {
     'second-page': `Next: ${call('page')} for one page’s queries and live facts.`,
     'content-decay': `Next: ${call('index')} for pages that lost most of their clicks; ${call('page')} to see which queries moved.`,
     cannibalization: `Next: ${call('page')} on each competing URL to see Google’s chosen canonical.`,
-    'traffic-drop': `Next: ${call('compare')} with the date the drop started, for the pages and queries that moved.`,
+    'traffic-drop': `Next: ${call('compare')} with the date the drop started, for the pages and queries that moved; ${call('index')} for pages that lost almost all their clicks and their index status.`,
     bing: `Next: ${call('data', { source: 'bing' })} for every Bing row; ${call('page')} for one page.`,
   }[section]
 }

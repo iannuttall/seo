@@ -13,10 +13,9 @@ import {
 import { PAGE_SIZE, rowsText } from './rows.js'
 import type { CommandResult } from './types.js'
 
-export {
-  KEY_HEADERS,
-  type ResearchAction,
-  type ResearchProvider,
+export type {
+  ResearchAction,
+  ResearchProvider,
 } from './research-providers.js'
 
 export const RESEARCH_ACTIONS = [

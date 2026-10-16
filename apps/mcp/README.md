@@ -70,11 +70,14 @@ repository.
 | `seo_research` | Keyword metrics, ranked keywords, SERPs, competitors and backlinks from DataForSEO or Ahrefs, with a free Ahrefs Domain Rating column |
 | `seo_data` | Raw Search Console rows, or search landing pages from Google Analytics. Clicky and other analytics run locally with the CLI and a provider package. |
 
-Bing Webmaster Tools runs only in the CLI and the local MCP server for now,
-because Bing blocks this server's network. When an agent asks for Bing, the
-server tells it to run `npx -y seo providers bing connect` once, then
-`npx -y seo report --site <site> --section bing --json`. The Bing code stays
-in place, turned off by `HOSTED_BING` in `src/tools/deps.ts`.
+Bing Webmaster Tools runs only in the CLI and the local MCP server, because
+Bing blocks this server's network. Bing is still linked here, on the account
+page. A CLI linked to the account with `seo login` gets short-lived Bing and
+Google tokens and the saved keys from `/account/cli/credentials` and calls
+Bing and Google from its own machine (`src/cli.ts`). When an agent asks for
+Bing, crawls or internal links, the server tells it to run `npx -y seo login`
+and then the CLI command. Hosted Bing reports stay off through `HOSTED_BING`
+in `src/tools/deps.ts`.
 
 Reports run the same `@seo/core` code as the CLI, through
 `@seo/core/hosted`. Advice fields are removed before the agent sees them.
@@ -92,7 +95,10 @@ A small Cloudflare D1 database (`migrations/`) keeps only:
 
 - a random person id, created at your first Google sign-in,
 - each linked Google account's email and refresh and access tokens,
-- your DataForSEO and Ahrefs keys, if you save them.
+- each linked Bing account's tokens and a name made from its sites,
+- your DataForSEO and Ahrefs keys, if you save them,
+- machines linked with `seo login` (a name from the host name and the date
+  last used).
 
 Tokens and keys are sealed with AES-GCM under `SEAL_KEY` before they are
 written. They are used only to fetch your own data when you ask. The token

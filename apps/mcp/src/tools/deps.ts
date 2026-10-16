@@ -1,10 +1,11 @@
+import type { LinkedAccounts } from '@seo/core/commands'
 import {
   type CommandDeps,
   checkPages,
   indexStatusFrom,
   mcpCall,
 } from '@seo/core/commands'
-import { accountUrl, type Directory } from '../google.ts'
+import { accountUrl } from '../google.ts'
 
 // The core commands' functions for the hosted MCP: Search Console and Bing
 // through the person's linked accounts, the shared live page checks, and
@@ -15,7 +16,7 @@ import { accountUrl, type Directory } from '../google.ts'
 // The account store, Bing sign-in and routing stay ready for that.
 export const HOSTED_BING = false
 
-export function deps(env: Env, directory: Directory): CommandDeps {
+export function deps(env: Env, directory: LinkedAccounts): CommandDeps {
   return {
     searchAnalytics: directory.searchAnalytics(),
     checkPages,

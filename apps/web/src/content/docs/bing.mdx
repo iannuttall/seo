@@ -9,11 +9,21 @@ Google is not the only search engine sending visits. Connect Bing Webmaster Tool
 
 You need a site verified in [Bing Webmaster Tools](https://www.bing.com/webmasters). Bing can import your sites from Search Console, which is the quickest way to add them.
 
-Bing runs with the CLI and the local MCP server. The [hosted MCP](/docs/mcp) has no Bing for now (Bing blocks requests from its network). If you use the hosted MCP, your agent runs the CLI for Bing, the same way it does for a crawl.
+Bing runs with the CLI and the local MCP server, on your own machine. The [hosted MCP](/docs/mcp) cannot reach Bing (Bing blocks requests from its network), so if you use it, your agent runs the CLI for Bing, the same way it does for a crawl.
 
-## Connect Bing in the CLI
+## Connect Bing on your account
 
-The CLI and the local MCP server use a Bing Webmaster API key. In Bing Webmaster Tools, open **Settings**, then **API access**, and copy the API key. Then run:
+On your [account page](https://seoskill.dev/account), choose **Connect Bing** and sign in to Bing Webmaster Tools. Then link the CLI on your machine to the same account:
+
+```sh
+seo login
+```
+
+The CLI gets a short-lived Bing token from your account and calls Bing from your machine. Any machine you link the same way, including a cloud agent, gets Bing with no extra setup.
+
+## Connect Bing with an API key instead
+
+To keep Bing on one machine only, use a Bing Webmaster API key. In Bing Webmaster Tools, open **Settings**, then **API access**, and copy the API key. Then run:
 
 ```sh
 seo providers bing connect
@@ -46,10 +56,10 @@ With the local MCP server, ask your agent for the Bing section or for raw Bing r
 
 ## Bing with the hosted MCP
 
-When you ask the hosted MCP for Bing, it tells your agent to run the CLI instead. An agent with a shell connects the key once, then runs the Bing section:
+When you ask the hosted MCP for Bing, it tells your agent to run the CLI instead. An agent with a shell links the CLI to your account once (you approve it in your browser), then runs the Bing section:
 
 ```sh
-npx -y seo providers bing connect
+npx -y seo login
 npx -y seo report --site example.com --section bing --json
 ```
 

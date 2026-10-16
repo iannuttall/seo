@@ -255,16 +255,21 @@ It then prints `seo sites`, then `seo report --site <site>`.
 - Only the local server adds `seo_crawl`, `seo_internal_links` and the
   provider package tools (`seo_list_providers`, `seo_describe_provider`,
   `seo_run_provider`), because they need the person's machine.
-- The hosted server keeps only a person id, the linked Google accounts, and
-  saved research keys, sealed with `SEAL_KEY` in Cloudflare D1.
+- The hosted server keeps only a person id, the linked Google and Bing
+  accounts, saved research keys and machines linked with `seo login`, sealed
+  with `SEAL_KEY` in Cloudflare D1.
   It keeps no report data, provider rows, site lists or request logs, and
   Workers Logs stay off. The token the client keeps carries only the person
   id. Key headers win over saved keys and are used for that request only.
   The `/account` page links accounts, saves keys and deletes everything.
 - Bing runs only in the CLI and the local server. Bing blocks the hosted
   server's network, so `HOSTED_BING` in `apps/mcp/src/tools/deps.ts` stays
-  off until hosted Bing calls go through another route. The hosted server
-  sends agents to the CLI for Bing, as it does for crawls.
+  off. The account stays the one place for credentials: `seo login`
+  (`packages/core/src/cloud.ts`) links a machine, which then gets
+  short-lived Google and Bing tokens and the saved keys from the server and
+  makes the calls itself. Nothing it fetches goes back to the server. The
+  hosted server sends agents to `npx -y seo login` for Bing, crawls and
+  internal links (`CLI_LINK`).
 - Keep `seo mcp install` interactive for humans. Require explicit targets in
   JSON and CI mode.
 - `seo start` adds the hosted server as an `mcpServers.seoskill` URL entry

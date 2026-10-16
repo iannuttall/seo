@@ -1,5 +1,6 @@
 import { account, accountCallback, bingCallback } from './account.ts'
-import { Directory } from './google.ts'
+import { credentials, finishLogin, logout, startLogin } from './cli.ts'
+import { directory } from './google.ts'
 import { serveMcp, serverCard } from './mcp.ts'
 import {
   authorize,
@@ -74,6 +75,19 @@ async function route(
   if (pathname === '/oauth/bing/callback' && method === 'GET') {
     return bingCallback(request, env)
   }
+  // `seo login` and a linked CLI. See cli.ts.
+  if (pathname === '/account/cli/start' && method === 'POST') {
+    return startLogin(request, env)
+  }
+  if (pathname === '/account/cli/token' && method === 'POST') {
+    return finishLogin(request, env)
+  }
+  if (pathname === '/account/cli/credentials' && method === 'GET') {
+    return credentials(request, env)
+  }
+  if (pathname === '/account/cli/logout' && method === 'POST') {
+    return logout(request, env)
+  }
   if (pathname === '/account' || pathname.startsWith('/account/')) {
     return account(request, env, pathname)
   }
@@ -106,7 +120,7 @@ async function route(
     for (const [name, value] of request.headers) headers.set(name, value)
     return serveMcp(request, {
       env,
-      directory: new Directory(env, accounts),
+      directory: directory(env, accounts),
       headers,
       waitUntil: (promise) => ctx.waitUntil(promise),
     })

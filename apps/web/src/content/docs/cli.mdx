@@ -29,6 +29,16 @@ If you skip a step, you can do it later with `seo mcp install` or `seo skill ins
 seo sites
 ```
 
+## Use your seoskill.dev account
+
+If you use the [hosted MCP](/docs/mcp), link the CLI to the same account. Your Google accounts, Bing and research keys then live in one place, and every machine you link uses them:
+
+```sh
+seo login
+```
+
+It opens a page on seoskill.dev where you approve this machine. The CLI then asks the account for short-lived tokens and makes the Google and Bing requests itself (Bing blocks the hosted server, so this is how Bing works with an account). Nothing it fetches goes back to seoskill.dev. Your linked machines are listed on your [account page](https://seoskill.dev/account), where you can remove them. `seo logout` unlinks this one.
+
 ## Run the commands
 
 | Command | What it does |
@@ -53,7 +63,7 @@ seo compare --site example.com --date 2026-09-15
 
 Add `--json` to any of them for structured output, or `--help` to see every option.
 
-Research needs a provider key. Connect one once and the CLI keeps it on your machine:
+Research needs a provider key. Keys saved on your [account page](https://seoskill.dev/account) work once you run `seo login`. To keep a key on this machine only instead:
 
 ```sh
 seo providers dataforseo connect
@@ -69,7 +79,7 @@ Your agent runs the same commands for you once setup has added the skill, so mos
 
 ## Run it in a cloud agent
 
-On a machine that is rebuilt each time, such as Amp, Codex cloud or CI, the CLI can sign in with a Google service account and read keys from secrets. The [cloud agents guide](/docs/cloud-agents) has a start-up script.
+On a machine that is rebuilt each time, such as Amp, Codex cloud or CI, make a token on your [account page](https://seoskill.dev/account) and save it as the `SEO_TOKEN` secret. The CLI then uses your account with no login step. The [cloud agents guide](/docs/cloud-agents) has the details.
 
 ## Where your data lives
 

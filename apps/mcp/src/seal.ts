@@ -16,7 +16,7 @@ export type Sealed =
     }
   // A Google sign-in from the account page: to sign in, or to link another
   // account to a signed-in person.
-  | { k: 'web'; userId: string | null; exp: number }
+  | { k: 'web'; userId: string | null; link?: string; exp: number }
   // A Bing sign-in from the account page.
   | { k: 'bing'; userId: string; exp: number }
   | {
@@ -32,6 +32,10 @@ export type Sealed =
   // The account page's sign-in cookie, and its form token.
   | { k: 'session'; userId: string; exp: number }
   | { k: 'form'; userId: string; exp: number }
+  // A CLI login waiting for approval, and a linked CLI's token. Both name
+  // a row in cli_links, so removing the row ends them.
+  | { k: 'cli-device'; linkId: string; exp: number }
+  | { k: 'cli'; linkId: string }
   // A refresh token, access token or key kept in D1.
   | { k: 'secret'; value: string }
 

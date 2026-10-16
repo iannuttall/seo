@@ -1,13 +1,14 @@
 # Privacy policy
 
-Last updated: 15 October 2026
+Last updated: 16 October 2026
 
 This policy covers the official `seo` command-line tool, library, MCP server,
 the hosted MCP server at seoskill.dev/mcp with its account page, and the
 seoskill.dev website.
 
-In short: the hosted MCP keeps only your linked Google accounts and any API
-keys you save, encrypted, so it can fetch your own data when you ask. It never
+In short: the hosted MCP keeps only your linked Google and Bing accounts, any
+API keys you save and the machines you link, encrypted, so it can fetch your
+own data when you ask. It never
 keeps your Search Console or analytics data, your reports or a log of your
 requests. The only thing kept about your use is an anonymous usage
 count (the event, report, agent, version and week).
@@ -32,8 +33,16 @@ Cloudflare D1 with only these things:
 - **Your linked Google accounts.** The email address of each Google account
   you link, and its refresh and access tokens. You grant read-only access to
   Search Console and Google Analytics.
+- **Your linked Bing account, if you link one.** Its refresh and access
+  tokens, with read-only access to Bing Webmaster Tools, and a name made
+  from its sites.
 - **Your API keys, if you save them.** A DataForSEO login and password and an
   Ahrefs key.
+- **Machines you link with `seo login`.** A name such as "seo on
+  my-laptop", made from the machine's host name, and the date it was last
+  used. A linked machine asks for short-lived Google and Bing tokens and your
+  keys, and makes the Google and Bing requests itself. Nothing it fetches is
+  sent back.
 
 Every token and key is encrypted with a server key before it is written. The
 tokens are used only to fetch your own data when you or your agent ask for
@@ -49,8 +58,9 @@ Request logs are turned off.
   `X-DataForSEO-Password` and `X-Ahrefs-Key` headers instead of saving keys.
   A header wins over a saved key and is used for that request only.
 - **The account page.** At [seoskill.dev/account](https://seoskill.dev/account)
-  you sign in with Google to see your linked accounts, add or remove them,
-  and save or remove keys. It sets one essential cookie that holds your
+  you sign in with Google to see your linked accounts, keys and machines,
+  add or remove them, approve a `seo login`, and make a token for a cloud
+  agent. It sets one essential cookie that holds your
   encrypted person id for up to 30 days.
 - **Outside services.** Google answers its own requests. The provider you
   choose receives your research request under its own policy.
@@ -64,7 +74,8 @@ Request logs are turned off.
 ### Delete your hosted data
 
 Sign in at [seoskill.dev/account](https://seoskill.dev/account) and choose
-**Delete everything**. It deletes your person id, linked accounts and keys,
+**Delete everything**. It deletes your person id, linked accounts, keys and
+linked machines,
 and revokes the Google sign-ins. Your agents will ask you to sign in again if
 you use the hosted server later. You can also revoke SEO Skill in your
 [Google Account connections](https://myaccount.google.com/connections), which
@@ -118,8 +129,10 @@ save a Bing Webmaster API key with `seo providers bing connect`, or set
 `SEO_BING_API_KEY`. The key is saved in the system keychain when available,
 with a private local file fallback. Requests go directly from your machine to
 Bing over HTTPS and can read the sites that key can read. Run
-`seo providers bing disconnect` to remove the saved key. The hosted MCP
-server does not read Bing data.
+`seo providers bing disconnect` to remove the saved key. A machine linked
+with `seo login` can instead use the Bing account linked on seoskill.dev:
+the server hands it a short-lived token and the machine calls Bing directly.
+The hosted MCP server itself does not read Bing data.
 
 ## How Google data is protected
 

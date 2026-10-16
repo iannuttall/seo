@@ -1,3 +1,9 @@
+import {
+  cloudGoogleEmails,
+  cloudGoogleToken,
+  cloudLinked,
+  notSignedIn,
+} from '../../cloud.js'
 import { SeoError } from '../../errors.js'
 import { getSeoCliPaths } from '../../paths.js'
 import {
@@ -37,7 +43,7 @@ function authRequired(accountEmail?: string): SeoError {
     'AUTH_REQUIRED',
     accountEmail
       ? `Google account ${accountEmail} is not connected. Run \`seo auth login\` first.`
-      : 'Not logged in. Run `seo auth login` first.',
+      : notSignedIn(),
   )
 }
 
@@ -169,7 +175,7 @@ export async function refreshAuthToken(
 
 export type AuthorizedGoogleClient = {
   client: GoogleAccessTokenClient
-  mode: 'oauth' | 'service-account'
+  mode: 'oauth' | 'service-account' | 'cloud'
   identity: string
   quotaIdentity: {
     clientId: string
@@ -191,6 +197,18 @@ export async function createGoogleAccessTokenClient(
         clientId: 'service-account',
         accountEmail: serviceAccount.clientEmail,
       },
+    }
+  }
+
+  // A machine linked with `seo login` uses the seoskill.dev account's
+  // Google sign-ins; tokens come from there and are never stored here.
+  if (cloudLinked()) {
+    const email = accountEmail ?? (await cloudGoogleEmails())[0] ?? ''
+    return {
+      client: { getAccessToken: () => cloudGoogleToken(email || undefined) },
+      mode: 'cloud',
+      identity: email,
+      quotaIdentity: { clientId: 'seoskill.dev', accountEmail: email },
     }
   }
 

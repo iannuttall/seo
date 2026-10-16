@@ -9,6 +9,7 @@ export type {
 export * from './analytics.js'
 export * from './bing.js'
 export * from './domain-rating.js'
+export * from './linked.js'
 export * from './page-facts.js'
 export * from './present.js'
 export * from './report.js'

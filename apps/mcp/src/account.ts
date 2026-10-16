@@ -1,4 +1,5 @@
 import { bingCall, listBingSites } from '@seo/core/commands'
+import { loginUrl, newToken } from './cli.ts'
 import { signInPerson } from './oauth.ts'
 import { view } from './page.ts'
 import {
@@ -10,18 +11,22 @@ import {
 import { type Sealed, seal, unseal } from './seal.ts'
 import {
   accountsOf,
+  approveLogin,
+  cliLinksOf,
   deleteUser,
   keysOf,
   linkAccount,
+  pendingLogin,
   removeAccount,
+  removeCliLink,
   setKey,
   userExists,
 } from './store.ts'
-import { HOSTED_BING } from './tools/deps.ts'
 
-// The account page: the person's linked Google accounts, Bing and research
-// keys, with add, remove and delete everything. Google sign-in only; a
-// cookie holds the sealed person id for 30 days.
+// The account page: the person's linked Google accounts, Bing, research
+// keys and machines linked with `seo login`, with add, remove and delete
+// everything. Google sign-in only; a cookie holds the sealed person id for
+// 30 days.
 
 const SESSION_TTL = 30 * 24 * 60 * 60_000
 const FORM_TTL = 60 * 60_000
@@ -67,22 +72,36 @@ async function sessionUser(request: Request, env: Env): Promise<string | null> {
   return session.userId
 }
 
-function signInPage(env: Env, message = ''): Promise<Response> {
-  return view(env, { view: 'signin', message: message || undefined })
+function signInPage(env: Env, message = '', link?: string): Promise<Response> {
+  return view(env, {
+    view: 'signin',
+    message: message || undefined,
+    ...(link ? { link } : {}),
+  })
 }
+
+// A `seo login` code from the link the CLI printed, if it looks like one.
+const linkCode = (value: string | null) =>
+  value && /^[A-Z0-9]{4}-[A-Z0-9]{4}$/.test(value) ? value : undefined
 
 async function accountPage(
   env: Env,
   userId: string,
   message = '',
+  extra: { link?: string; token?: string } = {},
 ): Promise<Response> {
-  const [accounts, keys] = await Promise.all([
+  const [accounts, keys, machines, login] = await Promise.all([
     accountsOf(env, userId),
     keysOf(env, userId),
+    cliLinksOf(env, userId),
+    extra.link ? pendingLogin(env, extra.link) : null,
   ])
   return view(env, {
     view: 'account',
-    message: message || undefined,
+    message:
+      (extra.link && !login
+        ? 'This link expired or was already used. Run `seo login` again.'
+        : message) || undefined,
     account: {
       form: await seal(env.SEAL_KEY, {
         k: 'form',
@@ -93,12 +112,21 @@ async function accountPage(
         .filter((account) => account.provider === 'google')
         .map((account) => ({ email: account.label, subject: account.subject })),
       bing: accounts
-        .filter((account) => HOSTED_BING && account.provider === 'bing')
+        .filter((account) => account.provider === 'bing')
         .map((account) => ({ label: account.label, subject: account.subject })),
-      bingReady: HOSTED_BING && Boolean(env.BING_CLIENT_ID),
+      bingReady: Boolean(env.BING_CLIENT_ID),
       keys: KEY_FIELDS.map((field) => field.header).filter(
         (name) => keys[name],
       ),
+      machines: machines.map((machine) => ({
+        id: machine.id,
+        label: machine.label,
+        usedAt: machine.usedAt,
+      })),
+      ...(login
+        ? { login: { code: login.code ?? '', label: login.label } }
+        : {}),
+      ...(extra.token ? { token: extra.token } : {}),
     },
   })
 }
@@ -112,25 +140,30 @@ export async function account(
   const home = `${env.PUBLIC_URL}/account`
   if (request.method === 'GET' && path === '/account') {
     const userId = await sessionUser(request, env)
-    return userId ? accountPage(env, userId) : signInPage(env)
+    const link = linkCode(new URL(request.url).searchParams.get('link'))
+    return userId
+      ? accountPage(env, userId, '', { link })
+      : signInPage(env, '', link)
   }
   if (request.method !== 'POST') {
     return new Response('Not found', { status: 404 })
   }
+  const data = await request.formData().catch(() => null)
   if (path === '/account/signin') {
+    const link = linkCode(String(data?.get('link') ?? ''))
     return redirect(
       googleSignInUrl(
         env,
         await seal(env.SEAL_KEY, {
           k: 'web',
           userId: null,
+          ...(link ? { link } : {}),
           exp: Date.now() + STATE_TTL,
         }),
       ),
     )
   }
   const userId = await sessionUser(request, env)
-  const data = await request.formData().catch(() => null)
   const form = await unseal(
     env.SEAL_KEY,
     String(data?.get('form') ?? ''),
@@ -153,7 +186,7 @@ export async function account(
         ),
       )
     case '/account/bing':
-      if (!HOSTED_BING || !env.BING_CLIENT_ID) {
+      if (!env.BING_CLIENT_ID) {
         return accountPage(env, userId, 'Bing sign-in is not set up yet.')
       }
       return redirect(
@@ -189,6 +222,28 @@ export async function account(
       if (provider === 'google') await revokeGoogle(target.refresh)
       return redirect(home)
     }
+    case '/account/link': {
+      const code = linkCode(field('code'))
+      if (code && (await approveLogin(env, code, userId))) {
+        return accountPage(
+          env,
+          userId,
+          'Linked. Go back to your terminal or agent: `seo login` finishes there.',
+        )
+      }
+      return accountPage(
+        env,
+        userId,
+        'This link expired or was already used. Run `seo login` again.',
+      )
+    }
+    case '/account/cli/new':
+      return accountPage(env, userId, '', {
+        token: await newToken(env, userId),
+      })
+    case '/account/cli/remove':
+      await removeCliLink(env, field('id'), userId)
+      return redirect(`${home}#machines`)
     case '/account/keys':
       for (const key of KEY_FIELDS) {
         const value = field(key.header)
@@ -212,7 +267,7 @@ export async function account(
           view: 'notice',
           notice: {
             title: 'Deleted',
-            text: 'SEO Skill no longer has your Google or Bing sign-ins or keys. Your agents will ask you to sign in again if you use SEO Skill later.',
+            text: 'SEO Skill no longer has your Google or Bing sign-ins, keys or linked machines. Your agents will ask you to sign in again if you use SEO Skill later.',
           },
         },
         200,
@@ -246,7 +301,7 @@ export async function accountCallback(
     exp: Date.now() + SESSION_TTL,
   })
   return redirect(
-    `${env.PUBLIC_URL}/account`,
+    state.link ? loginUrl(env, state.link) : `${env.PUBLIC_URL}/account`,
     cookie(env, session, SESSION_TTL / 1000),
   )
 }

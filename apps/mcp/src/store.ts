@@ -1,7 +1,7 @@
 import { seal, unseal } from './seal.ts'
 
-// The D1 store: people, their linked Google and Bing accounts, and their
-// research keys. Refresh tokens, access tokens and keys are sealed with
+// The D1 store: people, their linked Google and Bing accounts, their
+// research keys and the machines they linked with `seo login`. Refresh tokens, access tokens and keys are sealed with
 // SEAL_KEY before they are written. Nothing else is kept.
 
 export type Provider = 'google' | 'bing'
@@ -209,7 +209,132 @@ export async function setKey(
 export async function deleteUser(env: Env, userId: string): Promise<void> {
   await env.DB.batch([
     env.DB.prepare('DELETE FROM keys WHERE user_id = ?').bind(userId),
+    env.DB.prepare('DELETE FROM cli_links WHERE user_id = ?').bind(userId),
     env.DB.prepare('DELETE FROM accounts WHERE user_id = ?').bind(userId),
     env.DB.prepare('DELETE FROM users WHERE id = ?').bind(userId),
   ])
+}
+
+// Machines linked with `seo login`. See migrations/0002_cli_links.sql.
+
+export const LOGIN_TTL = 10 * 60_000
+
+export type CliLink = {
+  id: string
+  userId: string | null
+  label: string
+  code: string | null
+  createdAt: number
+  usedAt: number | null
+}
+
+type CliLinkRow = {
+  id: string
+  user_id: string | null
+  label: string
+  code: string | null
+  created_at: number
+  used_at: number | null
+}
+
+const cliLink = (row: CliLinkRow): CliLink => ({
+  id: row.id,
+  userId: row.user_id,
+  label: row.label,
+  code: row.code,
+  createdAt: row.created_at,
+  usedAt: row.used_at,
+})
+
+// A new link: waiting for approval when it has a code, else already the
+// person's (a token made on the account page).
+export async function createCliLink(
+  env: Env,
+  input: { label: string; code: string | null; userId: string | null },
+): Promise<string> {
+  const id = crypto.randomUUID()
+  await env.DB.batch([
+    env.DB.prepare(
+      'DELETE FROM cli_links WHERE code IS NOT NULL AND created_at < ?',
+    ).bind(Date.now() - LOGIN_TTL),
+    env.DB.prepare(
+      'INSERT INTO cli_links (id, user_id, label, code, created_at) VALUES (?, ?, ?, ?, ?)',
+    ).bind(id, input.userId, input.label, input.code, Date.now()),
+  ])
+  return id
+}
+
+export async function cliLinkById(
+  env: Env,
+  id: string,
+): Promise<CliLink | null> {
+  const row = await env.DB.prepare('SELECT * FROM cli_links WHERE id = ?')
+    .bind(id)
+    .first<CliLinkRow>()
+  return row ? cliLink(row) : null
+}
+
+// A login still waiting for approval, by the code the person sees.
+export async function pendingLogin(
+  env: Env,
+  code: string,
+): Promise<CliLink | null> {
+  const row = await env.DB.prepare(
+    'SELECT * FROM cli_links WHERE code = ? AND user_id IS NULL AND created_at > ?',
+  )
+    .bind(code, Date.now() - LOGIN_TTL)
+    .first<CliLinkRow>()
+  return row ? cliLink(row) : null
+}
+
+export async function approveLogin(
+  env: Env,
+  code: string,
+  userId: string,
+): Promise<boolean> {
+  const result = await env.DB.prepare(
+    'UPDATE cli_links SET user_id = ? WHERE code = ? AND user_id IS NULL AND created_at > ?',
+  )
+    .bind(userId, code, Date.now() - LOGIN_TTL)
+    .run()
+  return result.meta.changes > 0
+}
+
+// Clears the code once the CLI has its token, so it is issued only once.
+export async function issueLogin(env: Env, id: string): Promise<boolean> {
+  const result = await env.DB.prepare(
+    'UPDATE cli_links SET code = NULL, used_at = ? WHERE id = ? AND user_id IS NOT NULL AND code IS NOT NULL',
+  )
+    .bind(Date.now(), id)
+    .run()
+  return result.meta.changes > 0
+}
+
+export async function touchCliLink(env: Env, id: string): Promise<void> {
+  await env.DB.prepare('UPDATE cli_links SET used_at = ? WHERE id = ?')
+    .bind(Date.now(), id)
+    .run()
+}
+
+export async function cliLinksOf(env: Env, userId: string): Promise<CliLink[]> {
+  const { results } = await env.DB.prepare(
+    'SELECT * FROM cli_links WHERE user_id = ? AND code IS NULL ORDER BY created_at',
+  )
+    .bind(userId)
+    .all<CliLinkRow>()
+  return results.map(cliLink)
+}
+
+export async function removeCliLink(
+  env: Env,
+  id: string,
+  userId?: string,
+): Promise<void> {
+  await (userId
+    ? env.DB.prepare('DELETE FROM cli_links WHERE id = ? AND user_id = ?').bind(
+        id,
+        userId,
+      )
+    : env.DB.prepare('DELETE FROM cli_links WHERE id = ?').bind(id)
+  ).run()
 }

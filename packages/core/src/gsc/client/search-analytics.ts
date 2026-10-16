@@ -1,3 +1,4 @@
+import { cloudAccountFor } from '../../cloud.js'
 import { searchAnalyticsRows } from '../../google/api.js'
 import { getDb, hashKey, noteCacheWrite } from '../../storage/database.js'
 import type { GscRow } from '../../types.js'
@@ -44,7 +45,9 @@ export async function querySearchAnalytics(
   body: SearchAnalyticsRequest,
   opts: SearchAnalyticsOptions = {},
 ): Promise<SearchAnalyticsResult> {
-  const { client, identity } = await getAuthorized(opts.accountEmail)
+  const { client, identity } = await getAuthorized(
+    opts.accountEmail ?? (await cloudAccountFor(site)),
+  )
   const db = getDb()
   const queryHash = hashKey([site, identity, body])
   const cached = db

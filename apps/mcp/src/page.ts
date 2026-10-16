@@ -80,7 +80,7 @@ button.danger { background: oklch(57.7% 0.215 27.325); color: oklch(98.5% 0 0); 
 // apps/web/src/pages/account-shell.astro.
 export type View =
   | { view: 'connect'; connect: { client: string; host: string; flow: string } }
-  | { view: 'signin'; message?: string }
+  | { view: 'signin'; message?: string; link?: string }
   | { view: 'notice'; notice: { title: string; text: string } }
   | {
       view: 'account'
@@ -91,6 +91,12 @@ export type View =
         bing: { label: string; subject: string }[]
         bingReady: boolean
         keys: string[]
+        // Machines linked with `seo login`.
+        machines: { id: string; label: string; usedAt: number | null }[]
+        // A `seo login` waiting for this person to approve it.
+        login?: { code: string; label: string }
+        // A token just made for a cloud agent, shown once.
+        token?: string
       }
     }
 

@@ -1,12 +1,6 @@
 import assert from 'node:assert/strict'
 import { execFile } from 'node:child_process'
 import { access, mkdtemp, rm, writeFile } from 'node:fs/promises'
-import {
-  createServer,
-  type IncomingMessage,
-  type Server,
-  type ServerResponse,
-} from 'node:http'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 import { describe, test } from 'node:test'
@@ -15,23 +9,6 @@ import { promisify } from 'node:util'
 
 const execFileAsync = promisify(execFile)
 const cliPath = fileURLToPath(new URL('./index.js', import.meta.url))
-
-async function runSeo(
-  args: string[],
-  env: Record<string, string> = {},
-): Promise<string> {
-  const result = await execFileAsync(process.execPath, [cliPath, ...args], {
-    env: {
-      ...process.env,
-      ...env,
-      CI: '1',
-      NO_UPDATE_NOTIFIER: '1',
-    },
-    maxBuffer: 1024 * 1024,
-    timeout: 10_000,
-  })
-  return `${result.stdout}${result.stderr}`
-}
 
 async function runSeoResult(
   args: string[],
@@ -60,25 +37,6 @@ async function runSeoResult(
       stdout: result.stdout ?? '',
       stderr: result.stderr ?? '',
     }
-  }
-}
-
-async function withServer(
-  handler: (req: IncomingMessage, res: ServerResponse) => void,
-): Promise<{ baseUrl: string; close: () => Promise<void> }> {
-  const server = createServer(handler)
-  await new Promise<void>((resolve) => server.listen(0, '127.0.0.1', resolve))
-  const address = server.address()
-  assert.ok(address && typeof address === 'object')
-  return {
-    baseUrl: `http://127.0.0.1:${address.port}`,
-    close: () =>
-      new Promise<void>((resolve, reject) => {
-        ;(server as Server).close((error) => {
-          if (error) reject(error)
-          else resolve()
-        })
-      }),
   }
 }
 

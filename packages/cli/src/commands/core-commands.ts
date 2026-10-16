@@ -25,7 +25,7 @@ import {
 } from '@seo/core/commands'
 import { defineCommand } from 'citty'
 import { booleanArg, csvArg, jsonFlag, numberArg, stringArg } from '../args.js'
-import { resolveProperty } from '../selection.js'
+import { requireSite, resolveProperty } from '../selection.js'
 import { printJson } from '../utils.js'
 
 // The shared commands: the same core code and text as the hosted MCP, with
@@ -147,7 +147,13 @@ export const reportCommand = defineCommand({
         `--section is one of ${SECTION_IDS.join(', ')}.`,
       )
     }
-    const site = await property(args, stringArg(args.site))
+    // The bing section needs only Bing: without a Google property it shows
+    // the Bing rows and says Google was not available.
+    const target = stringArg(args.site)
+    const site =
+      section === 'bing'
+        ? await property(args, target).catch(() => requireSite(target))
+        : await property(args, target)
     await run(args, (deps) =>
       runReport(
         {
@@ -311,8 +317,9 @@ export const dataCommand = defineCommand({
     if (!['search_console', 'bing'].includes(source)) {
       throw new SeoError('INVALID_INPUT', '--source is search_console or bing.')
     }
-    const site = await property(args, stringArg(args.site))
+    // Bing needs only Bing: its own site list matches the site.
     if (source === 'bing') {
+      const site = requireSite(stringArg(args.site))
       await run(args, (deps) =>
         runBingRows(
           {
@@ -328,6 +335,7 @@ export const dataCommand = defineCommand({
       )
       return
     }
+    const site = await property(args, stringArg(args.site))
     const page = stringArg(args.page)
     const query = stringArg(args.query)
     await run(args, (deps) =>

@@ -144,7 +144,12 @@ export const SHARED_TOOLS: SharedTool[] = [
     run: async (surface, input) =>
       runReport(
         {
-          site: await surface.resolveSite(input.site),
+          // The bing section needs only Bing: without a Google property it
+          // shows the Bing rows and says Google was not available.
+          site:
+            input.section === 'bing'
+              ? await surface.resolveSite(input.site).catch(() => input.site)
+              : await surface.resolveSite(input.site),
           section: input.section,
           startDate: input.start_date,
           endDate: input.end_date,

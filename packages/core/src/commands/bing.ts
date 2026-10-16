@@ -231,36 +231,45 @@ export async function bingSection(
       dataState: 'final',
       maxRows: 25_000,
     })
-  const [queries, pages, googleQueries, googlePages] = await Promise.all([
+  // Bing needs only Bing. Without Google the Google columns stay empty and
+  // the caveats say why.
+  const [queries, pages, googleRead] = await Promise.all([
     bingQueries(source.call, source.site),
     bingPages(source.call, source.site),
-    google('query'),
-    google('page'),
+    Promise.all([google('query'), google('page')]).catch((error: unknown) =>
+      error instanceof Error ? error : new Error(String(error)),
+    ),
   ])
+  const googleError = googleRead instanceof Error ? googleRead : null
+  const [googleQueries, googlePages] =
+    googleRead instanceof Error ? [] : googleRead
   const beside = (
     bing: Summed[],
-    googleRows: {
-      keys: string[]
-      clicks: number
-      impressions: number
-      position: number
-    }[],
+    googleRows:
+      | {
+          keys: string[]
+          clicks: number
+          impressions: number
+          position: number
+        }[]
+      | undefined,
     name: 'query' | 'page',
   ) => {
     const norm = (value: string) =>
       name === 'query' ? value.toLowerCase().trim() : value.replace(/#.*$/, '')
     const byKey = new Map(
-      googleRows.map((row) => [norm(row.keys[0] ?? ''), row]),
+      googleRows?.map((row) => [norm(row.keys[0] ?? ''), row]),
     )
     return bing.map((row) => {
       const g = byKey.get(norm(row.key))
+      const known = googleRows ? 0 : null
       return {
         [name]: row.key,
         bingClicks: row.clicks,
         bingImpressions: row.impressions,
         bingPosition: row.position,
-        googleClicks: g?.clicks ?? 0,
-        googleImpressions: g?.impressions ?? 0,
+        googleClicks: g?.clicks ?? known,
+        googleImpressions: g?.impressions ?? known,
         googlePosition: g ? Math.round(g.position * 10) / 10 : null,
       }
     })
@@ -277,10 +286,15 @@ export async function bingSection(
       bingPages: p.rows.length,
       weeks: q.weeks.length,
     },
-    items: beside(q.rows, googleQueries.rows, 'query'),
-    topPages: beside(p.rows, googlePages.rows, 'page'),
+    items: beside(q.rows, googleQueries?.rows, 'query'),
+    topPages: beside(p.rows, googlePages?.rows, 'page'),
     caveats: [
       ...(empty ? [noBingData(source.site)] : []),
+      ...(googleError
+        ? [
+            `Search Console was not available, so the Google columns are empty (unknown, not zero): ${googleError.message}`,
+          ]
+        : []),
       `Bing weeks counted: ${q.weeks.join(', ') || 'none'} (each date names a week). Google numbers cover ${range.startDate} to ${range.endDate} exactly.`,
       'Google numbers are for the same query text or page URL. 0 means Google showed no row for it in these dates.',
       ...BING_LIMITS,

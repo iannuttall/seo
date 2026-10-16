@@ -1,8 +1,16 @@
 import { type BingCall, bingCall } from './bing/api.js'
+import {
+  cloudBing,
+  cloudGoogleEmails,
+  cloudGoogleToken,
+  cloudKeys,
+  cloudLinked,
+} from './cloud.js'
 import type {
   Caller,
   CommandDeps,
   CommandErrorCode,
+  GoogleAccount,
   IndexStatus,
 } from './commands/index.js'
 import {
@@ -12,7 +20,7 @@ import {
   matchProperty,
 } from './commands/index.js'
 import { SeoError, type SeoErrorCode } from './errors.js'
-import type { GoogleFetch } from './google/api.js'
+import { bearerFetch, type GoogleFetch } from './google/api.js'
 import {
   getAuthorized,
   googleFetchFor,
@@ -61,30 +69,44 @@ export function nodeCommandDeps(options: {
 }
 
 export const LOCAL_BING_CONNECT =
-  'Run `seo providers bing connect` with an API key from Bing Webmaster Tools (Settings, API access).'
+  'Connect Bing on your seoskill.dev account and run `seo login`, or run `seo providers bing connect` with an API key from Bing Webmaster Tools (Settings, API access).'
 
 let bing: Promise<BingCall | null> | undefined
 
-// Bing Webmaster calls with the saved API key, or null without one.
+// Bing Webmaster calls with the saved API key, else the seoskill.dev
+// account's Bing sign-ins when this machine is linked, or null.
 export function localBing(): Promise<BingCall | null> {
   bing ??= readBingApiKey()
     .catch(() => undefined)
     .then((key) =>
       key
         ? bingCall({ apiKey: key.apiKey }, { signIn: LOCAL_BING_CONNECT })
-        : null,
+        : cloudLinked()
+          ? cloudBing()
+          : null,
     )
   return bing
 }
 
-// Provider keys from the local secret store, as header-style names. Keys go
-// only to their provider.
+// The Google sign-ins on this machine: the seoskill.dev account's when it is
+// linked, else the local sign-in.
+export async function localAccounts(): Promise<GoogleAccount[]> {
+  if (!cloudLinked()) return [{ email: null, google: await localGoogleFetch() }]
+  return (await cloudGoogleEmails()).map((email) => ({
+    email,
+    google: bearerFetch(() => cloudGoogleToken(email)),
+  }))
+}
+
+// Provider keys, as header-style names: keys saved on this machine win over
+// the seoskill.dev account's. Keys go only to their provider.
 export async function localResearchKeys(): Promise<Headers> {
-  const [dataForSeo, ahrefs] = await Promise.all([
+  const [dataForSeo, ahrefs, saved] = await Promise.all([
     readDataForSeoCredentials().catch(() => undefined),
     readAhrefsApiKey().catch(() => undefined),
+    cloudLinked() ? cloudKeys().catch(() => ({})) : {},
   ])
-  const keys = new Headers()
+  const keys = new Headers(saved)
   if (dataForSeo) {
     keys.set('x-dataforseo-login', dataForSeo.login)
     keys.set('x-dataforseo-password', dataForSeo.password)

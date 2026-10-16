@@ -2,8 +2,8 @@ import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js'
 import { WebStandardStreamableHTTPServerTransport } from '@modelcontextprotocol/sdk/server/webStandardStreamableHttp.js'
 import type { CallToolResult } from '@modelcontextprotocol/sdk/types.js'
 import {
+  CLI_LINK,
   commandErrorFrom,
-  LOCAL_BING,
   MCP_INSTRUCTIONS,
   runSharedTool,
   SHARED_TOOLS,
@@ -36,7 +36,7 @@ function sharedTool(shared: SharedTool): Tool {
           drKey: context.env.AHREFS_DR_KEY,
           accounts: async () => context.directory.accounts(),
           signIn: signInHint(context.env),
-          connect: accountUrl(context.env),
+          connect: `${accountUrl(context.env)}. Crawls, internal links and Bing run in the CLI. ${CLI_LINK}`,
         },
         input,
       )
@@ -48,7 +48,7 @@ function sharedTool(shared: SharedTool): Tool {
 export const TOOLS: Tool[] = SHARED_TOOLS.map(sharedTool)
 
 const instructions = (env: Env) => `${MCP_INSTRUCTIONS}
-Crawls and Bing data run on the person's own machine with the open-source CLI, not on this server. ${LOCAL_BING} If you have a shell, run \`npx -y seo crawl https://example.com --json\` or \`npx -y seo internal-links --url https://example.com/page --json\`. When a site or key is missing, open ${accountUrl(env)} in the person's browser (with \`open <url>\` on macOS, \`xdg-open\` on Linux or \`start\` on Windows when you have a shell, otherwise show the link), let them add the Google account or key there, then run the same call again. This server keeps only those sign-ins and keys, encrypted, and no report data.`
+Crawls, internal links and Bing run on a machine with the open-source CLI, not on this server. ${CLI_LINK} Then run, for example, \`npx -y seo crawl https://example.com --json\`, \`npx -y seo internal-links --url https://example.com/page --json\` or \`npx -y seo report --site <site> --section bing --json\`. When a site or key is missing, open ${accountUrl(env)} in the person's browser (with \`open <url>\` on macOS, \`xdg-open\` on Linux or \`start\` on Windows when you have a shell, otherwise show the link), let them add the Google account or key there, then run the same call again. This server keeps only those sign-ins and keys, encrypted, and no report data.`
 
 const SERVER_INFO = { name: 'seo', title: 'SEO Skill', version: '1.0.0' }
 

@@ -23,11 +23,6 @@ export type ResearchInput = {
   limit: number
 }
 
-export const KEY_HEADERS: Record<ResearchProvider, string> = {
-  dataforseo: 'X-DataForSEO-Login and X-DataForSEO-Password',
-  ahrefs: 'X-Ahrefs-Key',
-}
-
 type Row = Record<string, string | number | boolean | null>
 
 function need(headers: Headers, provider: ResearchProvider): string[] {
@@ -41,7 +36,7 @@ function need(headers: Headers, provider: ResearchProvider): string[] {
   if (values.some((value) => !value)) {
     throw new CommandError(
       'NO_KEY',
-      `No ${provider} key. Hosted MCP: save it at https://seoskill.dev/account#keys or send the ${KEY_HEADERS[provider]} header. CLI and local MCP: run \`seo providers ${provider} connect\`.`,
+      `No ${provider} key. Hosted MCP: save it at https://seoskill.dev/account#keys. CLI and local MCP: run \`seo login\` to use the account's keys, or \`seo providers ${provider} connect\`.`,
     )
   }
   return values as string[]

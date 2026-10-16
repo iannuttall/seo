@@ -425,7 +425,7 @@ export const researchCommand = defineCommand({
     if (!keys.has(header[provider])) {
       throw new SeoError(
         'AUTH_CONFIG_REQUIRED',
-        `No ${provider} key saved. Run \`seo providers ${provider} connect\` first.`,
+        `No ${provider} key. Save it at https://seoskill.dev/account#keys and run \`seo login\`, or run \`seo providers ${provider} connect\` to keep it on this machine only.`,
       )
     }
     const keywords = csvArg(args.keywords) ?? []

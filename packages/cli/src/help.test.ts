@@ -310,7 +310,7 @@ test('report JSON fails clearly when Google auth is missing', async () => {
       ok: false,
       error: {
         code: 'AUTH_REQUIRED',
-        message: 'Not logged in. Run `seo auth login` first.',
+        message: 'Not signed in. Run `seo login` to use your seoskill.dev account on this machine (it prints a link to approve), or `seo auth login` to sign in with Google on this machine only.',
         retryable: false,
       },
     })

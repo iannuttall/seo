@@ -37,13 +37,17 @@ export const BING_LIMITS = [
 // Surfaces without Bing (the hosted MCP, until Bing calls go through a
 // relay: Bing blocks Cloudflare's network with ThrottleIP) send agents to
 // the CLI, as they do for crawls.
-export const LOCAL_BING =
-  'Bing data runs on the person’s machine with the CLI: connect a Bing Webmaster API key once with `npx -y seo providers bing connect`, then run `npx -y seo report --site <site> --section bing --json`.'
+// How an agent on the hosted MCP gets the CLI working on a machine with the
+// same account: Google, Bing and keys, with no extra setup.
+export const CLI_LINK =
+  'If you have a shell, link the CLI to the same account once: run `npx -y seo login`, show the person the link it prints, and after they approve it run `npx -y seo login` again. `npx -y seo` commands then use the same Google accounts, Bing and keys.'
+
+export const LOCAL_BING = `Bing blocks the hosted server, so Bing data comes from the CLI on a machine. ${CLI_LINK} Connect Bing on the account page if it is not connected, then run \`npx -y seo report --site <site> --section bing --json\`.`
 
 // The overview line on a surface without Bing: missing Bing data is not
 // "no Bing traffic", and some sites get most of their search visits there.
 export const NO_BING_HERE =
-  'Bing: not included here, so these totals show Google only. Some sites get most of their search visits from Bing; run `npx -y seo report --site <site> --section bing --json` with the CLI to see them.'
+  'Bing: not included here, so these totals show Google only. Some sites get most of their search visits from Bing; the CLI reads them with the same account: `npx -y seo login` once, then `npx -y seo report --site <site> --section bing --json`.'
 
 const BING_HOME = 'https://www.bing.com/webmasters'
 

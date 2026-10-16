@@ -1,8 +1,8 @@
 import type { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js'
 import {
   LOCAL_SIGN_IN,
+  localAccounts,
   localError,
-  localGoogleFetch,
   localResearchKeys,
   nodeCommandDeps,
   resolveLocalSite,
@@ -78,10 +78,10 @@ export function registerSharedTools(
     resolveSite: (site: string) => resolveLocalSite(site),
     keys: localResearchKeys,
     drKey: null,
-    accounts: async () => [{ email: null, google: await localGoogleFetch() }],
+    accounts: localAccounts,
     signIn: LOCAL_SIGN_IN.signIn,
     connect:
-      'run `seo auth login` for Google, `seo providers bing connect` for Bing, and `seo providers dataforseo connect` or `seo providers ahrefs connect` for keys.',
+      'run `seo login` to use your seoskill.dev account (Google, Bing and keys in one place), or `seo auth login`, `seo providers bing connect` and `seo providers dataforseo connect` or `seo providers ahrefs connect` on this machine only.',
   }
   for (const shared of SHARED_TOOLS) {
     server.registerTool(

@@ -76,7 +76,11 @@ const keys: { name: string; label: string; type: 'text' | 'password' }[] = [
         <p class={note}>
           A Google account that is not connected yet gets its own new account.
         </p>
+        <p class={note} data-signin-link hidden>
+          After you sign in, you can link the <code>seo</code> CLI that asked.
+        </p>
         <form method="post" data-action="/account/signin" class="mt-6">
+          <input type="hidden" name="link" data-link-code />
           <button type="submit" class={primary}>Sign in with Google</button>
         </form>
       </div>
@@ -91,6 +95,26 @@ const keys: { name: string; label: string; type: 'text' | 'password' }[] = [
 
     <section data-view="account" hidden>
       <div class="flex flex-col gap-4">
+        <div class={panel} data-login hidden>
+          <h2 class={heading}>Link the seo CLI</h2>
+          <p class="mt-1 text-sm/6 text-foreground">
+            <strong class="font-medium" data-login-label></strong> asked to
+            link with code <strong class="font-mono font-medium" data-login-code></strong>.
+          </p>
+          <p class={note}>
+            Only link it if you just ran <code>seo login</code> yourself. That
+            machine can then use your Google accounts, Bing and keys.
+          </p>
+          <div class="mt-4 flex flex-wrap items-center gap-3">
+            <form method="post" data-action="/account/link">
+              <input type="hidden" name="form" />
+              <input type="hidden" name="code" data-login-input />
+              <button type="submit" class={primary}>Link this machine</button>
+            </form>
+            <a href="/account" data-href="/account" class={outline}>Cancel</a>
+          </div>
+        </div>
+
         <div class={panel} id="google">
           <h2 class={heading}>Google accounts</h2>
           <p class={note}>Each report uses the account that can read the site.</p>
@@ -105,7 +129,8 @@ const keys: { name: string; label: string; type: 'text' | 'password' }[] = [
           <h2 class={heading}>Bing Webmaster Tools</h2>
           <p class={note}>
             Adds Bing clicks, impressions, queries and pages beside Search
-            Console. Each report uses the Bing account that has the site.
+            Console. Bing blocks this server, so Bing data comes through
+            the <code>seo</code> CLI on your own machine after <code>seo login</code>.
           </p>
           <ul class="mt-4 divide-y divide-border text-sm" data-bing-list></ul>
           <form method="post" data-action="/account/bing" class="mt-4" data-bing-add>
@@ -152,11 +177,36 @@ const keys: { name: string; label: string; type: 'text' | 'password' }[] = [
           </form>
         </div>
 
+        <div class={panel} id="machines">
+          <h2 class={heading}>Linked machines</h2>
+          <p class={note}>
+            The <code>seo</code> CLI on these machines uses your Google
+            accounts, Bing and keys. Run <code>seo login</code> on a machine to
+            add it.
+          </p>
+          <ul class="mt-4 divide-y divide-border text-sm" data-machine-list></ul>
+          <div class="mt-4" data-token hidden>
+            <p class="text-sm/6 text-foreground">
+              Save this as <code>SEO_TOKEN</code> in your cloud agent's
+              secrets. It is shown once.
+            </p>
+            <input
+              readonly
+              class="mt-2 w-full rounded-md bg-background px-3 py-2 font-mono text-xs text-foreground"
+              data-token-value
+            />
+          </div>
+          <form method="post" data-action="/account/cli/new" class="mt-4">
+            <input type="hidden" name="form" />
+            <button type="submit" class={outline}>Make a token for a cloud agent</button>
+          </form>
+        </div>
+
         <div class={panel}>
           <h2 class={heading}>Delete everything</h2>
           <p class={note}>
-            Removes your Google and Bing sign-ins and keys from SEO Skill and
-            revokes the Google sign-ins. Your agents will ask you to sign in
+            Removes your Google and Bing sign-ins, keys and linked machines
+            from SEO Skill and revokes the Google sign-ins. Your agents will ask you to sign in
             again.
           </p>
           <div class="mt-4 flex flex-wrap items-center gap-3">
@@ -184,6 +234,19 @@ const keys: { name: string; label: string; type: 'text' | 'password' }[] = [
         </form>
       </li>
     </template>
+    <template data-machine-row>
+      <li class="flex items-center justify-between gap-4 py-2.5">
+        <span class="min-w-0 text-foreground">
+          <span data-machine-label></span>
+          <span class="text-foreground-muted" data-machine-used></span>
+        </span>
+        <form method="post" data-action="/account/cli/remove">
+          <input type="hidden" name="form" />
+          <input type="hidden" name="id" data-machine-id />
+          <button type="submit" class={quiet}>Remove</button>
+        </form>
+      </li>
+    </template>
   </main>
 </BaseLayout>
 
@@ -200,7 +263,11 @@ const keys: { name: string; label: string; type: 'text' | 'password' }[] = [
       bing: { label: string; subject: string }[]
       bingReady: boolean
       keys: string[]
+      machines: { id: string; label: string; usedAt: number | null }[]
+      login?: { code: string; label: string }
+      token?: string
     }
+    link?: string
   }
 
   const root = document.querySelector<HTMLElement>('[data-account-app]')
@@ -258,9 +325,46 @@ const keys: { name: string; label: string; type: 'text' | 'password' }[] = [
         if (input) input.placeholder = 'Leave empty to keep the saved key'
       }
       show(root.querySelector('[data-keys-remove]'), account.keys.length > 0)
+      const machineRow = root.querySelector<HTMLTemplateElement>('[data-machine-row]')
+      const machineList = root.querySelector('[data-machine-list]')
+      for (const machine of account.machines) {
+        const copy = machineRow?.content.cloneNode(true) as DocumentFragment
+        const label = copy.querySelector('[data-machine-label]')
+        if (label) label.textContent = machine.label
+        const used = copy.querySelector('[data-machine-used]')
+        if (used && machine.usedAt) {
+          used.textContent = ` · used ${new Date(machine.usedAt).toLocaleDateString()}`
+        }
+        const id = copy.querySelector<HTMLInputElement>('[data-machine-id]')
+        if (id) id.value = machine.id
+        machineList?.append(copy)
+      }
+      if (account.login) {
+        show(root.querySelector('[data-login]'))
+        const label = root.querySelector('[data-login-label]')
+        if (label) label.textContent = account.login.label
+        const code = root.querySelector('[data-login-code]')
+        if (code) code.textContent = account.login.code
+        const input = root.querySelector<HTMLInputElement>('[data-login-input]')
+        if (input) input.value = account.login.code
+      }
+      if (account.token) {
+        show(root.querySelector('[data-token]'))
+        const value = root.querySelector<HTMLInputElement>('[data-token-value]')
+        if (value) {
+          value.value = account.token
+          value.addEventListener('focus', () => value.select())
+        }
+      }
       for (const input of all<HTMLInputElement>('input[name="form"]')) {
         input.value = account.form
       }
+    }
+
+    if (state.view === 'signin' && state.link) {
+      show(root.querySelector('[data-signin-link]'))
+      const code = root.querySelector<HTMLInputElement>('[data-link-code]')
+      if (code) code.value = state.link
     }
 
     const connect = state.connect

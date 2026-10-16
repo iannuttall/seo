@@ -14,12 +14,15 @@ There are two ways to reach the same commands:
 
 - **MCP tools**, from the hosted server at `https://seoskill.dev/mcp` or the
   local server from `seo mcp serve`. Use them when they are connected.
-- **The CLI**. Before the first call, run `command -v seo`. If it is missing,
-  run `npm i -g seo`, then `seo start` to sign in with Google. Add `--json`
-  for machine-readable output; JSON mode never prompts.
+- **The CLI**: `seo`, or `npx -y seo` when it is not installed. Sign in
+  once with `seo login`: show the person the link it prints, then run
+  `seo login` again after they approve. It uses the same seoskill.dev
+  account as the hosted server (Google accounts, Bing, keys). A cloud agent
+  can use an account-page token as `SEO_TOKEN`. Add `--json` for JSON; it
+  never prompts.
 
-Crawls, internal links and Bing run only on the person's machine, through
-the CLI or the local MCP server.
+Crawls, internal links and Bing run only in the CLI or the local MCP
+server, on any machine with a shell.
 
 ## The commands
 
@@ -52,9 +55,6 @@ CLI commands need `--site` (or `--url`): `example.com`, a URL or
 4. Each result ends with the command to run next. Follow it when it fits the
    question.
 
-Each command takes a target and optional dates. Everything else is automatic
-and shown in the output.
-
 ## Common jobs
 
 | Job | Commands |
@@ -76,17 +76,18 @@ and shown in the output.
 The report overview shows Google and Bing clicks for the same dates. The
 `bing` section puts Bing's top queries and pages beside Google's numbers. Never
 add Bing to Google. Bing lists only its top rows by week, so a missing row is
-unknown, not zero. Bing runs in the CLI and local MCP server: connect it once
-with `seo providers bing connect` (or `SEO_BING_API_KEY`). The hosted server
-has no Bing yet, so its totals are Google only: no Bing data there is not
-"no Bing traffic". Run `npx -y seo report --site <site> --section bing --json`.
+unknown, not zero. Bing runs in the CLI and local MCP server: connect Bing
+on the account page and run `seo login`, or use `seo providers bing connect`.
+The hosted server cannot reach Bing, so its totals are Google only: no Bing
+data there is not "no Bing traffic". Run
+`npx -y seo report --site <site> --section bing --json`.
 
 ## Research keys
 
-Research costs the person's own provider credits. On the hosted server, add
-keys and missing Google accounts at `https://seoskill.dev/account`, or send
-keys as client headers. In the CLI and local server, run
-`seo providers <name> connect`. Domain Rating appears
+Research costs the person's own provider credits. Keys and missing Google
+accounts are added at `https://seoskill.dev/account`; the hosted server and
+a CLI linked with `seo login` both use them. `seo providers <name> connect`
+keeps a key on one machine only. Domain Rating appears
 as a free column next to domains; credit it as "Domain Rating by Ahrefs".
 
 ## Evidence rules

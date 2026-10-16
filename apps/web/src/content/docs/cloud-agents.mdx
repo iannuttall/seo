@@ -1,7 +1,7 @@
 ---
 title: Run in cloud agents
-description: Set up SEO Skill on cloud agents and CI machines that are rebuilt each time, with the hosted MCP or a headless CLI that signs in with a Google service account.
-lead: Use SEO Skill on Amp, Codex cloud, CI and other machines that start fresh each time. Pick the hosted MCP or a headless CLI.
+description: Set up SEO Skill on cloud agents and CI machines that are rebuilt each time, with the hosted MCP, the CLI and an account token, or a Google service account.
+lead: Use SEO Skill on Amp, Codex cloud, CI and other machines that start fresh each time. Pick the hosted MCP, the CLI with an account token, or a service account.
 ---
 
 A cloud agent machine is rebuilt for each task, so nothing you set up by hand survives. Everything has to come from the agent's config, its start-up script and its secrets.
@@ -18,9 +18,21 @@ That URL is all the config needs. The MCP client keeps a token that points to yo
 
 Research keys saved on your [account page](https://seoskill.dev/account) work here too. Or send them from the agent's secrets as headers, for example `X-Ahrefs-Key`, so nothing is saved. The [API keys guide](/docs/keys) lists them.
 
-## Option 2: the CLI, fully headless
+## Option 2: the CLI with an account token
 
-The CLI can run with no browser and no saved state. It needs three things from the platform: an install step, a Google service account, and your keys as secrets.
+This is the simplest way to get everything, including Bing and crawls, on a machine with no browser. On your [account page](https://seoskill.dev/account), under **Linked machines**, choose **Make a token for a cloud agent** and save it in the platform's secrets as `SEO_TOKEN`. Then install the CLI in the start-up script:
+
+```sh
+npm i -g seo
+```
+
+The CLI uses your account's Google accounts, Bing and keys, with nothing else to set up. Remove the token on the account page when you no longer need it.
+
+If the agent can show you a link, it can also run `npx -y seo login` and ask you to approve the machine. That link lasts only as long as the machine, so a token is better for machines that are rebuilt.
+
+## Option 3: the CLI with a Google service account
+
+The CLI can also run with no account at all. It needs three things from the platform: an install step, a Google service account, and your keys as secrets.
 
 ### Create a Google service account
 
@@ -41,6 +53,7 @@ Store these as secrets in the platform, so they arrive as environment variables:
 | `SEO_AHREFS_API_KEY` | Optional, for research with Ahrefs |
 | `SEO_BING_API_KEY` | Optional, for [Bing Webmaster Tools](/docs/bing) data |
 | `SEO_CLICKY_SITEKEY` | Optional, read by the [Clicky provider package](https://github.com/iannuttall/seoskill-clicky-provider) |
+| `DO_NOT_TRACK` | Optional. Set to `1` to turn off the [anonymous usage counts](/telemetry) |
 
 If the platform gives you a file instead, set `SEO_GOOGLE_SERVICE_ACCOUNT_FILE` (or `GOOGLE_APPLICATION_CREDENTIALS`) to its path. Set only one of the three Google variables.
 

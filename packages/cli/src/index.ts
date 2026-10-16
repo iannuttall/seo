@@ -37,6 +37,7 @@ import {
 } from './commands/diagnosis-reports.js'
 import { exportCommand } from './commands/export/index.js'
 import { initCommand } from './commands/init.js'
+import { loginCommand, logoutCommand } from './commands/login.js'
 import { logsCommand } from './commands/logs.js'
 import { mcpCommand } from './commands/mcp.js'
 import {
@@ -125,6 +126,7 @@ const helpSections: HelpSection[] = [
   {
     title: 'Setup',
     commands: [
+      ['seo login', 'Use your seoskill.dev account on this machine'],
       ['seo sites', 'List Search Console properties'],
       ['seo mcp install', 'Add the local MCP server to your agents'],
       ['seo providers', 'Connect DataForSEO or Ahrefs'],
@@ -219,6 +221,8 @@ const main = defineCommand({
     skill: skillsCommand,
     start: startCommand,
     setup: setupCommand,
+    login: loginCommand,
+    logout: logoutCommand,
     report: reportCommand,
     page: pageCommand,
     compare: compareCommand,

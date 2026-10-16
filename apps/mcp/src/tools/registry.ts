@@ -1,5 +1,5 @@
+import type { LinkedAccounts } from '@seo/core/commands'
 import type { z } from 'zod'
-import type { Directory } from '../google.ts'
 
 // One tool shape for MCP. Each tool parses its input with Zod and returns
 // the text an agent reads.
@@ -7,7 +7,7 @@ import type { Directory } from '../google.ts'
 export type ToolContext = {
   env: Env
   // The person's linked Google and Bing accounts.
-  directory: Directory
+  directory: LinkedAccounts
   // The request headers plus stored research keys; headers win.
   headers: Headers
   // Work that may finish after the response, such as usage counts.

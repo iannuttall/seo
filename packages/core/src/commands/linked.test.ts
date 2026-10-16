@@ -1,17 +1,10 @@
 import assert from 'node:assert/strict'
 import { test } from 'node:test'
-import { Directory } from './google.ts'
-import type { Account } from './store.ts'
+import { LinkedAccounts } from './linked.js'
 
-const env = { PUBLIC_URL: 'https://seoskill.dev' } as Env
-
-const account = (label: string, token: string): Account => ({
-  provider: 'google',
-  subject: label,
-  label,
-  refresh: 'r',
-  access: token,
-  accessExp: Date.now() + 60_000,
+const account = (email: string, token: string) => ({
+  email,
+  token: async () => token,
 })
 
 const SITES: Record<string, { siteUrl: string; permissionLevel: string }[]> = {
@@ -40,10 +33,16 @@ test('each site goes to the linked Google account with the most access to it', a
     return Response.json({ rows: [] })
   }) as typeof fetch
 
-  const directory = new Directory(env, [
-    account('a@example.com', 'one'),
-    account('b@example.com', 'two'),
-  ])
+  const directory = new LinkedAccounts(
+    {
+      google: [
+        account('a@example.com', 'one'),
+        account('b@example.com', 'two'),
+      ],
+      bing: [],
+    },
+    { signIn: 'Sign in again.', addGoogle: 'Add the Google account.' },
+  )
   assert.equal(
     await directory.resolve('https://example.org/pay'),
     'sc-domain:example.org',
@@ -63,6 +62,6 @@ test('each site goes to the linked Google account with the most access to it', a
   ])
   await assert.rejects(
     directory.resolve('nobody.org'),
-    /None of the connected Google accounts \(a@example.com, b@example.com\).*https:\/\/seoskill.dev\/account/,
+    /None of the connected Google accounts \(a@example.com, b@example.com\).*Add the Google account/,
   )
 })

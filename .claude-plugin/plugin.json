@@ -2,7 +2,7 @@
   "name": "seo",
   "displayName": "seo",
   "description": "Free Google Search Console MCP server and SEO skill for AI agents. Reads your real Search Console, Google Analytics and Bing data, plus DataForSEO and Ahrefs keyword research. Facts from your own data, never guesses.",
-  "version": "0.4.1",
+  "version": "0.4.2",
   "author": {
     "name": "Ian Nuttall"
   },

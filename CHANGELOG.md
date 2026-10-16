@@ -1,5 +1,10 @@
 # Changelog
 
+## 0.4.2
+
+- The MCP Registry name is now `dev.seoskill/seo`, under the seoskill.dev
+  domain. It was `io.github.iannuttall/seo`. Nothing else changed.
+
 ## 0.4.1
 
 Replaces 0.4.0 and 0.3.0, which were removed from npm. Same features.

@@ -210,8 +210,60 @@ const LOST_SHARE = 0.2
 const MIN_LOST = 3
 const CHECKED = 20
 const INSPECTED = 10
+// Most of the inspected pages, and at least this many, out of the index.
+const SITE_WIDE_MIN = 5
 
-export const LOST_PAGES_RULE = `Pages that had at least ${MIN_LOST} clicks in the previous 28 days and kept ${LOST_SHARE * 100}% or less of them in the last 28 days, with a live check of the top ${CHECKED} and Google’s index status for the top ${INSPECTED}.`
+// Counts of URL Inspection results, and a line when most inspected pages
+// are out of Google's index while the home page is in it. A pattern to
+// check, not a cause.
+export function indexSummary(
+  inspected: (IndexStatus | null)[],
+  home: { url: string; status: IndexStatus | null } | null,
+) {
+  const known = inspected.filter(
+    (item): item is IndexStatus => item?.verdict != null,
+  )
+  const indexed = known.filter((item) => item.verdict === 'PASS').length
+  const coverage = new Map<string, number>()
+  for (const item of known) {
+    if (item.verdict === 'PASS') continue
+    const state = item.coverage ?? item.verdict ?? 'unknown'
+    coverage.set(state, (coverage.get(state) ?? 0) + 1)
+  }
+  const notIndexed = known.length - indexed
+  const homeIndexed = home?.status?.verdict
+    ? home.status.verdict === 'PASS'
+    : null
+  const siteWide =
+    notIndexed >= SITE_WIDE_MIN && notIndexed * 2 > known.length && homeIndexed
+  const byCoverage = [...coverage]
+    .sort((a, b) => b[1] - a[1] || a[0].localeCompare(b[0]))
+    .map(([state, count]) => ({ state, count }))
+  const lines = known.length
+    ? [
+        `Index status of the ${known.length} inspected pages: ${indexed} indexed, ${notIndexed} not indexed${byCoverage.length ? ` (${byCoverage.map((item) => `${item.count} ${item.state}`).join('; ')})` : ''}.${home && homeIndexed !== null ? ` Home page ${home.url}: ${homeIndexed ? 'indexed' : `not indexed (${home.status?.coverage ?? home.status?.verdict})`}.` : ''}`,
+        siteWide
+          ? `Site-wide pattern: ${notIndexed} of ${known.length} inspected pages are not in Google's index, but the home page is. This points to the whole site, not single pages. It does not show the cause.`
+          : null,
+      ]
+    : []
+  return {
+    text: lines.filter(Boolean).join('\n'),
+    data: {
+      inspected: known.length,
+      indexed,
+      notIndexed,
+      byCoverage,
+      homePage:
+        home && homeIndexed !== null
+          ? { url: home.url, indexed: homeIndexed }
+          : null,
+      siteWide: Boolean(siteWide),
+    },
+  }
+}
+
+export const LOST_PAGES_RULE = `Pages that had at least ${MIN_LOST} clicks in the previous 28 days and kept ${LOST_SHARE * 100}% or less of them in the last 28 days, with a live check of the top ${CHECKED} and Google’s index status for the top ${INSPECTED} and the home page.`
 
 export async function runLostPages(
   input: DateInput & { site: string },
@@ -242,12 +294,30 @@ export async function runLostPages(
         a.url.localeCompare(b.url),
     )
   const top = lost.slice(0, CHECKED)
-  const [facts, indexed] = await Promise.all([
+  const homeUrl = top[0] ? `${new URL(top[0].url).origin}/` : null
+  const [facts, indexed, homeStatus] = await Promise.all([
     deps.checkPages(top.map((row) => row.url)),
     Promise.all(
       top.slice(0, INSPECTED).map((row) => deps.inspect(input.site, row.url)),
     ),
+    homeUrl && !top.slice(0, INSPECTED).some((row) => row.url === homeUrl)
+      ? deps.inspect(input.site, homeUrl).catch(() => null)
+      : null,
   ])
+  const homeIndex = top
+    .slice(0, INSPECTED)
+    .findIndex((row) => row.url === homeUrl)
+  const summary = indexSummary(
+    homeIndex >= 0
+      ? indexed.filter((_, index) => index !== homeIndex)
+      : indexed,
+    homeUrl
+      ? {
+          url: homeUrl,
+          status: homeIndex >= 0 ? (indexed[homeIndex] ?? null) : homeStatus,
+        }
+      : null,
+  )
   const rows = top.map((row, index) => ({
     ...row,
     status: facts[index]?.status ?? null,
@@ -265,6 +335,7 @@ export async function runLostPages(
       rows.length
         ? table(rows, Object.keys(rows[0] ?? {}), originOf(input.site))
         : 'No pages lost their clicks.',
+      summary.text,
       'Live checks are fetched now with no redirects followed. Index status is from URL Inspection; Google allows about 2,000 inspections a day per property.',
       temporaryRedirectNote(rows),
       `Next: ${deps.call('page')} for one URL; ${deps.call('report', { site: input.site, section: 'content-decay' })} for pages that lost part of their clicks.`,
@@ -277,6 +348,7 @@ export async function runLostPages(
       comparisonRange: before,
       rule: LOST_PAGES_RULE,
       lostPages: lost.length,
+      index: summary.data,
       pages: rows,
     },
   }

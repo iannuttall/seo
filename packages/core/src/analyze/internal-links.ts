@@ -1,5 +1,6 @@
+import { deriveBrandTerms } from '../brand.js'
 import { extractPage } from '../extract/page-extractor.js'
-import { type FetchRateControls, fetchPage } from '../fetch/page-fetcher.js'
+import { fetchPage } from '../fetch/page-fetcher.js'
 import { querySearchAnalytics } from '../gsc/client.js'
 import { assertUrlMatchesGscProperty } from '../gsc/property-url.js'
 import { SessionLedger } from '../storage/ledger.js'
@@ -16,8 +17,6 @@ import {
 } from './internal-links-placement.js'
 import {
   completeInternalLinksSelection,
-  internalLinksIntegerOption,
-  internalLinksNumberOption,
   internalLinksReportRange,
   internalLinksVerdict,
   uniqueInternalLinksWarnings,
@@ -38,19 +37,22 @@ type SearchAnalytics = typeof querySearchAnalytics
 type FetchPage = typeof fetchPage
 type ExtractPage = typeof extractPage
 
+// The report takes only its target and optional dates. Every other choice
+// is fixed here and shown in the output.
 export interface InternalLinksInput {
   site: string
   targetUrl: string
-  days?: number
-  limit?: number
-  checkLimit?: number
-  minImpressions?: number
-  brandTerms?: string[]
-  includeBrand?: boolean
-  js?: boolean | 'auto'
-  rate?: FetchRateControls
+  startDate?: string
+  endDate?: string
   refresh?: boolean
 }
+
+// The last 90 days give a small site enough queries; a large site reaches
+// the row cap, which the output reports.
+const DEFAULT_DAYS = 90
+const RESULT_LIMIT = 20
+const CHECK_LIMIT = 40
+const MIN_IMPRESSIONS = 1
 
 export interface InternalLinksDependencies {
   searchAnalytics: SearchAnalytics
@@ -75,43 +77,17 @@ export async function internalLinksReport(
   )
   targetPage.hash = ''
   const targetUrl = targetPage.toString()
-  const days = internalLinksIntegerOption({
-    value: input.days,
-    fallback: 28,
-    minimum: 1,
-    maximum: 548,
-    label: 'days',
-  })
-  const limit = internalLinksIntegerOption({
-    value: input.limit,
-    fallback: 20,
-    minimum: 1,
-    maximum: 100,
-    label: 'limit',
-  })
-  const checkLimit = internalLinksIntegerOption({
-    value: input.checkLimit,
-    fallback: Math.max(limit, 40),
-    minimum: 1,
-    maximum: 200,
-    label: 'checkLimit',
-  })
-  const minImpressions = internalLinksNumberOption({
-    value: input.minImpressions,
-    fallback: 1,
-    minimum: 0,
-    maximum: 1_000_000_000,
-    label: 'minImpressions',
-  })
+  const limit = RESULT_LIMIT
+  const checkLimit = CHECK_LIMIT
+  const minImpressions = MIN_IMPRESSIONS
   const now = dependencies.now()
-  const range = internalLinksReportRange(days, now)
+  const { days, ...range } = internalLinksReportRange(input, DEFAULT_DAYS, now)
+  const brandTerms = deriveBrandTerms({ siteUrl: input.site })
   const ledger = new SessionLedger()
   const target = await verifyInternalLinkTarget({
     site: input.site,
     targetUrl,
-    js: input.js,
     refresh: input.refresh,
-    rate: input.rate,
     dependencies,
   })
 
@@ -147,8 +123,7 @@ export async function internalLinksReport(
     site: input.site,
     targetAliases: target.aliases,
     minImpressions,
-    brandTerms: input.brandTerms,
-    includeBrand: input.includeBrand,
+    brandTerms,
   })
   const queryCandidates =
     target.verification === 'verified' &&
@@ -173,8 +148,7 @@ export async function internalLinksReport(
     site: input.site,
     targetAliases: target.aliases,
     minImpressions,
-    brandTerms: input.brandTerms,
-    includeBrand: input.includeBrand,
+    brandTerms,
   })
 
   const found: Array<{
@@ -195,9 +169,7 @@ export async function internalLinksReport(
       site: input.site,
       candidate,
       target,
-      js: input.js,
       refresh: input.refresh,
-      rate: input.rate,
       dependencies,
     })
     warnings.push(...verified.warnings)
@@ -345,15 +317,16 @@ export async function internalLinksReport(
         (sum, item) => sum + item.matchedQueryImpressions,
         0,
       ),
-      brandFiltering: input.includeBrand ? 'included' : 'excluded',
+      brandFiltering: 'excluded',
       verdict: summaryVerdict,
     },
     items,
     warnings: structuredWarnings,
     caveats: [
-      `Date window: ${range.startDate} to ${range.endDate} (${days} days), using final GSC data where available.`,
+      `Date window: ${range.startDate} to ${range.endDate} (${days} days), using final GSC data where available.${input.startDate ? '' : ` Without dates the window is the last ${DEFAULT_DAYS} days.`}`,
+      `Limits: up to ${checkLimit} source pages are checked live and up to ${limit} are returned. Queries need at least ${minImpressions} impression.`,
       `Selection: ${analysis.selection.targetEligibleQueries} eligible target queries, ${analysis.selection.candidateUrls} matched source pages, ${attemptedSources} attempted, ${checkedSources} successfully checked, ${items.length} returned.`,
-      `Minimum retained query impressions: ${minImpressions}. Brand queries were ${input.includeBrand ? 'included' : 'excluded when detected or configured'}.`,
+      `Brand queries were left out. Brand terms found from the domain: ${brandTerms.join(', ') || 'none'}.`,
       'GSC query rows omit anonymized queries and lower-volume rows. A 100,000-row cap is reported separately when reached.',
       'Exact query overlap is medium-confidence affinity evidence; lexical matches are low-confidence review evidence. Neither predicts traffic lift or link equity.',
       'The fetch checks HTML link placement, but it cannot prove editorial relevance. Review intent and reader usefulness before adding a link.',

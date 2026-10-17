@@ -90,17 +90,14 @@ function absoluteCanonical(page: ExtractedPage): string | undefined {
 export async function verifyInternalLinkTarget(input: {
   site: string
   targetUrl: string
-  js?: boolean | 'auto'
   refresh?: boolean
-  rate?: FetchRateControls
   dependencies: InternalLinksVerificationDependencies
 }): Promise<VerifiedInternalLinkTarget> {
   let fetched: PageFetchResult
   try {
     fetched = await input.dependencies.fetch(input.targetUrl, {
-      js: input.js ?? 'auto',
+      js: 'auto',
       refresh: input.refresh,
-      rate: input.rate,
     })
   } catch (error) {
     return {
@@ -211,9 +208,7 @@ export async function verifyInternalLinkCandidate(input: {
   site: string
   candidate: InternalLinkCandidate
   target: VerifiedInternalLinkTarget
-  js?: boolean | 'auto'
   refresh?: boolean
-  rate?: FetchRateControls
   dependencies: InternalLinksVerificationDependencies
 }): Promise<{
   item?: Omit<InternalLinkOpportunity, 'placement'>
@@ -241,9 +236,8 @@ export async function verifyInternalLinkCandidate(input: {
   let fetched: PageFetchResult
   try {
     fetched = await input.dependencies.fetch(input.candidate.sourceUrl, {
-      js: input.js ?? 'auto',
+      js: 'auto',
       refresh: input.refresh,
-      rate: input.rate,
     })
   } catch (error) {
     return {

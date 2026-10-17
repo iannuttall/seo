@@ -1,0 +1,27 @@
+name: New data source
+description: Ask about adding an analytics or research tool
+title: "Data source: "
+labels: [data-source]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        **There will be no more built-in data sources.** The built-in list is Search Console, Google Analytics, Bing Webmaster Tools, Clicky, DataForSEO and Ahrefs.
+
+        To add any other tool, build your own provider package from the [provider template](https://github.com/iannuttall/seo-provider-template). It takes about an hour, and it runs in the CLI and the local MCP server.
+
+        Open this issue only if the provider SDK is missing something your package needs.
+  - type: input
+    id: tool
+    attributes:
+      label: Tool
+      description: The analytics or research tool you are building a provider for.
+    validations:
+      required: true
+  - type: textarea
+    id: missing
+    attributes:
+      label: What the provider SDK is missing
+      description: What your package needs that `seo/provider-sdk` does not give it.
+    validations:
+      required: true

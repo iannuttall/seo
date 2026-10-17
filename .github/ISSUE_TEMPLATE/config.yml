@@ -3,3 +3,6 @@ contact_links:
   - name: Private vulnerability report
     url: https://github.com/iannuttall/seo/security/advisories/new
     about: Report suspected security vulnerabilities privately through GitHub.
+  - name: Add your own data source
+    url: https://github.com/iannuttall/seo-provider-template
+    about: Build a provider package for any analytics or research tool not built in.

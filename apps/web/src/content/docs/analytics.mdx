@@ -13,7 +13,7 @@ Search Console tells you what happens in Google before the click. Your analytics
 | --- | --- | --- |
 | Google Analytics | Yes, with your Google sign-in | Yes, `seo analytics google report` |
 | Clicky | Yes, with the site saved on your account page | Yes, `seo data --source clicky` |
-| Fathom, Simple Analytics, Plausible or anything else | No | Not built in. Anyone can build a provider package |
+| Fathom, Simple Analytics, Plausible or anything else | No | Build your own from the [provider template](https://github.com/iannuttall/seo-provider-template) |
 
 The hosted MCP reads your Google data, your Clicky sites and your DataForSEO or Ahrefs research. When you ask it about another analytics tool, or about [Bing](/docs/bing), it tells your agent to use the CLI, the same way it does for a crawl.
 
@@ -59,12 +59,19 @@ The agent runs `seo_data` with Clicky as the source and the site's domain or its
 seo data --source clicky --site example.com
 ```
 
-A Clicky site saved on your machine with `seo analytics clicky connect` (from the [Clicky provider package](https://github.com/iannuttall/seoskill-clicky-provider)) works too, by its site ID.
+A Clicky site saved on this machine only with `seo analytics clicky connect --site-id 12345` works too, by its site ID.
 
 Clicky counts visits, not Google Analytics sessions or users, so compare the two with care. Clicky does not split landing pages by source, so the landing pages include every visit, not only visits from search.
 
 ## Any other analytics tool
 
-There is no built-in support for Fathom, Simple Analytics, Plausible or any other analytics tool. Anyone can add one to the CLI by building a provider package with the public provider SDK. The [Clicky provider package](https://github.com/iannuttall/seoskill-clicky-provider) is the example to follow: it shows how a package connects an account, keeps its key in the keychain and returns landing page visits.
+There is no built-in support for Fathom, Simple Analytics, Plausible or any other analytics tool, and there will be no more built-in sources. You can add your own in about an hour: copy the [provider template](https://github.com/iannuttall/seo-provider-template), point it at your tool's API and publish it to npm. Then:
+
+```sh
+seo providers install <your-package-name>
+seo providers connect <provider-id>
+```
+
+`seo` shows the package's details and asks before it installs. It saves the key, limits network use and keeps your tool's numbers apart from Google's. A provider package runs in the CLI and the local MCP server, not on the hosted server.
 
 For one page's queries, use [`seo page`](/docs/page). For raw Search Console rows, use [`seo data`](/docs/data).

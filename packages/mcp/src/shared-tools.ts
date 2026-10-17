@@ -122,17 +122,31 @@ export function registerSharedTools(
     {
       title: 'Internal link opportunities',
       description:
-        'Pages of the same site that could link to a target page, from Search Console and live page checks on this machine.',
-      inputSchema: { url: z.url() },
+        'Pages of the same site that could link to a target page, from Search Console and live page checks on this machine. Each one names the sentence where the link fits and anchor text from it. Takes the target URL and optional dates (default: the last 90 days).',
+      inputSchema: {
+        url: z.url(),
+        start_date: z
+          .string()
+          .regex(/^\d{4}-\d{2}-\d{2}$/)
+          .optional()
+          .describe('YYYY-MM-DD. Optional; send with end_date.'),
+        end_date: z
+          .string()
+          .regex(/^\d{4}-\d{2}-\d{2}$/)
+          .optional()
+          .describe('YYYY-MM-DD. Optional; send with start_date.'),
+      },
       annotations: readOnly,
     },
-    async ({ url }) =>
+    async ({ url, start_date, end_date }) =>
       counted('internal-links', {}, options.telemetry, async () => {
         try {
           const site = await resolveLocalSite(url)
           return await executeReport('internal-links', {
             site,
             targetUrl: url,
+            startDate: start_date,
+            endDate: end_date,
           })
         } catch (error) {
           return toolError(localError(error))

@@ -217,13 +217,13 @@ hosted server and a CLI linked with `seo login` both read them:
 seo data --source clicky --site example.com
 ```
 
-A site saved on your machine with the
-[Clicky provider package](https://github.com/iannuttall/seoskill-clicky-provider)
-(`seo analytics clicky connect --site-id 12345`) works too, by its site ID.
-For any other analytics tool, build a provider package with the
-public provider SDK; the Clicky package is the example. Each source keeps its
-own metric names, so a Clicky visit is never relabelled as a Google Analytics
-user.
+A site saved on this machine only with
+`seo analytics clicky connect --site-id 12345` works too, by its site ID.
+
+There will be no more built-in sources. For any other analytics or research
+tool, build your own provider package from the
+[provider template](https://github.com/iannuttall/seo-provider-template). Each source keeps its own metric names, so a
+Clicky visit is never relabelled as a Google Analytics user.
 
 ## Use it with agents
 
@@ -335,9 +335,8 @@ console.log(wins)
 console.log(crawl.summary, crawl.issueGroups)
 ```
 
-`seo/provider-sdk` is the public contract for provider packages. The
-[Clicky provider](https://github.com/iannuttall/seoskill-clicky-provider) is a
-working example.
+`seo/provider-sdk` is the public contract for provider packages. Start from
+the [provider template](https://github.com/iannuttall/seo-provider-template).
 
 ## Local data and Google access
 

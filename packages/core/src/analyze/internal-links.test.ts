@@ -109,10 +109,6 @@ test('uses target aliases, verifies placement, and excludes technical sources', 
     {
       site: 'sc-domain:example.com',
       targetUrl: requested,
-      days: 90,
-      limit: 10,
-      checkLimit: 10,
-      includeBrand: true,
     },
     {
       searchAnalytics: async (_site, request) => {
@@ -205,8 +201,8 @@ test('uses target aliases, verifies placement, and excludes technical sources', 
   assert.equal(report.methodology.observedLinkEvidenceLimit, 20)
   assert.deepEqual(report.filters, {
     minImpressions: 1,
-    resultLimit: 10,
-    checkLimit: 10,
+    resultLimit: 20,
+    checkLimit: 40,
     maxGscRowsPerRequest: 100_000,
   })
 })
@@ -217,7 +213,6 @@ test('blocks link actions when the target has a technical issue', async () => {
     {
       site: 'sc-domain:example.com',
       targetUrl,
-      includeBrand: true,
     },
     {
       searchAnalytics: async (_site, request) => {
@@ -253,7 +248,6 @@ test('malformed retained source rows cannot become a filtered all-clear', async 
     {
       site: 'sc-domain:example.com',
       targetUrl,
-      includeBrand: true,
     },
     {
       searchAnalytics: async (_site, request) => {
@@ -283,7 +277,6 @@ test('a reached provider row cap keeps returned candidates partial', async () =>
     {
       site: 'sc-domain:example.com',
       targetUrl,
-      includeBrand: true,
     },
     {
       searchAnalytics: async (_site, request) => {
@@ -318,7 +311,6 @@ test('does not collapse trailing-slash links without redirect evidence', async (
     {
       site: 'sc-domain:example.com',
       targetUrl,
-      includeBrand: true,
     },
     {
       searchAnalytics: async (_site, request) => {

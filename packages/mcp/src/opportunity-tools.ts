@@ -33,16 +33,8 @@ type QuickWinsToolInput = {
 type InternalLinksToolInput = {
   site: string
   targetUrl: string
-  days?: number
-  limit?: number
-  checkLimit?: number
-  minImpressions?: number
-  brandTerms?: string[]
-  includeBrand?: boolean
-  js?: boolean
-  fetchConcurrency?: number
-  fetchIntervalCap?: number
-  fetchIntervalMs?: number
+  startDate?: string
+  endDate?: string
   refresh?: boolean
 }
 
@@ -252,71 +244,32 @@ export function registerOpportunityTools(
       description:
         'Find verified internal-link review candidates for a target URL',
       inputSchema: {
-        ...mcpReportInputSchema([
-          'site',
-          'days',
-          'limit',
-          'checkLimit',
-          'minImpressions',
-          'includeBrand',
-          'js',
-          'fetchConcurrency',
-          'fetchIntervalCap',
-          'fetchIntervalMs',
-          'refresh',
-        ]),
+        ...mcpReportInputSchema(['site', 'refresh']),
         targetUrl: z
           .string()
           .url()
           .refine((value) => /^https?:\/\//.test(value), 'Use an HTTP(S) URL.'),
-        days: z.number().int().min(1).max(548).optional(),
-        limit: z.number().int().min(1).max(100).optional(),
-        checkLimit: z.number().int().min(1).max(200).optional(),
-        minImpressions: z.number().min(0).max(1_000_000_000).optional(),
-        brandTerms: z
-          .array(z.string().trim().min(1).max(200))
-          .max(20)
+        startDate: z
+          .string()
+          .regex(/^\d{4}-\d{2}-\d{2}$/)
           .optional(),
-        fetchConcurrency: z.number().int().min(1).max(16).optional(),
-        fetchIntervalCap: z.number().int().min(1).max(60).optional(),
-        fetchIntervalMs: z.number().int().min(100).max(60_000).optional(),
+        endDate: z
+          .string()
+          .regex(/^\d{4}-\d{2}-\d{2}$/)
+          .optional(),
       },
     },
     async ({
       site,
       targetUrl,
-      days,
-      limit,
-      checkLimit,
-      minImpressions,
-      brandTerms,
-      includeBrand,
-      js,
-      fetchConcurrency,
-      fetchIntervalCap,
-      fetchIntervalMs,
+      startDate,
+      endDate,
       refresh,
     }: InternalLinksToolInput) => {
       try {
         const result = await (
           dependencies.internalLinksReport ?? internalLinksReport
-        )({
-          site,
-          targetUrl,
-          days,
-          limit,
-          checkLimit,
-          minImpressions,
-          brandTerms,
-          includeBrand,
-          js: resolveJsOption(js, undefined),
-          rate: fetchRateInput({
-            fetchConcurrency,
-            fetchIntervalCap,
-            fetchIntervalMs,
-          }),
-          refresh,
-        })
+        )({ site, targetUrl, startDate, endDate, refresh })
         return toolSuccess(result.summary.verdict, result)
       } catch (error) {
         return toolError(error)

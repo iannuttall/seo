@@ -16,50 +16,39 @@ type RuntimeSelectionKey =
   | 'failedChecks'
   | 'uncheckedCandidates'
 
-export function internalLinksIntegerOption(input: {
-  value: number | undefined
-  fallback: number
-  minimum: number
-  maximum: number
-  label: string
-}): number {
-  const value = input.value ?? input.fallback
+const DAY = 86_400_000
+const ISO_DAY = /^\d{4}-\d{2}-\d{2}$/
+
+// The date window: the dates sent, or the last `fallbackDays` days of final
+// Search Console data.
+export function internalLinksReportRange(
+  input: { startDate?: string; endDate?: string },
+  fallbackDays: number,
+  now: Date,
+): { startDate: string; endDate: string; days: number } {
+  if (!input.startDate && !input.endDate) {
+    return { ...finalGscDateRange(fallbackDays, now), days: fallbackDays }
+  }
+  const { startDate, endDate } = input
   if (
-    !Number.isInteger(value) ||
-    value < input.minimum ||
-    value > input.maximum
+    !startDate ||
+    !endDate ||
+    !ISO_DAY.test(startDate) ||
+    !ISO_DAY.test(endDate) ||
+    startDate > endDate
   ) {
     throw new SeoError(
       'INVALID_INPUT',
-      `${input.label} must be a whole number between ${input.minimum} and ${input.maximum}.`,
+      'Send a start date and an end date together, in order, as YYYY-MM-DD.',
     )
   }
-  return value
-}
-
-export function internalLinksNumberOption(input: {
-  value: number | undefined
-  fallback: number
-  minimum: number
-  maximum: number
-  label: string
-}): number {
-  const value = input.value ?? input.fallback
-  if (
-    !Number.isFinite(value) ||
-    value < input.minimum ||
-    value > input.maximum
-  ) {
-    throw new SeoError(
-      'INVALID_INPUT',
-      `${input.label} must be between ${input.minimum} and ${input.maximum}.`,
-    )
-  }
-  return value
-}
-
-export function internalLinksReportRange(days: number, now: Date) {
-  return finalGscDateRange(days, now)
+  const days =
+    Math.round(
+      (Date.parse(`${endDate}T00:00:00Z`) -
+        Date.parse(`${startDate}T00:00:00Z`)) /
+        DAY,
+    ) + 1
+  return { startDate, endDate, days }
 }
 
 export function completeInternalLinksSelection(

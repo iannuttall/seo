@@ -1,14 +1,7 @@
 import { internalLinksReport } from '@seo/core'
 import { defineCommand } from 'citty'
-import {
-  booleanArg,
-  csvArg,
-  jsonFlag,
-  strictFetchRateArg,
-  strictNumberArg,
-  stringArg,
-} from '../../args.js'
-import { requireSite } from '../../selection.js'
+import { booleanArg, jsonFlag, stringArg } from '../../args.js'
+import { resolveProperty } from '../../selection.js'
 import { printJson } from '../../utils.js'
 import {
   formatCount,
@@ -18,7 +11,6 @@ import {
   printReportSummary,
   truncate,
 } from '../output.js'
-import { cliReportArgs } from '../report-options.js'
 
 export const internalLinksCommand = defineCommand({
   meta: {
@@ -26,30 +18,22 @@ export const internalLinksCommand = defineCommand({
     description: 'Find verified internal-link review candidates for one URL',
   },
   args: {
-    site: {
-      type: 'string',
-      description: 'GSC property URL, for example sc-domain:example.com.',
-    },
     url: {
       type: 'string',
       required: true,
-      description: 'Target page that should receive relevant internal links.',
+      description: 'Target page that should receive internal links.',
     },
-    ...cliReportArgs([
-      'days',
-      'limit',
-      'checkLimit',
-      'minImpressions',
-      'includeBrand',
-      'js',
-      'fetchConcurrency',
-      'fetchIntervalCap',
-      'fetchIntervalMs',
-      'refresh',
-    ]),
-    'brand-terms': {
+    site: {
       type: 'string',
-      description: 'Comma-separated brand terms to exclude.',
+      description:
+        'Search Console property, when the URL alone does not pick one.',
+    },
+    'start-date': { type: 'string', description: 'Optional YYYY-MM-DD.' },
+    'end-date': { type: 'string', description: 'Optional YYYY-MM-DD.' },
+    refresh: {
+      type: 'boolean',
+      default: false,
+      description: 'Bypass the local cache and fetch fresh data.',
     },
     json: {
       type: 'boolean',
@@ -60,26 +44,15 @@ export const internalLinksCommand = defineCommand({
   run: async ({ args }) => {
     const json = jsonFlag(args)
     const refresh = booleanArg(args.refresh)
-    const days = strictNumberArg(args.days, '--days')
-    const limit = strictNumberArg(args.limit, '--limit')
-    const checkLimit = strictNumberArg(args['check-limit'], '--check-limit')
-    const minImpressions = strictNumberArg(
-      args['min-impressions'],
-      '--min-impressions',
-    )
-    const rate = strictFetchRateArg(args)
-    const site = requireSite(stringArg(args.site))
+    const targetUrl = stringArg(args.url) ?? ''
+    const site = await resolveProperty(stringArg(args.site) ?? targetUrl, {
+      refresh,
+    })
     const report = await internalLinksReport({
       site,
-      targetUrl: stringArg(args.url) ?? '',
-      days,
-      limit,
-      checkLimit,
-      minImpressions,
-      brandTerms: [...(csvArg(args['brand-terms']) ?? [])],
-      includeBrand: booleanArg(args['include-brand']),
-      js: booleanArg(args.js) ? true : undefined,
-      rate,
+      targetUrl,
+      startDate: stringArg(args['start-date']),
+      endDate: stringArg(args['end-date']),
       refresh,
     })
     if (json) {

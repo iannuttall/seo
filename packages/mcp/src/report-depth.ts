@@ -208,7 +208,7 @@ const REPORT_DEPTH_PRIMARY = {
       'per-item placement: the sentence where a link fits, its anchors, and contentSimilarity',
     ],
     doNotClaim: [
-      'A low checkLimit can leave plausible candidates unchecked, so absence is not proven.',
+      'The live check stops at 40 source pages, so unchecked candidates can remain and absence is not proven.',
       'Query overlap does not prove a link belongs or that adding one improves rankings.',
       'Priority is a heuristic, not estimated impact.',
       'Placement sentences, anchors and contentSimilarity are text heuristics; they do not prove the link helps a reader.',

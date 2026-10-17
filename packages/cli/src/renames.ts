@@ -143,11 +143,42 @@ export function removedNotice(args: string[]): string | null {
   return `\`seo ${command}\` was removed. ${reason} ${next}`
 }
 
-// --project and --client selected a saved project. Both are gone.
+// Flags removed from one command after 0.6.0, so it runs one way.
+const REMOVED_COMMAND_FLAGS: Record<string, string[]> = {
+  'internal-links': [
+    '--days',
+    '--limit',
+    '--check-limit',
+    '--min-impressions',
+    '--brand-terms',
+    '--include-brand',
+    '--no-include-brand',
+    '--js',
+    '--no-js',
+    '--fetch-concurrency',
+    '--fetch-interval-cap',
+    '--fetch-interval-ms',
+  ],
+}
+
+const flagName = (arg: string) => arg.split('=')[0] ?? ''
+
+// --project and --client selected a saved project. Both are gone. Some
+// commands also lost flags that changed what they return.
 export function removedFlagNotice(args: string[]): string | null {
   const flag = args.find((arg) =>
-    ['--project', '--client'].includes(arg.split('=')[0] ?? ''),
+    ['--project', '--client'].includes(flagName(arg)),
   )
-  if (!flag) return null
-  return `\`${flag.split('=')[0]}\` was removed. ${PROJECT_REASON} Pass --site with a domain, URL or sc-domain: property, or run \`seo sites\` to list your Search Console properties.`
+  if (flag) {
+    return `\`${flagName(flag)}\` was removed. ${PROJECT_REASON} Pass --site with a domain, URL or sc-domain: property, or run \`seo sites\` to list your Search Console properties.`
+  }
+  const command = args[0] ?? ''
+  const removed = Object.hasOwn(REMOVED_COMMAND_FLAGS, command)
+    ? args.find((arg) =>
+        REMOVED_COMMAND_FLAGS[command]?.includes(flagName(arg)),
+      )
+    : undefined
+  if (!removed) return null
+  const name = flagName(removed)
+  return `\`${name}\` was removed from \`seo ${command}\`. It now sets its own limits, brand terms and page fetching, and shows them in the output.${name === '--days' ? ' Pass --start-date and --end-date for other dates.' : ''}`
 }

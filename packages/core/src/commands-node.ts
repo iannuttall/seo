@@ -23,6 +23,8 @@ import {
   matchProperty,
 } from './commands/index.js'
 import { SeoError, type SeoErrorCode } from './errors.js'
+import { extractMainMarkdown } from './extract/main-content.js'
+import { fetchPage } from './fetch/page-fetcher.js'
 import { bearerFetch, type GoogleFetch } from './google/api.js'
 import {
   getAuthorized,
@@ -65,6 +67,8 @@ export function nodeCommandDeps(options: {
         return null
       }
     },
+    pageMarkdown: async (url) =>
+      extractMainMarkdown(await fetchPage(url, { refresh: options.refresh })),
     call: options.call,
     bing: localBing,
     bingConnect: LOCAL_BING_CONNECT,

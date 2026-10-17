@@ -21,13 +21,16 @@ The hosted MCP runs `seo_page`. In a terminal, run:
 seo page --url https://example.com/pricing
 ```
 
-Add `--start-date` and `--end-date` for other dates, `--detail rows` for more query rows, or `--json` for structured output.
+Add `--start-date` and `--end-date` for other dates, `--detail rows` for more query rows, `--detail full` for every field and the page's main content as Markdown, or `--json` for structured output.
 
 ## What comes back
 
 - **Live page facts.** The HTTP status, any redirect, the title, meta description, H1, canonical and robots tags as the page serves them now.
 - **Google index status.** What Search Console URL Inspection reports for the URL.
 - **Queries.** The page's Search Console queries for the last 28 days against the previous period.
+- **Main content as Markdown,** with `--detail full`. The page's main text, without the menus, sidebars and footer, read live. It stops at 20,000 characters and says so when it cuts. Your agent can read or rewrite the page from it without fetching the page again.
+
+The hosted MCP does not return the Markdown, because the extraction code runs only on your own machine. It tells your agent to use the CLI, or the local MCP server, for it.
 
 The page has to belong to a Search Console property you can read. URL Inspection reports Google's last known state, which can lag behind a change you just made.
 

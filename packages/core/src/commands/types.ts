@@ -104,6 +104,9 @@ export type CommandDeps = {
   checkPages: (urls: string[]) => Promise<PageFacts[]>
   // Google's index status for one URL, or null when it cannot be read.
   inspect: (site: string, url: string) => Promise<IndexStatus | null>
+  // One page's main content as Markdown, read live. Only where the
+  // extraction packages run (the CLI and the local MCP server).
+  pageMarkdown?: (url: string) => Promise<PageMarkdown>
   call: Caller
   // Bing Webmaster calls, or null when Bing is not connected here. Each
   // surface returns the same call each time.
@@ -114,6 +117,10 @@ export type CommandDeps = {
 }
 
 export type CommandResult = { text: string; data: unknown }
+
+export type PageMarkdown =
+  | { markdown: string; characters: number; truncated: boolean }
+  | { error: string }
 
 const FROM_SEO: Partial<Record<SeoErrorCode, CommandErrorCode>> = {
   AUTH_EXPIRED: 'NOT_CONNECTED',

@@ -413,3 +413,24 @@ test('classifies link placement for contextual-link evidence', async () => {
     ['navigation', 'main-content', 'other', 'footer'],
   )
 })
+
+// A real page response with no <html> root (empty, plain text, JSON or a
+// lone doctype) crashed linkedom and stopped `seo internal-links`.
+test('pages without an html root are read, not thrown', async () => {
+  for (const html of [
+    '',
+    'Plain text only',
+    '{"ok":true}',
+    '<!doctype html>',
+  ]) {
+    const content = extractMainContent(fetchResult(html))
+    assert.equal(typeof content.text, 'string')
+    await extractPage(fetchResult(html))
+  }
+  const fragment = extractMainContent(
+    fetchResult(
+      '<h1>Example page</h1><p>Example words that a reader can see on the page today.</p>',
+    ),
+  )
+  assert.match(fragment.text, /Example words/)
+})

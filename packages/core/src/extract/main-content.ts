@@ -30,6 +30,17 @@ export interface MainContentResult {
   warnings: string[]
 }
 
+// linkedom needs an <html> root. Without one (an empty body, plain text,
+// JSON or a lone doctype) reading document.body throws, and a bare fragment
+// loses its text. Such input is parsed again inside an empty page.
+export function parseDocument(html: string) {
+  const { document } = parseHTML(html)
+  if (document.documentElement?.localName === 'html') return document
+  return parseHTML(
+    `<!doctype html><html><head></head><body>${html}</body></html>`,
+  ).document
+}
+
 function readableError(error: unknown): string {
   return error instanceof Error ? error.message : String(error)
 }
@@ -89,10 +100,6 @@ function readabilityResult(
   fallbackReason?: ContentExtractionDiagnostics['fallbackReason'],
   fallbackDetail?: string,
 ): MainContentResult {
-  const { document } = parseHTML(fetchResult.html)
-  const bodyText = document.body.textContent ?? ''
-  const article = new Readability(document as never).parse()
-  const text = article?.textContent ?? bodyText
   const fallback = requested !== 'readability'
   const diagnostics: ContentExtractionDiagnostics = {
     requested,
@@ -107,16 +114,32 @@ function readabilityResult(
         }
       : {}),
   }
-
-  return {
-    text,
-    excerpt: normalizedText(article?.excerpt),
-    wordCount: countCjkAwareWords(text),
-    diagnostics,
-    warnings:
-      fallback && fallbackDetail
-        ? [`Defuddle extraction fell back to Readability: ${fallbackDetail}`]
-        : [],
+  const warnings =
+    fallback && fallbackDetail
+      ? [`Defuddle extraction fell back to Readability: ${fallbackDetail}`]
+      : []
+  try {
+    const document = parseDocument(fetchResult.html)
+    const bodyText = document.body?.textContent ?? ''
+    const article = new Readability(document as never).parse()
+    const text = article?.textContent ?? bodyText
+    return {
+      text,
+      excerpt: normalizedText(article?.excerpt),
+      wordCount: countCjkAwareWords(text),
+      diagnostics,
+      warnings,
+    }
+  } catch (error) {
+    return {
+      text: '',
+      wordCount: 0,
+      diagnostics,
+      warnings: [
+        ...warnings,
+        `The page's main content could not be read: ${readableError(error)}`,
+      ],
+    }
   }
 }
 
@@ -141,7 +164,7 @@ export function extractMainContent(
   }
 
   try {
-    const { document } = parseHTML(fetchResult.html)
+    const document = parseDocument(fetchResult.html)
     resolveDocumentUrls(document, fetchResult.finalUrl)
     const article = (dependencies.parseDefuddle ?? defaultParseDefuddle)(
       document,
@@ -150,7 +173,7 @@ export function extractMainContent(
     const text =
       typeof article.content === 'string'
         ? load(article.content).text()
-        : (document.body.textContent ?? '')
+        : (document.body?.textContent ?? '')
     if (!text.trim()) {
       return readabilityResult(
         fetchResult,
@@ -189,5 +212,41 @@ export function extractMainContent(
       'defuddle_error',
       readableError(error),
     )
+  }
+}
+
+// The most Markdown a page result carries, so one page cannot fill an
+// agent's context.
+export const MARKDOWN_LIMIT = 20_000
+
+export interface MainContentMarkdown {
+  markdown: string
+  // The length before any cut, in characters.
+  characters: number
+  truncated: boolean
+}
+
+// The page's main content as Markdown, from the same Defuddle extraction.
+// Links are made absolute. Nothing is fetched beyond the given HTML.
+export async function extractMainMarkdown(
+  fetchResult: PageFetchResult,
+): Promise<MainContentMarkdown> {
+  const document = parseDocument(fetchResult.html)
+  resolveDocumentUrls(document, fetchResult.finalUrl)
+  const { Defuddle: toMarkdown } = await import('defuddle/node')
+  const result = await toMarkdown(document as never, fetchResult.finalUrl, {
+    markdown: true,
+    useAsync: false,
+  })
+  const markdown = (result.content ?? '').trim()
+  if (markdown.length <= MARKDOWN_LIMIT) {
+    return { markdown, characters: markdown.length, truncated: false }
+  }
+  const cut = markdown.slice(0, MARKDOWN_LIMIT)
+  const end = cut.lastIndexOf('\n')
+  return {
+    markdown: (end > MARKDOWN_LIMIT / 2 ? cut.slice(0, end) : cut).trimEnd(),
+    characters: markdown.length,
+    truncated: true,
   }
 }

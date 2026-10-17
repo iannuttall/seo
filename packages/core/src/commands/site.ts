@@ -1,4 +1,5 @@
 import { latestFinalGscDate, shiftIsoDate } from '../gsc/dates.js'
+import { CLI_LINK } from './bing.js'
 import { temporaryRedirectNote } from './page-facts.js'
 import type { Detail } from './present.js'
 import { table } from './present.js'
@@ -19,6 +20,7 @@ import {
   CommandError,
   type CommandResult,
   type IndexStatus,
+  type PageMarkdown,
 } from './types.js'
 
 // One page, a before and after comparison, and pages that lost their
@@ -72,11 +74,19 @@ export async function runPage(
         },
       ],
     })
-  const [[facts], indexed, now, then] = await Promise.all([
+  const full = input.detail === 'full'
+  const [[facts], indexed, now, then, markdown] = await Promise.all([
     deps.checkPages([input.url]),
     deps.inspect(input.site, input.url),
     query(range),
     query(before),
+    full && deps.pageMarkdown
+      ? deps.pageMarkdown(input.url).catch(
+          (error: unknown): PageMarkdown => ({
+            error: error instanceof Error ? error.message : String(error),
+          }),
+        )
+      : null,
   ])
   const old = new Map(then.rows.map((row) => [row.keys[0], row]))
   const seen = new Set<string>()
@@ -123,6 +133,9 @@ export async function runPage(
         ? `Google index status:\n${table([indexed], Object.keys(indexed), null)}`
         : 'Google index status: not available for this URL.',
       `Query totals: clicks ${sum(now.rows, 'clicks')} (was ${sum(then.rows, 'clicks')}), impressions ${sum(now.rows, 'impressions')} (was ${sum(then.rows, 'impressions')}). Search Console hides rare queries, so these can be lower than the page total.`,
+      deps.pageMarkdown
+        ? `Main content as Markdown: ${deps.call('page', { url: input.url, detail: 'full' })}.`
+        : `Main content as Markdown: only in the CLI and the local MCP server, with \`npx -y seo page --url ${input.url} --detail full\`.`,
     ],
     rows,
     offset,
@@ -132,7 +145,12 @@ export async function runPage(
       deps.call('page', { url: input.url, detail: 'rows', offset: next }),
   })
   return {
-    text: `${text}\n\nNext: ${deps.call('research')} serp with the top query to see who else ranks.\n\n${FACTS_ONLY}`,
+    text: [
+      text,
+      ...(full ? [markdownText(markdown, input.url)] : []),
+      `Next: ${deps.call('research')} serp with the top query to see who else ranks.`,
+      FACTS_ONLY,
+    ].join('\n\n'),
     data: {
       url: input.url,
       range,
@@ -141,8 +159,27 @@ export async function runPage(
       index: indexed,
       totalQueries: rows.length,
       queries: rows.slice(offset, offset + PAGE_SIZE),
+      ...(full ? { markdown } : {}),
     },
   }
+}
+
+// The page's main content, or why it is missing. A surface without the
+// extraction packages (the hosted server) sends agents to the CLI.
+function markdownText(markdown: PageMarkdown | null, url: string): string {
+  if (!markdown) {
+    return `Main content as Markdown: not on this server; it runs in the CLI and the local MCP server. ${CLI_LINK} Then run \`npx -y seo page --url ${url} --detail full\`.`
+  }
+  if ('error' in markdown) {
+    return `Main content as Markdown: the page could not be read (${markdown.error}).`
+  }
+  if (!markdown.markdown) {
+    return 'Main content as Markdown: the page has no main content to read.'
+  }
+  const cut = markdown.truncated
+    ? `, cut to ${markdown.markdown.length.toLocaleString('en-US')} of ${markdown.characters.toLocaleString('en-US')} characters`
+    : ''
+  return `Main content as Markdown (live page${cut}):\n\n${markdown.markdown}`
 }
 
 export type CompareInput = {

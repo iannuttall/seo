@@ -74,7 +74,7 @@ repository.
 | --- | --- |
 | `seo_sites` | Search Console and Google Analytics properties from every linked Google account, which keys are set and the saved Clicky sites |
 | `seo_report` | The main report. Without a section: the overview plus each section's count and top rows. Sections: overview, quick-wins, low-ctr, striking-distance, second-page, content-decay, cannibalization, traffic-drop. Page sections check their top 20 URLs live and merge same-site redirects. |
-| `seo_page` | One URL: live page facts, Google index status and its queries against the previous period |
+| `seo_page` | One URL: live page facts, Google index status and its queries against the previous period. The page's main content as Markdown is CLI and local server only; with detail `full` this server says how to get it. |
 | `seo_compare` | Equal periods before and after a date, for the site or URLs that contain some text, with Google updates |
 | `seo_index` | Pages that lost most of their clicks, checked live and with URL Inspection |
 | `seo_research` | Keyword metrics, ranked keywords, SERPs, competitors and backlinks from DataForSEO or Ahrefs, with a free Ahrefs Domain Rating column |

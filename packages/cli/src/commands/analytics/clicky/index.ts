@@ -1,151 +1,76 @@
-import { confirm, intro, note, outro, password, text } from '@clack/prompts'
+import { intro, outro, password, text } from '@clack/prompts'
 import {
   CLICKY_SITEKEY_ENV,
   deleteClickySiteKey,
-  deleteProviderExtensionCredentials,
-  inspectProviderPackage,
-  installProviderPackage,
-  loadInstalledProviderExtensions,
-  type RegisteredProviderExtension,
   readClickySiteKey,
-  readProviderExtensionCredentials,
-  runProviderExtensionAction,
   SeoError,
-  verifyAnalyticsProvider,
   writeClickySiteKey,
-  writeProviderExtensionAccount,
-  writeProviderExtensionCredentials,
 } from '@seo/core'
+import {
+  ClickyError,
+  clickyDomain,
+  isClickySiteId,
+  isClickySitekey,
+} from '@seo/core/commands'
 import { defineCommand } from 'citty'
-import { booleanArg, jsonFlag, numberArg, stringArg } from '../../../args.js'
+import { booleanArg, jsonFlag, stringArg } from '../../../args.js'
 import {
   canPrompt,
   maybeExitCancelled,
   printJson,
   printKeyValue,
-  printTable,
 } from '../../../utils.js'
 
-const CLICKY_PROVIDER_PACKAGE = '@seoskill/clicky-provider'
+// Clicky sites saved on this machine only. `seo data --source clicky` reads
+// them by site ID. Sites saved on the seoskill.dev account need no command
+// here; `seo login` brings them in.
 
 function credentialSourceLabel(source: string | undefined): string {
   if (source === 'keychain') return 'system keychain'
   if (source === 'file') return 'private local file'
-  if (source === 'provider-store') return 'provider credential store'
+  if (source === 'environment') return CLICKY_SITEKEY_ENV
   return source ?? 'missing'
 }
 
-async function clickyProvider(input: {
-  json?: boolean
-}): Promise<RegisteredProviderExtension> {
-  let loaded = await loadInstalledProviderExtensions()
-  const installed = loaded.registry.get('clicky')
-  if (installed) return installed
-  const failure = loaded.failures.find((item) => item.id === 'clicky')
-  if (failure) {
-    throw new SeoError(
-      'PROVIDER_UNAVAILABLE',
-      `The Clicky provider package could not load: ${failure.message}`,
-    )
-  }
-  const interactive = canPrompt({ json: input.json })
-  if (!interactive) {
-    throw new SeoError(
-      'PROVIDER_UNAVAILABLE',
-      `Clicky is now an optional provider package. Run \`seo providers install ${CLICKY_PROVIDER_PACKAGE} --yes\`, then run this command again.`,
-    )
-  }
-  let release: Awaited<ReturnType<typeof inspectProviderPackage>>
-  try {
-    release = await inspectProviderPackage(CLICKY_PROVIDER_PACKAGE)
-  } catch (error) {
-    throw new SeoError(
-      'PROVIDER_UNAVAILABLE',
-      error instanceof Error ? error.message : String(error),
-    )
-  }
-  note(
-    [
-      `${release.package}@${release.version}`,
-      `Publisher: ${release.publisher ?? 'not supplied by npm'}`,
-      `Repository: ${release.repository ?? 'not supplied by npm'}`,
-      `Integrity: ${release.integrity}`,
-    ].join('\n'),
-    'Clicky package',
-  )
-  note(
-    'This package can read files, use the network, and run with the same local permissions as seo.',
-    'Local permissions',
-  )
-  const approved = maybeExitCancelled(
-    await confirm({
-      message: 'Install the Clicky provider package?',
-      initialValue: true,
-    }),
-  )
-  if (!approved) {
-    throw new SeoError(
-      'PROVIDER_UNAVAILABLE',
-      'The Clicky provider package is required for this command.',
-    )
-  }
-  await installProviderPackage(release)
-  loaded = await loadInstalledProviderExtensions()
-  const provider = loaded.registry.get('clicky')
-  if (!provider) {
-    throw new SeoError(
-      'PROVIDER_UNAVAILABLE',
-      'The Clicky provider package was installed but could not load. Run `seo providers doctor`.',
-    )
-  }
-  return provider
-}
-
 function requireClickySiteId(siteId: string | undefined): string {
-  if (siteId) return siteId
+  if (siteId && isClickySiteId(siteId)) return siteId.trim()
   throw new SeoError(
     'INVALID_INPUT',
     'No Clicky site given. Pass --site-id with the numeric Clicky site ID.',
   )
 }
 
-async function savedCredentials(
-  provider: RegisteredProviderExtension,
-  siteId: string,
-): Promise<{ siteKey?: string; source?: string }> {
-  const legacy = await readClickySiteKey(siteId)
-  if (legacy) return { siteKey: legacy.siteKey, source: legacy.source }
-  try {
-    const credentials = await readProviderExtensionCredentials({
-      providerId: 'clicky',
-      account: { siteId },
-      fields: provider.connection.fields,
-    })
-    return credentials.sitekey
-      ? { siteKey: credentials.sitekey, source: 'provider-store' }
-      : {}
-  } catch {
-    return {}
-  }
+// Checks the site ID and sitekey with Clicky and returns the site's domain.
+async function verify(siteId: string, sitekey: string) {
+  return clickyDomain({ siteId, sitekey }).catch((error: unknown) => {
+    throw new SeoError(
+      error instanceof ClickyError && error.code === 'auth'
+        ? 'AUTH_REQUIRED'
+        : 'PROVIDER_UNAVAILABLE',
+      error instanceof Error ? error.message : String(error),
+    )
+  })
 }
+
+const json = {
+  type: 'boolean',
+  default: false,
+  description: 'Print machine-readable JSON.',
+} as const
+const siteIdArg = {
+  type: 'string',
+  description: 'Numeric Clicky site ID.',
+} as const
 
 const connectCommand = defineCommand({
   meta: {
     name: 'connect',
-    description: 'Validate and save a Clicky sitekey',
+    description: 'Check and save a Clicky site on this machine',
   },
-  args: {
-    'site-id': { type: 'string', description: 'Numeric Clicky site ID.' },
-    json: {
-      type: 'boolean',
-      default: false,
-      description: 'Print machine-readable JSON.',
-    },
-  },
+  args: { 'site-id': siteIdArg, json },
   run: async ({ args }) => {
-    const json = jsonFlag(args)
-    const provider = await clickyProvider({ json })
-    const interactive = canPrompt({ json })
+    const asJson = jsonFlag(args)
+    const interactive = canPrompt({ json: asJson })
     if (interactive) intro('Connect Clicky')
     const siteId =
       stringArg(args['site-id']) ??
@@ -154,105 +79,80 @@ const connectCommand = defineCommand({
             await text({
               message: 'Clicky site ID',
               validate: (value) =>
-                /^\d{1,30}$/u.test(value?.trim() ?? '')
+                isClickySiteId(value ?? '')
                   ? undefined
                   : 'Enter the numeric site ID from Clicky',
             }),
           )
         : undefined)
-    if (!siteId) {
-      throw new SeoError(
-        'INVALID_INPUT',
-        'No Clicky site given. Pass --site-id with the numeric Clicky site ID.',
-      )
-    }
-    const existing = await savedCredentials(provider, siteId)
-    const siteKey =
-      existing.siteKey ??
+    const id = requireClickySiteId(siteId)
+    const sitekey =
+      process.env[CLICKY_SITEKEY_ENV]?.trim() ||
       (interactive
         ? maybeExitCancelled(
             await password({
               message: 'Clicky sitekey',
               validate: (value) =>
-                /^[A-Za-z0-9]{12,64}$/u.test(value?.trim() ?? '')
+                isClickySitekey(value ?? '')
                   ? undefined
-                  : 'Enter the sitekey from Clicky',
+                  : 'Enter the sitekey from Clicky (Preferences, Info)',
             }),
           )
         : undefined)
-    if (!siteKey) {
+    if (!sitekey) {
       throw new SeoError(
         'AUTH_REQUIRED',
         `Run this command in a terminal or set ${CLICKY_SITEKEY_ENV}.`,
       )
     }
-    await verifyAnalyticsProvider({
-      providerId: 'clicky',
-      account: { siteId },
-      credentials: { sitekey: siteKey },
-    })
-    const source =
-      existing.source ?? (await writeClickySiteKey(siteId, siteKey))
-    await writeProviderExtensionCredentials({
-      providerId: 'clicky',
-      account: { siteId },
-      credentials: { sitekey: siteKey },
-    })
-    writeProviderExtensionAccount('clicky', { siteId })
+    const domain = await verify(id, sitekey.trim())
+    const source = await writeClickySiteKey(id, sitekey.trim())
     const result = {
-      siteId,
+      siteId: id,
+      domain,
       connected: true,
       credentialSource: source,
     }
-    if (json) {
+    if (asJson) {
       printJson(result)
       return
     }
-    const message = `Connection verified. Saved in the ${credentialSourceLabel(source)}.`
+    const message = `Clicky site ${id}${domain ? ` (${domain})` : ''} saved in the ${credentialSourceLabel(source)}. Next: seo data --source clicky --site ${id}`
     if (interactive) outro(message)
     else process.stdout.write(`${message}\n`)
   },
 })
 
 const statusCommand = defineCommand({
-  meta: { name: 'status', description: 'Show the local Clicky connection' },
+  meta: {
+    name: 'status',
+    description: 'Show a Clicky site saved on this machine',
+  },
   args: {
-    'site-id': { type: 'string', description: 'Numeric Clicky site ID.' },
+    'site-id': siteIdArg,
     check: {
       type: 'boolean',
       default: false,
-      description: 'Verify the saved sitekey with Clicky.',
+      description: 'Check the saved sitekey with Clicky.',
     },
-    json: {
-      type: 'boolean',
-      default: false,
-      description: 'Print machine-readable JSON.',
-    },
+    json,
   },
   run: async ({ args }) => {
-    const json = jsonFlag(args)
-    const provider = await clickyProvider({ json })
     const siteId = requireClickySiteId(stringArg(args['site-id']))
-    const credential = await savedCredentials(provider, siteId)
+    const saved = await readClickySiteKey(siteId)
     const check = booleanArg(args.check)
-    if (check && credential.siteKey) {
-      await verifyAnalyticsProvider({
-        providerId: 'clicky',
-        account: { siteId },
-        credentials: { sitekey: credential.siteKey },
-      })
-    }
+    if (check && saved) await verify(siteId, saved.siteKey)
     const result = {
       siteId,
-      connected: Boolean(credential.siteKey),
-      credentialSource: credential.source,
+      connected: Boolean(saved),
+      credentialSource: saved?.source,
       liveCheck: check
-        ? credential.siteKey
+        ? saved
           ? ('passed' as const)
           : ('unavailable' as const)
         : ('not-requested' as const),
     }
-    if (json) {
+    if (jsonFlag(args)) {
       printJson(result)
       return
     }
@@ -268,126 +168,33 @@ const statusCommand = defineCommand({
 const reportCommand = defineCommand({
   meta: {
     name: 'report',
-    description: 'Run a bounded Clicky analytics report',
+    description: 'Moved to seo data --source clicky',
   },
-  args: {
-    'site-id': { type: 'string', description: 'Numeric Clicky site ID.' },
-    type: {
-      type: 'string',
-      default: 'pages-entrance',
-      description: 'Clicky report type. Defaults to pages-entrance.',
-    },
-    'start-date': {
-      type: 'string',
-      required: true,
-      description: 'First site calendar date in YYYY-MM-DD format.',
-    },
-    'end-date': {
-      type: 'string',
-      required: true,
-      description: 'Last site calendar date in YYYY-MM-DD format.',
-    },
-    limit: {
-      type: 'string',
-      default: '100',
-      description: 'Maximum retained rows. Defaults to 100 and caps at 5000.',
-    },
-    refresh: {
-      type: 'boolean',
-      default: false,
-      description: 'Bypass the local Clicky cache.',
-    },
-    json: {
-      type: 'boolean',
-      default: false,
-      description: 'Print machine-readable JSON.',
-    },
-  },
-  run: async ({ args }) => {
-    const json = jsonFlag(args)
-    const provider = await clickyProvider({ json })
-    const siteId = requireClickySiteId(stringArg(args['site-id']))
-    const credential = await savedCredentials(provider, siteId)
-    const action = await runProviderExtensionAction({
-      providerId: 'clicky',
-      actionId: 'report',
-      account: { siteId },
-      ...(credential.siteKey
-        ? { credentials: { sitekey: credential.siteKey } }
-        : {}),
-      params: {
-        type: stringArg(args.type) ?? 'pages-entrance',
-        startDate: stringArg(args['start-date']) ?? '',
-        endDate: stringArg(args['end-date']) ?? '',
-        limit: numberArg(args.limit) ?? 100,
-      },
-      refresh: booleanArg(args.refresh),
-    })
-    if (!action.data || typeof action.data !== 'object') {
-      throw new SeoError(
-        'PROVIDER_UNAVAILABLE',
-        'The Clicky provider returned an invalid report.',
-      )
-    }
-    const result = {
-      ...(action.data as Record<string, unknown>),
-      cache: action.cache,
-    } as {
-      siteId: string
-      type: string
-      rows: Array<Record<string, unknown>>
-      returnedRows: number
-      cache: string
-    }
-    if (json) {
-      printJson(result)
-      return
-    }
-    printKeyValue([
-      ['Site ID', result.siteId],
-      ['Report', result.type],
-      ['Rows', String(result.returnedRows)],
-      ['Cache', result.cache],
-    ])
-    printTable(
-      ['Value', 'Title', 'URL'],
-      result.rows
-        .slice(0, 25)
-        .map((row) => [
-          String(row.value ?? ''),
-          String(row.title ?? ''),
-          String(row.url ?? ''),
-        ]),
+  args: { 'site-id': siteIdArg },
+  run: ({ args }) => {
+    process.stderr.write(
+      `\`seo analytics clicky report\` is now \`seo data --source clicky --site ${stringArg(args['site-id']) ?? '<domain or site ID>'}\`.\n`,
     )
+    process.exitCode = 2
   },
 })
 
 const disconnectCommand = defineCommand({
-  meta: { name: 'disconnect', description: 'Remove a saved Clicky sitekey' },
-  args: {
-    'site-id': { type: 'string', description: 'Numeric Clicky site ID.' },
-    json: {
-      type: 'boolean',
-      default: false,
-      description: 'Print machine-readable JSON.',
-    },
+  meta: {
+    name: 'disconnect',
+    description: 'Remove a Clicky site saved on this machine',
   },
+  args: { 'site-id': siteIdArg, json },
   run: async ({ args }) => {
-    const json = jsonFlag(args)
-    await clickyProvider({ json })
     const siteId = requireClickySiteId(stringArg(args['site-id']))
     await deleteClickySiteKey(siteId)
-    await deleteProviderExtensionCredentials({
-      providerId: 'clicky',
-      account: { siteId },
-    })
     const environmentCredential = Boolean(process.env[CLICKY_SITEKEY_ENV])
     const result = {
       siteId,
       savedCredentialRemoved: true,
       environmentCredential: environmentCredential ? 'active' : 'missing',
     }
-    if (json) printJson(result)
+    if (jsonFlag(args)) printJson(result)
     else
       process.stdout.write(
         environmentCredential
@@ -400,7 +207,7 @@ const disconnectCommand = defineCommand({
 export const clickyAnalyticsCommand = defineCommand({
   meta: {
     name: 'clicky',
-    description: 'Connect Clicky and read bounded analytics reports',
+    description: 'Save a Clicky site on this machine only',
   },
   subCommands: {
     connect: connectCommand,

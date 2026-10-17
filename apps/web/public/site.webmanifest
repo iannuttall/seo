@@ -1,7 +1,7 @@
 {
-  "name": "seo",
-  "short_name": "seo",
-  "description": "Local SEO tools for agents, developers, and CI.",
+  "name": "SEO Skill",
+  "short_name": "SEO Skill",
+  "description": "The SEO command for AI agents.",
   "start_url": "/",
   "display": "standalone",
   "background_color": "#fafafa",
@@ -11,6 +11,11 @@
       "src": "/favicon-light.png",
       "sizes": "512x512",
       "type": "image/png"
+    },
+    {
+      "src": "/favicon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml"
     }
   ]
 }

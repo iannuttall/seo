@@ -200,7 +200,7 @@ test('uses target aliases, verifies placement, and excludes technical sources', 
   assert.equal(report.items[0]?.linkEvidence.observed.length, 20)
   assert.equal(report.items[1]?.linkEvidence.status, 'missing')
   assert.equal(report.items[0]?.confidence, 'medium')
-  assert.equal(report.methodology.version, 3)
+  assert.equal(report.methodology.version, 4)
   assert.equal(report.methodology.matchedQueryEvidenceLimit, 10)
   assert.equal(report.methodology.observedLinkEvidenceLimit, 20)
   assert.deepEqual(report.filters, {

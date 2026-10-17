@@ -1,4 +1,5 @@
 import type { PageFetchDiagnostics } from '../types.js'
+import type { LinkPlacement } from './internal-links-placement.js'
 import type { PageTechnicalSignal } from './page-technical-signals.js'
 
 export type InternalLinkMatchKind = 'exact-query' | 'lexical-review'
@@ -41,6 +42,9 @@ export interface InternalLinkOpportunity extends InternalLinkCandidate {
       location: 'main-content' | 'navigation' | 'footer' | 'other'
     }>
   }
+  // Where the link fits: source sentences that name the target, with anchor
+  // text taken from them. Empty sentences means no sentence names it.
+  placement: LinkPlacement
   confidence: 'medium' | 'low'
   priority: {
     score: number
@@ -139,13 +143,14 @@ export interface InternalLinksReport {
   }
   methodology: {
     id: 'gsc_internal_link_candidates'
-    version: 3
+    version: 4
     lexicalTargetLimit: number
     matchedQueryEvidenceLimit: number
     observedLinkEvidenceLimit: number
     matching: 'pairwise_exact_then_precision_lexical'
     ranking: 'exact_matches_then_matched_query_impressions_then_relevance'
     contextualPlacementVerified: true
+    placement: 'tfidf_sentence_match_then_phrase_anchors'
   }
   filters: {
     minImpressions: number

@@ -1,5 +1,24 @@
 # Changelog
 
+## 0.6.0
+
+### New
+
+- **Clicky with your seoskill.dev account.** Save your whole Clicky account,
+  or one site at a time, on the account page. `seo data --source clicky
+  --site example.com` reads it after `seo login`, with visits by landing
+  page, traffic sources and search engines. A site you add to Clicky later
+  appears the first time you ask for it.
+- **`seo index` counts index states.** It also checks the home page, and
+  says when most checked pages are out of Google's index but the home page
+  is in, which points to the whole site rather than single pages.
+
+### Changed
+
+- Old 0.2 report names still work and print their new command. They, and
+  the commands under "More commands" in `seo help all`, are removed in
+  1.0.0.
+
 ## 0.5.0
 
 ### New

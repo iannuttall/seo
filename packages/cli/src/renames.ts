@@ -1,5 +1,5 @@
 // Version 0.3.0 moved most reports into eight commands. Old names keep
-// working for this one release and say where they went. Removed commands say
+// working until 1.0.0 and say where they went. Removed commands say
 // so and stop with exit code 2.
 
 export const RENAMED: Record<string, string> = {
@@ -121,7 +121,7 @@ export function removedCommand(args: string[]): string | null {
 export function renamedNotice(command: string): string | null {
   const next = Object.hasOwn(RENAMED, command) ? RENAMED[command] : undefined
   return next
-    ? `\`seo ${command}\` is now \`${next}\`. The old name stops working in 0.4.0.`
+    ? `\`seo ${command}\` is now \`${next}\`. The old name stops working in 1.0.0.`
     : null
 }
 

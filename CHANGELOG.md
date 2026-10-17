@@ -1,5 +1,33 @@
 # Changelog
 
+## 0.7.0
+
+### New
+
+- **`seo internal-links` shows where each link fits.** Each suggested source
+  page names up to two sentences that already talk about the target, with
+  anchor text taken from those sentences.
+- **`seo page` returns the page's main content as Markdown** with
+  `--detail full` (MCP `seo_page`, detail `full`), up to 20,000 characters.
+  CLI and local MCP server only.
+- **Build your own data source** from the new
+  [provider template](https://github.com/iannuttall/seo-provider-template).
+  There will be no more built-in sources.
+
+### Changed
+
+- `seo internal-links` takes only `--url` and optional dates. It sets its own
+  limits (last 90 days, up to 40 pages checked, 20 returned) and brand terms,
+  and shows them in the result. The old flags stop with a notice.
+- `seo analytics clicky connect` checks the sitekey itself and no longer
+  installs the Clicky provider package. `seo analytics clicky report` is now
+  `seo data --source clicky`.
+
+### Fixed
+
+- Pages whose HTML has no `<html>` element no longer crash page reading,
+  `seo page` or `seo internal-links`.
+
 ## 0.6.0
 
 ### New

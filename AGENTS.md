@@ -481,10 +481,15 @@ node dist/cli.js projects
 Root help must keep this curated path: `seo start`, `seo report`, then the
 eight commands (`seo page`, `seo compare`, `seo index`, `seo research`,
 `seo data`, `seo crawl`, `seo internal-links`) and setup commands. Old report
-names are not taught; they print their new command for one release
+names are not taught; they print their new command until 1.0.0
 (`packages/cli/src/renames.ts`). Removed commands and flags, such as
 `seo projects` and `--project`, exit 2 with a one-line notice from the same
 file.
+
+Version 1.0.0 removes the old report names and the 0.2 commands listed under
+"More commands" in `seo help all` (such as `crawl-queue`, `redirect-trace`,
+`perf audit`, `index-coverage`, `ai-referrals`, `explain`, `rules`,
+`export` and `reports`). Do not add to them before then.
 
 Do not let `seo help` return `Unknown command help`.
 

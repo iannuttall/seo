@@ -1,6 +1,6 @@
 ---
 title: Find internal link opportunities
-description: Find pages on your site that could link to a page you choose with seo internal-links, using Search Console queries and a live check for existing links.
+description: Find pages on your site that could link to a page you choose with seo internal-links, with the sentence where each link fits and anchor text from it.
 heading: seo internal-links
 lead: Find pages on your site that could link to a page you choose. CLI only.
 ---
@@ -22,5 +22,6 @@ It looks at the last 28 days of Search Console data. Change that with `--days`.
 - Pages whose Search Console queries overlap with the target page's topic.
 - A live check of those pages, keeping only the ones that do not already link to the target.
 - The queries behind each suggestion, so you can see why it was picked.
+- Where the link fits: the sentence on the source page that names the target best, and anchor text taken from that sentence. When no sentence names the target, it says so, because a link there needs new text.
 
-The order is a rough guide, not a forecast. Read the source page, add a link only where it helps a reader, and run a [crawl](/docs/crawl) afterwards to confirm it is there.
+Pages with a sentence that fits come first. The order is a rough guide, not a forecast. Read the source page, add a link only where it helps a reader, and run a [crawl](/docs/crawl) afterwards to confirm it is there.

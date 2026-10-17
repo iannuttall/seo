@@ -9,6 +9,12 @@ import {
   INTERNAL_LINK_MATCH_EVIDENCE_LIMIT,
 } from './internal-links-analysis.js'
 import {
+  LinkCorpus,
+  linkPlacement,
+  type PlacementPage,
+  termCounts,
+} from './internal-links-placement.js'
+import {
   completeInternalLinksSelection,
   internalLinksIntegerOption,
   internalLinksNumberOption,
@@ -171,7 +177,10 @@ export async function internalLinksReport(
     includeBrand: input.includeBrand,
   })
 
-  const items: InternalLinksReport['items'] = []
+  const found: Array<{
+    item: Omit<InternalLinksReport['items'][number], 'placement'>
+    text?: PlacementPage
+  }> = []
   const warnings = [...target.warnings]
   let attemptedSources = 0
   let checkedSources = 0
@@ -180,7 +189,7 @@ export async function internalLinksReport(
   let selfAliasExclusions = 0
   let failedChecks = 0
   for (const candidate of analysis.candidates) {
-    if (attemptedSources >= checkLimit || items.length >= limit) break
+    if (attemptedSources >= checkLimit || found.length >= limit) break
     attemptedSources += 1
     const verified = await verifyInternalLinkCandidate({
       site: input.site,
@@ -192,13 +201,14 @@ export async function internalLinksReport(
       dependencies,
     })
     warnings.push(...verified.warnings)
-    if (verified.item) items.push(verified.item)
+    if (verified.item) found.push({ item: verified.item, text: verified.text })
     if (verified.exclusion === 'existing-link') existingLinkExclusions += 1
     if (verified.exclusion === 'technical') technicalExclusions += 1
     if (verified.exclusion === 'self-alias') selfAliasExclusions += 1
     if (verified.exclusion === 'failed') failedChecks += 1
     else checkedSources += 1
   }
+  const items = placeLinks(found, target.text)
   const uncheckedCandidates = Math.max(
     0,
     analysis.candidates.length - attemptedSources,
@@ -293,13 +303,14 @@ export async function internalLinksReport(
     },
     methodology: {
       id: 'gsc_internal_link_candidates',
-      version: 3,
+      version: 4,
       lexicalTargetLimit: INTERNAL_LINK_LEXICAL_TARGET_LIMIT,
       matchedQueryEvidenceLimit: INTERNAL_LINK_MATCH_EVIDENCE_LIMIT,
       observedLinkEvidenceLimit: INTERNAL_LINK_OBSERVED_EVIDENCE_LIMIT,
       matching: 'pairwise_exact_then_precision_lexical',
       ranking: 'exact_matches_then_matched_query_impressions_then_relevance',
       contextualPlacementVerified: true,
+      placement: 'tfidf_sentence_match_then_phrase_anchors',
     },
     filters: {
       minImpressions,
@@ -346,6 +357,7 @@ export async function internalLinksReport(
       'GSC query rows omit anonymized queries and lower-volume rows. A 100,000-row cap is reported separately when reached.',
       'Exact query overlap is medium-confidence affinity evidence; lexical matches are low-confidence review evidence. Neither predicts traffic lift or link equity.',
       'The fetch checks HTML link placement, but it cannot prove editorial relevance. Review intent and reader usefulness before adding a link.',
+      'Placement sentences are the source sentences without a link that share the most rare words with the target title, h1, description and URL. Anchors are phrases from those sentences. Content similarity compares the words of the checked pages only. All three are text heuristics, not ranking evidence.',
       uncheckedCandidates
         ? `${uncheckedCandidates} matched source page${uncheckedCandidates === 1 ? ' was' : 's were'} not checked because the output or check limit was reached.`
         : '',
@@ -367,4 +379,41 @@ export async function internalLinksReport(
             ],
     ledgerSummary: ledger.summary(),
   }
+}
+
+// Adds where each link fits, with term weights from the target and every
+// returned source. Sources with a sentence that names the target come first;
+// the order is otherwise unchanged.
+function placeLinks(
+  found: Array<{
+    item: Omit<InternalLinksReport['items'][number], 'placement'>
+    text?: PlacementPage
+  }>,
+  target: PlacementPage | undefined,
+): InternalLinksReport['items'] {
+  const pages = [target, ...found.map((entry) => entry.text)].filter(
+    (page): page is PlacementPage => Boolean(page),
+  )
+  const corpus = new LinkCorpus(pages.map(termCounts))
+  const placed = found.map(({ item, text }) => {
+    const placement =
+      target && text
+        ? linkPlacement(text, target, corpus)
+        : { contentSimilarity: 0, sentences: [] }
+    const best = placement.sentences[0]
+    const recommendation = best
+      ? {
+          ...item.recommendation,
+          action: `${item.recommendation.action} It fits in: "${best.text}" Anchor text could be ${best.anchors.map((anchor) => `"${anchor}"`).join(' or ')}.`,
+        }
+      : {
+          ...item.recommendation,
+          action: `${item.recommendation.action} No sentence on this page names the target, so a link here needs new text.`,
+        }
+    return { ...item, placement, recommendation }
+  })
+  return [
+    ...placed.filter((item) => item.placement.sentences.length > 0),
+    ...placed.filter((item) => item.placement.sentences.length === 0),
+  ]
 }

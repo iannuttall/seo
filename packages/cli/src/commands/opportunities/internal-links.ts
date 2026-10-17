@@ -142,19 +142,23 @@ export const internalLinksCommand = defineCommand({
     printNotes('Why this matters', [
       'Exact-query overlap is useful affinity evidence; precision lexical matches are review evidence only.',
       'Source and target pages are checked for redirects, indexability, canonicals, and existing link placement before an action is returned.',
+      'Each source names the sentence where a link fits and anchor text taken from it, when a sentence names the target.',
     ])
     printNotes('Recommended actions', report.recommendations)
     printNotes('Report caveats', report.caveats)
     if (!report.items.length) return
 
     printLimitedTable(
-      ['Source URL', 'Matched impr', 'Match', 'Link evidence', 'Action'],
+      ['Source URL', 'Matched impr', 'Match', 'Link evidence', 'Anchor'],
       report.items.map((item) => [
         truncate(item.sourceUrl, 52),
         formatCount(item.matchedQueryImpressions),
         item.bestMatchKind,
         item.linkEvidence.status,
-        item.actionType,
+        truncate(
+          item.placement.sentences[0]?.anchors[0] ?? 'no sentence fits',
+          32,
+        ),
       ]),
     )
     printActionDetails(

@@ -205,11 +205,13 @@ const REPORT_DEPTH_PRIMARY = {
       'dataStatus, target verification, aliases, canonical, and technical signals',
       'source completeness and selection attempted, checked, failed, unchecked, and exclusions',
       'per-item exact versus lexical matches and linkEvidence',
+      'per-item placement: the sentence where a link fits, its anchors, and contentSimilarity',
     ],
     doNotClaim: [
       'A low checkLimit can leave plausible candidates unchecked, so absence is not proven.',
       'Query overlap does not prove a link belongs or that adding one improves rankings.',
       'Priority is a heuristic, not estimated impact.',
+      'Placement sentences, anchors and contentSimilarity are text heuristics; they do not prove the link helps a reader.',
     ],
     verify:
       'Read the source passage, add one contextual link if the target is genuinely useful, and re-crawl to confirm it.',

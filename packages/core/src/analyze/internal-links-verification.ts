@@ -1,6 +1,10 @@
 import type { FetchRateControls } from '../fetch/page-fetcher.js'
 import { assertUrlMatchesGscProperty } from '../gsc/property-url.js'
 import type { ExtractedPage, PageFetchResult } from '../types.js'
+import {
+  type PlacementPage,
+  placementPage,
+} from './internal-links-placement.js'
 import type {
   InternalLinkCandidate,
   InternalLinkOpportunity,
@@ -40,6 +44,8 @@ export interface VerifiedInternalLinkTarget {
   technicalSignals: ReturnType<typeof pageTechnicalSignals>
   fetchDiagnostics?: PageFetchResult['diagnostics']
   warnings: InternalLinksWarning[]
+  // The target's text, for placing a link on each source. Not reported.
+  text?: PlacementPage
 }
 
 function errorMessage(error: unknown): string {
@@ -174,6 +180,7 @@ export async function verifyInternalLinkTarget(input: {
     technicalSignals: signals,
     fetchDiagnostics: fetched.diagnostics,
     warnings,
+    text: placementPage({ ...page, url: page.finalUrl, html: fetched.html }),
   }
 }
 
@@ -209,7 +216,9 @@ export async function verifyInternalLinkCandidate(input: {
   rate?: FetchRateControls
   dependencies: InternalLinksVerificationDependencies
 }): Promise<{
-  item?: InternalLinkOpportunity
+  item?: Omit<InternalLinkOpportunity, 'placement'>
+  // The source's text, for placing the link. Only with an item.
+  text?: PlacementPage
   exclusion?: 'existing-link' | 'technical' | 'self-alias' | 'failed'
   warnings: InternalLinksWarning[]
 }> {
@@ -350,6 +359,7 @@ export async function verifyInternalLinkCandidate(input: {
         confidence,
       },
     },
+    text: placementPage({ ...page, url: page.finalUrl, html: fetched.html }),
     warnings,
   }
 }

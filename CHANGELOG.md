@@ -1,5 +1,14 @@
 # Changelog
 
+## 0.7.1
+
+### Fixed
+
+- `seo research` with DataForSEO now works outside English-speaking
+  countries. Each country gets its own language (Spanish for Mexico, German
+  for Germany), and the result names it. Before, every request asked for
+  English, and DataForSEO refused countries without English data.
+
 ## 0.7.0
 
 ### New

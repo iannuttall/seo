@@ -100,7 +100,7 @@ async function accountPage(
   env: Env,
   userId: string,
   message = '',
-  extra: { link?: string; token?: string; tab?: string } = {},
+  extra: { link?: string; token?: string; tab?: string; ok?: boolean } = {},
 ): Promise<Response> {
   const [accounts, keys, machines, login] = await Promise.all([
     accountsOf(env, userId),
@@ -114,6 +114,8 @@ async function accountPage(
       (extra.link && !login
         ? 'This link expired or was already used. Run `seo login` again.'
         : message) || undefined,
+    // Every account page message is an error unless the caller says ok.
+    error: Boolean(message || (extra.link && !login)) && !extra.ok,
     account: {
       form: await seal(env.SEAL_KEY, {
         k: 'form',
@@ -246,6 +248,7 @@ export async function account(
           env,
           userId,
           'Linked. Go back to your terminal or agent: `seo login` finishes there.',
+          { ok: true },
         )
       }
       return accountPage(
@@ -323,7 +326,7 @@ export async function account(
           env,
           userId,
           change instanceof ClickyError && change.code === 'auth'
-            ? 'Clicky did not accept that username and password. If you sign in to Clicky with Google, set a Clicky password first, or add each site below.'
+            ? 'Clicky did not accept that username and password. This does not work if your Clicky account uses two-factor sign-in or Sign in with Google. Add each site below instead.'
             : 'Could not reach Clicky. Try again in a minute.',
           { tab: 'keys' },
         )
@@ -333,7 +336,7 @@ export async function account(
         env,
         userId,
         `Clicky account saved: ${count} site${count === 1 ? '' : 's'}. New Clicky sites appear when an agent asks for them.`,
-        { tab: 'keys' },
+        { tab: 'keys', ok: true },
       )
     }
     case '/account/clicky/account/remove':

@@ -19,7 +19,6 @@ export type ResearchInput = {
   keywords: string[]
   target: string
   country: string
-  language: string
   limit: number
 }
 
@@ -91,13 +90,56 @@ function countryName(code: string): string {
   )
 }
 
+// The country's main language, for the SERP API, which takes any pair.
+function mainLanguage(country: string): string {
+  try {
+    return new Intl.Locale(`und-${country.toUpperCase()}`).maximize().language
+  } catch {
+    return 'en'
+  }
+}
+
+// DataForSEO Labs has data only for these countries, each in fixed
+// languages. This is the one language used per country: the country's main
+// language when Labs has it, else the first Labs language (English for India,
+// Pakistan and Malaysia, where most search is in English). From the free
+// v3/dataforseo_labs/locations_and_languages list.
+const LABS_LANGUAGES: ReadonlyMap<string, string> = new Map(
+  `
+  ae:ar al:sq am:hy ao:pt ar:es at:de au:en az:az ba:bs bd:bn be:nl bf:fr
+  bg:bg bh:ar bo:es br:pt ca:en ch:de ci:fr cl:es cm:fr co:es cr:es cy:el
+  cz:cs de:de dk:da dz:ar ec:es ee:et eg:ar es:es fi:fi fr:fr gb:en gh:en
+  gr:el gt:es hk:en hr:hr hu:hu id:id ie:en il:he in:en it:it jo:ar jp:ja
+  ke:en kh:en kr:ko kz:ru lk:en lt:lt lv:lv ma:ar mc:fr md:ro mk:mk mm:en
+  mt:en mx:es my:en ng:en ni:es nl:nl no:nb nz:en pa:es pe:es ph:en pk:en
+  pl:pl pt:pt py:es ro:ro rs:sr sa:ar se:sv sg:en si:sl sk:sk sn:fr sv:es
+  th:th tn:ar tr:tr tw:zh-TW ua:uk us:en uy:es ve:es vn:vi za:en
+`
+    .trim()
+    .split(/\s+/)
+    .map((pair) => pair.split(':') as [string, string]),
+)
+
+// The language DataForSEO gets for a country, or null when DataForSEO Labs
+// has no data for it.
+export function dataForSeoLanguage(country: string): string | null {
+  return LABS_LANGUAGES.get(country.toLowerCase()) ?? null
+}
+
 async function dataForSeo(
   [login, password]: string[],
   input: ResearchInput,
 ): Promise<Row[]> {
+  const language = dataForSeoLanguage(input.country)
+  if (!language && input.action !== 'serp' && input.action !== 'backlinks') {
+    throw new CommandError(
+      'INVALID_INPUT',
+      `DataForSEO has no ${input.action} data for country "${input.country}".`,
+    )
+  }
   const market = {
     location_name: countryName(input.country),
-    language_code: input.language,
+    language_code: language ?? mainLanguage(input.country),
   }
   const post = async (path: string, task: Record<string, unknown>) => {
     const response = await call(

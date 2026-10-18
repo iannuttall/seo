@@ -6,6 +6,7 @@ import {
 } from './domain-rating.js'
 import type { Detail } from './present.js'
 import {
+  dataForSeoLanguage,
   type ResearchAction,
   type ResearchProvider,
   research,
@@ -111,12 +112,13 @@ export async function runResearch(
   const country = input.country ?? 'us'
   const target = input.target ?? ''
   const offset = input.offset ?? 0
+  const language =
+    input.provider === 'dataforseo' ? dataForSeoLanguage(country) : null
   const found = await research(input.provider, keys, {
     action: input.action,
     keywords: input.keywords ?? [],
     target,
     country,
-    language: 'en',
     limit: Math.min(1000, Math.max(100, offset + PAGE_SIZE)),
   })
   const { rows, note } =
@@ -131,7 +133,7 @@ export async function runResearch(
   const hasTargetDr = targetDr !== undefined && targetDr !== null
   return {
     text: rowsText({
-      title: `${input.provider} ${input.action}${target ? ` for ${target}` : ''}, ${country}.`,
+      title: `${input.provider} ${input.action}${target ? ` for ${target}` : ''}, ${country}${language ? `, language ${language}` : ''}.`,
       rows: rated.rows,
       offset,
       limit: PAGE_SIZE,
@@ -151,6 +153,7 @@ export async function runResearch(
       action: input.action,
       target: target || null,
       country,
+      language,
       targetDomainRating: hasTargetDr ? targetDr : null,
       attribution: rated.added || hasTargetDr ? DR_ATTRIBUTION : null,
       leftOut: note,

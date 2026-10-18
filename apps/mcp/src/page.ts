@@ -85,6 +85,8 @@ export type View =
   | {
       view: 'account'
       message?: string
+      // The message reports a failure.
+      error?: boolean
       account: {
         form: string
         google: { email: string; subject: string }[]

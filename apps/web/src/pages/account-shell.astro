@@ -237,7 +237,8 @@ const keys: { name: string; label: string; type: 'text' | 'password' }[] = [
             later appear when an agent asks for them. Your Clicky password is
             encrypted and kept for this, so use one you use nowhere else. To
             stop, remove the account here and change your password at Clicky.
-            It does not work if you sign in to Clicky with Google.
+            It does not work if your Clicky account uses two-factor sign-in or
+            Sign in with Google; add each site below instead.
           </p>
           <div class="mt-3 flex items-center justify-between gap-4 text-sm" data-clicky-account-row hidden>
             <span class="min-w-0 break-all text-foreground">
@@ -388,6 +389,7 @@ const keys: { name: string; label: string; type: 'text' | 'password' }[] = [
     view: 'connect' | 'signin' | 'account' | 'notice'
     base?: string
     message?: string
+    error?: boolean
     connect?: { client: string; host: string; flow: string }
     notice?: { title: string; text: string }
     account?: {
@@ -603,6 +605,10 @@ const keys: { name: string; label: string; type: 'text' | 'password' }[] = [
     const message = root.querySelector('[data-message]')
     if (message && state.message) {
       message.textContent = state.message
+      if (state.error) {
+        message.classList.replace('bg-muted', 'bg-destructive-soft')
+        message.setAttribute('role', 'alert')
+      }
       show(message)
     }
     for (const view of all('[data-view]')) {

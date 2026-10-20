@@ -1,6 +1,5 @@
 ---
 import {
-  Alert02Icon,
   Analytics01Icon,
   Briefcase01Icon,
   Calendar03Icon,
@@ -8,9 +7,7 @@ import {
   FileSearchIcon,
   Key01Icon,
   News01Icon,
-  PieChartIcon,
   Route01Icon,
-  Search01Icon,
   SearchList01Icon,
   AiChat02Icon,
   Store01Icon,
@@ -31,29 +28,29 @@ const jobs = [
     title: 'Find out why traffic moved',
     icon: Analytics01Icon,
     text: 'Your agent gets your clicks and impressions against the last period, the pages and queries that moved, Google Analytics sessions for the same dates, and the Google updates in between.',
-    href: '/docs/report',
-    link: 'How the SEO report works',
+    href: '/features/google-updates',
+    link: 'Google update checker',
   },
   {
     title: 'Check that a fix worked',
     icon: FileSearchIcon,
     text: 'After an edit, your agent loads the live page and asks Google whether it is indexed, so you see the redirect, the noindex or the missing canonical before your traffic does.',
-    href: '/docs/page',
-    link: 'How a page check works',
+    href: '/features/seo-audit',
+    link: 'SEO audit tool',
   },
   {
     title: 'See what people ask AI about you',
     icon: AiChat02Icon,
     text: 'Questions from Google AI Mode and AI assistants already show up in your Search Console. Your agent finds them, groups the rewordings and shows which page Google picked for each.',
-    href: '/docs/report',
-    link: 'How the SEO report works',
+    href: '/features/ai-search',
+    link: 'AI search tracking',
   },
   {
     title: 'Plan pages from real demand',
     icon: SearchList01Icon,
     text: 'Start from the searches you already show up for, then size the gaps with keyword volumes and competitors from your own Ahrefs or DataForSEO account.',
-    href: '/docs/research',
-    link: 'How research works',
+    href: '/features/keyword-research',
+    link: 'Keyword research tool',
   },
 ]
 
@@ -61,72 +58,44 @@ const sources = [
   {
     title: 'Search Console',
     icon: Analytics01Icon,
-    text: 'Clicks, impressions, click-through rate and position for every page and query, plus quick wins, pages stuck on page two, decay and cannibalization.',
-    href: '/docs/report',
-    link: 'SEO report docs',
+    text: 'Clicks, impressions, click-through rate and position for every page and query on your site, with quick wins, pages stuck on page two, decaying pages and cannibalization worked out for you. Bing sits alongside it when you connect it.',
+    href: '/features/search-console',
+    link: 'Google Search Console MCP',
   },
   {
     title: 'Google Analytics',
     icon: ChartLineData01Icon,
-    text: 'Sessions for the same dates as Search Console, so you can tell a search drop from a drop in all your traffic.',
-    href: '/docs/analytics',
-    link: 'Analytics docs',
+    text: 'Sessions from search for the same dates as your Search Console data, so you can see what happened after the click and tell a search drop from a drop in all your traffic.',
+    href: '/features/google-analytics',
+    link: 'Google Analytics MCP for SEO',
   },
   {
-    title: 'Visits from AI assistants',
+    title: 'AI search',
     icon: AiChat02Icon,
-    text: 'Visits from ChatGPT, Perplexity, Claude, Gemini and Copilot, and the pages they land on.',
-    href: '/docs/report',
-    link: 'SEO report docs',
+    text: 'The questions people ask Google AI Mode and AI assistants that already show up in your Search Console, and the visits ChatGPT, Perplexity, Claude and Gemini send you.',
+    href: '/features/ai-search',
+    link: 'AI search tracking',
   },
   {
-    title: 'Questions people ask AI',
-    icon: SearchList01Icon,
-    text: 'The questions people ask Google AI Mode and AI assistants that show up in your Search Console, with each set of rewordings grouped into one question.',
-    href: '/docs/report',
-    link: 'SEO report docs',
-  },
-  {
-    title: 'Bing Webmaster Tools',
-    icon: Search01Icon,
-    text: "Bing's clicks and impressions beside Google's, so you see each engine's share of your search traffic.",
-    href: '/docs/bing',
-    link: 'Bing docs',
-  },
-  {
-    title: 'Clicky',
-    icon: PieChartIcon,
-    text: 'Landing pages and traffic sources from your Clicky sites.',
-    href: '/docs/analytics',
-    link: 'Analytics docs',
-  },
-  {
-    title: 'Google update dates',
+    title: 'Google updates',
     icon: Calendar03Icon,
-    text: 'Every Google update lined up against your traffic, so you can see at a glance whether a drop matches one.',
-    href: '/docs/compare',
-    link: 'Compare docs',
+    text: 'Every Google update lined up against your clicks and sessions, so when traffic moves you can see straight away whether the dates match an update.',
+    href: '/features/google-updates',
+    link: 'Google update checker',
   },
   {
-    title: 'Index status',
-    icon: Alert02Icon,
-    text: 'Whether Google has indexed a page, checked live, for one page or for every page that lost its clicks.',
-    href: '/docs/indexing',
-    link: 'Index docs',
-  },
-  {
-    title: 'Site crawl',
+    title: 'Site audit',
     icon: Route01Icon,
-    text: 'Broken pages, redirects, titles, canonicals and internal links, plus what AI crawlers can read on your site.',
-    href: '/docs/crawl',
-    link: 'Crawl docs',
+    text: 'A crawl of your site for broken pages, redirects, titles, canonicals and internal links, plus whether Google has indexed a page and what AI crawlers can read.',
+    href: '/features/seo-audit',
+    link: 'SEO audit tool',
   },
   {
-    title: 'Research with your key',
+    title: 'Keyword research',
     icon: Key01Icon,
-    text: 'Keyword volumes, search results, competitors and backlinks from your own DataForSEO or Ahrefs account.',
-    href: '/docs/research',
-    link: 'Research docs',
+    text: 'Keyword volumes, search results, competitors and backlinks from your own Ahrefs or DataForSEO account, kept clearly apart from your own numbers.',
+    href: '/features/keyword-research',
+    link: 'Keyword research tool',
   },
 ]
 
@@ -164,9 +133,9 @@ const teams = [
   {
     title: 'Publishers and large sites',
     icon: News01Icon,
-    text: 'Thousands of pages and several Google updates a year. See which sections moved, line them up with update dates, and crawl up to 10,000 pages.',
-    href: '/docs/compare',
-    link: 'Compare before and after an update',
+    text: 'With thousands of pages and several Google updates a year, you need to see quickly which sections moved, line them up with update dates, and crawl up to 10,000 pages to find what broke.',
+    href: '/features/google-updates',
+    link: 'Google update checker',
   },
 ]
 
@@ -174,7 +143,7 @@ const teams = [
 const trust = [
   {
     title: 'Straight from your accounts',
-    text: 'Search Console, Google Analytics, Bing and Clicky, read fresh each time you ask.',
+    text: 'Your agent reads Search Console, Google Analytics, Bing and Clicky fresh each time you ask, so it never works from an old export.',
   },
   {
     title: 'Every number has its dates',
@@ -193,25 +162,25 @@ const trust = [
 const surfaces = [
   {
     title: 'Hosted MCP',
-    text: 'Best for most teams. Sign in with Google and connect one URL, with nothing to install.',
+    text: 'The best choice for most teams: you sign in with Google and connect one URL, with nothing to install.',
     code: 'seoskill.dev/mcp',
     href: '/docs/mcp',
   },
   {
     title: 'CLI',
-    text: 'For site crawls, Bing and running everything on your own machine. Open source.',
+    text: 'Open source and runs on your own machine, which adds site crawls and Bing data.',
     code: 'npm i -g seo && seo start',
     href: '/docs/cli',
   },
   {
     title: 'Your research key',
-    text: 'Optional. Add your Ahrefs or DataForSEO key for keyword volumes, competitors and backlinks.',
+    text: 'If you already pay for Ahrefs or DataForSEO, add your key to get keyword volumes, competitors and backlinks.',
     code: null,
     href: '/docs/keys',
   },
   {
     title: 'Your data',
-    text: 'Sign-ins and keys are encrypted. Your search data is never stored on our servers.',
+    text: 'Your sign-ins and keys are encrypted, and your search data is never stored on our servers.',
     code: null,
     href: '/docs/privacy',
   },
@@ -283,15 +252,16 @@ const faqs = [
           SEO for <span class="whitespace-nowrap">agent-native</span> teams
         </h1>
         <p class="mt-4 max-w-2xl text-pretty text-xl/8 font-medium -tracking-[0.2px] text-foreground-muted">
-          The SEO data I give my agents every day, so they work from my real
-          numbers instead of guessing.
+          Give your team's AI agents your real Search Console, Google Analytics
+          and Bing data, so every answer they give you about search comes from
+          your own numbers instead of a guess.
         </p>
       </div>
 
       <div class="site-frame mt-10 sm:mt-12">
         <SetupCommands id="home-setup" />
         <p class="mt-6 text-center text-sm text-foreground-muted">
-          Free. Sign in with Google. Your search data is never stored on our servers.
+          It's free to use, you sign in with your Google account, and your search data is never stored on our servers.
         </p>
       </div>
     </section>
@@ -301,7 +271,7 @@ const faqs = [
         <SectionHeading
           id="why-heading"
           title="What your agent can do with it"
-          text="Ask in plain words. Your agent pulls the right numbers from your own accounts and tells you what changed, where and when."
+          text="You ask your agent a question the way you would ask a colleague, and it pulls the numbers it needs from your own accounts to tell you what changed, which pages were affected and when it started."
         />
         <div class="grid grid-cols-1 gap-2 sm:grid-cols-2">
           {
@@ -316,7 +286,7 @@ const faqs = [
         <SectionHeading
           id="sources-heading"
           title="The data your agent works from"
-          text="Your own numbers, straight from the accounts you already use, plus research from your own Ahrefs or DataForSEO key."
+          text="Everything comes straight from the accounts you already use. When you need keyword volumes or competitor data too, your agent adds research from your own Ahrefs or DataForSEO account."
         />
         <div class="grid grid-cols-1 gap-2 sm:grid-cols-2">
           {
@@ -333,8 +303,9 @@ const faqs = [
             Questions you can ask it
           </h2>
           <p class="mt-4 text-base leading-7 text-foreground-muted">
-            Ask in plain words, the way you would ask a colleague. Your agent
-            picks the commands, reads the results and shows you what it found.
+            You don't need to learn any commands. Ask the way you would ask a
+            colleague who knows your site, and your agent works out which
+            reports to run and walks you through what it found.
           </p>
         </div>
         <ul class="divide-y divide-border rounded-lg bg-muted px-6">
@@ -350,7 +321,7 @@ const faqs = [
         <SectionHeading
           id="teams-heading"
           title="Built for teams that run agents on real sites"
-          text="If search brings in your customers, your agents should work from the same numbers you do."
+          text="If search brings in your customers, the agents your team already uses should be working from the same numbers you look at every day."
         />
         <div class="grid grid-cols-1 gap-2 sm:grid-cols-2">
           {
@@ -367,8 +338,9 @@ const faqs = [
             Numbers you can put in front of a client
           </h2>
           <p class="mt-4 text-base leading-7 text-foreground-muted">
-            Your agent works from the same numbers you would show a client or
-            your board, so you can act on what it finds.
+            Every answer your agent gives you is built on the same numbers you
+            would show a client or your board, so you can act on it without
+            checking everything again yourself.
           </p>
         </div>
         <ul class="divide-y divide-border rounded-lg bg-muted px-6">
@@ -389,8 +361,9 @@ const faqs = [
             Pick how you connect
           </h2>
           <p class="mt-4 text-base leading-7 text-foreground-muted">
-            Most teams start with the hosted MCP. Add the CLI on a machine when
-            you want site crawls or Bing data.
+            Most teams start with the hosted MCP because there is nothing to
+            install, then add the CLI on a machine when they want site crawls or
+            Bing data.
           </p>
         </div>
         <ul class="divide-y divide-border rounded-lg bg-muted px-6">
@@ -421,7 +394,7 @@ const faqs = [
         <SectionHeading
           id="tools-heading"
           title="Free SEO tools"
-          text="Check a website, a technical file or a keyword list in your browser. No sign-in."
+          text="Check a website, a technical file or a keyword list right in your browser, with no account needed."
         />
         <div class="grid grid-cols-1 gap-2 sm:grid-cols-2">
           {

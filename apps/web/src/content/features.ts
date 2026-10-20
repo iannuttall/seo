@@ -1,11 +1,14 @@
 import {
+  AiChat02Icon,
   Analytics01Icon,
+  Calendar03Icon,
+  ChartLineData01Icon,
   McpServerIcon,
   Route01Icon,
   SearchList01Icon,
 } from '@hugeicons/core-free-icons'
 
-// The four feature pages. Each targets one search phrase and links to the
+// The feature pages. Each targets one search phrase and links to the
 // docs pages that cover the detail.
 export const features = [
   {
@@ -19,6 +22,24 @@ export const features = [
     title: 'Google Search Console MCP',
     text: 'Give your agent your clicks, impressions, CTR, positions, queries and pages.',
     icon: Analytics01Icon,
+  },
+  {
+    path: '/features/google-analytics',
+    title: 'Google Analytics MCP for SEO',
+    text: 'Search sessions beside your clicks, the pages search sends people to, and visits from AI assistants.',
+    icon: ChartLineData01Icon,
+  },
+  {
+    path: '/features/ai-search',
+    title: 'AI search tracking',
+    text: 'The questions people ask AI that show in your Search Console, visits from AI assistants, and what AI crawlers can read.',
+    icon: AiChat02Icon,
+  },
+  {
+    path: '/features/google-updates',
+    title: 'Google update checker',
+    text: 'Line up your clicks and sessions with Google update dates, and see the pages and queries that moved.',
+    icon: Calendar03Icon,
   },
   {
     path: '/features/keyword-research',

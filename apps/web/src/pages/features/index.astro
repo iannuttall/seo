@@ -7,31 +7,26 @@ import BaseLayout from '@/layouts/BaseLayout.astro'
 
 <BaseLayout
   title="Open source SEO tools for AI agents"
-  description="Use open source SEO tools inside AI agents: a Google Search Console MCP, a hosted SEO MCP server, keyword research with your own key, and a site audit."
+  description="Open source SEO tools for AI agents: a Google Search Console MCP, Google Analytics for SEO, AI search tracking, a Google update checker, keyword research and a site audit."
   canonicalPath="/features"
   schemaType="CollectionPage"
 >
   <main data-agent-content>
     <PageHeader
       title="Open source SEO tools for AI agents"
-      description="Give your agent your Search Console data, keyword research and a site audit, and keep the decisions with you."
+      description="Give your agent your real search and analytics data, so it works from your numbers instead of guessing."
     />
 
     <div class="grid grid-cols-1 gap-2 sm:grid-cols-2">
       {features.map((item) => <HomeCard title={item.title} text={item.text} icon={item.icon} href={item.path} />)}
     </div>
 
-    <section class="docs-prose mt-14" aria-labelledby="one-engine">
-      <h2 id="one-engine">One engine behind every tool</h2>
+    <section class="docs-prose mt-14" aria-labelledby="get-started">
+      <h2 id="get-started">Start in a minute</h2>
       <p>
-        The hosted MCP, the local MCP and the <code>seo</code> CLI run the
-        same reports and return the same facts. Each result says what the data
-        shows and where it came from. It gives no advice, so your agent shows
-        you the facts and you decide what to change.
-      </p>
-      <p>
-        Start with the <a href="/docs/getting-started">getting started guide</a>,
-        or read about the <a href="/docs#docs-commands">eight commands</a>.
+        Connect the hosted MCP and sign in with Google, or install the CLI on
+        your machine. The <a href="/docs/getting-started">getting started
+        guide</a> walks through both.
       </p>
     </section>
   </main>

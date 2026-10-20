@@ -5,7 +5,7 @@
   </picture>
 </p>
 
-# SEO Skill
+# SEO For Agent-Native Teams
 
 [![npm](https://img.shields.io/npm/v/seo?style=flat-square)](https://www.npmjs.com/package/seo)
 

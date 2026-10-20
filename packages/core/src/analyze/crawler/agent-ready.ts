@@ -2,24 +2,30 @@ import { explainRule, type RuleId } from '../../rules.js'
 import type { CrawlPageSnapshot } from '../monitoring/types.js'
 import type { CrawlAiSignals, CrawlIssue } from './report.js'
 
-// A public page: indexable HTML that anyone can load. Only public pages
-// should have a Markdown copy.
-export function isPublicPage(page: CrawlPageSnapshot): boolean {
-  return (
-    page.status >= 200 &&
-    page.status < 300 &&
-    page.indexable &&
-    !page.softAuthenticationGate &&
-    /\btext\/html\b/i.test(page.contentType ?? '')
-  )
-}
-
-function needsSignIn(page: CrawlPageSnapshot): boolean {
+// A page that needs a sign-in. Only these pages should have no Markdown copy.
+// noindex does not make a page private: agents may still read it.
+export function needsSignIn(page: CrawlPageSnapshot): boolean {
   return (
     page.status === 401 ||
     page.status === 403 ||
     Boolean(page.softAuthenticationGate)
   )
+}
+
+// A public page: HTML that loads without a sign-in.
+export function isPublicPage(page: CrawlPageSnapshot): boolean {
+  return (
+    page.status >= 200 &&
+    page.status < 300 &&
+    !needsSignIn(page) &&
+    /\btext\/html\b/i.test(page.contentType ?? '')
+  )
+}
+
+// Pages expected to have a Markdown copy: public pages search engines may
+// index. A noindex page may have one, but it is not expected.
+function expectsMarkdown(page: CrawlPageSnapshot): boolean {
+  return isPublicPage(page) && page.indexable
 }
 
 function issue(
@@ -87,11 +93,11 @@ export function agentReadyIssues(input: {
     )
   }
 
-  const publicPages = input.pages.filter(isPublicPage)
-  const linked = publicPages.filter((page) => page.markdownAlternates?.length)
+  const expected = input.pages.filter(expectsMarkdown)
+  const linked = expected.filter((page) => page.markdownAlternates?.length)
   const negotiation = ai.markdownNegotiation
   if (
-    publicPages.length &&
+    expected.length &&
     !linked.length &&
     negotiation?.availability === 'available' &&
     !negotiation.markdown
@@ -100,47 +106,32 @@ export function agentReadyIssues(input: {
       issue(
         'markdown_missing',
         startUrl,
-        `Accept: text/markdown returned ${negotiation.contentType || 'no content type'}, and none of ${publicPages.length} public pages links to a Markdown copy.`,
+        `Accept: text/markdown returned ${negotiation.contentType || 'no content type'}, and none of ${expected.length} public pages links to a Markdown copy.`,
         { negotiation },
       ),
     )
   }
   if (linked.length) {
-    for (const page of publicPages) {
+    for (const page of expected) {
       if (page.markdownAlternates?.length) continue
       issues.push(
         issue(
           'markdown_alternate_missing',
           page.url,
-          `${linked.length} of ${publicPages.length} public pages link to a Markdown copy; this one does not.`,
+          `${linked.length} of ${expected.length} public pages link to a Markdown copy; this one does not.`,
         ),
       )
     }
   }
 
-  const brokenPrivate = new Map(
-    (ai.markdownCopies?.broken ?? [])
-      .filter((copy) => !copy.public)
-      .map((copy) => [copy.page, copy]),
-  )
   for (const page of input.pages) {
-    if (isPublicPage(page) || !page.markdownAlternates?.length) continue
-    const copy = brokenPrivate.get(page.url)
-    if (!copy && !needsSignIn(page)) continue
-    const reason = needsSignIn(page)
-      ? 'needs a sign-in'
-      : page.indexable
-        ? 'is not public'
-        : 'is not indexable'
+    if (!needsSignIn(page) || !page.markdownAlternates?.length) continue
     issues.push(
       issue(
         'markdown_alternate_on_private_page',
         page.url,
-        `The page ${reason} but links to a Markdown copy at ${page.markdownAlternates[0]}${copy ? `, which returned ${copy.status === undefined ? 'no response' : `HTTP ${copy.status}`}` : ''}.`,
-        {
-          markdownAlternates: page.markdownAlternates,
-          ...(copy ? { copy } : {}),
-        },
+        `The page needs a sign-in but links to a Markdown copy at ${page.markdownAlternates[0]}.`,
+        { markdownAlternates: page.markdownAlternates },
       ),
     )
   }

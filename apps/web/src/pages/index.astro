@@ -5,7 +5,6 @@ import {
   Briefcase01Icon,
   Calendar03Icon,
   ChartLineData01Icon,
-  CheckListIcon,
   FileSearchIcon,
   Key01Icon,
   PieChartIcon,
@@ -26,32 +25,35 @@ import { toolIcon } from '@/content/tool-icons'
 import { tools } from '@/content/tools/manifest.mjs'
 import BaseLayout from '@/layouts/BaseLayout.astro'
 
-// The four ways agents fail at SEO, from the README, each with the command
-// that answers it.
-const failures = [
+// What a team's agent can do with it, each with the docs that show how.
+const jobs = [
   {
-    title: 'It makes things up',
+    title: 'Find out why traffic moved',
     icon: Analytics01Icon,
-    text: 'Ask an agent why traffic dropped and you get a tidy list of possible causes, none of them from your site. The SEO report gives it your totals against the last period, the pages and queries that moved, and the Google updates in between.',
+    text: 'Your agent gets your clicks and impressions against the last period, the pages and queries that moved, Google Analytics sessions for the same dates, and the Google updates in between.',
     href: '/docs/report',
+    link: 'How the SEO report works',
   },
   {
-    title: 'It trusts keyword tools',
-    icon: SearchList01Icon,
-    text: 'Keyword tools estimate your traffic from a sample and miss most of the long tail. Your agent starts from Search Console instead. When it needs volumes or competitors, research runs on your own key and stays apart from your real numbers.',
-    href: '/docs/research',
-  },
-  {
-    title: "It says it's fixed when it isn't",
+    title: 'Check that a fix worked',
     icon: FileSearchIcon,
-    text: 'Agents trust their own edits. Then you find the page is still noindexed, still redirecting, or still not in Google. A page check loads the live URL and asks Google whether it is indexed.',
+    text: 'After an edit, your agent loads the live page and asks Google whether it is indexed, so you see the redirect, the noindex or the missing canonical before your traffic does.',
     href: '/docs/page',
+    link: 'How a page check works',
   },
   {
-    title: 'It drowns in reports',
-    icon: CheckListIcon,
-    text: 'The first version of this had about 70 reports, and almost nobody used most of them. Now there are eight commands. Each one takes a site or a URL, and every result ends with the command to run next.',
-    href: '/docs',
+    title: 'See what people ask AI about you',
+    icon: AiChat02Icon,
+    text: 'Questions from Google AI Mode and AI assistants already show up in your Search Console. Your agent finds them, groups the rewordings, and shows which page Google picked for each.',
+    href: '/docs/report',
+    link: 'How the SEO report works',
+  },
+  {
+    title: 'Plan pages from real demand',
+    icon: SearchList01Icon,
+    text: 'Start from the searches you already appear for. When your agent needs volumes, results pages or competitors, it uses your own DataForSEO or Ahrefs key and keeps those numbers labelled.',
+    href: '/docs/research',
+    link: 'How research works',
   },
 ]
 
@@ -61,54 +63,70 @@ const sources = [
     icon: Analytics01Icon,
     text: 'Clicks, impressions, click-through rate and position by query and page. Then quick wins, low click-through rates, pages stuck on page two, decay and cannibalization.',
     href: '/docs/report',
+    link: 'SEO report docs',
   },
   {
     title: 'Google Analytics',
     icon: ChartLineData01Icon,
     text: 'Sessions for the same dates as Search Console, from Google, from every search engine and from all channels. You can tell a search drop from a drop in all traffic.',
     href: '/docs/analytics',
+    link: 'Analytics docs',
   },
   {
     title: 'Visits from AI assistants',
     icon: AiChat02Icon,
     text: 'Google Analytics visits from ChatGPT, Perplexity, Claude, Gemini and Copilot, by source, with the pages they land on. An AI app that sends no referrer shows up as Direct.',
     href: '/docs/report',
+    link: 'SEO report docs',
+  },
+  {
+    title: 'Questions people ask AI',
+    icon: SearchList01Icon,
+    text: 'Search Console queries that read like AI conversations: a bare "yes", "what about…", long chat-style questions and agent searches. Rewordings are grouped into one question.',
+    href: '/docs/report',
+    link: 'SEO report docs',
   },
   {
     title: 'Bing Webmaster Tools',
     icon: Search01Icon,
     text: "Bing's clicks and impressions beside Google's for the same dates, and each engine's share. The two are never added together. Runs on your machine with the CLI.",
     href: '/docs/bing',
+    link: 'Bing docs',
   },
   {
     title: 'Clicky',
     icon: PieChartIcon,
     text: 'Landing pages from your Clicky sites, counted the way Clicky counts them. A Clicky visit stays a Clicky visit and never becomes a Google Analytics session.',
     href: '/docs/analytics',
+    link: 'Analytics docs',
   },
   {
     title: 'Google update dates',
     icon: Calendar03Icon,
     text: 'Known Google updates sit next to your traffic, so your agent can see when the timing lines up. Timing that lines up is not proof, and the result says so.',
     href: '/docs/compare',
+    link: 'Compare docs',
   },
   {
     title: 'Index status',
     icon: Alert02Icon,
     text: 'Google URL Inspection for one page, or for every page that lost its clicks, with the live page checked at the same time.',
     href: '/docs/indexing',
+    link: 'Index docs',
   },
   {
     title: 'Site crawl',
     icon: Route01Icon,
     text: 'Broken pages, redirects, titles, canonicals and internal links, plus what AI bots can read: robots.txt rules, llms.txt and Markdown copies. Runs on your machine.',
     href: '/docs/crawl',
+    link: 'Crawl docs',
   },
   {
     title: 'Research with your key',
     icon: Key01Icon,
     text: 'Keyword volumes, search results, competitors and backlinks from your own DataForSEO or Ahrefs account, labelled as estimates and kept apart from your own data.',
     href: '/docs/research',
+    link: 'Research docs',
   },
 ]
 
@@ -127,18 +145,21 @@ const teams = [
     icon: Briefcase01Icon,
     text: "Link each client's Google account on your account page. Every request uses the linked account that can read that site, so one agent can work across all your clients.",
     href: '/docs/mcp',
+    link: 'Set up the hosted MCP',
   },
   {
     title: 'In-house SEO and growth teams',
     icon: UserGroupIcon,
     text: 'Add it to the cloud agents and CI jobs you already run. One account token gives a fresh machine your Google accounts, Bing and keys with nothing else to set up.',
     href: '/docs/cloud-agents',
+    link: 'Run it in cloud agents',
   },
   {
     title: 'Founders who build with agents',
     icon: Store01Icon,
     text: 'You already work in Claude Code, Codex or Cursor every day. Connect one URL and ask about your own site in the same session where you build it.',
     href: '/docs/getting-started',
+    link: 'Get started',
   },
 ]
 
@@ -272,13 +293,13 @@ const faqs = [
       <section class="site-frame" aria-labelledby="why-heading">
         <SectionHeading
           id="why-heading"
-          title="Why agents get SEO wrong"
-          text="Most AI SEO tools hand your agent generic advice, or estimates from a keyword tool that has never seen your site. You end up with the same pages everyone else is publishing."
+          title="What your agent can do with it"
+          text="Ask in plain words. Your agent runs the right report on your own data, and every result ends with the next one to run."
         />
         <div class="grid grid-cols-1 gap-2 sm:grid-cols-2">
           {
-            failures.map((item) => (
-              <HomeCard title={item.title} text={item.text} icon={item.icon} href={item.href} />
+            jobs.map((item) => (
+              <HomeCard title={item.title} text={item.text} icon={item.icon} href={item.href} link={item.link} />
             ))
           }
         </div>
@@ -290,17 +311,13 @@ const faqs = [
           title="The data your agent works from"
           text="Your own numbers come first, from accounts you already have. Every result gives its dates and its limits, and each source keeps its own metric names."
         />
-        <div class="grid grid-cols-1 gap-2 sm:grid-cols-2 lg:grid-cols-3">
+        <div class="grid grid-cols-1 gap-2 sm:grid-cols-2">
           {
             sources.map((item) => (
-              <HomeCard title={item.title} text={item.text} icon={item.icon} href={item.href} />
+              <HomeCard title={item.title} text={item.text} icon={item.icon} href={item.href} link={item.link} />
             ))
           }
         </div>
-        <p class="mt-6 max-w-2xl text-sm leading-6 text-foreground-muted">
-          Coming next: the questions people ask AI assistants that already
-          show up in your Search Console.
-        </p>
       </section>
 
       <section class="site-frame grid gap-8 sm:grid-cols-[1fr_1.15fr] sm:items-start">
@@ -328,10 +345,10 @@ const faqs = [
           title="Built for teams that run agents on real sites"
           text="If search brings in your customers and your agents already ship real work, they should read the same numbers you do."
         />
-        <div class="grid grid-cols-1 gap-2 sm:grid-cols-3">
+        <div class="grid grid-cols-1 gap-2 sm:grid-cols-2">
           {
             teams.map((item) => (
-              <HomeCard title={item.title} text={item.text} icon={item.icon} href={item.href} />
+              <HomeCard title={item.title} text={item.text} icon={item.icon} href={item.href} link={item.link} />
             ))
           }
         </div>
@@ -417,7 +434,7 @@ const faqs = [
           title="Free SEO tools"
           text="Check a website, a technical file or a keyword list in your browser. No sign-in."
         />
-        <div class="grid grid-cols-1 gap-2 sm:grid-cols-2 lg:grid-cols-3">
+        <div class="grid grid-cols-1 gap-2 sm:grid-cols-2">
           {
             featuredTools.map((tool) => (
               <HomeCard title={tool.title} text={tool.description} icon={toolIcon(tool.id)} href={tool.path} />

@@ -1,0 +1,66 @@
+---
+import {
+  AiChat02Icon,
+  Analytics01Icon,
+  ChartLineData01Icon,
+  Route01Icon,
+} from '@hugeicons/core-free-icons'
+import FeaturePage from '@/components/FeaturePage.astro'
+
+const related = [
+  { title: 'seo report', text: 'The ai-queries section and visits from AI assistants in the overview.', href: '/docs/report', icon: Analytics01Icon },
+  { title: 'Analytics', text: 'Connect Google Analytics or Clicky.', href: '/docs/analytics', icon: ChartLineData01Icon },
+  { title: 'seo crawl', text: 'What AI crawlers can read on your site.', href: '/docs/crawl', icon: Route01Icon },
+  { title: 'seo compare', text: 'AI visits before and after a change.', href: '/docs/compare', icon: AiChat02Icon },
+]
+---
+
+<FeaturePage
+  title="AI search tracking from your own data"
+  description="See how AI search reaches your site: the questions people ask Google AI Mode and AI assistants that show in Search Console, visits from ChatGPT and Perplexity, and what AI crawlers can read."
+  path="/features/ai-search"
+  lead="See the questions people ask AI about your topic, the visits AI assistants send you, and what AI crawlers can read, all from your own Search Console, analytics and site."
+  {related}
+>
+  <h2>The questions people ask AI</h2>
+  <p>
+    When people use Google's AI Mode, and when AI assistants search the web
+    for them, their questions show up in your Search Console. They look
+    different from normal searches:
+  </p>
+  <ul>
+    <li>Bare replies, such as "yes" or "tell me more".</li>
+    <li>Follow-ups, such as "what about smith" or "is it common".</li>
+    <li>Long, chat-style questions in full sentences.</li>
+    <li>Agent searches, such as a question with <code>site:</code> added, or a whole prompt.</li>
+  </ul>
+  <p>
+    Your agent finds these queries, groups the many rewordings of one
+    question, and shows the page Google picked for each, with impressions,
+    clicks and position. These are real questions from your own data, not a
+    list of prompts someone guessed.
+  </p>
+
+  <h2>Visits from AI assistants</h2>
+  <p>
+    From Google Analytics, your agent sees the visits that ChatGPT,
+    Perplexity, Claude, Gemini and Copilot send you, by source, and the pages
+    they land on, against the previous period.
+  </p>
+
+  <h2>What AI crawlers can read</h2>
+  <p>
+    A crawl of your site shows which AI search and training bots your
+    robots.txt allows, whether your pages have Markdown copies, and whether
+    your llms.txt and its links work. See the <a href="/features/seo-audit">SEO
+    audit tool</a>.
+  </p>
+
+  <h2>Read it as a signal</h2>
+  <p>
+    Search Console does not label AI Mode, so the questions are found by
+    their shape, and some will have been typed by people. Search Console also
+    leaves out rare queries, so the counts are a minimum. Visits only count
+    when the AI app passes a referrer.
+  </p>
+</FeaturePage>

@@ -136,10 +136,10 @@ import FormTextarea from '@/components/FormTextarea.astro'
         heading.className = 'flex flex-wrap items-center gap-2'
         const badge = document.createElement('strong')
         badge.className = finding.severity === 'error'
-          ? 'font-mono text-xs uppercase text-red-700 dark:text-red-400'
+          ? 'font-mono text-xs text-red-700 dark:text-red-400'
           : finding.severity === 'warning'
-            ? 'font-mono text-xs uppercase text-amber-700 dark:text-amber-300'
-            : 'font-mono text-xs uppercase text-foreground-muted'
+            ? 'font-mono text-xs text-amber-700 dark:text-amber-300'
+            : 'font-mono text-xs text-foreground-muted'
         badge.textContent = finding.severity
         const location = document.createElement('code')
         location.className = 'font-mono text-xs text-foreground-muted'

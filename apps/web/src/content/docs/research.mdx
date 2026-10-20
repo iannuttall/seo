@@ -1,6 +1,6 @@
 ---
 title: Keyword and competitor research
-description: Get keyword metrics, ranked keywords, SERPs, competitors and backlinks from your own DataForSEO or Ahrefs key with seo research.
+description: Get keyword metrics, ranked keywords, SERPs, competitors, backlinks and AI answer checks from your own DataForSEO or Ahrefs key with seo research.
 heading: seo research
 lead: Keyword metrics, rankings, SERPs, competitors and backlinks from your own DataForSEO or Ahrefs account.
 ---
@@ -21,6 +21,7 @@ seo providers ahrefs connect
 | `serp` | Up to 5 keywords | The pages that rank for each one |
 | `competitors` | A domain or URL | Domains that rank for the same keywords |
 | `backlinks` | A domain or URL | Referring domains |
+| `ai_answers` | Your site (DataForSEO only) | Whether AI answers to your site's own AI-style questions cite or mention it |
 
 Each request also takes a two-letter country code. The default is `us`.
 
@@ -40,6 +41,18 @@ seo research ranked_keywords --provider ahrefs --target competitor.com --country
 ```
 
 Without `--provider`, the CLI uses the first provider with a saved key.
+
+## Check whether AI answers cite your site
+
+`ai_answers` starts from questions people already ask about your site. It takes the top 10 chat-style and long questions from the [AI queries section](/docs/report) of your Search Console data, so you need Google connected as well as a DataForSEO key. You cannot give it your own list.
+
+```sh
+seo research ai_answers --target example.com --country gb
+```
+
+Each question goes to ChatGPT, Perplexity, Google AI Mode and Google AI Overviews. Every row says whether the answer cited your site with a link, mentioned it by name, did neither, or showed no AI answer at all. A full run costs about 50 cents of DataForSEO credit, and the result shows what it actually cost.
+
+Treat each row as one sample. Ask the same question tomorrow and the answer can change, so a "neither" today is not proof you will never be cited.
 
 ## Domain Rating column
 

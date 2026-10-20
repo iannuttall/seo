@@ -12,6 +12,9 @@
 
 ### Added
 
+- `seo data --source google_analytics --site <property ID>` reads Google
+  Analytics search landing pages in the CLI, the same as the MCP tool.
+
 - `seo crawl` checks what AI agents can read: AI search and training bots
   in robots.txt (listed apart), Markdown copies of public pages, llms.txt and
   its links, agent files under `/.well-known/`, and the `Content-Signal` and

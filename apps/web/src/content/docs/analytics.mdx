@@ -11,7 +11,7 @@ Search Console tells you what happens in Google before the click. Your analytics
 
 | Tool | Hosted MCP | CLI |
 | --- | --- | --- |
-| Google Analytics | Yes, with your Google sign-in | Yes, `seo analytics google report` |
+| Google Analytics | Yes, with your Google sign-in | Yes, `seo data --source google_analytics` |
 | Clicky | Yes, with the site saved on your account page | Yes, `seo data --source clicky` |
 | Fathom, Simple Analytics, Plausible or anything else | No | Build your own from the [provider template](https://github.com/iannuttall/seo-provider-template) |
 
@@ -31,10 +31,8 @@ The agent runs `seo_data` with Google Analytics as the source and the numeric pr
 
 ```sh
 seo analytics google properties
-seo analytics google report --property 123456789
+seo data --source google_analytics --site 123456789
 ```
-
-In the CLI, `seo data` reads Search Console, Bing or Clicky rows. Use `seo analytics google report` for Google Analytics.
 
 ## Clicky
 

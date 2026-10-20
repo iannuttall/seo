@@ -1,4 +1,6 @@
 import {
+  LOCAL_SIGN_IN,
+  localAccounts,
   localError,
   localRefreshClicky,
   localResearchKeys,
@@ -6,6 +8,7 @@ import {
   SeoError,
 } from '@seo/core'
 import {
+  analyticsSignIn,
   type Caller,
   type CommandResult,
   DIMENSIONS,
@@ -14,6 +17,7 @@ import {
   RESEARCH_PROVIDERS,
   type ResearchAction,
   type ResearchProvider,
+  runAnalyticsRows,
   runBingRows,
   runClickyRows,
   runCompare,
@@ -276,7 +280,7 @@ export const dataCommand = defineCommand({
   meta: {
     name: 'data',
     description:
-      'Raw Search Console or Bing rows beside the previous period, or Clicky landing pages',
+      'Raw Search Console or Bing rows beside the previous period, or Google Analytics or Clicky landing pages',
   },
   args: {
     site: {
@@ -286,7 +290,7 @@ export const dataCommand = defineCommand({
     source: {
       type: 'string',
       description:
-        'search_console (default), bing or clicky. Bing takes the first dimension, query or page. Clicky takes the site or its Clicky site ID.',
+        'search_console (default), google_analytics, bing or clicky. Google Analytics takes the numeric property ID from `seo sites`. Bing takes the first dimension, query or page. Clicky takes the site or its Clicky site ID.',
     },
     dimensions: {
       type: 'string',
@@ -316,11 +320,43 @@ export const dataCommand = defineCommand({
       )
     }
     const source = stringArg(args.source) ?? 'search_console'
-    if (!['search_console', 'bing', 'clicky'].includes(source)) {
+    if (
+      !['search_console', 'google_analytics', 'bing', 'clicky'].includes(source)
+    ) {
       throw new SeoError(
         'INVALID_INPUT',
-        '--source is search_console, bing or clicky.',
+        '--source is search_console, google_analytics, bing or clicky.',
       )
+    }
+    if (source === 'google_analytics') {
+      const property = requireSite(stringArg(args.site))
+      await run(args, async () =>
+        runAnalyticsRows(
+          {
+            property,
+            startDate: stringArg(args['start-date']),
+            endDate: stringArg(args['end-date']),
+            detail: detailArg(args),
+            offset: numberArg(args.offset),
+          },
+          await analyticsSignIn(
+            await localAccounts(),
+            property,
+            LOCAL_SIGN_IN.signIn,
+          ),
+          {
+            signIn: LOCAL_SIGN_IN.signIn,
+            call: (offset) =>
+              cliCall('data', {
+                source: 'google_analytics',
+                site: property,
+                detail: 'rows',
+                offset,
+              }),
+          },
+        ),
+      )
+      return
     }
     if (source === 'clicky') {
       const site = requireSite(stringArg(args.site))

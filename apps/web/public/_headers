@@ -66,30 +66,12 @@
   Content-Type: text/markdown; charset=utf-8
 
 /cookies
-  Link: <https://seoskill.dev/cookies.md>; rel="alternate"; type="text/markdown"
-  Vary: Accept
-  X-Robots-Tag: noindex, follow
-
-/cookies.md
-  Link: <https://seoskill.dev/cookies>; rel="canonical"
   X-Robots-Tag: noindex, follow
 
 /privacy
-  Link: <https://seoskill.dev/privacy.md>; rel="alternate"; type="text/markdown"
-  Vary: Accept
-  X-Robots-Tag: noindex, follow
-
-/privacy.md
-  Link: <https://seoskill.dev/privacy>; rel="canonical"
   X-Robots-Tag: noindex, follow
 
 /terms
-  Link: <https://seoskill.dev/terms.md>; rel="alternate"; type="text/markdown"
-  Vary: Accept
-  X-Robots-Tag: noindex, follow
-
-/terms.md
-  Link: <https://seoskill.dev/terms>; rel="canonical"
   X-Robots-Tag: noindex, follow
 
 

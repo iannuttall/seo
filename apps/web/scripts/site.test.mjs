@@ -214,10 +214,14 @@ test('every content page has one deterministic Markdown alternative', () => {
       .length,
     0,
   )
+  // Only public pages get a Markdown copy.
   assert.deepEqual(
     manifest.pages.filter((page) => page.noindex).map((page) => page.htmlPath),
-    ['/account', '/cookies', '/privacy', '/terms'],
+    [],
   )
+  for (const path of ['account', 'cookies', 'privacy', 'terms']) {
+    assert.equal(existsSync(resolve(dist, `${path}.md`)), false, path)
+  }
   assert.equal(representedHtml.length, manifest.pages.length)
 
   for (const page of manifest.pages) {

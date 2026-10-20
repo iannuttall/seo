@@ -168,7 +168,7 @@ Leave the query string unchanged.
 Use this rule expression:
 
 ```txt
-(http.host eq "seoskill.dev" and http.request.uri.path ne "/" and not ends_with(http.request.uri.path, "/") and not (http.request.uri.path contains ".") and not starts_with(http.request.uri.path, "/api/") and (lower(http.request.headers["accept"][0]) eq "text/markdown" or starts_with(lower(http.request.headers["accept"][0]), "text/markdown,")))
+(http.host eq "seoskill.dev" and http.request.uri.path ne "/" and not ends_with(http.request.uri.path, "/") and not (http.request.uri.path contains ".") and not starts_with(http.request.uri.path, "/api/") and not (http.request.uri.path in {"/account" "/cookies" "/privacy" "/terms"}) and (lower(http.request.headers["accept"][0]) eq "text/markdown" or starts_with(lower(http.request.headers["accept"][0]), "text/markdown,")))
 ```
 
 Set **Path** to **Rewrite to Dynamic** with this expression:
@@ -185,7 +185,9 @@ the moment the build emits their `.md` twin, with no rule edit. The
 `contains "."` exclusion keeps every file-extension asset out — including
 explicit `.md` requests, which also send `Accept: text/markdown` and would
 otherwise be rewritten to `.md.md` and 404. `/api/` is excluded so the
-Worker's telemetry routes are never rewritten. A page without a generated
+Worker's telemetry routes are never rewritten. The noindex pages (`/account`,
+`/cookies`, `/privacy`, `/terms`) are excluded because only public pages get a
+Markdown twin; a Markdown request for them returns the HTML page. A page without a generated
 `.md` twin returns the 404 page for Markdown requests; that only happens
 for paths that are already 404 in HTML.
 

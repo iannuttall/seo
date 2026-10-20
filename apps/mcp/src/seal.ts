@@ -4,7 +4,9 @@
 // another.
 
 export type Sealed =
-  | { k: 'client'; redirectUris: string[]; name: string }
+  // An MCP client's registration. ua is the client's own User-Agent, kept
+  // only to record where a new person came from.
+  | { k: 'client'; redirectUris: string[]; name: string; ua?: string | null }
   // An MCP client's sign-in, from /oauth/authorize to the Google callback.
   | {
       k: 'flow'

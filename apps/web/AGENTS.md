@@ -11,8 +11,10 @@ write any site copy, metadata included.
   `/account`, `/account/*` and `/.well-known/oauth-*`. Never publish site
   pages on those paths. The account page is drawn from this site's
   `/account-shell` page; its state and cookie belong to the MCP Worker.
-- No other accounts, cookies, analytics or hosted surfaces without Ian's
-  decision.
+- One site cookie, `seo_first`, set once by `BaseLayout.astro` on a first
+  visit: the referring host, landing path and `utm_*` tags, for the hosted
+  MCP to record where a new person came from. No other accounts, cookies,
+  analytics or hosted surfaces without Ian's decision.
 - The design is copied from Ian's ilo web app: tokens in
   `src/styles/globals.css`, soft `bg-muted` panels, no borders or shadows.
   Do not bring back the old brutalist look. Reuse the components in

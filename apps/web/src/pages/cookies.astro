@@ -4,11 +4,11 @@ import PolicyLayout from '@/layouts/PolicyLayout.astro'
 
 <PolicyLayout
   title="Cookie policy"
-  description="How seoskill.dev uses Clicky analytics, Cloudflare Turnstile and one sign-in cookie on the account page."
-  dateModified="2026-10-15"
+  description="How seoskill.dev uses Clicky analytics, Cloudflare Turnstile, one first-visit cookie and one sign-in cookie on the account page."
+  dateModified="2026-10-20"
 >
   <h1>Cookie policy</h1>
-  <p>Last updated: 15 October 2026</p>
+  <p>Last updated: 20 October 2026</p>
   <p>
     The seoskill.dev website uses Clicky to count visits and see which pages
     people use. Clicky tracking cookies are disabled in the website code.
@@ -26,6 +26,16 @@ import PolicyLayout from '@/layouts/PolicyLayout.astro'
     strictly necessary security control against automated use. Turnstile
     processes challenge and browser information under Cloudflare's policies.
     It is not used for advertising or site analytics here.
+  </p>
+  <p>
+    On your first visit, the site sets one first-party cookie, named <code>seo_first</code>,
+    for 30 days. It holds the name of the site that
+    sent you (such as a search engine, never the full address), the first
+    page you opened and any campaign tags in that link. Later visits never
+    change it, and it is not set when your browser sends Global Privacy
+    Control. If you sign up for the hosted MCP server, it records this once,
+    so we can see which paths bring people to SEO Skill. Nothing else reads
+    it.
   </p>
   <p>
     The <a href="/account">account page</a> sets one strictly necessary

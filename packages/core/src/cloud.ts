@@ -7,6 +7,8 @@ import { SeoError } from './errors.js'
 import { readJson } from './http/read-json.js'
 import { ensureSeoCliDirs, getSeoCliPaths } from './paths.js'
 import { readJsonFile, safeRemove, writeJsonAtomic } from './storage/files.js'
+import { detectTelemetryAgent, getTelemetryStatus } from './telemetry.js'
+import { SEO_VERSION } from './version.js'
 
 // A CLI linked to a seoskill.dev account with `seo login`. The account keeps
 // the person's Google and Bing sign-ins and research keys; this machine asks
@@ -53,6 +55,7 @@ async function call<T>(
     ...init,
     headers: {
       'content-type': 'application/json',
+      'user-agent': `seo/${SEO_VERSION}`,
       ...(init.token ? { authorization: `Bearer ${init.token}` } : {}),
     },
   }).catch(() => {
@@ -197,7 +200,9 @@ export async function cloudKeys(): Promise<Record<string, string>> {
 }
 
 // `seo login`, step one: a code for the person to approve on the account
-// page. The pending login is kept until it is approved or expires.
+// page. The pending login is kept until it is approved or expires. The agent
+// running the CLI, when it can tell and usage counts are on, is sent so the
+// account can record where a new person came from.
 export async function startCloudLogin(): Promise<Pending> {
   const result = await call<{
     device?: string
@@ -211,6 +216,7 @@ export async function startCloudLogin(): Promise<Pending> {
         0,
         60,
       ),
+      agent: getTelemetryStatus().enabled ? detectTelemetryAgent() : undefined,
     }),
   })
   const { device, code, url, expiresIn } = result.body

@@ -5,7 +5,7 @@ import {
   indexStatusFrom,
   mcpCall,
 } from '@seo/core/commands'
-import { accountUrl } from '../google.ts'
+import { accountUrl, signInHint } from '../google.ts'
 
 // The core commands' functions for the hosted MCP: Search Console and Bing
 // through the person's linked accounts, the shared live page checks, and
@@ -26,6 +26,10 @@ export function deps(env: Env, directory: LinkedAccounts): CommandDeps {
         .then(indexStatusFrom)
         .catch(() => null),
     call: mcpCall,
+    analytics: {
+      accounts: async () => directory.accounts(),
+      signIn: signInHint(env),
+    },
     ...(HOSTED_BING
       ? {
           bing: async () => directory.bing,

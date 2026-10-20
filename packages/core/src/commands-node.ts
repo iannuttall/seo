@@ -72,6 +72,7 @@ export function nodeCommandDeps(options: {
     call: options.call,
     bing: localBing,
     bingConnect: LOCAL_BING_CONNECT,
+    analytics: { accounts: localAccounts, signIn: LOCAL_SIGN_IN.signIn },
   }
 }
 

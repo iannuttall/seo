@@ -221,6 +221,36 @@ export async function listAnalyticsAccounts(
   })
 }
 
+export interface Ga4DataStream {
+  name: string
+  displayName?: string
+  type?: string
+  webStreamData?: {
+    defaultUri?: string
+    measurementId?: string
+  }
+}
+
+// The first 200 data streams of one Google Analytics property. A property
+// has at most 50 web streams, so one page holds them all.
+export async function listAnalyticsDataStreams(
+  gfetch: GoogleFetch,
+  propertyId: string,
+  options: GoogleCallOptions,
+): Promise<Ga4DataStream[]> {
+  const json = await googleJson<{ dataStreams?: Ga4DataStream[] }>(
+    gfetch,
+    `https://analyticsadmin.googleapis.com/v1beta/properties/${propertyId}/dataStreams?pageSize=200`,
+    {
+      ...options,
+      label: 'Google Analytics data streams',
+      subject: `property ${propertyId}`,
+      maxBytes: 1024 * 1024,
+    },
+  )
+  return json.dataStreams ?? []
+}
+
 export async function runAnalyticsReport<T = unknown>(
   gfetch: GoogleFetch,
   propertyId: string,

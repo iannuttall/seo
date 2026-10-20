@@ -1,4 +1,4 @@
-import type { Ga4DataStream } from './client.js'
+import type { Ga4DataStream } from '../google/api.js'
 
 export type Ga4WebStreamCandidate = {
   account: string

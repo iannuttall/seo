@@ -1,4 +1,5 @@
 import { latestFinalGscDate, shiftIsoDate } from '../gsc/dates.js'
+import { analyticsBeside } from './analytics-site.js'
 import { CLI_LINK } from './bing.js'
 import { temporaryRedirectNote } from './page-facts.js'
 import type { Detail } from './present.js'
@@ -215,7 +216,7 @@ export async function runCompare(
     startDate: shiftIsoDate(input.date, -days),
     endDate: shiftIsoDate(input.date, -1),
   }
-  const [report, updates] = await Promise.all([
+  const [report, updates, analytics] = await Promise.all([
     siteOverview(
       sharedReader(deps.searchAnalytics),
       input.site,
@@ -224,6 +225,7 @@ export async function runCompare(
       input.pages,
     ),
     googleUpdates({ start: before.startDate, end: after.endDate }),
+    analyticsBeside(deps.analytics, input.site, after, before, input.pages),
   ])
   return {
     text: [
@@ -233,13 +235,18 @@ export async function runCompare(
         originOf(input.site),
         10,
       ),
+      analytics?.text,
       listOfUpdates(updates),
       `Next: ${deps.call('page')} for a page that moved.`,
       FACTS_ONLY,
     ]
       .filter(Boolean)
       .join('\n\n'),
-    data: { ...report, googleUpdates: updates },
+    data: {
+      ...report,
+      ...(analytics ? { analytics: analytics.data } : {}),
+      googleUpdates: updates,
+    },
   }
 }
 

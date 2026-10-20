@@ -7,6 +7,7 @@ import { strikingDistanceWith } from '../analyze/striking-distance-report.js'
 import { changeWindow } from '../analyze/traffic-anomaly-analysis.js'
 import { trafficAnomalyWith } from '../analyze/traffic-anomaly-report.js'
 import type { SearchAnalyticsQuery } from '../gsc/client/types.js'
+import { analyticsBeside } from './analytics-site.js'
 import {
   type BingSource,
   bingFor,
@@ -44,7 +45,7 @@ import type {
 
 export const SECTIONS = {
   overview:
-    'Site totals (clicks, impressions, CTR, position) against the previous period, by device, with the top pages and queries and their change.',
+    'Site totals (clicks, impressions, CTR, position) against the previous period, by device, with the top pages and queries and their change, and Google Analytics sessions for the same dates from the property whose web stream matches the site.',
   'quick-wins':
     'Query and page pairs at average positions 4 to 10 with a click-through rate below the site’s own curve for that position.',
   'low-ctr':
@@ -477,6 +478,13 @@ async function allSections(
   const bing = once(() => bingFor(deps, input.site))
   // A surface without Bing leaves the bing section out.
   const ids = SECTION_IDS.filter((id) => id !== 'bing' || deps.bing)
+  const range = dateWindow(input, DEFAULT_DAYS.overview)
+  const analytics = analyticsBeside(
+    deps.analytics,
+    input.site,
+    range,
+    earlierRange(range),
+  )
   const runs = await Promise.all(
     ids.map((id) =>
       build(
@@ -497,6 +505,8 @@ async function allSections(
   }
   const parts = [overviewText(overview, `Report on ${input.site}`, origin, 5)]
   parts.push(deps.bing ? await enginesLine(overview, bing) : NO_BING_HERE)
+  const ga = await analytics
+  if (ga) parts.push(ga.text)
   const brand = rest.find(
     (run): run is Record<string, unknown> =>
       !(run instanceof Error) && brandNote(run) !== null,
@@ -531,7 +541,12 @@ async function allSections(
   )
   return {
     text: `${parts.join('\n\n')}\n\n${FACTS_ONLY}`,
-    data: { site: input.site, overview, sections },
+    data: {
+      site: input.site,
+      overview,
+      ...(ga ? { analytics: ga.data } : {}),
+      sections,
+    },
   }
 }
 
@@ -554,10 +569,28 @@ async function oneSection(
     bing,
   )
   const next = nextFor(section, deps.call)
-  if (section === 'overview' && detail !== 'full') {
-    return {
-      text: `${overviewText(report, `overview of ${site}`, origin, 10)}\n\n${deps.bing ? await enginesLine(report, bing) : NO_BING_HERE}\n\nMore: ${deps.call('report', { site, section, detail: 'full' })} for every row.\n\n${next}\n\n${FACTS_ONLY}`,
-      data: report,
+  if (section === 'overview') {
+    const ga = await analyticsBeside(
+      deps.analytics,
+      site,
+      range,
+      earlierRange(range),
+    )
+    if (ga) report.analytics = ga.data
+    if (detail !== 'full') {
+      return {
+        text: [
+          overviewText(report, `overview of ${site}`, origin, 10),
+          deps.bing ? await enginesLine(report, bing) : NO_BING_HERE,
+          ga?.text,
+          `More: ${deps.call('report', { site, section, detail: 'full' })} for every row.`,
+          next,
+          FACTS_ONLY,
+        ]
+          .filter(Boolean)
+          .join('\n\n'),
+        data: report,
+      }
     }
   }
   let checked: PageFacts[] = []

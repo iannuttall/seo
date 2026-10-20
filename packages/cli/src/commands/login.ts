@@ -97,20 +97,27 @@ export const loginCommand = defineCommand({
         )
       return
     }
-    write(
-      `Opening ${pending.url}\nApprove code ${pending.code} there. Waiting…`,
-    )
-    await openCloudLink(pending.url)
-    while (pendingCloudLogin()) {
-      await new Promise((resolve) => setTimeout(resolve, 3000))
-      const result = await finishCloudLogin()
-      if (result === 'linked') return done()
-      if (result === 'expired') break
-    }
+    if (await linkInBrowser()) return done()
     write('The login expired. Run `seo login` again.')
     process.exitCode = 1
   },
 })
+
+// Opens the seoskill.dev link in the browser and waits until the person
+// signs in (which creates the account the first time) and approves this
+// machine. False when the link expired.
+export async function linkInBrowser(): Promise<boolean> {
+  const pending = pendingCloudLogin() ?? (await startCloudLogin())
+  write(`Opening ${pending.url}\nApprove code ${pending.code} there. Waiting…`)
+  await openCloudLink(pending.url)
+  while (pendingCloudLogin()) {
+    await new Promise((resolve) => setTimeout(resolve, 3000))
+    const result = await finishCloudLogin()
+    if (result === 'linked') return true
+    if (result === 'expired') break
+  }
+  return false
+}
 
 const link = (pending: { url: string; code: string } | null) => ({
   url: pending?.url,

@@ -8,6 +8,8 @@ import {
 } from '@clack/prompts'
 import {
   authStatus,
+  cloudCredentials,
+  cloudLinked,
   listGoogleAccounts,
   SeoError,
   setActiveGoogleAccount,
@@ -15,6 +17,7 @@ import {
 } from '@seo/core'
 import { maybeExitCancelled } from '../../utils.js'
 import { loginWithGuidance } from '../google-login.js'
+import { linkInBrowser } from '../login.js'
 import { detectMcpClients } from '../mcp-clients.js'
 import {
   HOSTED_MCP_URL,
@@ -25,8 +28,55 @@ import {
 import { installSeoSkill } from '../skill-install.js'
 
 export type SetupAuthResult = {
-  status: 'connected' | 'already-connected' | 'service-account' | 'skipped'
+  status:
+    | 'linked'
+    | 'connected'
+    | 'already-connected'
+    | 'service-account'
+    | 'skipped'
   accountEmail?: string
+}
+
+// The seoskill.dev account first: signing in there creates it the first
+// time, keeps Google accounts, Bing and keys in one place, and makes the
+// hosted MCP work too. Google on this machine only stays a choice. Returns
+// null when the person picks this machine only, so the Google step runs.
+export async function maybeLinkAccount(input: {
+  interactive: boolean
+}): Promise<SetupAuthResult | null> {
+  const linked = async (): Promise<SetupAuthResult> => {
+    const { google } = await cloudCredentials().catch(() => ({
+      google: [] as { email: string }[],
+    }))
+    return {
+      status: 'linked',
+      accountEmail: google.map((item) => item.email).join(', ') || undefined,
+    }
+  }
+  if (process.env.SEO_TOKEN?.trim() || cloudLinked()) return linked()
+  if (!input.interactive) return null
+  const choice = maybeExitCancelled(
+    await select<'account' | 'local' | 'skip'>({
+      message: 'How do you want to sign in?',
+      options: [
+        {
+          value: 'account',
+          label: 'Sign in or create a free seoskill.dev account',
+          hint: 'Recommended. Your Google accounts, Bing and keys in one place, for the CLI and the hosted MCP',
+        },
+        {
+          value: 'local',
+          label: 'Sign in with Google on this machine only',
+        },
+        { value: 'skip', label: 'Skip for now' },
+      ],
+    }),
+  )
+  if (choice === 'skip') return { status: 'skipped' }
+  if (choice === 'local') return null
+  if (await linkInBrowser()) return linked()
+  note('The link expired. Run `seo login` to try again.', 'Not signed in')
+  return { status: 'skipped' }
 }
 export type SetupMcpInstall = {
   client: string

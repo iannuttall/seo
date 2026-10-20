@@ -12,6 +12,7 @@ import {
   maybeConnectAuth,
   maybeInstallMcp,
   maybeInstallSkill,
+  maybeLinkAccount,
   type SetupAuthResult,
   type SetupMcpInstall,
   type SetupSkillInstall,
@@ -24,13 +25,16 @@ import {
 const NEXT = ['seo sites', 'seo report --site <site>']
 
 const STEPS = [
-  'Sign in with Google (read-only Search Console and Google Analytics).',
+  'Sign in or create your free seoskill.dev account, or sign in with Google on this machine only (read-only Search Console and Google Analytics).',
   `Add the free hosted MCP server (${HOSTED_MCP_URL}) or a local one to your agents.`,
   'Install the SEO skill for your agents.',
 ]
 
 function authLabel(auth: SetupAuthResult): string {
   if (auth.status === 'skipped') return 'skipped'
+  if (auth.status === 'linked') {
+    return `seoskill.dev account${auth.accountEmail ? ` (${auth.accountEmail})` : ''}`
+  }
   if (auth.status === 'service-account') {
     return `service account${auth.accountEmail ? ` ${auth.accountEmail}` : ''}`
   }
@@ -85,7 +89,9 @@ export async function runGuidedSetup(
 
   ensureSeoCliDirs()
   const interactive = canPrompt({ json })
-  const auth = await maybeConnectAuth({ interactive })
+  const auth =
+    (await maybeLinkAccount({ interactive })) ??
+    (await maybeConnectAuth({ interactive }))
   const mcp = interactive ? await maybeInstallMcp() : []
   const skill: SetupSkillInstall = interactive
     ? await maybeInstallSkill()
@@ -97,7 +103,7 @@ export async function runGuidedSetup(
   }
 
   printKeyValue([
-    ['Google', authLabel(auth)],
+    ['Sign-in', authLabel(auth)],
     ['MCP server', mcpLabel(mcp)],
     ['SEO skill', skillLabel(skill)],
   ])

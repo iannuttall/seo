@@ -1,5 +1,15 @@
 # Changelog
 
+## Unreleased
+
+### Changed
+
+- `seo start` now asks how you want to sign in: sign in to your free
+  seoskill.dev account or create one (recommended, so the CLI and the hosted
+  MCP share your Google accounts, Bing and keys), sign in with Google on this
+  machine only, or skip. A machine already linked with `seo login` skips the
+  question.
+
 ## 0.8.1
 
 ### Added

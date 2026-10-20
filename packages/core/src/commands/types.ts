@@ -1,6 +1,7 @@
 import type { BingCall } from '../bing/api.js'
 import { SeoError, type SeoErrorCode } from '../errors.js'
 import type { SearchAnalyticsQuery } from '../gsc/client/types.js'
+import type { AnalyticsAccess } from './analytics-site.js'
 
 // The eight public commands. Each runs the same core code in the CLI, the
 // local MCP and the hosted MCP; only the functions that reach Google and the
@@ -20,7 +21,7 @@ export const COMMANDS = {
   compare: {
     where: 'anywhere',
     summary:
-      'Equal periods before and after a date, for the site or some URLs, with Google updates.',
+      'Equal periods before and after a date, for the site or some URLs, with Google Analytics sessions and Google updates.',
   },
   index: {
     where: 'anywhere',
@@ -113,6 +114,9 @@ export type CommandDeps = {
   bing?: () => Promise<BingCall | null>
   // How to connect Bing on this surface, for "not connected" notes.
   bingConnect?: string
+  // The Google sign-ins that can read Google Analytics. The report and
+  // compare show the matching property's sessions beside Search Console.
+  analytics?: AnalyticsAccess
   now?: () => Date
 }
 

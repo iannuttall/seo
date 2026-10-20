@@ -17,6 +17,10 @@
 
 ### Added
 
+- `seo report` (overview) and `seo compare` show Google Analytics sessions
+  for the same dates: Organic Search from Google, from every search engine,
+  and from all channels. The property is the one whose web stream matches the
+  site, and the output names it. When none matches, the report says so.
 - `seo crawl` checks what AI agents can read: AI search and training bots
   in robots.txt (listed apart), Markdown copies of public pages, llms.txt and
   its links, agent files under `/.well-known/`, and the `Content-Signal` and

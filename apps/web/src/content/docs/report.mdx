@@ -28,11 +28,19 @@ Without a section, the report returns the overview: clicks, impressions, click-t
 
 If [Bing is connected](/docs/bing) in the CLI or the local MCP server, the overview also shows Google and Bing clicks and impressions for the same dates, and each engine's share of those clicks. The two are never added together.
 
+The overview also shows your Google Analytics sessions for the same dates. You do not pick the property: the report finds the one whose web stream matches the site, names it, and shows:
+
+- Organic Search sessions from Google, the number to set beside Search Console clicks.
+- Organic Search sessions from every search engine, Bing and DuckDuckGo included.
+- Sessions from all channels, so you can tell a search drop from a drop in all traffic.
+
+Sessions are Google Analytics' own count, so they never equal clicks. If no web stream matches, the report says so and carries on without it.
+
 ## Ask for one section
 
 | Section | What it lists |
 | --- | --- |
-| `overview` | Site totals against the previous period, by device, with the top pages and queries. |
+| `overview` | Site totals against the previous period, by device, with the top pages and queries and Google Analytics sessions. |
 | `quick-wins` | Query and page pairs at positions 4 to 10 with a click-through rate below your site's own curve for that position. |
 | `low-ctr` | Query and page pairs at positions 1 to 4 with a click-through rate below your site's own curve. These are titles and snippets to review. |
 | `striking-distance` | Queries just outside the top positions, with impressions, for pages that already rank. |

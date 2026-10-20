@@ -1,4 +1,5 @@
 import {
+  type Ga4DataStream,
   googleJson,
   listAnalyticsAccounts,
   runAnalyticsReport,
@@ -8,6 +9,7 @@ import { googleFetchFor, LOCAL_SIGN_IN } from '../gsc/client/fetch.js'
 import { getDb, hashKey, noteCacheWrite } from '../storage/database.js'
 import type { Ga4AccountSummary } from './account-summaries.js'
 
+export type { Ga4DataStream } from '../google/api.js'
 export type {
   Ga4AccountSummary,
   Ga4PropertySummary,
@@ -46,16 +48,6 @@ export interface Ga4RunReportResult {
     }>
   }
   propertyQuota?: unknown
-}
-
-export interface Ga4DataStream {
-  name: string
-  displayName?: string
-  type?: string
-  webStreamData?: {
-    defaultUri?: string
-    measurementId?: string
-  }
 }
 
 export function ga4RequestCanUseCache(body: Ga4ReportRequest): boolean {

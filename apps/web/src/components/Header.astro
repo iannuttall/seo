@@ -14,16 +14,10 @@ const navClass =
   </a>
   <nav class="flex items-center gap-4 sm:gap-5" aria-label="Main navigation">
     <a class={navClass} href="/docs">Docs</a>
-    <a class={navClass} href="/tools">Tools</a>
+    <a class:list={[navClass, 'hidden sm:inline']} href="/tools">Tools</a>
     <a class:list={[navClass, 'hidden sm:inline']} href="/stats">Stats</a>
-    <a class={navClass} href="/account">Account</a>
-    <a
-      class={getButtonClasses('secondary', 'sm')}
-      href={site.repository}
-      target="_blank"
-      rel="noreferrer"
-    >
-      GitHub
-    </a>
+    <a class:list={[navClass, 'hidden sm:inline']} href={site.repository} target="_blank" rel="noreferrer">GitHub</a>
+    <a class:list={[navClass, 'hidden sm:inline']} href="/account">Sign in</a>
+    <a class={getButtonClasses('default', 'sm')} href="/account">Get started free</a>
   </nav>
 </header>

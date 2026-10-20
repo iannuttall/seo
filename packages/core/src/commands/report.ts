@@ -1,3 +1,4 @@
+import { aiQueriesReport } from '../analyze/ai-queries.js'
 import { ctrUnderperformersReportWith } from '../analyze/ctr-underperformers-report.js'
 import { secondPageWith } from '../analyze/second-page-report.js'
 import { cannibalReportWith } from '../analyze/site-diagnostics/cannibal-report.js'
@@ -60,6 +61,8 @@ export const SECTIONS = {
     'Queries where more than one page of the site gets impressions, with each page’s share.',
   'traffic-drop':
     'Daily clicks and impressions checked for a sudden change that lasted, with the date it started (else the last 7 days against the days before), and Google updates within 3 days of that date. Overlap is timing only, not cause.',
+  'ai-queries':
+    'Queries with the shape of AI conversations and agent searches (replies such as "yes go on", follow-ups, agent prompts, search operators, chat phrasing, ten or more words), with rewordings grouped into one question and its top page, impressions, clicks and position. A heuristic: Search Console does not mark AI Mode.',
   bing: 'Bing’s top queries from Bing Webmaster Tools with Google’s clicks, impressions and position for the same query beside them, and the same for pages.',
 } as const
 
@@ -86,6 +89,7 @@ const DEFAULT_DAYS: Record<SectionId, number> = {
   'content-decay': 28,
   cannibalization: 28,
   'traffic-drop': 90,
+  'ai-queries': 90,
   bing: 28,
 }
 
@@ -101,6 +105,7 @@ function nextFor(section: SectionId, call: Caller): string {
     'content-decay': `Next: ${call('index')} for pages that lost most of their clicks; ${call('page')} to see which queries moved.`,
     cannibalization: `Next: ${call('page')} on each competing URL to see Google’s chosen canonical.`,
     'traffic-drop': `Next: ${call('compare')} with the date the drop started, for the pages and queries that moved; ${call('index')} for pages that lost almost all their clicks and their index status.`,
+    'ai-queries': `Next: ${call('page')} for a page that gets many of these questions, to see whether it answers them.`,
     bing: `Next: ${call('data', { source: 'bing' })} for every Bing row; ${call('page')} for one page.`,
   }[section]
 }
@@ -396,6 +401,7 @@ async function build(
         googleUpdates: await googleUpdates(window),
       }
     },
+    'ai-queries': () => aiQueriesReport({ site, ...range }, read),
     bing: async () => bingSection(await bing(), read, site, range),
   }[section]
   return factsOnly(await run()) as Record<string, unknown>

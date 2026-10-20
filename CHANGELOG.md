@@ -4,6 +4,11 @@
 
 ### Added
 
+- `seo report` has a new `ai-queries` section: Search Console queries that
+  look like AI conversations and agent searches (replies such as "yes",
+  follow-ups such as "what about…", agent prompts, `site:` searches and long
+  chat-style questions), with rewordings grouped into one question and its
+  top page. It is a heuristic over the last 90 days.
 - The hosted MCP notes how each new person signed up, once: the path (MCP
   client, account page or `seo login`), the MCP client's name or the agent
   running the CLI, and, from a first-visit cookie on seoskill.dev, the

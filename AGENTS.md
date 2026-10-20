@@ -61,8 +61,9 @@ Read before you write:
   next; that is the only routing.
 - Every command takes `--site` or `--url` each time. Nothing picks a site
   from saved state or a prompt.
-- `seo start` signs in with Google, offers the MCP server (hosted first) and
-  the skill, then stops. It asks for no other setting. JSON and CI modes
+- `seo start` asks how to sign in (the seoskill.dev account first, which
+  creates it the first time, or Google on this machine only), offers the MCP
+  server (hosted first) and the skill, then stops. It asks for no other setting. JSON and CI modes
   never prompt. Edits to an agent's MCP config keep unrelated settings, make
   a backup and never replace an entry that `seo` did not write.
 

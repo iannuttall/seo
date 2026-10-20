@@ -95,17 +95,17 @@
   --border-subtle: oklch(95% 0 0);
   --border-strong: oklch(85% 0 0);
   --input: oklch(92% 0 0);
-  --ring: oklch(60.9% 0.126 221.723);
+  --ring: oklch(54% 0.24 262);
 
   --card: oklch(100% 0 0);
   --card-foreground: var(--foreground);
   --popover: oklch(100% 0 0);
   --popover-foreground: var(--foreground);
 
-  --primary: oklch(60.9% 0.126 221.723);
-  --primary-soft: oklch(95% 0.04 221.723);
-  --primary-hover: oklch(54% 0.13 221.723);
-  --primary-active: oklch(48% 0.13 221.723);
+  --primary: oklch(54% 0.24 262);
+  --primary-soft: oklch(95% 0.035 262);
+  --primary-hover: oklch(48% 0.24 262);
+  --primary-active: oklch(43% 0.22 262);
   --primary-foreground: oklch(98.5% 0 0);
 
   --secondary: oklch(96% 0 0);

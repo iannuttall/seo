@@ -2,6 +2,12 @@
 
 ## Unreleased
 
+### Added
+
+- The Google Analytics part of `seo report` and `seo compare` now shows
+  visits from AI assistants (ChatGPT, Perplexity, Claude, Gemini, Copilot
+  and others) by source, with their top landing pages, for both periods.
+
 ### Changed
 
 - Results no longer end with "only edit pages with their approval", and the

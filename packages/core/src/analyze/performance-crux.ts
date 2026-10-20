@@ -1,5 +1,6 @@
 import pRetry from 'p-retry'
 import { fetch } from 'undici'
+import { readJson } from '../http/read-json.js'
 import { parseCruxFieldData } from './performance-analysis.js'
 import type { PerformanceAuditReport } from './performance-types.js'
 
@@ -71,7 +72,10 @@ export async function fetchCruxFieldData(input: {
             headers: { 'content-type': 'application/json' },
             signal: controller.signal,
           })
-          const json = (await response.json().catch(() => ({}))) as {
+          const json = (await readJson(
+            response as unknown as Response,
+            'CrUX',
+          ).catch(() => ({}))) as {
             record?: CruxRecord
           }
           if (response.status === 404) return { response, json }

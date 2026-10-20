@@ -1,0 +1,68 @@
+#!/usr/bin/env bash
+# Amp orb setup: pinned Node from .node-version, pnpm from packageManager,
+# and workspace dependencies. Safe to rerun on a warm snapshot.
+set -euo pipefail
+
+repo_root="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+cd "$repo_root"
+
+step() {
+  local label="$1"
+  shift
+  local start=$SECONDS
+  echo "==> $label"
+  "$@"
+  echo "    done in $((SECONDS - start))s"
+}
+
+node_version="$(tr -d '[:space:]' < .node-version)"
+node_dir="$HOME/.local/share/node-v$node_version"
+
+install_node() {
+  if [[ -x "$node_dir/bin/node" ]]; then
+    echo "    Node $node_version already installed"
+    return
+  fi
+  local arch
+  case "$(uname -m)" in
+    x86_64) arch=x64 ;;
+    aarch64 | arm64) arch=arm64 ;;
+    *) echo "Unsupported architecture $(uname -m)" >&2; exit 1 ;;
+  esac
+  local tmp
+  tmp="$(mktemp -d)"
+  curl -fsSL "https://nodejs.org/dist/v$node_version/node-v$node_version-linux-$arch.tar.xz" \
+    | tar -xJ -C "$tmp"
+  mkdir -p "$(dirname "$node_dir")"
+  rm -rf "$node_dir"
+  mv "$tmp/node-v$node_version-linux-$arch" "$node_dir"
+  rmdir "$tmp"
+}
+
+persist_path() {
+  # Login shells (Amp and orb services) put the pinned Node first.
+  local marker="# seo repo: pinned Node from .node-version"
+  local profile="$HOME/.bash_profile"
+  # Drop an older block so a .node-version bump replaces the path.
+  if grep -Fqx "$marker" "$profile" 2>/dev/null; then
+    sed -i "/^$marker\$/,+1d" "$profile"
+  fi
+  printf '%s\nexport PATH="%s/bin:$PATH"\n' "$marker" "$node_dir" >> "$profile"
+}
+
+install_pnpm() {
+  local pnpm_version
+  pnpm_version="$(node -p "require('./package.json').packageManager.split('@')[1]")"
+  if [[ "$(pnpm --version 2>/dev/null || true)" == "$pnpm_version" ]]; then
+    echo "    pnpm $pnpm_version already installed"
+    return
+  fi
+  npm install --global --no-fund --no-audit "pnpm@$pnpm_version"
+}
+
+step "Install Node $node_version" install_node
+step "Persist Node on login PATH" persist_path
+export PATH="$node_dir/bin:$PATH"
+step "Install pnpm" install_pnpm
+step "Install dependencies" pnpm install --frozen-lockfile
+echo "Node $(node --version), pnpm $(pnpm --version)"

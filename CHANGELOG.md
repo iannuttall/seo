@@ -2,6 +2,21 @@
 
 ## Unreleased
 
+### Added
+
+- `seo report` has a new `ai-queries` section: Search Console queries that
+  look like AI conversations and agent searches (replies such as "yes",
+  follow-ups such as "what about…", agent prompts, `site:` searches and long
+  chat-style questions), with rewordings grouped into one question and its
+  top page. It is a heuristic over the last 90 days.
+- The hosted MCP notes how each new person signed up, once: the path (MCP
+  client, account page or `seo login`), the MCP client's name or the agent
+  running the CLI, and, from a first-visit cookie on seoskill.dev, the
+  referring site's host, the landing page and any `utm_*` tags. No IP
+  address, country or email. The privacy and cookie policies list it.
+  `seo login` now sends the agent it runs in (when usage counts are on) and
+  a `seo/<version>` user agent.
+
 ### Changed
 
 - `seo start` now asks how you want to sign in: sign in to your free

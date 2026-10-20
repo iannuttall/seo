@@ -1,7 +1,8 @@
 {
   "$schema": "./node_modules/wrangler/config-schema.json",
   // The hosted MCP. D1 keeps only linked Google and Bing sign-ins and
-  // research keys, sealed with SEAL_KEY. No report data and no logs.
+  // research keys, sealed with SEAL_KEY, and how each person signed up.
+  // No report data and no logs.
   "name": "seo-mcp",
   "main": "./src/index.ts",
   "account_id": "ab5ec097e2579c5f3639612c755e6f15",

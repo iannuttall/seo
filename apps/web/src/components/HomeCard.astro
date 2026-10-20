@@ -1,8 +1,9 @@
 ---
 // A card from the ilo home page: an icon in the corner, the title and text
 // below. Linked cards add an arrow, lift the icon, and change colour on
-// hover. Each card spans three rows of its parent grid (icon, title, text) as
-// a subgrid, so titles and text line up across a row whatever their length.
+// hover. With link, the card ends with that text, so a reader knows where it
+// goes. Each card spans its rows of the parent grid (icon, title, text, link)
+// as a subgrid, so titles and text line up across a row whatever their length.
 import { ArrowUpRight01Icon } from '@hugeicons/core-free-icons'
 import HugeIcon from './HugeIcon.astro'
 
@@ -12,16 +13,19 @@ type Props = {
   icon: Parameters<typeof HugeIcon>[0]['icon']
   href?: string
   code?: string
+  // Where the card goes, such as "SEO report docs". Replaces the corner arrow.
+  link?: string
 }
 
-const { title, text, icon, href, code } = Astro.props
+const { title, text, icon, href, code, link } = Astro.props
 const Tag = href ? 'a' : 'div'
 ---
 
 <Tag
   href={href}
   class:list={[
-    'row-span-3 grid grid-rows-subgrid gap-y-0 rounded-lg bg-muted p-6',
+    link ? 'row-span-4' : 'row-span-3',
+    'grid grid-rows-subgrid gap-y-0 rounded-lg bg-muted p-6',
     href &&
       'group no-underline transition-colors hover:bg-secondary-hover focus-visible:outline-none focus-visible:ring-[3px] focus-visible:ring-ring/20',
   ]}
@@ -35,7 +39,7 @@ const Tag = href ? 'a' : 'div'
           'transition-transform duration-200 group-hover:-translate-y-0.5 group-hover:text-primary',
       ]}
     />
-    {href ? (
+    {href && !link ? (
       <HugeIcon
         icon={ArrowUpRight01Icon}
         class="size-5 text-foreground-soft transition-colors group-hover:text-foreground"
@@ -46,4 +50,13 @@ const Tag = href ? 'a' : 'div'
     {code ? <code class="font-mono text-[0.9375rem]">{code}</code> : title}
   </h3>
   <p class="mt-2 text-sm leading-6 text-foreground-muted">{text}</p>
+  {link ? (
+    <span class="mt-4 inline-flex items-center gap-1 self-end text-sm font-medium text-foreground">
+      {link}
+      <HugeIcon
+        icon={ArrowUpRight01Icon}
+        class="size-4 text-foreground-soft transition-colors group-hover:text-foreground"
+      />
+    </span>
+  ) : null}
 </Tag>

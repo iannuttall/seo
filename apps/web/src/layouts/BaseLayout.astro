@@ -93,6 +93,27 @@ const schema = pageSchema({
     <meta name="twitter:image" content={ogImage} />
     <meta name="twitter:image:alt" content={site.name} />
     <script is:inline type="application/ld+json" set:html={JSON.stringify(schema)} />
+    {/* First visit only: the referring site's host, the landing path and any
+        utm_* values, kept in a first-party cookie for 30 days. The hosted MCP
+        Worker reads it once, when a new person signs up, to record where they
+        came from (apps/mcp/src/signup.ts). Never overwritten by later visits. */}
+    <script is:inline>
+      try {
+        const done = document.cookie.split('; ').some((c) => c.startsWith('seo_first='))
+        const ref = document.referrer ? new URL(document.referrer).hostname : ''
+        if (!done && !navigator.globalPrivacyControl && ref !== location.hostname && !location.pathname.startsWith('/oauth/')) {
+          const q = new URLSearchParams(location.search)
+          const v = new URLSearchParams()
+          const add = (k, x, n) => x && v.set(k, x.slice(0, n))
+          add('r', ref, 100)
+          add('p', location.pathname, 100)
+          add('s', q.get('utm_source'), 60)
+          add('m', q.get('utm_medium'), 60)
+          add('c', q.get('utm_campaign'), 60)
+          document.cookie = `seo_first=${v.toString().slice(0, 400)}; Max-Age=2592000; Path=/; SameSite=Lax; Secure`
+        }
+      } catch {}
+    </script>
     {
       showClicky ? (
         <>

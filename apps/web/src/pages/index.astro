@@ -1,60 +1,186 @@
 ---
 import {
   Analytics01Icon,
+  Briefcase01Icon,
   Calendar03Icon,
+  ChartLineData01Icon,
+  FileSearchIcon,
   Key01Icon,
+  News01Icon,
+  Route01Icon,
+  SearchList01Icon,
+  AiChat02Icon,
+  Store01Icon,
+  UserGroupIcon,
 } from '@hugeicons/core-free-icons'
 import FaqAccordion from '@/components/FaqAccordion.astro'
 import HomeCard from '@/components/HomeCard.astro'
 import SectionHeading from '@/components/SectionHeading.astro'
 import SetupCommands from '@/components/SetupCommands.astro'
 import { getButtonClasses } from '@/components/ui/button'
-import { commands } from '@/content/commands'
-import { features } from '@/content/features'
 import { toolIcon } from '@/content/tool-icons'
 import { tools } from '@/content/tools/manifest.mjs'
 import BaseLayout from '@/layouts/BaseLayout.astro'
 
+// What a team's agent can do with it, each with the docs that show how.
+const jobs = [
+  {
+    title: 'Find out why traffic moved',
+    icon: Analytics01Icon,
+    text: 'Your agent gets your clicks and impressions against the last period, the pages and queries that moved, Google Analytics sessions for the same dates, and the Google updates in between.',
+    href: '/features/google-updates',
+    link: 'Google update checker',
+  },
+  {
+    title: 'Check that a fix worked',
+    icon: FileSearchIcon,
+    text: 'After an edit, your agent loads the live page and asks Google whether it is indexed, so you see the redirect, the noindex or the missing canonical before your traffic does.',
+    href: '/features/seo-audit',
+    link: 'SEO audit tool',
+  },
+  {
+    title: 'See what people ask AI about you',
+    icon: AiChat02Icon,
+    text: 'Questions from Google AI Mode and AI assistants already show up in your Search Console. Your agent finds them, groups the rewordings and shows which page Google picked for each.',
+    href: '/features/ai-search',
+    link: 'AI search tracking',
+  },
+  {
+    title: 'Plan pages from real demand',
+    icon: SearchList01Icon,
+    text: 'Start from the searches you already show up for, then size the gaps with keyword volumes and competitors from your own Ahrefs or DataForSEO account.',
+    href: '/features/keyword-research',
+    link: 'Keyword research tool',
+  },
+]
+
 const sources = [
   {
-    title: 'Your own search data',
+    title: 'Search Console',
     icon: Analytics01Icon,
-    text: 'Search Console and Google Analytics through your Google sign-in, and Clicky with a saved sitekey. Other analytics tools run on your machine with the CLI.',
+    text: 'Clicks, impressions, click-through rate and position for every page and query on your site, with quick wins, pages stuck on page two, decaying pages and cannibalization worked out for you. Bing sits alongside it when you connect it.',
+    href: '/features/search-console',
+    link: 'Google Search Console MCP',
   },
   {
-    title: 'Google update dates',
+    title: 'Google Analytics',
+    icon: ChartLineData01Icon,
+    text: 'Sessions from search for the same dates as your Search Console data, so you can see what happened after the click and tell a search drop from a drop in all your traffic.',
+    href: '/features/google-analytics',
+    link: 'Google Analytics MCP for SEO',
+  },
+  {
+    title: 'AI search',
+    icon: AiChat02Icon,
+    text: 'The questions people ask Google AI Mode and AI assistants that already show up in your Search Console, and the visits ChatGPT, Perplexity, Claude and Gemini send you.',
+    href: '/features/ai-search',
+    link: 'AI search tracking',
+  },
+  {
+    title: 'Google updates',
     icon: Calendar03Icon,
-    text: 'Known Google algorithm updates sit next to your traffic, so you can see when the timing lines up.',
+    text: 'Every Google update lined up against your clicks and sessions, so when traffic moves you can see straight away whether the dates match an update.',
+    href: '/features/google-updates',
+    link: 'Google update checker',
   },
   {
-    title: 'Research with your key',
+    title: 'Site audit',
+    icon: Route01Icon,
+    text: 'A crawl of your site for broken pages, redirects, titles, canonicals and internal links, plus whether Google has indexed a page and what AI crawlers can read.',
+    href: '/features/seo-audit',
+    link: 'SEO audit tool',
+  },
+  {
+    title: 'Keyword research',
     icon: Key01Icon,
-    text: 'Keyword, SERP, competitor and backlink data from your own DataForSEO or Ahrefs account.',
+    text: 'Keyword volumes, search results, competitors and backlinks from your own Ahrefs or DataForSEO account, kept clearly apart from your own numbers.',
+    href: '/features/keyword-research',
+    link: 'Keyword research tool',
+  },
+]
+
+const questions = [
+  'Why did clicks drop last month? Was it the core update?',
+  'Which pages are close to page one, and what do they rank for?',
+  'Is this page indexed? If not, why not?',
+  'Which searches does this page show up for that it never mentions?',
+  'How many visits came from ChatGPT and Perplexity, and where did they land?',
+  "Who am I up against in search, and is there demand for a 'vs' page?",
+]
+
+const teams = [
+  {
+    title: 'Agencies',
+    icon: Briefcase01Icon,
+    text: "Link each client's Google account once. Your agent can then report on any client site from the same chat.",
+    href: '/docs/mcp',
+    link: 'Set up the hosted MCP',
+  },
+  {
+    title: 'In-house SEO and growth teams',
+    icon: UserGroupIcon,
+    text: 'Add it to the cloud agents and scheduled jobs you already run. One account token gives each new machine your Google accounts and keys.',
+    href: '/docs/cloud-agents',
+    link: 'Run it in cloud agents',
+  },
+  {
+    title: 'Founders who build with agents',
+    icon: Store01Icon,
+    text: 'You already build in Claude Code, Codex or Cursor. Connect one URL and ask about your site in the same session where you ship it.',
+    href: '/docs/getting-started',
+    link: 'Get started',
+  },
+  {
+    title: 'Publishers and large sites',
+    icon: News01Icon,
+    text: 'With thousands of pages and several Google updates a year, you need to see quickly which sections moved, line them up with update dates, and crawl up to 10,000 pages to find what broke.',
+    href: '/features/google-updates',
+    link: 'Google update checker',
+  },
+]
+
+// Why the numbers hold up in front of a client or a board.
+const trust = [
+  {
+    title: 'Straight from your accounts',
+    text: 'Your agent reads Search Console, Google Analytics, Bing and Clicky fresh each time you ask, so it never works from an old export.',
+  },
+  {
+    title: 'Every number has its dates',
+    text: 'Each result says which days it covers, and says so when a source was missing or cut short.',
+  },
+  {
+    title: 'Estimates are labelled',
+    text: 'Ahrefs and DataForSEO numbers are marked as research and never mixed into your own data.',
+  },
+  {
+    title: 'Updates shown against your traffic',
+    text: 'When a drop lines up with a Google update, you see both dates side by side and judge the link yourself.',
   },
 ]
 
 const surfaces = [
   {
     title: 'Hosted MCP',
-    text: 'Free, with Google sign-in and nothing to install. Your search data is never stored.',
+    text: 'The best choice for most teams: you sign in with Google and connect one URL, with nothing to install.',
     code: 'seoskill.dev/mcp',
     href: '/docs/mcp',
   },
   {
     title: 'CLI',
-    text: 'Open source and local. Adds a site crawl and internal links.',
+    text: 'Open source and runs on your own machine, which adds site crawls and Bing data.',
     code: 'npm i -g seo && seo start',
     href: '/docs/cli',
   },
   {
-    title: 'API keys',
-    text: 'Optional. Your own DataForSEO or Ahrefs account. Save the key encrypted, or send it as a header.',
+    title: 'Your research key',
+    text: 'If you already pay for Ahrefs or DataForSEO, add your key to get keyword volumes, competitors and backlinks.',
     code: null,
     href: '/docs/keys',
   },
   {
-    title: 'What is stored',
-    text: 'Your sign-ins and saved keys, encrypted. Never your data.',
+    title: 'Your data',
+    text: 'Your sign-ins and keys are encrypted, and your search data is never stored on our servers.',
     code: null,
     href: '/docs/privacy',
   },
@@ -77,91 +203,78 @@ const faqs = [
   {
     question: 'Is it free?',
     answer:
-      'Yes. The hosted MCP and the CLI are free. Research data from DataForSEO or Ahrefs uses your own account with them, so they bill you for what you use.',
+      'Yes. The hosted MCP and the CLI are free. Research from DataForSEO or Ahrefs runs on your own account with them.',
   },
   {
-    question: 'What does the hosted MCP store?',
+    question: 'How is it different from Ahrefs or Semrush?',
     answer:
-      'Only your linked Google accounts and any API keys you save, encrypted, so it can fetch your own data when you ask. It never keeps your Search Console or analytics data, your reports or a log of your requests. You can delete everything on your account page.',
+      'Ahrefs and Semrush estimate your traffic from their own crawl of the web. SEO Skill reads your real numbers from Search Console, Google Analytics and Bing. If you already pay for Ahrefs or DataForSEO, add your key and your agent uses both, with the estimates labelled.',
   },
   {
-    question: 'Does it tell me what to fix?',
+    question: 'Can an agency use it for client sites?',
     answer:
-      'No. It returns facts from your data, such as which pages lost clicks or which queries sit at position 4 to 10 with a low click-through rate. Your agent shows you the facts and you decide what to change.',
+      "Yes. Link each client's Google account on your account page, and your agent can work on any of their sites from one place.",
   },
   {
     question: 'Should I use the hosted MCP or the CLI?',
     answer:
-      'Start with the hosted MCP if you want the quickest setup. Use the CLI if you want everything on your machine, or need the site crawl and internal links, which only run locally.',
+      'Start with the hosted MCP. It is the quickest to set up. Add the CLI when you want site crawls or Bing data, and your agent will tell you when it needs it.',
+  },
+  {
+    question: 'What do you store?',
+    answer:
+      'Your sign-ins and any keys you save, encrypted. We never keep your Search Console or analytics data or your reports, and you can delete everything from your account page.',
   },
   {
     question: 'Which agents does it work with?',
     answer:
-      'Any agent that supports remote MCP servers, including Claude Code, Codex, Cursor and Claude on the web. The CLI also adds a skill that teaches your agent which command to run.',
+      'Any agent that supports remote MCP servers, including Claude Code, Codex, Cursor and Claude on the web.',
+  },
+  {
+    question: 'Is it open source?',
+    answer:
+      'Yes. The CLI, both MCP servers and this site are on GitHub under the Apache-2.0 license.',
   },
 ]
 ---
 
 <BaseLayout
-  title="Free SEO data for AI agents"
+  title="Open source SEO for agent-native teams"
   titleBrandPosition="prefix"
-  description="Give your AI agent facts from your own Search Console, Google Analytics and keyword data. Connect the free hosted MCP in one command or install the open source CLI."
+  description="Give your AI agent your real Search Console, Google Analytics, Bing and Clicky data, Google update dates and a site crawl. Free hosted MCP and open source CLI."
   canonicalPath="/"
   framed={false}
 >
   <main data-agent-content>
     <section class="pt-4">
       <div class="site-frame flex flex-col items-center pt-14 text-center sm:pt-20">
-        <h1 class="max-w-3xl text-pretty text-4xl/tight font-medium -tracking-[0.8px] xl:text-5xl/tight xl:-tracking-[1px]">
-          Give your AI agent your real SEO data
+        <h1 class="mt-4 max-w-3xl text-pretty text-4xl/tight font-medium -tracking-[0.8px] xl:text-5xl/tight xl:-tracking-[1px]">
+          SEO for <span class="whitespace-nowrap">agent-native</span> teams
         </h1>
         <p class="mt-4 max-w-2xl text-pretty text-xl/8 font-medium -tracking-[0.2px] text-foreground-muted">
-          Facts from your Search Console, analytics and keyword data, ready
-          for Claude, Codex or any agent. No advice, no guesswork. You decide
-          what to change.
+          Give your team's AI agents your real Search Console, Google Analytics
+          and Bing data, so every answer they give you about search comes from
+          your own numbers instead of a guess.
         </p>
+        <a class:list={[getButtonClasses('default', 'lg'), 'mt-8']} href="/account">Get started free</a>
       </div>
 
       <div class="site-frame mt-10 sm:mt-12">
         <SetupCommands id="home-setup" />
-        <p class="mt-6 text-center text-sm text-foreground-muted">
-          Free. Sign in with Google, no password. Only your sign-ins and saved keys are kept, encrypted, and never your data.
-        </p>
       </div>
     </section>
 
     <div class="space-y-24 py-24 sm:space-y-32 sm:py-32">
-      <section class="site-frame" aria-labelledby="commands-heading">
+      <section class="site-frame" aria-labelledby="why-heading">
         <SectionHeading
-          id="commands-heading"
-          title="What your agent can do"
-          text="Eight commands. Start with the report, then ask about one page, one date or one keyword."
+          id="why-heading"
+          title="What your agent can do with it"
+          text="You ask your agent a question the way you would ask a colleague, and it pulls the numbers it needs from your own accounts to tell you what changed, which pages were affected and when it started."
         />
         <div class="grid grid-cols-1 gap-2 sm:grid-cols-2">
           {
-            commands.map((item) => (
-              <HomeCard
-                title={item.command}
-                code={item.command}
-                text={item.text}
-                icon={item.icon}
-                href={item.path}
-              />
-            ))
-          }
-        </div>
-      </section>
-
-      <section class="site-frame" aria-labelledby="features-heading">
-        <SectionHeading
-          id="features-heading"
-          title="Pick the SEO job"
-          text="A Search Console MCP, keyword research, a site audit, or the MCP server that ties them together."
-        />
-        <div class="grid grid-cols-1 gap-2 sm:grid-cols-2">
-          {
-            features.map((item) => (
-              <HomeCard title={item.title} text={item.text} icon={item.icon} href={item.path} />
+            jobs.map((item) => (
+              <HomeCard title={item.title} text={item.text} icon={item.icon} href={item.href} link={item.link} />
             ))
           }
         </div>
@@ -170,22 +283,85 @@ const faqs = [
       <section class="site-frame" aria-labelledby="sources-heading">
         <SectionHeading
           id="sources-heading"
-          title="Facts from data you own"
-          text="Every row says where it came from, and outside estimates never mix with your own numbers."
+          title="The data your agent works from"
+          text="Everything comes straight from the accounts you already use. When you need keyword volumes or competitor data too, your agent adds research from your own Ahrefs or DataForSEO account."
         />
-        <div class="grid grid-cols-1 gap-2 sm:grid-cols-3">
-          {sources.map((item) => <HomeCard title={item.title} text={item.text} icon={item.icon} />)}
+        <div class="grid grid-cols-1 gap-2 sm:grid-cols-2">
+          {
+            sources.map((item) => (
+              <HomeCard title={item.title} text={item.text} icon={item.icon} href={item.href} link={item.link} />
+            ))
+          }
         </div>
       </section>
 
       <section class="site-frame grid gap-8 sm:grid-cols-[1fr_1.15fr] sm:items-start">
         <div class="sm:sticky sm:top-24">
           <h2 class="text-pretty text-2xl font-medium -tracking-[0.4px] text-foreground xl:text-3xl xl:-tracking-[0.6px]">
-            Two ways in, same reports
+            Questions you can ask it
           </h2>
           <p class="mt-4 text-base leading-7 text-foreground-muted">
-            The hosted MCP and the CLI run the same code and return the same
-            facts. Pick the one that suits how you work (you can switch later).
+            You don't need to learn any commands. Ask the way you would ask a
+            colleague who knows your site, and your agent works out which
+            reports to run and walks you through what it found.
+          </p>
+        </div>
+        <ul class="divide-y divide-border rounded-lg bg-muted px-6">
+          {
+            questions.map((question) => (
+              <li class="py-4 text-base leading-7 text-foreground">{question}</li>
+            ))
+          }
+        </ul>
+      </section>
+
+      <section class="site-frame" aria-labelledby="teams-heading">
+        <SectionHeading
+          id="teams-heading"
+          title="Built for teams that run agents on real sites"
+          text="If search brings in your customers, the agents your team already uses should be working from the same numbers you look at every day."
+        />
+        <div class="grid grid-cols-1 gap-2 sm:grid-cols-2">
+          {
+            teams.map((item) => (
+              <HomeCard title={item.title} text={item.text} icon={item.icon} href={item.href} link={item.link} />
+            ))
+          }
+        </div>
+      </section>
+
+      <section class="site-frame grid gap-8 sm:grid-cols-[1fr_1.15fr] sm:items-start">
+        <div class="sm:sticky sm:top-24">
+          <h2 class="text-pretty text-2xl font-medium -tracking-[0.4px] text-foreground xl:text-3xl xl:-tracking-[0.6px]">
+            Numbers you can put in front of a client
+          </h2>
+          <p class="mt-4 text-base leading-7 text-foreground-muted">
+            Every answer your agent gives you is built on the same numbers you
+            would show a client or your board, so you can act on it without
+            checking everything again yourself.
+          </p>
+        </div>
+        <ul class="divide-y divide-border rounded-lg bg-muted px-6">
+          {
+            trust.map((item) => (
+              <li class="py-4">
+                <h3 class="text-base leading-7 font-medium text-foreground">{item.title}</h3>
+                <p class="text-base leading-7 text-foreground-muted">{item.text}</p>
+              </li>
+            ))
+          }
+        </ul>
+      </section>
+
+      <section class="site-frame grid gap-8 sm:grid-cols-[1fr_1.15fr] sm:items-start">
+        <div class="sm:sticky sm:top-24">
+          <h2 class="text-pretty text-2xl font-medium -tracking-[0.4px] text-foreground xl:text-3xl xl:-tracking-[0.6px]">
+            Pick how you connect
+          </h2>
+          <p class="mt-4 text-base leading-7 text-foreground-muted">
+            Most teams start with the hosted MCP because there is nothing to
+            install, then add the CLI on a machine when they want site crawls or
+            Bing data.
           </p>
         </div>
         <ul class="divide-y divide-border rounded-lg bg-muted px-6">
@@ -197,14 +373,14 @@ const faqs = [
                 href={item.href}
               >
                 <span class="flex items-center justify-between gap-4">
-                  <span class="text-sm font-medium text-foreground group-hover:underline">{item.title}</span>{' '}
+                  <span class="text-base leading-7 font-medium text-foreground group-hover:underline">{item.title}</span>{' '}
                   {item.code ? (
                     <code class="truncate rounded-md bg-background px-2 py-0.5 font-mono text-xs text-foreground-muted">{item.code}</code>
                   ) : (
                     <span aria-hidden="true" class="text-foreground-soft group-hover:text-foreground">&rarr;</span>
                   )}
                 </span>{' '}
-                <span class="mt-1 block text-sm leading-6 text-foreground-muted">{item.text}</span>
+                <span class="block text-base leading-7 text-foreground-muted">{item.text}</span>
               </a>
               </li>
             ))
@@ -216,9 +392,9 @@ const faqs = [
         <SectionHeading
           id="tools-heading"
           title="Free SEO tools"
-          text="Check a website, a technical file or a keyword list in your browser. No sign-in."
+          text="Check a website, a technical file or a keyword list right in your browser, with no account needed."
         />
-        <div class="grid grid-cols-1 gap-2 sm:grid-cols-2 lg:grid-cols-3">
+        <div class="grid grid-cols-1 gap-2 sm:grid-cols-2">
           {
             featuredTools.map((tool) => (
               <HomeCard title={tool.title} text={tool.description} icon={toolIcon(tool.id)} href={tool.path} />

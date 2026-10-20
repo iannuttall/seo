@@ -49,6 +49,7 @@ Sessions are Google Analytics' own count, so they never equal clicks. If no web 
 | `content-decay` | Query and page pairs that lost clicks against the previous period. |
 | `cannibalization` | Queries where more than one of your pages gets impressions, with each page's share. |
 | `traffic-drop` | Daily clicks and impressions checked for sudden changes, with Google updates whose dates overlap. |
+| `ai-queries` | Queries that look like AI conversations and agent searches: replies such as "yes", follow-ups such as "what about…", agent prompts, search operators and long chat-style questions. Rewordings are grouped into one question. A heuristic, covering the last 90 days. |
 | `bing` | Bing's top queries and pages with Google's numbers for the same rows beside them. Needs [Bing connected](/docs/bing) in the CLI or the local MCP server. |
 
 Ask for a section by name:
@@ -69,11 +70,17 @@ Sections that list pages also check their top 20 URLs live, so you can see a pag
 
 ## Dates
 
-The report uses the latest final Search Console data: the last 28 days, or 90 days for `traffic-drop`. You can ask for a start and end date instead:
+The report uses the latest final Search Console data: the last 28 days, or 90 days for `traffic-drop` and `ai-queries`. You can ask for a start and end date instead:
 
 ```sh
 seo report --site example.com --start-date 2026-09-01 --end-date 2026-09-28
 ```
+
+## Questions people ask AI
+
+People who use Google's AI Mode, and AI assistants that search for them, leave a trail in Search Console: a bare "yes", "is it common", "what about smith", a search with `site:` added, or a whole agent prompt. The `ai-queries` section finds these queries, groups the rewordings of one question, and shows which page Google showed for each.
+
+It is a pattern match on the query text, not a label from Google. Search Console does not mark AI Mode, and its Generative AI report is not in its API. Some of these queries were typed by people, and rare ones are left out, so the counts are a minimum.
 
 ## Read it carefully
 

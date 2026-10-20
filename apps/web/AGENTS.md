@@ -11,11 +11,16 @@ write any site copy, metadata included.
   `/account`, `/account/*` and `/.well-known/oauth-*`. Never publish site
   pages on those paths. The account page is drawn from this site's
   `/account-shell` page; its state and cookie belong to the MCP Worker.
-- No other accounts, cookies, analytics or hosted surfaces without Ian's
-  decision.
+- One site cookie, `seo_first`, set once by `BaseLayout.astro` on a first
+  visit: the referring host, landing path and `utm_*` tags, for the hosted
+  MCP to record where a new person came from. No other accounts, cookies,
+  analytics or hosted surfaces without Ian's decision.
 - The design is copied from Ian's ilo web app: tokens in
   `src/styles/globals.css`, soft `bg-muted` panels, no borders or shadows.
-  Do not bring back the old brutalist look. Reuse the components in
+  Do not bring back the old brutalist look. Never use uppercase text: no all-caps eyebrows,
+  kickers, labels or headings, and no letter-spaced small caps. Use sentence
+  case. Card grids have two columns at most. Linked cards end with a label
+  that says where they go. Reuse the components in
   `src/components` (and `docs-prose` for docs) before writing new markup.
 - Docs order, index, breadcrumbs, sitemap and llms.txt all come from
   `src/content/docs-nav.mjs`. The `seo index` page is
@@ -33,6 +38,9 @@ write any site copy, metadata included.
 - Teach `npm i -g seo` then `seo start`, and the hosted MCP next to it. Keep
   hosted facts in step with `apps/mcp/README.md`. Credit Domain Rating as
   Domain Rating by Ahrefs with a link.
+- Copy says what the product gives today. No "coming next", no earlier
+  versions of the product, and no sections built on what other tools get
+  wrong.
 - Keep implementation terms (field names, limits, registry words) out of
   public copy.
 - All internal links are relative.

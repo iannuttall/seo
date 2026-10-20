@@ -49,7 +49,7 @@ const breadcrumbs: SchemaBreadcrumb[] = [
     <section class="mt-16" aria-labelledby="related-docs">
       <h2 id="related-docs" class="text-2xl/8 font-medium tracking-normal">Read the docs</h2>
       <div class="mt-6 grid grid-cols-1 gap-2 sm:grid-cols-2">
-        {related.map((item) => <HomeCard {...item} />)}
+        {related.map((item) => <HomeCard {...item} link={`${item.title} docs`} />)}
       </div>
     </section>
   </main>

@@ -1,0 +1,59 @@
+---
+import {
+  Analytics01Icon,
+  Calendar03Icon,
+  ChartLineData01Icon,
+  Database01Icon,
+} from '@hugeicons/core-free-icons'
+import FeaturePage from '@/components/FeaturePage.astro'
+
+const related = [
+  { title: 'Analytics', text: 'Google Analytics and Clicky in the hosted MCP and the CLI, and how to add another tool.', href: '/docs/analytics', icon: ChartLineData01Icon },
+  { title: 'seo report', text: 'The overview, with Google Analytics sessions beside your Search Console clicks.', href: '/docs/report', icon: Analytics01Icon },
+  { title: 'seo compare', text: 'Before and after a date, with sessions, clicks and Google updates side by side.', href: '/docs/compare', icon: Calendar03Icon },
+  { title: 'seo data', text: 'Raw rows when you need every landing page.', href: '/docs/data', icon: Database01Icon },
+]
+---
+
+<FeaturePage
+  title="Google Analytics MCP for SEO"
+  description="Connect Google Analytics to Claude, Codex or any AI agent with a free MCP server. See search sessions beside Search Console clicks, landing pages and visits from AI assistants."
+  path="/features/google-analytics"
+  lead="Your agent sees what happens after the click: sessions from search, the pages people land on, and visits from AI assistants, for the same dates as your Search Console data."
+  {related}
+>
+  <h2>Sessions beside your clicks</h2>
+  <p>
+    Ask about a site and the SEO report shows its Google Analytics sessions
+    next to its Search Console clicks, for the same dates. You don't pick a
+    property: it finds the one whose web stream matches the site and names
+    it. You get three numbers, each against the previous period:
+  </p>
+  <ul>
+    <li>Organic Search sessions from Google, the number to set beside clicks.</li>
+    <li>Organic Search sessions from every search engine, Bing and DuckDuckGo included.</li>
+    <li>Sessions from all channels, so you can tell a search drop from a drop in all your traffic.</li>
+  </ul>
+
+  <h2>The pages search sends people to</h2>
+  <p>
+    Your agent can list every landing page from search with its sessions,
+    users, engaged sessions and key events. Ask for it in plain words, or
+    run <code>seo analytics google report</code> in a terminal.
+  </p>
+
+  <h2>Visits from AI assistants</h2>
+  <p>
+    The same report shows visits from ChatGPT, Perplexity, Claude, Gemini and
+    Copilot, and the pages they land on. See <a href="/features/ai-search">AI
+    search tracking</a> for the rest of the AI picture.
+  </p>
+
+  <h2>Works with other analytics tools</h2>
+  <p>
+    Google Analytics is built in. Clicky works in the hosted MCP and the CLI.
+    For Fathom, Plausible, Simple Analytics or anything else, a small provider
+    package adds it on your own machine. The <a href="/docs/analytics">analytics
+    docs</a> show how.
+  </p>
+</FeaturePage>

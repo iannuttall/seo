@@ -23,6 +23,9 @@ export default defineConfig({
     agentMarkdown({
       llmsTxt,
       cloudflareHeaders: false,
+      // Signed-in pages get no Markdown copy. The account page is drawn from
+      // /account-shell, whose canonical is /account.
+      excludePaths: ['/account'],
     }),
   ],
   vite: {

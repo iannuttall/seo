@@ -161,11 +161,11 @@ importers:
         specifier: 4.2.3
         version: 4.2.3
       '@iannuttall/seo-graph-astro':
-        specifier: ^0.0.4
-        version: 0.0.4(astro@7.3.5(@astrojs/markdown-remark@7.3.1)(@types/node@26.1.1)(jiti@2.7.0)(yaml@2.9.0))(typescript@6.0.3)
+        specifier: ^0.0.11
+        version: 0.0.11(astro@7.3.5(@astrojs/markdown-remark@7.3.1)(@types/node@26.1.1)(jiti@2.7.0)(yaml@2.9.0))(typescript@6.0.3)
       '@iannuttall/seo-graph-core':
-        specifier: ^0.0.2
-        version: 0.0.2(typescript@6.0.3)
+        specifier: ^0.0.5
+        version: 0.0.5(typescript@6.0.3)
       '@seo/core':
         specifier: workspace:*
         version: link:../../packages/core
@@ -916,16 +916,16 @@ packages:
   '@hugeicons/core-free-icons@4.2.3':
     resolution: {integrity: sha512-fpiU0qFZkv4ABi23xJ2m4qNr0BBfuIaYjPboN8WDA6aj9D+OzXa7eykxKOpACZRuGbDz1U9S5DsNx1d5KNnsgA==}
 
-  '@iannuttall/seo-graph-astro@0.0.4':
-    resolution: {integrity: sha512-dv0GI+4vtI7w+IeInS+OgxAf7Hl83ckz6d0Lu6uEJbFuGAZnf34tjUVTImBFePkaflEp6G3QSpLStGUenwdzWA==}
+  '@iannuttall/seo-graph-astro@0.0.11':
+    resolution: {integrity: sha512-1VLCkWMuq82XWNOmnd7g1FiSxzGxicJ4BnNkfUg3LoSVZpICp/eu6pKP9YaOCUDhOToTaqoOiqbzLTv1L2YKlg==}
     peerDependencies:
       astro: '>=7.0.0 <8.0.0'
     peerDependenciesMeta:
       astro:
         optional: true
 
-  '@iannuttall/seo-graph-core@0.0.2':
-    resolution: {integrity: sha512-Th+GYXJj40Y38Y5fFxrkl/Iv0uqUy5qIRvFilGcGMzLaMU4WQnxF9/dVwwlv2RY3E6ZpUkORwBWWLw+xn9+M1w==}
+  '@iannuttall/seo-graph-core@0.0.5':
+    resolution: {integrity: sha512-+7keMnHvaYBTh/tfrTHtPXnJxM0HXbBjuNTe1OgKXtb046cSkYLIyiqXUYQVxYEXaYsy7JqkIKY72bUsVPOjlA==}
 
   '@img/colour@1.1.0':
     resolution: {integrity: sha512-Td76q7j57o/tLVdgS746cYARfSyxk8iEfRxewL9h4OMzYhbW4TAcppl0mT4eyqXddh6L/jwoM75mo7ixa/pCeQ==}
@@ -5191,9 +5191,9 @@ snapshots:
 
   '@hugeicons/core-free-icons@4.2.3': {}
 
-  '@iannuttall/seo-graph-astro@0.0.4(astro@7.3.5(@astrojs/markdown-remark@7.3.1)(@types/node@26.1.1)(jiti@2.7.0)(yaml@2.9.0))(typescript@6.0.3)':
+  '@iannuttall/seo-graph-astro@0.0.11(astro@7.3.5(@astrojs/markdown-remark@7.3.1)(@types/node@26.1.1)(jiti@2.7.0)(yaml@2.9.0))(typescript@6.0.3)':
     dependencies:
-      '@iannuttall/seo-graph-core': 0.0.2(typescript@6.0.3)
+      '@iannuttall/seo-graph-core': 0.0.5(typescript@6.0.3)
       schema-dts: 2.0.0(typescript@6.0.3)
       zod: 4.4.3
     optionalDependencies:
@@ -5202,7 +5202,7 @@ snapshots:
       - canvas
       - typescript
 
-  '@iannuttall/seo-graph-core@0.0.2(typescript@6.0.3)':
+  '@iannuttall/seo-graph-core@0.0.5(typescript@6.0.3)':
     dependencies:
       linkedom: 0.18.13
       schema-dts: 2.0.0(typescript@6.0.3)

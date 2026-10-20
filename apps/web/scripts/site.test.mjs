@@ -214,10 +214,12 @@ test('every content page has one deterministic Markdown alternative', () => {
       .length,
     0,
   )
+  // noindex pages keep their copy; the signed-in account page has none.
   assert.deepEqual(
     manifest.pages.filter((page) => page.noindex).map((page) => page.htmlPath),
-    ['/account', '/cookies', '/privacy', '/terms'],
+    ['/cookies', '/privacy', '/terms'],
   )
+  assert.equal(existsSync(resolve(dist, 'account.md')), false)
   assert.equal(representedHtml.length, manifest.pages.length)
 
   for (const page of manifest.pages) {

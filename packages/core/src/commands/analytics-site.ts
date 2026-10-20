@@ -176,6 +176,31 @@ type ReportRows = {
   }
 }
 
+// Session sources that are AI assistants, as Google Analytics records them
+// from the referrer or utm_source. A full match, so other sites that only
+// contain these words do not count.
+const AI_SOURCES = [
+  'chatgpt.com',
+  'chatgpt',
+  'chat.openai.com',
+  'perplexity.ai',
+  'perplexity',
+  'claude.ai',
+  'gemini.google.com',
+  'copilot.microsoft.com',
+  'copilot.com',
+  'chat.deepseek.com',
+  'meta.ai',
+  'grok.com',
+  'chat.mistral.ai',
+  'you.com',
+  'phind.com',
+  'poe.com',
+]
+const AI_SOURCE_PATTERN = `(www\\.)?(${AI_SOURCES.map((source) => source.replaceAll('.', '\\.')).join('|')})`
+// AI sources and their landing pages shown in the text.
+const AI_ROWS = 5
+
 const filter = (fieldName: string, value: string, matchType = 'EXACT') => ({
   filter: { fieldName, stringFilter: { matchType, value } },
 })
@@ -209,7 +234,11 @@ async function totals(
       { signIn: access.signIn },
     )
   const onPages = pages ? [filter('landingPage', pages, 'CONTAINS')] : []
-  const [channels, google] = await Promise.all([
+  const fromAi = [
+    ...onPages,
+    filter('sessionSource', AI_SOURCE_PATTERN, 'FULL_REGEXP'),
+  ]
+  const [channels, google, aiSources, aiPages] = await Promise.all([
     read(['sessionDefaultChannelGroup'], onPages),
     read(
       [],
@@ -219,6 +248,8 @@ async function totals(
         filter('sessionSource', 'google'),
       ],
     ),
+    read(['sessionSource'], fromAi),
+    read(['landingPage'], fromAi),
   ])
   const sum = () => ({
     google: { sessions: 0, keyEvents: 0 } as Totals,
@@ -253,15 +284,57 @@ async function totals(
     if (channel === 'Organic Search') plus(period.organic, row)
   })
   each(google, (period, _, row) => plus(period.google, row))
+  // Sessions now and before for each AI source or landing page, most first.
+  const byName = (data: ReportRows, key: 'source' | 'page') => {
+    const rows = new Map<
+      string,
+      { now: number; before: number; keyEvents: number }
+    >()
+    const headers = data.dimensionHeaders?.map((header) => header.name) ?? []
+    const periodAt = headers.indexOf('dateRange')
+    for (const row of data.rows ?? []) {
+      const values = row.dimensionValues ?? []
+      const name = values[0]?.value ?? ''
+      const before =
+        (periodAt >= 0 ? values[periodAt] : values.at(-1))?.value === 'before'
+      const entry = rows.get(name) ?? { now: 0, before: 0, keyEvents: 0 }
+      const sessions = Number(row.metricValues?.[0]?.value ?? 0)
+      if (before) entry.before += sessions
+      else {
+        entry.now += sessions
+        entry.keyEvents += Number(row.metricValues?.[1]?.value ?? 0)
+      }
+      rows.set(name, entry)
+    }
+    return [...rows]
+      .map(([name, entry]) => ({
+        [key]: name,
+        sessions: entry.now,
+        previousSessions: entry.before,
+        keyEvents: entry.keyEvents,
+      }))
+      .sort(
+        (a, b) =>
+          b.sessions - a.sessions ||
+          b.previousSessions - a.previousSessions ||
+          String(a[key]).localeCompare(String(b[key])),
+      )
+  }
+  const bySource = byName(aiSources, 'source')
+  const aiNow = bySource.reduce((total, row) => total + row.sessions, 0)
+  const aiBefore = bySource.reduce(
+    (total, row) => total + row.previousSessions,
+    0,
+  )
   const data = {
     metadata: {
       timeZone: channels.metadata?.timeZone,
-      subjectToThresholding:
-        channels.metadata?.subjectToThresholding ||
-        google.metadata?.subjectToThresholding,
-      dataLossFromOtherRow:
-        channels.metadata?.dataLossFromOtherRow ||
-        google.metadata?.dataLossFromOtherRow,
+      subjectToThresholding: [channels, google, aiSources, aiPages].some(
+        (data) => data.metadata?.subjectToThresholding,
+      ),
+      dataLossFromOtherRow: [channels, google, aiSources, aiPages].some(
+        (data) => data.metadata?.dataLossFromOtherRow,
+      ),
     },
   }
   const notes: string[] = []
@@ -312,12 +385,49 @@ async function totals(
         periods.before.all.sessions,
       ),
     },
+    aiAssistants: {
+      sessions: aiNow,
+      previousSessions: aiBefore,
+      sessionsChangePct: pct(aiNow, aiBefore),
+      bySource,
+      topLandingPages: byName(aiPages, 'page').slice(0, 20),
+      sources: AI_SOURCES,
+    },
     notes,
   }
 }
 
 const change = (value: number | null) =>
   value === null ? 'n/a' : `${value > 0 ? '+' : ''}${value}%`
+
+type AiRow = { sessions: number; previousSessions: number }
+
+// Visits from AI assistants, by source and landing page.
+function aiText(ai: {
+  sessions: number
+  previousSessions: number
+  sessionsChangePct: number | null
+  bySource: (AiRow & { source?: unknown })[]
+  topLandingPages: (AiRow & { page?: unknown })[]
+}): string {
+  const list = (rows: (AiRow & Record<string, unknown>)[], key: string) =>
+    rows
+      .slice(0, AI_ROWS)
+      .map((row) => `${row[key]} ${row.sessions} (was ${row.previousSessions})`)
+      .join(', ')
+  if (!ai.sessions && !ai.previousSessions) {
+    return 'Visits from AI assistants (ChatGPT, Perplexity, Claude, Gemini, Copilot and others): none in either period.'
+  }
+  return [
+    `Visits from AI assistants (ChatGPT, Perplexity, Claude, Gemini, Copilot and others): ${ai.sessions} sessions (was ${ai.previousSessions}, ${change(ai.sessionsChangePct)}). By source: ${list(ai.bySource, 'source')}.`,
+    ai.topLandingPages.length
+      ? `Top landing pages from AI assistants: ${list(ai.topLandingPages, 'page')}.`
+      : '',
+    'Only visits that pass a referrer or utm_source count; AI apps that send none show as Direct.',
+  ]
+    .filter(Boolean)
+    .join(' ')
+}
 
 // The Google Analytics line for a report on a Search Console site, for the
 // same dates. It never stops the report: a missing match or a failure is
@@ -373,7 +483,9 @@ export async function analyticsBeside(
               `Other properties with a matching web stream, with fewer sessions: ${others.join(', ')}.`,
             ]
           : []),
-      ].join(' '),
+      ]
+        .join(' ')
+        .concat('\n\n', aiText(data.aiAssistants)),
       data: { ...data, ...(others.length ? { otherMatches: others } : {}) },
     }
   } catch (error) {

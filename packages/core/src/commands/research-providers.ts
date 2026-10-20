@@ -1,3 +1,4 @@
+import { readJson } from '../http/read-json.js'
 import { CommandError } from './types.js'
 
 // Keyword, competitor and backlink data from the person's own DataForSEO,
@@ -153,7 +154,7 @@ async function dataForSeo(
         body: JSON.stringify([{ ...market, ...task }]),
       }),
     )
-    const data = (await response.json()) as {
+    const data = (await readJson(response, 'DataForSEO')) as {
       tasks?: {
         status_code: number
         status_message: string
@@ -301,7 +302,7 @@ async function ahrefs(key: string, input: ResearchInput): Promise<Row[]> {
         headers: { authorization: `Bearer ${key}`, accept: 'application/json' },
       }),
     )
-    return (await response.json()) as Record<string, Row[] | undefined>
+    return readJson<Record<string, Row[] | undefined>>(response, 'Ahrefs')
   }
   const today = new Date().toISOString().slice(0, 10)
   if (input.action === 'keyword_metrics') {

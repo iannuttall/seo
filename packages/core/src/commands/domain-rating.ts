@@ -4,6 +4,8 @@
 // attribution next to the data and does not allow a raw DR feed, so DR only
 // appears as a column beside other research data.
 
+import { readJson } from '../http/read-json.js'
+
 export const DR_ATTRIBUTION =
   'domain_rating: Domain Rating by Ahrefs (https://ahrefs.com/).'
 
@@ -44,7 +46,7 @@ async function lookup(domain: string, key: string): Promise<number | null> {
       signal: AbortSignal.timeout(5000),
     }))
   if (!response.ok) return null
-  const body = (await response.clone().json()) as {
+  const body = (await readJson(response.clone(), 'Ahrefs Domain Rating')) as {
     domain_rating?: { domain_rating?: number | null }
   }
   if (cache && !cached) {

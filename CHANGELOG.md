@@ -1,5 +1,13 @@
 # Changelog
 
+## Unreleased
+
+### Changed
+
+- Results no longer end with "only edit pages with their approval", and the
+  MCP instructions no longer tell the agent how to work with the person. The
+  skill already dropped these rules in 0.8.0.
+
 ## 0.8.0
 
 ### Changed

@@ -12,7 +12,7 @@ Search Console tells you what happens in Google before the click. Your analytics
 | Tool | Hosted MCP | CLI |
 | --- | --- | --- |
 | Google Analytics | Yes, with your Google sign-in | Yes, `seo analytics google report` |
-| Clicky | Yes, with the site saved on your account page | Yes, `seo data --source clicky` |
+| Clicky | Yes, with the site saved on your account page | Yes, `seo analytics clicky report` |
 | Fathom, Simple Analytics, Plausible or anything else | No | Build your own from the [provider template](https://github.com/iannuttall/seo-provider-template) |
 
 The hosted MCP reads your Google data, your Clicky sites and your DataForSEO or Ahrefs research. When you ask it about another analytics tool, or about [Bing](/docs/bing), it tells your agent to use the CLI, the same way it does for a crawl.
@@ -34,7 +34,7 @@ seo analytics google properties
 seo analytics google report --property 123456789
 ```
 
-In the CLI, `seo data` reads Search Console, Bing or Clicky rows. Use `seo analytics google report` for Google Analytics.
+It returns the same landing pages as the MCP tool.
 
 ## Clicky
 
@@ -56,7 +56,7 @@ The agent runs `seo_data` with Clicky as the source and the site's domain or its
 **CLI.** Link the CLI to your account with `seo login`, then:
 
 ```sh
-seo data --source clicky --site example.com
+seo analytics clicky report --site example.com
 ```
 
 A Clicky site saved on this machine only with `seo analytics clicky connect --site-id 12345` works too, by its site ID.

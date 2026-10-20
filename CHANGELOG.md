@@ -9,6 +9,11 @@
   works, such as asking before each edit. Each result already states its
   limits and the command to run next.
 - "Not signed in" now says that `seo crawl --url` works without sign-in.
+- `seo analytics google report --property <id>` and
+  `seo analytics clicky report --site <site>` are the CLI way to read your
+  analytics. Each returns the same landing pages as the MCP tool, with dates
+  and `--detail` like the other commands. The Google report no longer takes
+  `--dimensions`, `--metrics`, `--limit` or `--body`.
 
 ### Added
 

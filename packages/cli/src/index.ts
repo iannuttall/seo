@@ -147,7 +147,10 @@ const allHelpSections: HelpSection[] = [
       ['seo perf audit', 'Run a page performance audit'],
       ['seo index-coverage', 'Choose pages for URL Inspection'],
       ['seo ai-referrals', 'AI referral traffic in Google Analytics'],
-      ['seo analytics google report', 'Run a Google Analytics report'],
+      [
+        'seo analytics google report',
+        'Google Analytics landing pages for visits from search',
+      ],
       ['seo updates', 'List official Google ranking updates'],
       ['seo export', 'Export report data to CSV'],
       ['seo reports list', 'List every structured report'],

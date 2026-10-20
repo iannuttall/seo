@@ -9,131 +9,153 @@
 
 [![npm](https://img.shields.io/npm/v/seo?style=flat-square)](https://www.npmjs.com/package/seo)
 
-Real SEO data for your AI agent. Not guesses.
+The SEO data I give my agents every day, so they work from my real numbers
+instead of guessing.
 
-Ask an agent why your traffic dropped and it will happily make something up.
-It has never seen your Search Console. So it reaches for the same generic
-checklist everyone else gets.
+Most AI SEO tools do one of two things. They hand your agent a checklist of
+generic advice, or they feed it estimates from a keyword tool that has never
+seen your site. Either way you end up with the same pages everyone else is
+publishing. Pages written from a keyword list aren't SEO. They're slop.
 
-SEO Skill gives your agent your own data: Search Console, Google Analytics,
-Bing and Clicky, with Google update dates laid over it. It can crawl your
-site, check any page live, and pull keyword and competitor data when you
-need it. It is free and open source, and it gives your agent facts, not
-advice. Your agent does the thinking. You decide what changes.
+This works the other way round. It doesn't tell your agent what to do. It
+gives it the facts: your clicks, impressions and positions from Search
+Console, your visits from Google Analytics or Clicky, your Bing data, the
+dates of Google updates, and a crawl of your site. Your agent works out what
+matters, and you decide what changes.
 
-I use it every day on my own sites. Hack around with it. Make it yours.
+It's free and open source. Hack around with it. Make it your own.
 
-## Setup (30 seconds)
+## Installation (30-second setup)
 
-Pick one.
+### 1. Connect it to your agent
 
 <details>
-<summary><strong>Hosted MCP</strong> (nothing to install)</summary>
+<summary><strong>Claude Code</strong></summary>
 
 ```bash
 claude mcp add --transport http seoskill https://seoskill.dev/mcp
-codex mcp add seoskill --url https://seoskill.dev/mcp
 ```
-
-For any other agent, add `https://seoskill.dev/mcp` as a remote MCP server.
-Sign in with Google when it asks. That is your account: no password, no
-signup form.
 
 </details>
 
 <details>
-<summary><strong>CLI</strong> (adds crawls and Bing, runs on your machine)</summary>
+<summary><strong>Codex</strong></summary>
+
+```bash
+codex mcp add seoskill --url https://seoskill.dev/mcp
+```
+
+</details>
+
+<details>
+<summary><strong>Any other agent</strong></summary>
+
+Add `https://seoskill.dev/mcp` as a remote MCP server. Cursor, Claude
+Desktop, VS Code and most other agents support it.
+
+</details>
+
+<details>
+<summary><strong>The CLI</strong> (for crawls and Bing, which run on your machine)</summary>
 
 ```bash
 npm i -g seo
 seo start
 ```
 
-`seo start` signs you in with Google, then offers to connect the MCP server
-to the agents it finds and to install the skill. That is all it asks.
+`seo start` signs you in, connects your agents and installs the skill.
 
 </details>
 
-Then ask your agent something real:
+### 2. Sign in with Google
+
+Your agent opens a Google sign-in. Pick the account that can see your Search
+Console. That's your account. There's no password and no signup form.
+
+### 3. Ask it something real
 
 ```text
 Why did clicks drop on example.com last month?
 ```
 
+That's it. You're ready to go.
+
 ## Why it exists
 
-I built it to fix the ways agents fail at SEO.
+I built this because agents kept failing at SEO in the same few ways.
 
-### #1: The agent guesses
+### #1: The agent makes things up
 
-**The problem.** An agent with no data writes generic advice: "add more
-keywords", "improve your meta descriptions". It sounds right and helps no one.
+**The problem.** Ask an agent why your traffic dropped and you get a tidy
+list of possible causes. Algorithm update, technical issues, content
+quality. None of it comes from your site, so none of it helps.
 
-**The fix.** Give it the numbers. `seo report` returns your site's totals
-against the last period, the pages and queries that moved, and every section
-worth a look: quick wins, low click-through rate, page two, decay,
-cannibalization, sudden drops. `seo compare` lines up the weeks before and
-after a date with the Google updates in between.
+**The fix** is to give it your numbers:
 
-### #2: Third-party tools are estimates
+- [`seo report`](https://seoskill.dev/docs/report) shows your totals against the last period, the pages and queries that moved, and the places worth a look: quick wins, low click-through rates, pages stuck on page two, decay and cannibalization.
+- [`seo compare`](https://seoskill.dev/docs/compare) lines up the weeks before and after a date, with the Google updates in between.
 
-**The problem.** Keyword tools estimate your traffic from a sample. They miss
-the long tail, and they disagree with each other.
+### #2: Keyword tools are guessing too
 
-**The fix.** Your own data first. Search Console and your analytics are the
-source of truth. Keyword and competitor data from DataForSEO or Ahrefs is
-there when you need it, labelled and kept apart, never blended in.
+**The problem.** Ahrefs and Semrush estimate your traffic from a sample.
+They miss most of the long tail, and they rarely agree with each other.
 
-### #3: The agent says "it's fixed" without checking
+**The fix** is to start from your own data. Search Console is the source of
+truth for Google. When you do need keyword volumes or competitor data,
+[`seo research`](https://seoskill.dev/docs/research) uses your own
+DataForSEO or Ahrefs key, and it keeps those estimates apart from your real
+numbers.
 
-**The problem.** Agents trust their own edits. Then the page is still
-noindexed, still redirecting, still missing from Google.
+### #3: The agent says it's fixed when it isn't
 
-**The fix.** `seo page` checks one URL live and asks Google whether it is
-indexed. `seo index` checks the pages that lost their clicks. `seo crawl`
-checks the whole site, including what AI agents can read: robots rules for
-AI bots, Markdown copies and llms.txt.
+**The problem.** Agents trust their own edits. Then you find the page is
+still noindexed, still redirecting, or still not in Google.
+
+**The fix** is to check the live site:
+
+- [`seo page`](https://seoskill.dev/docs/page) loads one URL and asks Google whether it's indexed.
+- [`seo index`](https://seoskill.dev/docs/indexing) checks every page that lost its clicks.
+- [`seo crawl`](https://seoskill.dev/docs/crawl) checks the whole site, including what AI agents can read.
 
 ### #4: Too many reports
 
-**The problem.** SEO tools ship hundreds of reports, and nobody reads them.
-This project once had 70. Most went unused.
+**The problem.** SEO tools love reports. The first version of this had about
+70 of them, and almost nobody used most of them.
 
-**The fix.** Eight commands. Each takes a site or URL and optional dates,
-and returns everything it has. No settings to tune. Every result ends with
-the command to run next, so your agent always knows where to go.
+**The fix** was to cut it down to eight commands. Each one takes a site or a
+URL, and dates if you want them. There are no settings to tune. Every result
+ends with the command to run next, so your agent always knows where to go.
 
-## The commands
+## Reference
 
 | Command | What it returns |
 | --- | --- |
-| [`seo report`](https://seoskill.dev/docs/report) | Search Console overview, then each section's top rows |
-| [`seo page`](https://seoskill.dev/docs/page) | One URL: the live page, Google index status and its queries |
+| [`seo report`](https://seoskill.dev/docs/report) | Your Search Console overview, then the top rows of each section |
+| [`seo page`](https://seoskill.dev/docs/page) | One URL: the live page, its Google index status and its queries |
 | [`seo compare`](https://seoskill.dev/docs/compare) | Before and after a date, with Google updates |
 | [`seo index`](https://seoskill.dev/docs/indexing) | Pages that lost their clicks, checked live and with Google |
-| [`seo research`](https://seoskill.dev/docs/research) | Keywords, SERPs, competitors and backlinks from your own key |
-| [`seo data`](https://seoskill.dev/docs/data) | Raw Search Console, Bing and Clicky rows |
-| [`seo crawl`](https://seoskill.dev/docs/crawl) | Technical issues and AI agent access across a site (CLI) |
-| [`seo internal-links`](https://seoskill.dev/docs/internal-links) | Pages that could link to a page (CLI) |
+| [`seo research`](https://seoskill.dev/docs/research) | Keywords, search results, competitors and backlinks from your own key |
+| [`seo data`](https://seoskill.dev/docs/data) | Raw rows from Search Console, Google Analytics, Bing or Clicky |
+| [`seo crawl`](https://seoskill.dev/docs/crawl) | Technical issues and AI agent access across a site (CLI only) |
+| [`seo internal-links`](https://seoskill.dev/docs/internal-links) | Pages that could link to a page (CLI only) |
 
-Each one is also an MCP tool (`seo_report`, `seo_page` and so on). Add
-`--json` to any command for scripts and CI.
+Every command is also an MCP tool, such as `seo_report`. Add `--json` to any
+command when you're scripting it.
 
 ## What it keeps
 
-Almost nothing. The hosted server keeps your linked Google accounts and any
-keys you save, encrypted. No report data, no Search Console rows, no request
-logs. The CLI keeps your sign-in in your system keychain. Read the
-[privacy policy](https://seoskill.dev/privacy).
+As little as possible. The hosted server keeps your linked Google accounts
+and any keys you save, encrypted. It doesn't keep your Search Console data,
+your reports or request logs. The CLI keeps your sign-in in your system
+keychain. The [privacy policy](https://seoskill.dev/privacy) has the details.
 
-## More
+## Links
 
 - [Documentation](https://seoskill.dev/docs)
 - [Cloud agents and CI](https://seoskill.dev/docs/cloud-agents)
 - [Add your own analytics source](https://github.com/iannuttall/seo-provider-template)
-- [Changelog](CHANGELOG.md)
-- [Contributing](CONTRIBUTING.md)
+- [Changelog](CHANGELOG.md) and [contributing](CONTRIBUTING.md)
 - [Questions and bugs](https://github.com/iannuttall/seo/issues)
 
-Apache-2.0. Names and artwork are covered by the
+Apache-2.0. The name and artwork are covered by the
 [brand policy](TRADEMARKS.md).

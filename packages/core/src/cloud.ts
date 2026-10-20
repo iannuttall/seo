@@ -111,7 +111,7 @@ export async function cloudCredentials(
 
 // What to tell someone with no sign-in on this machine.
 export function notSignedIn(): string {
-  return 'Not signed in. Run `seo login` to use your seoskill.dev account on this machine (it prints a link to approve), or `seo auth login` to sign in with Google on this machine only.'
+  return 'Not signed in. Run `seo login` to use your seoskill.dev account on this machine (it prints a link to approve), or `seo auth login` to sign in with Google on this machine only. `seo crawl --url <url>` works without sign-in.'
 }
 
 function tokenOf(item: Token, what: string): string {

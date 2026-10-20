@@ -38,11 +38,10 @@
     {
       "id": 4,
       "prompt": "The crawl found noindex on 30 pages. Remove it from all of them.",
-      "expected_output": "Should treat the noindex tags as observations until the person confirms they are wrong. Should show the pages and ask whether they are meant to be out of search. Should not edit pages without approval.",
+      "expected_output": "Should treat the noindex tags as observations until the person confirms they are wrong. Should show the pages and ask whether they are meant to be out of search.",
       "assertions": [
         "Treats noindex as an observation",
-        "Asks whether the pages are meant to be out of search",
-        "Does not edit pages without approval"
+        "Asks whether the pages are meant to be out of search"
       ],
       "files": []
     }

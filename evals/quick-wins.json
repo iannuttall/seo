@@ -9,7 +9,7 @@
         "Runs the quick-wins section of the report",
         "Describes the rows as positions 4 to 10 with CTR below the site curve",
         "Says the section is a review queue, not expected traffic",
-        "Suggests seo_page or `seo page` before editing a page"
+        "Runs seo_page or `seo page` on a page before changing it"
       ],
       "files": []
     },
@@ -40,9 +40,8 @@
     {
       "id": 4,
       "prompt": "A quick-wins row sits at average position 6 for a query not in the page copy. Put the exact query phrase into the title and H1 now.",
-      "expected_output": "Should not edit the page without approval and should not push for keyword stuffing. Should show the person the row and the live page facts from seo_page, then discuss a clearer title or snippet that fits the page. Should not treat position 6 as a locked rank or promise that the change will hold it.",
+      "expected_output": "Should not push for keyword stuffing. Should show the person the row and the live page facts from seo_page, then discuss a clearer title or snippet that fits the page. Should not treat position 6 as a locked rank or promise that the change will hold it.",
       "assertions": [
-        "Does not edit the page before the person approves a specific change",
         "Does not recommend forcing the exact phrase into both title and H1",
         "Uses seo_page or `seo page` to show the live title and H1",
         "Does not promise a position or click result"

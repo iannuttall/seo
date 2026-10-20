@@ -3,10 +3,10 @@
 This package ships one skill: `seo`. It teaches an agent how to use `seo`
 without reading the whole repo.
 
-The skill is a router, not a manual. It teaches the eight commands, the
-report-first flow (run `seo report`, then one section), the commands for
-common jobs, and the evidence rules. Each command's result names what to run
-next, so the skill stays small.
+The skill is a short map of the CLI and MCP tools, not a manual. It says
+what each command returns, how to reach it, and that `seo crawl` needs no
+sign-in. It sets no rules for how the agent works: each result states its own
+limits and names the command to run next, so the skill stays small.
 
 ## Install during setup
 

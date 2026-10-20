@@ -134,8 +134,8 @@ still noindexed, still redirecting, or still not in Google.
 **The problem.** SEO tools love reports. The first version of this had about
 70 of them, and almost nobody used most of them.
 
-**The fix** was to cut it down to eight commands. Each one takes a site or a
-URL, and dates if you want them. There are no settings to tune. Every result
+**The fix** was to cut it down to a handful of commands. Each one takes a
+site or a URL, and dates if you want them. There are no settings to tune. Every result
 ends with the command to run next, so your agent always knows where to go.
 
 ## Reference
@@ -147,7 +147,8 @@ ends with the command to run next, so your agent always knows where to go.
 | [`seo compare`](https://seoskill.dev/docs/compare) | Before and after a date, with Google updates |
 | [`seo index`](https://seoskill.dev/docs/indexing) | Pages that lost their clicks, checked live and with Google |
 | [`seo research`](https://seoskill.dev/docs/research) | Keywords, search results, competitors and backlinks from your own key |
-| [`seo data`](https://seoskill.dev/docs/data) | Raw rows from Search Console, Google Analytics, Bing or Clicky |
+| [`seo data`](https://seoskill.dev/docs/data) | Raw Search Console or Bing rows |
+| [`seo analytics`](https://seoskill.dev/docs/analytics) | Landing pages from Google Analytics or Clicky |
 | [`seo crawl`](https://seoskill.dev/docs/crawl) | Technical issues and AI agent access across a site (CLI only) |
 | [`seo internal-links`](https://seoskill.dev/docs/internal-links) | Pages that could link to a page (CLI only) |
 

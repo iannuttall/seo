@@ -17,11 +17,12 @@ generic advice, or they feed it estimates from a keyword tool that has never
 seen your site. Either way you end up with the same pages everyone else is
 publishing. Pages written from a keyword list aren't SEO. They're slop.
 
-This works the other way round. It doesn't tell your agent what to do. It
-gives it the facts: your clicks, impressions and positions from Search
-Console, your visits from Google Analytics or Clicky, your Bing data, the
-dates of Google updates, and a crawl of your site. Your agent works out what
-matters, and you decide what changes.
+This works the other way round. It's a Google Search Console MCP server and
+CLI, and it doesn't tell your agent what to do. It gives it the facts: your
+clicks, impressions and positions from Search Console, your visits from
+Google Analytics or Clicky, your Bing data, the dates of Google updates, and
+a crawl of your site. Your agent works out what matters, and you decide what
+changes.
 
 It's free and open source. Hack around with it. Make it your own.
 
@@ -79,6 +80,17 @@ Why did clicks drop on example.com last month?
 ```
 
 That's it. You're ready to go.
+
+## What you can ask it
+
+- "Why did clicks drop last month? Was it the core update?"
+- "Which pages are close to page one, and what do they rank for?"
+- "Is this page indexed? If not, why not?"
+- "Which searches does this page show up for that it never mentions?"
+- "Can ChatGPT, Claude and Perplexity read my site?"
+- "Who am I up against in search, and is there demand for a 'vs' or alternatives page?"
+
+Your agent picks the commands, reads the results and shows you what it found.
 
 ## Why it exists
 

@@ -15,7 +15,9 @@ write any site copy, metadata included.
   decision.
 - The design is copied from Ian's ilo web app: tokens in
   `src/styles/globals.css`, soft `bg-muted` panels, no borders or shadows.
-  Do not bring back the old brutalist look. Reuse the components in
+  Do not bring back the old brutalist look. Never use uppercase text: no all-caps eyebrows,
+  kickers, labels or headings, and no letter-spaced small caps. Use sentence
+  case. Reuse the components in
   `src/components` (and `docs-prose` for docs) before writing new markup.
 - Docs order, index, breadcrumbs, sitemap and llms.txt all come from
   `src/content/docs-nav.mjs`. The `seo index` page is

@@ -7,6 +7,7 @@ import {
   ChartLineData01Icon,
   FileSearchIcon,
   Key01Icon,
+  News01Icon,
   PieChartIcon,
   Route01Icon,
   Search01Icon,
@@ -20,7 +21,6 @@ import HomeCard from '@/components/HomeCard.astro'
 import SectionHeading from '@/components/SectionHeading.astro'
 import SetupCommands from '@/components/SetupCommands.astro'
 import { getButtonClasses } from '@/components/ui/button'
-import { features } from '@/content/features'
 import { toolIcon } from '@/content/tool-icons'
 import { tools } from '@/content/tools/manifest.mjs'
 import BaseLayout from '@/layouts/BaseLayout.astro'
@@ -44,14 +44,14 @@ const jobs = [
   {
     title: 'See what people ask AI about you',
     icon: AiChat02Icon,
-    text: 'Questions from Google AI Mode and AI assistants already show up in your Search Console. Your agent finds them, groups the rewordings, and shows which page Google picked for each.',
+    text: 'Questions from Google AI Mode and AI assistants already show up in your Search Console. Your agent finds them, groups the rewordings and shows which page Google picked for each.',
     href: '/docs/report',
     link: 'How the SEO report works',
   },
   {
     title: 'Plan pages from real demand',
     icon: SearchList01Icon,
-    text: 'Start from the searches you already appear for. When your agent needs volumes, results pages or competitors, it uses your own DataForSEO or Ahrefs key and keeps those numbers labelled.',
+    text: 'Start from the searches you already show up for, then size the gaps with keyword volumes and competitors from your own Ahrefs or DataForSEO account.',
     href: '/docs/research',
     link: 'How research works',
   },
@@ -61,70 +61,70 @@ const sources = [
   {
     title: 'Search Console',
     icon: Analytics01Icon,
-    text: 'Clicks, impressions, click-through rate and position by query and page. Then quick wins, low click-through rates, pages stuck on page two, decay and cannibalization.',
+    text: 'Clicks, impressions, click-through rate and position for every page and query, plus quick wins, pages stuck on page two, decay and cannibalization.',
     href: '/docs/report',
     link: 'SEO report docs',
   },
   {
     title: 'Google Analytics',
     icon: ChartLineData01Icon,
-    text: 'Sessions for the same dates as Search Console, from Google, from every search engine and from all channels. You can tell a search drop from a drop in all traffic.',
+    text: 'Sessions for the same dates as Search Console, so you can tell a search drop from a drop in all your traffic.',
     href: '/docs/analytics',
     link: 'Analytics docs',
   },
   {
     title: 'Visits from AI assistants',
     icon: AiChat02Icon,
-    text: 'Google Analytics visits from ChatGPT, Perplexity, Claude, Gemini and Copilot, by source, with the pages they land on. An AI app that sends no referrer shows up as Direct.',
+    text: 'Visits from ChatGPT, Perplexity, Claude, Gemini and Copilot, and the pages they land on.',
     href: '/docs/report',
     link: 'SEO report docs',
   },
   {
     title: 'Questions people ask AI',
     icon: SearchList01Icon,
-    text: 'Search Console queries that read like AI conversations: a bare "yes", "what about…", long chat-style questions and agent searches. Rewordings are grouped into one question.',
+    text: 'The questions people ask Google AI Mode and AI assistants that show up in your Search Console, with each set of rewordings grouped into one question.',
     href: '/docs/report',
     link: 'SEO report docs',
   },
   {
     title: 'Bing Webmaster Tools',
     icon: Search01Icon,
-    text: "Bing's clicks and impressions beside Google's for the same dates, and each engine's share. The two are never added together. Runs on your machine with the CLI.",
+    text: "Bing's clicks and impressions beside Google's, so you see each engine's share of your search traffic.",
     href: '/docs/bing',
     link: 'Bing docs',
   },
   {
     title: 'Clicky',
     icon: PieChartIcon,
-    text: 'Landing pages from your Clicky sites, counted the way Clicky counts them. A Clicky visit stays a Clicky visit and never becomes a Google Analytics session.',
+    text: 'Landing pages and traffic sources from your Clicky sites.',
     href: '/docs/analytics',
     link: 'Analytics docs',
   },
   {
     title: 'Google update dates',
     icon: Calendar03Icon,
-    text: 'Known Google updates sit next to your traffic, so your agent can see when the timing lines up. Timing that lines up is not proof, and the result says so.',
+    text: 'Every Google update lined up against your traffic, so you can see at a glance whether a drop matches one.',
     href: '/docs/compare',
     link: 'Compare docs',
   },
   {
     title: 'Index status',
     icon: Alert02Icon,
-    text: 'Google URL Inspection for one page, or for every page that lost its clicks, with the live page checked at the same time.',
+    text: 'Whether Google has indexed a page, checked live, for one page or for every page that lost its clicks.',
     href: '/docs/indexing',
     link: 'Index docs',
   },
   {
     title: 'Site crawl',
     icon: Route01Icon,
-    text: 'Broken pages, redirects, titles, canonicals and internal links, plus what AI bots can read: robots.txt rules, llms.txt and Markdown copies. Runs on your machine.',
+    text: 'Broken pages, redirects, titles, canonicals and internal links, plus what AI crawlers can read on your site.',
     href: '/docs/crawl',
     link: 'Crawl docs',
   },
   {
     title: 'Research with your key',
     icon: Key01Icon,
-    text: 'Keyword volumes, search results, competitors and backlinks from your own DataForSEO or Ahrefs account, labelled as estimates and kept apart from your own data.',
+    text: 'Keyword volumes, search results, competitors and backlinks from your own DataForSEO or Ahrefs account.',
     href: '/docs/research',
     link: 'Research docs',
   },
@@ -143,68 +143,75 @@ const teams = [
   {
     title: 'Agencies',
     icon: Briefcase01Icon,
-    text: "Link each client's Google account on your account page. Every request uses the linked account that can read that site, so one agent can work across all your clients.",
+    text: "Link each client's Google account once. Your agent can then report on any client site from the same chat.",
     href: '/docs/mcp',
     link: 'Set up the hosted MCP',
   },
   {
     title: 'In-house SEO and growth teams',
     icon: UserGroupIcon,
-    text: 'Add it to the cloud agents and CI jobs you already run. One account token gives a fresh machine your Google accounts, Bing and keys with nothing else to set up.',
+    text: 'Add it to the cloud agents and scheduled jobs you already run. One account token gives each new machine your Google accounts and keys.',
     href: '/docs/cloud-agents',
     link: 'Run it in cloud agents',
   },
   {
     title: 'Founders who build with agents',
     icon: Store01Icon,
-    text: 'You already work in Claude Code, Codex or Cursor every day. Connect one URL and ask about your own site in the same session where you build it.',
+    text: 'You already build in Claude Code, Codex or Cursor. Connect one URL and ask about your site in the same session where you ship it.',
     href: '/docs/getting-started',
     link: 'Get started',
   },
+  {
+    title: 'Publishers and large sites',
+    icon: News01Icon,
+    text: 'Thousands of pages and several Google updates a year. See which sections moved, line them up with update dates, and crawl up to 10,000 pages.',
+    href: '/docs/compare',
+    link: 'Compare before and after an update',
+  },
 ]
 
-// The report truth rules from AGENTS.md, in words a buyer can check.
-const rules = [
+// Why the numbers hold up in front of a client or a board.
+const trust = [
   {
-    title: 'Missing data never turns into a zero',
-    text: "Zero, missing, filtered, partial and capped stay separate. A capped source can't support an all-clear.",
+    title: 'Straight from your accounts',
+    text: 'Search Console, Google Analytics, Bing and Clicky, read fresh each time you ask.',
   },
   {
-    title: 'Timing is shown as timing',
-    text: 'When a drop lines up with a Google update, the result shows the dates. It never claims the update caused it.',
+    title: 'Every number has its dates',
+    text: 'Each result says which days it covers, and says so when a source was missing or cut short.',
   },
   {
-    title: 'Heuristics carry a label',
-    text: 'Rules of thumb, such as how brand terms are picked or one H1 per page, are marked as heuristics. None of them is presented as a Google rule.',
+    title: 'Estimates are labelled',
+    text: 'Ahrefs and DataForSEO numbers are marked as research and never mixed into your own data.',
   },
   {
-    title: 'Estimates stay apart from your data',
-    text: 'DataForSEO and Ahrefs numbers are labelled as research and never blended with Search Console or analytics.',
+    title: 'Updates shown against your traffic',
+    text: 'When a drop lines up with a Google update, you see both dates side by side and judge the link yourself.',
   },
 ]
 
 const surfaces = [
   {
     title: 'Hosted MCP',
-    text: 'Free, with Google sign-in and nothing to install. Search Console, Google Analytics, Clicky and research.',
+    text: 'Best for most teams. Sign in with Google and connect one URL, with nothing to install.',
     code: 'seoskill.dev/mcp',
     href: '/docs/mcp',
   },
   {
     title: 'CLI',
-    text: 'Open source and runs on your machine. Adds the site crawl, internal links and Bing.',
+    text: 'For site crawls, Bing and running everything on your own machine. Open source.',
     code: 'npm i -g seo && seo start',
     href: '/docs/cli',
   },
   {
-    title: 'API keys',
-    text: 'Optional. Your own DataForSEO or Ahrefs account. Save the key encrypted, or send it as a header.',
+    title: 'Your research key',
+    text: 'Optional. Add your Ahrefs or DataForSEO key for keyword volumes, competitors and backlinks.',
     code: null,
     href: '/docs/keys',
   },
   {
-    title: 'What is stored',
-    text: 'Your sign-ins and saved keys, encrypted. Never your search data, your reports or a log of your requests.',
+    title: 'Your data',
+    text: 'Sign-ins and keys are encrypted. Your search data is never stored on our servers.',
     code: null,
     href: '/docs/privacy',
   },
@@ -227,37 +234,37 @@ const faqs = [
   {
     question: 'Is it free?',
     answer:
-      'Yes. The hosted MCP and the CLI are free. Research data from DataForSEO or Ahrefs uses your own account with them, so they bill you for what you use.',
+      'Yes. The hosted MCP and the CLI are free. Research from DataForSEO or Ahrefs runs on your own account with them.',
   },
   {
-    question: 'Does it write content or tell me what to fix?',
+    question: 'How is it different from Ahrefs or Semrush?',
     answer:
-      'No. It writes no pages and gives no advice. It returns facts from your data, such as which pages lost clicks or which queries sit at position 4 to 10 with a low click-through rate. Your agent shows you the facts and you decide what to change.',
+      'Ahrefs and Semrush estimate your traffic from their own crawl of the web. SEO Skill reads your real numbers from Search Console, Google Analytics and Bing. If you already pay for Ahrefs or DataForSEO, add your key and your agent uses both, with the estimates labelled.',
   },
   {
     question: 'Can an agency use it for client sites?',
     answer:
-      "Yes. Add each client's Google account on your account page. Each request uses the linked account that can read the site. If none can, the error names your linked accounts so you know which one to add.",
-  },
-  {
-    question: 'What does the hosted MCP store?',
-    answer:
-      'Only your linked Google and Bing accounts, any API keys and Clicky logins you save, encrypted, and the names of machines you link. It never keeps your Search Console or analytics data, your reports or a log of your requests. You can delete everything on your account page.',
+      "Yes. Link each client's Google account on your account page, and your agent can work on any of their sites from one place.",
   },
   {
     question: 'Should I use the hosted MCP or the CLI?',
     answer:
-      'Start with the hosted MCP if you want the quickest setup. Add the CLI when you want everything on your machine, or need the site crawl, internal links or Bing, which only run locally. Your agent tells you when it needs the CLI.',
+      'Start with the hosted MCP. It is the quickest to set up. Add the CLI when you want site crawls or Bing data, and your agent will tell you when it needs it.',
+  },
+  {
+    question: 'What do you store?',
+    answer:
+      'Your sign-ins and any keys you save, encrypted. We never keep your Search Console or analytics data or your reports, and you can delete everything from your account page.',
   },
   {
     question: 'Which agents does it work with?',
     answer:
-      'Any agent that supports remote MCP servers, including Claude Code, Codex, Cursor and Claude on the web. The CLI also adds a skill that teaches your agent which command to run.',
+      'Any agent that supports remote MCP servers, including Claude Code, Codex, Cursor and Claude on the web.',
   },
   {
     question: 'Is it open source?',
     answer:
-      'Yes. The CLI, both MCP servers and this site are on GitHub under the Apache-2.0 license. Read the code, run your own copy, or build a provider for another analytics tool.',
+      'Yes. The CLI, both MCP servers and this site are on GitHub under the Apache-2.0 license.',
   },
 ]
 ---
@@ -284,7 +291,7 @@ const faqs = [
       <div class="site-frame mt-10 sm:mt-12">
         <SetupCommands id="home-setup" />
         <p class="mt-6 text-center text-sm text-foreground-muted">
-          It's free, and you sign in with Google. The server keeps your sign-ins and saved keys, encrypted, and never your search data.
+          Free. Sign in with Google. Your search data is never stored on our servers.
         </p>
       </div>
     </section>
@@ -294,7 +301,7 @@ const faqs = [
         <SectionHeading
           id="why-heading"
           title="What your agent can do with it"
-          text="Ask in plain words. Your agent runs the right report on your own data, and every result ends with the next one to run."
+          text="Ask in plain words. Your agent pulls the right numbers from your own accounts and tells you what changed, where and when."
         />
         <div class="grid grid-cols-1 gap-2 sm:grid-cols-2">
           {
@@ -309,7 +316,7 @@ const faqs = [
         <SectionHeading
           id="sources-heading"
           title="The data your agent works from"
-          text="Your own numbers come first, from accounts you already have. Every result gives its dates and its limits, and each source keeps its own metric names."
+          text="Your own numbers, straight from the accounts you already use, plus research from your own Ahrefs or DataForSEO key."
         />
         <div class="grid grid-cols-1 gap-2 sm:grid-cols-2">
           {
@@ -343,7 +350,7 @@ const faqs = [
         <SectionHeading
           id="teams-heading"
           title="Built for teams that run agents on real sites"
-          text="If search brings in your customers and your agents already ship real work, they should read the same numbers you do."
+          text="If search brings in your customers, your agents should work from the same numbers you do."
         />
         <div class="grid grid-cols-1 gap-2 sm:grid-cols-2">
           {
@@ -357,21 +364,19 @@ const faqs = [
       <section class="site-frame grid gap-8 sm:grid-cols-[1fr_1.15fr] sm:items-start">
         <div class="sm:sticky sm:top-24">
           <h2 class="text-pretty text-2xl font-medium -tracking-[0.4px] text-foreground xl:text-3xl xl:-tracking-[0.6px]">
-            Your agent decides and you approve
+            Numbers you can put in front of a client
           </h2>
           <p class="mt-4 text-base leading-7 text-foreground-muted">
-            SEO Skill gives no advice and writes no pages. It returns facts with
-            their dates and limits. Your agent works out what matters, and you
-            decide what changes. That only works if the facts are careful, so
-            every result follows the same rules.
+            Your agent works from the same numbers you would show a client or
+            your board, so you can act on what it finds.
           </p>
         </div>
         <ul class="divide-y divide-border rounded-lg bg-muted px-6">
           {
-            rules.map((rule) => (
+            trust.map((item) => (
               <li class="py-4">
-                <h3 class="text-sm font-medium text-foreground">{rule.title}</h3>
-                <p class="mt-1 text-sm leading-6 text-foreground-muted">{rule.text}</p>
+                <h3 class="text-base leading-7 font-medium text-foreground">{item.title}</h3>
+                <p class="text-base leading-7 text-foreground-muted">{item.text}</p>
               </li>
             ))
           }
@@ -381,12 +386,11 @@ const faqs = [
       <section class="site-frame grid gap-8 sm:grid-cols-[1fr_1.15fr] sm:items-start">
         <div class="sm:sticky sm:top-24">
           <h2 class="text-pretty text-2xl font-medium -tracking-[0.4px] text-foreground xl:text-3xl xl:-tracking-[0.6px]">
-            Two ways in, same reports
+            Pick how you connect
           </h2>
           <p class="mt-4 text-base leading-7 text-foreground-muted">
-            The hosted MCP and the CLI run the same code and return the same
-            facts. Start with the hosted server. Add the CLI when you want a
-            crawl or Bing (your agent will tell you when it needs it).
+            Most teams start with the hosted MCP. Add the CLI on a machine when
+            you want site crawls or Bing data.
           </p>
         </div>
         <ul class="divide-y divide-border rounded-lg bg-muted px-6">
@@ -398,34 +402,19 @@ const faqs = [
                 href={item.href}
               >
                 <span class="flex items-center justify-between gap-4">
-                  <span class="text-sm font-medium text-foreground group-hover:underline">{item.title}</span>{' '}
+                  <span class="text-base leading-7 font-medium text-foreground group-hover:underline">{item.title}</span>{' '}
                   {item.code ? (
                     <code class="truncate rounded-md bg-background px-2 py-0.5 font-mono text-xs text-foreground-muted">{item.code}</code>
                   ) : (
                     <span aria-hidden="true" class="text-foreground-soft group-hover:text-foreground">&rarr;</span>
                   )}
                 </span>{' '}
-                <span class="mt-1 block text-sm leading-6 text-foreground-muted">{item.text}</span>
+                <span class="block text-base leading-7 text-foreground-muted">{item.text}</span>
               </a>
               </li>
             ))
           }
         </ul>
-      </section>
-
-      <section class="site-frame" aria-labelledby="features-heading">
-        <SectionHeading
-          id="features-heading"
-          title="Pick the SEO job"
-          text="A Search Console MCP, keyword research, a site audit, or the MCP server that ties them together."
-        />
-        <div class="grid grid-cols-1 gap-2 sm:grid-cols-2">
-          {
-            features.map((item) => (
-              <HomeCard title={item.title} text={item.text} icon={item.icon} href={item.path} />
-            ))
-          }
-        </div>
       </section>
 
       <section class="site-frame" aria-labelledby="tools-heading">

@@ -22,8 +22,9 @@ Read before you write:
   no command whose job is to keep them. The agent decides what to store.
 - Free. The hosted server keeps only a person id, linked Google and Bing
   accounts, saved keys, a saved Clicky login, Clicky sites and linked
-  machines, sealed with `SEAL_KEY` in D1. No report data, rows, site lists or
-  request logs. Workers Logs stay off. Any change here must also change
+  machines, sealed with `SEAL_KEY` in D1, plus one row per person, written
+  at sign-up, on how they signed up (`signup_sources`). No report data, rows,
+  site lists or request logs. Workers Logs stay off. Any change here must also change
   `PRIVACY.md` and `apps/mcp/README.md`.
 - Research data never replaces or blends with first-party data.
 

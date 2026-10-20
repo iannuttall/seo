@@ -21,6 +21,7 @@ import {
   revokeGoogle,
 } from './providers.ts'
 import { type Sealed, seal, unseal } from './seal.ts'
+import { firstTouch, userAgentOf } from './signup.ts'
 import {
   accountsOf,
   approveLogin,
@@ -387,7 +388,17 @@ export async function accountCallback(
   if (state.userId && !(await userExists(env, state.userId))) {
     return signInPage(env, 'Your session ended. Sign in again.')
   }
-  const userId = await signInPerson(env, code, state.userId)
+  const userId = await signInPerson(env, code, state.userId, async () => {
+    // A sign-in from a `seo login` link counts as the CLI's.
+    const login = state.link ? await pendingLogin(env, state.link) : null
+    return {
+      entry: state.link ? 'cli' : 'web',
+      client: login?.agent ?? null,
+      clientName: null,
+      userAgent: state.link ? (login?.userAgent ?? null) : userAgentOf(request),
+      ...firstTouch(request),
+    }
+  })
   if (!userId) {
     return signInPage(env, 'Google did not return a sign-in. Try again.')
   }

@@ -1,6 +1,8 @@
+import { agentFromClientName } from '@seo/core/hosted'
 import { view } from './page.ts'
 import { googleSignedIn, googleSignInUrl } from './providers.ts'
 import { type Sealed, seal, sha256Base64Url, unseal } from './seal.ts'
+import { firstTouch, type SignupSource, userAgentOf } from './signup.ts'
 import { createUser, linkAccount, ownerOf, userExists } from './store.ts'
 
 // OAuth for MCP clients, with Google as the sign-in. The client id, sign-in
@@ -104,6 +106,7 @@ export async function register(request: Request, env: Env): Promise<Response> {
     k: 'client',
     redirectUris: uris as string[],
     name,
+    ua: userAgentOf(request),
   })
   return json(
     {
@@ -199,19 +202,20 @@ export async function toGoogle(request: Request, env: Env): Promise<Response> {
   )
 }
 
-// The person who owns a Google account, created on first sign-in. The
-// account's tokens are saved for them.
+// The person who owns a Google account, created on first sign-in with where
+// they came from. The account's tokens are saved for them.
 export async function signInPerson(
   env: Env,
   code: string,
   into: string | null,
+  source: () => Promise<SignupSource>,
 ): Promise<string | null> {
   const signedIn = await googleSignedIn(env, code)
   if (!signedIn) return null
   const userId =
     into ??
     (await ownerOf(env, 'google', signedIn.subject)) ??
-    (await createUser(env))
+    (await createUser(env, await source()))
   await linkAccount(env, userId, {
     provider: 'google',
     subject: signedIn.subject,
@@ -259,7 +263,17 @@ export async function callback(
     back.searchParams.set('error_description', 'Google sign-in was cancelled.')
     return Response.redirect(back.toString(), 302)
   }
-  const userId = await signInPerson(env, code, null)
+  const userId = await signInPerson(env, code, null, async () => {
+    const client = await unseal(env.SEAL_KEY, flow.clientId, 'client')
+    const name = client?.name ?? null
+    return {
+      entry: 'mcp',
+      client: agentFromClientName(name),
+      clientName: name,
+      userAgent: client?.ua ?? null,
+      ...firstTouch(request),
+    }
+  })
   if (!userId) {
     back.searchParams.set('error', 'server_error')
     back.searchParams.set(

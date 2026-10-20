@@ -1,6 +1,6 @@
 # Privacy policy
 
-Last updated: 16 October 2026
+Last updated: 20 October 2026
 
 This policy covers the official `seo` command-line tool, library, MCP server,
 the hosted MCP server at seoskill.dev/mcp with its account page, and the
@@ -10,8 +10,10 @@ In short: the hosted MCP keeps only your linked Google and Bing accounts, any
 API keys and Clicky sites you save and the machines you link, encrypted, so it can fetch your
 own data when you ask. It never
 keeps your Search Console or analytics data, your reports or a log of your
-requests. The only thing kept about your use is an anonymous usage
-count (the event, report, agent, version and week).
+requests. When you first sign up it also notes how you found it: the
+sign-in path, the agent or app, and the site that sent you there. The only
+thing kept about your use is an anonymous usage count (the event, report,
+agent, version and week).
 
 The command-line tool runs on your machine. It does not create an SEO
 account, upload reports to a hosted SEO service, or send reports or connected
@@ -53,6 +55,21 @@ Cloudflare D1 with only these things:
   used. A linked machine asks for short-lived Google and Bing tokens and your
   keys, and makes the Google and Bing requests itself. Nothing it fetches is
   sent back.
+- **How you signed up.** Written once, when your person id is created, and
+  never changed:
+  - the way you signed up: an MCP client, the account page, or `seo login`;
+  - the MCP client's name and its user agent, such as "Claude Code", or for
+    `seo login` the agent running the CLI (when the CLI can tell and usage
+    counts are on) and the CLI's user agent; for the account page, your
+    browser's user agent;
+  - if you visited the seoskill.dev website first in the same browser: the
+    host name of the site that sent you (such as a search engine, never the
+    full address), the first page you opened on seoskill.dev without its
+    query string, and any `utm_source`, `utm_medium` and `utm_campaign` tags
+    in that link.
+
+  It holds no IP address, country or email address. It shows which paths
+  bring people to SEO Skill, and it is counted only in totals.
 
 Every token and key is encrypted with a server key before it is written. The
 tokens are used only to fetch your own data when you or your agent ask for
@@ -71,7 +88,8 @@ Request logs are turned off.
   you sign in with Google to see your linked accounts, keys and machines,
   add or remove them, approve a `seo login`, and make a token for a cloud
   agent. It sets one essential cookie that holds your
-  encrypted person id for up to 30 days.
+  encrypted person id for up to 30 days. The `seo_first` website cookie
+  described below is read once, when you first sign up.
 - **Outside services.** Google answers its own requests. The provider you
   choose receives your research request under its own policy. Clicky
   receives the site ID, sitekey, report types and dates for a Clicky request,
@@ -88,7 +106,7 @@ Request logs are turned off.
 
 Sign in at [seoskill.dev/account](https://seoskill.dev/account) and choose
 **Delete everything**. It deletes your person id, linked accounts, keys,
-Clicky sites and linked machines,
+Clicky sites, linked machines and how you signed up,
 and revokes the Google sign-ins. Your agents will ask you to sign in again if
 you use the hosted server later. You can also revoke SEO Skill in your
 [Google Account connections](https://myaccount.google.com/connections), which
@@ -311,6 +329,14 @@ The seoskill.dev website uses [Clicky](https://clicky.com/terms/privacy) to
 count visits and see which pages people use. Tracking cookies are disabled in
 the website code. Clicky receives normal browser and request information such
 as the page, referrer, device, and IP address.
+
+On your first visit, the website sets one first-party cookie, `seo_first`,
+for 30 days. It holds the host name of the site that sent you (never the full
+address), the first page you opened without its query string, and any
+`utm_source`, `utm_medium` and `utm_campaign` tags in that link. Later visits
+never change it, and it is not set when your browser sends Global Privacy
+Control. It is not sent to anyone else. The hosted MCP server reads it only
+when you first sign up, as described above.
 
 The website host and security provider may also process normal web request
 data such as an IP address, user agent, requested path, and timestamp. Website

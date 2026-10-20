@@ -1,8 +1,10 @@
 import { seal, unseal } from './seal.ts'
+import type { SignupSource } from './signup.ts'
 
 // The D1 store: people, their linked Google and Bing accounts, their
-// research keys and the machines they linked with `seo login`. Refresh tokens, access tokens and keys are sealed with
-// SEAL_KEY before they are written. Nothing else is kept.
+// research keys, the machines they linked with `seo login` and where they
+// came from at sign-up. Refresh tokens, access tokens and keys are sealed
+// with SEAL_KEY before they are written. Nothing else is kept.
 
 export type Provider = 'google' | 'bing'
 
@@ -54,11 +56,37 @@ export async function ownerOf(
   return row?.user_id ?? null
 }
 
-export async function createUser(env: Env): Promise<string> {
+// A new person, with where they came from. The source row is written once
+// here and never updated.
+export async function createUser(
+  env: Env,
+  source: SignupSource,
+): Promise<string> {
   const id = crypto.randomUUID()
-  await env.DB.prepare('INSERT INTO users (id, created_at) VALUES (?, ?)')
-    .bind(id, Date.now())
-    .run()
+  const now = Date.now()
+  await env.DB.batch([
+    env.DB.prepare('INSERT INTO users (id, created_at) VALUES (?, ?)').bind(
+      id,
+      now,
+    ),
+    env.DB.prepare(
+      `INSERT INTO signup_sources (user_id, created_at, entry, client, client_name, user_agent,
+         referrer_host, landing_path, utm_source, utm_medium, utm_campaign)
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+    ).bind(
+      id,
+      now,
+      source.entry,
+      source.client,
+      source.clientName,
+      source.userAgent,
+      source.referrerHost,
+      source.landingPath,
+      source.utmSource,
+      source.utmMedium,
+      source.utmCampaign,
+    ),
+  ])
   return id
 }
 
@@ -211,6 +239,7 @@ export async function deleteUser(env: Env, userId: string): Promise<void> {
     env.DB.prepare('DELETE FROM keys WHERE user_id = ?').bind(userId),
     env.DB.prepare('DELETE FROM cli_links WHERE user_id = ?').bind(userId),
     env.DB.prepare('DELETE FROM accounts WHERE user_id = ?').bind(userId),
+    env.DB.prepare('DELETE FROM signup_sources WHERE user_id = ?').bind(userId),
     env.DB.prepare('DELETE FROM users WHERE id = ?').bind(userId),
   ])
 }
@@ -226,6 +255,9 @@ export type CliLink = {
   code: string | null
   createdAt: number
   usedAt: number | null
+  // The CLI's agent and user agent, kept only until approval.
+  agent: string | null
+  userAgent: string | null
 }
 
 type CliLinkRow = {
@@ -235,6 +267,8 @@ type CliLinkRow = {
   code: string | null
   created_at: number
   used_at: number | null
+  agent?: string | null
+  user_agent?: string | null
 }
 
 const cliLink = (row: CliLinkRow): CliLink => ({
@@ -244,13 +278,21 @@ const cliLink = (row: CliLinkRow): CliLink => ({
   code: row.code,
   createdAt: row.created_at,
   usedAt: row.used_at,
+  agent: row.agent ?? null,
+  userAgent: row.user_agent ?? null,
 })
 
 // A new link: waiting for approval when it has a code, else already the
 // person's (a token made on the account page).
 export async function createCliLink(
   env: Env,
-  input: { label: string; code: string | null; userId: string | null },
+  input: {
+    label: string
+    code: string | null
+    userId: string | null
+    agent?: string | null
+    userAgent?: string | null
+  },
 ): Promise<string> {
   const id = crypto.randomUUID()
   await env.DB.batch([
@@ -258,8 +300,16 @@ export async function createCliLink(
       'DELETE FROM cli_links WHERE code IS NOT NULL AND created_at < ?',
     ).bind(Date.now() - LOGIN_TTL),
     env.DB.prepare(
-      'INSERT INTO cli_links (id, user_id, label, code, created_at) VALUES (?, ?, ?, ?, ?)',
-    ).bind(id, input.userId, input.label, input.code, Date.now()),
+      'INSERT INTO cli_links (id, user_id, label, code, created_at, agent, user_agent) VALUES (?, ?, ?, ?, ?, ?, ?)',
+    ).bind(
+      id,
+      input.userId,
+      input.label,
+      input.code,
+      Date.now(),
+      input.agent ?? null,
+      input.userAgent ?? null,
+    ),
   ])
   return id
 }
@@ -293,7 +343,7 @@ export async function approveLogin(
   userId: string,
 ): Promise<boolean> {
   const result = await env.DB.prepare(
-    'UPDATE cli_links SET user_id = ? WHERE code = ? AND user_id IS NULL AND created_at > ?',
+    'UPDATE cli_links SET user_id = ?, agent = NULL, user_agent = NULL WHERE code = ? AND user_id IS NULL AND created_at > ?',
   )
     .bind(userId, code, Date.now() - LOGIN_TTL)
     .run()

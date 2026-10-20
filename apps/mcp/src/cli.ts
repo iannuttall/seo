@@ -2,6 +2,7 @@ import { CLICKY_ACCOUNT_KEY } from '@seo/core/commands'
 import { refreshClicky } from './clicky.ts'
 import { freshAccess } from './google.ts'
 import { seal, unseal } from './seal.ts'
+import { cliAgent, userAgentOf } from './signup.ts'
 import {
   accountsOf,
   cliLinkById,
@@ -48,13 +49,22 @@ export async function startLogin(
 ): Promise<Response> {
   const body = (await request.json().catch(() => null)) as {
     label?: unknown
+    agent?: unknown
   } | null
   const label =
     typeof body?.label === 'string' && body.label.trim()
       ? body.label.trim().slice(0, 60)
       : 'A machine'
   const code = newCode()
-  const linkId = await createCliLink(env, { label, code, userId: null })
+  // The agent running the CLI, when it knows, and its user agent: kept only
+  // until approval, for a first sign-in from this link.
+  const linkId = await createCliLink(env, {
+    label,
+    code,
+    userId: null,
+    agent: cliAgent(body?.agent),
+    userAgent: userAgentOf(request),
+  })
   return json({
     device: await seal(env.SEAL_KEY, {
       k: 'cli-device',

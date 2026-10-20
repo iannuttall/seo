@@ -112,6 +112,13 @@ A small Cloudflare D1 database (`migrations/`) keeps only:
   only to read your Clicky site list,
 - machines linked with `seo login` (a name from the host name and the date
   last used).
+- how you signed up, written once when your person id is created: the path
+  (MCP client, account page or `seo login`), the MCP client's name and user
+  agent or the agent running the CLI, and, if you visited seoskill.dev first
+  in that browser, the referring site's host name, the first page's path and
+  any `utm_*` tags. These come from the site's `seo_first` cookie. No IP
+  address, country or email (`migrations/0003_signup_sources.sql`,
+  `src/signup.ts`).
 
 Tokens and keys are sealed with AES-GCM under `SEAL_KEY` before they are
 written. They are used only to fetch your own data when you ask. The token
@@ -119,7 +126,9 @@ your MCP client keeps, and the account page cookie, hold only your sealed
 person id.
 
 There are no reports, Search Console or analytics rows, site lists or
-request logs. Workers Logs are off. **Delete everything** on the account page
+request logs. Workers Logs are off. Read sign-ups as totals only with
+`pnpm --filter @seo/hosted-mcp run signups` (by day, path, client, referring
+site, landing page and `utm_*`). **Delete everything** on the account page
 removes every row for you and revokes the Google sign-ins, so your agents
 ask you to sign in again. You can also remove access in your
 [Google account](https://myaccount.google.com/connections).

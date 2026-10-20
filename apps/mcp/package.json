@@ -6,6 +6,7 @@
   "scripts": {
     "deploy": "wrangler deploy",
     "dev": "wrangler dev",
+    "signups": "node scripts/signups.mjs",
     "test": "node --test src/*.test.ts",
     "typecheck": "wrangler types src/worker-configuration.d.ts --include-runtime false --env-file .dev.vars.example --check && tsc -p tsconfig.json",
     "types": "wrangler types src/worker-configuration.d.ts --include-runtime false --env-file .dev.vars.example"

@@ -1,5 +1,21 @@
 # Changelog
 
+## Unreleased
+
+### Added
+
+- The Google Analytics part of `seo report` and `seo compare` shows Organic
+  Search sessions by search engine, such as Google, Bing, Yahoo and
+  DuckDuckGo. It works on the hosted MCP too, so sites that get most of
+  their search visits from Bing can see it there.
+- When Bing sends more clicks than Google, the report overview in the CLI
+  and local MCP adds Bing's own overview: totals against the previous
+  period, and the pages and queries that gained or lost the most Bing
+  clicks. Pages and queries that left Bing's top list are listed as unknown,
+  not zero.
+- `seo report --site <site>` runs a Bing report for a site that is in your
+  Bing account but has no Search Console property.
+
 ## 0.8.2
 
 ### Added

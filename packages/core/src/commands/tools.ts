@@ -2,7 +2,7 @@ import { z } from 'zod'
 import { analyticsSignIn, runAnalyticsRows } from './analytics.js'
 import { runBingRows } from './bing.js'
 import { clickyLabel, clickySites, runClickyRows } from './clicky.js'
-import { runReport, SECTION_IDS, SECTIONS } from './report.js'
+import { runBingReport, runReport, SECTION_IDS, SECTIONS } from './report.js'
 import {
   RESEARCH_ACTIONS,
   RESEARCH_HELP,
@@ -141,15 +141,32 @@ export const SHARED_TOOLS: SharedTool[] = [
       ...dates,
       ...detail,
     }),
-    run: async (surface, input) =>
-      runReport(
+    run: async (surface, input) => {
+      // A site with no Search Console property can still have Bing, on a
+      // surface that reads Bing.
+      const resolved = await surface
+        .resolveSite(input.site)
+        .catch((error: unknown) =>
+          error instanceof Error ? error : new Error(String(error)),
+        )
+      if (resolved instanceof Error && !input.section && surface.deps.bing) {
+        return runBingReport(
+          {
+            site: input.site,
+            startDate: input.start_date,
+            endDate: input.end_date,
+          },
+          surface.deps,
+        ).catch(() => {
+          throw resolved
+        })
+      }
+      // The bing section needs only Bing: without a Google property it shows
+      // the Bing rows and says Google was not available.
+      if (resolved instanceof Error && input.section !== 'bing') throw resolved
+      return runReport(
         {
-          // The bing section needs only Bing: without a Google property it
-          // shows the Bing rows and says Google was not available.
-          site:
-            input.section === 'bing'
-              ? await surface.resolveSite(input.site).catch(() => input.site)
-              : await surface.resolveSite(input.site),
+          site: resolved instanceof Error ? input.site : resolved,
           section: input.section,
           startDate: input.start_date,
           endDate: input.end_date,
@@ -157,7 +174,8 @@ export const SHARED_TOOLS: SharedTool[] = [
           offset: input.offset,
         },
         surface.deps,
-      ),
+      )
+    },
   }),
   tool({
     name: 'seo_page',

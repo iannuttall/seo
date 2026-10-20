@@ -12,6 +12,8 @@ import { analyticsBeside } from './analytics-site.js'
 import {
   type BingSource,
   bingFor,
+  bingOverview,
+  bingOverviewText,
   bingSection,
   bingTotals,
   enginesText,
@@ -32,12 +34,13 @@ import {
   sharedReader,
   UPDATE_PADDING_DAYS,
 } from './shared.js'
-import type {
-  Caller,
-  CommandDeps,
-  CommandResult,
-  DateRange,
-  PageFacts,
+import {
+  type Caller,
+  type CommandDeps,
+  CommandError,
+  type CommandResult,
+  type DateRange,
+  type PageFacts,
 } from './types.js'
 
 // The main report: one overview plus sections, each from the same report
@@ -335,6 +338,32 @@ async function enginesLine(
   }
 }
 
+// When Bing sends more clicks than Google for the same dates, Bing's own
+// overview follows, so a site that lives on Bing gets the same picture.
+async function bingLead(
+  overview: Record<string, unknown>,
+  bing: () => Promise<BingSource>,
+  origin: string,
+  rowsPerList: number,
+): Promise<{ text: string; data: Record<string, unknown> } | null> {
+  const range = overview.range as DateRange
+  const before = overview.comparisonRange as DateRange
+  const google = (overview.summary as { clicks: number }).clicks
+  try {
+    const source = await bing()
+    if (!source.call) return null
+    const totals = await bingTotals(source, range, before)
+    if ('missing' in totals || totals.current.clicks <= google) return null
+    const report = await bingOverview(source, range, before)
+    return {
+      text: `## Bing\n${bingOverviewText(report, `Bing sends more clicks than Google here, so here is Bing's overview of ${totals.site}`, origin, rowsPerList)}`,
+      data: report,
+    }
+  } catch {
+    return null
+  }
+}
+
 // One way to run each section: brand terms, minimums and the comparison
 // period are automatic and shown in the output.
 async function build(
@@ -511,6 +540,8 @@ async function allSections(
   }
   const parts = [overviewText(overview, `Report on ${input.site}`, origin, 5)]
   parts.push(deps.bing ? await enginesLine(overview, bing) : NO_BING_HERE)
+  const bingFirst = deps.bing ? await bingLead(overview, bing, origin, 5) : null
+  if (bingFirst) parts.push(bingFirst.text)
   const ga = await analytics
   if (ga) parts.push(ga.text)
   const brand = rest.find(
@@ -551,6 +582,7 @@ async function allSections(
       site: input.site,
       overview,
       ...(ga ? { analytics: ga.data } : {}),
+      ...(bingFirst ? { bingOverview: bingFirst.data } : {}),
       sections,
     },
   }
@@ -583,11 +615,16 @@ async function oneSection(
       earlierRange(range),
     )
     if (ga) report.analytics = ga.data
+    const bingFirst = deps.bing
+      ? await bingLead(report, bing, origin, 10)
+      : null
+    if (bingFirst) report.bingOverview = bingFirst.data
     if (detail !== 'full') {
       return {
         text: [
           overviewText(report, `overview of ${site}`, origin, 10),
           deps.bing ? await enginesLine(report, bing) : NO_BING_HERE,
+          bingFirst?.text,
           ga?.text,
           `More: ${deps.call('report', { site, section, detail: 'full' })} for every row.`,
           next,
@@ -683,4 +720,37 @@ export function runReport(
   return input.section
     ? oneSection({ ...input, section: input.section }, deps)
     : allSections(input, deps)
+}
+
+// The report for a site that has no Search Console property but is in the
+// connected Bing account: Bing's overview, with Google Analytics beside it.
+export async function runBingReport(
+  input: DateInput & { site: string },
+  deps: CommandDeps,
+): Promise<CommandResult> {
+  const range = dateWindow(input, DEFAULT_DAYS.overview)
+  const before = earlierRange(range)
+  const source = await bingFor(deps, input.site)
+  if (!source.call) throw new CommandError('NOT_CONNECTED', source.missing)
+  const [report, ga] = await Promise.all([
+    bingOverview(source, range, before),
+    analyticsBeside(deps.analytics, source.site, range, before),
+  ])
+  if (ga) report.analytics = ga.data
+  return {
+    text: [
+      bingOverviewText(
+        report,
+        `Bing report on ${source.site}. No Search Console property covers this site, so this report uses Bing`,
+        originOf(source.site),
+        10,
+      ),
+      ga?.text,
+      `More: ${deps.call('data', { source: 'bing', site: input.site, dimensions: 'page' })} for every Bing page, or the same with query.`,
+      FACTS_ONLY.replace('Search Console', 'Bing Webmaster Tools'),
+    ]
+      .filter(Boolean)
+      .join('\n\n'),
+    data: report,
+  }
 }

@@ -14,6 +14,7 @@ import {
   RESEARCH_PROVIDERS,
   type ResearchAction,
   type ResearchProvider,
+  runBingReport,
   runBingRows,
   runClickyRows,
   runCompare,
@@ -155,7 +156,24 @@ export const reportCommand = defineCommand({
     const site =
       section === 'bing'
         ? await property(args, target).catch(() => requireSite(target))
-        : await property(args, target)
+        : await property(args, target).catch(async (error: unknown) => {
+            // A site with no Search Console property can still have Bing.
+            if (section || !target) throw error
+            await run(args, (deps) =>
+              runBingReport(
+                {
+                  site: requireSite(target),
+                  startDate: stringArg(args['start-date']),
+                  endDate: stringArg(args['end-date']),
+                },
+                deps,
+              ).catch(() => {
+                throw error
+              }),
+            )
+            return null
+          })
+    if (site === null) return
     await run(args, (deps) =>
       runReport(
         {

@@ -26,12 +26,12 @@ seo report --site example.com
 
 Without a section, the report returns the overview: clicks, impressions, click-through rate and average position against the previous period, split by device, with the top pages and queries and how they changed. It also returns each section's row count and its top rows, so you can see which section is worth opening.
 
-If [Bing is connected](/docs/bing) in the CLI or the local MCP server, the overview also shows Google and Bing clicks and impressions for the same dates, and each engine's share of those clicks. The two are never added together.
+If [Bing is connected](/docs/bing) in the CLI or the local MCP server, the overview also shows Google and Bing clicks and impressions for the same dates, and each engine's share of those clicks. The two are never added together. When Bing sends more clicks than Google, Bing's own overview follows, with the pages and queries that moved.
 
 The overview also shows your Google Analytics sessions for the same dates. You do not pick the property: the report finds the one whose web stream matches the site, names it, and shows:
 
 - Organic Search sessions from Google, the number to set beside Search Console clicks.
-- Organic Search sessions from every search engine, Bing and DuckDuckGo included.
+- Organic Search sessions from every search engine, Bing and DuckDuckGo included, and how many each engine sent.
 - Sessions from all channels, so you can tell a search drop from a drop in all traffic.
 - Visits from AI assistants such as ChatGPT, Perplexity, Claude, Gemini and Copilot, by source, with the pages they land on. Only visits that pass a referrer or tag count. An AI app that sends neither shows as Direct.
 

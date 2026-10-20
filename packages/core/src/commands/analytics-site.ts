@@ -238,7 +238,7 @@ async function totals(
     ...onPages,
     filter('sessionSource', AI_SOURCE_PATTERN, 'FULL_REGEXP'),
   ]
-  const [channels, google, aiSources, aiPages] = await Promise.all([
+  const [channels, google, aiSources, aiPages, engines] = await Promise.all([
     read(['sessionDefaultChannelGroup'], onPages),
     read(
       [],
@@ -250,6 +250,10 @@ async function totals(
     ),
     read(['sessionSource'], fromAi),
     read(['landingPage'], fromAi),
+    read(
+      ['sessionSource'],
+      [...onPages, filter('sessionDefaultChannelGroup', 'Organic Search')],
+    ),
   ])
   const sum = () => ({
     google: { sessions: 0, keyEvents: 0 } as Totals,
@@ -321,6 +325,9 @@ async function totals(
       )
   }
   const bySource = byName(aiSources, 'source')
+  // Organic Search sessions by search engine, as Google Analytics names
+  // each source, so a site that lives on Bing shows it here too.
+  const byEngine = byName(engines, 'source')
   const aiNow = bySource.reduce((total, row) => total + row.sessions, 0)
   const aiBefore = bySource.reduce(
     (total, row) => total + row.previousSessions,
@@ -329,12 +336,20 @@ async function totals(
   const data = {
     metadata: {
       timeZone: channels.metadata?.timeZone,
-      subjectToThresholding: [channels, google, aiSources, aiPages].some(
-        (data) => data.metadata?.subjectToThresholding,
-      ),
-      dataLossFromOtherRow: [channels, google, aiSources, aiPages].some(
-        (data) => data.metadata?.dataLossFromOtherRow,
-      ),
+      subjectToThresholding: [
+        channels,
+        google,
+        aiSources,
+        aiPages,
+        engines,
+      ].some((data) => data.metadata?.subjectToThresholding),
+      dataLossFromOtherRow: [
+        channels,
+        google,
+        aiSources,
+        aiPages,
+        engines,
+      ].some((data) => data.metadata?.dataLossFromOtherRow),
     },
   }
   const notes: string[] = []
@@ -385,6 +400,7 @@ async function totals(
         periods.before.all.sessions,
       ),
     },
+    organicSearchByEngine: byEngine.slice(0, 10),
     aiAssistants: {
       sessions: aiNow,
       previousSessions: aiBefore,
@@ -401,6 +417,16 @@ const change = (value: number | null) =>
   value === null ? 'n/a' : `${value > 0 ? '+' : ''}${value}%`
 
 type AiRow = { sessions: number; previousSessions: number }
+
+// Organic Search sessions by engine, when more than Google sends visits.
+function engineText(rows: (AiRow & { source?: unknown })[]): string {
+  const shown = rows.filter((row) => row.sessions || row.previousSessions)
+  if (shown.length < 2) return ''
+  return `Organic Search sessions by search engine: ${shown
+    .slice(0, AI_ROWS)
+    .map((row) => `${row.source} ${row.sessions} (was ${row.previousSessions})`)
+    .join(', ')}.`
+}
 
 // Visits from AI assistants, by source and landing page.
 function aiText(ai: {
@@ -476,6 +502,7 @@ export async function analyticsBeside(
     return {
       text: [
         `Google Analytics, property ${data.propertyName} (${data.property}), matched by its web stream ${data.webStream}${pages ? `, landing pages whose path contains "${pages}"` : ''}: Organic Search sessions from Google ${google.sessions} (was ${google.previousSessions}, ${change(google.sessionsChangePct)}), from every search engine ${organic.sessions} (was ${organic.previousSessions}, ${change(organic.sessionsChangePct)})${keyEvents}, sessions from all channels ${all.sessions} (was ${all.previousSessions}, ${change(all.sessionsChangePct)}).`,
+        engineText(data.organicSearchByEngine),
         'Sessions are Google Analytics’ own count, not Search Console clicks.',
         ...data.notes,
         ...(others.length
@@ -484,6 +511,7 @@ export async function analyticsBeside(
             ]
           : []),
       ]
+        .filter(Boolean)
         .join(' ')
         .concat('\n\n', aiText(data.aiAssistants)),
       data: { ...data, ...(others.length ? { otherMatches: others } : {}) },

@@ -40,6 +40,10 @@ seo providers bing disconnect
 
 Run the [main report](/docs/report) as usual. The overview gains a line with Google (Search Console) and Bing clicks and impressions for the same dates, and each engine's share of those clicks. If Bing is not connected, the line says so and how to connect it.
 
+When Bing sends more clicks than Google for those dates, the overview also shows Bing's own overview: its totals against the previous period, and the pages and queries that gained or lost the most Bing clicks. Some sites get almost all of their search visits from Bing, and this gives them the same picture that Google sites get.
+
+If a site is in your Bing account but has no Search Console property, `seo report --site example.com` runs a Bing report for it instead of stopping with an error.
+
 The `bing` section lists Bing's top queries with Google's clicks, impressions and position for the same query beside them, and the same for pages:
 
 ```sh
@@ -56,7 +60,7 @@ With the local MCP server, ask your agent for the Bing section or for raw Bing r
 
 ## Bing with the hosted MCP
 
-When you ask the hosted MCP for Bing, it tells your agent to run the CLI instead. An agent with a shell links the CLI to your account once (you approve it in your browser), then runs the Bing section:
+The hosted MCP cannot read Bing Webmaster Tools, because Bing blocks the network it runs on. If you connect Google Analytics, the report still shows your search visits by engine, so you can see how many come from Bing, Yahoo or DuckDuckGo. For Bing's own queries and pages, the hosted MCP tells your agent to run the CLI instead. An agent with a shell links the CLI to your account once (you approve it in your browser), then runs the Bing section:
 
 ```sh
 npx -y seo login

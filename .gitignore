@@ -15,3 +15,6 @@ coverage
 .conductor/settings.local.toml
 /docs/
 /apps/web/public/.well-known/agent-skills/
+
+# Local Codex config
+.codex/

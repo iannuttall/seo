@@ -1185,13 +1185,13 @@ const RULE_DEFINITIONS = [
   },
   {
     id: 'markdown_alternate_on_private_page',
-    title: 'Private page links to a Markdown copy',
+    title: 'Signed-in page links to a Markdown copy',
     category: 'agents',
     defaultSeverity: 'medium',
     whyItMatters:
-      'Only public pages should have a Markdown copy. This page needs a sign-in or is kept out of search, yet it links to one. A copy of a signed-in page can show content to agents that a signed-out visitor cannot see, and a broken copy wastes their requests.',
+      'Signed-in pages should have no Markdown copy. This page needs a sign-in, yet it links to one. A copy can show agents content that a signed-out visitor cannot see, or fail and waste their requests.',
     howToFix:
-      'Remove the rel="alternate" Markdown link, the Link header and any Markdown copy for signed-in and private routes. Keep them for public pages only.',
+      'Remove the rel="alternate" Markdown link, the Link header and any Markdown copy for signed-in routes. Public pages keep theirs, including noindex pages such as privacy and terms.',
     impactIfIgnored:
       'Agents can request a copy that fails, or read content that was meant to stay behind a sign-in.',
     howToVerify:
@@ -1209,7 +1209,7 @@ const RULE_DEFINITIONS = [
     category: 'agents',
     defaultSeverity: 'medium',
     whyItMatters:
-      'A public page links to a Markdown copy that returns an error or HTML, so an agent that follows the link gets nothing useful.',
+      'The page links to a Markdown copy that returns an error or HTML, so an agent that follows the link gets nothing useful. If the page needs a sign-in, remove the link instead.',
     howToFix:
       'Make the linked URL return the page as text/markdown, or fix the link.',
     impactIfIgnored:

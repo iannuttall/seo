@@ -38,7 +38,7 @@ A `noindex` tag or a canonical pointing elsewhere is reported as what the page s
 The crawl also checks how AI agents get to your site:
 
 - Which AI search bots (such as OAI-SearchBot, Claude-SearchBot and PerplexityBot) and which AI training bots (such as GPTBot and ClaudeBot) your robots.txt allows. The two groups are listed apart, because blocking training is a choice and blocking search keeps you out of AI answers.
-- Whether your pages have a Markdown copy: through a `rel="alternate"` link, or for a request with `Accept: text/markdown`. Only public pages should have one, so the crawl reports a signed-in or private page that links to a copy.
+- Whether your pages have a Markdown copy: through a `rel="alternate"` link, or for a request with `Accept: text/markdown`. Every public page can have one, including noindex pages such as privacy and terms. The crawl reports a page that needs a sign-in and still links to a copy.
 - Whether `/llms.txt` exists and its links load.
 - Agent files under `/.well-known/`, such as an agent skills index or an MCP server card, plus the `Content-Signal` and `Link` headers.
 

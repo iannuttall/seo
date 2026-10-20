@@ -45,7 +45,7 @@ function markdown(ai: Ai): SemanticDiagnostic {
       ? `Accept: text/markdown returns ${negotiation.contentType || 'no content type'}.`
       : `Accept: text/markdown could not be checked (${negotiation?.availability ?? 'not checked'}).`
   const linked = copies
-    ? ` ${copies.publicPagesWithLink} of ${copies.publicPages} public pages link to a Markdown copy${copies.privatePagesWithLink ? `, and ${copies.privatePagesWithLink} private pages do` : ''}. ${copies.checked} copies checked, ${copies.broken.length} broken.${copies.largest ? ` Largest checked copy: about ${copies.largest.estimatedTokens} tokens.` : ''}`
+    ? ` ${copies.publicPagesWithLink} of ${copies.publicPages} public pages link to a Markdown copy${copies.privatePagesWithLink ? `, and ${copies.privatePagesWithLink} signed-in pages do` : ''}. ${copies.checked} copies checked, ${copies.broken.length} broken.${copies.largest ? ` Largest checked copy: about ${copies.largest.estimatedTokens} tokens.` : ''}`
     : ''
   return {
     status:

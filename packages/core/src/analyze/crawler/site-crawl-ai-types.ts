@@ -68,8 +68,8 @@ export type CrawlAiSignals = {
     varyAccept: boolean
     error?: string
   }
-  // Markdown copies that crawled pages link to. Public pages are indexable
-  // HTML pages; every other page is private.
+  // Markdown copies that crawled pages link to. A public page loads without
+  // a sign-in, whether or not it is noindex.
   markdownCopies?: {
     publicPages: number
     publicPagesWithLink: number

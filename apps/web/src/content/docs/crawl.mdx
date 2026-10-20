@@ -1,6 +1,6 @@
 ---
 title: Technical SEO site crawl
-description: Crawl your site with seo crawl on your own machine and list technical issues such as broken pages, redirects, titles, canonicals and noindex tags.
+description: Crawl your site with seo crawl on your own machine and list technical issues such as broken pages, redirects, titles, canonicals and noindex tags, plus what AI agents can read.
 heading: seo crawl
 lead: Crawl your site from your own machine and list technical issues. CLI only.
 ---
@@ -32,5 +32,16 @@ seo crawl --sitemap-url https://example.com/sitemap.xml --health
 The crawl fetches your pages and lists what it finds, such as pages that return errors, redirects, missing or duplicate titles and descriptions, canonical and robots tags, and broken internal links. Nothing is saved: the result comes back in full, and your agent keeps what it needs (add `--json --output crawl.json` to write it to a file).
 
 A `noindex` tag or a canonical pointing elsewhere is reported as what the page says. It is only a problem if you did not mean it.
+
+## What AI agents can read
+
+The crawl also checks how AI agents get to your site:
+
+- Which AI search bots (such as OAI-SearchBot, Claude-SearchBot and PerplexityBot) and which AI training bots (such as GPTBot and ClaudeBot) your robots.txt allows. The two groups are listed apart, because blocking training is a choice and blocking search keeps you out of AI answers.
+- Whether your pages have a Markdown copy: through a `rel="alternate"` link, or for a request with `Accept: text/markdown`. Only public pages should have one, so the crawl reports a signed-in or private page that links to a copy.
+- Whether `/llms.txt` exists and its links load.
+- Agent files under `/.well-known/`, such as an agent skills index or an MCP server card, plus the `Content-Signal` and `Link` headers.
+
+None of these change your Google rankings. They decide how easily ChatGPT, Claude and other agents can read and quote you. If a file could not be fetched, the crawl says so instead of calling it missing.
 
 To see which pages lost search clicks rather than which pages have issues, use [`seo index`](/docs/indexing).

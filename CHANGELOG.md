@@ -10,6 +10,15 @@
   limits and the command to run next.
 - "Not signed in" now says that `seo crawl --url` works without sign-in.
 
+### Added
+
+- `seo crawl` checks what AI agents can read: AI search and training bots
+  in robots.txt (listed apart), Markdown copies of public pages, llms.txt and
+  its links, agent files under `/.well-known/`, and the `Content-Signal` and
+  `Link` headers. It reports a private or signed-in page that links to a
+  Markdown copy. A file that could not be fetched is reported as unknown,
+  not missing.
+
 ## 0.7.1
 
 ### Fixed

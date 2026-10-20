@@ -18,7 +18,7 @@ type RuleDefinition = {
     | 'security'
     | 'social'
     | 'structured-data'
-    | 'geo'
+    | 'agents'
   defaultSeverity: 'low' | 'medium' | 'high'
   whyItMatters: string
   howToFix: string
@@ -1081,6 +1081,145 @@ const RULE_DEFINITIONS = [
     howToVerify:
       'Re-run the crawl and confirm twitterCard is present if a specific X preview is required.',
   },
+  {
+    id: 'ai_search_bot_blocked',
+    title: 'robots.txt blocks AI search bots',
+    category: 'agents',
+    defaultSeverity: 'medium',
+    whyItMatters:
+      "AI search bots fetch pages to answer a person's question and cite the source. A blocked bot cannot read the site, so its answers cannot quote or link to it. Training bots are a separate choice and are listed apart.",
+    howToFix:
+      'Allow the AI search and user bots in robots.txt if the site should appear in AI answers. Block training bots separately if the person wants that.',
+    impactIfIgnored:
+      'ChatGPT, Claude, Perplexity and similar tools can leave the site out of answers and citations.',
+    howToVerify:
+      'Re-run the crawl and confirm the search bots in ai.robotsTxt.botAccess show allowed: true.',
+    review: {
+      question: 'Is the site meant to be left out of AI search answers?',
+      changeOnlyIf:
+        'Change robots.txt when the person wants the site to appear in AI answers.',
+      ifNotNeeded:
+        'Record that blocking AI search bots is a deliberate choice for this site.',
+    },
+    agentHints: {
+      evidenceFields: ['report.ai.robotsTxt.botAccess'],
+    },
+  },
+  {
+    id: 'llms_txt_missing',
+    title: 'No llms.txt',
+    category: 'agents',
+    defaultSeverity: 'low',
+    whyItMatters:
+      'llms.txt gives agents a short summary of the site and links to its main pages, ideally their Markdown copies. Search engines do not use it for ranking.',
+    howToFix:
+      'Publish /llms.txt as plain text with a one-line summary and sections of links to the main pages.',
+    impactIfIgnored:
+      'Agents must find the main pages by crawling, which costs them more requests and tokens.',
+    howToVerify: 'Request /llms.txt and confirm a 200 plain text response.',
+    review: {
+      question: 'Should agents get a reading list for this site?',
+      changeOnlyIf: 'Add it when agents are expected to read or use the site.',
+      ifNotNeeded: 'Record that the site has no llms.txt by choice.',
+    },
+    agentHints: {
+      evidenceFields: ['report.ai.llmsTxt'],
+    },
+  },
+  {
+    id: 'llms_txt_broken_link',
+    title: 'llms.txt links to a page that does not load',
+    category: 'agents',
+    defaultSeverity: 'low',
+    whyItMatters:
+      'An agent that follows a link in llms.txt and gets an error loses its reading list entry.',
+    howToFix:
+      'Update or remove each broken link in llms.txt, or restore the page it points to.',
+    impactIfIgnored: 'Agents waste requests and can miss the page.',
+    howToVerify:
+      'Re-run the crawl and confirm ai.llmsTxt.links.broken is empty.',
+    agentHints: {
+      evidenceFields: ['report.ai.llmsTxt.links'],
+    },
+  },
+  {
+    id: 'markdown_missing',
+    title: 'No Markdown copy of the pages',
+    category: 'agents',
+    defaultSeverity: 'low',
+    whyItMatters:
+      'A Markdown copy gives agents the page content without layout, scripts or navigation, at a fraction of the tokens. Neither a request with Accept: text/markdown nor a rel="alternate" link returned one. Search engines do not use it for ranking.',
+    howToFix:
+      'Serve a Markdown copy of each page, linked from the page with <link rel="alternate" type="text/markdown">, and return it for Accept: text/markdown with Vary: Accept.',
+    impactIfIgnored:
+      'Agents read the full HTML, which costs more tokens and can include layout text.',
+    howToVerify:
+      'Request a page with Accept: text/markdown and confirm a text/markdown response.',
+    review: {
+      question: 'Should agents get a Markdown copy of the pages?',
+      changeOnlyIf: 'Add it when agents are expected to read the site.',
+      ifNotNeeded: 'Record that the site serves HTML only by choice.',
+    },
+    agentHints: {
+      evidenceFields: [
+        'report.ai.markdownNegotiation',
+        'report.ai.markdownCopies',
+      ],
+    },
+  },
+  {
+    id: 'markdown_alternate_missing',
+    title: 'Page has no link to its Markdown copy',
+    category: 'agents',
+    defaultSeverity: 'low',
+    whyItMatters:
+      'Other pages on the site link to a Markdown copy, but this one does not, so agents cannot find a copy for it.',
+    howToFix:
+      'Add <link rel="alternate" type="text/markdown" href="..."> to the page head, pointing at its Markdown copy.',
+    impactIfIgnored: 'Agents read the full HTML for this page.',
+    howToVerify:
+      'Re-run the crawl and confirm the page lists a Markdown alternate.',
+    agentHints: {
+      evidenceFields: ['page.markdownAlternates', 'report.ai.markdownCopies'],
+    },
+  },
+  {
+    id: 'markdown_alternate_on_private_page',
+    title: 'Private page links to a Markdown copy',
+    category: 'agents',
+    defaultSeverity: 'medium',
+    whyItMatters:
+      'Only public pages should have a Markdown copy. This page needs a sign-in or is kept out of search, yet it links to one. A copy of a signed-in page can show content to agents that a signed-out visitor cannot see, and a broken copy wastes their requests.',
+    howToFix:
+      'Remove the rel="alternate" Markdown link, the Link header and any Markdown copy for signed-in and private routes. Keep them for public pages only.',
+    impactIfIgnored:
+      'Agents can request a copy that fails, or read content that was meant to stay behind a sign-in.',
+    howToVerify:
+      'Re-run the crawl and confirm the page no longer lists a Markdown alternate.',
+    agentHints: {
+      evidenceFields: [
+        'page.markdownAlternates',
+        'report.ai.markdownCopies.broken',
+      ],
+    },
+  },
+  {
+    id: 'markdown_copy_broken',
+    title: 'Markdown copy does not load',
+    category: 'agents',
+    defaultSeverity: 'medium',
+    whyItMatters:
+      'A public page links to a Markdown copy that returns an error or HTML, so an agent that follows the link gets nothing useful.',
+    howToFix:
+      'Make the linked URL return the page as text/markdown, or fix the link.',
+    impactIfIgnored:
+      'Agents get an error or the HTML page instead of the copy.',
+    howToVerify:
+      'Request the Markdown URL and confirm a 200 text/markdown response.',
+    agentHints: {
+      evidenceFields: ['report.ai.markdownCopies.broken'],
+    },
+  },
 ] as const satisfies readonly RuleDefinition[]
 
 export type RuleId = (typeof RULE_DEFINITIONS)[number]['id']
@@ -1118,6 +1257,9 @@ const RULE_RECOMMENDATIONS: Partial<Record<RuleId, RuleRecommendation>> = {
   og_description_missing: 'review',
   og_image_missing: 'review',
   twitter_card_missing: 'review',
+  ai_search_bot_blocked: 'review',
+  llms_txt_missing: 'review',
+  markdown_missing: 'review',
 }
 
 const RULES_BY_ID = new Map<string, RuleInfo>(

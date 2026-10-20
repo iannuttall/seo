@@ -2,6 +2,7 @@ import { SEO_CRAWLER_USER_AGENT } from '../../fetch/crawler-identity.js'
 import { createRobotsSession } from '../../fetch/page-fetcher/robots.js'
 import { createPageRenderer } from '../../fetch/page-fetcher.js'
 import type { CrawlOneResult } from '../monitoring/crawl-page.js'
+import { agentReadyIssues, isPublicPage } from './agent-ready.js'
 import { crawlCaveats } from './crawl-caveats.js'
 import { CRAWL_CANCELLED, cancellationRace } from './crawl-control.js'
 import { crawlMemoryPressure } from './crawl-memory.js'
@@ -23,7 +24,11 @@ import {
 } from './report.js'
 import { observationFromPage } from './request-evidence.js'
 import { collectCrawlSiteChecks } from './site-checks.js'
-import { collectCrawlAiSignals } from './site-crawl-ai-signals.js'
+import {
+  checkMarkdownCopies,
+  collectCrawlAiSignals,
+  linkRelations,
+} from './site-crawl-ai-signals.js'
 import {
   crawlDataSources,
   crawlProviderLimits,
@@ -216,15 +221,14 @@ export async function crawlSite(
             url: config.url,
             timeoutMs: config.timeoutMs,
             fetch: deps.fetch,
+            respectRobots: config.respectRobots,
             signal,
           })
-    const llmsTxt = aiSignals?.[0]
+    const llmsTxt = aiSignals?.signals.llmsTxt
     const healthSitemapUrls =
       healthStrategy && !config.sitemapUrl && !isCancelled()
         ? await robotsSession?.sitemapUrls(origin)
         : undefined
-    const robotsTxt = aiSignals?.[1]
-    const agentResources = aiSignals?.[2]
     cancelled = isCancelled()
 
     const enqueue = (value: string, depth: number): void => {
@@ -309,7 +313,8 @@ export async function crawlSite(
         url: config.url,
         sitemapUrl: config.sitemapUrl,
         maxPages: config.maxPages,
-        declaredSitemapUrls: robotsTxt?.sitemapUrls ?? healthSitemapUrls ?? [],
+        declaredSitemapUrls:
+          aiSignals?.signals.robotsTxt?.sitemapUrls ?? healthSitemapUrls ?? [],
         warnings,
         fetchSitemapUrls: deps.fetchSitemapUrls,
       })
@@ -785,6 +790,43 @@ export async function crawlSite(
       }
     }
 
+    const startPage = pages.find(
+      (page) => page.url === config.url || page.finalUrl === config.url,
+    )
+    const ai =
+      aiSignals && !cancelled
+        ? {
+            ...aiSignals.signals,
+            markdownCopies: await checkMarkdownCopies({
+              allows: aiSignals.allows,
+              pages: pages.map((page) => ({
+                url: page.url,
+                markdownAlternates: page.markdownAlternates,
+                public: isPublicPage(page),
+              })),
+              timeoutMs: config.timeoutMs,
+              fetch: deps.fetch,
+              signal,
+            }),
+            ...(startPage
+              ? {
+                  startPageHeaders: {
+                    url: startPage.url,
+                    linkRelations: linkRelations(
+                      startPage.responseHeaders?.link,
+                    ),
+                    ...(startPage.responseHeaders?.['content-signal']
+                      ? {
+                          contentSignal:
+                            startPage.responseHeaders['content-signal'],
+                        }
+                      : {}),
+                  },
+                }
+              : {}),
+          }
+        : aiSignals?.signals
+
     const report = createCrawlReport({
       config,
       site,
@@ -794,23 +836,14 @@ export async function crawlSite(
       pages,
       requests,
       requestEvidenceStatus,
-      ...(!healthStrategy
-        ? {
-            ai: {
-              ...(llmsTxt ? { llmsTxt } : {}),
-              ...(robotsTxt ? { robotsTxt } : {}),
-              ...(agentResources ? { agentResources } : {}),
-            },
-          }
-        : {}),
+      ...(ai ? { ai } : {}),
       ...(sitemapDiscovery ? { sitemapDiscovery } : {}),
       ...(externalLinkVerification ? { externalLinkVerification } : {}),
-      ...(siteCheckResult
-        ? {
-            siteChecks: siteCheckResult.checks,
-            additionalIssues: siteCheckResult.issues,
-          }
-        : {}),
+      ...(siteCheckResult ? { siteChecks: siteCheckResult.checks } : {}),
+      additionalIssues: [
+        ...(siteCheckResult?.issues ?? []),
+        ...(ai ? agentReadyIssues({ startUrl: config.url, ai, pages }) : []),
+      ],
       status: reportStatus,
       warnings,
       caveats: crawlCaveats({

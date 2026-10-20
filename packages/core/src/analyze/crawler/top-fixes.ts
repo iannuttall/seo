@@ -57,7 +57,7 @@ const EFFORT_BY_CATEGORY: Partial<
 > = {
   canonical: 'medium',
   content: 'high',
-  geo: 'medium',
+  agents: 'low',
   headings: 'low',
   images: 'medium',
   indexability: 'medium',

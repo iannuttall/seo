@@ -36,7 +36,7 @@ export type CrawlImplementationQueueInput = CrawlConfigInput & {
 const CATEGORY_TO_PRIORITY: Record<RuleCategory, CrawlPriorityCategory> = {
   canonical: 'technical',
   content: 'content',
-  geo: 'content',
+  agents: 'technical',
   headings: 'content',
   images: 'content',
   indexability: 'technical',

@@ -32,9 +32,17 @@ import {
 } from './crawl-skip-reasons.js'
 import type { CrawlStatusPhase } from './crawl-status.js'
 import type { CrawlSiteChecks } from './site-checks.js'
+import type { CrawlAiSignals } from './site-crawl-ai-types.js'
 
 export type { CrawlStatusPhase } from './crawl-status.js'
 export type { CrawlSiteChecks } from './site-checks.js'
+export type {
+  CrawlAiAvailability,
+  CrawlAiBotAccess,
+  CrawlAiLinkCheck,
+  CrawlAiResourceSignal,
+  CrawlAiSignals,
+} from './site-crawl-ai-types.js'
 
 export type CrawlMode = 'site' | 'page' | 'list' | 'sitemap'
 export type CrawlStrategy = 'full' | 'health'
@@ -136,47 +144,6 @@ export type CrawlRunStats = {
 }
 
 export type CrawlLinkGraph = Record<string, string[]>
-
-export type CrawlAiBotAccess = {
-  userAgent: string
-  allowed: boolean | null
-  declared: boolean
-  coveredByWildcard: boolean
-}
-
-export type CrawlAiResourceSignal = {
-  url: string
-  exists: boolean
-  status?: number
-  contentType?: string
-  validJson?: boolean
-}
-
-export type CrawlAiSignals = {
-  robotsTxt?: {
-    url: string
-    exists: boolean
-    availability:
-      | 'available'
-      | 'absent'
-      | 'access-blocked'
-      | 'rate-limited'
-      | 'unreachable'
-    status?: number
-    error?: string
-    sitemapUrls: string[]
-    // Distinct robots.txt Content-Signal directive values. undefined means the
-    // directives were not collected; [] means robots.txt declared none.
-    contentSignals?: string[]
-    botAccess: CrawlAiBotAccess[]
-  }
-  llmsTxt?: {
-    url: string
-    exists: boolean
-    status?: number
-  }
-  agentResources?: CrawlAiResourceSignal[]
-}
 
 export type CrawlSitemapDiscovery = {
   dataStatus: 'complete' | 'partial' | 'unavailable'

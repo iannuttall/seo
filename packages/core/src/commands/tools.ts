@@ -410,6 +410,6 @@ export const SKILL_RESOURCE = {
   uri: 'skill://seo/SKILL.md',
   title: 'SEO Skill',
   description:
-    'How to use these tools: the commands, the one-report flow and the evidence rules.',
+    'How to use these tools: what each command returns and how to reach it.',
   mimeType: 'text/markdown',
 } as const

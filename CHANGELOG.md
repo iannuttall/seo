@@ -1,5 +1,15 @@
 # Changelog
 
+## Unreleased
+
+### Changed
+
+- The skill is now a short map of the commands and MCP tools (about 250
+  words, down from about 1,000). It no longer sets rules for how the agent
+  works, such as asking before each edit. Each result already states its
+  limits and the command to run next.
+- "Not signed in" now says that `seo crawl --url` works without sign-in.
+
 ## 0.7.1
 
 ### Fixed

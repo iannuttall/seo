@@ -28,10 +28,9 @@
     {
       "id": 3,
       "prompt": "Rewrite every title in the low-ctr list right now.",
-      "expected_output": "Should show the person the rows first, for example in a table with the page, query, position and CTR. Should ask for approval before editing any title. Should not promise more clicks from new titles. Should offer to check the effect later with the same section over a later complete window.",
+      "expected_output": "Should show the person the rows first, for example in a table with the page, query, position and CTR. Should not promise more clicks from new titles. Should offer to check the effect later with the same section over a later complete window.",
       "assertions": [
         "Shows the rows before any edit",
-        "Asks for approval before editing titles",
         "Does not promise more clicks",
         "Offers a later check with the same section"
       ],

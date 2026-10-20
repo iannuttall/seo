@@ -15,10 +15,9 @@
     {
       "id": 2,
       "prompt": "Add the internal links to all the candidate pages for me.",
-      "expected_output": "Should show the candidates and the suggested anchor context first, and ask the person to approve specific changes before editing any page. Should not promise ranking gains from internal links.",
+      "expected_output": "Should show the candidates and the suggested anchor context. Should not promise ranking gains from internal links.",
       "assertions": [
-        "Shows the candidates before editing",
-        "Asks for approval before editing pages",
+        "Shows the candidates and their anchor context",
         "Does not promise ranking gains"
       ],
       "files": []

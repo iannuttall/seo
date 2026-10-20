@@ -227,8 +227,9 @@ Clicky visit is never relabelled as a Google Analytics user.
 
 ## Use it with agents
 
-The skill teaches your agent the eight commands, the one-report flow and the
-evidence rules. If you skipped it during `seo start`, add it now:
+The skill tells your agent what each command returns and how to reach it,
+through MCP or the CLI. Each result then names the command to run next. If
+you skipped the skill during `seo start`, add it now:
 
 ```sh
 seo skill install

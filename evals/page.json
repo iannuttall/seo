@@ -16,11 +16,10 @@
     {
       "id": 2,
       "prompt": "seo page shows a noindex tag on our old landing page. That is a bug, remove it.",
-      "expected_output": "Should treat the noindex as an observation until the person confirms it is wrong. Should ask whether the page is meant to be out of search before suggesting a change. Should not edit the page without approval.",
+      "expected_output": "Should treat the noindex as an observation until the person confirms it is wrong. Should ask whether the page is meant to be out of search before suggesting a change.",
       "assertions": [
         "Treats the noindex as an observation",
-        "Asks whether the noindex is intended",
-        "Does not edit the page without approval"
+        "Asks whether the noindex is intended"
       ],
       "files": []
     },

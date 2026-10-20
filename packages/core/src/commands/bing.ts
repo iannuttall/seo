@@ -8,7 +8,7 @@ import {
   listBingSites,
 } from '../bing/api.js'
 import type { SearchAnalyticsQuery } from '../gsc/client/types.js'
-import type { Detail } from './present.js'
+import { type Detail, table } from './present.js'
 import { PAGE_SIZE, rowsText } from './rows.js'
 import {
   type DateInput,
@@ -391,4 +391,178 @@ export async function runBingRows(
       rows: rows.slice(input.offset ?? 0, (input.offset ?? 0) + PAGE_SIZE),
     },
   }
+}
+
+type Moved = Record<string, unknown> & {
+  clicks: number
+  previousClicks: number | null
+  clicksChange: number | null
+}
+
+// Bing rows now against the earlier period: the top rows, the rows that
+// lost or gained the most clicks, and the rows that left Bing's top list.
+// Bing lists only its top rows, so a row missing from one period is
+// unknown there, not zero, and has no change.
+function moved(
+  rows: BingRow[],
+  range: DateRange,
+  before: DateRange,
+  name: 'query' | 'page',
+  limit: number,
+) {
+  const now = sumWeeks(rows, range)
+  const then = sumWeeks(rows, before)
+  const old = new Map(then.rows.map((row) => [row.key, row]))
+  const seen = new Set(now.rows.map((row) => row.key))
+  const all: Moved[] = now.rows.map((row) => {
+    const earlier = old.get(row.key)
+    return {
+      [name]: row.key,
+      clicks: row.clicks,
+      previousClicks: earlier ? earlier.clicks : null,
+      clicksChange: earlier ? row.clicks - earlier.clicks : null,
+      impressions: row.impressions,
+      position: row.position,
+    }
+  })
+  const by = (sign: 1 | -1) =>
+    all
+      .filter(
+        (row): row is Moved & { clicksChange: number } =>
+          row.clicksChange !== null && sign * row.clicksChange > 0,
+      )
+      .sort(
+        (a, b) =>
+          sign * (b.clicksChange - a.clicksChange) ||
+          String(a[name]).localeCompare(String(b[name])),
+      )
+      .slice(0, limit)
+  return {
+    top: all.slice(0, limit),
+    biggestLosses: by(-1),
+    biggestGains: by(1),
+    leftTopList: then.rows
+      .filter((row) => !seen.has(row.key))
+      .slice(0, limit)
+      .map((row) => ({ [name]: row.key, previousClicks: row.clicks })),
+    weeks: now.weeks,
+    previousWeeks: then.weeks,
+  }
+}
+
+// Bing's own overview: totals against the previous period and the pages and
+// queries that moved. For sites where Bing sends more clicks than Google, or
+// that have no Search Console property.
+export async function bingOverview(
+  source: BingSource,
+  range: DateRange,
+  before: DateRange,
+): Promise<Record<string, unknown>> {
+  if (!source.call) throw new CommandError('NOT_CONNECTED', source.missing)
+  const [totals, queries, pages] = await Promise.all([
+    bingTotals(source, range, before),
+    bingQueries(source.call, source.site),
+    bingPages(source.call, source.site),
+  ])
+  if ('missing' in totals)
+    throw new CommandError('NOT_CONNECTED', totals.missing)
+  const { current: now, previous: then } = totals
+  const q = moved(queries.rows, range, before, 'query', 15)
+  const p = moved(pages.rows, range, before, 'page', 15)
+  return {
+    bingSite: source.site,
+    range,
+    comparisonRange: before,
+    summary: {
+      clicks: now.clicks,
+      previousClicks: then.clicks,
+      clicksChangePct: pct(now.clicks, then.clicks),
+      impressions: now.impressions,
+      previousImpressions: then.impressions,
+      impressionsChangePct: pct(now.impressions, then.impressions),
+      days: now.days,
+      previousDays: then.days,
+    },
+    pages: p,
+    queries: q,
+    caveats: [
+      ...(now.days < now.expectedDays || then.days < then.expectedDays
+        ? [
+            `Bing has data for ${now.days} of ${now.expectedDays} days (earlier period ${then.days} of ${then.expectedDays}), so its totals are partial.`,
+          ]
+        : []),
+      `Totals are Bing's daily site totals. Page and query rows are Bing's weekly top rows: weeks ${q.weeks.join(', ') || 'none'} against ${q.previousWeeks.join(', ') || 'none'}.`,
+      ...BING_LIMITS.slice(1),
+    ],
+  }
+}
+
+// The Bing overview as text.
+export function bingOverviewText(
+  report: Record<string, unknown>,
+  heading: string,
+  origin: string,
+  rowsPerList: number,
+): string {
+  const range = report.range as DateRange
+  const before = report.comparisonRange as DateRange
+  const t = report.summary as {
+    clicks: number
+    previousClicks: number
+    impressions: number
+    previousImpressions: number
+    days: number
+    previousDays: number
+  }
+  const columns = (name: string) => [
+    name,
+    'clicks',
+    'previousClicks',
+    'clicksChange',
+    'impressions',
+    'position',
+  ]
+  const part = (title: string, rows: unknown, name: string) => {
+    const list = (rows as Record<string, unknown>[] | undefined) ?? []
+    return list.length
+      ? `${title}:\n${table(list.slice(0, rowsPerList), columns(name), origin)}`
+      : ''
+  }
+  const group = (key: 'pages' | 'queries', name: 'page' | 'query') => {
+    const lists = report[key] as Record<string, unknown>
+    return [
+      part(
+        `Biggest Bing ${key === 'pages' ? 'page' : 'query'} click losses`,
+        lists.biggestLosses,
+        name,
+      ),
+      part(
+        `Biggest Bing ${key === 'pages' ? 'page' : 'query'} click gains`,
+        lists.biggestGains,
+        name,
+      ),
+      (lists.leftTopList as unknown[] | undefined)?.length
+        ? `Left Bing's top ${key} list (now unknown, not zero): ${(
+            lists.leftTopList as Record<string, unknown>[]
+          )
+            .slice(0, rowsPerList)
+            .map((row) => `${row[name]} (had ${row.previousClicks} clicks)`)
+            .join(', ')}.`
+        : '',
+      rowsPerList >= 10 ? part(`Top Bing ${key}`, lists.top, name) : '',
+    ]
+      .filter(Boolean)
+      .join('\n\n')
+  }
+  return [
+    `${heading}, ${range.startDate} to ${range.endDate} against ${before.startDate} to ${before.endDate}.`,
+    t.days || t.previousDays
+      ? `Bing totals: clicks ${t.clicks} (was ${t.previousClicks}, ${change(t.clicks, t.previousClicks)}), impressions ${t.impressions} (was ${t.previousImpressions}, ${change(t.impressions, t.previousImpressions)}).`
+      : 'Bing totals: unknown. Bing has no daily data for these dates.',
+    group('pages', 'page'),
+    group('queries', 'query'),
+    `Limits:\n${(report.caveats as string[]).map((line) => `- ${line}`).join('\n')}`,
+  ]
+    .filter(Boolean)
+    .join('\n\n')
 }

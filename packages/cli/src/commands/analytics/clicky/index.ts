@@ -2,6 +2,8 @@ import { intro, outro, password, text } from '@clack/prompts'
 import {
   CLICKY_SITEKEY_ENV,
   deleteClickySiteKey,
+  localRefreshClicky,
+  localResearchKeys,
   readClickySiteKey,
   SeoError,
   writeClickySiteKey,
@@ -11,19 +13,21 @@ import {
   clickyDomain,
   isClickySiteId,
   isClickySitekey,
+  runClickyRows,
 } from '@seo/core/commands'
 import { defineCommand } from 'citty'
-import { booleanArg, jsonFlag, stringArg } from '../../../args.js'
+import { booleanArg, jsonFlag, numberArg, stringArg } from '../../../args.js'
+import { requireSite } from '../../../selection.js'
 import {
   canPrompt,
   maybeExitCancelled,
   printJson,
   printKeyValue,
 } from '../../../utils.js'
+import { dates, detail, detailArg, run } from '../../core-commands.js'
 
-// Clicky sites saved on this machine only. `seo data --source clicky` reads
-// them by site ID. Sites saved on the seoskill.dev account need no command
-// here; `seo login` brings them in.
+// Clicky sites saved on this machine only, and the Clicky report. Sites saved
+// on the seoskill.dev account need no command here; `seo login` brings them in.
 
 function credentialSourceLabel(source: string | undefined): string {
   if (source === 'keychain') return 'system keychain'
@@ -117,7 +121,7 @@ const connectCommand = defineCommand({
       printJson(result)
       return
     }
-    const message = `Clicky site ${id}${domain ? ` (${domain})` : ''} saved in the ${credentialSourceLabel(source)}. Next: seo data --source clicky --site ${id}`
+    const message = `Clicky site ${id}${domain ? ` (${domain})` : ''} saved in the ${credentialSourceLabel(source)}. Next: seo analytics clicky report --site ${id}`
     if (interactive) outro(message)
     else process.stdout.write(`${message}\n`)
   },
@@ -165,17 +169,42 @@ const statusCommand = defineCommand({
   },
 })
 
+// The same Clicky rows as seo_data in the MCP servers.
 const reportCommand = defineCommand({
   meta: {
     name: 'report',
-    description: 'Moved to seo data --source clicky',
+    description: 'Clicky landing pages, traffic sources and search engines',
   },
-  args: { 'site-id': siteIdArg },
-  run: ({ args }) => {
-    process.stderr.write(
-      `\`seo analytics clicky report\` is now \`seo data --source clicky --site ${stringArg(args['site-id']) ?? '<domain or site ID>'}\`.\n`,
+  args: {
+    site: {
+      type: 'string',
+      description: 'The site, or its numeric Clicky site ID.',
+    },
+    ...dates,
+    ...detail,
+    json,
+  },
+  run: async ({ args }) => {
+    const site = requireSite(stringArg(args.site))
+    await run(args, async () =>
+      runClickyRows(
+        {
+          site,
+          startDate: stringArg(args['start-date']),
+          endDate: stringArg(args['end-date']),
+          detail: detailArg(args),
+          offset: numberArg(args.offset),
+        },
+        await localResearchKeys(),
+        {
+          connect:
+            'save it at https://seoskill.dev/account#keys and run `seo login`, or run `seo analytics clicky connect` to keep it on this machine only.',
+          refresh: localRefreshClicky,
+          call: (offset) =>
+            `seo analytics clicky report --site ${site} --detail rows --offset ${offset}`,
+        },
+      ),
     )
-    process.exitCode = 2
   },
 })
 
@@ -207,7 +236,7 @@ const disconnectCommand = defineCommand({
 export const clickyAnalyticsCommand = defineCommand({
   meta: {
     name: 'clicky',
-    description: 'Save a Clicky site on this machine only',
+    description: 'Read Clicky, or save a Clicky site on this machine only',
   },
   subCommands: {
     connect: connectCommand,

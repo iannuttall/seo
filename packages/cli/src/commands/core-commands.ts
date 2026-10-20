@@ -72,12 +72,12 @@ const common = {
   },
 } as const
 
-const dates = {
+export const dates = {
   'start-date': { type: 'string', description: 'Optional YYYY-MM-DD.' },
   'end-date': { type: 'string', description: 'Optional YYYY-MM-DD.' },
 } as const
 
-const detail = {
+export const detail = {
   detail: {
     type: 'string',
     description: 'summary (default), rows for the next page, or full.',
@@ -87,7 +87,7 @@ const detail = {
 
 type Args = Record<string, unknown>
 
-function detailArg(args: Args) {
+export function detailArg(args: Args) {
   const value = stringArg(args.detail) ?? 'summary'
   if (!['summary', 'rows', 'full'].includes(value)) {
     throw new SeoError('INVALID_INPUT', '--detail is summary, rows or full.')
@@ -103,7 +103,7 @@ function property(args: Args, target?: string): Promise<string> {
   })
 }
 
-async function run(
+export async function run(
   args: Args,
   task: (deps: ReturnType<typeof nodeCommandDeps>) => Promise<CommandResult>,
 ) {

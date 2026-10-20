@@ -59,7 +59,10 @@ test('crawlSite reports redirected URLs with final target evidence', async () =>
     assert.equal(issue?.url, `${fixture.baseUrl}/old`)
     assert.equal(
       report.issues.some(
-        (item) => item.url === `${fixture.baseUrl}/old` && item !== issue,
+        (item) =>
+          item.url === `${fixture.baseUrl}/old` &&
+          item !== issue &&
+          item.category !== 'agents',
       ),
       false,
     )
@@ -109,7 +112,8 @@ test('crawlSite follows meta refreshes without auditing the redirect stub', asyn
     )
     const target = `${fixture.baseUrl}/en/getting-started/`
     const redirectIssues = report.issues.filter(
-      (issue) => issue.url === `${fixture.baseUrl}/`,
+      (issue) =>
+        issue.url === `${fixture.baseUrl}/` && issue.category !== 'agents',
     )
 
     assert.deepEqual(redirectPage?.metaRefresh, {
@@ -183,7 +187,9 @@ test('crawlSite preserves fetch failures as structured request evidence', async 
   assert.equal(report.summary.requestByStatus['no-response'], 1)
   assert.equal(report.status, 'failed')
   assert.deepEqual(
-    report.issues.map((item) => [item.ruleId, item.url]),
+    report.issues
+      .filter((item) => item.category !== 'agents')
+      .map((item) => [item.ruleId, item.url]),
     [['connection_error', url]],
   )
 })

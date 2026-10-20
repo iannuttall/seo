@@ -162,8 +162,13 @@ test('none creates noindex and nofollow findings while other-bot headers do not'
 })
 
 test('auditCrawlPages has issue-producing coverage for every rule family', () => {
+  // Agent rules come from site-wide checks, not the page audit.
   const registryFamilies = [
-    ...new Set(listRules().map((rule) => rule.category)),
+    ...new Set(
+      listRules()
+        .map((rule) => rule.category)
+        .filter((category) => category !== 'agents'),
+    ),
   ].sort()
   const issues = auditCrawlPages(
     [
@@ -407,7 +412,7 @@ test('auditCrawlPages does not turn word count or llms.txt into SEO issues', () 
     ],
     { startUrl: 'https://example.com/' },
   )
-  const geoIssues = issues.filter((issue) => issue.category === 'geo')
+  const agentIssues = issues.filter((issue) => issue.category === 'agents')
 
-  assert.deepEqual(geoIssues, [])
+  assert.deepEqual(agentIssues, [])
 })

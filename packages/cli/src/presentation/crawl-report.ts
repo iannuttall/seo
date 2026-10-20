@@ -6,6 +6,7 @@ import {
   topFixes,
 } from '@seo/core'
 import { printSemanticReport } from '../utils.js'
+import { agentAccessDiagnostics } from './crawl-agent-access.js'
 
 function issueStatus(severity: TopFix['severity']): 'fail' | 'warning' {
   return severity === 'high' ? 'fail' : 'warning'
@@ -80,6 +81,7 @@ export function printCrawlHuman(
         title: 'Review before changing anything',
         diagnostics: reviewDiagnostics,
       },
+      { title: 'Agent access', diagnostics: agentAccessDiagnostics(report.ai) },
       ...(!accessDiagnostics.length &&
       !fixDiagnostics.length &&
       !reviewDiagnostics.length

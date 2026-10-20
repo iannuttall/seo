@@ -4,6 +4,7 @@ import { listRules } from '../../rules.js'
 import { analyticsConnectionSchema } from '../../types.js'
 import { CRAWL_SKIP_REASONS } from './crawl-skip-reasons.js'
 import { crawlSiteChecksSchema } from './site-checks-schema.js'
+import { crawlAiSignalsSchema } from './site-crawl-ai-schema.js'
 
 export const crawlerRuleSeveritySchema = z.enum(['low', 'medium', 'high'])
 export const crawlerRuleRecommendationSchema = z.enum(['fix', 'review'])
@@ -23,7 +24,7 @@ export const crawlerRuleCategorySchema = z.enum([
   'security',
   'social',
   'structured-data',
-  'geo',
+  'agents',
 ])
 
 export const crawlerRuleIdSchema = z.enum(
@@ -673,52 +674,6 @@ export const crawlIssueGroupSchema = z.object({
   severity: crawlerRuleSeveritySchema,
   count: z.number().int(),
   sampleUrls: z.array(z.string().url()),
-})
-
-const crawlAiSignalsSchema = z.object({
-  robotsTxt: z
-    .object({
-      url: z.string().url(),
-      exists: z.boolean(),
-      availability: z.enum([
-        'available',
-        'absent',
-        'access-blocked',
-        'rate-limited',
-        'unreachable',
-      ]),
-      status: z.number().int().optional(),
-      error: z.string().optional(),
-      sitemapUrls: z.array(z.string().url()),
-      contentSignals: z.array(z.string()).optional(),
-      botAccess: z.array(
-        z.object({
-          userAgent: z.string(),
-          allowed: z.boolean().nullable(),
-          declared: z.boolean(),
-          coveredByWildcard: z.boolean(),
-        }),
-      ),
-    })
-    .optional(),
-  llmsTxt: z
-    .object({
-      url: z.string().url(),
-      exists: z.boolean(),
-      status: z.number().int().optional(),
-    })
-    .optional(),
-  agentResources: z
-    .array(
-      z.object({
-        url: z.string().url(),
-        exists: z.boolean(),
-        status: z.number().int().optional(),
-        contentType: z.string().optional(),
-        validJson: z.boolean().optional(),
-      }),
-    )
-    .optional(),
 })
 
 export const crawlTopFixSchema = crawlIssueGroupSchema.extend({

@@ -129,10 +129,10 @@ Ian's approval.
 - Before a release, install the packed tarball in an empty folder and check
   `seo --version`, `seo mcp serve --test`, the `seo` and `seo/mcp` imports
   and the packaged skill.
-- Hosted server: `pnpm --filter @seo/hosted-mcp run deploy`. Apply new D1
-  migrations with `wrangler d1 migrations apply seo-mcp --remote` first. A
-  new `SEAL_KEY` signs everyone out and makes stored keys unreadable.
-- The site deploys from `main` through Cloudflare.
+- The site and the hosted server both deploy from `main` through
+  Cloudflare's Git builds, so merging a PR deploys them. The hosted deploy
+  (`pnpm deploy:mcp`) applies new D1 migrations first. A new `SEAL_KEY`
+  signs everyone out and makes stored keys unreadable.
 - Version 1.0.0 removes the old report names (`packages/cli/src/renames.ts`)
   and the 0.2 commands under "More commands" in `seo help all`. Do not add to
   them.

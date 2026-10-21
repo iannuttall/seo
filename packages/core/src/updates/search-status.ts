@@ -4,6 +4,7 @@ import {
   type SearchStatusIncident,
   type SearchUpdate,
   searchUpdatesFromIncidents,
+  withRankingHistory,
 } from './search-updates.js'
 
 export {
@@ -11,6 +12,7 @@ export {
   type SearchStatusIncident,
   type SearchUpdate,
   searchUpdatesFromIncidents,
+  withRankingHistory,
 } from './search-updates.js'
 
 import { readJson } from '../http/read-json.js'
@@ -39,5 +41,8 @@ export async function fetchSearchStatusIncidents(): Promise<
 export async function listSearchUpdates(
   input: { product?: string; limit?: number } = {},
 ): Promise<SearchUpdate[]> {
-  return searchUpdatesFromIncidents(await fetchSearchStatusIncidents(), input)
+  return searchUpdatesFromIncidents(
+    withRankingHistory(await fetchSearchStatusIncidents()),
+    input,
+  )
 }

@@ -53,7 +53,10 @@ export async function updateCorrelation(input: {
   const window = changeWindow(anomalies)
   const comparisonStart = window?.start
   const comparisonEnd = window?.end
-  const updates = await listSearchUpdates({ product: 'Ranking', limit: 50 })
+  const updates = await listSearchUpdates({
+    product: 'Ranking',
+    limit: Number.POSITIVE_INFINITY,
+  })
   const overlappingUpdates =
     comparisonStart && comparisonEnd
       ? findOverlappingSearchUpdates({

@@ -1,6 +1,7 @@
 import { Hono } from 'hono'
 import { reportIds } from '../src/content/telemetry/report-ids.mjs'
 import { applyDailyToolQuota } from './tools/daily-tool-quota.ts'
+import { handleDomainAge } from './tools/domain-age.ts'
 import { handleFaviconCheck } from './tools/favicon-checker.ts'
 import { handleLlmsTxtFetch } from './tools/llms-txt.ts'
 import {
@@ -1010,6 +1011,7 @@ app.all('/api/tools/serp-preview', (context) =>
 app.all('/api/tools/favicon-checker', (context) =>
   handleFaviconCheck(context.req.raw),
 )
+app.all('/api/tools/domain-age', (context) => handleDomainAge(context.req.raw))
 app.all('/api/tools/spam-score', (context) =>
   handleSpamScore(context.req.raw, context.env),
 )

@@ -298,6 +298,46 @@ export class PaidToolGuard {
           INSERT INTO _sql_schema_migrations (id) VALUES (3);
         `)
       }
+
+      const hasDomainAgeMigration = this.ctx.storage.sql
+        .exec<{ id: number }>(
+          'SELECT id FROM _sql_schema_migrations WHERE id = 4 LIMIT 1',
+        )
+        .toArray()[0]
+      if (!hasDomainAgeMigration) {
+        this.ctx.storage.sql.exec(`
+          CREATE TABLE identity_tool_usage_v4 (
+            identity_hash TEXT NOT NULL CHECK (length(identity_hash) = 64),
+            tool TEXT NOT NULL CHECK (
+              tool IN (
+                'spam-score',
+                'domain-rating',
+                'website-traffic',
+                'competitor-keywords',
+                'serp-checker',
+                'llms-txt',
+                'sitemap',
+                'sitemap-extractor',
+                'sitemap-validator',
+                'robots-txt',
+                'serp-preview',
+                'favicon-checker',
+                'domain-age'
+              )
+            ),
+            calls INTEGER NOT NULL CHECK (
+              calls >= 0 AND calls <= ${PAID_TOOL_DAILY_LIMIT}
+            ),
+            PRIMARY KEY (identity_hash, tool)
+          ) WITHOUT ROWID;
+
+          INSERT INTO identity_tool_usage_v4 (identity_hash, tool, calls)
+          SELECT identity_hash, tool, calls FROM identity_tool_usage;
+          DROP TABLE identity_tool_usage;
+          ALTER TABLE identity_tool_usage_v4 RENAME TO identity_tool_usage;
+          INSERT INTO _sql_schema_migrations (id) VALUES (4);
+        `)
+      }
     })
   }
 

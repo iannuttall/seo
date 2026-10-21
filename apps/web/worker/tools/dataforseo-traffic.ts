@@ -17,8 +17,11 @@ const HISTORY_ENDPOINT =
   'https://api.dataforseo.com/v3/dataforseo_labs/google/historical_rank_overview/live'
 const KEYWORDS_ENDPOINT =
   'https://api.dataforseo.com/v3/dataforseo_labs/google/ranked_keywords/live'
+const PAGES_ENDPOINT =
+  'https://api.dataforseo.com/v3/dataforseo_labs/google/relevant_pages/live'
 const MONTH_LIMIT = 12
-const KEYWORD_LIMIT = 5
+const KEYWORD_LIMIT = 20
+const PAGE_LIMIT = 10
 
 export type DataForSeoTrafficInput = {
   target: string
@@ -58,6 +61,14 @@ export type DataForSeoTopKeyword = {
   estimatedTrafficValueUsd: number | null
 }
 
+export type DataForSeoTopPage = {
+  url: string
+  estimatedOrganicTraffic: number | null
+  rankingResults: number | null
+  topThree: number | null
+  estimatedTrafficValueUsd: number | null
+}
+
 export type DataForSeoTrafficResult = {
   schema: 1
   target: string
@@ -65,8 +76,14 @@ export type DataForSeoTrafficResult = {
   latest: DataForSeoTrafficMonth | null
   history: DataForSeoTrafficMonth[]
   topKeywords: DataForSeoTopKeyword[]
+  topPages: DataForSeoTopPage[]
+  rankingPages: number | null
   warnings: Array<{
-    code: 'provider-estimate' | 'history-unavailable' | 'keywords-unavailable'
+    code:
+      | 'provider-estimate'
+      | 'history-unavailable'
+      | 'keywords-unavailable'
+      | 'pages-unavailable'
     message: string
   }>
   provenance: {
@@ -74,6 +91,7 @@ export type DataForSeoTrafficResult = {
     endpoints: {
       history: typeof HISTORY_ENDPOINT
       keywords: typeof KEYWORDS_ENDPOINT
+      pages: typeof PAGES_ENDPOINT
     }
     checkedAt: string
     market: {
@@ -89,7 +107,8 @@ export type DataForSeoTrafficResult = {
     providerCostUsd: number | null
     limits: {
       historyMonths: 12
-      topKeywords: 5
+      topKeywords: 20
+      topPages: 10
     }
   }
 }
@@ -149,51 +168,80 @@ export async function checkDataForSeoWebsiteTraffic(
     })
   }
 
+  const providerRequest = (body: Record<string, unknown>) => ({
+    method: 'POST',
+    headers: {
+      authorization,
+      accept: 'application/json',
+      'content-type': 'application/json; charset=utf-8',
+    },
+    body: JSON.stringify([{ ...sharedTask, ...body }]),
+  })
+  const [keywordSettled, pageSettled] = await Promise.allSettled([
+    fetchProviderJson(
+      KEYWORDS_ENDPOINT,
+      providerRequest({
+        item_types: ['organic'],
+        historical_serp_mode: 'live',
+        order_by: ['ranked_serp_element.serp_item.etv,desc'],
+        limit: KEYWORD_LIMIT,
+      }),
+      dependencies,
+    ),
+    fetchProviderJson(
+      PAGES_ENDPOINT,
+      providerRequest({
+        item_types: ['organic'],
+        order_by: ['metrics.organic.etv,desc'],
+        limit: PAGE_LIMIT,
+      }),
+      dependencies,
+    ),
+  ])
+
   let keywordCostUsd: number | null = null
   let topKeywords: DataForSeoTopKeyword[] = []
-  let keywordsAvailable = true
   try {
-    const keywordPayload = await fetchProviderJson(
-      KEYWORDS_ENDPOINT,
-      {
-        method: 'POST',
-        headers: {
-          authorization,
-          accept: 'application/json',
-          'content-type': 'application/json; charset=utf-8',
-        },
-        body: JSON.stringify([
-          {
-            ...sharedTask,
-            item_types: ['organic'],
-            historical_serp_mode: 'live',
-            order_by: ['ranked_serp_element.serp_item.etv,desc'],
-            limit: KEYWORD_LIMIT,
-          },
-        ]),
-      },
-      dependencies,
-    )
-    const keywordTask = dataForSeoTask(keywordPayload)
+    if (keywordSettled.status === 'rejected') throw keywordSettled.reason
+    const keywordTask = dataForSeoTask(keywordSettled.value)
     validateMarketResult(keywordTask.result, target, locationCode, languageCode)
     keywordCostUsd = keywordTask.costUsd
     topKeywords = normalizeKeywords(keywordTask.result.items, target)
-    if (topKeywords.length === 0) {
-      keywordsAvailable = false
-      warnings.push({
-        code: 'keywords-unavailable',
-        message: 'DataForSEO did not return the top keyword sample.',
-      })
-    }
   } catch {
-    keywordsAvailable = false
+    topKeywords = []
+  }
+  const keywordsAvailable = topKeywords.length > 0
+  if (!keywordsAvailable) {
     warnings.push({
       code: 'keywords-unavailable',
-      message: 'DataForSEO did not return the top keyword sample.',
+      message: 'DataForSEO did not return the top keywords.',
     })
   }
 
-  const costParts = [historyTask.costUsd, keywordCostUsd].filter(
+  let pageCostUsd: number | null = null
+  let topPages: DataForSeoTopPage[] = []
+  let rankingPages: number | null = null
+  try {
+    if (pageSettled.status === 'rejected') throw pageSettled.reason
+    const pageTask = dataForSeoTask(pageSettled.value)
+    validateMarketResult(pageTask.result, target, locationCode, languageCode)
+    pageCostUsd = pageTask.costUsd
+    topPages = normalizePages(pageTask.result.items, target)
+    rankingPages = topPages.length
+      ? nonNegativeInteger(pageTask.result.total_count)
+      : null
+  } catch {
+    topPages = []
+  }
+  const pagesAvailable = topPages.length > 0
+  if (!pagesAvailable) {
+    warnings.push({
+      code: 'pages-unavailable',
+      message: 'DataForSEO did not return the top pages.',
+    })
+  }
+
+  const costParts = [historyTask.costUsd, keywordCostUsd, pageCostUsd].filter(
     (cost): cost is number => cost !== null,
   )
   const providerCostUsd =
@@ -202,10 +250,10 @@ export async function checkDataForSeoWebsiteTraffic(
       : null
   const dataStatus: ProviderDataStatus =
     history.length === 0
-      ? topKeywords.length > 0
+      ? keywordsAvailable || pagesAvailable
         ? 'partial'
         : 'unavailable'
-      : keywordsAvailable
+      : keywordsAvailable && pagesAvailable
         ? 'complete'
         : 'partial'
 
@@ -216,12 +264,15 @@ export async function checkDataForSeoWebsiteTraffic(
     latest: history.at(-1) ?? null,
     history,
     topKeywords,
+    topPages,
+    rankingPages,
     warnings,
     provenance: {
       provider: 'dataforseo',
       endpoints: {
         history: HISTORY_ENDPOINT,
         keywords: KEYWORDS_ENDPOINT,
+        pages: PAGES_ENDPOINT,
       },
       checkedAt,
       market: { locationCode, languageCode },
@@ -234,6 +285,7 @@ export async function checkDataForSeoWebsiteTraffic(
       limits: {
         historyMonths: MONTH_LIMIT,
         topKeywords: KEYWORD_LIMIT,
+        topPages: PAGE_LIMIT,
       },
     },
   }
@@ -407,6 +459,36 @@ function normalizeKeywords(
       return traffic || codepointCompare(left.keyword, right.keyword)
     })
     .slice(0, KEYWORD_LIMIT)
+}
+
+function normalizePages(value: unknown, target: string): DataForSeoTopPage[] {
+  if (!Array.isArray(value)) return []
+  const pages = new Map<string, DataForSeoTopPage>()
+  for (const item of value) {
+    if (!isRecord(item) || !isRecord(item.metrics)) continue
+    const organic = isRecord(item.metrics.organic)
+      ? item.metrics.organic
+      : undefined
+    const url = safeRankingUrl(item.page_address, target)
+    if (!organic || !url || pages.has(url)) continue
+    pages.set(url, {
+      url,
+      estimatedOrganicTraffic: nonNegativeNumber(organic.etv),
+      rankingResults: nonNegativeInteger(organic.count),
+      topThree: sumKnownIntegers([organic.pos_1, organic.pos_2_3]),
+      estimatedTrafficValueUsd: nonNegativeNumber(
+        organic.estimated_paid_traffic_cost,
+      ),
+    })
+  }
+  return [...pages.values()]
+    .sort((left, right) => {
+      const traffic =
+        (right.estimatedOrganicTraffic ?? -1) -
+        (left.estimatedOrganicTraffic ?? -1)
+      return traffic || codepointCompare(left.url, right.url)
+    })
+    .slice(0, PAGE_LIMIT)
 }
 
 function safeRankingUrl(value: unknown, target: string): string | null {

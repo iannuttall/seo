@@ -47,9 +47,9 @@ const organic = {
   is_lost: 2,
 }
 
-test('returns bounded historical estimates and the five highest traffic keywords', async () => {
+test('returns bounded estimates, the top 20 keywords and the top pages', async () => {
   const calls: Array<{ url: string; init?: RequestInit }> = []
-  const keywordItems = Array.from({ length: 7 }, (_, index) => ({
+  const keywordItems = Array.from({ length: 25 }, (_, index) => ({
     keyword_data: {
       keyword: `keyword ${index}`,
       keyword_info: { search_volume: 100 - index },
@@ -65,6 +65,21 @@ test('returns bounded historical estimates and the five highest traffic keywords
       },
     },
   }))
+  const pageItems = [
+    {
+      page_address: 'https://example.com/small',
+      metrics: { organic: { ...organic, etv: 5 } },
+    },
+    {
+      page_address: 'https://example.com/big',
+      metrics: { organic: { ...organic, etv: 900 } },
+    },
+    { page_address: 'https://other.example/elsewhere', metrics: { organic } },
+    {
+      page_address: 'https://example.com/big',
+      metrics: { organic: { ...organic, etv: 1 } },
+    },
+  ]
   const result = await checkDataForSeoWebsiteTraffic(
     {
       target: 'https://www.example.com/some-page',
@@ -77,7 +92,10 @@ test('returns bounded historical estimates and the five highest traffic keywords
       now,
       fetch: async (input, init) => {
         calls.push({ url: input.toString(), init })
-        return calls.length === 1
+        const url = input.toString()
+        if (url.endsWith('/relevant_pages/live'))
+          return response(pageItems, 0.011)
+        return url.endsWith('/historical_rank_overview/live')
           ? response(
               [
                 { year: 2026, month: 8, metrics: { organic } },
@@ -94,7 +112,7 @@ test('returns bounded historical estimates and the five highest traffic keywords
     },
   )
 
-  assert.equal(calls.length, 2)
+  assert.equal(calls.length, 3)
   assert.equal(
     calls[0]?.url,
     'https://api.dataforseo.com/v3/dataforseo_labs/google/historical_rank_overview/live',
@@ -111,7 +129,10 @@ test('returns bounded historical estimates and the five highest traffic keywords
       correlate: true,
     },
   ])
-  assert.deepEqual(JSON.parse(String(calls[1]?.init?.body)), [
+  const keywordCall = calls.find((call) =>
+    call.url.endsWith('/ranked_keywords/live'),
+  )
+  assert.deepEqual(JSON.parse(String(keywordCall?.init?.body)), [
     {
       target: 'example.com',
       location_code: 2826,
@@ -121,7 +142,7 @@ test('returns bounded historical estimates and the five highest traffic keywords
       item_types: ['organic'],
       historical_serp_mode: 'live',
       order_by: ['ranked_serp_element.serp_item.etv,desc'],
-      limit: 5,
+      limit: 20,
     },
   ])
   assert.equal(result.dataStatus, 'complete')
@@ -129,13 +150,22 @@ test('returns bounded historical estimates and the five highest traffic keywords
   assert.equal(result.latest?.estimatedOrganicTraffic, 1234.5)
   assert.equal(result.latest?.positions.twentyFirstToHundredth, 8)
   assert.equal(result.history.length, 2)
-  assert.equal(result.topKeywords.length, 5)
+  assert.equal(result.topKeywords.length, 20)
+  assert.equal(result.topKeywords[0]?.keyword, 'keyword 24')
+  assert.equal(result.topKeywords.at(-1)?.keyword, 'keyword 5')
+  assert.equal(result.topKeywords[0]?.rankingUrl, 'https://example.com/page-24')
   assert.deepEqual(
-    result.topKeywords.map((keyword) => keyword.keyword),
-    ['keyword 6', 'keyword 5', 'keyword 4', 'keyword 3', 'keyword 2'],
+    result.topPages.map((page) => [
+      page.url,
+      page.estimatedOrganicTraffic,
+      page.topThree,
+    ]),
+    [
+      ['https://example.com/big', 900, 5],
+      ['https://example.com/small', 5, 5],
+    ],
   )
-  assert.equal(result.topKeywords[0]?.rankingUrl, 'https://example.com/page-6')
-  assert.equal(result.provenance.providerCostUsd, 0.147)
+  assert.equal(result.provenance.providerCostUsd, 0.158)
   assert.deepEqual(result.provenance.period, {
     dateFrom: '2025-09-01',
     dateTo: '2026-08-09',

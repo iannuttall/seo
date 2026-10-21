@@ -63,8 +63,12 @@ export async function signupReport(db: D1Database, now: Date): Promise<string> {
     .join('\n')
 }
 
-// Sends the report when both Telegram secrets are set; otherwise does nothing.
-export async function sendSignupReport(env: Env, now: Date): Promise<void> {
+// Sends text to Ian's Telegram chat when both Telegram secrets are set;
+// otherwise does nothing.
+export async function sendTelegram(
+  env: Env,
+  text: () => Promise<string>,
+): Promise<void> {
   if (!env.TELEGRAM_BOT_TOKEN || !env.TELEGRAM_CHAT_ID) return
   const response = await fetch(
     `https://api.telegram.org/bot${env.TELEGRAM_BOT_TOKEN}/sendMessage`,
@@ -73,7 +77,7 @@ export async function sendSignupReport(env: Env, now: Date): Promise<void> {
       headers: { 'content-type': 'application/json' },
       body: JSON.stringify({
         chat_id: env.TELEGRAM_CHAT_ID,
-        text: await signupReport(env.DB, now),
+        text: await text(),
         disable_web_page_preview: true,
       }),
     },
@@ -81,4 +85,8 @@ export async function sendSignupReport(env: Env, now: Date): Promise<void> {
   if (!response.ok) {
     throw new Error(`Telegram answered ${response.status}`)
   }
+}
+
+export function sendSignupReport(env: Env, now: Date): Promise<void> {
+  return sendTelegram(env, () => signupReport(env.DB, now))
 }

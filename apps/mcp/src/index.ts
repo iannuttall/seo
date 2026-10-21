@@ -1,5 +1,6 @@
 import { account, accountCallback, bingCallback } from './account.ts'
 import { credentials, finishLogin, logout, startLogin } from './cli.ts'
+import { failureReport } from './failure-report.ts'
 import { directory } from './google.ts'
 import { serveMcp, serverCard } from './mcp.ts'
 import {
@@ -13,7 +14,7 @@ import {
   token,
   userOf,
 } from './oauth.ts'
-import { sendSignupReport } from './signup-report.ts'
+import { sendSignupReport, sendTelegram } from './signup-report.ts'
 import { accountsOf, keysOf } from './store.ts'
 
 // seoskill.dev routes /mcp, /oauth/*, /account, /.well-known/oauth-* and
@@ -147,8 +148,11 @@ export default {
     const response = await route(request, env, ctx)
     return api ? withCors(response) : response
   },
-  // The weekly sign-up count for Ian's Telegram (wrangler.jsonc triggers).
+  // The weekly sign-up and failure counts for Ian's Telegram
+  // (wrangler.jsonc triggers).
   async scheduled(controller, env, ctx) {
-    ctx.waitUntil(sendSignupReport(env, new Date(controller.scheduledTime)))
+    const now = new Date(controller.scheduledTime)
+    ctx.waitUntil(sendSignupReport(env, now))
+    ctx.waitUntil(sendTelegram(env, () => failureReport(env.TELEMETRY_DB, now)))
   },
 } satisfies ExportedHandler<Env>

@@ -9,6 +9,7 @@ import {
   trackTelemetryReportFailed,
   trackTelemetryReportStart,
   trackTelemetrySetupComplete,
+  updateNotice,
 } from '@seo/core'
 import {
   COMMANDS,
@@ -342,6 +343,8 @@ const isMcpServer = argv[0] === 'mcp' && argv[1] === 'serve'
 if (!isTelemetryControl && !isMcpServer) {
   initializeTelemetry(telemetryOptions)
 }
+// Starts the background version check early, so a run can show its result.
+if (!isMcpServer) updateNotice()
 const updateExitCode = await maybeOfferSelfUpdate(pkg, { argv })
 if (updateExitCode !== undefined) {
   process.exit(updateExitCode)
@@ -378,6 +381,7 @@ if (helpRequested || versionRequested) {
   if (trackedReport) {
     trackTelemetryReportStart(trackedReport, telemetryOptions)
   }
+  const json = argv.includes('--json')
   try {
     await runCommand(main, { rawArgs: commandArgs })
     if (trackedReport) {
@@ -399,9 +403,10 @@ if (helpRequested || versionRequested) {
       }
     }
     const normalized = toSeoError(error)
-    if (argv.includes('--json')) {
+    if (json) {
+      const notice = updateNotice()
       process.stdout.write(
-        `${JSON.stringify(seoErrorEnvelope(normalized), null, 2)}\n`,
+        `${JSON.stringify({ ...seoErrorEnvelope(normalized), ...(notice ? { updateNotice: notice } : {}) }, null, 2)}\n`,
       )
     } else {
       process.stderr.write(`Error: ${normalized.message}\n`)
@@ -416,4 +421,7 @@ if (helpRequested || versionRequested) {
     }
     process.exitCode = normalized.exitCode
   }
+  // JSON output carries the notice as a field (printJson).
+  const notice = json || isMcpServer ? undefined : updateNotice()
+  if (notice) process.stderr.write(`\n${notice}\n`)
 }

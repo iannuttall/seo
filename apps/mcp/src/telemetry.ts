@@ -39,8 +39,8 @@ export function agentFor(userAgent: string | null): string {
 const FAILURES: Record<ErrorCode, [string, string]> = {
   INVALID_INPUT: ['config', 'invalid_input'],
   NOT_CONNECTED: ['auth', 'auth_required'],
-  NO_ACCESS: ['auth', 'property_not_found'],
-  NO_KEY: ['config', 'auth_config_required'],
+  NO_ACCESS: ['config', 'property_not_found'],
+  NO_KEY: ['auth', 'auth_config_required'],
   RATE_LIMITED: ['network', 'rate_limited'],
   GOOGLE_ERROR: ['network', 'provider_unavailable'],
   PROVIDER_ERROR: ['network', 'provider_unavailable'],

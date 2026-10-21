@@ -1,0 +1,349 @@
+---
+import Button from '@/components/Button.astro'
+import Card from '@/components/Card.astro'
+import FormInput from '@/components/FormInput.astro'
+
+const toggle =
+  'inline-flex h-8 items-center justify-center rounded-md border border-transparent px-3 text-sm font-medium text-foreground-muted outline-none transition-colors hover:text-foreground focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/20 aria-pressed:bg-card aria-pressed:text-foreground aria-pressed:shadow-xs'
+---
+
+<section data-og-checker class="space-y-6">
+  <Card>
+    <form data-og-form class="space-y-5 p-5 sm:p-6" novalidate>
+      <div class="space-y-1">
+        <h2 class="text-lg font-medium">Check a page's link preview</h2>
+        <p class="text-sm leading-6 text-foreground-muted">
+          The checker reads the page the way a link preview crawler does, then fetches the share image to measure it.
+        </p>
+      </div>
+      <label class="block space-y-2 text-sm font-medium">
+        <span>Page URL</span>
+        <FormInput
+          data-og-url
+          type="text"
+          inputmode="url"
+          autocomplete="url"
+          autocapitalize="off"
+          spellcheck="false"
+          maxlength="2048"
+          placeholder="https://example.com/blog/post"
+        />
+      </label>
+      <div class="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+        <p class="text-xs leading-5 text-foreground-muted">Free, 10 checks a day. The page must be public.</p>
+        <Button data-check type="submit" class="min-h-10 shrink-0 px-5 text-xs">Check Open Graph</Button>
+      </div>
+      <p data-error hidden class="text-sm leading-6 text-red-700 dark:text-red-400" role="alert"></p>
+    </form>
+  </Card>
+
+  <div data-results hidden class="space-y-6">
+    <Card inverted>
+      <div class="space-y-5 p-5 sm:p-6">
+        <div class="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
+          <div class="min-w-0">
+            <p data-headline class="text-2xl font-medium text-primary"></p>
+            <p data-subline class="mt-1 break-words text-sm leading-6 text-foreground-muted"></p>
+          </div>
+          <div class="grid shrink-0 gap-2 sm:grid-cols-2">
+            <Button data-copy type="button" class="min-h-10 px-4 text-xs">Copy findings</Button>
+            <Button data-download type="button" class="min-h-10 px-4 text-xs">Download JSON</Button>
+          </div>
+        </div>
+        <p data-action-status class="text-xs text-foreground-muted" aria-live="polite"></p>
+      </div>
+    </Card>
+
+    <Card>
+      <div class="space-y-5 p-5 sm:p-6">
+        <div class="flex flex-wrap items-center justify-between gap-3">
+          <h3 class="text-sm font-medium">How a share looks</h3>
+          <div data-surfaces role="group" aria-label="Preview" class="inline-flex h-9 items-center gap-1 rounded-lg bg-muted p-0.5">
+            <button type="button" class={toggle} data-surface="facebook" aria-pressed="true">Facebook</button>
+            <button type="button" class={toggle} data-surface="x" aria-pressed="false">X</button>
+            <button type="button" class={toggle} data-surface="chat" aria-pressed="false">Chat apps</button>
+          </div>
+        </div>
+        <div data-preview class="mx-auto w-full max-w-[32rem]"></div>
+        <p data-preview-note class="text-xs leading-5 text-foreground-muted"></p>
+      </div>
+    </Card>
+
+    <Card>
+      <div class="space-y-4 p-5 sm:p-6">
+        <h3 class="text-sm font-medium">Checks</h3>
+        <ul data-checks class="divide-y divide-border text-sm"></ul>
+      </div>
+    </Card>
+
+    <div data-images class="grid items-start gap-2 sm:grid-cols-2"></div>
+
+    <Card>
+      <div class="space-y-4 p-5 sm:p-6">
+        <h3 class="text-sm font-medium">Tags found in the head</h3>
+        <div class="overflow-x-auto">
+          <table class="w-full text-left text-xs">
+            <thead class="border-b border-border text-foreground-muted">
+              <tr>
+                <th class="py-2 pr-4 font-normal">Tag</th>
+                <th class="py-2 font-normal">Value</th>
+              </tr>
+            </thead>
+            <tbody data-tags class="divide-y divide-border"></tbody>
+          </table>
+        </div>
+      </div>
+    </Card>
+  </div>
+</section>
+
+<script>
+  type Image = {
+    url: string
+    usedBy: Array<'open-graph' | 'x'>
+    status: 'ok' | 'http-error' | 'too-large' | 'not-image' | 'failed'
+    message?: string
+    bytes?: number
+    format?: string
+    width?: number
+    height?: number
+    dataUrl?: string
+  }
+  type Check = { id: string; level: 'pass' | 'warn' | 'fail' | 'info'; message: string }
+  type Result = {
+    source: { requestedUrl: string; finalUrl: string; redirects: unknown[]; checkedAt: string }
+    preview: {
+      title: string
+      description: string
+      siteName: string
+      url: string
+      image: string | null
+      imageAlt: string
+      xTitle: string
+      xDescription: string
+      xImage: string | null
+      xCard: string
+    }
+    tags: Array<{ key: string; value: string }>
+    images: Image[]
+    checks: Check[]
+  }
+
+  const LEVELS: Record<Check['level'], { label: string; className: string }> = {
+    fail: { label: 'Fix', className: 'bg-destructive-soft text-destructive' },
+    warn: { label: 'Check', className: 'bg-warning-soft text-foreground' },
+    info: { label: 'Note', className: 'bg-muted text-foreground-muted' },
+    pass: { label: 'OK', className: 'bg-primary-soft text-foreground' },
+  }
+
+  function el<K extends keyof HTMLElementTagNameMap>(tag: K, className = '', text = ''): HTMLElementTagNameMap[K] {
+    const node = document.createElement(tag)
+    if (className) node.className = className
+    if (text) node.textContent = text
+    return node
+  }
+
+  function initialise(root: HTMLElement): void {
+    if (root.dataset.initialised === 'true') return
+    root.dataset.initialised = 'true'
+    const $ = <T extends Element>(selector: string) => root.querySelector<T>(selector) as T
+    const form = $<HTMLFormElement>('[data-og-form]')
+    const input = $<HTMLInputElement>('[data-og-url]')
+    const button = $<HTMLButtonElement>('[data-check]')
+    const error = $<HTMLElement>('[data-error]')
+    const status = $<HTMLElement>('[data-action-status]')
+    let result: Result | undefined
+    let surface = 'facebook'
+
+    const imageFor = (url: string | null) => result?.images.find((image) => image.url === url && image.status === 'ok')
+
+    const picture = (url: string | null, className: string, alt: string, fit = 'object-cover') => {
+      const image = imageFor(url)
+      if (!image) {
+        return el('div', `${className} flex items-center justify-center bg-muted text-xs text-foreground-muted`, url ? 'Image did not load' : 'No image')
+      }
+      const node = el('img', `${className} ${fit}`)
+      // A large file is shown from its own address, without a referrer.
+      node.src = image.dataUrl ?? image.url
+      node.referrerPolicy = 'no-referrer'
+      node.alt = alt
+      node.loading = 'lazy'
+      return node
+    }
+
+    function renderPreview(): void {
+      if (!result) return
+      const preview = $<HTMLElement>('[data-preview]')
+      const note = $<HTMLElement>('[data-preview-note]')
+      const p = result.preview
+      const box = el('div', 'overflow-hidden rounded-lg bg-card ring-1 ring-border')
+      if (surface === 'facebook') {
+        box.append(picture(p.image, 'block aspect-[1.91/1] w-full', p.imageAlt))
+        const text = el('div', 'space-y-0.5 bg-muted px-3 py-2.5')
+        text.append(
+          el('p', 'truncate text-xs text-foreground-muted', p.url),
+          el('p', 'line-clamp-2 text-[15px] font-medium leading-5 text-foreground', p.title || 'No title'),
+          el('p', 'line-clamp-1 text-sm leading-5 text-foreground-muted', p.description),
+        )
+        box.append(text)
+        note.textContent = 'Facebook and LinkedIn draw a large card like this. Both cache what they read, so a changed page can keep its old preview until you refresh it in their own tools.'
+      } else if (surface === 'x') {
+        if (p.xCard === 'summary_large_image') {
+          const frame = el('div', 'relative')
+          frame.append(picture(p.xImage, 'block aspect-[1.91/1] w-full', p.imageAlt))
+          frame.append(el('span', 'absolute bottom-2 left-2 max-w-[80%] truncate rounded bg-black/60 px-1.5 py-0.5 text-xs text-white', p.url))
+          box.append(frame)
+          note.textContent = `X shows a full-width image because twitter:card is summary_large_image. Under the post it shows only the site, not the description.`
+        } else {
+          const row = el('div', 'flex items-stretch')
+          row.append(picture(p.xImage, 'size-28 shrink-0', p.imageAlt))
+          const text = el('div', 'min-w-0 space-y-0.5 px-3 py-2.5')
+          text.append(
+            el('p', 'truncate text-xs text-foreground-muted', p.url),
+            el('p', 'line-clamp-1 text-sm font-medium text-foreground', p.xTitle || 'No title'),
+            el('p', 'line-clamp-2 text-sm leading-5 text-foreground-muted', p.xDescription),
+          )
+          row.append(text)
+          box.append(row)
+          note.textContent = `X shows a small summary card because twitter:card is ${p.xCard === 'summary' && !result.tags.some((tag) => tag.key === 'twitter:card') ? 'not set' : p.xCard}.`
+        }
+      } else {
+        box.className = 'space-y-1.5 rounded-lg bg-card p-3 ring-1 ring-border'
+        const body = el('div', 'space-y-1 border-l-4 border-border pl-3')
+        body.append(
+          el('p', 'text-xs font-medium text-foreground-muted', p.siteName),
+          el('p', 'text-sm font-medium text-primary', p.title || 'No title'),
+          el('p', 'line-clamp-3 text-sm leading-5 text-foreground-muted', p.description),
+        )
+        if (p.image) body.append(picture(p.image, 'mt-2 block aspect-[1.91/1] w-full max-w-[22rem] rounded-md', p.imageAlt))
+        box.append(body)
+        note.textContent = 'Slack, Discord, WhatsApp and iMessage show something close to this. Each one crops and trims text its own way.'
+      }
+      preview.replaceChildren(box)
+      for (const option of root.querySelectorAll<HTMLButtonElement>('[data-surface]')) {
+        option.setAttribute('aria-pressed', String(option.dataset.surface === surface))
+      }
+    }
+
+    function render(): void {
+      if (!result) return
+      const fails = result.checks.filter((item) => item.level === 'fail').length
+      const warns = result.checks.filter((item) => item.level === 'warn').length
+      $<HTMLElement>('[data-headline]').textContent =
+        fails ? `${fails} ${fails === 1 ? 'problem' : 'problems'} to fix` : warns ? `${warns} ${warns === 1 ? 'thing' : 'things'} to check` : 'Ready to share'
+      $<HTMLElement>('[data-subline]').textContent =
+        `${result.source.finalUrl}${result.source.redirects.length ? `, reached after ${result.source.redirects.length} ${result.source.redirects.length === 1 ? 'redirect' : 'redirects'}` : ''}. ${result.tags.length} Open Graph and X tags found.`
+
+      const checks = $<HTMLElement>('[data-checks]')
+      checks.replaceChildren(
+        ...result.checks.map((item) => {
+          const row = el('li', 'flex items-start gap-3 py-2.5')
+          const level = LEVELS[item.level]
+          row.append(el('span', `mt-0.5 inline-flex w-12 shrink-0 justify-center rounded px-1.5 py-0.5 text-xs font-medium ${level.className}`, level.label), el('span', 'min-w-0 break-words leading-6 text-foreground-muted', item.message))
+          return row
+        }),
+      )
+
+      const images = $<HTMLElement>('[data-images]')
+      images.replaceChildren(
+        ...result.images.map((image) => {
+          const card = el('div', 'min-w-0 space-y-3 rounded-lg bg-muted p-5')
+          card.append(el('p', 'text-sm font-medium', image.usedBy.includes('open-graph') ? (image.usedBy.includes('x') ? 'Share image, used by every platform' : 'Open Graph image') : 'X image'))
+          if (image.status === 'ok') card.append(picture(image.url, 'block max-h-72 w-full rounded-md bg-background', '', 'object-contain'))
+          const list = el('dl', 'grid grid-cols-[auto_minmax(0,1fr)] gap-x-4 gap-y-1.5 text-xs')
+          const add = (term: string, value: string | undefined) => {
+            if (value) list.append(el('dt', 'text-foreground-muted', term), el('dd', 'break-words text-foreground', value))
+          }
+          add('Size', image.width && image.height ? `${image.width}×${image.height} (${(image.width / image.height).toFixed(2)}:1)` : undefined)
+          add('File', image.bytes ? `${image.format ?? ''} ${image.bytes >= 1_048_576 ? `${(image.bytes / 1_048_576).toFixed(1)} MB` : `${Math.max(1, Math.round(image.bytes / 1024))} KB`}`.trim() : undefined)
+          add('Problem', image.status === 'ok' ? undefined : image.message)
+          add('Address', image.url)
+          card.append(list)
+          return card
+        }),
+      )
+      images.hidden = result.images.length === 0
+
+      $<HTMLElement>('[data-tags]').replaceChildren(
+        ...(result.tags.length
+          ? result.tags.map((tag) => {
+              const row = el('tr')
+              row.append(el('td', 'whitespace-nowrap py-2 pr-4 align-top font-mono text-foreground', tag.key), el('td', 'py-2 text-foreground-muted [overflow-wrap:anywhere]', tag.value))
+              return row
+            })
+          : [(() => {
+              const row = el('tr')
+              const cell = el('td', 'py-2 text-foreground-muted', 'No Open Graph or X tags in the head.')
+              cell.colSpan = 2
+              row.append(cell)
+              return row
+            })()]),
+      )
+      renderPreview()
+      $<HTMLElement>('[data-results]').hidden = false
+    }
+
+    for (const option of root.querySelectorAll<HTMLButtonElement>('[data-surface]')) {
+      option.addEventListener('click', () => {
+        surface = option.dataset.surface ?? 'facebook'
+        renderPreview()
+      })
+    }
+
+    form.addEventListener('submit', async (event) => {
+      event.preventDefault()
+      error.hidden = true
+      const url = input.value.trim()
+      if (!url) {
+        error.textContent = 'Enter a page URL.'
+        error.hidden = false
+        return
+      }
+      button.disabled = true
+      button.textContent = 'Checking…'
+      try {
+        const response = await fetch('/api/tools/open-graph', {
+          method: 'POST',
+          headers: { 'content-type': 'application/json' },
+          body: JSON.stringify({ url }),
+        })
+        const data = (await response.json().catch(() => ({}))) as Result & { error?: string }
+        if (!response.ok) throw new Error(data.error || 'The page could not be checked.')
+        result = data
+        status.textContent = ''
+        render()
+        $<HTMLElement>('[data-results]').scrollIntoView({ behavior: 'smooth', block: 'start' })
+      } catch (caught) {
+        error.textContent = caught instanceof Error ? caught.message : 'The page could not be checked.'
+        error.hidden = false
+      } finally {
+        button.disabled = false
+        button.textContent = 'Check Open Graph'
+      }
+    })
+
+    $<HTMLButtonElement>('[data-copy]').addEventListener('click', async () => {
+      if (!result) return
+      const lines = [`Open Graph check for ${result.source.finalUrl}`, ...result.checks.map((item) => `${LEVELS[item.level].label}: ${item.message}`)]
+      try {
+        await navigator.clipboard.writeText(lines.join('\n'))
+        status.textContent = 'Findings copied.'
+      } catch {
+        status.textContent = 'The findings could not be copied.'
+      }
+    })
+
+    $<HTMLButtonElement>('[data-download]').addEventListener('click', () => {
+      if (!result) return
+      const clean = { ...result, images: result.images.map(({ dataUrl: _, ...rest }) => rest) }
+      const link = document.createElement('a')
+      link.href = URL.createObjectURL(new Blob([JSON.stringify(clean, null, 2)], { type: 'application/json' }))
+      link.download = 'open-graph-check.json'
+      link.click()
+      URL.revokeObjectURL(link.href)
+      status.textContent = 'JSON downloaded.'
+    })
+  }
+
+  for (const root of document.querySelectorAll<HTMLElement>('[data-og-checker]')) initialise(root)
+</script>

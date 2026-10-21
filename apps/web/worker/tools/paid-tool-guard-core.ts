@@ -19,6 +19,7 @@ export const PUBLIC_WORKER_TOOLS = [
   'serp-preview',
   'favicon-checker',
   'domain-age',
+  'open-graph',
 ] as const
 
 export type PaidToolId = keyof typeof PAID_TOOL_PROVIDERS

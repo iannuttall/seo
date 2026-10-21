@@ -53,13 +53,13 @@ const JSON_HEADERS = {
 }
 const REDIRECT_STATUSES = new Set([301, 302, 303, 307, 308])
 
-class ToolInputError extends Error {}
-class ToolFetchError extends Error {}
-class ToolLimitError extends Error {}
+export class ToolInputError extends Error {}
+export class ToolFetchError extends Error {}
+export class ToolLimitError extends Error {}
 
-type FetchBudget = { subrequests: number }
+export type FetchBudget = { subrequests: number }
 
-type FetchedResource = {
+export type FetchedResource = {
   bytes: Uint8Array
   contentType: string
   finalUrl: URL
@@ -103,7 +103,7 @@ async function readBounded(
   return bytes
 }
 
-async function readRequest(request: Request): Promise<unknown> {
+export async function readRequest(request: Request): Promise<unknown> {
   const declared = Number(request.headers.get('content-length'))
   if (
     Number.isFinite(declared) &&
@@ -128,7 +128,7 @@ async function readRequest(request: Request): Promise<unknown> {
   }
 }
 
-function parsePageUrl(value: unknown): URL {
+export function parsePageUrl(value: unknown): URL {
   if (typeof value !== 'string' || !value.trim()) {
     throw new ToolInputError('Enter a public website URL or domain.')
   }
@@ -145,21 +145,26 @@ function parsePageUrl(value: unknown): URL {
   }
 }
 
-async function fetchBounded(
+export async function fetchBounded(
   initialUrl: URL,
   fetcher: SitemapFetcher,
   budget: FetchBudget,
   maximumBytes: number,
   accept: string,
+  limits: {
+    redirects: number
+    subrequests: number
+  } = SERP_PREVIEW_FETCH_LIMITS,
+  userAgent = 'SEO-SERP-Preview/1.0 (+https://seoskill.dev/tools/serp-preview)',
 ): Promise<FetchedResource> {
   let current = initialUrl
   const redirects: FetchedResource['redirects'] = []
   for (
     let redirectCount = 0;
-    redirectCount <= SERP_PREVIEW_FETCH_LIMITS.redirects;
+    redirectCount <= limits.redirects;
     redirectCount += 1
   ) {
-    if (budget.subrequests >= SERP_PREVIEW_FETCH_LIMITS.subrequests) {
+    if (budget.subrequests >= limits.subrequests) {
       throw new ToolLimitError('The request limit was reached.')
     }
     budget.subrequests += 1
@@ -173,8 +178,7 @@ async function fetchBounded(
       response = await fetcher(current, {
         headers: {
           accept,
-          'user-agent':
-            'SEO-SERP-Preview/1.0 (+https://seoskill.dev/tools/serp-preview)',
+          'user-agent': userAgent,
         },
         redirect: 'manual',
         signal: controller.signal,
@@ -196,7 +200,7 @@ async function fetchBounded(
       const location = response.headers.get('location')
       await response.body?.cancel()
       if (!location) throw new ToolFetchError('A redirect had no location.')
-      if (redirectCount === SERP_PREVIEW_FETCH_LIMITS.redirects) {
+      if (redirectCount === limits.redirects) {
         throw new ToolLimitError('The URL redirected too many times.')
       }
       let next: URL
@@ -237,7 +241,7 @@ async function fetchBounded(
   throw new ToolLimitError('The URL redirected too many times.')
 }
 
-function decodeHtml(value: string): string {
+export function decodeHtml(value: string): string {
   return value.replace(
     /&(?:amp|lt|gt|quot|apos|#\d+|#x[\da-f]+);/giu,
     (entity) => {
@@ -266,7 +270,7 @@ function decodeHtml(value: string): string {
   )
 }
 
-function cleanText(value: string | undefined, maximum: number): string {
+export function cleanText(value: string | undefined, maximum: number): string {
   if (!value) return ''
   return decodeHtml(value.replace(/<[^>]*>/gu, ' '))
     .replace(/\s+/gu, ' ')
@@ -274,7 +278,10 @@ function cleanText(value: string | undefined, maximum: number): string {
     .slice(0, maximum)
 }
 
-function safeResolve(value: string | undefined, base: URL): URL | undefined {
+export function safeResolve(
+  value: string | undefined,
+  base: URL,
+): URL | undefined {
   if (!value || value.length > 2_048) return undefined
   try {
     return parseSitemapUrl(new URL(decodeHtml(value), base).toString())

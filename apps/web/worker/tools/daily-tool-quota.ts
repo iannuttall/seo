@@ -28,6 +28,7 @@ const PUBLIC_TOOL_BY_PATH = new Map<string, PublicWorkerToolId>([
   ['/api/tools/serp-preview', 'serp-preview'],
   ['/api/tools/favicon-checker', 'favicon-checker'],
   ['/api/tools/domain-age', 'domain-age'],
+  ['/api/tools/open-graph', 'open-graph'],
 ])
 
 const JSON_HEADERS = {

@@ -4,6 +4,7 @@ import { applyDailyToolQuota } from './tools/daily-tool-quota.ts'
 import { handleDomainAge } from './tools/domain-age.ts'
 import { handleFaviconCheck } from './tools/favicon-checker.ts'
 import { handleLlmsTxtFetch } from './tools/llms-txt.ts'
+import { handleOpenGraphCheck } from './tools/open-graph.ts'
 import {
   handleCompetitorKeywords,
   handleDomainRating,
@@ -1010,6 +1011,9 @@ app.all('/api/tools/serp-preview', (context) =>
 )
 app.all('/api/tools/favicon-checker', (context) =>
   handleFaviconCheck(context.req.raw),
+)
+app.all('/api/tools/open-graph', (context) =>
+  handleOpenGraphCheck(context.req.raw),
 )
 app.all('/api/tools/domain-age', (context) => handleDomainAge(context.req.raw))
 app.all('/api/tools/spam-score', (context) =>

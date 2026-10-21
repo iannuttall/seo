@@ -45,6 +45,15 @@ export const tools = [
     kind: 'worker',
   },
   {
+    id: 'open-graph-checker',
+    path: '/tools/open-graph-checker',
+    title: 'Open Graph checker',
+    action: 'Open the Open Graph checker',
+    description:
+      'Preview how a link looks on Facebook, X and chat apps, and check its Open Graph tags and share image.',
+    kind: 'worker',
+  },
+  {
     id: 'llms-txt-generator',
     path: '/tools/llms-txt-generator',
     title: 'llms.txt generator',

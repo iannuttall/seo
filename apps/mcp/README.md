@@ -23,8 +23,8 @@ no password or separate signup.
 Sign in with Google at `https://seoskill.dev/account` to:
 
 - **Accounts:** see your linked Google accounts and Bing, and add another,
-- **Keys:** save or remove DataForSEO and Ahrefs keys, a Clicky account
-  login and Clicky sites (never shown again),
+- **Keys:** save or remove DataForSEO, Ahrefs and TypeSafe keys, a Clicky
+  account login and Clicky sites (never shown again),
 - **Machines:** approve a `seo login`, remove a linked machine, or make a
   token for a cloud agent,
 - delete everything, which also revokes the Google sign-ins, or sign out.
@@ -36,7 +36,10 @@ links to the account page.
 
 ## Keys
 
-DataForSEO and Ahrefs use your own key. Clicky uses each site's site ID and
+DataForSEO and Ahrefs use your own key. A TypeSafe key
+(`x-typesafe-key`) is never used by this server: a linked CLI gets it with
+the other keys, and `seo internal-links` uses it on that machine to have Jev
+classify pages and judge links. Clicky uses each site's site ID and
 sitekey; saving one checks it with Clicky and records the site's domain from
 one recent page, so `seo_data` can match the site by domain or site ID. Each
 Clicky site is one key, `x-clicky-<site id>`. A saved Clicky account login
@@ -106,7 +109,7 @@ A small Cloudflare D1 database (`migrations/`) keeps only:
 - a random person id, created at your first Google sign-in,
 - each linked Google account's email and refresh and access tokens,
 - each linked Bing account's tokens and a name made from its sites,
-- your DataForSEO and Ahrefs keys, if you save them,
+- your DataForSEO, Ahrefs and TypeSafe keys, if you save them,
 - your Clicky sites, if you save them: site ID, sitekey and domain,
 - your Clicky account login, if you save it: username and password, used
   only to read your Clicky site list,

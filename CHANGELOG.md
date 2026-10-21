@@ -1,5 +1,27 @@
 # Changelog
 
+## Unreleased
+
+### Changed
+
+- `seo internal-links` audits a whole site with `--site`, or finds links to
+  one page with `--url`. It crawls the site from your machine (sitemap
+  first, robots.txt and its crawl delay honoured, redirects and canonicals
+  followed), finds related pages by their text and by shared Search Console
+  queries when the property is available, and places each link in a real
+  sentence with a real phrase as anchor text. At most 8 links per target.
+  A site audit crawls 500 pages; `--max-pages` takes up to 5,000, and the
+  result says how many pages were crawled and whether the limit was hit.
+  The JSON shape is new (methodology replaced by `crawl`, `judge`,
+  `searchConsole`, `items`, `heldBack` and `pageInventory`).
+- With a TypeSafe key, Jev classifies every page's type and search intent
+  and judges each link: its probability, the sentence, the anchor and what
+  it does for the reader. Fixed floors in code can overrule it. Set
+  `TYPESAFE_API_KEY` on the machine, or save the key on the Keys tab of the
+  seoskill.dev account and run `seo login`. The result shows the requests
+  and their cost (about 10 to 20 cents for 500 pages). Without a key it
+  says Jev was not used and uses text heuristics.
+
 ## 0.9.0
 
 ### Added

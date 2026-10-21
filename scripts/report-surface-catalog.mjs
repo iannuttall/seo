@@ -193,6 +193,7 @@ export const reportSurfaces = [
     cli: {
       file: 'packages/cli/src/commands/opportunities/internal-links.ts',
       marker: "'internal-links': internalLinksCommand",
+      sharedFiles: ['packages/cli/src/commands/core-commands.ts'],
     },
     mcp: {
       file: 'packages/mcp/src/opportunity-tools.ts',
@@ -201,6 +202,7 @@ export const reportSurfaces = [
     options: [
       common.site,
       opt('targetUrl', 'url:', 'targetUrl: z'),
+      opt('maxPages', "'max-pages':", 'maxPages: z'),
       opt('startDate', "'start-date':", 'startDate: z'),
       opt('endDate', "'end-date':", 'endDate: z'),
       common.refresh,

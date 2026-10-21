@@ -1,35 +1,40 @@
-import { internalLinksReport } from '@seo/core'
-import { defineCommand } from 'citty'
-import { booleanArg, jsonFlag, stringArg } from '../../args.js'
-import { resolveProperty } from '../../selection.js'
-import { printJson } from '../../utils.js'
 import {
-  formatCount,
-  printActionDetails,
-  printLimitedTable,
-  printNotes,
-  printReportSummary,
-  truncate,
-} from '../output.js'
+  internalLinksReport,
+  localInternalLinksDependencies,
+  SeoError,
+} from '@seo/core'
+import { internalLinksText } from '@seo/core/commands'
+import { defineCommand } from 'citty'
+import { booleanArg, jsonFlag, numberArg, stringArg } from '../../args.js'
+import { createProgressReporter } from '../../progress.js'
+import { printJson } from '../../utils.js'
+import { cliCall, dates, detail, detailArg } from '../core-commands.js'
+
+// `seo internal-links --site <site>` audits a whole site; `--url <page>`
+// finds links to one page. Both crawl the site from this machine.
 
 export const internalLinksCommand = defineCommand({
   meta: {
     name: 'internal-links',
-    description: 'Find verified internal-link review candidates for one URL',
+    description:
+      'Internal links to add across a site (--site) or to one page (--url), placed in real sentences',
   },
   args: {
-    url: {
-      type: 'string',
-      required: true,
-      description: 'Target page that should receive internal links.',
-    },
     site: {
       type: 'string',
-      description:
-        'Search Console property, when the URL alone does not pick one.',
+      description: 'Site to audit: a domain, URL or Search Console property.',
     },
-    'start-date': { type: 'string', description: 'Optional YYYY-MM-DD.' },
-    'end-date': { type: 'string', description: 'Optional YYYY-MM-DD.' },
+    url: {
+      type: 'string',
+      description: 'One page to find internal links to.',
+    },
+    'max-pages': {
+      type: 'string',
+      description:
+        'Site audits only: pages to crawl, 500 by default, up to 5,000.',
+    },
+    ...dates,
+    ...detail,
     refresh: {
       type: 'boolean',
       default: false,
@@ -44,104 +49,50 @@ export const internalLinksCommand = defineCommand({
   run: async ({ args }) => {
     const json = jsonFlag(args)
     const refresh = booleanArg(args.refresh)
-    const targetUrl = stringArg(args.url) ?? ''
-    const site = await resolveProperty(stringArg(args.site) ?? targetUrl, {
-      refresh,
-    })
-    const report = await internalLinksReport({
-      site,
-      targetUrl,
-      startDate: stringArg(args['start-date']),
-      endDate: stringArg(args['end-date']),
-      refresh,
-    })
+    const url = stringArg(args.url)
+    const site = stringArg(args.site)
+    if (Boolean(url) === Boolean(site)) {
+      throw new SeoError(
+        'INVALID_INPUT',
+        'Send --site to audit a whole site, or --url to find links to one page.',
+      )
+    }
+    const maxPagesArg = stringArg(args['max-pages'])
+    const maxPages =
+      maxPagesArg === undefined ? undefined : numberArg(maxPagesArg)
+    if (maxPagesArg !== undefined && maxPages === undefined) {
+      throw new SeoError('INVALID_INPUT', '--max-pages is a whole number.')
+    }
+    const target = (url ?? site) as string
+    const report = await internalLinksReport(
+      {
+        site: target,
+        targetUrl: url,
+        maxPages,
+        startDate: stringArg(args['start-date']),
+        endDate: stringArg(args['end-date']),
+        refresh,
+      },
+      {
+        ...(await localInternalLinksDependencies({ site: target, refresh })),
+        progress: createProgressReporter(!json && process.stderr.isTTY),
+      },
+    )
     if (json) {
       printJson(report)
       return
     }
-
-    printReportSummary({
-      title: 'Internal link opportunities',
-      target: report.targetUrl,
-      status:
-        report.summary.failedChecks > 0 ||
-        report.summary.uncheckedCandidates > 0
-          ? 'unknown'
-          : 'info',
-      summary: report.summary.verdict,
-      metrics: [
-        { label: 'Target state', value: report.target.verification },
-        { label: 'Preferred target', value: report.target.preferredUrl },
-        {
-          label: 'Target queries',
-          value: formatCount(report.summary.targetQueries),
-        },
-        {
-          label: 'Matched sources',
-          value: formatCount(report.summary.candidateSources),
-        },
-        {
-          label: 'Checked sources',
-          value: formatCount(report.summary.checkedSources),
-        },
-        {
-          label: 'Attempted sources',
-          value: formatCount(report.summary.attemptedSources),
-        },
-        {
-          label: 'Review candidates',
-          value: formatCount(report.summary.returnedSources),
-        },
-        {
-          label: 'Technical exclusions',
-          value: formatCount(report.summary.technicalExclusions),
-        },
-        {
-          label: 'Existing links',
-          value: formatCount(report.summary.existingLinksObserved),
-        },
-        {
-          label: 'Failed checks',
-          value: formatCount(report.summary.failedChecks),
-        },
-        {
-          label: 'Unchecked sources',
-          value: formatCount(report.summary.uncheckedCandidates),
-        },
-        { label: 'GSC completeness', value: report.source.completeness },
-        { label: 'Brand queries', value: report.summary.brandFiltering },
-      ],
-    })
-    printNotes('Why this matters', [
-      'Exact-query overlap is useful affinity evidence; precision lexical matches are review evidence only.',
-      'Source and target pages are checked for redirects, indexability, canonicals, and existing link placement before an action is returned.',
-      'Each source names the sentence where a link fits and anchor text taken from it, when a sentence names the target.',
-    ])
-    printNotes('Recommended actions', report.recommendations)
-    printNotes('Report caveats', report.caveats)
-    if (!report.items.length) return
-
-    printLimitedTable(
-      ['Source URL', 'Matched impr', 'Match', 'Link evidence', 'Anchor'],
-      report.items.map((item) => [
-        truncate(item.sourceUrl, 52),
-        formatCount(item.matchedQueryImpressions),
-        item.bestMatchKind,
-        item.linkEvidence.status,
-        truncate(
-          item.placement.sentences[0]?.anchors[0] ?? 'no sentence fits',
-          32,
-        ),
-      ]),
+    const base = {
+      ...(url ? { url } : { site }),
+      ...(maxPages !== undefined ? { 'max-pages': maxPages } : {}),
+    }
+    process.stdout.write(
+      `${internalLinksText(report, {
+        detail: detailArg(args),
+        offset: numberArg(args.offset) ?? 0,
+        more: (view, offset) =>
+          cliCall('internal-links', { ...base, detail: view, offset }),
+      })}\n`,
     )
-    printActionDetails(
-      'Top internal-link reviews',
-      report.items.map((item) => ({
-        label: truncate(item.sourceUrl, 96),
-        context: `${formatCount(item.matchedQueryImpressions)} matched-query impressions; ${item.bestMatchKind}`,
-        action: item.recommendation.action,
-      })),
-    )
-    printNotes('Provider usage', [report.ledgerSummary])
   },
 })

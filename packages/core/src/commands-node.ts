@@ -1,3 +1,4 @@
+import type { InternalLinksDependencies } from './analyze/internal-links.js'
 import { type BingCall, bingCall } from './bing/api.js'
 import { readClickySiteKeys } from './clicky/credentials.js'
 import {
@@ -22,6 +23,7 @@ import {
   indexStatusFrom,
   matchProperty,
 } from './commands/index.js'
+import { typesafeDecisionModel } from './decision-model.js'
 import { SeoError, type SeoErrorCode } from './errors.js'
 import { extractMainMarkdown } from './extract/main-content.js'
 import { fetchPage } from './fetch/page-fetcher.js'
@@ -127,6 +129,51 @@ export async function localResearchKeys(): Promise<Headers> {
   }
   if (ahrefs?.apiKey) keys.set('x-ahrefs-key', ahrefs.apiKey)
   return keys
+}
+
+export const TYPESAFE_API_KEY_ENV = 'TYPESAFE_API_KEY'
+
+// What `seo internal-links` uses on this machine: the Search Console
+// property for the site when this Google login has one, and Jev when a
+// TypeSafe key is set here (it never leaves the machine) or saved on the
+// seoskill.dev account. Without either, the report says why.
+export async function localInternalLinksDependencies(options: {
+  site: string
+  refresh?: boolean
+}): Promise<
+  Pick<InternalLinksDependencies, 'searchConsole' | 'decisionModel'>
+> {
+  const searchConsole: InternalLinksDependencies['searchConsole'] =
+    await resolveLocalSite(options.site, { refresh: options.refresh }).then(
+      (property) => ({
+        property,
+        query: (request) =>
+          querySearchAnalytics(property, request, {
+            refresh: options.refresh,
+          }),
+      }),
+      (error: unknown) => ({
+        unavailable: `no Search Console property was found for this site (${error instanceof Error ? error.message : String(error)})`,
+      }),
+    )
+  const local = process.env[TYPESAFE_API_KEY_ENV]?.trim()
+  const saved = local
+    ? undefined
+    : (await localResearchKeys().catch(() => new Headers())).get(
+        'x-typesafe-key',
+      )
+  const decisionModel: InternalLinksDependencies['decisionModel'] = local
+    ? {
+        model: typesafeDecisionModel({ apiKey: local }),
+        keySource: 'environment',
+      }
+    : saved
+      ? {
+          model: typesafeDecisionModel({ apiKey: saved }),
+          keySource: 'account',
+        }
+      : { unavailable: 'no TypeSafe key is set' }
+  return { searchConsole, decisionModel }
 }
 
 // Asks the seoskill.dev account to read its saved Clicky account's sites

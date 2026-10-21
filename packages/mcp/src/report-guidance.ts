@@ -162,19 +162,19 @@ export const REPORT_GUIDANCE = {
       'Cross-source URL groups with clear evidence limits and a representative review queue for URL Inspection.',
   },
   'internal-links': {
-    name: 'Internal link opportunities',
+    name: 'Internal links',
     description:
-      'Find relevant pages that could add a useful internal link to a target URL.',
+      'Crawl a site and find the internal links it is missing, across the whole site or to one target URL, each placed in a real sentence with a real phrase as anchor text.',
     useWhen: [
-      'A target page needs stronger internal discovery or contextual links.',
-      'You want candidate source pages checked against their current content.',
+      'Pages that belong together do not link to each other.',
+      'A target page needs more contextual links from the rest of the site.',
     ],
     avoidWhen: [
       'You want links added automatically.',
-      'The target and candidate pages do not share a clear topic or user need.',
+      'The site cannot be crawled from this machine.',
     ],
     outcome:
-      'Verified source-page candidates with query and page evidence for review.',
+      'Links to add with the source sentence and anchor, judged by Jev when a TypeSafe key is set, plus orphan and weakly linked pages.',
   },
   'link-recovery': {
     name: 'Recover broken search-value URLs',

@@ -28,6 +28,7 @@ function parseRobots(robotsUrl: string, text: string) {
     ) => {
       isAllowed(url: string, ua?: string): boolean | undefined
       getMatchingLineNumber?(url: string, ua?: string): number
+      getCrawlDelay(ua?: string): number | undefined
     }
   )(robotsUrl, text)
 }
@@ -239,6 +240,7 @@ export function createRobotsSession(
 ): {
   resolve: RobotsResolver
   sitemapUrls: (origin: string) => Promise<string[]>
+  crawlDelay: (origin: string) => Promise<number | undefined>
 } {
   const sources = new Map<string, Promise<RobotsSource>>()
   const sourceFor = (origin: string): Promise<RobotsSource> => {
@@ -257,6 +259,19 @@ export function createRobotsSession(
   return {
     resolve: async (origin, targetUrl) =>
       resultFromSource(await sourceFor(origin), targetUrl),
+    // Seconds between requests that robots.txt asks this crawler to wait.
+    crawlDelay: async (origin) => {
+      const source = await sourceFor(origin)
+      if (source.status === undefined || source.status >= 300 || !source.text) {
+        return undefined
+      }
+      const delay = parseRobots(source.robotsUrl, source.text).getCrawlDelay(
+        SEO_CRAWLER_USER_AGENT,
+      )
+      return delay !== undefined && Number.isFinite(delay) && delay > 0
+        ? delay
+        : undefined
+    },
     sitemapUrls: async (origin) => {
       const source = await sourceFor(origin)
       if (source.status === undefined || source.status >= 300 || !source.text) {

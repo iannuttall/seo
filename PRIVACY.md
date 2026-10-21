@@ -38,8 +38,8 @@ Cloudflare D1 with only these things:
 - **Your linked Bing account, if you link one.** Its refresh and access
   tokens, with read-only access to Bing Webmaster Tools, and a name made
   from its sites.
-- **Your API keys, if you save them.** A DataForSEO login and password and an
-  Ahrefs key.
+- **Your API keys, if you save them.** A DataForSEO login and password, an
+  Ahrefs key and a TypeSafe key.
 - **Your Clicky sites, if you save them.** Each site's numeric site ID,
   sitekey and domain. The domain comes from Clicky when you save the site,
   so agents can name the site.
@@ -226,6 +226,16 @@ operation. Depending on the provider and report, these can include:
 DataForSEO requests use your login and API password. Ahrefs requests use your API v3 bearer key and can include the
 target mode and country filter. Each provider also receives ordinary network
 metadata.
+
+`seo internal-links` sends page text to TypeSafe when a TypeSafe key is set
+(`TYPESAFE_API_KEY` on your machine, or saved on your seoskill.dev account
+and delivered by `seo login`). For each crawled page it sends the URL,
+title, description, headings and opening sentences, and for each link it
+judges, the source sentences that could hold the link and the target's
+title, description and opening. The requests go from your machine with your
+key, and TypeSafe processes them under the
+[TypeSafe privacy policy](https://typesafe.ai/legal/privacy-policy). Without a key, nothing
+is sent to TypeSafe.
 
 The project maintainer does not receive these credentials, inputs, or
 responses. DataForSEO processes them under its

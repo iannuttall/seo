@@ -26,7 +26,7 @@ link for them to approve, then run it again.
 | `seo research <action>` | `seo_research` | Keywords, SERP, competitors, backlinks, AI answer citations |
 | `seo data --site <site>` | `seo_data` | Raw Search Console, Bing, Clicky or Google Analytics rows |
 | `seo crawl --url <url>` | `seo_crawl` | Technical issues across a site |
-| `seo internal-links --url <url>` | `seo_internal_links` | Pages that could link to a page |
+| `seo internal-links --site <site>` or `--url <url>` | `seo_internal_links` | Links to add across a site, or to one page |
 | `seo sites` | `seo_sites` | The properties the person can read |
 
 Each result ends with the command to run next. `seo <command> --help` shows

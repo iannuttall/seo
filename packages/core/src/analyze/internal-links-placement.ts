@@ -20,24 +20,12 @@ export interface PlacementPage {
   sentences: LinkSentence[]
 }
 
-export interface LinkPlacement {
-  // Cosine similarity of the two pages' TF-IDF vectors, 0 to 1. A heuristic.
-  contentSimilarity: number
-  sentences: Array<{
-    text: string
-    section: string
-    // Share of the target's naming terms (title, h1, description, URL)
-    // the sentence contains, weighted by rarity, 0 to 1.
-    match: number
-    anchors: string[]
-  }>
-}
-
-// Bounds per page: sentences kept for placement, and terms per vector.
+// Bounds per page: sentences read from the HTML, and sentences kept as
+// places for a new link. Per pair: sentences and anchor phrases offered.
 export const MAX_PAGE_SENTENCES = 250
-const MAX_TERMS = 100
-const PLACEMENT_SENTENCES = 2
-const ANCHORS_PER_SENTENCE = 3
+export const MAX_LINKABLE_SENTENCES = 150
+const PAIR_SENTENCES = 4
+const PAIR_ANCHORS = 8
 const MIN_SENTENCE_WORDS = 6
 const NAME_WEIGHT = 2
 
@@ -156,7 +144,7 @@ function stem(word: string): string {
 
 // The terms of a text for matching: no function words or bare numbers, in
 // their plain form.
-const terms = (text: string): string[] =>
+export const terms = (text: string): string[] =>
   words(text)
     .filter(
       (word) =>
@@ -179,7 +167,9 @@ const slugWords = (url: string) => {
 // path, 1 for words only in the meta description.
 // The site's own name (the title after its last separator, and the first
 // label of the host) is left out: every page carries it.
-export function keyTerms(page: PlacementPage): Map<string, number> {
+export function keyTerms(
+  page: Pick<PlacementPage, 'url' | 'title' | 'h1' | 'description'>,
+): Map<string, number> {
   const key = new Map<string, number>()
   const title = page.title.replace(
     /\s+[|\u2013\u2014-]\s+[^|\u2013\u2014]*$/u,
@@ -420,72 +410,57 @@ export function pageSentences(html: string): LinkSentence[] {
 
 // --- Weights and placement ---------------------------------------------------
 
-// TF-IDF over the pages checked in one run.
-export class LinkCorpus {
-  private readonly df = new Map<string, number>()
-  private readonly size: number
-
-  constructor(pages: Array<Record<string, number>>) {
-    this.size = pages.length
-    for (const counts of pages) {
-      for (const term in counts) this.df.set(term, (this.df.get(term) ?? 0) + 1)
-    }
-  }
-
-  idf(term: string): number {
-    return Math.log((this.size + 1) / ((this.df.get(term) ?? 1) + 1)) + 1
-  }
-
-  // A unit-length vector of a page's heaviest shared terms. A term used by
-  // one page only cannot match another page, so it only adds to the length.
-  vector(counts: Record<string, number>): Map<string, number> {
-    let norm = 0
-    const shared: Array<[string, number]> = []
-    for (const term in counts) {
-      const weight = (1 + Math.log(counts[term] ?? 1)) * this.idf(term)
-      norm += weight * weight
-      if ((this.df.get(term) ?? 0) >= 2) shared.push([term, weight])
-    }
-    norm = Math.sqrt(norm) || 1
-    shared.sort(
-      (left, right) =>
-        right[1] - left[1] ||
-        (left[0] < right[0] ? -1 : left[0] > right[0] ? 1 : 0),
-    )
-    return new Map(
-      shared.slice(0, MAX_TERMS).map(([term, weight]) => [term, weight / norm]),
-    )
-  }
-
-  similarity(left: Map<string, number>, right: Map<string, number>): number {
-    let sum = 0
-    for (const [term, weight] of left) sum += weight * (right.get(term) ?? 0)
-    return sum
-  }
-
-  // How much of the target's naming terms a sentence has, weighted by
-  // rarity and by where the term names the target, 0 to 1.
-  sentenceScore(sentence: string, key: Map<string, number>): number {
-    if (!key.size) return 0
-    const seen = new Set(terms(sentence))
-    let hit = 0
-    let total = 0
-    for (const [term, place] of key) {
-      const weight = this.idf(term) * place
-      total += weight
-      if (seen.has(term)) hit += weight
-    }
-    return total ? hit / total : 0
-  }
+// How rare a term is across the pages of one run (the IDF of TF-IDF).
+export interface TermWeights {
+  idf(term: string): number
 }
 
-// Real phrases of one to four words from a sentence, best first. Each has a
-// word from the target's title, h1 or URL; then more naming words and rarer
-// words rank higher.
+// The sentences that could carry a new link: no link yet, at least six
+// words, each text once (a page can repeat a sentence). At most
+// MAX_LINKABLE_SENTENCES, in page order.
+export function linkableSentences(sentences: LinkSentence[]): LinkSentence[] {
+  const seen = new Set<string>()
+  const out: LinkSentence[] = []
+  for (const sentence of sentences) {
+    if (out.length >= MAX_LINKABLE_SENTENCES) break
+    if (seen.has(sentence.text)) continue
+    seen.add(sentence.text)
+    if (
+      !sentence.hasLink &&
+      sentence.text.split(/\s+/).length >= MIN_SENTENCE_WORDS
+    ) {
+      out.push(sentence)
+    }
+  }
+  return out
+}
+
+// How much of the target's naming terms a sentence has, weighted by rarity
+// and by where the term names the target, 0 to 1.
+export function sentenceMatch(
+  sentence: string,
+  key: Map<string, number>,
+  weights: TermWeights,
+): number {
+  if (!key.size) return 0
+  const seen = new Set(terms(sentence))
+  let hit = 0
+  let total = 0
+  for (const [term, place] of key) {
+    const weight = weights.idf(term) * place
+    total += weight
+    if (seen.has(term)) hit += weight
+  }
+  return total ? hit / total : 0
+}
+
+// Real phrases of one to four words from a sentence, best first. Each starts
+// and ends on a word from the target's title, h1, URL or description and has
+// one from its title, h1 or URL; more naming words and rarer words rank higher.
 function anchorCandidates(
   sentence: string,
   key: Map<string, number>,
-  corpus: LinkCorpus,
+  weights: TermWeights,
   limit: number,
 ): string[] {
   const scored = new Map<string, { text: string; score: number }>()
@@ -493,8 +468,9 @@ function anchorCandidates(
     .split(/\s+/)
     .map((word) => word.replace(/^[^\p{L}\p{N}]+|[^\p{L}\p{N}]+$/gu, ''))
     .filter(Boolean)
-  // Two to four words: a single word rarely reads as a link.
-  for (let size = 2; size <= 4; size += 1) {
+  // One to four words. A single word must itself name the target, and
+  // ranks below a phrase that names it as well.
+  for (let size = 1; size <= 4; size += 1) {
     for (let start = 0; start + size <= parts.length; start += 1) {
       const gram = parts.slice(start, start + size)
       const first = (gram[0] ?? '').toLowerCase()
@@ -508,10 +484,11 @@ function anchorCandidates(
         continue
       }
       const stems = terms(gram.join(' '))
-      if (stems.length < 2) continue
+      if (stems.length < size || (size > 1 && stems.length < 2)) continue
+      if (size === 1 && key.get(stems[0] ?? '') !== NAME_WEIGHT) continue
       const hits = stems.filter((term) => key.has(term)).length
       const named = stems.reduce(
-        (sum, term) => sum + (key.get(term) ?? 0) * corpus.idf(term),
+        (sum, term) => sum + (key.get(term) ?? 0) * weights.idf(term),
         0,
       )
       if (!stems.some((term) => key.get(term) === NAME_WEIGHT)) continue
@@ -524,9 +501,11 @@ function anchorCandidates(
       const text = gram.join(' ')
       const lower = text.toLowerCase()
       if (GENERIC_ANCHORS.test(lower)) continue
-      const rarity = stems.reduce((sum, term) => sum + corpus.idf(term), 0)
+      const rarity = stems.reduce((sum, term) => sum + weights.idf(term), 0)
       const score =
-        named * (1 + hits / key.size) + rarity * 0.05 - (size === 4 ? 0.2 : 0)
+        named * (1 + hits / key.size) +
+        rarity * 0.05 -
+        (size === 1 ? 0.5 : size === 4 ? 0.2 : 0)
       const existing = scored.get(lower)
       if (!existing || existing.score < score)
         scored.set(lower, { text, score })
@@ -542,53 +521,68 @@ function anchorCandidates(
     .map((item) => item.text)
 }
 
-// The sentences on the source that could carry a link to the target, with
-// anchor text from each. Sentences that already link, and short ones, are
-// left out.
-export function linkPlacement(
-  source: PlacementPage,
-  target: PlacementPage,
-  corpus: LinkCorpus,
-): LinkPlacement {
+export interface SentenceOption {
+  // S and the sentence's place among the source's linkable sentences, so a
+  // sentence keeps its id across every target of one source.
+  id: string
+  text: string
+  section: string
+  // sentenceMatch, rounded to two places.
+  match: number
+}
+
+export interface AnchorOption {
+  text: string
+  // The id of the sentence the phrase comes from.
+  sentence: string
+}
+
+export interface PairPlacement {
+  sentences: SentenceOption[]
+  anchors: AnchorOption[]
+}
+
+// Where a link to the target could go on the source: the linkable sentences
+// that share the target's naming terms, best first, and real phrases from
+// them as anchor text, shared fairly between the sentences.
+export function pairPlacement(
+  sentences: LinkSentence[],
+  target: Pick<PlacementPage, 'url' | 'title' | 'h1' | 'description'>,
+  weights: TermWeights,
+): PairPlacement {
   const key = keyTerms(target)
-  const contentSimilarity = corpus.similarity(
-    corpus.vector(termCounts(source)),
-    corpus.vector(termCounts(target)),
-  )
-  const seen = new Set<string>()
-  const sentences = source.sentences
-    .filter((sentence) => {
-      // A page can repeat a sentence, such as an answer shown twice.
-      if (seen.has(sentence.text)) return false
-      seen.add(sentence.text)
-      return (
-        !sentence.hasLink &&
-        sentence.text.split(/\s+/).length >= MIN_SENTENCE_WORDS
-      )
-    })
+  const chosen = sentences
     .map((sentence, index) => ({
       sentence,
       index,
-      match: corpus.sentenceScore(sentence.text, key),
+      match: sentenceMatch(sentence.text, key, weights),
     }))
     .filter((item) => item.match > 0)
     .sort((left, right) => right.match - left.match || left.index - right.index)
-    .slice(0, PLACEMENT_SENTENCES)
-    .map(({ sentence, match }) => ({
+    .slice(0, PAIR_SENTENCES)
+  const perSentence = Math.max(
+    1,
+    Math.floor(PAIR_ANCHORS / Math.max(1, chosen.length)),
+  )
+  const anchors: AnchorOption[] = []
+  for (const { sentence, index } of chosen) {
+    for (const text of anchorCandidates(
+      sentence.text,
+      key,
+      weights,
+      perSentence,
+    )) {
+      anchors.push({ text, sentence: `S${index + 1}` })
+    }
+  }
+  return {
+    sentences: chosen.map(({ sentence, index, match }) => ({
+      id: `S${index + 1}`,
       text: sentence.text,
       section: sentence.section,
       match: Math.round(match * 100) / 100,
-      anchors: anchorCandidates(
-        sentence.text,
-        key,
-        corpus,
-        ANCHORS_PER_SENTENCE,
-      ),
-    }))
-    .filter((item) => item.anchors.length > 0)
-  return {
-    contentSimilarity: Math.round(contentSimilarity * 100) / 100,
-    sentences,
+    })),
+    anchors: anchors.slice(0, PAIR_ANCHORS),
   }
 }
 

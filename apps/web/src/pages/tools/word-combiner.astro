@@ -1,4 +1,7 @@
 ---
+import CodeBlock from '@/components/CodeBlock.astro'
+import FaqAccordion from '@/components/FaqAccordion.astro'
+import SetupCommands from '@/components/SetupCommands.astro'
 import Breadcrumbs from '@/components/Breadcrumbs.astro'
 import PageHeader from '@/components/PageHeader.astro'
 import WordCombiner from '@/components/tools/WordCombiner.astro'
@@ -10,11 +13,39 @@ const breadcrumbs: SchemaBreadcrumb[] = [
   { label: 'Tools', href: '/tools' },
   { label: 'Word combiner' },
 ]
+
+const faq = [
+  {
+    question: "What is a word combiner?",
+    answer:
+      "A tool that joins words from two or more lists into every combination, in order. Two lists of three words each make nine phrases.",
+  },
+  {
+    question: "How do I combine two lists of words?",
+    answer:
+      "Put one word or phrase per line in list A and list B, choose how to join them, and generate. Add more lists for more parts.",
+  },
+  {
+    question: "Is the word combiner free?",
+    answer:
+      "Yes, with no account. It runs in your browser and nothing is uploaded.",
+  },
+  {
+    question: "Can I combine words in every order?",
+    answer:
+      "This tool keeps the list order, which gives cleaner phrases. To get the reverse order, swap the lists and generate again.",
+  },
+  {
+    question: "How many combinations can it make?",
+    answer:
+      "Up to 100,000 at a time. A larger result is marked as partial, so narrow the lists to get the full set.",
+  },
+]
 ---
 
 <BaseLayout
   title="Word combiner"
-  description="Combine up to five word or keyword lists in your browser. Filter, preview, copy, and download the results as TXT or CSV without uploading your data."
+  description="Combine words from several lists into every phrase, in order, with filters and CSV export. Use it for keyword lists, product names, ad groups and name ideas."
   canonicalPath="/tools/word-combiner"
   {breadcrumbs}
 >
@@ -83,6 +114,44 @@ const breadcrumbs: SchemaBreadcrumb[] = [
         use the active result search, so you can export a smaller subset without
         generating it again.
       </p>
+
+      <h2>Ways to use a word combiner</h2>
+      <ul>
+        <li><strong>Keyword lists.</strong> Combine services with locations, such as “plumber” and “emergency plumber” with a list of towns.</li>
+        <li><strong>Product names.</strong> Pair attributes with products: sizes, colours and materials.</li>
+        <li><strong>Ad groups.</strong> Build exact phrase lists for a paid search campaign.</li>
+        <li><strong>Names and ideas.</strong> Join two lists of words to find a domain or brand name.</li>
+      </ul>
+
+      <h2>Check which combinations people search for</h2>
+      <p>
+        Most generated phrases get no searches at all. Before you plan pages
+        around them, check the demand. Pick the combinations that read like
+        something a person would type, then look up their search volume.
+        Keep the ones with demand and fold close variants into one page
+        rather than one page each.
+      </p>
+
+      <h2>Check search volume with your agent</h2>
+      <p>
+        With SEO Skill, your agent can take the list straight from here.{' '}
+        <a href="/docs/research">seo research</a> looks up search volume,
+        keyword difficulty and cost per click for up to 100 keywords at a
+        time with your own DataForSEO or Ahrefs key. Your agent can check
+        which ones you already get impressions for with{' '}
+        <a href="/docs/data">seo data</a>. Ask:
+      </p>
+      <CodeBlock value="Get the search volume for these phrases in the US, drop the ones with none, and group the rest by intent" wrap />
+      <p>Add the hosted MCP server to your agent and sign in with Google:</p>
+    </div>
+
+    <SetupCommands id="word-combiner-setup" class="mt-6" />
+
+    <div class="docs-prose mt-16">
+      <h2>Word combiner questions</h2>
+    </div>
+    <div class="mt-6">
+      <FaqAccordion id="word-combiner-faq" items={faq} />
     </div>
   </main>
 </BaseLayout>

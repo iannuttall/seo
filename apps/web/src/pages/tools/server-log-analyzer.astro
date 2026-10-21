@@ -1,4 +1,7 @@
 ---
+import CodeBlock from '@/components/CodeBlock.astro'
+import FaqAccordion from '@/components/FaqAccordion.astro'
+import SetupCommands from '@/components/SetupCommands.astro'
 import PageHeader from '@/components/PageHeader.astro'
 import ServerLogAnalyzer from '@/components/tools/ServerLogAnalyzer.astro'
 import BaseLayout from '@/layouts/BaseLayout.astro'
@@ -9,11 +12,44 @@ const breadcrumbs: SchemaBreadcrumb[] = [
   { label: 'Tools', href: '/tools' },
   { label: 'SEO log file analyzer' },
 ]
+
+const faq = [
+  {
+    question: "What is log file analysis in SEO?",
+    answer:
+      "Reading your web server’s access logs to see which pages search engine and AI crawlers request, how often, and what status your server returned.",
+  },
+  {
+    question: "Where do I find my server access logs?",
+    answer:
+      "On your web server or host. Apache and NGINX usually write them to an access.log file. Many hosts and CDNs let you download or export them from their dashboard.",
+  },
+  {
+    question: "Is my log file uploaded?",
+    answer:
+      "No. The file is read in this browser tab. Only the summary you download leaves it, and only when you choose to.",
+  },
+  {
+    question: "Which log formats work?",
+    answer:
+      "Apache and NGINX combined logs, and JSONL or NDJSON exports with common field names for time, method, URL, status, bytes and user agent.",
+  },
+  {
+    question: "How do I know a request was really from Googlebot?",
+    answer:
+      "The user agent can be faked. Run a reverse DNS lookup on the IP, check that it ends in googlebot.com, google.com or googleusercontent.com, then confirm with a forward lookup.",
+  },
+  {
+    question: "Do small sites need log file analysis?",
+    answer:
+      "Rarely. Crawling limits matter for large sites with many URLs. On a small site, Search Console’s crawl stats are usually enough.",
+  },
+]
 ---
 
 <BaseLayout
   title="SEO log file analyzer"
-  description="Analyze Apache and NGINX access logs in your browser. Find search and AI crawler requests, HTTP errors, busy paths, and download CSV files."
+  description="Analyze server access logs in your browser. See which search and AI crawlers request your pages, which URLs and status codes they get, and how to verify a real Googlebot."
   canonicalPath="/tools/server-log-analyzer"
   {breadcrumbs}
 >
@@ -76,6 +112,66 @@ const breadcrumbs: SchemaBreadcrumb[] = [
         case, rather than a clean zero.
       </p>
 
+      <h2>Read the crawler summary</h2>
+      <p>
+        Start with the status codes for search crawlers. Mostly 200s is
+        healthy. A run of 5xx responses tells Googlebot your server is
+        struggling, and Google slows its crawling when that happens. Lots of
+        404s for old URLs are normal and harmless unless they are pages that
+        should exist. Lots of 301s mean your internal links or sitemap still
+        point at old addresses.
+      </p>
+      <p>
+        Then look at the paths. Crawlers spending most of their requests on
+        filters, search pages or old parameters, while new pages get few
+        visits, is a sign the site wastes crawling on pages that do not
+        matter.
+      </p>
+
+      <h2>Why log files matter for SEO</h2>
+      <p>
+        Search Console shows a sample of what Google crawled. Your access
+        log shows every request, so it is the only place to see exactly
+        which pages crawlers fetch, how often and what your server sent
+        back. That matters most for large sites, where Google cannot crawl
+        everything often, and after a migration, when you need to see
+        crawlers reach the new URLs.
+      </p>
+      <p>
+        For a small site, crawling is rarely the problem. If Googlebot
+        fetches your pages and gets 200s, look elsewhere.
+      </p>
+
+      <h2>Verify a crawler before you act</h2>
+      <p>
+        Anyone can send a request that calls itself Googlebot. To confirm a
+        real Google crawler, do a reverse DNS lookup on the IP address: it
+        should resolve to <code>googlebot.com</code>, <code>google.com</code>{' '}
+        or <code>googleusercontent.com</code>, and a forward lookup on that
+        name should return the same IP. Google also publishes its crawler IP
+        ranges. Do the same for other crawlers with their own published
+        details before you block or allow them.
+      </p>
+
+      <h2>Use the results with your AI agent</h2>
+      <p>
+        SEO Skill has no log command, and this page keeps your log in the
+        browser. Download the CSV summary from here and give it to your
+        agent. Next to a <a href="/docs/crawl">seo crawl</a> of the same
+        site, it can find pages crawlers keep requesting that your site no
+        longer links to, and linked pages crawlers never reach. Ask:
+      </p>
+      <CodeBlock value="Here is the crawler CSV from my server logs and a crawl of example.com. Which pages does Googlebot request that the site no longer links to?" wrap />
+      <p>Add the hosted MCP server to your agent and sign in with Google:</p>
+    </div>
+
+    <SetupCommands id="server-log-analyzer-setup" class="mt-6" />
+
+    <div class="docs-prose mt-16">
+      <h2>Log file analysis questions</h2>
+    </div>
+    <div class="mt-6">
+      <FaqAccordion id="server-log-analyzer-faq" items={faq} />
     </div>
   </main>
 </BaseLayout>

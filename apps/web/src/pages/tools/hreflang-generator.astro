@@ -1,4 +1,7 @@
 ---
+import CodeBlock from '@/components/CodeBlock.astro'
+import FaqAccordion from '@/components/FaqAccordion.astro'
+import SetupCommands from '@/components/SetupCommands.astro'
 import Breadcrumbs from '@/components/Breadcrumbs.astro'
 import PageHeader from '@/components/PageHeader.astro'
 import HreflangGenerator from '@/components/tools/HreflangGenerator.astro'
@@ -10,9 +13,42 @@ const breadcrumbs: SchemaBreadcrumb[] = [
   { label: 'Tools', href: '/tools' },
   { label: 'Hreflang generator' },
 ]
+
+const faq = [
+  {
+    question: "What is hreflang?",
+    answer:
+      "An annotation that links the language and region versions of a page, so search engines can show each searcher the right one. It can be HTML link tags, HTTP headers or entries in an XML sitemap.",
+  },
+  {
+    question: "Does hreflang improve rankings?",
+    answer:
+      "No. It decides which version of a page Google shows, not whether the page ranks.",
+  },
+  {
+    question: "What is x-default?",
+    answer:
+      "The version to show when no other language or region matches the searcher, often a language picker or the main international page.",
+  },
+  {
+    question: "Do I need a canonical and hreflang together?",
+    answer:
+      "Yes. Each version should have a canonical pointing to itself, and hreflang linking it to the others. A canonical pointing to another language version cancels the hreflang.",
+  },
+  {
+    question: "Should I use HTML tags or a sitemap for hreflang?",
+    answer:
+      "Either works for Google. Tags are easier to see and test. A sitemap is easier for large sites. Use one method, not both.",
+  },
+  {
+    question: "Is it en-GB or en-UK?",
+    answer:
+      "en-GB. Region codes follow ISO 3166-1, and the code for the United Kingdom is GB.",
+  },
+]
 ---
 
-<BaseLayout title="Hreflang generator" description="Generate complete hreflang annotations for localized pages as HTML link tags, an HTTP Link header, or XML sitemap entries." canonicalPath="/tools/hreflang-generator" {breadcrumbs}>
+<BaseLayout title="Hreflang generator" description="Generate hreflang tags for every language and region version of a page, as HTML, HTTP headers or sitemap entries, and learn how to fix return link and code errors." canonicalPath="/tools/hreflang-generator" {breadcrumbs}>
   <main data-agent-content>
     <Breadcrumbs {breadcrumbs} />
     <PageHeader title="Hreflang generator" description="Add each language or regional version once. Get the complete reciprocal set as HTML, an HTTP header, or XML sitemap entries." />
@@ -34,6 +70,49 @@ const breadcrumbs: SchemaBreadcrumb[] = [
 
       <h2>Your URLs stay in the browser</h2>
       <p>The generator validates and formats the entries in this browser tab. It does not fetch the URLs or upload the list.</p>
+
+      <h2>What hreflang does in search</h2>
+      <p>
+        Hreflang tells Google that several pages are versions of the same
+        content for different languages or regions. When one of them ranks,
+        Google can swap in the version that suits the searcher, so a reader
+        in France sees the French page instead of the English one. It does
+        not make any page rank higher, and it does not stop Google treating
+        near-identical regional pages as duplicates when they are left
+        unlinked.
+      </p>
+
+      <h2>Fix common hreflang errors</h2>
+      <ul>
+        <li><strong>No return links.</strong> Page A lists page B but B does not list A, so Google can ignore the pair.</li>
+        <li><strong>Missing self reference.</strong> Each page must list itself as well as the others.</li>
+        <li><strong>Wrong codes.</strong> The region for the United Kingdom is <code>GB</code>, so <code>en-UK</code> is invalid. A region alone, such as <code>gb</code>, is invalid too.</li>
+        <li><strong>URLs that redirect, are noindexed or point their canonical elsewhere.</strong> List only the final, indexable URL of each version.</li>
+        <li><strong>Relative URLs.</strong> Use full URLs with the protocol and host.</li>
+      </ul>
+
+      <h2>Check hreflang across your site with your agent</h2>
+      <p>
+        One set is easy to check by eye. A whole site is not. The{' '}
+        <a href="/docs/crawl">seo crawl</a> command reads hreflang on every
+        page it reaches on your machine and reports malformed values,
+        repeated values and pages that leave themselves out of their own
+        set. Your agent can then fix the template and paste the corrected
+        set here to check it. Ask:
+      </p>
+      <CodeBlock value="Crawl example.com and list the pages with hreflang errors, then check whether each language version links back" wrap />
+      <p>The crawl runs from the CLI on your machine. Install it and run setup:</p>
+      <CodeBlock value="npm i -g seo && seo start" wrap />
+      <p>Or add the hosted MCP server to your agent and sign in with Google:</p>
+    </div>
+
+    <SetupCommands id="hreflang-generator-setup" class="mt-6" />
+
+    <div class="docs-prose mt-16">
+      <h2>Hreflang questions</h2>
+    </div>
+    <div class="mt-6">
+      <FaqAccordion id="hreflang-generator-faq" items={faq} />
     </div>
   </main>
 </BaseLayout>

@@ -1,4 +1,7 @@
 ---
+import CodeBlock from '@/components/CodeBlock.astro'
+import FaqAccordion from '@/components/FaqAccordion.astro'
+import SetupCommands from '@/components/SetupCommands.astro'
 import Breadcrumbs from '@/components/Breadcrumbs.astro'
 import PageHeader from '@/components/PageHeader.astro'
 import SerpPreview from '@/components/tools/SerpPreview.astro'
@@ -10,9 +13,37 @@ const breadcrumbs: SchemaBreadcrumb[] = [
   { label: 'Tools', href: '/tools' },
   { label: 'SERP preview' },
 ]
+
+const faq = [
+  {
+    question: "What is a SERP preview tool?",
+    answer:
+      "A tool that shows how a page’s title, address and description will look in Google’s results, on desktop and mobile, with the point where Google cuts them off.",
+  },
+  {
+    question: "How many characters should a title tag be?",
+    answer:
+      "Google measures width, not characters. About 600 pixels shows in full on desktop, which is often 50 to 60 characters depending on the letters.",
+  },
+  {
+    question: "Why did Google change my title?",
+    answer:
+      "Google writes its own title link when the title tag is missing, too long, stuffed with keywords, the same as other pages or does not match the page. Make the title a short, accurate name for the page.",
+  },
+  {
+    question: "Does the meta description affect rankings?",
+    answer:
+      "No. It can affect whether people click. Google often writes its own snippet from the page when it fits the search better.",
+  },
+  {
+    question: "Is the preview exactly what Google shows?",
+    answer:
+      "It is close, not exact. Google changes its layout, adds features for some searches and may rewrite the text.",
+  },
+]
 ---
 
-<BaseLayout title="SERP preview" description="Load a public page or draft its metadata, then preview the Google search result on desktop and mobile before copying the HTML tags." canonicalPath="/tools/serp-preview" {breadcrumbs}>
+<BaseLayout title="SERP preview" description="Preview how a page’s title and meta description look in Google on desktop and mobile, measured in pixels, and learn how long titles and descriptions should be." canonicalPath="/tools/serp-preview" {breadcrumbs}>
   <main data-agent-content>
     <Breadcrumbs {breadcrumbs} />
     <PageHeader title="SERP preview" description="Enter a URL to load its title, description and favicon, or write them yourself. Compare the result on desktop and mobile before copying the HTML." />
@@ -31,6 +62,49 @@ const breadcrumbs: SchemaBreadcrumb[] = [
 
       <h2>What happens when you load a page</h2>
       <p>Loading a page sends its URL to the site worker. The worker reads the public HTML and a small favicon, then returns the title, meta description and site name. Any edits you make after that stay in this browser tab.</p>
+
+      <h2>How long should a title and description be?</h2>
+      <p>
+        Google sets no character limit. It cuts titles to fit the width of
+        the screen, so on desktop a title of about 600 pixels shows in full,
+        which is often 50 to 60 characters. Descriptions are cut at about
+        two lines on desktop and a little more on phones. The preview
+        measures the real width, so trust its truncation over a character
+        count.
+      </p>
+      <p>
+        Put the words that make someone click at the start. If the end is
+        cut off, the searcher still sees what matters.
+      </p>
+
+      <h2>Write a title and snippet people click</h2>
+      <ul>
+        <li>Name the thing the searcher is looking for, in their words.</li>
+        <li>Say what is different about this page: a price, a date, a number, a free tool.</li>
+        <li>Make each page’s title unique. Twenty pages called “Products” all look the same in results.</li>
+        <li>Keep the description true to the page. Google rewrites descriptions that do not match.</li>
+      </ul>
+
+      <h2>Find the titles worth rewriting with your agent</h2>
+      <p>
+        The pages to work on are the ones people see but do not click. The{' '}
+        <a href="/docs/report">SEO report</a> has a low click-through rate
+        section: queries where your page ranks in the top four and gets
+        fewer clicks than your own site gets at that position. Your agent
+        can pull that list from Search Console, draft new titles, and you
+        can check each one here before it ships. Ask:
+      </p>
+      <CodeBlock value="Show the low click-through rate pages for example.com and suggest a clearer title for each one" wrap />
+      <p>Add the hosted MCP server to your agent and sign in with Google:</p>
+    </div>
+
+    <SetupCommands id="serp-preview-setup" class="mt-6" />
+
+    <div class="docs-prose mt-16">
+      <h2>SERP preview questions</h2>
+    </div>
+    <div class="mt-6">
+      <FaqAccordion id="serp-preview-faq" items={faq} />
     </div>
   </main>
 </BaseLayout>

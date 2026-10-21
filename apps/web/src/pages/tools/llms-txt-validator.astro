@@ -1,4 +1,7 @@
 ---
+import CodeBlock from '@/components/CodeBlock.astro'
+import FaqAccordion from '@/components/FaqAccordion.astro'
+import SetupCommands from '@/components/SetupCommands.astro'
 import PageHeader from '@/components/PageHeader.astro'
 import LlmsTxtValidator from '@/components/tools/LlmsTxtValidator.astro'
 import BaseLayout from '@/layouts/BaseLayout.astro'
@@ -9,11 +12,34 @@ const breadcrumbs: SchemaBreadcrumb[] = [
   { label: 'Tools', href: '/tools' },
   { label: 'llms.txt validator' },
 ]
+
+const faq = [
+  {
+    question: "How do I check my llms.txt file?",
+    answer:
+      "Enter the URL of the file, or paste its Markdown. The validator checks the structure and lists errors and suggestions with line numbers.",
+  },
+  {
+    question: "What makes an llms.txt file valid?",
+    answer:
+      "One H1 with the project name, an optional blockquote summary, and H2 sections whose list items are Markdown links with full URLs.",
+  },
+  {
+    question: "Does a valid llms.txt get me cited in AI answers?",
+    answer:
+      "No. It only means the file follows the proposal. Whether an AI tool reads it, and whether it cites you, is up to that tool.",
+  },
+  {
+    question: "Why does the validator say the file is not Markdown?",
+    answer:
+      "The server probably returned an HTML page instead, such as a 404 template. Open the URL in a browser and check what comes back.",
+  },
+]
 ---
 
 <BaseLayout
   title="llms.txt validator"
-  description="Validate a published, pasted, or local llms.txt file. Find Markdown structure, section, link, and size problems without opening the URLs inside it."
+  description="Validate an llms.txt file by URL or pasted Markdown. Find structure errors, bad and duplicate links and thin sections, with the line for each problem."
   canonicalPath="/tools/llms-txt-validator"
   {breadcrumbs}
 >
@@ -86,6 +112,43 @@ const breadcrumbs: SchemaBreadcrumb[] = [
         the same basic shape from links you choose and can import page URLs from
         a sitemap.
       </p>
+
+      <h2>Read the validation result</h2>
+      <p>
+        Errors break the format: no H1, more than one H1, links that are not
+        full HTTP or HTTPS URLs, or list items that are not links. Fix those
+        first. Suggestions point at a file that is valid but thin, such as a
+        title with no summary or a section with no links. Each finding gives
+        the line where it applies.
+      </p>
+
+      <h2>Fix common llms.txt problems</h2>
+      <ul>
+        <li><strong>Served as HTML.</strong> Some servers return an error page or a site template for <code>/llms.txt</code>. The validator shows what it actually received.</li>
+        <li><strong>Relative links.</strong> Write each link as a full URL.</li>
+        <li><strong>The whole sitemap pasted in.</strong> A long list defeats the point. Keep the pages an agent should read first.</li>
+        <li><strong>Links to pages that moved.</strong> Valid Markdown, broken result. Check the links when you change your site.</li>
+      </ul>
+
+      <h2>Check the links in your llms.txt with your agent</h2>
+      <p>
+        This page checks the file, not the pages it lists. The{' '}
+        <a href="/docs/crawl">seo crawl</a> command does both: it finds{' '}
+        <code>/llms.txt</code> and checks that its links load. Ask:
+      </p>
+      <CodeBlock value="Check whether example.com has an llms.txt with working links, and list the pages that are missing from it" wrap />
+      <p>The crawl runs from the CLI on your machine. Install it and run setup:</p>
+      <CodeBlock value="npm i -g seo && seo start" wrap />
+      <p>Or add the hosted MCP server to your agent and sign in with Google:</p>
+    </div>
+
+    <SetupCommands id="llms-txt-validator-setup" class="mt-6" />
+
+    <div class="docs-prose mt-16">
+      <h2>llms.txt validator questions</h2>
+    </div>
+    <div class="mt-6">
+      <FaqAccordion id="llms-txt-validator-faq" items={faq} />
     </div>
   </main>
 </BaseLayout>

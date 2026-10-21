@@ -335,7 +335,7 @@ const action = kind === 'serp' ? 'serp-checker' : 'competitor-keywords'
           )
           body.append(tr)
         }
-        parts.push('Positions count organic results only. Results change through the day and by location. ', ahrefsNote())
+        parts.push('Only organic results are listed, but positions count every block on the page, so an answer box or a video row above the first result makes it position 2 or lower. Results change through the day and by location. ', ahrefsNote())
       }
       if (result.partial) parts.push(' DataForSEO could not fetch every page of results, so some rows may be missing.')
       notes.replaceChildren(...parts)

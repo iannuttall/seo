@@ -1,6 +1,9 @@
 ---
 import Breadcrumbs from '@/components/Breadcrumbs.astro'
+import CodeBlock from '@/components/CodeBlock.astro'
+import FaqAccordion from '@/components/FaqAccordion.astro'
 import PageHeader from '@/components/PageHeader.astro'
+import SetupCommands from '@/components/SetupCommands.astro'
 import RobotsTxtValidator from '@/components/tools/RobotsTxtValidator.astro'
 import BaseLayout from '@/layouts/BaseLayout.astro'
 import type { SchemaBreadcrumb } from '@/lib/schema'
@@ -10,11 +13,49 @@ const breadcrumbs: SchemaBreadcrumb[] = [
   { label: 'Tools', href: '/tools' },
   { label: 'robots.txt validator and tester' },
 ]
+
+const faq = [
+  {
+    question: 'How do I test my robots.txt file?',
+    answer:
+      'Enter your domain above to fetch the live file, or paste a draft. Add the URLs you care about and pick a crawler. Each URL comes back allowed or blocked, with the group and the exact line that decided it.',
+  },
+  {
+    question: 'Does noindex work in robots.txt?',
+    answer:
+      'No. Google stopped supporting noindex lines in robots.txt in 2019 and ignores them. To keep a page out of search, let Google crawl it and put a noindex meta tag or X-Robots-Tag header on the page itself.',
+  },
+  {
+    question: 'Does blocking a page in robots.txt remove it from Google?',
+    answer:
+      'No. It stops Google crawling the page, not indexing it. A blocked URL that other pages link to can still show in results, usually without a description. It also means Google can never see a noindex tag on that page.',
+  },
+  {
+    question: 'Where does the robots.txt file go?',
+    answer:
+      'At the root of each host, such as https://example.com/robots.txt. A file in a folder is ignored, and each subdomain and each protocol needs its own file.',
+  },
+  {
+    question: 'Should I add my sitemap to robots.txt?',
+    answer:
+      'Yes, it is a cheap way to tell every crawler where the sitemap is. Add a line such as Sitemap: https://example.com/sitemap.xml with the full URL. It can go anywhere in the file and does not belong to a user-agent group.',
+  },
+  {
+    question: 'How do I block AI crawlers but stay in AI search?',
+    answer:
+      'Block the training crawlers by name and leave the search crawlers allowed. For OpenAI that means a group for GPTBot with Disallow: / and no block for OAI-SearchBot. Use the presets above to test both tokens against the same file.',
+  },
+  {
+    question: 'How long does Google take to see a robots.txt change?',
+    answer:
+      'Google usually caches robots.txt for up to 24 hours, sometimes longer if the file cannot be fetched. Search Console has a robots.txt report where you can ask Google to fetch it again.',
+  },
+]
 ---
 
 <BaseLayout
   title="robots.txt validator and tester"
-  description="Fetch or paste a robots.txt file, find ignored lines, and test the exact rule that allows or blocks a URL for search and AI crawlers."
+  description="Free robots.txt tester and validator. Fetch or paste a file, find ignored lines, and test the exact rule that allows or blocks a URL for Googlebot and AI crawlers."
   canonicalPath="/tools/robots-txt-validator"
   {breadcrumbs}
 >
@@ -99,6 +140,56 @@ const breadcrumbs: SchemaBreadcrumb[] = [
         {' '}before making a policy change. Crawler names and uses can change.
       </p>
 
+      <h2>Fix common robots.txt mistakes</h2>
+      <ul>
+        <li>
+          <strong>A leftover <code>Disallow: /</code>.</strong> A staging
+          file copied to production blocks the whole site. Test the home page
+          for Googlebot after every launch.
+        </li>
+        <li>
+          <strong>Blocked CSS and JavaScript.</strong> Google renders pages
+          like a browser. If it cannot fetch the files a page needs, it may
+          see a broken page.
+        </li>
+        <li>
+          <strong>Noindex in robots.txt.</strong> Google ignores it. Put the
+          noindex on the page and leave the page crawlable.
+        </li>
+        <li>
+          <strong>Blocking a page you want removed.</strong> The block hides
+          the noindex tag, so the URL can stay in results. Allow the crawl
+          until the page drops out.
+        </li>
+        <li>
+          <strong>Wrong case or a missing slash.</strong> Paths are case
+          sensitive, so <code>/Admin</code> does not block{' '}
+          <code>/admin</code>. Test the exact URLs.
+        </li>
+      </ul>
+
+      <h2>Check robots.txt across your site with your agent</h2>
+      <p>
+        The <a href="/docs/crawl">seo crawl</a> command reads your
+        robots.txt while it crawls your site on your own machine. It lists
+        which AI search crawlers and which AI training crawlers your file
+        allows, apart from each other, and reports the pages your rules
+        stop its own crawler from fetching. Your agent can then change the file in your codebase
+        and test the new rules here before you ship. Ask:
+      </p>
+      <CodeBlock value="Crawl example.com and tell me which AI search and training crawlers my robots.txt blocks, and which linked pages robots.txt stops the crawl from fetching" wrap />
+      <p>The crawl runs from the CLI. Install it and run setup:</p>
+      <CodeBlock value="npm i -g seo && seo start" wrap />
+      <p>Or add the hosted MCP server for Search Console work in your agent:</p>
+    </div>
+
+    <SetupCommands id="robots-setup" class="mt-6" />
+
+    <div class="docs-prose mt-16">
+      <h2>robots.txt questions</h2>
+    </div>
+    <div class="mt-6">
+      <FaqAccordion id="robots-faq" items={faq} />
     </div>
   </main>
 </BaseLayout>

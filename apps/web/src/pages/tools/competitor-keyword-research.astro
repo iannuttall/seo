@@ -1,6 +1,9 @@
 ---
 import Breadcrumbs from '@/components/Breadcrumbs.astro'
+import CodeBlock from '@/components/CodeBlock.astro'
+import FaqAccordion from '@/components/FaqAccordion.astro'
 import PageHeader from '@/components/PageHeader.astro'
+import SetupCommands from '@/components/SetupCommands.astro'
 import ResearchLookup from '@/components/tools/ResearchLookup.astro'
 import BaseLayout from '@/layouts/BaseLayout.astro'
 import type { SchemaBreadcrumb } from '@/lib/schema'
@@ -10,11 +13,44 @@ const breadcrumbs: SchemaBreadcrumb[] = [
   { label: 'Tools', href: '/tools' },
   { label: 'Competitor keyword research' },
 ]
+
+const faq = [
+  {
+    question: 'How do I find the keywords a competitor ranks for?',
+    answer:
+      'Enter their domain above with Keywords it ranks for selected. You get the 50 keywords that bring them the most estimated traffic, with their position, monthly searches and the page that ranks. For the full list, your agent can page through every row with seo research.',
+  },
+  {
+    question: 'Can I see a competitor’s keywords for free?',
+    answer:
+      'Yes, 10 lookups a day on this page without an account. The data comes from DataForSEO’s index of Google results. With your own DataForSEO or Ahrefs key, your agent can run as many as you need.',
+  },
+  {
+    question: 'What is a keyword gap analysis?',
+    answer:
+      'Comparing the keywords your competitors rank for with the ones you rank for, to find searches you are missing. The useful version uses your real Search Console queries for your side, not an estimate, which is what your agent does with seo data and seo research together.',
+  },
+  {
+    question: 'How do I find my real competitors in search?',
+    answer:
+      'Choose Sites it competes with and enter your own domain. You get the domains that rank for the most of the same keywords. They are often publishers, forums or tools rather than the businesses you sell against.',
+  },
+  {
+    question: 'How accurate are competitor keyword numbers?',
+    answer:
+      'They are estimates for the country you pick. Positions are close to what the index last saw, and search volumes are monthly averages. They are good for comparing sites and spotting which pages earn traffic. For your own site, Search Console has the real numbers.',
+  },
+  {
+    question: 'Can I see a competitor’s paid keywords?',
+    answer:
+      'No. This page shows organic rankings only. Ads change by the hour and depend on bids, so they are not in the results.',
+  },
+]
 ---
 
 <BaseLayout
   title="Competitor keyword research"
-  description="Find the keywords a competitor ranks for, with positions, monthly searches and the ranking page, and see which sites compete with any domain in Google."
+  description="Find the keywords a competitor ranks for in Google, with positions, monthly searches and the ranking page, find the sites you really compete with, and run a keyword gap analysis."
   canonicalPath="/tools/competitor-keyword-research"
   {breadcrumbs}
 >
@@ -42,7 +78,9 @@ const breadcrumbs: SchemaBreadcrumb[] = [
       <p>
         Read the page column first. It shows which of their pages pull in
         that traffic, which tells you more about what is working for them
-        than the keyword list alone.
+        than the keyword list alone. Three pages earning most of a site's
+        traffic is a very different competitor from three hundred pages
+        earning a little each.
       </p>
 
       <h2>Find the sites you actually compete with</h2>
@@ -59,25 +97,56 @@ const breadcrumbs: SchemaBreadcrumb[] = [
         <strong>Its keywords</strong> on any row to look up that domain next.
       </p>
 
-      <h2>Compare their keywords with your own</h2>
+      <h2>Run a keyword gap analysis</h2>
+      <ol>
+        <li>Find three to five search competitors with <strong>Sites it competes with</strong>. Pick sites near your size, not the giants.</li>
+        <li>Look up each one's keywords and note the ones that match what you sell or write about.</li>
+        <li>Check each keyword against your own Search Console. No impressions at all means you have no page Google shows for it. Impressions at position 20 or below means you have a page that is not good enough yet.</li>
+        <li>Group the gaps by topic, not by keyword. One strong page usually ranks for a whole cluster of related searches.</li>
+      </ol>
       <p>
-        A competitor list only becomes a plan when you hold it up against
-        your own site. Your agent can do that with your data: ask it which of
-        a competitor's keywords you get no impressions for in Search Console,
-        and it pulls their ranked keywords with{' '}
-        <a href="/docs/research">seo research</a>{' '}
-        and your own queries with <a href="/docs/data">seo data</a>, then
-        compares the two. Research data stays labelled as research and
-        is never mixed into your own numbers.
+        Step three is where most gap analyses go wrong. Comparing two
+        estimates hides the keywords you already rank for but the index
+        missed. Your own Search Console data is the side to trust.
+      </p>
+
+      <h2>Pick keywords you can win</h2>
+      <p>
+        A competitor ranking for a keyword does not mean you should chase
+        it. Run the keyword through the <a href="/tools/serp-checker">SERP checker</a>{' '}
+        and look at who holds the top five. If they are much stronger sites
+        than yours, a lower volume keyword where the results are thinner is
+        often the better bet.
       </p>
 
       <h2>Positions and searches are estimates</h2>
       <p>
         The keywords, positions and search volumes come from DataForSEO's own
-        index for the country you pick. They are good for comparing sites in
-        the same market. For your own site, Search Console has the real
-        clicks and positions.
+        index for the country you pick. Positions count every block on the
+        results page, not just organic results. They are good for comparing
+        sites in the same market.
       </p>
+
+      <h2>Compare their keywords with yours using your agent</h2>
+      <p>
+        A competitor list only becomes a plan when you hold it up against
+        your own site. With SEO Skill your agent pulls their ranked keywords
+        with <a href="/docs/research">seo research</a> and your own queries
+        with <a href="/docs/data">seo data</a>, then does step three for
+        every keyword at once. Research data stays labelled as research and
+        is never mixed into your own numbers. Ask:
+      </p>
+      <CodeBlock value="Which keywords does competitor.example rank for in the top 10 that example.com gets no Search Console impressions for? Group them by topic." wrap />
+      <p>Add the hosted MCP server to your agent and sign in with Google:</p>
+    </div>
+
+    <SetupCommands id="competitor-setup" class="mt-6" />
+
+    <div class="docs-prose mt-16">
+      <h2>Competitor keyword questions</h2>
+    </div>
+    <div class="mt-6">
+      <FaqAccordion id="competitor-faq" items={faq} />
     </div>
   </main>
 </BaseLayout>

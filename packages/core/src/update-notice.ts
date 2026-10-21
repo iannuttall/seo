@@ -1,3 +1,4 @@
+import { realpathSync } from 'node:fs'
 import { request } from 'node:https'
 import { join } from 'node:path'
 import { readJson } from './http/read-json.js'
@@ -22,12 +23,33 @@ type LatestCache = { checkedAt: number; latest: string }
 export type UpdateNoticeOptions = {
   argv?: string[]
   cacheFile?: string
+  cliPath?: string
   env?: NodeJS.ProcessEnv
   now?: Date
   version?: string
 }
 
 let checking = false
+
+// True when this seo was started by npx (or pnpm dlx) rather than a global
+// install: npm marks an npx run with npm_command=exec and an npx npm_execpath,
+// and npx installs into its own _npx cache folder.
+function runByNpx(
+  env: NodeJS.ProcessEnv,
+  cliPath: string | undefined,
+): boolean {
+  if (env.npm_command === 'exec' || /npx/i.test(env.npm_execpath ?? '')) {
+    return true
+  }
+  if (!cliPath) return false
+  let path = cliPath
+  try {
+    path = realpathSync(cliPath)
+  } catch {
+    // Use the path as given.
+  }
+  return /[\\/](?:_npx|dlx)[\\/]/.test(path)
+}
 
 export function isNewerVersion(current: string, latest: string): boolean {
   const parse = (value: string) =>
@@ -130,7 +152,11 @@ export function updateNotice(
     }
     const current = options.version ?? SEO_VERSION
     if (!cache || !isNewerVersion(current, cache.latest)) return undefined
-    return `seo ${cache.latest} is out (you have ${current}). Update with: npm i -g seo`
+    // npx reuses its cached copy of seo, so only seo@latest fetches the new
+    // one, and an MCP client runs the new one after it restarts.
+    return runByNpx(env, options.cliPath ?? argv[1])
+      ? `seo ${cache.latest} is out (you have ${current}). Run npx -y seo@latest; in an MCP config use seo@latest, then restart the client.`
+      : `seo ${cache.latest} is out (you have ${current}). Update with: npm i -g seo`
   } catch {
     return undefined
   }

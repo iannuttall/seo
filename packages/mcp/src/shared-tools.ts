@@ -1,12 +1,16 @@
 import type { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js'
 import {
+  internalLinksReport,
   LOCAL_SIGN_IN,
   localAccounts,
   localError,
+  localInternalLinksDependencies,
   localRefreshClicky,
   localResearchKeys,
+  MAX_MAX_PAGES,
   nodeCommandDeps,
   resolveLocalSite,
+  SeoError,
   type TelemetryOptions,
   trackTelemetryReportComplete,
   trackTelemetryReportFailed,
@@ -14,6 +18,7 @@ import {
 } from '@seo/core'
 import {
   type CommandId,
+  internalLinksText,
   mcpCall,
   runSharedTool,
   SHARED_TOOLS,
@@ -120,34 +125,83 @@ export function registerSharedTools(
   server.registerTool(
     'seo_internal_links',
     {
-      title: 'Internal link opportunities',
+      title: 'Internal links',
       description:
-        'Pages of the same site that could link to a target page, from Search Console and live page checks on this machine. Each one names the sentence where the link fits and anchor text from it. Takes the target URL and optional dates (default: the last 90 days).',
+        'Internal links to add, crawled from this machine. Send site to audit a whole site, or url to find links to one page. Each link names a real sentence on the source and a real phrase from it as anchor text. With a TypeSafe key (TYPESAFE_API_KEY or the seoskill.dev account), Jev classifies pages and judges each link; without one the result says Jev was not used. Search Console query overlap is added when this login has the property.',
       inputSchema: {
-        url: z.url(),
+        site: z
+          .string()
+          .min(1)
+          .optional()
+          .describe('Site to audit: a domain, URL or Search Console property.'),
+        url: z.url().optional().describe('One page to find links to.'),
+        max_pages: z
+          .number()
+          .int()
+          .min(1)
+          .max(MAX_MAX_PAGES)
+          .optional()
+          .describe('site only: pages to crawl, 500 by default, up to 5,000.'),
         start_date: z
           .string()
           .regex(/^\d{4}-\d{2}-\d{2}$/)
           .optional()
-          .describe('YYYY-MM-DD. Optional; send with end_date.'),
+          .describe(
+            'YYYY-MM-DD for Search Console. Optional; send with end_date.',
+          ),
         end_date: z
           .string()
           .regex(/^\d{4}-\d{2}-\d{2}$/)
           .optional()
           .describe('YYYY-MM-DD. Optional; send with start_date.'),
+        detail: z
+          .enum(['summary', 'rows', 'full'])
+          .default('summary')
+          .describe(
+            'summary first. rows: the next page of links. full: every field as JSON.',
+          ),
+        offset: z
+          .number()
+          .int()
+          .min(0)
+          .default(0)
+          .describe('rows only: the first link to return.'),
       },
       annotations: readOnly,
     },
-    async ({ url, start_date, end_date }) =>
+    async ({ site, url, max_pages, start_date, end_date, detail, offset }) =>
       counted('internal-links', {}, options.telemetry, async () => {
         try {
-          const site = await resolveLocalSite(url)
-          return await executeReport('internal-links', {
-            site,
-            targetUrl: url,
-            startDate: start_date,
-            endDate: end_date,
-          })
+          if (Boolean(site) === Boolean(url)) {
+            throw new SeoError(
+              'INVALID_INPUT',
+              'Send site to audit a whole site, or url to find links to one page.',
+            )
+          }
+          const target = (url ?? site) as string
+          const report = await internalLinksReport(
+            {
+              site: target,
+              targetUrl: url,
+              maxPages: max_pages,
+              startDate: start_date,
+              endDate: end_date,
+            },
+            await localInternalLinksDependencies({ site: target }),
+          )
+          return text(
+            internalLinksText(report, {
+              detail,
+              offset,
+              more: (view, from) =>
+                mcpCall('internal-links', {
+                  ...(url ? { url } : { site }),
+                  ...(max_pages ? { max_pages } : {}),
+                  detail: view,
+                  offset: from,
+                }),
+            }),
+          )
         } catch (error) {
           return toolError(localError(error))
         }

@@ -4,6 +4,8 @@ import {
   ctrUnderperformersReport,
   decayingReport,
   internalLinksReport,
+  localInternalLinksDependencies,
+  MAX_MAX_PAGES,
   queryClusterReport,
   quickWinsReport,
 } from '@seo/core'
@@ -32,7 +34,8 @@ type QuickWinsToolInput = {
 
 type InternalLinksToolInput = {
   site: string
-  targetUrl: string
+  targetUrl?: string
+  maxPages?: number
   startDate?: string
   endDate?: string
   refresh?: boolean
@@ -242,13 +245,15 @@ export function registerOpportunityTools(
     'seo_internal_links',
     {
       description:
-        'Find verified internal-link review candidates for a target URL',
+        'Internal links to add across a site, or to one target URL, placed in real sentences',
       inputSchema: {
         ...mcpReportInputSchema(['site', 'refresh']),
         targetUrl: z
           .string()
           .url()
-          .refine((value) => /^https?:\/\//.test(value), 'Use an HTTP(S) URL.'),
+          .refine((value) => /^https?:\/\//.test(value), 'Use an HTTP(S) URL.')
+          .optional(),
+        maxPages: z.number().int().min(1).max(MAX_MAX_PAGES).optional(),
         startDate: z
           .string()
           .regex(/^\d{4}-\d{2}-\d{2}$/)
@@ -262,6 +267,7 @@ export function registerOpportunityTools(
     async ({
       site,
       targetUrl,
+      maxPages,
       startDate,
       endDate,
       refresh,
@@ -269,7 +275,13 @@ export function registerOpportunityTools(
       try {
         const result = await (
           dependencies.internalLinksReport ?? internalLinksReport
-        )({ site, targetUrl, startDate, endDate, refresh })
+        )(
+          { site, targetUrl, maxPages, startDate, endDate, refresh },
+          await localInternalLinksDependencies({
+            site: targetUrl ?? site,
+            refresh,
+          }),
+        )
         return toolSuccess(result.summary.verdict, result)
       } catch (error) {
         return toolError(error)

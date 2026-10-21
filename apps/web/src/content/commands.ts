@@ -77,11 +77,11 @@ export const commands = [
   },
   {
     id: 'internal-links',
-    needs: 'A site URL and a target page',
+    needs: 'A site, or one page',
     command: 'seo internal-links',
     tool: null,
     path: '/docs/internal-links',
     icon: Link01Icon,
-    text: 'Find pages on your site that could link to a page you choose. Runs on your machine with the CLI.',
+    text: 'Find the internal links your site is missing, across the whole site or to one page. Runs on your machine with the CLI.',
   },
 ] as const

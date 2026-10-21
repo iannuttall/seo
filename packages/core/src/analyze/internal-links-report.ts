@@ -1,26 +1,12 @@
 import { SeoError } from '../errors.js'
 import { finalGscDateRange } from '../gsc/dates.js'
-import type {
-  InternalLinksReport,
-  InternalLinksSelection,
-  InternalLinksWarning,
-} from './internal-links-types.js'
-
-type RuntimeSelectionKey =
-  | 'attemptedSources'
-  | 'checkedSources'
-  | 'returnedSources'
-  | 'existingLinkExclusions'
-  | 'technicalExclusions'
-  | 'selfAliasExclusions'
-  | 'failedChecks'
-  | 'uncheckedCandidates'
+import type { InternalLinksReport } from './internal-links-types.js'
 
 const DAY = 86_400_000
 const ISO_DAY = /^\d{4}-\d{2}-\d{2}$/
 
-// The date window: the dates sent, or the last `fallbackDays` days of final
-// Search Console data.
+// The Search Console window: the dates sent, or the last `fallbackDays` days
+// of final data.
 export function internalLinksReportRange(
   input: { startDate?: string; endDate?: string },
   fallbackDays: number,
@@ -51,57 +37,40 @@ export function internalLinksReportRange(
   return { startDate, endDate, days }
 }
 
-export function completeInternalLinksSelection(
-  analysis: {
-    selection: Omit<InternalLinksSelection, RuntimeSelectionKey>
+const plural = (count: number, word: string) =>
+  `${count} ${word}${count === 1 ? '' : 's'}`
+
+export function internalLinksVerdict(
+  report: Pick<
+    InternalLinksReport,
+    'mode' | 'dataStatus' | 'crawl' | 'judge' | 'target'
+  > & {
+    counts: InternalLinksReport['summary']
   },
-  runtime: Pick<InternalLinksSelection, RuntimeSelectionKey>,
-): InternalLinksSelection {
-  return { ...analysis.selection, ...runtime }
-}
-
-export function internalLinksVerdict(input: {
-  dataStatus: InternalLinksReport['dataStatus']
-  returned: number
-  attempted: number
-  checked: number
-  candidates: number
-  failed: number
-  unchecked: number
-}): string {
-  if (input.dataStatus === 'target-technical-issue') {
-    return 'The target has a technical issue. Resolve it before adding internal links.'
+): string {
+  const { counts } = report
+  if (report.dataStatus === 'blocked') {
+    return 'robots.txt does not allow this crawler to read the site, so nothing was checked.'
   }
-  if (input.dataStatus === 'empty') {
-    return 'Search Console returned no retained query/page rows for the target URL aliases in this window.'
+  if (report.dataStatus === 'empty') {
+    return 'No HTML page could be crawled, so there is nothing to link.'
   }
-  if (input.dataStatus === 'source-empty') {
-    return 'Search Console returned no retained source query/page rows in this window. This does not prove that no relevant source page exists.'
+  if (report.dataStatus === 'target-not-crawled') {
+    return 'The target page could not be crawled as its own page (it failed, left the site, or names another page as canonical). Check it with seo page first.'
   }
-  if (input.dataStatus === 'filtered') {
-    return 'Target demand exists, but no precision-matched source candidates passed the report filters.'
+  if (report.dataStatus === 'target-not-linkable') {
+    return `The target is ${report.target?.noindex ? 'noindex' : `a ${report.target?.type?.replaceAll('_', ' ')} page`}, so no links to it are suggested.`
   }
-  if (input.returned) {
-    return `${input.returned} internal-link review candidate${input.returned === 1 ? '' : 's'} remained after ${input.attempted} verification attempt${input.attempted === 1 ? '' : 's'}; ${input.checked} of ${input.candidates} matched source pages were successfully checked.`
-  }
-  if (input.dataStatus === 'partial') {
-    if (input.candidates === 0 && input.attempted === 0) {
-      return 'Internal-link candidates could not be evaluated because required target, provider, or row evidence was incomplete.'
-    }
-    return `No missing contextual link was confirmed among ${input.checked} successfully checked source page${input.checked === 1 ? '' : 's'}; evidence remains incomplete with ${input.failed} failed check${input.failed === 1 ? '' : 's'} and ${input.unchecked} unattempted candidate${input.unchecked === 1 ? '' : 's'}.`
-  }
-  return `No missing contextual link was confirmed among ${input.checked} successfully checked source page${input.checked === 1 ? '' : 's'}.`
-}
-
-export function uniqueInternalLinksWarnings(
-  warnings: InternalLinksWarning[],
-): InternalLinksWarning[] {
-  return [
-    ...new Map(
-      warnings.map((warning) => [
-        `${warning.stage}\u0000${warning.url}\u0000${warning.code}\u0000${warning.message}`,
-        warning,
-      ]),
-    ).values(),
-  ]
+  const judged =
+    report.judge.status === 'used' || report.judge.status === 'partial'
+      ? `${counts.strong} strong and ${counts.possible} possible link${counts.strong + counts.possible === 1 ? '' : 's'} judged by ${report.judge.model}${counts.heuristic ? `, plus ${plural(counts.heuristic, 'heuristic link')} where a request failed` : ''}`
+      : `${plural(counts.heuristic, 'heuristic link')} (no decision model)`
+  const scope =
+    report.mode === 'url'
+      ? `to ${report.target?.url}`
+      : `across ${plural(counts.pagesCrawled, 'page')}`
+  const capped = report.crawl.capReached
+    ? ` The crawl stopped at its limit of ${report.crawl.pageLimit} pages, so pages beyond it were not checked.`
+    : ''
+  return `${judged} ${scope}${counts.heldBack ? `; ${counts.heldBack} held back by the evidence floors` : ''}.${capped}`
 }

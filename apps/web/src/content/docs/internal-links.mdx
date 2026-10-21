@@ -1,29 +1,40 @@
 ---
-title: Find internal link opportunities
-description: Find pages on your site that could link to a page you choose with seo internal-links, with the sentence where each link fits and anchor text from it.
+title: Find internal links to add
+description: Audit the internal links across your whole site, or find links to one page, with seo internal-links. Each link names a real sentence on the source page and anchor text from it.
 heading: seo internal-links
-lead: Find pages on your site that could link to a page you choose. CLI only.
+lead: Find the internal links your site is missing, placed in sentences you already wrote. CLI only.
 ---
 
-Use it when a page deserves more links from the rest of your site. Pick the target page and the command looks for pages that cover the same topic but do not link to it yet.
+Use it when pages that belong together do not link to each other, or when one page deserves more links from the rest of your site. It crawls your site from your machine, finds pages about the same things, and checks which links are not there yet.
 
-## Run it
-
-Install the CLI and run setup if you have not yet, then ask your agent or run it with the page that should get the links:
+## Audit the whole site
 
 ```sh
-seo internal-links --url https://example.com/pricing
+seo internal-links --site example.com
 ```
 
-It finds the Search Console property from the URL. Add `--site` only when you have more than one property that covers it.
+It crawls up to 500 pages, from your sitemap when there is one and by following links when there is not. It honours robots.txt, including a crawl delay. For a bigger site, add `--max-pages` with any number up to 5,000. The result always says how many pages it crawled and whether it hit the limit.
 
-It looks at the last 90 days of Search Console data. For other dates, add `--start-date` and `--end-date`. Everything else is set for you and shown in the result: it checks up to 40 pages live, returns up to 20, and leaves out searches for your brand name.
+You get the links to add (at most eight for each page), the pages nothing links to, the pages with fewer than three links from other pages' content, links that still go through a redirect, and links with text such as "click here".
+
+## Find links to one page
+
+```sh
+seo internal-links --url https://example.com/guides/composting
+```
+
+It crawls the same way and returns up to eight pages that should link to that page.
+
+## Let Jev judge each link
+
+Without a key, the links come from text matching: pages that use the same words, and sentences that name the page. That finds candidates, but it cannot tell a helpful link from a forced one.
+
+With a TypeSafe API key, Jev sorts every page into a type (guide, article, tool, product page and so on), then judges each link: how likely it is to help a reader, which of the real sentences it belongs in, which real phrase to use as the link text, and what the link does for the reader. Fixed rules still apply on top: a weak yes is dropped, and a sentence that barely names the page cannot hold the link. Jev only chooses among your own pages, sentences and phrases. It never writes text.
+
+Add the key on the [Keys tab of your account](/account#keys) and run `seo login`, or set `TYPESAFE_API_KEY` on your machine to keep it there. The result says whether Jev was used, how many requests it made and what they cost. A 500-page site costs about 10 to 20 cents.
 
 ## What comes back
 
-- Pages whose Search Console queries overlap with the target page's topic.
-- A live check of those pages, keeping only the ones that do not already link to the target.
-- The queries behind each suggestion, so you can see why it was picked.
-- Where the link fits: the sentence on the source page that names the target best, and anchor text taken from that sentence. When no sentence names the target, it says so, because a link there needs new text.
+Each link names the page to add it to, the page it points at, the sentence it fits in and the phrase to use as the link text. With Jev it also has a probability and says whether it is a strong or a possible link. When your Search Console account has the site, the result also counts the searches both pages appear for.
 
-Pages with a sentence that fits come first. The order is a rough guide, not a forecast. Read the source page, add a link only where it helps a reader, and run a [crawl](/docs/crawl) afterwards to confirm it is there.
+Read the source page, add a link only where it helps a reader, and run a [crawl](/docs/crawl) afterwards to confirm it is there.

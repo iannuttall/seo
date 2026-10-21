@@ -56,7 +56,16 @@ Read before you write:
   returns everything it has.
 - No flags, options or env switches that change what a report returns or
   means. Make the default right instead. Choices (brand terms, minimums,
-  redirect merges) are automatic and shown in the output.
+  redirect merges) are automatic and shown in the output. The one exception
+  is `seo internal-links --site --max-pages` (500 by default, up to 5,000):
+  the crawl size is the person's call, and the output always says how many
+  pages were crawled and whether the limit was hit. Do not copy it.
+- `seo internal-links` uses Jev when a TypeSafe key is set
+  (`TYPESAFE_API_KEY` on the machine, or saved on the account) and says so;
+  without one it uses heuristics and says Jev was not used. The model only
+  classifies pages and picks among real pages, sentences and phrases.
+  Decision models sit behind `packages/core/src/decision-model.ts`, so
+  another System One model is one adapter.
 - More detail comes only from progressive disclosure: summary, then `rows`
   with an offset, then `full`. Each result ends with the command to run
   next; that is the only routing.

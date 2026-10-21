@@ -1,193 +1,136 @@
-import type { PageFetchDiagnostics } from '../types.js'
-import type { LinkPlacement } from './internal-links-placement.js'
-import type { PageTechnicalSignal } from './page-technical-signals.js'
+import type {
+  HeldBackReason,
+  LinkRole,
+  PageType,
+  SearchIntent,
+} from './internal-links-judge.js'
 
-export type InternalLinkMatchKind = 'exact-query' | 'lexical-review'
-
-export interface InternalLinkQueryMatch {
-  sourceQuery: string
-  targetQuery: string
-  kind: InternalLinkMatchKind
-  relevanceScore: number
-  impressions: number
-  sharedTerms: string[]
+export interface InternalLinkSuggestion {
+  source: string
+  target: string
+  // strong and possible come from the decision model's probability;
+  // heuristic means no model judged this link.
+  tier: 'strong' | 'possible' | 'heuristic'
+  probability: number | null
+  role: LinkRole | null
+  // A real phrase from the sentence, or null when none reads as a link.
+  anchor: string | null
+  // A real sentence from the source, or null when the link needs new text.
+  sentence: string | null
+  section: string | null
+  // Share of the target's naming words in the sentence, 0 to 1.
+  sentenceMatch: number | null
+  // TF-IDF similarity of the two pages, raised for targets with few links
+  // and lowered for news. A heuristic.
+  similarity: number
+  // Search Console queries both pages appeared for, when it was used.
+  sharedQueries: number
+  targetInboundLinks: number
+  sourceType: PageType | null
+  targetType: PageType | null
 }
 
-export interface InternalLinkCandidate {
-  sourceUrl: string
-  matchedQueryImpressions: number
-  matchedQueries: number
-  exactQueryMatches: number
-  bestRelevanceScore: number
-  bestMatchKind: InternalLinkMatchKind
-  matches: InternalLinkQueryMatch[]
-}
-
-export interface InternalLinkOpportunity extends InternalLinkCandidate {
-  finalUrl: string
-  status: number
-  technicalSignals: PageTechnicalSignal[]
-  fetchDiagnostics: PageFetchDiagnostics
-  pageWarnings: string[]
-  actionType: 'review-contextual-link' | 'review-alias-link'
-  linkEvidence: {
-    status: 'missing' | 'non-contextual-only' | 'alias-contextual'
-    observedCount: number
-    observedLimit: number
-    limitedCount: number
-    observed: Array<{
-      href: string
-      text: string
-      rel: string[]
-      location: 'main-content' | 'navigation' | 'footer' | 'other'
-    }>
-  }
-  // Where the link fits: source sentences that name the target, with anchor
-  // text taken from them. Empty sentences means no sentence names it.
-  placement: LinkPlacement
-  confidence: 'medium' | 'low'
-  priority: {
-    score: number
-    heuristic: true
-    components: {
-      exactQueryMatches: number
-      matchedQueryImpressions: number
-      relevanceScore: number
-    }
-  }
-  recommendation: {
-    principle: 'C.6'
-    evidenceRef: string
-    action: string
-    effort: 'S'
-    confidence: 'medium' | 'low'
-  }
-}
-
-export interface InternalLinksSelection {
-  targetSourceRows: number
-  targetValidRows: number
-  targetInvalidRows: number
-  targetUrlMismatchRows: number
-  targetLowImpressionQueries: number
-  targetLowActionabilityQueries: number
-  targetBrandQueries: number
-  targetEligibleQueries: number
-  selectedLexicalTargetQueries: number
-  sourceRows: number
-  sourceValidRows: number
-  sourceInvalidRows: number
-  sourceTargetAliasRows: number
-  sourceLowImpressionQueries: number
-  sourceLowActionabilityQueries: number
-  sourceBrandQueries: number
-  sourceUnmatchedQueries: number
-  candidateQueries: number
-  candidateUrls: number
-  attemptedSources: number
-  checkedSources: number
-  returnedSources: number
-  existingLinkExclusions: number
-  technicalExclusions: number
-  selfAliasExclusions: number
-  failedChecks: number
-  uncheckedCandidates: number
-}
-
-export interface InternalLinksWarning {
-  stage: 'target-fetch' | 'target-extract' | 'source-fetch' | 'source-extract'
+export interface InternalLinksPage {
   url: string
-  code: 'fetch-failed' | 'extract-failed' | 'extractor-warning'
-  message: string
+  title: string
+  type: PageType | null
+  intent: SearchIntent | null
+  words: number
+  // Pages linking from their main content, and from anywhere on the page.
+  inboundLinks: number
+  inboundLinksAnywhere: number
+  outboundLinks: number
+  suggestedInbound: number
+  suggestedOutbound: number
+  noindex: boolean
 }
 
 export interface InternalLinksReport {
   site: string
-  targetUrl: string
+  mode: 'site' | 'url'
+  targetUrl: string | null
   generatedAt: string
-  range: { startDate: string; endDate: string }
-  rangeDays: number
   dataStatus:
-    | 'empty'
-    | 'source-empty'
-    | 'filtered'
-    | 'partial'
     | 'complete'
-    | 'target-technical-issue'
-  source: {
-    provider: 'google-search-console'
-    dimensions: ['query', 'page']
-    searchType: 'web'
-    dataState: 'final'
-    target: {
-      pageFilters: string[]
-      requests: Array<{
-        pageFilter: string
-        rowsFetched: number
-        calls: number
-        possiblyTruncated: boolean
-      }>
-      rowsFetched: number
-      calls: number
-      maxRowsPerRequest: number
-      possiblyTruncated: boolean
-    }
-    candidates: {
-      queried: boolean
-      rowsFetched: number
-      calls: number
-      maxRows: number
-      possiblyTruncated: boolean
-    }
-    completeness: 'retained-rows-only' | 'possibly-truncated' | 'not-queried'
+    | 'partial'
+    | 'blocked'
+    | 'empty'
+    | 'target-not-crawled'
+    | 'target-not-linkable'
+  crawl: {
+    startUrl: string
+    method: 'sitemap' | 'links'
+    maxPages: number
+    pageLimit: number
+    urlsFound: number
+    pagesCrawled: number
+    capReached: boolean
+    crawlDelaySeconds: number | null
+    skipped: Record<string, number>
+    redirectsChecked: number
   }
-  methodology: {
-    id: 'gsc_internal_link_candidates'
-    version: 4
-    lexicalTargetLimit: number
-    matchedQueryEvidenceLimit: number
-    observedLinkEvidenceLimit: number
-    matching: 'pairwise_exact_then_precision_lexical'
-    ranking: 'exact_matches_then_matched_query_impressions_then_relevance'
-    contextualPlacementVerified: true
-    placement: 'tfidf_sentence_match_then_phrase_anchors'
+  searchConsole: {
+    status: 'used' | 'not-available' | 'failed'
+    property: string | null
+    range: { startDate: string; endDate: string } | null
+    rows: number
+    possiblyTruncated: boolean
+    pairsWithSharedQueries: number
+    note: string | null
   }
-  filters: {
-    minImpressions: number
-    resultLimit: number
-    checkLimit: number
-    maxGscRowsPerRequest: number
+  judge: {
+    status: 'used' | 'partial' | 'not-used' | 'failed'
+    note: string
+    keySource: 'environment' | 'account' | null
+    provider: string | null
+    model: string | null
+    requests: number
+    failedRequests: number
+    inputTokens: number
+    costUsd: number
+    pagesClassified: number
+    pairsJudged: number
+    thresholds: { possible: number; strong: number }
+    floors: { minSentenceMatch: number; minSimilarityAlone: number }
   }
   target: {
-    requestedUrl: string
-    preferredUrl: string
-    finalUrl?: string
-    canonical?: string
-    status?: number
-    aliases: string[]
-    verification: 'verified' | 'failed' | 'technical-issue'
-    technicalSignals: PageTechnicalSignal[]
-    fetchDiagnostics?: PageFetchDiagnostics
-    queries: Array<{ query: string; clicks: number; impressions: number }>
-  }
-  selection: InternalLinksSelection
+    url: string
+    title: string
+    type: PageType | null
+    intent: SearchIntent | null
+    inboundLinks: number
+    inboundLinksAnywhere: number
+    noindex: boolean
+  } | null
   summary: {
-    targetQueries: number
-    candidateSources: number
-    attemptedSources: number
-    checkedSources: number
-    returnedSources: number
-    existingLinksObserved: number
-    technicalExclusions: number
-    failedChecks: number
-    uncheckedCandidates: number
-    matchedQueryImpressions: number
-    brandFiltering: 'included' | 'excluded'
     verdict: string
+    pagesCrawled: number
+    existingContextualLinks: number
+    orphanPages: number
+    weaklyLinkedPages: number
+    pairsConsidered: number
+    suggestions: number
+    strong: number
+    possible: number
+    heuristic: number
+    heldBack: number
+    declined: number
   }
-  items: InternalLinkOpportunity[]
-  warnings: InternalLinksWarning[]
+  items: InternalLinkSuggestion[]
+  heldBack: {
+    count: number
+    reasons: Partial<Record<HeldBackReason, number>>
+    examples: Array<{
+      source: string
+      target: string
+      reason: HeldBackReason
+      detail: string
+    }>
+  }
+  pageInventory: InternalLinksPage[]
+  redirectedLinks: Array<{ source: string; via: string; target: string }>
+  genericAnchors: Array<{ source: string; href: string; text: string }>
+  warnings: string[]
   caveats: string[]
-  recommendations: string[]
-  ledgerSummary: string
+  next: string | null
 }

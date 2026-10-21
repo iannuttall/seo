@@ -150,7 +150,7 @@ ends with the command to run next, so your agent always knows where to go.
 | [`seo data`](https://seoskill.dev/docs/data) | Raw Search Console or Bing rows |
 | [`seo analytics`](https://seoskill.dev/docs/analytics) | Landing pages from Google Analytics or Clicky |
 | [`seo crawl`](https://seoskill.dev/docs/crawl) | Technical issues and AI agent access across a site (CLI only) |
-| [`seo internal-links`](https://seoskill.dev/docs/internal-links) | Pages that could link to a page (CLI only) |
+| [`seo internal-links`](https://seoskill.dev/docs/internal-links) | Internal links to add across a site or to one page (CLI only) |
 
 Every command is also an MCP tool, such as `seo_report`. Add `--json` to any
 command when you're scripting it.

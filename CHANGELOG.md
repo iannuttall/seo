@@ -1,5 +1,33 @@
 # Changelog
 
+## 0.9.0
+
+### Added
+
+- `seo research ai_answers --target <site>` checks whether AI answers cite
+  or name the site. It takes the top 10 askable questions from the site's
+  own `ai-queries` section (last 90 days) and asks each one on ChatGPT
+  search, Google AI Mode and the Google AI Overview, through your
+  DataForSEO account. Each row is cited, mentioned, neither, no answer or
+  unavailable, with the date, the cost and the model DataForSEO reports.
+  It costs about $0.12 a run.
+
+### Changed
+
+- The `ai-queries` section leaves out letters split by spaces, text broken
+  by a wrong encoding and text pasted from a tool or an agent's output, and
+  counts what it left out. Each question has an `askable` flag, and
+  `ai_answers` checks only askable questions.
+- Every DataForSEO `seo research` result shows DataForSEO's own cost, in
+  the text and as `costUsd` in JSON.
+
+### Fixed
+
+- DataForSEO's "No Search Results" is an empty result with its cost, not
+  an error. Partial results keep their rows and are labelled partial.
+- `ai_answers` checks the country and language against DataForSEO's free
+  lists before any paid call, so an unsupported market costs nothing.
+
 ## 0.8.3
 
 ### Added

@@ -55,7 +55,7 @@ const faq = [
 
 <BaseLayout
   title="Free website traffic checker for any domain"
-  description="Check any website's estimated monthly Google organic traffic, ranking keywords, traffic value and twelve-month trend, then compare it with your own Search Console numbers."
+  description="Check any website's estimated monthly Google organic traffic, its twelve-month trend, and the top pages and keywords that bring it. Free, with no account."
   canonicalPath="/tools/website-traffic-checker"
   {breadcrumbs}
 >
@@ -63,7 +63,7 @@ const faq = [
     <Breadcrumbs {breadcrumbs} />
     <PageHeader
       title="Website traffic checker"
-      description="Enter a domain and choose a country to check its estimated organic search traffic from Google, with a year of history."
+      description="Enter a domain and choose a country to check its estimated organic search traffic from Google, with a year of history and the pages and keywords behind it."
     />
 
     <WebsiteTrafficChecker />
@@ -72,9 +72,10 @@ const faq = [
       <h2>Read the traffic estimate</h2>
       <p>
         The big number is the estimated organic visits the site gets from
-        Google in one month, in the country you picked. Under it you get the
-        number of keywords it ranks for, a traffic value, and a twelve-month
-        table that shows how each of those moved.
+        Google in one month, in the country you picked, with its change on
+        the month before and over the year. Under it you get a twelve-month
+        chart, where its keywords rank now, its ten biggest pages and its
+        twenty biggest keywords.
       </p>
       <table>
         <thead>
@@ -91,6 +92,10 @@ const faq = [
           <tr>
             <td>Ranking keywords</td>
             <td>Keywords the site ranks for in the top 100 in that market.</td>
+          </tr>
+          <tr>
+            <td>Pages with traffic</td>
+            <td>How many of the site's pages rank for at least one keyword.</td>
           </tr>
           <tr>
             <td>Traffic value</td>
@@ -112,6 +117,20 @@ const faq = [
         them. A site with 300 keywords in the top 3 can get a lot.
       </p>
 
+      <h2>See which pages and keywords bring the traffic</h2>
+      <p>
+        The top pages show where the traffic lands, and each page's share of
+        the total. When one page brings half the traffic, the site depends
+        on a handful of rankings, and losing one of them shows up straight
+        away in the total. Traffic spread over many pages is steadier.
+      </p>
+      <p>
+        The top keywords show what people searched to get there, with the
+        position, the monthly searches and the estimated visits. Sort them
+        by searches to find big keywords where the site ranks low, or filter
+        by a word to see one topic. Each keyword shows the page that ranks
+        for it.
+      </p>
       <h2>How the estimate is built</h2>
       <p>
         Nobody outside a website can see its analytics, so every traffic
@@ -143,7 +162,8 @@ const faq = [
 
       <h2>Spot a traffic drop in the history</h2>
       <p>
-        When the estimate falls, the monthly table shows why. More lost
+        When the estimate falls, switch the chart between traffic, keywords
+        and top 10, and open the monthly numbers to see why. More lost
         keywords means rankings disappeared. Fewer top 3 keywords with the
         same total means positions slipped. Steady keywords with less traffic
         usually means search demand fell, which is often seasonal.

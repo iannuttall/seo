@@ -12,7 +12,7 @@ import TurnstileWidget from '@/components/tools/TurnstileWidget.astro'
       <div class="space-y-1">
         <h2 class="text-lg font-medium">Estimate organic search traffic</h2>
         <p class="text-sm leading-6 text-foreground-muted">
-          See estimated organic traffic, ranking keywords, and position changes for the last twelve months.
+          See a site's estimated Google traffic, its trend over twelve months, and the pages and keywords that bring it.
         </p>
       </div>
       <div class="grid gap-4 sm:grid-cols-[minmax(0,1fr)_14rem]">
@@ -57,21 +57,25 @@ import TurnstileWidget from '@/components/tools/TurnstileWidget.astro'
   <div data-results hidden class="space-y-6">
     <Card inverted>
       <div class="space-y-5 p-5 sm:p-6">
-        <div class="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
-          <div>
+        <div class="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
+          <div class="min-w-0">
             <p class="text-xs text-foreground-muted">Estimated monthly Google organic traffic</p>
             <p data-traffic class="mt-1 text-5xl font-medium text-primary"></p>
-            <p data-period class="mt-2 text-sm text-foreground-muted"></p>
+            <p data-change class="mt-2 text-sm text-foreground-muted"></p>
           </div>
-          <div class="grid gap-2 sm:grid-cols-2">
+          <div class="grid shrink-0 gap-2 sm:grid-cols-2">
             <Button data-copy type="button" class="min-h-10 px-4 text-xs">Copy summary</Button>
             <Button data-download type="button" class="min-h-10 px-4 text-xs">Download CSV</Button>
           </div>
         </div>
-        <dl class="grid grid-cols-2 gap-4 border-t border-border pt-5 sm:grid-cols-3">
+        <dl class="grid grid-cols-2 gap-4 border-t border-border pt-5 sm:grid-cols-4">
           <div>
             <dt class="text-xs text-foreground-muted">Ranking keywords</dt>
             <dd data-keywords class="mt-1 font-mono text-lg"></dd>
+          </div>
+          <div>
+            <dt class="text-xs text-foreground-muted">Pages with traffic</dt>
+            <dd data-pages class="mt-1 font-mono text-lg"></dd>
           </div>
           <div>
             <dt class="text-xs text-foreground-muted">Traffic value</dt>
@@ -79,11 +83,10 @@ import TurnstileWidget from '@/components/tools/TurnstileWidget.astro'
           </div>
           <div>
             <dt class="text-xs text-foreground-muted">Market</dt>
-            <dd data-result-market class="mt-1 font-mono text-xs"></dd>
+            <dd data-result-market class="mt-1 text-sm"></dd>
           </div>
         </dl>
         <div class="space-y-2 border-t border-border pt-5">
-          <p data-data-status class="font-mono text-xs"></p>
           <p data-checked-at class="text-xs text-foreground-muted"></p>
           <ul data-warnings class="list-disc space-y-1 pl-5 text-xs leading-5 text-foreground-muted"></ul>
         </div>
@@ -93,29 +96,32 @@ import TurnstileWidget from '@/components/tools/TurnstileWidget.astro'
 
     <Card>
       <div class="space-y-5 p-5 sm:p-6">
-        <div class="space-y-1">
-          <h3 class="text-sm font-medium">Twelve-month estimate</h3>
-          <p class="text-xs leading-5 text-foreground-muted">
-            Compare monthly traffic and keyword movement to spot gains, losses, and trend changes.
-          </p>
+        <div class="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+          <h3 class="text-sm font-medium">Twelve-month trend</h3>
+          <div data-metrics role="group" aria-label="Number shown" class="inline-flex h-9 w-fit items-center gap-1 rounded-lg bg-muted p-0.5 text-xs">
+            <button type="button" data-metric="traffic" aria-pressed="true" class="h-8 rounded-md px-3 aria-pressed:bg-background aria-pressed:text-foreground text-foreground-muted">Traffic</button>
+            <button type="button" data-metric="keywords" aria-pressed="false" class="h-8 rounded-md px-3 aria-pressed:bg-background aria-pressed:text-foreground text-foreground-muted">Keywords</button>
+            <button type="button" data-metric="top10" aria-pressed="false" class="h-8 rounded-md px-3 aria-pressed:bg-background aria-pressed:text-foreground text-foreground-muted">Top 10</button>
+          </div>
         </div>
-        <div class="overflow-x-auto">
-          <table class="w-full min-w-[68rem] border-collapse text-left">
-            <thead class="border-b border-border text-xs font-medium text-foreground-muted">
-              <tr>
-                <th class="pb-2 pr-4">Month</th>
-                <th class="pb-2 pr-4 text-right">Traffic</th>
-                <th class="pb-2 pr-4 text-right">Keywords</th>
-                <th class="pb-2 pr-4 text-right">Top 3</th>
-                <th class="pb-2 pr-4 text-right">Top 10</th>
-                <th class="pb-2 pr-4 text-right">New</th>
-                <th class="pb-2 pr-4 text-right">Up</th>
-                <th class="pb-2 pr-4 text-right">Down</th>
-                <th class="pb-2 text-right">Lost</th>
-              </tr>
-            </thead>
-            <tbody data-history class="divide-y divide-border text-xs"></tbody>
-          </table>
+        <p data-readout class="min-h-6 text-sm" aria-live="polite"></p>
+        <div data-bars class="flex h-44 items-end gap-1 sm:gap-2"></div>
+        <div data-bar-labels class="flex gap-1 text-center text-[0.65rem] text-foreground-muted sm:gap-2" aria-hidden="true"></div>
+        <p class="text-xs leading-5 text-foreground-muted">Point at or tap a month to read it.</p>
+      </div>
+    </Card>
+
+    <Card>
+      <div class="space-y-5 p-5 sm:p-6">
+        <div class="space-y-1">
+          <h3 class="text-sm font-medium">Where it ranks now</h3>
+          <p data-positions-total class="text-xs leading-5 text-foreground-muted"></p>
+        </div>
+        <div data-position-bar class="flex h-4 w-full overflow-hidden rounded-full bg-muted"></div>
+        <ul data-position-legend class="grid gap-2 text-xs sm:grid-cols-2"></ul>
+        <div class="space-y-2 border-t border-border pt-5">
+          <h4 class="text-xs font-medium">Keyword movement since last month</h4>
+          <dl data-movement class="grid grid-cols-2 gap-4 sm:grid-cols-4"></dl>
         </div>
       </div>
     </Card>
@@ -123,24 +129,67 @@ import TurnstileWidget from '@/components/tools/TurnstileWidget.astro'
     <Card>
       <div class="space-y-5 p-5 sm:p-6">
         <div class="space-y-1">
-          <h3 class="text-sm font-medium">Top ranking keywords</h3>
-          <p class="text-xs leading-5 text-foreground-muted">A small current sample for context, not a complete keyword export.</p>
+          <h3 class="text-sm font-medium">Top pages by traffic</h3>
+          <p class="text-xs leading-5 text-foreground-muted">The ten pages with the most estimated traffic, and their share of the site's total.</p>
         </div>
-        <div class="overflow-x-auto">
-          <table class="w-full min-w-[48rem] border-collapse text-left">
-            <thead class="border-b border-border text-xs font-medium text-foreground-muted">
+        <ol data-top-pages class="space-y-4"></ol>
+        <p data-no-pages hidden class="text-sm text-foreground-muted">No top pages were available.</p>
+      </div>
+    </Card>
+
+    <Card>
+      <div class="space-y-5 p-5 sm:p-6">
+        <div class="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
+          <div class="space-y-1">
+            <h3 class="text-sm font-medium">Top keywords by traffic</h3>
+            <p class="text-xs leading-5 text-foreground-muted">The twenty keywords that bring the most estimated traffic.</p>
+          </div>
+          <div class="grid grid-cols-2 gap-2 sm:w-80">
+            <FormInput data-keyword-filter type="search" placeholder="Filter" aria-label="Filter keywords" class="h-9 text-xs" />
+            <FormSelect data-keyword-sort aria-label="Sort keywords" class="h-9 text-xs">
+              <option value="traffic">By traffic</option>
+              <option value="volume">By searches</option>
+              <option value="position">By position</option>
+            </FormSelect>
+          </div>
+        </div>
+        <table class="w-full border-collapse text-left text-xs">
+          <thead class="border-b border-border text-foreground-muted">
+            <tr>
+              <th class="pb-2 pr-3 font-normal">Keyword</th>
+              <th class="pb-2 pr-3 text-right font-normal">Position</th>
+              <th class="pb-2 pr-3 text-right font-normal">Searches</th>
+              <th class="pb-2 text-right font-normal">Traffic</th>
+            </tr>
+          </thead>
+          <tbody data-top-keywords class="divide-y divide-border"></tbody>
+        </table>
+        <p data-no-keywords hidden class="text-sm text-foreground-muted">No keywords match.</p>
+      </div>
+    </Card>
+
+    <Card>
+      <details class="group p-5 sm:p-6">
+        <summary class="cursor-pointer text-sm font-medium">Monthly numbers</summary>
+        <div class="mt-5 overflow-x-auto">
+          <table class="w-full min-w-[40rem] border-collapse text-left text-xs">
+            <thead class="border-b border-border text-foreground-muted">
               <tr>
-                <th class="pb-2 pr-4">Keyword</th>
-                <th class="pb-2 pr-4 text-right">Position</th>
-                <th class="pb-2 pr-4 text-right">Search volume</th>
-                <th class="pb-2">Ranking URL</th>
+                <th class="pb-2 pr-3 font-normal">Month</th>
+                <th class="pb-2 pr-3 text-right font-normal">Traffic</th>
+                <th class="pb-2 pr-3 text-right font-normal">Keywords</th>
+                <th class="pb-2 pr-3 text-right font-normal">Top 3</th>
+                <th class="pb-2 pr-3 text-right font-normal">Top 10</th>
+                <th class="pb-2 pr-3 text-right font-normal">New</th>
+                <th class="pb-2 pr-3 text-right font-normal">Up</th>
+                <th class="pb-2 pr-3 text-right font-normal">Down</th>
+                <th class="pb-2 text-right font-normal">Lost</th>
               </tr>
             </thead>
-            <tbody data-top-keywords class="divide-y divide-border text-xs"></tbody>
+            <tbody data-history class="divide-y divide-border font-mono"></tbody>
           </table>
         </div>
-        <p data-no-keywords hidden class="text-sm text-foreground-muted">No current keyword sample was available.</p>
-      </div>
+      </details>
     </Card>
   </div>
 </section>
@@ -161,13 +210,27 @@ import TurnstileWidget from '@/components/tools/TurnstileWidget.astro'
       twentyFirstToHundredth: number | null
     }
   }
-  type KeywordRow = { keyword: string; rankGroup: number | null; searchVolume: number | null; rankingUrl: string | null }
+  type KeywordRow = {
+    keyword: string
+    rankGroup: number | null
+    searchVolume: number | null
+    rankingUrl: string | null
+    estimatedOrganicTraffic: number | null
+  }
+  type PageRow = {
+    url: string
+    estimatedOrganicTraffic: number | null
+    rankingResults: number | null
+    topThree: number | null
+  }
   type TrafficResult = {
     target: string
     dataStatus: 'complete' | 'partial' | 'unavailable'
     latest: HistoryRow | null
     history: HistoryRow[]
     topKeywords: KeywordRow[]
+    topPages?: PageRow[]
+    rankingPages?: number | null
     warnings: Array<{ code?: string; message: string }>
     provenance: {
       checkedAt: string
@@ -176,6 +239,7 @@ import TurnstileWidget from '@/components/tools/TurnstileWidget.astro'
     }
   }
   type TrafficResponse = { result: TrafficResult }
+  type Metric = 'traffic' | 'keywords' | 'top10'
 
   declare global {
     interface Window {
@@ -184,95 +248,326 @@ import TurnstileWidget from '@/components/tools/TurnstileWidget.astro'
   }
 
   const number = new Intl.NumberFormat()
+  const compact = new Intl.NumberFormat(undefined, { notation: 'compact', maximumFractionDigits: 1 })
   const money = new Intl.NumberFormat(undefined, { style: 'currency', currency: 'USD', maximumFractionDigits: 0 })
-  const formatCount = (value: number | null): string => value === null ? 'N/A' : number.format(value)
+  const formatCount = (value: number | null | undefined): string =>
+    value === null || value === undefined ? 'N/A' : number.format(Math.round(value))
+  const monthName = (month: string, style: 'short' | 'long' = 'long') => {
+    const [year, index] = month.split('-').map(Number)
+    return new Date(Date.UTC(year ?? 2000, (index ?? 1) - 1, 1)).toLocaleString(undefined, {
+      month: style,
+      year: style === 'long' ? 'numeric' : undefined,
+      timeZone: 'UTC',
+    })
+  }
+  const top10Of = (row: HistoryRow) =>
+    sumKnownTrafficCounts([row.positions.first, row.positions.secondToThird, row.positions.fourthToTenth])
+  const metricOf = (row: HistoryRow, metric: Metric): number | null =>
+    metric === 'traffic' ? row.estimatedOrganicTraffic : metric === 'keywords' ? row.rankingResults : top10Of(row)
+  const metricWords: Record<Metric, string> = {
+    traffic: 'estimated visits from Google',
+    keywords: 'ranking keywords',
+    top10: 'keywords in the top 10',
+  }
+  // Shows the path, with the host when the page is on a subdomain.
+  const pathOf = (url: string, site = '') => {
+    try {
+      const parsed = new URL(url)
+      const host = parsed.hostname.replace(/^www\./u, '')
+      return `${host === site ? '' : host}${parsed.pathname}${parsed.search}` || '/'
+    } catch {
+      return url
+    }
+  }
+  const el = <K extends keyof HTMLElementTagNameMap>(tag: K, className = '', text?: string) => {
+    const node = document.createElement(tag)
+    if (className) node.className = className
+    if (text !== undefined) node.textContent = text
+    return node
+  }
+  const percentChange = (from: number | null | undefined, to: number | null | undefined): string | null => {
+    if (from === null || from === undefined || to === null || to === undefined || from <= 0) return null
+    const change = ((to - from) / from) * 100
+    const rounded = Math.abs(change) < 10 ? change.toFixed(1) : Math.round(change).toString()
+    return `${change >= 0 ? 'Up' : 'Down'} ${rounded.replace('-', '')}%`
+  }
 
   function initialiseTrafficChecker(root: HTMLElement): void {
     if (root.dataset.initialised === 'true') return
     root.dataset.initialised = 'true'
-    const form = root.querySelector<HTMLFormElement>('[data-traffic-form]')
-    const target = root.querySelector<HTMLInputElement>('[data-target]')
-    const market = root.querySelector<HTMLSelectElement>('[data-market]')
-    const submit = root.querySelector<HTMLButtonElement>('[data-submit]')
-    const error = root.querySelector<HTMLElement>('[data-error]')
-    const results = root.querySelector<HTMLElement>('[data-results]')
-    if (!form || !target || !market || !submit || !error || !results) return
+    const $ = <T extends HTMLElement>(selector: string) => root.querySelector<T>(selector)
+    const form = $<HTMLFormElement>('[data-traffic-form]')
+    const target = $<HTMLInputElement>('[data-target]')
+    const market = $<HTMLSelectElement>('[data-market]')
+    const submit = $<HTMLButtonElement>('[data-submit]')
+    const error = $<HTMLElement>('[data-error]')
+    const results = $<HTMLElement>('[data-results]')
+    const filter = $<HTMLInputElement>('[data-keyword-filter]')
+    const sort = $<HTMLSelectElement>('[data-keyword-sort]')
+    if (!form || !target || !market || !submit || !error || !results || !filter || !sort) return
     const marketSelect = market
     const resultsSection = results
+    const keywordFilter = filter
+    const keywordSort = sort
     let latestResult: TrafficResponse | undefined
+    let metric: Metric = 'traffic'
+    let selectedMonth = ''
 
     const setText = (selector: string, value: string) => {
-      const element = root.querySelector<HTMLElement>(selector)
+      const element = $<HTMLElement>(selector)
       if (element) element.textContent = value
+    }
+    const marketName = () => marketSelect.options[marketSelect.selectedIndex]?.text ?? 'Selected market'
+
+    function renderReadout(result: TrafficResult): void {
+      const row = result.history.find((entry) => entry.month === selectedMonth) ?? result.history.at(-1)
+      if (!row) {
+        setText('[data-readout]', 'No monthly history was returned for this domain.')
+        return
+      }
+      setText('[data-readout]', `${monthName(row.month)}: ${formatCount(metricOf(row, metric))} ${metricWords[metric]}`)
+      for (const bar of root.querySelectorAll<HTMLElement>('[data-bar]')) {
+        bar.dataset.active = String(bar.dataset.bar === row.month)
+      }
+    }
+
+    function renderChart(result: TrafficResult): void {
+      const bars = $<HTMLElement>('[data-bars]')
+      const labels = $<HTMLElement>('[data-bar-labels]')
+      if (!bars || !labels) return
+      const values = result.history.map((row) => metricOf(row, metric) ?? 0)
+      const max = Math.max(1, ...values)
+      bars.replaceChildren(
+        ...result.history.map((row, index) => {
+          const value = metricOf(row, metric)
+          const button = el('button', 'group flex h-full min-w-0 flex-1 cursor-pointer items-end rounded-t-sm focus-visible:outline-2 focus-visible:outline-ring')
+          button.type = 'button'
+          button.dataset.bar = row.month
+          button.setAttribute('aria-label', `${monthName(row.month)}: ${formatCount(value)} ${metricWords[metric]}`)
+          const fill = el('span', 'block w-full rounded-t-sm bg-primary/35 transition-colors group-hover:bg-primary group-data-[active=true]:bg-primary')
+          fill.style.height = `${Math.max(value === null ? 0 : 2, ((values[index] ?? 0) / max) * 100)}%`
+          button.append(fill)
+          const select = () => {
+            selectedMonth = row.month
+            renderReadout(result)
+          }
+          button.addEventListener('mouseenter', select)
+          button.addEventListener('focus', select)
+          button.addEventListener('click', select)
+          return button
+        }),
+      )
+      labels.replaceChildren(...result.history.map((row) => el('span', 'min-w-0 flex-1 truncate', monthName(row.month, 'short'))))
+      renderReadout(result)
+    }
+
+    function renderPositions(result: TrafficResult): void {
+      const latest = result.latest
+      const bar = $<HTMLElement>('[data-position-bar]')
+      const legend = $<HTMLElement>('[data-position-legend]')
+      const movement = $<HTMLElement>('[data-movement]')
+      if (!bar || !legend || !movement) return
+      const groups = [
+        { label: 'Position 1', value: latest?.positions.first ?? null, className: 'bg-primary' },
+        { label: 'Positions 2 to 3', value: latest?.positions.secondToThird ?? null, className: 'bg-primary/75' },
+        { label: 'Positions 4 to 10', value: latest?.positions.fourthToTenth ?? null, className: 'bg-primary/50' },
+        { label: 'Positions 11 to 20', value: latest?.positions.eleventhToTwentieth ?? null, className: 'bg-primary/30' },
+        { label: 'Positions 21 to 100', value: latest?.positions.twentyFirstToHundredth ?? null, className: 'bg-foreground-soft/40' },
+      ]
+      const total = groups.reduce((sum, group) => sum + (group.value ?? 0), 0)
+      setText(
+        '[data-positions-total]',
+        latest ? `${formatCount(total)} keywords in Google's top 100 in ${monthName(latest.month)}.` : 'No position data was returned.',
+      )
+      bar.replaceChildren(
+        ...groups
+          .filter((group) => (group.value ?? 0) > 0 && total > 0)
+          .map((group) => {
+            const segment = el('span', `block h-full ${group.className}`)
+            segment.style.width = `${((group.value ?? 0) / total) * 100}%`
+            segment.title = `${group.label}: ${formatCount(group.value)}`
+            return segment
+          }),
+      )
+      legend.replaceChildren(
+        ...groups.map((group) => {
+          const item = el('li', 'flex items-center gap-2')
+          item.append(
+            el('span', `size-2.5 shrink-0 rounded-full ${group.className}`),
+            el('span', 'text-foreground-muted', group.label),
+            el('span', 'ml-auto font-mono', `${formatCount(group.value)}${total > 0 && group.value !== null ? ` (${Math.round((group.value / total) * 100)}%)` : ''}`),
+          )
+          return item
+        }),
+      )
+      const moves: Array<[string, number | null | undefined]> = [
+        ['New', latest?.movement.new],
+        ['Up', latest?.movement.up],
+        ['Down', latest?.movement.down],
+        ['Lost', latest?.movement.lost],
+      ]
+      movement.replaceChildren(
+        ...moves.map(([label, value]) => {
+          const item = el('div')
+          item.append(el('dt', 'text-xs text-foreground-muted', label), el('dd', 'mt-1 font-mono text-lg', formatCount(value)))
+          return item
+        }),
+      )
+    }
+
+    function renderPages(result: TrafficResult): void {
+      const list = $<HTMLElement>('[data-top-pages]')
+      const empty = $<HTMLElement>('[data-no-pages]')
+      const pages = result.topPages ?? []
+      const total = result.latest?.estimatedOrganicTraffic ?? null
+      const max = Math.max(1, ...pages.map((page) => page.estimatedOrganicTraffic ?? 0))
+      list?.replaceChildren(
+        ...pages.map((page) => {
+          const share = total && page.estimatedOrganicTraffic !== null ? (page.estimatedOrganicTraffic / total) * 100 : null
+          const item = el('li', 'space-y-1.5')
+          const top = el('div', 'flex items-baseline justify-between gap-3 text-xs')
+          const path = el('a', 'min-w-0 truncate font-mono text-foreground hover:text-primary', pathOf(page.url, result.target))
+          path.href = page.url
+          path.title = page.url
+          path.rel = 'nofollow noopener'
+          path.target = '_blank'
+          top.append(path, el('span', 'shrink-0 font-mono', `${formatCount(page.estimatedOrganicTraffic)}${share === null ? '' : ` · ${share < 1 ? share.toFixed(1) : Math.round(share)}%`}`))
+          const track = el('div', 'h-1.5 w-full overflow-hidden rounded-full bg-muted')
+          const fill = el('span', 'block h-full rounded-full bg-primary')
+          fill.style.width = `${((page.estimatedOrganicTraffic ?? 0) / max) * 100}%`
+          track.append(fill)
+          item.append(top, track, el('p', 'text-[0.7rem] text-foreground-muted', `${formatCount(page.rankingResults)} keywords, ${formatCount(page.topThree)} in the top 3`))
+          return item
+        }),
+      )
+      if (empty) empty.hidden = pages.length > 0
+    }
+
+    function renderKeywords(result: TrafficResult): void {
+      const body = $<HTMLElement>('[data-top-keywords]')
+      const empty = $<HTMLElement>('[data-no-keywords]')
+      if (!body) return
+      const query = keywordFilter.value.trim().toLowerCase()
+      const order = keywordSort.value
+      const rows = result.topKeywords
+        .filter((row) => !query || row.keyword.toLowerCase().includes(query) || (row.rankingUrl ?? '').toLowerCase().includes(query))
+        .sort((left, right) => {
+          const key =
+            order === 'volume'
+              ? (right.searchVolume ?? -1) - (left.searchVolume ?? -1)
+              : order === 'position'
+                ? (left.rankGroup ?? 999) - (right.rankGroup ?? 999)
+                : (right.estimatedOrganicTraffic ?? -1) - (left.estimatedOrganicTraffic ?? -1)
+          return key || (left.keyword < right.keyword ? -1 : left.keyword > right.keyword ? 1 : 0)
+        })
+      body.replaceChildren(
+        ...rows.map((row) => {
+          const tr = el('tr')
+          const keyword = el('td', 'py-2.5 pr-3 align-top')
+          keyword.append(el('span', 'block [overflow-wrap:anywhere] text-foreground', row.keyword))
+          if (row.rankingUrl) {
+            const path = el('span', 'mt-0.5 block font-mono text-[0.7rem] text-foreground-muted [overflow-wrap:anywhere]', pathOf(row.rankingUrl, result.target))
+            path.title = row.rankingUrl
+            keyword.append(path)
+          }
+          tr.append(
+            keyword,
+            el('td', 'py-2.5 pr-3 text-right align-top font-mono', row.rankGroup === null ? 'N/A' : String(row.rankGroup)),
+            el('td', 'py-2.5 pr-3 text-right align-top font-mono', row.searchVolume === null ? 'N/A' : compact.format(row.searchVolume)),
+            el('td', 'py-2.5 text-right align-top font-mono', formatCount(row.estimatedOrganicTraffic)),
+          )
+          return tr
+        }),
+      )
+      if (empty) {
+        empty.textContent = result.topKeywords.length === 0 ? 'No keywords were available.' : 'No keywords match.'
+        empty.hidden = rows.length > 0
+      }
     }
 
     function render(data: TrafficResponse): void {
       const result = data.result
       const latest = result.latest
-      setText('[data-traffic]', latest?.estimatedOrganicTraffic === null || latest?.estimatedOrganicTraffic === undefined ? 'N/A' : number.format(Math.round(latest.estimatedOrganicTraffic)))
-      setText('[data-period]', latest ? `${latest.month} for ${result.target}` : result.target)
-      setText('[data-keywords]', latest?.rankingResults === null || latest?.rankingResults === undefined ? 'N/A' : number.format(latest.rankingResults))
-      setText('[data-value]', latest?.estimatedTrafficValueUsd === null || latest?.estimatedTrafficValueUsd === undefined ? 'N/A' : money.format(latest.estimatedTrafficValueUsd))
-      setText('[data-result-market]', `${marketSelect.options[marketSelect.selectedIndex]?.text ?? 'Selected market'} / ${result.provenance.market.languageCode}`)
+      const history = result.history
+      setText('[data-traffic]', formatCount(latest?.estimatedOrganicTraffic))
+      const previous = history.at(-2)
+      const first = history[0]
+      const monthChange = percentChange(previous?.estimatedOrganicTraffic, latest?.estimatedOrganicTraffic)
+      const yearChange =
+        first && first !== latest && first !== previous
+          ? percentChange(first.estimatedOrganicTraffic, latest?.estimatedOrganicTraffic)
+          : null
       setText(
-        '[data-data-status]',
-        result.dataStatus === 'complete'
-          ? 'Complete result'
-          : result.dataStatus === 'partial'
-            ? 'Partial result'
-            : 'Result unavailable',
+        '[data-change]',
+        [
+          latest ? `${monthName(latest.month)} for ${result.target}` : result.target,
+          monthChange ? `${monthChange} on the month before` : null,
+          yearChange && first ? `${yearChange} since ${monthName(first.month)}` : null,
+        ]
+          .filter(Boolean)
+          .join('. ') + '.',
       )
-      setText('[data-checked-at]', `Checked ${new Date(result.provenance.checkedAt).toLocaleString()}`)
+      setText('[data-keywords]', formatCount(latest?.rankingResults))
+      setText('[data-pages]', formatCount(result.rankingPages))
+      setText(
+        '[data-value]',
+        latest?.estimatedTrafficValueUsd === null || latest?.estimatedTrafficValueUsd === undefined
+          ? 'N/A'
+          : money.format(latest.estimatedTrafficValueUsd),
+      )
+      setText('[data-result-market]', marketName())
+      setText(
+        '[data-checked-at]',
+        `${result.dataStatus === 'complete' ? 'Complete result' : result.dataStatus === 'partial' ? 'Partial result' : 'Result unavailable'}. Estimates from DataForSEO, checked ${new Date(result.provenance.checkedAt).toLocaleString()}.`,
+      )
 
-      const warnings = root.querySelector<HTMLElement>('[data-warnings]')
+      const warnings = $<HTMLElement>('[data-warnings]')
       if (warnings) {
-        const visibleWarnings = result.warnings.filter(
-          (warning) => warning.code !== 'provider-estimate',
-        )
-        warnings.replaceChildren(...visibleWarnings.map((warning) => {
-          const item = document.createElement('li')
-          item.textContent = warning.message
-          return item
-        }))
+        const visibleWarnings = result.warnings.filter((warning) => warning.code !== 'provider-estimate')
+        warnings.replaceChildren(...visibleWarnings.map((warning) => el('li', '', warning.message)))
         warnings.hidden = visibleWarnings.length === 0
       }
 
-      const history = root.querySelector<HTMLElement>('[data-history]')
-      if (history) {
-        history.replaceChildren(...result.history.map((row) => {
-          const tr = document.createElement('tr')
-          const top3 = sumKnownTrafficCounts([row.positions.first, row.positions.secondToThird])
-          const top10 = sumKnownTrafficCounts([top3, row.positions.fourthToTenth])
-          tr.innerHTML = `<td class="py-3 pr-4 font-mono">${row.month}</td><td class="py-3 pr-4 text-right font-mono">${row.estimatedOrganicTraffic === null ? 'N/A' : number.format(Math.round(row.estimatedOrganicTraffic))}</td><td class="py-3 pr-4 text-right font-mono">${formatCount(row.rankingResults)}</td><td class="py-3 pr-4 text-right font-mono">${formatCount(top3)}</td><td class="py-3 pr-4 text-right font-mono">${formatCount(top10)}</td><td class="py-3 pr-4 text-right font-mono">${formatCount(row.movement.new)}</td><td class="py-3 pr-4 text-right font-mono">${formatCount(row.movement.up)}</td><td class="py-3 pr-4 text-right font-mono">${formatCount(row.movement.down)}</td><td class="py-3 text-right font-mono">${formatCount(row.movement.lost)}</td>`
-          return tr
-        }))
-      }
+      selectedMonth = latest?.month ?? ''
+      renderChart(result)
+      renderPositions(result)
+      renderPages(result)
+      renderKeywords(result)
 
-      const keywordBody = root.querySelector<HTMLElement>('[data-top-keywords]')
-      const noKeywords = root.querySelector<HTMLElement>('[data-no-keywords]')
-      if (keywordBody) {
-        keywordBody.replaceChildren(...result.topKeywords.map((row) => {
-          const tr = document.createElement('tr')
-          const keyword = document.createElement('td')
-          keyword.className = 'py-3 pr-4'
-          keyword.textContent = row.keyword
-          const position = document.createElement('td')
-          position.className = 'py-3 pr-4 text-right font-mono'
-          position.textContent = row.rankGroup === null ? 'N/A' : String(row.rankGroup)
-          const volume = document.createElement('td')
-          volume.className = 'py-3 pr-4 text-right font-mono'
-          volume.textContent = row.searchVolume === null ? 'N/A' : number.format(row.searchVolume)
-          const url = document.createElement('td')
-          url.className = 'max-w-md truncate py-3 font-mono'
-          url.textContent = row.rankingUrl ?? 'N/A'
-          url.title = row.rankingUrl ?? ''
-          tr.append(keyword, position, volume, url)
+      $<HTMLElement>('[data-history]')?.replaceChildren(
+        ...[...history].reverse().map((row) => {
+          const tr = el('tr')
+          const top3 = sumKnownTrafficCounts([row.positions.first, row.positions.secondToThird])
+          for (const [value, className] of [
+            [monthName(row.month, 'short') + ' ' + row.month.slice(0, 4), 'py-2.5 pr-3 font-sans'],
+            [formatCount(row.estimatedOrganicTraffic), 'py-2.5 pr-3 text-right'],
+            [formatCount(row.rankingResults), 'py-2.5 pr-3 text-right'],
+            [formatCount(top3), 'py-2.5 pr-3 text-right'],
+            [formatCount(top10Of(row)), 'py-2.5 pr-3 text-right'],
+            [formatCount(row.movement.new), 'py-2.5 pr-3 text-right'],
+            [formatCount(row.movement.up), 'py-2.5 pr-3 text-right'],
+            [formatCount(row.movement.down), 'py-2.5 pr-3 text-right'],
+            [formatCount(row.movement.lost), 'py-2.5 text-right'],
+          ] as const) {
+            tr.append(el('td', className, value))
+          }
           return tr
-        }))
-      }
-      if (noKeywords) noKeywords.hidden = result.topKeywords.length > 0
+        }),
+      )
       resultsSection.hidden = false
     }
+
+    for (const button of root.querySelectorAll<HTMLButtonElement>('[data-metric]')) {
+      button.addEventListener('click', () => {
+        metric = button.dataset.metric as Metric
+        for (const other of root.querySelectorAll<HTMLButtonElement>('[data-metric]')) {
+          other.setAttribute('aria-pressed', String(other === button))
+        }
+        if (latestResult) renderChart(latestResult.result)
+      })
+    }
+    keywordFilter.addEventListener('input', () => latestResult && renderKeywords(latestResult.result))
+    keywordSort.addEventListener('change', () => latestResult && renderKeywords(latestResult.result))
 
     form.addEventListener('submit', async (event) => {
       event.preventDefault()
@@ -310,6 +605,7 @@ import TurnstileWidget from '@/components/tools/TurnstileWidget.astro'
         const data = (await response.json()) as TrafficResponse & { error?: string }
         if (!response.ok) throw new Error(data.error || 'The traffic estimate could not be completed.')
         latestResult = data
+        keywordFilter.value = ''
         render(data)
         resultsSection.scrollIntoView({ behavior: 'smooth', block: 'start' })
       } catch (caught) {
@@ -318,26 +614,30 @@ import TurnstileWidget from '@/components/tools/TurnstileWidget.astro'
       } finally {
         submit.disabled = false
         submit.textContent = 'Check traffic'
-        const widget = root.querySelector<HTMLElement>('[data-turnstile-container]')
+        const widget = $<HTMLElement>('[data-turnstile-container]')
         if (widget) window.turnstile?.reset(widget)
       }
     })
 
-    root.querySelector('[data-copy]')?.addEventListener('click', async () => {
+    $<HTMLElement>('[data-copy]')?.addEventListener('click', async () => {
       if (!latestResult) return
       const result = latestResult.result
       const latest = result.latest
-      await navigator.clipboard.writeText([
-        `Target: ${result.target}`,
-        `Market: ${marketSelect.options[marketSelect.selectedIndex]?.text ?? 'Selected market'} (${result.provenance.market.languageCode})`,
-        `Estimated monthly Google organic traffic: ${latest?.estimatedOrganicTraffic === null || latest?.estimatedOrganicTraffic === undefined ? 'unavailable' : Math.round(latest.estimatedOrganicTraffic)}`,
-        `Ranking keywords: ${latest?.rankingResults ?? 'unavailable'}`,
-        `Checked: ${result.provenance.checkedAt}`,
-      ].join('\n'))
+      await navigator.clipboard.writeText(
+        [
+          `Target: ${result.target}`,
+          `Market: ${marketName()} (${result.provenance.market.languageCode})`,
+          `Estimated monthly Google organic traffic: ${latest?.estimatedOrganicTraffic == null ? 'unavailable' : Math.round(latest.estimatedOrganicTraffic)}${latest ? ` (${latest.month})` : ''}`,
+          `Ranking keywords: ${latest?.rankingResults ?? 'unavailable'}`,
+          `Top pages: ${(result.topPages ?? []).slice(0, 5).map((page) => `${pathOf(page.url, result.target)} (${formatCount(page.estimatedOrganicTraffic)})`).join(', ') || 'unavailable'}`,
+          `Top keywords: ${result.topKeywords.slice(0, 5).map((row) => `${row.keyword} (#${row.rankGroup ?? 'N/A'})`).join(', ') || 'unavailable'}`,
+          `Source: DataForSEO estimates, checked ${result.provenance.checkedAt}`,
+        ].join('\n'),
+      )
       setText('[data-action-status]', 'Summary copied.')
     })
 
-    root.querySelector('[data-download]')?.addEventListener('click', () => {
+    $<HTMLElement>('[data-download]')?.addEventListener('click', () => {
       if (!latestResult) return
       const result = latestResult.result
       const csv = buildTrafficHistoryCsv(result.history)

@@ -69,9 +69,10 @@ async function counted(
     }
     return result
   } catch (error) {
+    const failure = localError(error)
     if (report && telemetry)
-      trackTelemetryReportFailed(report, error, telemetry())
-    return toolError(localError(error))
+      trackTelemetryReportFailed(report, failure, telemetry())
+    return toolError(failure)
   }
 }
 

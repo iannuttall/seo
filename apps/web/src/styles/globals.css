@@ -4,17 +4,30 @@
    JetBrains Mono for code, neutral oklch surfaces, one cyan accent, soft
    muted panels instead of borders, and automatic light and dark mode. */
 
+/* The page fonts are Latin subsets of the full files, which the social card
+   renderer still uses. */
 @font-face {
   font-family: "InterVariable";
-  src: url("/fonts/InterVF.woff2") format("woff2");
+  src: url("/fonts/InterLatinVF.woff2") format("woff2");
   font-display: swap;
   font-style: normal;
   font-weight: 100 900;
 }
 
+/* Arial scaled to Inter's width and line metrics, so text does not move
+   when Inter arrives after the first paint. */
+@font-face {
+  font-family: "Inter fallback";
+  src: local("Arial"), local("ArialMT");
+  size-adjust: 107.12%;
+  ascent-override: 90.44%;
+  descent-override: 22.52%;
+  line-gap-override: 0%;
+}
+
 @font-face {
   font-family: "JetBrains Mono";
-  src: url("/fonts/JetBrainsMonoVF.woff2") format("woff2");
+  src: url("/fonts/JetBrainsMonoLatinVF.woff2") format("woff2");
   font-display: swap;
   font-style: normal;
   font-weight: 100 800;
@@ -72,7 +85,8 @@
   --radius-lg: var(--radius);
   --radius-xl: calc(var(--radius) + 2px);
   --radius-2xl: calc(var(--radius) + 4px);
-  --font-sans: "InterVariable", "Inter", ui-sans-serif, system-ui, sans-serif;
+  --font-sans:
+    "InterVariable", "Inter fallback", ui-sans-serif, system-ui, sans-serif;
   --font-mono:
     "JetBrains Mono", ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas,
     monospace;

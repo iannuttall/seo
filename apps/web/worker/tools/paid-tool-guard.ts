@@ -237,6 +237,67 @@ export class PaidToolGuard {
           INSERT INTO _sql_schema_migrations (id) VALUES (2);
         `)
       }
+
+      const hasResearchMigration = this.ctx.storage.sql
+        .exec<{ id: number }>(
+          'SELECT id FROM _sql_schema_migrations WHERE id = 3 LIMIT 1',
+        )
+        .toArray()[0]
+      if (!hasResearchMigration) {
+        this.ctx.storage.sql.exec(`
+          CREATE TABLE identity_tool_usage_v3 (
+            identity_hash TEXT NOT NULL CHECK (length(identity_hash) = 64),
+            tool TEXT NOT NULL CHECK (
+              tool IN (
+                'spam-score',
+                'domain-rating',
+                'website-traffic',
+                'competitor-keywords',
+                'serp-checker',
+                'llms-txt',
+                'sitemap',
+                'sitemap-extractor',
+                'sitemap-validator',
+                'robots-txt',
+                'serp-preview',
+                'favicon-checker'
+              )
+            ),
+            calls INTEGER NOT NULL CHECK (
+              calls >= 0 AND calls <= ${PAID_TOOL_DAILY_LIMIT}
+            ),
+            PRIMARY KEY (identity_hash, tool)
+          ) WITHOUT ROWID;
+
+          INSERT INTO identity_tool_usage_v3 (identity_hash, tool, calls)
+          SELECT identity_hash, tool, calls FROM identity_tool_usage;
+          DROP TABLE identity_tool_usage;
+          ALTER TABLE identity_tool_usage_v3 RENAME TO identity_tool_usage;
+
+          CREATE TABLE provider_usage_v3 (
+            provider TEXT PRIMARY KEY CHECK (
+              provider IN (
+                'ahrefs',
+                'dataforseo-spam',
+                'dataforseo-traffic',
+                'dataforseo-research'
+              )
+            ),
+            calls INTEGER NOT NULL CHECK (
+              calls >= 0 AND calls <= ${MAX_PROVIDER_DAILY_LIMIT}
+            ),
+            daily_limit INTEGER NOT NULL CHECK (
+              daily_limit >= 1 AND daily_limit <= ${MAX_PROVIDER_DAILY_LIMIT}
+            )
+          ) WITHOUT ROWID;
+
+          INSERT INTO provider_usage_v3 (provider, calls, daily_limit)
+          SELECT provider, calls, daily_limit FROM provider_usage;
+          DROP TABLE provider_usage;
+          ALTER TABLE provider_usage_v3 RENAME TO provider_usage;
+          INSERT INTO _sql_schema_migrations (id) VALUES (3);
+        `)
+      }
     })
   }
 

@@ -1,6 +1,11 @@
 // Pure parsing of the Google Search Status incident feed, shared by the
 // local client and the hosted MCP.
 
+import { RANKING_HISTORY } from './ranking-history.js'
+
+// Days either side of the checked dates that still count as overlap.
+export const UPDATE_PADDING_DAYS = 3
+
 export interface SearchStatusIncident {
   id: string
   begin: string
@@ -70,6 +75,31 @@ export function searchUpdatesFromIncidents(
       }
     })
     .slice(0, input.limit ?? 25)
+}
+
+// The live feed keeps only Google's latest few incidents. This adds every
+// earlier Ranking update from the saved history, newest first. A live
+// incident wins over its saved copy, so a rollout that has since ended shows
+// its end.
+export function withRankingHistory(
+  live: SearchStatusIncident[],
+): SearchStatusIncident[] {
+  const byId = new Map<string, SearchStatusIncident>()
+  for (const saved of RANKING_HISTORY) {
+    byId.set(saved.id, {
+      ...saved,
+      service_name: 'Ranking',
+      status_impact: 'SERVICE_INFORMATION',
+      severity: 'low',
+      uri: `incidents/${saved.id}`,
+    })
+  }
+  for (const incident of live) byId.set(incident.id, incident)
+  return [...byId.values()].sort(
+    (left, right) =>
+      Date.parse(right.begin) - Date.parse(left.begin) ||
+      (left.id < right.id ? -1 : 1),
+  )
 }
 
 export function findOverlappingSearchUpdates(input: {

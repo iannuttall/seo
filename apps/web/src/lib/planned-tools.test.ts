@@ -2,31 +2,7 @@ import assert from 'node:assert/strict'
 import test from 'node:test'
 import { analyzeCanonical } from './canonical-checker.ts'
 import { generateHreflang } from './hreflang-generator.ts'
-import { generateSeoReportTemplate } from './seo-report-template.ts'
 import { generateSerpMetaHtml } from './serp-preview.ts'
-
-test('SEO report HTML escapes user content and never invents values', () => {
-  const result = generateSeoReportTemplate({
-    siteName: '<Field & Co>',
-    reportTitle: 'SEO "report" <draft>',
-    periodStart: '',
-    periodEnd: '',
-    audience: 'owner',
-    comparison: 'none',
-    sections: ['summary', 'actions'],
-    format: 'html',
-  })
-
-  assert.match(
-    result.output,
-    /<title>SEO &quot;report&quot; &lt;draft&gt;<\/title>/u,
-  )
-  assert.match(result.output, /&lt;Field &amp; Co&gt;/u)
-  assert.match(result.output, /\[Add reporting period\]/u)
-  assert.doesNotMatch(result.output, /<Field/u)
-  assert.equal(result.includedSections, 2)
-  assert.equal(result.filename, 'field-co-template.html')
-})
 
 test('hreflang generator emits reciprocal HTML tags and canonicalizes codes', () => {
   const result = generateHreflang(

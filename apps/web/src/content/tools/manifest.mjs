@@ -1,5 +1,41 @@
 export const tools = [
   {
+    id: 'google-algorithm-update-checker',
+    path: '/tools/google-algorithm-update-checker',
+    title: 'Google algorithm update checker',
+    action: 'Open the Google algorithm update checker',
+    description:
+      'See every Google ranking update on a timeline, then add your Search Console clicks to check whether a drop lines up with one.',
+    kind: 'browser',
+  },
+  {
+    id: 'competitor-keyword-research',
+    path: '/tools/competitor-keyword-research',
+    title: 'Competitor keyword research',
+    action: 'Open competitor keyword research',
+    description:
+      'See the keywords a competitor ranks for, or the sites that compete with any domain.',
+    kind: 'protected',
+  },
+  {
+    id: 'monthly-seo-report',
+    path: '/tools/monthly-seo-report',
+    title: 'Monthly SEO report',
+    action: 'Build a monthly SEO report',
+    description:
+      'Turn a Search Console export into a month-on-month report, then download it as HTML or Markdown.',
+    kind: 'browser',
+  },
+  {
+    id: 'serp-checker',
+    path: '/tools/serp-checker',
+    title: 'SERP checker',
+    action: 'Open the SERP checker',
+    description:
+      'See who ranks in Google for a keyword right now, and where your own domain sits.',
+    kind: 'protected',
+  },
+  {
     id: 'llms-txt-generator',
     path: '/tools/llms-txt-generator',
     title: 'llms.txt generator',
@@ -112,15 +148,6 @@ export const tools = [
     action: 'Open the schema markup validator',
     description:
       'Check pasted JSON-LD or HTML for syntax errors and missing properties in supported profiles.',
-    kind: 'browser',
-  },
-  {
-    id: 'seo-report-template',
-    path: '/tools/seo-report-template',
-    title: 'SEO report template',
-    action: 'Build an SEO report template',
-    description:
-      'Create an evidence-first SEO report outline in Markdown or HTML for a client, team, or site owner.',
     kind: 'browser',
   },
   {

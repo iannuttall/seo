@@ -25,6 +25,11 @@
       "types": "./src/commands/index.ts",
       "workerd": "./src/commands/index.ts",
       "import": "./dist/commands/index.js"
+    },
+    "./updates/browser": {
+      "types": "./src/updates/browser.ts",
+      "browser": "./src/updates/browser.ts",
+      "import": "./dist/updates/browser.js"
     }
   },
   "files": [

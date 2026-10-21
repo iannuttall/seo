@@ -1,0 +1,74 @@
+---
+import Breadcrumbs from '@/components/Breadcrumbs.astro'
+import PageHeader from '@/components/PageHeader.astro'
+import ResearchLookup from '@/components/tools/ResearchLookup.astro'
+import BaseLayout from '@/layouts/BaseLayout.astro'
+import type { SchemaBreadcrumb } from '@/lib/schema'
+
+const breadcrumbs: SchemaBreadcrumb[] = [
+  { label: 'Home', href: '/' },
+  { label: 'Tools', href: '/tools' },
+  { label: 'SERP checker' },
+]
+---
+
+<BaseLayout
+  title="SERP checker"
+  description="Check the live Google results for any keyword in ten countries. See who ranks, with a Domain Rating for each site, and find where your own domain ranks."
+  canonicalPath="/tools/serp-checker"
+  {breadcrumbs}
+>
+  <main data-agent-content>
+    <Breadcrumbs {breadcrumbs} />
+    <PageHeader
+      title="SERP checker"
+      description="See who ranks in Google for a keyword right now, and where your own domain sits in the results."
+    />
+
+    <ResearchLookup
+      kind="serp"
+      heading="Check the live results"
+      description="Enter a keyword and pick a country. Add your domain to find its position."
+    />
+
+    <div class="docs-prose mt-16">
+      <h2>What the live results show</h2>
+      <p>
+        The checker asks Google for the keyword at the moment you press the
+        button and lists the first 50 organic results, with each page's
+        title, address and a Domain Rating for its site. Ads, maps and other
+        boxes are left out, so the numbers are organic positions.
+      </p>
+
+      <h2>Find where your site ranks</h2>
+      <p>
+        Add your domain and the result says its position, and the row is
+        highlighted. If it is not in the first 50 results, the result says
+        so rather than showing a number.
+      </p>
+      <p>
+        One check is one moment in one country. Results move during the day
+        and differ by city and device, so a single check is a snapshot, not
+        your average position.
+      </p>
+
+      <h2>Your average position is in Search Console</h2>
+      <p>
+        For keywords your site already shows up for, Search Console has the
+        average position over every search, which is steadier than any one
+        check. Your agent reads it with the <a href="/docs/report">SEO
+        report</a>, then uses <a href="/docs/research">seo research</a>{' '}
+        to see who outranks you for the queries that matter. It needs a
+        DataForSEO or Ahrefs key of your own for that part.
+      </p>
+
+      <h2>Size up the competition before you write</h2>
+      <p>
+        Look at what kind of pages rank: guides, product pages, forums or
+        tools. If every result is a product page, a long article is unlikely
+        to fit the search. The Domain Rating column shows whether the page
+        is up against large sites or small ones.
+      </p>
+    </div>
+  </main>
+</BaseLayout>

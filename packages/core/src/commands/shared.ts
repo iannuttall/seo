@@ -5,6 +5,8 @@ import { readJson } from '../http/read-json.js'
 import {
   findOverlappingSearchUpdates,
   searchUpdatesFromIncidents,
+  UPDATE_PADDING_DAYS,
+  withRankingHistory,
 } from '../updates/search-updates.js'
 import { CommandError, type DateRange } from './types.js'
 
@@ -118,9 +120,9 @@ export function sharedReader(
 }
 
 // Google Search ranking updates that overlap a window, from Google's public
-// status feed. Overlap is timing only, not cause.
-// Days either side of the checked dates that still count as overlap.
-export const UPDATE_PADDING_DAYS = 3
+// status feed and its saved Ranking history. Overlap is timing only, not
+// cause.
+export { UPDATE_PADDING_DAYS } from '../updates/search-updates.js'
 
 const MAX_STATUS_BYTES = 10 * 1024 * 1024
 
@@ -144,9 +146,9 @@ export async function googleUpdates(window?: {
   if (!Array.isArray(incidents))
     return 'Google Search Status could not be read.'
   return findOverlappingSearchUpdates({
-    updates: searchUpdatesFromIncidents(incidents, {
+    updates: searchUpdatesFromIncidents(withRankingHistory(incidents), {
       product: 'Ranking',
-      limit: 50,
+      limit: Number.POSITIVE_INFINITY,
     }),
     startDate: window.start,
     endDate: window.end,

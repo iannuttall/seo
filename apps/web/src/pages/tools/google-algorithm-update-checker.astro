@@ -1,0 +1,97 @@
+---
+import Breadcrumbs from '@/components/Breadcrumbs.astro'
+import PageHeader from '@/components/PageHeader.astro'
+import SetupCommands from '@/components/SetupCommands.astro'
+import GoogleUpdateChecker from '@/components/tools/GoogleUpdateChecker.astro'
+import BaseLayout from '@/layouts/BaseLayout.astro'
+import type { SchemaBreadcrumb } from '@/lib/schema'
+
+const breadcrumbs: SchemaBreadcrumb[] = [
+  { label: 'Home', href: '/' },
+  { label: 'Tools', href: '/tools' },
+  { label: 'Google algorithm update checker' },
+]
+---
+
+<BaseLayout
+  title="Google algorithm update checker"
+  description="Check whether a Google algorithm update lines up with a change in your traffic. See every Google ranking update since 2021 on a live timeline, then add your Search Console clicks."
+  canonicalPath="/tools/google-algorithm-update-checker"
+  {breadcrumbs}
+>
+  <main data-agent-content>
+    <Breadcrumbs {breadcrumbs} />
+    <PageHeader
+      title="Google algorithm update checker"
+      description="See every Google ranking update on one timeline, then add your Search Console clicks to check whether a drop lines up with one."
+    />
+
+    <GoogleUpdateChecker />
+
+    <div class="docs-prose mt-16">
+      <h2>Check your clicks against the update dates</h2>
+      <ol>
+        <li>
+          In Search Console, open <strong>Performance</strong>, then{' '}
+          <strong>Search results</strong>, and set the date to the last 3
+          months. For an older update, pick a longer range.
+        </li>
+        <li>Choose <strong>Export</strong>, then <strong>Download CSV</strong>.</li>
+        <li>
+          Drop the zip on the timeline above. Your daily clicks draw over the
+          updates and the change check runs in this tab. The file is not
+          uploaded anywhere.
+        </li>
+      </ol>
+
+      <h2>How the change check finds a date</h2>
+      <p>
+        It looks for the day your clicks or impressions moved to a new level
+        and stayed there. One odd day or a slow slide does not count. If there
+        is no such day, it compares the last 7 days with the days before them.
+        Then it lists the Google updates that ran within 3 days of the date.
+      </p>
+      <p>
+        This is the same check as the traffic drop section of the{' '}
+        <a href="/docs/report">SEO report</a>, so you get the same date
+        whether you use this page or ask your agent.
+      </p>
+
+      <h2>Read a match as timing, not cause</h2>
+      <p>
+        An update on the same dates shows the timing lines up. It does not
+        show the update caused the change. A release, a tracking change, a
+        holiday or a seasonal dip can land in the same week, so check those
+        too.
+      </p>
+      <p>
+        Google's guidance on{' '}
+        <a href="https://developers.google.com/search/docs/appearance/core-updates" rel="noreferrer">core updates</a>{' '}
+        says to wait until a rollout has finished, then compare at least a
+        week after it with a period of the same length before it.
+      </p>
+
+      <h2>Where the dates come from</h2>
+      <p>
+        Every date comes from Google's{' '}
+        <a href="https://status.search.google.com/products/rGHU1u87FJnkP6W2GwMi/history" rel="noreferrer">Search Status Dashboard</a>.
+        The page reads Google's live feed when it opens, so a new update shows
+        here as soon as Google posts it, and its end date as soon as the
+        rollout finishes. The dashboard starts in November 2021, so earlier
+        updates are not on the timeline.
+      </p>
+
+      <h2>Ask your agent which pages moved</h2>
+      <p>
+        The timeline shows when. Your agent can show what. Give it the first
+        day after an update and <a href="/docs/compare">seo compare</a>{' '}
+        compares equal periods on each side: clicks, impressions and position,
+        the pages and queries that gained or lost the most, Google Analytics
+        sessions, and the Google updates in the window. It reads your Search
+        Console directly, so there is nothing to export.
+      </p>
+    </div>
+
+    <SetupCommands id="update-checker-setup" class="mt-6" />
+  </main>
+</BaseLayout>

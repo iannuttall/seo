@@ -1,6 +1,9 @@
 ---
 import Breadcrumbs from '@/components/Breadcrumbs.astro'
+import CodeBlock from '@/components/CodeBlock.astro'
+import FaqAccordion from '@/components/FaqAccordion.astro'
 import PageHeader from '@/components/PageHeader.astro'
+import SetupCommands from '@/components/SetupCommands.astro'
 import SchemaMarkupGenerator from '@/components/tools/SchemaMarkupGenerator.astro'
 import BaseLayout from '@/layouts/BaseLayout.astro'
 import type { SchemaBreadcrumb } from '@/lib/schema'
@@ -10,33 +13,181 @@ const breadcrumbs: SchemaBreadcrumb[] = [
   { label: 'Tools', href: '/tools' },
   { label: 'Schema markup generator' },
 ]
+
+const faq = [
+  {
+    question: 'What is a JSON-LD schema generator?',
+    answer:
+      'It turns a short form into a block of structured data in JSON-LD, the format Google recommends. You fill in what the page shows, copy the script and paste it into the page’s HTML. No hand-written JSON and no missing commas.',
+  },
+  {
+    question: 'Where do I put the generated schema markup?',
+    answer:
+      'Paste the whole script tag into the page’s HTML, in the head or the body. Both work. On a CMS, put it in the template for that page type so every page of the type gets markup with its own values.',
+  },
+  {
+    question: 'Can I still generate FAQ schema?',
+    answer:
+      'Yes, and FAQPage is still valid Schema.org markup. Google normally shows FAQ rich results only for well-known government and health sites, so for most sites it will not change the search result. Other software that reads the page can still use it.',
+  },
+  {
+    question: 'Which schema types should I use?',
+    answer:
+      'The one that describes the main content of the page. A product page gets Product, a recipe gets Recipe, an article gets Article. Most sites also put Organization or WebSite markup on the home page, and BreadcrumbList on pages that show breadcrumbs.',
+  },
+  {
+    question: 'Can I put more than one schema type on a page?',
+    answer:
+      'Yes. A product page can carry Product and BreadcrumbList, for example. Generate each one, then paste each script, or combine them in one array. Avoid two blocks that describe the same thing with different values.',
+  },
+  {
+    question: 'Will adding schema markup improve rankings?',
+    answer:
+      'Do not expect it to. Structured data helps Google understand the page and can make it eligible for rich results such as stars or prices. That can change how a result looks and how often it gets clicked, not where it ranks.',
+  },
+]
 ---
 
-<BaseLayout title="Schema markup generator" description="Create JSON-LD structured data for articles, products, events, local businesses, recipes, videos, and other common page types." canonicalPath="/tools/schema-markup-generator" {breadcrumbs}>
+<BaseLayout
+  title="Schema markup generator"
+  description="Generate JSON-LD structured data for articles, products, events, local businesses, FAQs, recipes, videos and more, with only the fields the page shows."
+  canonicalPath="/tools/schema-markup-generator"
+  {breadcrumbs}
+>
   <main data-agent-content>
     <Breadcrumbs {breadcrumbs} />
-    <PageHeader title="Schema markup generator" description="Choose a page type, enter the visible details, and copy a clean JSON-LD script without writing it by hand." />
+    <PageHeader
+      title="Schema markup generator"
+      description="Choose a page type, enter the details people can see on the page, and copy a clean JSON-LD script."
+    />
+
     <SchemaMarkupGenerator />
+
     <div class="docs-prose mt-16">
-      <h2>Generate markup that matches the page</h2>
-      <p>The generator covers fourteen common page and entity types. Required fields follow the validation profile used by this tool. Optional fields are left out of the output when you do not fill them in.</p>
-      <p>Only add facts that people can see on the page. Structured data that is hidden, misleading, or unrelated to the main content can make a page ineligible for rich results.</p>
+      <h2>Generate JSON-LD in three steps</h2>
+      <ol>
+        <li>Pick the type that matches the main content of the page.</li>
+        <li>
+          Fill in the required fields, then any optional ones the page
+          actually shows. Empty optional fields are left out of the output.
+        </li>
+        <li>
+          Copy the script and paste it into the page’s HTML, or into the
+          template for that page type.
+        </li>
+      </ol>
+      <p>
+        The generator covers fourteen types: aggregate rating, article,
+        breadcrumb, event, FAQ page, job posting, local business,
+        organization, person, product, recipe, review, video and website.
+        Its required fields match the{' '}
+        <a href="/tools/schema-markup-validator">schema markup validator</a>,
+        so a block it makes passes that check.
+      </p>
 
-      <h2>Validation and rich result eligibility are different</h2>
-      <p>A complete JSON-LD object can make a page eligible for a supported search feature. It does not guarantee that Google will show a rich result or change rankings.</p>
-      <p>Check the finished code with the <a href="/tools/schema-markup-validator">schema markup validator</a>. After publishing it, use <a href="https://search.google.com/test/rich-results" target="_blank" rel="noreferrer">Google's Rich Results Test</a> on the live URL.</p>
+      <h2>Pick the right type for the page</h2>
+      <table>
+        <thead>
+          <tr>
+            <th>Page</th>
+            <th>Type to use</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>Blog post or news story</td>
+            <td>Article, or the blog post or news article variant</td>
+          </tr>
+          <tr>
+            <td>Product page</td>
+            <td>Product, with its offer, price and availability</td>
+          </tr>
+          <tr>
+            <td>Shop, office or restaurant</td>
+            <td>Local business, with address and opening hours</td>
+          </tr>
+          <tr>
+            <td>Home page</td>
+            <td>Website and organization</td>
+          </tr>
+          <tr>
+            <td>Any page with visible breadcrumbs</td>
+            <td>Breadcrumb list</td>
+          </tr>
+          <tr>
+            <td>Job ad, event, recipe or video page</td>
+            <td>Job posting, event, recipe or video</td>
+          </tr>
+        </tbody>
+      </table>
 
-      <h2>FAQ markup has limited Google visibility</h2>
-      <p>FAQPage remains valid Schema.org markup, but Google normally shows FAQ rich results only for authoritative government and health sites. The generator keeps the option because other systems may still read the structured data.</p>
+      <h2>Why markup has to match the page</h2>
+      <p>
+        Structured data is a description of the page, not a place to add
+        facts. Google checks it against what a visitor can see. A rating
+        that is not on the page, a price that differs from the one shown, or
+        an FAQ hidden from readers can make the page lose rich results, and
+        in bad cases it earns a manual action.
+      </p>
+      <p>
+        That is also why the generator leaves out empty fields rather than
+        filling them with placeholders. A missing optional property is fine.
+        A wrong one is not.
+      </p>
 
-      <h2>Ratings and reviews must be visible</h2>
-      <p>Review and AggregateRating markup must match genuine review content shown on the page. Google does not show review stars for LocalBusiness or Organization reviews published on pages controlled by the reviewed entity.</p>
+      <h2>Rules for some types</h2>
+      <ul>
+        <li>
+          <strong>FAQ page.</strong> Valid markup, but Google normally shows
+          FAQ rich results only for well-known government and health sites.
+        </li>
+        <li>
+          <strong>Reviews and ratings.</strong> They must match real reviews
+          shown on the page. Google does not show stars for reviews a local
+          business or organization publishes about itself.
+        </li>
+        <li>
+          <strong>Website.</strong> It can state the site name you want
+          Google to use. Put it on the home page with the canonical home page
+          URL. The old sitelinks search box action is retired, so the
+          generator leaves it out.
+        </li>
+      </ul>
 
-      <h2>Website markup belongs on the home page</h2>
-      <p>WebSite markup can state a preferred site name and alternate names for a domain or subdomain. Put it on the home page and use the canonical home page URL. The generator leaves out the retired sitelinks search box action.</p>
+      <h2>Test it after you publish</h2>
+      <p>
+        Paste the block into the{' '}
+        <a href="/tools/schema-markup-validator">validator</a>{' '}
+        before it goes live. After publishing, run the live URL through{' '}
+        <a href="https://search.google.com/test/rich-results" target="_blank" rel="noreferrer">Google's Rich Results Test</a>,
+        which renders the page and shows what Google can read. Search
+        Console then reports errors for each rich result type over the
+        following weeks.
+      </p>
 
-      <h2>Your page details stay in the browser</h2>
-      <p>The form and generated JSON-LD run in this browser tab. No page details are sent to the site worker or an outside provider.</p>
+      <h2>Add structured data across a site with your agent</h2>
+      <p>
+        Generating one block by hand works for one page. For a site, ask
+        your agent to find the gaps first. The <a href="/docs/crawl">seo crawl</a>{' '}
+        command lists pages with no structured data and pages whose JSON-LD
+        does not parse. The agent can then add the right type to each
+        template in your codebase, using the page’s own fields. Ask:
+      </p>
+      <CodeBlock value="Crawl example.com, find the product pages with no structured data, and add Product JSON-LD to the product template" wrap />
+      <p>
+        The crawl runs from the CLI on your machine:
+      </p>
+      <CodeBlock value="npm i -g seo && seo start" wrap />
+      <p>Or add the hosted MCP server to your agent:</p>
+    </div>
+
+    <SetupCommands id="schema-generator-setup" class="mt-6" />
+
+    <div class="docs-prose mt-16">
+      <h2>Schema generator questions</h2>
+    </div>
+    <div class="mt-6">
+      <FaqAccordion id="schema-generator-faq" items={faq} />
     </div>
   </main>
 </BaseLayout>

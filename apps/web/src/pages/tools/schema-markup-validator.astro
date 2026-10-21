@@ -1,6 +1,9 @@
 ---
 import Breadcrumbs from '@/components/Breadcrumbs.astro'
+import CodeBlock from '@/components/CodeBlock.astro'
+import FaqAccordion from '@/components/FaqAccordion.astro'
 import PageHeader from '@/components/PageHeader.astro'
+import SetupCommands from '@/components/SetupCommands.astro'
 import SchemaMarkupValidator from '@/components/tools/SchemaMarkupValidator.astro'
 import BaseLayout from '@/layouts/BaseLayout.astro'
 import type { SchemaBreadcrumb } from '@/lib/schema'
@@ -10,27 +13,184 @@ const breadcrumbs: SchemaBreadcrumb[] = [
   { label: 'Tools', href: '/tools' },
   { label: 'Schema markup validator' },
 ]
+
+const faq = [
+  {
+    question: 'What does a schema validator check?',
+    answer:
+      'It reads your structured data the way a parser would. First it checks that the JSON is valid and that each object says which Schema.org type it is. Then it checks the properties that type needs before a search feature can use it, such as a headline, image and date for an article.',
+  },
+  {
+    question: 'Does valid schema markup guarantee a rich result?',
+    answer:
+      'No. Valid markup makes a page eligible. Google still decides whether to show a rich result, and it can leave one out because of the page content, its policies or the search itself. Use the Rich Results Test on the live URL to see what Google can read.',
+  },
+  {
+    question: 'Can I validate a URL instead of pasted code?',
+    answer:
+      'This page checks code you paste or a file you drop, without fetching anything. To check a live page, open its source and paste it in, or use Google’s Rich Results Test. To check every page on your site, run seo crawl.',
+  },
+  {
+    question: 'Does it read Microdata or RDFa?',
+    answer:
+      'No. It reads JSON-LD, either as plain JSON or inside application/ld+json script tags in pasted HTML. JSON-LD is the format Google recommends. For Microdata and RDFa, use the Schema.org validator.',
+  },
+  {
+    question: 'Is structured data a ranking factor?',
+    answer:
+      'Google does not treat it as one. Structured data helps Google understand a page and can make it eligible for rich results, which can change how the result looks. Do not expect a ranking change from adding it.',
+  },
+  {
+    question: 'Why does Google show an error this validator does not?',
+    answer:
+      'Google reads the live page after rendering it, and it applies its own rules for each search feature. This validator checks the code you gave it against a reviewed set of fourteen common types. Fix what Google reports first, because that is what decides eligibility.',
+  },
+]
 ---
 
-<BaseLayout title="Schema markup validator" description="Validate pasted JSON-LD or HTML locally. Find JSON syntax errors, missing Schema.org context and types, and missing properties for supported search and Schema.org profiles." canonicalPath="/tools/schema-markup-validator" {breadcrumbs}>
+<BaseLayout
+  title="Schema markup validator"
+  description="Validate JSON-LD structured data in your browser. Find syntax errors, missing types and the required properties Google needs for articles, products, events, recipes and more."
+  canonicalPath="/tools/schema-markup-validator"
+  {breadcrumbs}
+>
   <main data-agent-content>
     <Breadcrumbs {breadcrumbs} />
-    <PageHeader title="Schema markup validator" description="Paste JSON-LD or HTML and check its syntax, typed entities, and required properties for supported search features." />
+    <PageHeader
+      title="Schema markup validator"
+      description="Paste JSON-LD or a page's HTML and check its syntax, types and required properties for common search features."
+    />
+
     <SchemaMarkupValidator />
+
     <div class="docs-prose mt-16">
-      <h2>What this validator checks</h2>
-      <p>The first pass checks JSON syntax, Schema.org context, typed entities, and input size limits. The second pass checks required and recommended properties for the fourteen profiles available in the generator.</p>
-      <p>Unsupported Schema.org types are reported separately. Their JSON syntax is still checked, but this tool does not claim that it has validated every property in the full Schema.org vocabulary.</p>
+      <h2>Read the validation result</h2>
+      <p>
+        The result lists every typed object it found, then the issues in
+        three levels. Fix them in that order.
+      </p>
+      <table>
+        <thead>
+          <tr>
+            <th>Level</th>
+            <th>What it means</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>Error</td>
+            <td>The markup cannot be read, or a type is missing a property it needs. A search feature will not use it.</td>
+          </tr>
+          <tr>
+            <td>Warning</td>
+            <td>A recommended property is missing. The markup works, but it gives less detail.</td>
+          </tr>
+          <tr>
+            <td>Advice</td>
+            <td>A rule worth knowing for that type, such as who can get FAQ or review stars.</td>
+          </tr>
+        </tbody>
+      </table>
+      <p>
+        A type the validator does not have a profile for is listed on its
+        own. Its JSON is still checked, but the validator does not claim to
+        know every property in the full Schema.org vocabulary.
+      </p>
 
-      <h2>Use both official tests before publishing</h2>
-      <p><a href="https://validator.schema.org/" target="_blank" rel="noreferrer">Schema.org's validator</a> checks the wider vocabulary and can read JSON-LD, Microdata, and RDFa. <a href="https://search.google.com/test/rich-results" target="_blank" rel="noreferrer">Google's Rich Results Test</a> checks whether a live page is eligible for supported Google search features.</p>
-      <p>A passing result does not guarantee a rich result. The visible page content, crawl access, search policies, and Google's result selection still matter.</p>
+      <h2>How the check works</h2>
+      <p>
+        The first pass parses the JSON and checks each object for an{' '}
+        <code>@context</code> of Schema.org and an <code>@type</code>. The
+        second pass compares each typed object with the required and
+        recommended properties for fourteen common types, including Article,
+        Product, Event, Recipe, LocalBusiness, JobPosting, VideoObject and
+        BreadcrumbList.
+      </p>
+      <p>
+        Everything runs in this browser tab. The markup is not uploaded, and
+        no URL inside it is requested.
+      </p>
 
-      <h2>Create a fresh JSON-LD block</h2>
-      <p>Use the <a href="/tools/schema-markup-generator">schema markup generator</a> when you want a guided form for an aggregate rating, article, breadcrumb, event, FAQ page, job posting, local business, organization, person, product, recipe, review, video, or website.</p>
+      <h2>Why structured data matters for search</h2>
+      <p>
+        A page says what it is in words. Structured data says it again in a
+        form a machine cannot misread: this is a recipe, it takes 40
+        minutes, it has 212 reviews averaging 4.6. Google uses that to
+        understand the page and to decide whether it can show extras such as
+        review stars, prices, event dates or a video thumbnail.
+      </p>
+      <p>
+        Those extras change how a result looks, which can change how many
+        people click it. They do not move the page up the results. Google
+        also expects the markup to describe what a visitor can see on the
+        page. Markup for content that is hidden or untrue can cost the page
+        its rich results.
+      </p>
 
-      <h2>Your markup stays in the browser</h2>
-      <p>Pasted text and local files are checked in this browser tab. The tool does not upload the markup or request any URLs found inside it.</p>
+      <h2>Fix common schema markup errors</h2>
+      <ul>
+        <li>
+          <strong>Invalid JSON.</strong> A trailing comma, a missing brace or
+          curly quotes pasted from a word processor. The error gives the line.
+        </li>
+        <li>
+          <strong>No context or type.</strong> Each top-level object needs{' '}
+          <code>"@context": "https://schema.org"</code> and an{' '}
+          <code>@type</code>, or nothing else in it can be read.
+        </li>
+        <li>
+          <strong>Missing required property.</strong> An article with no
+          image or a product with no offer, review or rating. Add the
+          property if the page shows it. If it does not, leave the type out.
+        </li>
+        <li>
+          <strong>Wrong value shape.</strong> An author given as a plain
+          string where a Person object with a name works better, or a date
+          that is not in ISO 8601 form such as <code>2026-10-21</code>.
+        </li>
+        <li>
+          <strong>Template values left empty.</strong> A CMS that prints{' '}
+          <code>"price": ""</code> when a field is blank. Fix the template,
+          not one page.
+        </li>
+      </ul>
+
+      <h2>Use the official tests as well</h2>
+      <p>
+        <a href="https://search.google.com/test/rich-results" target="_blank" rel="noreferrer">Google's Rich Results Test</a>{' '}
+        reads a live URL after rendering it and shows which Google features
+        it is eligible for.{' '}
+        <a href="https://validator.schema.org/" target="_blank" rel="noreferrer">Schema.org's validator</a>{' '}
+        checks the whole vocabulary, including Microdata and RDFa. This page
+        is quicker for pasted code and drafts, and it never sends them
+        anywhere. Need a fresh block? The{' '}
+        <a href="/tools/schema-markup-generator">schema markup generator</a>{' '}
+        builds one from a form.
+      </p>
+
+      <h2>Check structured data across your site with your agent</h2>
+      <p>
+        One page at a time is fine for a draft. For a whole site, the{' '}
+        <a href="/docs/crawl">seo crawl</a> command fetches your pages on
+        your own machine and reports the ones with no structured data at all
+        and the ones with JSON-LD that does not parse. Your agent can then
+        open the template that prints it and fix the cause. Ask:
+      </p>
+      <CodeBlock value="Crawl example.com and list the pages with broken JSON-LD, grouped by template" wrap />
+      <p>
+        The crawl runs from the CLI. Install it and run setup:
+      </p>
+      <CodeBlock value="npm i -g seo && seo start" wrap />
+      <p>Or add the hosted MCP server for Search Console work in your agent:</p>
+    </div>
+
+    <SetupCommands id="schema-validator-setup" class="mt-6" />
+
+    <div class="docs-prose mt-16">
+      <h2>Schema validator questions</h2>
+    </div>
+    <div class="mt-6">
+      <FaqAccordion id="schema-validator-faq" items={faq} />
     </div>
   </main>
 </BaseLayout>

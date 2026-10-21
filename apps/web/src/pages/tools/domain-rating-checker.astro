@@ -1,6 +1,9 @@
 ---
 import Breadcrumbs from '@/components/Breadcrumbs.astro'
+import CodeBlock from '@/components/CodeBlock.astro'
+import FaqAccordion from '@/components/FaqAccordion.astro'
 import PageHeader from '@/components/PageHeader.astro'
+import SetupCommands from '@/components/SetupCommands.astro'
 import ProtectedMetricChecker from '@/components/tools/ProtectedMetricChecker.astro'
 import BaseLayout from '@/layouts/BaseLayout.astro'
 import type { SchemaBreadcrumb } from '@/lib/schema'
@@ -10,11 +13,49 @@ const breadcrumbs: SchemaBreadcrumb[] = [
   { label: 'Tools', href: '/tools' },
   { label: 'Domain Rating checker' },
 ]
+
+const faq = [
+  {
+    question: 'What is Domain Rating?',
+    answer:
+      'Domain Rating, or DR, is a 0 to 100 score from Ahrefs for the strength of a website’s backlink profile. It looks at how many unique websites link to it with followed links, and how strong those websites are themselves. It is a score for the whole domain, not for one page.',
+  },
+  {
+    question: 'What is a good Domain Rating?',
+    answer:
+      'There is no fixed good number. The scale is logarithmic, so going from 20 to 30 is far easier than going from 70 to 80, and what counts as strong depends on the market. Check the sites that rank for the searches you want and see where you sit among them.',
+  },
+  {
+    question: 'Is Domain Rating the same as Domain Authority?',
+    answer:
+      'No. This page shows Domain Rating by Ahrefs. Domain Authority is a different score from Moz, built from a different link index with a different formula. A site can have very different numbers on the two, so never compare a DR with a DA.',
+  },
+  {
+    question: 'Can this page check Moz DA?',
+    answer:
+      'No. It shows Ahrefs Domain Rating only. If you need Domain Authority, it comes from Moz. For comparing link strength between sites, either score works as long as you use the same one for every site.',
+  },
+  {
+    question: 'Does Google use Domain Rating?',
+    answer:
+      'No. Domain Rating and Domain Authority are third-party scores. Google does not use either of them. They are useful because they summarise links, which Google does look at, but a higher score does not by itself move a page in Google.',
+  },
+  {
+    question: 'How do I increase my Domain Rating?',
+    answer:
+      'Get followed links from more websites that have strong links of their own. Many links from one site count as one. Links from pages people actually read and share tend to come with the authority that moves the score. Buying links breaks Google’s spam policies, whatever it does to a third-party score.',
+  },
+  {
+    question: 'Why did my Domain Rating drop?',
+    answer:
+      'Either you lost linking domains, or the domains that link to you lost strength, or other sites grew faster. DR is relative to the whole web, so it can fall a little while nothing about your own links changed.',
+  },
+]
 ---
 
 <BaseLayout
   title="Domain Rating checker"
-  description="Check the Domain Rating for any website."
+  description="Check any website's Domain Rating by Ahrefs for free. Learn what DR measures, what a good score is, and how Domain Rating differs from Moz Domain Authority."
   canonicalPath="/tools/domain-rating-checker"
   {breadcrumbs}
 >
@@ -22,7 +63,7 @@ const breadcrumbs: SchemaBreadcrumb[] = [
     <Breadcrumbs {breadcrumbs} />
     <PageHeader
       title="Domain Rating checker"
-      description="Get the Domain Rating for your website, a client site, or a competitor."
+      description="Get the Domain Rating by Ahrefs for your website, a client site or a competitor."
     />
 
     <ProtectedMetricChecker
@@ -35,40 +76,121 @@ const breadcrumbs: SchemaBreadcrumb[] = [
     />
 
     <div class="docs-prose mt-16">
-      <h2>Domain Rating is not Domain Authority</h2>
+      <h2>Read the Domain Rating</h2>
       <p>
-        Domain Rating, or DR, is Domain Rating by{' '}
+        The number is Domain Rating by{' '}
         <a href="https://ahrefs.com" target="_blank" rel="noreferrer">Ahrefs</a>,
-        an estimate of a website's backlink
-        profile strength on a logarithmic 0 to 100 scale. Domain Authority, or
-        DA, is a separate Moz metric. The names sound similar, but their
-        indexes and calculations are not interchangeable.
+        from 0 to 100. Higher means a stronger backlink profile: more unique
+        websites link to the domain, and those websites have strong links
+        of their own.
+      </p>
+      <p>
+        The scale is logarithmic. Each step up is harder than the one before
+        it, so climbing from 10 to 20 is far easier than climbing from 70 to
+        80. Read a gap of 10 points near the top as a much bigger difference
+        than the same gap near the bottom.
       </p>
 
-      <h2>Compare websites in the same market</h2>
+      <h2>How Domain Rating is worked out</h2>
       <p>
-        There is no universal good Domain Rating. A DR of 30 can be strong in
-        one narrow market and weak in another. Compare sites that compete for
-        similar topics, audiences, and links, then inspect the referring
-        domains behind the score.
+        Ahrefs crawls the web and records which sites link to which. For a
+        domain, it counts the unique websites that send it at least one
+        followed link. Each linking site passes on part of its own strength,
+        shared out between all the sites it links to. Many links from one
+        site count as one, and nofollow links do not count.
+      </p>
+      <p>
+        That makes DR a measure of links, and only links. It knows nothing
+        about the content, the traffic or the topic of a site, and it does
+        not look at the links to any single page.
       </p>
 
-      <h2>Domain Rating does not predict one page's rank</h2>
+      <h2>Domain Rating vs Domain Authority</h2>
       <p>
-        DR describes a domain-level backlink profile. It does not measure page
-        relevance, content quality, technical accessibility, search intent, or
-        the links pointing to one specific URL. A lower-DR site can outrank a
-        higher-DR site for an individual query.
+        This page shows Ahrefs Domain Rating, not Moz Domain Authority. The
+        two get mixed up because they answer a similar question with
+        similar names.
+      </p>
+      <table>
+        <thead>
+          <tr>
+            <th></th>
+            <th>Domain Rating (DR)</th>
+            <th>Domain Authority (DA)</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>Made by</td>
+            <td>Ahrefs</td>
+            <td>Moz</td>
+          </tr>
+          <tr>
+            <td>Scale</td>
+            <td>0 to 100, logarithmic</td>
+            <td>1 to 100, logarithmic</td>
+          </tr>
+          <tr>
+            <td>Built from</td>
+            <td>Ahrefs' link index: unique linking domains and their strength</td>
+            <td>Moz's link index, with a model trained to predict how well a site ranks</td>
+          </tr>
+          <tr>
+            <td>Shown here</td>
+            <td>Yes</td>
+            <td>No</td>
+          </tr>
+          <tr>
+            <td>Used by Google</td>
+            <td>No</td>
+            <td>No</td>
+          </tr>
+        </tbody>
+      </table>
+      <p>
+        The same site can score 45 on one and 30 on the other, so a DR and a
+        DA can never be compared. Pick one score and use it for every site
+        you compare.
       </p>
 
-      <h2>Find backlink opportunities</h2>
+      <h2>Compare sites in the same market</h2>
       <p>
-        Check competitors, publications, directories, and potential partners.
-        Comparing their Domain Ratings can help you decide which backlink
-        opportunities deserve a closer look first. With your own provider key,
-        the <a href="/docs/research">research command</a>{' '}
-        lists referring domains with a Domain Rating next to each one.
+        A DR of 30 can be strong for a local plumber and weak for a national
+        news site. The useful comparison is with the sites that rank for the
+        searches you want. Check the domains on the first page for your main
+        keyword with the <a href="/tools/serp-checker">SERP checker</a>, and
+        you see the range you are competing in.
       </p>
+
+      <h2>What Domain Rating cannot tell you</h2>
+      <p>
+        Google does not use DR. It is a summary of links, which Google does
+        look at, but Google ranks pages for searches, not domains by a score.
+        A lower-DR site with the better page for a search can and often does
+        outrank a higher-DR site. Use DR to judge a backlink profile or to
+        decide which link prospects deserve a look, not to predict one
+        page's position.
+      </p>
+
+      <h2>Check Domain Rating with your AI agent</h2>
+      <p>
+        With SEO Skill, Domain Rating comes free next to research results.
+        When your agent runs <a href="/docs/research">seo research</a> for
+        competitors or backlinks with your DataForSEO or Ahrefs key, every
+        row with a domain gets a Domain Rating column, with no Ahrefs key
+        needed for that part. Ask:
+      </p>
+      <CodeBlock value="Find the sites that compete with example.com in Google and sort them by Domain Rating" wrap />
+      <p>Add the hosted MCP server to your agent and sign in with Google:</p>
+    </div>
+
+    <SetupCommands id="domain-rating-setup" class="mt-6" />
+
+    <div class="docs-prose mt-16">
+      <h2>Domain Rating questions</h2>
+    </div>
+    <div class="mt-6">
+      <FaqAccordion id="domain-rating-faq" items={faq} />
     </div>
   </main>
 </BaseLayout>

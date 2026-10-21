@@ -1,6 +1,9 @@
 ---
 import Breadcrumbs from '@/components/Breadcrumbs.astro'
+import CodeBlock from '@/components/CodeBlock.astro'
+import FaqAccordion from '@/components/FaqAccordion.astro'
 import PageHeader from '@/components/PageHeader.astro'
+import SetupCommands from '@/components/SetupCommands.astro'
 import WebsiteTrafficChecker from '@/components/tools/WebsiteTrafficChecker.astro'
 import BaseLayout from '@/layouts/BaseLayout.astro'
 import type { SchemaBreadcrumb } from '@/lib/schema'
@@ -10,11 +13,49 @@ const breadcrumbs: SchemaBreadcrumb[] = [
   { label: 'Tools', href: '/tools' },
   { label: 'Website traffic checker' },
 ]
+
+const faq = [
+  {
+    question: 'How can I check how much traffic a website gets?',
+    answer:
+      'For a site you do not own, you can only estimate it. Enter the domain above, pick the country and you get its estimated monthly Google organic traffic with twelve months of history. For your own site, read the real numbers in Search Console (clicks from Google) and Google Analytics (sessions from every channel).',
+  },
+  {
+    question: 'Is the website traffic checker free?',
+    answer:
+      'Yes. There is no account and nothing to install. The page shares a small daily allowance of lookups between everyone, so if it runs out, try again tomorrow or run the same lookup through your agent with your own DataForSEO key.',
+  },
+  {
+    question: 'How accurate is a website traffic estimate?',
+    answer:
+      'Good enough to compare sites in the same market and to see a trend. Not good enough to quote as a visit count. The estimate is built from rankings and search volumes, so it misses keywords outside the index and assumes typical click rates. Two sites checked the same way can be compared fairly. One estimate checked against real analytics will be off.',
+  },
+  {
+    question: "Can I see another website's Google Analytics?",
+    answer:
+      "No. Google Analytics and Search Console data belong to the site owner and are never public. Any tool that shows another site's traffic is showing an estimate, whatever it calls the number.",
+  },
+  {
+    question: 'Does the estimate include all traffic?',
+    answer:
+      'No. It covers organic Google search in the country you picked. Paid search, social, email, referrals, direct visits, AI assistants and other search engines are not in it. A site that lives on newsletters or social can get far more visits than this number.',
+  },
+  {
+    question: 'Why does a site show no traffic?',
+    answer:
+      'It means DataForSEO found no Google rankings for that domain in that market. That is not the same as no visitors. Try the country the site actually serves, and remember that a new or very small site may not be in the index yet.',
+  },
+  {
+    question: 'Can I check daily website traffic?',
+    answer:
+      'The estimate is monthly, because search volumes are monthly. For daily numbers you need the site’s own data. Your agent can read daily clicks for your site from Search Console with seo data.',
+  },
+]
 ---
 
 <BaseLayout
   title="Website traffic checker"
-  description="Check a website's estimated monthly organic traffic, ranking keywords, and twelve-month trend."
+  description="Check any website's estimated monthly Google organic traffic, ranking keywords, traffic value and twelve-month trend, then compare it with your own Search Console numbers."
   canonicalPath="/tools/website-traffic-checker"
   {breadcrumbs}
 >
@@ -22,39 +63,134 @@ const breadcrumbs: SchemaBreadcrumb[] = [
     <Breadcrumbs {breadcrumbs} />
     <PageHeader
       title="Website traffic checker"
-      description="Enter a domain and choose a country to check its estimated organic search traffic."
+      description="Enter a domain and choose a country to check its estimated organic search traffic from Google, with a year of history."
     />
 
     <WebsiteTrafficChecker />
 
     <div class="docs-prose mt-16">
-      <h2>See how a website performs in organic search</h2>
+      <h2>Read the traffic estimate</h2>
       <p>
-        Check estimated monthly organic traffic, ranking keywords, traffic
-        value, and position movement. The twelve-month history makes it easier
-        to spot growth, losses, and recent changes.
+        The big number is the estimated organic visits the site gets from
+        Google in one month, in the country you picked. Under it you get the
+        number of keywords it ranks for, a traffic value, and a twelve-month
+        table that shows how each of those moved.
+      </p>
+      <table>
+        <thead>
+          <tr>
+            <th>Figure</th>
+            <th>What it tells you</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>Estimated monthly traffic</td>
+            <td>Organic Google visits a month, from rankings and search volumes.</td>
+          </tr>
+          <tr>
+            <td>Ranking keywords</td>
+            <td>Keywords the site ranks for in the top 100 in that market.</td>
+          </tr>
+          <tr>
+            <td>Traffic value</td>
+            <td>What the same clicks would cost as Google Ads, in US dollars.</td>
+          </tr>
+          <tr>
+            <td>Top 3 and top 10</td>
+            <td>How many of those keywords rank on the first page, or near the top of it.</td>
+          </tr>
+          <tr>
+            <td>New, up, down and lost</td>
+            <td>Keywords that started ranking, improved, slipped or dropped out that month.</td>
+          </tr>
+        </tbody>
+      </table>
+      <p>
+        The top 3 and top 10 counts matter more than the total keyword count.
+        A site with 40,000 keywords at position 60 gets almost nothing from
+        them. A site with 300 keywords in the top 3 can get a lot.
       </p>
 
-      <h2>Choose the market before comparing sites</h2>
+      <h2>How the estimate is built</h2>
       <p>
-        Search demand and rankings differ by country and language. Keep the
-        selected market the same when comparing two sites. A United States
-        estimate should not be presented as worldwide traffic.
+        Nobody outside a website can see its analytics, so every traffic
+        checker works backwards from search results. DataForSEO keeps an
+        index of Google results for millions of keywords. For each keyword a
+        site ranks for, it takes the monthly searches and the share of
+        clicks a result usually gets at that position, and adds them up.
+      </p>
+      <p>
+        That method has two blind spots. Keywords that are not in the index
+        (most long, rare searches) count for nothing. And the click share is
+        a typical curve, so a result under an AI Overview, a map or a row of
+        ads is counted as if it got normal clicks. Small sites and sites that
+        live on long-tail searches tend to look smaller than they are.
       </p>
 
-      <h2>Compare competitors and markets</h2>
+      <h2>Compare sites, not exact visits</h2>
       <p>
-        Use the same country and language when comparing websites. You can then
-        see which competitors attract more search demand, rank for more
-        keywords, or gain visibility faster.
+        The estimate is at its best as a comparison. Check two competitors
+        in the same country and the one with three times the estimate very
+        likely gets more search traffic. Check one site month by month and
+        the trend is usually right even when the level is not.
+      </p>
+      <p>
+        Keep the market fixed. A United States estimate is not worldwide
+        traffic, and a site that sells in Germany will look tiny in the
+        United States. Pick the country the site serves before you compare.
       </p>
 
-      <h2>Why estimates change</h2>
+      <h2>Spot a traffic drop in the history</h2>
       <p>
-        New rankings, position changes, and changing search demand can all move
-        the estimate. Use the keyword sample and monthly history to see what
-        changed and where to investigate next.
+        When the estimate falls, the monthly table shows why. More lost
+        keywords means rankings disappeared. Fewer top 3 keywords with the
+        same total means positions slipped. Steady keywords with less traffic
+        usually means search demand fell, which is often seasonal.
       </p>
+      <p>
+        If the drop starts in one month, check it against the{' '}
+        <a href="/tools/google-algorithm-update-checker">Google algorithm update checker</a>.
+        A core update on the same dates shows the timing lines up. It does
+        not prove the update caused the drop.
+      </p>
+
+      <h2>Use real numbers for your own site</h2>
+      <p>
+        For your own site, an estimate is the wrong tool. Search Console
+        counts the clicks Google sent, and Google Analytics counts sessions
+        from every channel. The two never match exactly (a click is not a
+        session), but both are measured, not modelled.
+      </p>
+      <p>
+        That gives you a useful check, too. Run your own domain through this
+        page and set the estimate beside your Search Console clicks. The gap
+        tells you roughly how far off the estimates are in your niche, which
+        helps you read the numbers for your competitors.
+      </p>
+
+      <h2>Check traffic with your AI agent</h2>
+      <p>
+        With SEO Skill your agent can do both halves of the job. For your own
+        site, the <a href="/docs/report">SEO report</a> reads Search Console
+        clicks and Google Analytics sessions for the same dates. For a
+        competitor, <a href="/docs/research">seo research</a> pulls the
+        keywords it ranks for with your own DataForSEO or Ahrefs key, and
+        keeps those estimates apart from your measured numbers. Ask:
+      </p>
+      <CodeBlock value="Compare my Search Console clicks for example.com with the estimated organic traffic for competitor.example, and show which of their top pages I have no equivalent for" wrap />
+      <p>
+        Add the hosted MCP server to your agent and sign in with Google:
+      </p>
+    </div>
+
+    <SetupCommands id="traffic-setup" class="mt-6" />
+
+    <div class="docs-prose mt-16">
+      <h2>Website traffic questions</h2>
+    </div>
+    <div class="mt-6">
+      <FaqAccordion id="traffic-faq" items={faq} />
     </div>
   </main>
 </BaseLayout>

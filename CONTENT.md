@@ -139,12 +139,18 @@ Bad:
 - Technical SEO site crawl audit: checks, results and setup
 
 Use sentence case. Lead with the phrase a user would search for or recognise in
-the product. Avoid colons, slogans, claims, and filler after the main topic. The
-site appends `| SEO Skill` to page titles where needed, so do not repeat the
-brand in every H1.
+the product. Avoid colons, slogans, claims, and filler after the main topic. Do
+not repeat the brand in an H1.
 
-This project's short, direct title rule takes priority over padding a title to a
-generic character target.
+## Title tags are written for the search result
+
+The title tag is separate from the H1 and can do more work. It leads with the
+words people search for, then adds one true reason to click, such as "Free",
+"for any domain" or "from Search Console". Say "Free" only when the tool needs
+no account or key. Keep it under about 60 characters. The site adds
+`| SEO Skill` only when the whole title still fits, so never add the brand
+yourself. Rewrite a title from the queries Search Console shows for the page,
+and check its click-through rate a few weeks later.
 
 H2 and H3 headings should tell the reader what is in the section. A reader who
 scans only the headings should still understand the page.
@@ -297,9 +303,8 @@ the same seven paragraphs with a different report id is not a content strategy.
 Use report metadata and conditional sections to explain the actual input,
 output, limits, and decisions for each report family.
 
-The title tag can be direct. The description and page body carry the supporting
-terms. Do not add a colon and a pile of keyword variants just to make the title
-longer.
+The description and page body carry the supporting terms. Do not add a colon
+and a pile of keyword variants to a title tag.
 
 ## Link like the words belong together
 

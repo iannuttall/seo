@@ -39,7 +39,10 @@
     }
   ],
   // No Workers Logs: the server keeps no logs of requests or user data.
-  "observability": { "enabled": false }
+  "observability": { "enabled": false },
+  // Mondays 08:00 UTC: the week's sign-up counts to Telegram.
+  "triggers": { "crons": ["0 8 * * 1"] }
   // Secrets: GOOGLE_CLIENT_ID, GOOGLE_CLIENT_SECRET, SEAL_KEY, AHREFS_DR_KEY,
-  // BING_CLIENT_ID, BING_CLIENT_SECRET.
+  // BING_CLIENT_ID, BING_CLIENT_SECRET, and optionally TELEGRAM_BOT_TOKEN and
+  // TELEGRAM_CHAT_ID for the weekly sign-up count.
 }

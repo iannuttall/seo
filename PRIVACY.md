@@ -69,7 +69,10 @@ Cloudflare D1 with only these things:
     in that link.
 
   It holds no IP address, country or email address. It shows which paths
-  bring people to SEO Skill, and it is counted only in totals.
+  bring people to SEO Skill, and it is counted only in totals. Once a week
+  the server sends the maintainer those totals for the last seven days, such
+  as sign-ups per path, agent, referring site and `utm_*` tag, through a
+  Telegram message. The message never holds a row for one person.
 
 Every token and key is encrypted with a server key before it is written. The
 tokens are used only to fetch your own data when you or your agent ask for

@@ -32,7 +32,7 @@ export const features = [
   {
     path: '/features/ai-search',
     title: 'AI search tracking',
-    text: 'The questions people ask AI that show in your Search Console, visits from AI assistants, and what AI crawlers can read.',
+    text: 'The questions people ask AI that show in your Search Console, whether AI answers cite you, visits from AI assistants, and what AI crawlers can read.',
     icon: AiChat02Icon,
   },
   {

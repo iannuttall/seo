@@ -180,7 +180,7 @@ async function ask(
       model: null,
       cited_url: null,
       answered_at: null,
-      cost_usd: 0,
+      cost_usd: (error as { cost?: number }).cost ?? 0,
       error: error instanceof Error ? error.message.slice(0, 200) : 'failed',
     }
   }

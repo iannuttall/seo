@@ -167,9 +167,13 @@ export async function dataForSeoTask(
   }
   const result = data.tasks?.[0]
   if (!result || result.status_code >= 40000) {
-    throw new CommandError(
-      'PROVIDER_ERROR',
-      `dataforseo: ${result?.status_message ?? 'no task result'}`,
+    // A failed task can still be charged; the cost goes with the error.
+    throw Object.assign(
+      new CommandError(
+        'PROVIDER_ERROR',
+        `dataforseo: ${result?.status_message ?? 'no task result'}`,
+      ),
+      { cost: result?.cost ?? 0 },
     )
   }
   return { cost: result.cost ?? 0, result: result.result?.[0] ?? null }

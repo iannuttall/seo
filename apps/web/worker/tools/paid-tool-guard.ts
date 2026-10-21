@@ -1,11 +1,11 @@
 import {
   decidePaidToolQuota,
   decideToolIdentityQuota,
+  FREE_TOOL_DAILY_LIMIT,
   isPaidToolId,
   isPaidToolIdentityHash,
   isPublicWorkerToolId,
   MAX_PROVIDER_DAILY_LIMIT,
-  PAID_TOOL_DAILY_LIMIT,
   PAID_TOOL_PROVIDERS,
   type PaidToolId,
   type PaidToolProvider,
@@ -181,7 +181,7 @@ export class PaidToolGuard {
             )
           ),
           calls INTEGER NOT NULL CHECK (
-            calls >= 0 AND calls <= ${PAID_TOOL_DAILY_LIMIT}
+            calls >= 0 AND calls <= ${FREE_TOOL_DAILY_LIMIT}
           ),
           PRIMARY KEY (identity_hash, tool)
         ) WITHOUT ROWID;
@@ -225,7 +225,7 @@ export class PaidToolGuard {
               )
             ),
             calls INTEGER NOT NULL CHECK (
-              calls >= 0 AND calls <= ${PAID_TOOL_DAILY_LIMIT}
+              calls >= 0 AND calls <= ${FREE_TOOL_DAILY_LIMIT}
             ),
             PRIMARY KEY (identity_hash, tool)
           ) WITHOUT ROWID;
@@ -264,7 +264,7 @@ export class PaidToolGuard {
               )
             ),
             calls INTEGER NOT NULL CHECK (
-              calls >= 0 AND calls <= ${PAID_TOOL_DAILY_LIMIT}
+              calls >= 0 AND calls <= ${FREE_TOOL_DAILY_LIMIT}
             ),
             PRIMARY KEY (identity_hash, tool)
           ) WITHOUT ROWID;
@@ -326,7 +326,7 @@ export class PaidToolGuard {
               )
             ),
             calls INTEGER NOT NULL CHECK (
-              calls >= 0 AND calls <= ${PAID_TOOL_DAILY_LIMIT}
+              calls >= 0 AND calls <= ${FREE_TOOL_DAILY_LIMIT}
             ),
             PRIMARY KEY (identity_hash, tool)
           ) WITHOUT ROWID;
@@ -367,7 +367,7 @@ export class PaidToolGuard {
               )
             ),
             calls INTEGER NOT NULL CHECK (
-              calls >= 0 AND calls <= ${PAID_TOOL_DAILY_LIMIT}
+              calls >= 0 AND calls <= ${FREE_TOOL_DAILY_LIMIT}
             ),
             PRIMARY KEY (identity_hash, tool)
           ) WITHOUT ROWID;
@@ -455,7 +455,10 @@ export class PaidToolGuard {
           parsed.tool,
         ).toArray()[0]?.calls,
       )
-      const result = decideToolIdentityQuota(identityUsed)
+      const result = decideToolIdentityQuota(
+        identityUsed,
+        FREE_TOOL_DAILY_LIMIT,
+      )
       if (!result.allowed) return result
 
       execute(

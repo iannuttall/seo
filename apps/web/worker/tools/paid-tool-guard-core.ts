@@ -1,4 +1,5 @@
-export const PAID_TOOL_DAILY_LIMIT = 10
+export const PAID_TOOL_DAILY_LIMIT = 3
+export const FREE_TOOL_DAILY_LIMIT = 10
 export const MAX_PROVIDER_DAILY_LIMIT = 100_000
 export const PAID_TOOL_GUARD_RETENTION_DAYS = 2
 
@@ -160,12 +161,13 @@ export function validateProviderDailyLimit(value: number): number {
 
 export function decideToolIdentityQuota(
   identityUsed: number,
+  limit: number,
 ): ToolIdentityQuotaDecision {
   if (!Number.isSafeInteger(identityUsed) || identityUsed < 0) {
     throw new Error('Invalid quota usage.')
   }
-  const identityRemaining = Math.max(0, PAID_TOOL_DAILY_LIMIT - identityUsed)
-  if (identityUsed >= PAID_TOOL_DAILY_LIMIT) {
+  const identityRemaining = Math.max(0, limit - identityUsed)
+  if (identityUsed >= limit) {
     return {
       allowed: false,
       reason: 'identity-limit',
@@ -176,7 +178,7 @@ export function decideToolIdentityQuota(
   return {
     allowed: true,
     identityUsed: identityUsed + 1,
-    identityRemaining: PAID_TOOL_DAILY_LIMIT - identityUsed - 1,
+    identityRemaining: limit - identityUsed - 1,
   }
 }
 
@@ -197,7 +199,10 @@ export function decidePaidToolQuota(input: {
     throw new Error('Invalid quota usage.')
   }
 
-  const identity = decideToolIdentityQuota(input.identityUsed)
+  const identity = decideToolIdentityQuota(
+    input.identityUsed,
+    PAID_TOOL_DAILY_LIMIT,
+  )
   const providerRemaining = Math.max(0, providerDailyLimit - input.providerUsed)
 
   if (!identity.allowed) {

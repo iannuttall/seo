@@ -82,7 +82,7 @@ const action = kind === 'serp' ? 'serp-checker' : 'competitor-keywords'
       <TurnstileWidget {action} />
 
       <div class="flex items-center justify-between gap-4">
-        <p class="text-xs leading-5 text-foreground-muted">10 free lookups a day.</p>
+        <p class="text-xs leading-5 text-foreground-muted">3 free lookups a day.</p>
         <Button data-submit type="submit" class="min-h-10 shrink-0 px-5 text-xs">{kind === 'serp' ? 'Check results' : 'Look up'}</Button>
       </div>
       <p data-error hidden class="text-sm leading-6 text-red-700 dark:text-red-400" role="alert"></p>
@@ -113,8 +113,8 @@ const action = kind === 'serp' ? 'serp-checker' : 'competitor-keywords'
         <h3 class="text-lg font-medium">Run it from your agent with your own key</h3>
         <p class="text-sm leading-6 text-foreground-muted">
           {kind === 'serp'
-            ? 'This page gives you 10 lookups a day. With a free account and your own DataForSEO or Ahrefs key, your agent checks the results for as many keywords as you need, next to the queries your site already gets clicks for in Search Console.'
-            : 'This page gives you 10 lookups a day. With a free account and your own DataForSEO or Ahrefs key, your agent runs the same research whenever it needs to, next to the queries your site already gets clicks for in Search Console.'}
+            ? 'This page gives you 3 lookups a day. With a free account and your own DataForSEO or Ahrefs key, your agent checks the results for as many keywords as you need, next to the queries your site already gets clicks for in Search Console.'
+            : 'This page gives you 3 lookups a day. With a free account and your own DataForSEO or Ahrefs key, your agent runs the same research whenever it needs to, next to the queries your site already gets clicks for in Search Console.'}
         </p>
         <ol class="list-decimal space-y-1 pl-5 text-sm leading-6 text-foreground-muted">
           <li>Sign in with Google on your account page. That creates the free account.</li>

@@ -19,7 +19,7 @@ function turnstileResponse(input: {
   return Response.json(input)
 }
 
-test('quota allows exactly ten daily calls for one identity and tool', () => {
+test('quota allows exactly three daily calls for one identity and tool', () => {
   let identityUsed = 0
   let providerUsed = 0
   for (let index = 0; index < PAID_TOOL_DAILY_LIMIT; index += 1) {
@@ -41,10 +41,10 @@ test('quota allows exactly ten daily calls for one identity and tool', () => {
   assert.deepEqual(denied, {
     allowed: false,
     reason: 'identity-limit',
-    identityUsed: 10,
+    identityUsed: 3,
     identityRemaining: 0,
-    providerUsed: 10,
-    providerRemaining: 90,
+    providerUsed: 3,
+    providerRemaining: 97,
   })
 })
 
@@ -57,7 +57,7 @@ test('provider budget is a separate global ceiling', () => {
   assert.deepEqual(finalCall, {
     allowed: true,
     identityUsed: 1,
-    identityRemaining: 9,
+    identityRemaining: 2,
     providerUsed: 20,
     providerRemaining: 0,
   })

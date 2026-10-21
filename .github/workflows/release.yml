@@ -75,14 +75,24 @@ jobs:
           echo "tag=${tag}" >> "$GITHUB_OUTPUT"
           echo "published=${published}" >> "$GITHUB_OUTPUT"
           echo "tagged=${tagged}" >> "$GITHUB_OUTPUT"
-      - run: pnpm install --frozen-lockfile
+      # Only a version that is not on npm yet, or a manual run, needs the
+      # release gates. A push that keeps the published version (a script or
+      # dependency change) has nothing to release, so it stops here.
+      - name: Install dependencies
+        if: steps.release.outputs.published == 'false' || github.event_name == 'workflow_dispatch'
+        run: pnpm install --frozen-lockfile
       - name: Inject shared desktop OAuth client
+        if: steps.release.outputs.published == 'false' || github.event_name == 'workflow_dispatch'
         run: pnpm auth:inject-shared-client
         env:
           SEO_GOOGLE_CLIENT_ID: ${{ secrets.SEO_GOOGLE_CLIENT_ID }}
           SEO_GOOGLE_CLIENT_SECRET: ${{ secrets.SEO_GOOGLE_CLIENT_SECRET }}
-      - run: pnpm test:package-install
-      - run: pnpm security:check
+      - name: Test the installed package
+        if: steps.release.outputs.published == 'false' || github.event_name == 'workflow_dispatch'
+        run: pnpm test:package-install
+      - name: Security check
+        if: steps.release.outputs.published == 'false' || github.event_name == 'workflow_dispatch'
+        run: pnpm security:check
       - name: Publish dry run
         if: github.event_name == 'workflow_dispatch' && inputs.dryRun == 'true'
         run: npm publish --dry-run

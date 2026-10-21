@@ -1,5 +1,10 @@
 import pRetry, { AbortError } from 'p-retry'
-import { getDb, hashKey, noteCacheWrite } from '../../storage/database.js'
+import {
+  cacheDb,
+  hashKey,
+  noteCacheWrite,
+  writeToCache,
+} from '../../storage/database.js'
 import type { PageFetchResult } from '../../types.js'
 import { detectAccessBlock } from '../access-block.js'
 import { readBoundedResponseText } from '../http-client.js'
@@ -71,7 +76,6 @@ export async function fetchPlain(
   writeCache = true,
 ): Promise<PageFetchResult> {
   const startedAt = Date.now()
-  const db = getDb()
   const key = hashKey(['page', url])
   const host = new URL(url).host
   let robots = respectRobots
@@ -86,7 +90,7 @@ export async function fetchPlain(
       robots,
     )
   }
-  const cached = db
+  const cached = cacheDb()
     .prepare(
       'SELECT status, headers_json, body_blob, metadata_json, expires_at FROM http_cache WHERE url_hash = ? AND expires_at > ?',
     )
@@ -238,22 +242,26 @@ export async function fetchPlain(
   }
 
   if (!accessBlock && writeCache) {
-    db.prepare(
-      `INSERT OR REPLACE INTO http_cache
-      (url_hash, url, status, headers_json, body_blob, metadata_json, etag, fetched_at, expires_at)
-      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`,
-    ).run(
-      key,
-      url,
-      response.response.status,
-      JSON.stringify(headerMap),
-      Buffer.from(html),
-      encodePageFetchCacheEvidence(result),
-      response.response.headers.get('etag'),
-      Date.now(),
-      Date.now() + 3_600_000,
-    )
-    noteCacheWrite(Buffer.byteLength(html))
+    writeToCache((database) => {
+      database
+        .prepare(
+          `INSERT OR REPLACE INTO http_cache
+          (url_hash, url, status, headers_json, body_blob, metadata_json, etag, fetched_at, expires_at)
+          VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+        )
+        .run(
+          key,
+          url,
+          response.response.status,
+          JSON.stringify(headerMap),
+          Buffer.from(html),
+          encodePageFetchCacheEvidence(result),
+          response.response.headers.get('etag'),
+          Date.now(),
+          Date.now() + 3_600_000,
+        )
+      noteCacheWrite(Buffer.byteLength(html), database)
+    })
   }
 
   return result

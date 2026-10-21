@@ -1,7 +1,7 @@
 import { createHash } from 'node:crypto'
 import type { ZodType } from 'zod'
 import { CACHE_MAX_AGE_MS } from '../storage/cache-maintenance.js'
-import { getDb, noteCacheWrite } from '../storage/database.js'
+import { cacheDb, noteCacheWrite, writeToCache } from '../storage/database.js'
 import type Database from '../storage/sqlite.js'
 import type { ExternalServiceId } from './contracts.js'
 import { ProviderError } from './errors.js'
@@ -73,7 +73,7 @@ export function readProviderCache<T>(
   schema: ZodType<T>,
   options: { database?: Database.Database; now?: number } = {},
 ): ProviderCacheEntry<T> | null {
-  const database = options.database ?? getDb()
+  const database = options.database ?? cacheDb()
   const now = options.now ?? Date.now()
   const requestJson = stableProviderRequestJson(key.request)
   const hash = requestHash(key, requestJson)
@@ -109,13 +109,17 @@ export function readProviderCache<T>(
       taskIds: taskIds(row.task_ids_json),
     }
   } catch {
-    database
-      .prepare(
-        `DELETE FROM provider_cache
-         WHERE provider = ? AND credential_scope = ? AND operation = ?
-           AND request_hash = ?`,
-      )
-      .run(key.provider, key.credentialScope, key.operation, hash)
+    try {
+      database
+        .prepare(
+          `DELETE FROM provider_cache
+           WHERE provider = ? AND credential_scope = ? AND operation = ?
+             AND request_hash = ?`,
+        )
+        .run(key.provider, key.credentialScope, key.operation, hash)
+    } catch {
+      // A bad row that cannot be removed now is still not returned.
+    }
     return null
   }
 }
@@ -143,7 +147,6 @@ export function writeProviderCache<T>(
       message: `Provider cache TTL must be between 1 and ${CACHE_MAX_AGE_MS} milliseconds.`,
     })
   }
-  const database = options.database ?? getDb()
   const now = options.now ?? Date.now()
   const expiresAt = now + input.ttlMs
   const requestJson = stableProviderRequestJson(key.request)
@@ -153,33 +156,37 @@ export function writeProviderCache<T>(
     .sort((left, right) => (left < right ? -1 : left > right ? 1 : 0))
     .slice(0, 20)
   const taskIdsJson = JSON.stringify(normalizedTaskIds)
-  database
-    .prepare(
-      `INSERT OR REPLACE INTO provider_cache (
-        provider, credential_scope, operation, request_hash, request_json,
-        response_json, row_count, source_cost_micros, task_ids_json,
-        fetched_at, expires_at
-      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+  const save = (database: Database.Database) => {
+    database
+      .prepare(
+        `INSERT OR REPLACE INTO provider_cache (
+          provider, credential_scope, operation, request_hash, request_json,
+          response_json, row_count, source_cost_micros, task_ids_json,
+          fetched_at, expires_at
+        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+      )
+      .run(
+        key.provider,
+        key.credentialScope,
+        key.operation,
+        requestHash(key, requestJson),
+        requestJson,
+        responseJson,
+        input.rowCount,
+        input.sourceCostMicros,
+        taskIdsJson,
+        now,
+        expiresAt,
+      )
+    noteCacheWrite(
+      Buffer.byteLength(requestJson) +
+        Buffer.byteLength(responseJson) +
+        Buffer.byteLength(taskIdsJson),
+      database,
     )
-    .run(
-      key.provider,
-      key.credentialScope,
-      key.operation,
-      requestHash(key, requestJson),
-      requestJson,
-      responseJson,
-      input.rowCount,
-      input.sourceCostMicros,
-      taskIdsJson,
-      now,
-      expiresAt,
-    )
-  noteCacheWrite(
-    Buffer.byteLength(requestJson) +
-      Buffer.byteLength(responseJson) +
-      Buffer.byteLength(taskIdsJson),
-    database,
-  )
+  }
+  if (options.database) save(options.database)
+  else writeToCache(save)
   return {
     data: input.data,
     storedAt: new Date(now).toISOString(),

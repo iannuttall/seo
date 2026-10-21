@@ -233,8 +233,6 @@ export type Stats = {
     firstAuditCompletions: number
     auditsStarted: number
     auditsCompleted: number
-    auditsFailed: number
-    commandsFailed: number
     auditsThisMonth: number
     firstAuditConversionPercent: number | null
   }
@@ -250,19 +248,6 @@ export type Stats = {
     complete: boolean
   }>
   reports: Array<{ report: string; count: number }>
-  failures: {
-    categories: Array<{ category: string; count: number }>
-    details: Array<{
-      event: 'audit_failed' | 'command_failed'
-      report: string | null
-      operation: string | null
-      category: string
-      reason: string
-      context: string | null
-      version: string
-      count: number
-    }>
-  }
 }
 
 const REPORT_IDS = new Set<string>(reportIds)
@@ -505,11 +490,6 @@ function rowCount(row: StatsRow): number {
   return typeof value === 'number' && Number.isFinite(value) ? value : 0
 }
 
-function nullableRowString(row: StatsRow, field: string): string | null {
-  const value = row[field]
-  return typeof value === 'string' && value.length > 0 ? value : null
-}
-
 function percentage(numerator: number, denominator: number): number | null {
   if (denominator <= 0) return null
   return Math.round((numerator / denominator) * 1_000) / 10
@@ -551,8 +531,6 @@ export function aggregateStats(
     agents: StatsRow[]
     cohorts: StatsRow[]
     reports: StatsRow[]
-    failureCategories: StatsRow[]
-    failureDetails: StatsRow[]
   },
   now = new Date(),
 ): Stats {
@@ -590,8 +568,6 @@ export function aggregateStats(
       firstAuditCompletions,
       auditsStarted: eventCounts.get('audit_start') ?? 0,
       auditsCompleted: eventCounts.get('audit_complete') ?? 0,
-      auditsFailed: eventCounts.get('audit_failed') ?? 0,
-      commandsFailed: eventCounts.get('command_failed') ?? 0,
       auditsThisMonth: input.month.reduce((sum, row) => sum + rowCount(row), 0),
       firstAuditConversionPercent: percentage(firstAuditCompletions, installs),
     },
@@ -625,51 +601,6 @@ export function aggregateStats(
         ),
       }))
       .sort((a, b) => b.count - a.count || a.report.localeCompare(b.report)),
-    failures: {
-      categories: input.failureCategories
-        .map((row) => ({
-          category: rowString(row, 'category'),
-          count: rowCount(row),
-        }))
-        .filter((row) =>
-          TELEMETRY_ERROR_CATEGORIES.includes(
-            row.category as TelemetryErrorCategory,
-          ),
-        )
-        .sort(
-          (a, b) => b.count - a.count || a.category.localeCompare(b.category),
-        ),
-      details: input.failureDetails
-        .map((row) => ({
-          event: rowString(row, 'event') as 'audit_failed' | 'command_failed',
-          report: nullableRowString(row, 'report'),
-          operation: nullableRowString(row, 'operation'),
-          category: rowString(row, 'category'),
-          reason: rowString(row, 'reason'),
-          context: nullableRowString(row, 'context'),
-          version: rowString(row, 'version'),
-          count: rowCount(row),
-        }))
-        .filter(
-          (row) =>
-            FAILURE_EVENTS.has(row.event) &&
-            TELEMETRY_ERROR_CATEGORIES.includes(
-              row.category as TelemetryErrorCategory,
-            ) &&
-            TELEMETRY_FAILURE_REASONS.includes(
-              row.reason as TelemetryFailureReason,
-            ),
-        )
-        .sort(
-          (a, b) =>
-            b.count - a.count ||
-            a.event.localeCompare(b.event) ||
-            (a.report ?? a.operation ?? '').localeCompare(
-              b.report ?? b.operation ?? '',
-            ) ||
-            a.reason.localeCompare(b.reason),
-        ),
-    },
   }
 }
 
@@ -870,35 +801,6 @@ async function liveStats(env: Env): Promise<Stats & { timeline: Timeline }> {
        GROUP BY report`,
     ),
     env.TELEMETRY_DB.prepare(
-      `SELECT error_category AS category, COUNT(*) AS count
-       FROM telemetry_events
-       WHERE event IN ('audit_failed', 'command_failed')
-       GROUP BY error_category`,
-    ),
-    env.TELEMETRY_DB.prepare(
-      `SELECT
-         event,
-         report,
-         operation,
-         error_category AS category,
-         failure_reason AS reason,
-         failure_context AS context,
-         version,
-         COUNT(*) AS count
-       FROM telemetry_events
-       WHERE schema = 2 AND event IN ('audit_failed', 'command_failed')
-       GROUP BY
-         event,
-         report,
-         operation,
-         error_category,
-         failure_reason,
-         failure_context,
-         version
-       ORDER BY count DESC, event, report, operation, reason, version
-       LIMIT 20`,
-    ),
-    env.TELEMETRY_DB.prepare(
       `SELECT received_day AS day, event, (os = 'hosted') AS hosted,
               COUNT(*) AS count
        FROM telemetry_events
@@ -917,18 +819,8 @@ async function liveStats(env: Env): Promise<Stats & { timeline: Timeline }> {
        WHERE day >= ?1`,
     ).bind(sinceDay),
   ])
-  const [
-    events,
-    month,
-    agents,
-    cohorts,
-    reports,
-    failureCategories,
-    failureDetails,
-    daily,
-    monthly,
-    skills,
-  ] = results.map((result) => result.results)
+  const [events, month, agents, cohorts, reports, daily, monthly, skills] =
+    results.map((result) => result.results)
   // Every account counts toward the total; the chart shows the last 90 days.
   const signups = await env.ACCOUNTS_DB.prepare(
     `SELECT date(created_at / 1000, 'unixepoch') AS day, COUNT(*) AS count
@@ -945,8 +837,6 @@ async function liveStats(env: Env): Promise<Stats & { timeline: Timeline }> {
       agents,
       cohorts,
       reports,
-      failureCategories,
-      failureDetails,
     }),
     timeline: timeline({ daily, monthly, skills, signups }),
   }

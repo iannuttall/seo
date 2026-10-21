@@ -273,6 +273,7 @@ test('Hono preserves API method errors, API 404s, and static asset fallback', as
     'robots-txt',
     'serp-preview',
     'favicon-checker',
+    'domain-age',
     'spam-score',
     'domain-rating',
     'website-traffic',

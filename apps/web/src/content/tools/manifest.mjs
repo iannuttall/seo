@@ -36,6 +36,15 @@ export const tools = [
     kind: 'protected',
   },
   {
+    id: 'domain-age-checker',
+    path: '/tools/domain-age-checker',
+    title: 'Domain age checker',
+    action: 'Open the domain age checker',
+    description:
+      'See when a domain was registered, when it expires and who its registrar is, read from the registry.',
+    kind: 'worker',
+  },
+  {
     id: 'llms-txt-generator',
     path: '/tools/llms-txt-generator',
     title: 'llms.txt generator',

@@ -1,0 +1,326 @@
+---
+import Button from '@/components/Button.astro'
+import Card from '@/components/Card.astro'
+import FormInput from '@/components/FormInput.astro'
+---
+
+<section data-domain-age class="space-y-6">
+  <Card>
+    <form data-age-form class="space-y-5 p-5 sm:p-6" novalidate>
+      <div class="space-y-1">
+        <h2 class="text-lg font-medium">Check when a domain was registered</h2>
+        <p class="text-sm leading-6 text-foreground-muted">
+          Enter up to five domains, separated by commas or spaces, to compare them on one timeline.
+        </p>
+      </div>
+      <label class="block space-y-2 text-sm font-medium">
+        <span>Domains</span>
+        <FormInput
+          data-domains
+          type="text"
+          inputmode="url"
+          autocapitalize="off"
+          spellcheck="false"
+          maxlength="1200"
+          placeholder="example.com, example.org"
+        />
+      </label>
+      <div class="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+        <p class="text-xs leading-5 text-foreground-muted">
+          Read live from each registry's RDAP server. Free, 10 domains a day.
+        </p>
+        <Button data-check type="submit" class="min-h-10 shrink-0 px-5 text-xs">Check domain age</Button>
+      </div>
+      <p data-error hidden class="text-sm leading-6 text-red-700 dark:text-red-400" role="alert"></p>
+    </form>
+  </Card>
+
+  <div data-results hidden class="space-y-6">
+    <Card inverted>
+      <div class="space-y-5 p-5 sm:p-6">
+        <div class="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
+          <div class="min-w-0">
+            <p data-headline-label class="text-xs text-foreground-muted"></p>
+            <p data-headline class="mt-1 text-4xl font-medium text-primary"></p>
+            <p data-headline-detail class="mt-2 text-sm text-foreground-muted"></p>
+          </div>
+          <div class="grid shrink-0 gap-2 sm:grid-cols-2">
+            <Button data-copy type="button" class="min-h-10 px-4 text-xs">Copy summary</Button>
+            <Button data-download type="button" class="min-h-10 px-4 text-xs">Download CSV</Button>
+          </div>
+        </div>
+        <div data-timeline-wrap class="space-y-3 border-t border-border pt-5">
+          <h3 class="text-sm font-medium">Registration timeline</h3>
+          <div data-timeline class="space-y-3"></div>
+          <div data-axis class="relative h-4 text-[11px] text-foreground-muted"></div>
+          <p class="text-xs leading-5 text-foreground-muted">
+            The solid bar runs from registration to today. The faint part runs to the date the registration is paid until.
+          </p>
+        </div>
+        <p data-action-status class="text-xs text-foreground-muted" aria-live="polite"></p>
+      </div>
+    </Card>
+
+    <div data-details class="grid items-start gap-2 sm:grid-cols-2"></div>
+  </div>
+</section>
+
+<script>
+  type Result = {
+    input: string
+    domain: string
+    state: 'found' | 'not-found' | 'no-rdap'
+    registeredAt: string | null
+    expiresAt: string | null
+    updatedAt: string | null
+    transferredAt: string | null
+    registrar: string | null
+    status: string[]
+    nameservers: string[]
+    source: { server: string | null; url: string | null; checkedAt: string }
+  }
+  type Row = { input: string; result?: Result; error?: string }
+
+  const DAY = 86_400_000
+  const MAX = 5
+
+  const formatDate = (iso: string) =>
+    new Date(iso).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric', timeZone: 'UTC' })
+
+  // Whole years, months and days on the UTC calendar.
+  function age(fromIso: string, to = new Date()): { years: number; months: number; days: number; text: string } {
+    const from = new Date(fromIso)
+    let years = to.getUTCFullYear() - from.getUTCFullYear()
+    let months = to.getUTCMonth() - from.getUTCMonth()
+    let days = to.getUTCDate() - from.getUTCDate()
+    if (days < 0) {
+      months -= 1
+      days += new Date(Date.UTC(to.getUTCFullYear(), to.getUTCMonth(), 0)).getUTCDate()
+    }
+    if (months < 0) {
+      years -= 1
+      months += 12
+    }
+    const part = (value: number, word: string) => (value ? `${value} ${word}${value === 1 ? '' : 's'}` : '')
+    const text = [part(years, 'year'), part(months, 'month'), years ? '' : part(days, 'day')].filter(Boolean).join(', ') || 'Less than a day'
+    return { years, months, days, text }
+  }
+
+  function parseInput(value: string): string[] {
+    return [...new Set(value.split(/[\s,]+/).map((item) => item.trim()).filter(Boolean))]
+  }
+
+  function initialise(root: HTMLElement): void {
+    if (root.dataset.initialised === 'true') return
+    root.dataset.initialised = 'true'
+    const $ = <T extends Element>(selector: string) => root.querySelector<T>(selector) as T
+    const form = $<HTMLFormElement>('[data-age-form]')
+    const input = $<HTMLInputElement>('[data-domains]')
+    const button = $<HTMLButtonElement>('[data-check]')
+    const error = $<HTMLElement>('[data-error]')
+    const results = $<HTMLElement>('[data-results]')
+    const timeline = $<HTMLElement>('[data-timeline]')
+    const axis = $<HTMLElement>('[data-axis]')
+    const details = $<HTMLElement>('[data-details]')
+    const status = $<HTMLElement>('[data-action-status]')
+    let rows: Row[] = []
+
+    const el = <K extends keyof HTMLElementTagNameMap>(tag: K, className = '', text = '') => {
+      const node = document.createElement(tag)
+      if (className) node.className = className
+      if (text) node.textContent = text
+      return node
+    }
+
+    const lookUp = async (domain: string): Promise<Row> => {
+      try {
+        const response = await fetch('/api/tools/domain-age', {
+          method: 'POST',
+          headers: { 'content-type': 'application/json' },
+          body: JSON.stringify({ domain }),
+        })
+        const data = (await response.json().catch(() => ({}))) as Result & { error?: string }
+        if (!response.ok) return { input: domain, error: data.error || 'The domain age could not be checked.' }
+        return { input: domain, result: data }
+      } catch {
+        return { input: domain, error: 'The domain age could not be checked.' }
+      }
+    }
+
+    const message = (row: Row): string => {
+      if (row.error) return row.error
+      if (row.result?.state === 'no-rdap') return "This domain's registry does not publish RDAP, so its dates cannot be read here. Try the registry's own lookup."
+      if (row.result?.state === 'not-found') return 'The registry has no record of this domain. It may not be registered.'
+      if (!row.result?.registeredAt) return 'The registry returned the domain without a registration date.'
+      return ''
+    }
+
+    function render(): void {
+      const dated = rows.filter((row) => row.result?.registeredAt)
+      const now = Date.now()
+      const headlineLabel = $<HTMLElement>('[data-headline-label]')
+      const headline = $<HTMLElement>('[data-headline]')
+      const headlineDetail = $<HTMLElement>('[data-headline-detail]')
+      const oldest = [...dated].sort((a, b) => Date.parse(a.result?.registeredAt ?? '') - Date.parse(b.result?.registeredAt ?? ''))[0]
+      if (oldest?.result?.registeredAt) {
+        headlineLabel.textContent = dated.length > 1 ? `Oldest: ${oldest.result.domain}` : `Domain age of ${oldest.result.domain}`
+        headline.textContent = age(oldest.result.registeredAt).text
+        headlineDetail.textContent = `Registered on ${formatDate(oldest.result.registeredAt)}.`
+      } else {
+        headlineLabel.textContent = 'Domain age'
+        headline.textContent = 'No date found'
+        headlineDetail.textContent = rows[0] ? message(rows[0]) : ''
+      }
+
+      // Timeline: earliest registration to the latest of today and expiry.
+      timeline.replaceChildren()
+      axis.replaceChildren()
+      $<HTMLElement>('[data-timeline-wrap]').hidden = dated.length === 0
+      if (dated.length) {
+        const start = Math.min(...dated.map((row) => Date.parse(row.result?.registeredAt ?? '')))
+        const end = Math.max(now + 30 * DAY, ...dated.map((row) => Date.parse(row.result?.expiresAt ?? '') || now))
+        const span = Math.max(DAY, end - start)
+        const at = (time: number) => `${((time - start) / span) * 100}%`
+        for (const row of dated) {
+          const result = row.result as Result
+          const registered = Date.parse(result.registeredAt ?? '')
+          const expires = Date.parse(result.expiresAt ?? '')
+          const item = el('div', 'space-y-1')
+          const label = el('div', 'flex items-baseline justify-between gap-3 text-xs')
+          label.append(el('span', 'truncate font-mono text-foreground', result.domain), el('span', 'shrink-0 text-foreground-muted', age(result.registeredAt ?? '').text))
+          const track = el('div', 'relative h-3 rounded-sm bg-card')
+          if (Number.isFinite(expires) && expires > now) {
+            const ahead = el('div', 'absolute inset-y-0 rounded-sm bg-primary/25')
+            ahead.style.left = at(now)
+            ahead.style.width = `calc(${at(expires)} - ${at(now)})`
+            track.append(ahead)
+          }
+          const bar = el('div', 'absolute inset-y-0 rounded-sm bg-primary')
+          bar.style.left = at(registered)
+          bar.style.width = `max(3px, calc(${at(now)} - ${at(registered)}))`
+          track.append(bar)
+          item.append(label, track)
+          timeline.append(item)
+        }
+        const first = new Date(start).getUTCFullYear()
+        const last = new Date(end).getUTCFullYear()
+        const years = last - first
+        const step = [1, 2, 5, 10, 20].find((each) => years / each <= (root.clientWidth < 500 ? 4 : 8)) ?? 20
+        for (let year = Math.ceil(first / step) * step; year <= last; year += step) {
+          const time = Date.UTC(year, 0, 1)
+          if (time < start) continue
+          const tick = el('span', 'absolute -translate-x-1/2 whitespace-nowrap', String(year))
+          tick.style.left = at(time)
+          axis.append(tick)
+        }
+      }
+
+      details.replaceChildren()
+      for (const row of rows) {
+        const result = row.result
+        const card = el('div', 'min-w-0 space-y-3 rounded-lg bg-muted p-5')
+        card.append(el('p', 'truncate font-mono text-sm font-medium text-foreground', result?.domain ?? row.input))
+        const note = message(row)
+        if (note) card.append(el('p', 'text-sm leading-6 text-foreground-muted', note))
+        if (result?.state === 'found') {
+          const list = el('dl', 'grid grid-cols-[auto_minmax(0,1fr)] gap-x-4 gap-y-1.5 text-xs')
+          const add = (term: string, value: string | null | undefined) => {
+            if (!value) return
+            list.append(el('dt', 'text-foreground-muted', term), el('dd', 'break-words text-foreground', value))
+          }
+          add('Registered', result.registeredAt ? `${formatDate(result.registeredAt)} (${age(result.registeredAt).text})` : null)
+          add('Paid until', result.expiresAt ? formatDate(result.expiresAt) : null)
+          add('Last changed', result.updatedAt ? formatDate(result.updatedAt) : null)
+          add('Transferred', result.transferredAt ? formatDate(result.transferredAt) : null)
+          add('Registrar', result.registrar)
+          add('Name servers', result.nameservers.join(', '))
+          add('Status', result.status.join(', '))
+          card.append(list)
+        }
+        if (result?.source.url) {
+          const source = el('a', 'text-xs text-foreground-muted underline decoration-border underline-offset-4 hover:text-foreground', 'Registry record')
+          ;(source as HTMLAnchorElement).href = result.source.url
+          ;(source as HTMLAnchorElement).rel = 'noreferrer'
+          ;(source as HTMLAnchorElement).target = '_blank'
+          card.append(source)
+        }
+        details.append(card)
+      }
+      results.hidden = false
+    }
+
+    const summary = () =>
+      rows
+        .map((row) => {
+          const result = row.result
+          return result?.registeredAt
+            ? `${result.domain}: registered ${formatDate(result.registeredAt)} (${age(result.registeredAt).text})${result.expiresAt ? `, paid until ${formatDate(result.expiresAt)}` : ''}`
+            : `${result?.domain ?? row.input}: ${message(row)}`
+        })
+        .join('\n')
+
+    form.addEventListener('submit', async (event) => {
+      event.preventDefault()
+      error.hidden = true
+      const domains = parseInput(input.value)
+      if (!domains.length) {
+        error.textContent = 'Enter a domain such as example.com.'
+        error.hidden = false
+        return
+      }
+      if (domains.length > MAX) {
+        error.textContent = `Enter up to ${MAX} domains at a time.`
+        error.hidden = false
+        return
+      }
+      button.disabled = true
+      button.textContent = 'Checking…'
+      rows = []
+      for (const domain of domains) rows.push(await lookUp(domain))
+      button.disabled = false
+      button.textContent = 'Check domain age'
+      status.textContent = ''
+      render()
+      results.scrollIntoView({ behavior: 'smooth', block: 'start' })
+    })
+
+    $<HTMLButtonElement>('[data-copy]').addEventListener('click', async () => {
+      try {
+        await navigator.clipboard.writeText(summary())
+        status.textContent = 'Summary copied.'
+      } catch {
+        status.textContent = 'The summary could not be copied.'
+      }
+    })
+
+    $<HTMLButtonElement>('[data-download]').addEventListener('click', () => {
+      const quote = (value: string) => `"${value.replaceAll('"', '""')}"`
+      const lines = [['domain', 'state', 'registered', 'age_years', 'expires', 'last_changed', 'registrar', 'nameservers'].join(',')]
+      for (const row of rows) {
+        const result = row.result
+        lines.push(
+          [
+            result?.domain ?? row.input,
+            row.error ? 'error' : (result?.state ?? ''),
+            result?.registeredAt ?? '',
+            result?.registeredAt ? String(age(result.registeredAt).years) : '',
+            result?.expiresAt ?? '',
+            result?.updatedAt ?? '',
+            result?.registrar ?? '',
+            (result?.nameservers ?? []).join(' '),
+          ]
+            .map(quote)
+            .join(','),
+        )
+      }
+      const link = document.createElement('a')
+      link.href = URL.createObjectURL(new Blob([`${lines.join('\n')}\n`], { type: 'text/csv' }))
+      link.download = 'domain-age.csv'
+      link.click()
+      URL.revokeObjectURL(link.href)
+      status.textContent = 'CSV downloaded.'
+    })
+  }
+
+  for (const root of document.querySelectorAll<HTMLElement>('[data-domain-age]')) initialise(root)
+</script>

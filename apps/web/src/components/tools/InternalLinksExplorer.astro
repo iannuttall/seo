@@ -1,0 +1,248 @@
+---
+import Card from '@/components/Card.astro'
+import CodeBlock from '@/components/CodeBlock.astro'
+import FormInput from '@/components/FormInput.astro'
+
+// A made-up result on example.com, shaped like the real output of
+// seo internal-links, so people can see what comes back before they install.
+const links = [
+  {
+    source: '/guides/raised-beds',
+    target: '/guides/composting',
+    sentence: 'Fill the bed with a mix of topsoil and compost from your own heap.',
+    anchor: 'compost from your own heap',
+    tier: 'strong',
+    probability: 0.86,
+    role: 'Explains a step',
+    sharedSearches: 14,
+  },
+  {
+    source: '/guides/tomatoes',
+    target: '/guides/watering',
+    sentence: 'Tomatoes split when watering is uneven, so keep to a steady schedule.',
+    anchor: 'watering is uneven',
+    tier: 'strong',
+    probability: 0.79,
+    role: 'Fixes a problem',
+    sharedSearches: 9,
+  },
+  {
+    source: '/blog/spring-jobs',
+    target: '/guides/raised-beds',
+    sentence: 'Spring is the best time to build new raised beds before planting.',
+    anchor: 'build new raised beds',
+    tier: 'possible',
+    probability: 0.61,
+    role: 'Next step',
+    sharedSearches: 3,
+  },
+  {
+    source: '/guides/composting',
+    target: '/tools/compost-calculator',
+    sentence: 'Work out how much brown and green material you need before you start.',
+    anchor: 'how much brown and green material',
+    tier: 'possible',
+    probability: 0.54,
+    role: 'Tool for the task',
+    sharedSearches: 0,
+  },
+]
+
+const orphans = ['/guides/seed-saving', '/blog/frost-dates-2025']
+const weak = [
+  { page: '/guides/watering', links: 1 },
+  { page: '/tools/compost-calculator', links: 2 },
+]
+const redirects = [{ source: '/guides/tomatoes', via: '/tomato-guide', target: '/guides/tomatoes-in-pots' }]
+const generic = [{ source: '/blog/spring-jobs', text: 'click here', href: '/guides/pruning' }]
+
+const tabButton =
+  'h-8 rounded-md px-3 text-foreground-muted aria-pressed:bg-background aria-pressed:text-foreground'
+---
+
+<section data-internal-links class="space-y-6">
+  <Card>
+    <div class="space-y-5 p-5 sm:p-6">
+      <div class="space-y-1">
+        <h2 class="text-lg font-medium">Build the command</h2>
+        <p class="text-sm leading-6 text-foreground-muted">
+          The crawl runs on your machine, so it starts from a command. Pick what to check and copy it.
+        </p>
+      </div>
+      <div role="group" aria-label="What to check" class="inline-flex h-9 w-fit items-center gap-1 rounded-lg bg-muted p-0.5 text-xs">
+        <button type="button" data-mode="site" aria-pressed="true" class={tabButton}>Whole site</button>
+        <button type="button" data-mode="url" aria-pressed="false" class={tabButton}>One page</button>
+      </div>
+      <label class="block space-y-2 text-sm font-medium">
+        <span data-target-label>Site</span>
+        <FormInput data-target type="text" inputmode="url" autocapitalize="off" spellcheck="false" maxlength="2048" value="example.com" />
+      </label>
+      <label data-pages-row class="block space-y-2 text-sm font-medium">
+        <span class="flex justify-between gap-3"><span>Pages to crawl</span><span data-pages-value class="font-mono"></span></span>
+        <input data-pages type="range" min="100" max="5000" step="100" value="500" class="w-full accent-primary" />
+      </label>
+      <div data-command class="min-w-0">
+        <CodeBlock value="seo internal-links --site example.com" wrap />
+      </div>
+      <p data-command-note class="text-xs leading-5 text-foreground-muted"></p>
+    </div>
+  </Card>
+
+  <Card inverted>
+    <div class="space-y-5 p-5 sm:p-6">
+      <div class="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+        <div class="space-y-1">
+          <h2 class="text-lg font-medium">What comes back</h2>
+          <p class="text-sm leading-6 text-foreground-muted">An example result for a made-up gardening site. Switch Jev off to see the result without a key.</p>
+        </div>
+        <div role="group" aria-label="Jev" class="inline-flex h-9 w-fit shrink-0 items-center gap-1 rounded-lg bg-background p-0.5 text-xs">
+          <button type="button" data-jev="on" aria-pressed="true" class={tabButton.replace('aria-pressed:bg-background', 'aria-pressed:bg-muted')}>With Jev</button>
+          <button type="button" data-jev="off" aria-pressed="false" class={tabButton.replace('aria-pressed:bg-background', 'aria-pressed:bg-muted')}>Without Jev</button>
+        </div>
+      </div>
+      <p data-verdict class="font-mono text-xs leading-5 text-foreground-muted"></p>
+      <div role="tablist" aria-label="Result sections" class="flex flex-wrap gap-1 text-xs">
+        <button type="button" role="tab" data-section="links" aria-selected="true" class="h-8 rounded-md px-3 text-foreground-muted aria-selected:bg-background aria-selected:text-foreground">Links to add</button>
+        <button type="button" role="tab" data-section="orphans" aria-selected="false" class="h-8 rounded-md px-3 text-foreground-muted aria-selected:bg-background aria-selected:text-foreground">Orphan pages</button>
+        <button type="button" role="tab" data-section="weak" aria-selected="false" class="h-8 rounded-md px-3 text-foreground-muted aria-selected:bg-background aria-selected:text-foreground">Weakly linked</button>
+        <button type="button" role="tab" data-section="fixes" aria-selected="false" class="h-8 rounded-md px-3 text-foreground-muted aria-selected:bg-background aria-selected:text-foreground">Links to fix</button>
+      </div>
+
+      <ol data-panel="links" role="tabpanel" class="space-y-3">
+        {
+          links.map((link) => (
+            <li class="space-y-2 rounded-lg bg-background p-4" data-tier={link.tier}>
+              <div class="flex flex-wrap items-center gap-x-2 gap-y-1 font-mono text-xs [overflow-wrap:anywhere]">
+                <span>{link.source}</span>
+                <span class="text-foreground-muted" aria-hidden="true">→</span>
+                <span class="sr-only">links to</span>
+                <span>{link.target}</span>
+              </div>
+              <p class="text-sm leading-6 text-foreground-muted">
+                {link.sentence.split(link.anchor)[0]}<mark class="rounded-sm bg-primary-soft px-0.5 text-foreground">{link.anchor}</mark>{link.sentence.split(link.anchor)[1]}
+              </p>
+              <div class="flex flex-wrap gap-1.5 text-[0.7rem]">
+                <span data-jev-only class="rounded-md bg-primary-soft px-1.5 py-0.5 text-foreground">{link.tier === 'strong' ? 'Strong' : 'Possible'} · {Math.round(link.probability * 100)}%</span>
+                <span data-jev-only class="rounded-md bg-muted px-1.5 py-0.5 text-foreground-muted">{link.role}</span>
+                <span data-heuristic-only hidden class="rounded-md bg-muted px-1.5 py-0.5 text-foreground-muted">Text match</span>
+                {link.sharedSearches > 0 && <span class="rounded-md bg-muted px-1.5 py-0.5 text-foreground-muted">{link.sharedSearches} shared searches</span>}
+              </div>
+            </li>
+          ))
+        }
+      </ol>
+
+      <div data-panel="orphans" role="tabpanel" hidden class="space-y-2 text-sm">
+        <p class="text-foreground-muted">Crawled pages that no other crawled page links to, from anywhere on the page.</p>
+        <ul class="space-y-1 font-mono text-xs">{orphans.map((page) => <li class="rounded-md bg-background px-3 py-2">{page}</li>)}</ul>
+      </div>
+
+      <div data-panel="weak" role="tabpanel" hidden class="space-y-2 text-sm">
+        <p class="text-foreground-muted">Pages with fewer than three links from other pages' main content.</p>
+        <ul class="space-y-1 text-xs">
+          {weak.map((row) => <li class="flex justify-between gap-3 rounded-md bg-background px-3 py-2"><span class="font-mono [overflow-wrap:anywhere]">{row.page}</span><span class="shrink-0">{row.links} {row.links === 1 ? 'link' : 'links'} in</span></li>)}
+        </ul>
+      </div>
+
+      <div data-panel="fixes" role="tabpanel" hidden class="space-y-3 text-sm">
+        <p class="text-foreground-muted">Links that still go through a redirect, and links with text that says nothing about the page.</p>
+        <ul class="space-y-1 text-xs">
+          {redirects.map((row) => <li class="rounded-md bg-background px-3 py-2 font-mono [overflow-wrap:anywhere]">{row.source}: {row.via} redirects to {row.target}</li>)}
+          {generic.map((row) => <li class="rounded-md bg-background px-3 py-2 [overflow-wrap:anywhere]"><span class="font-mono">{row.source}</span>: “{row.text}” to <span class="font-mono">{row.href}</span></li>)}
+        </ul>
+      </div>
+    </div>
+  </Card>
+</section>
+
+<script>
+  function initialise(root: HTMLElement): void {
+    if (root.dataset.initialised === 'true') return
+    root.dataset.initialised = 'true'
+    const $ = <T extends HTMLElement>(selector: string) => root.querySelector<T>(selector)
+    const target = $<HTMLInputElement>('[data-target]')
+    const pages = $<HTMLInputElement>('[data-pages]')
+    const command = $<HTMLElement>('[data-command]')
+    if (!target || !pages || !command) return
+    const [targetEl, pagesEl, commandEl] = [target, pages, command]
+    let mode: 'site' | 'url' = 'site'
+    let jev = true
+    let section = 'links'
+
+    function updateCommand(): void {
+      const value = targetEl.value.trim() || (mode === 'site' ? 'example.com' : 'https://example.com/guides/composting')
+      const quoted = /[\s'"$`\\]/u.test(value) ? `'${value.replaceAll("'", "'\\''")}'` : value
+      const count = Number(pagesEl.value)
+      const text =
+        mode === 'site'
+          ? `seo internal-links --site ${quoted}${count === 500 ? '' : ` --max-pages ${count}`}`
+          : `seo internal-links --url ${quoted}`
+      const code = commandEl.querySelector('code')
+      if (code) code.textContent = text
+      const valueText = $<HTMLElement>('[data-pages-value]')
+      if (valueText) valueText.textContent = count.toLocaleString()
+      const note = $<HTMLElement>('[data-command-note]')
+      if (note) {
+        note.textContent =
+          mode === 'site'
+            ? `Crawls up to ${count.toLocaleString()} pages from your sitemap, or by following links when there is none, and returns links to add across the whole site.`
+            : 'Crawls the site the same way and returns up to eight pages that should link to this one.'
+      }
+    }
+
+    function updateResult(): void {
+      for (const node of root.querySelectorAll<HTMLElement>('[data-jev-only]')) node.hidden = !jev
+      for (const node of root.querySelectorAll<HTMLElement>('[data-heuristic-only]')) node.hidden = jev
+      const verdict = $<HTMLElement>('[data-verdict]')
+      if (verdict) {
+        verdict.textContent = jev
+          ? 'Crawl: 214 pages (limit 500, not reached). Jev used: 46 requests, $0.04. 4 links to add: 2 strong, 2 possible.'
+          : 'Crawl: 214 pages (limit 500, not reached). Jev not used: no TypeSafe key, so these are text matches. 4 links to add.'
+      }
+      for (const button of root.querySelectorAll<HTMLButtonElement>('[data-jev]')) {
+        button.setAttribute('aria-pressed', String((button.dataset.jev === 'on') === jev))
+      }
+      for (const tab of root.querySelectorAll<HTMLButtonElement>('[data-section]')) {
+        tab.setAttribute('aria-selected', String(tab.dataset.section === section))
+      }
+      for (const panel of root.querySelectorAll<HTMLElement>('[data-panel]')) panel.hidden = panel.dataset.panel !== section
+    }
+
+    for (const button of root.querySelectorAll<HTMLButtonElement>('[data-mode]')) {
+      button.addEventListener('click', () => {
+        mode = button.dataset.mode === 'url' ? 'url' : 'site'
+        for (const other of root.querySelectorAll<HTMLButtonElement>('[data-mode]')) {
+          other.setAttribute('aria-pressed', String(other === button))
+        }
+        const label = $<HTMLElement>('[data-target-label]')
+        if (label) label.textContent = mode === 'site' ? 'Site' : 'Page URL'
+        targetEl.value = mode === 'site' ? 'example.com' : 'https://example.com/guides/composting'
+        const row = $<HTMLElement>('[data-pages-row]')
+        if (row) row.hidden = mode === 'url'
+        updateCommand()
+      })
+    }
+    for (const button of root.querySelectorAll<HTMLButtonElement>('[data-jev]')) {
+      button.addEventListener('click', () => {
+        jev = button.dataset.jev === 'on'
+        updateResult()
+      })
+    }
+    for (const tab of root.querySelectorAll<HTMLButtonElement>('[data-section]')) {
+      tab.addEventListener('click', () => {
+        section = tab.dataset.section ?? 'links'
+        updateResult()
+      })
+    }
+    targetEl.addEventListener('input', updateCommand)
+    pagesEl.addEventListener('input', updateCommand)
+    updateCommand()
+    updateResult()
+  }
+
+  function initialiseAll(): void {
+    for (const root of document.querySelectorAll<HTMLElement>('[data-internal-links]')) initialise(root)
+  }
+  initialiseAll()
+  document.addEventListener('astro:page-load', initialiseAll)
+</script>

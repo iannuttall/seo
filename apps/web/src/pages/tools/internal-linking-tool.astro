@@ -1,0 +1,190 @@
+---
+import Breadcrumbs from '@/components/Breadcrumbs.astro'
+import CodeBlock from '@/components/CodeBlock.astro'
+import FaqAccordion from '@/components/FaqAccordion.astro'
+import PageHeader from '@/components/PageHeader.astro'
+import SetupCommands from '@/components/SetupCommands.astro'
+import InternalLinksExplorer from '@/components/tools/InternalLinksExplorer.astro'
+import BaseLayout from '@/layouts/BaseLayout.astro'
+import type { SchemaBreadcrumb } from '@/lib/schema'
+
+const breadcrumbs: SchemaBreadcrumb[] = [
+  { label: 'Home', href: '/' },
+  { label: 'Tools', href: '/tools' },
+  { label: 'Internal linking tool' },
+]
+
+const faq = [
+  {
+    question: 'Is the internal linking tool free?',
+    answer:
+      'Yes. The command is free and open source. Jev is optional: with your own TypeSafe key it judges each link, and a 500-page site costs about 10 to 20 cents in requests. Without a key it uses text matching and says so.',
+  },
+  {
+    question: 'Does it add the links for me?',
+    answer:
+      'No. It tells you which page to edit, which sentence the link fits in and which phrase to use as the link text. You or your agent make the edit, and a person approves it.',
+  },
+  {
+    question: 'How many internal links should a page have?',
+    answer:
+      'There is no fixed number. Every important page should have links from a few related pages, in the main content. The tool flags pages with fewer than three such links, and suggests at most eight new links to any one page so no page is flooded.',
+  },
+  {
+    question: 'How does it find orphan pages?',
+    answer:
+      'It crawls the site, starting from your sitemap when there is one, and records every link on every page. Crawled pages that no other crawled page links to are orphans. Pages only reachable from the sitemap are the usual cause.',
+  },
+  {
+    question: 'Can it crawl a large site?',
+    answer:
+      'It crawls 500 pages by default. Add --max-pages with any number up to 5,000. The result always says how many pages it crawled and whether it hit the limit, because orphan and weak link counts only cover the pages it reached.',
+  },
+  {
+    question: 'Does it work from the hosted MCP server?',
+    answer:
+      'No. The crawl runs on your own machine, from the CLI or the local MCP server, so it reads your site the way a visitor would and nothing is sent to us. The hosted server points your agent to the CLI for it.',
+  },
+  {
+    question: 'What is the difference between internal and external links?',
+    answer:
+      'An internal link points to another page on the same site. An external link points to a different site. Internal links are the ones you fully control, which is why they are one of the quickest things to fix.',
+  },
+]
+---
+
+<BaseLayout
+  title="Free internal linking tool for SEO"
+  description="Find the internal links your site is missing, placed in sentences you already wrote. Audit a whole site or one page, find orphan pages, and fix weak links from your own machine."
+  canonicalPath="/tools/internal-linking-tool"
+  {breadcrumbs}
+>
+  <main data-agent-content>
+    <Breadcrumbs {breadcrumbs} />
+    <PageHeader
+      title="Internal linking tool"
+      description="Find the internal links your site is missing, placed in sentences you already wrote. Audit the whole site or find links to one page, from your own machine."
+    />
+
+    <InternalLinksExplorer />
+
+    <div class="docs-prose mt-16">
+      <h2>What the internal linking tool does</h2>
+      <p>
+        <a href="/docs/internal-links">seo internal-links</a> crawls your
+        site from your machine, honouring robots.txt and any crawl delay. It
+        reads each page's main content, finds pages about the same things,
+        and checks which of them do not link to each other yet. It works in
+        two ways.
+      </p>
+      <table>
+        <thead>
+          <tr>
+            <th>Command</th>
+            <th>What you get</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><code>--site example.com</code></td>
+            <td>Links to add across the site (at most eight to each page), orphan pages, weakly linked pages, links through redirects and links with text like "click here".</td>
+          </tr>
+          <tr>
+            <td><code>--url https://example.com/page</code></td>
+            <td>Up to eight pages that should link to that one page.</td>
+          </tr>
+          <tr>
+            <td><code>--max-pages 2000</code></td>
+            <td>Site audits only. Crawls more than the default 500 pages, up to 5,000.</td>
+          </tr>
+        </tbody>
+      </table>
+      <p>
+        Each suggested link names the page to edit, the page it points to, a
+        real sentence on that page that it fits in, and a real phrase from
+        that sentence to use as the link text. When your Search Console
+        account has the site, it also counts the searches both pages appear
+        for.
+      </p>
+
+      <h2>Text matching or Jev</h2>
+      <p>
+        Without a key, links come from text matching: pages that use the
+        same words, and sentences that name the target page. That finds good
+        candidates, but it cannot tell a helpful link from a forced one, so
+        the result says Jev was not used.
+      </p>
+      <p>
+        With a TypeSafe key, Jev sorts every page into a type (guide,
+        article, tool, product page and so on), then judges each link: how
+        likely it is to help a reader, which real sentence it belongs in,
+        which real phrase to use, and what the link does for the reader. A
+        link needs a probability of 50% to count as possible and 75% to
+        count as strong. Fixed rules still apply on top, and Jev only picks
+        among your own pages, sentences and phrases. It never writes text.
+        The result says how many requests Jev made and what they cost.
+      </p>
+
+      <h2>Why internal links matter for SEO</h2>
+      <p>
+        Search engines find most pages by following links, and they read the
+        links between your pages as a map of what matters. A page that many
+        related pages link to looks central to its topic. A page nothing
+        links to may not be found at all, and if it is, little tells Google
+        it is important.
+      </p>
+      <p>
+        Internal links also carry meaning. The link text tells Google what
+        the target page is about, which is why a descriptive phrase beats
+        "click here". And they move readers: a link in the right sentence
+        takes someone to the next thing they need, which is the reason to
+        add it in the first place.
+      </p>
+
+      <h2>Orphan pages and weakly linked pages</h2>
+      <p>
+        An orphan page has no links from other pages on the site. It often
+        happens when a page lives only in the sitemap, or when the pages that
+        linked to it were removed. A weakly linked page has fewer than three
+        links from other pages' main content. Navigation and footer links
+        repeat on every page, so they say little about any one page; links in
+        the content say much more.
+      </p>
+      <p>
+        The tool lists both, so you can start with the pages that need links
+        most. If the crawl hit its page limit, it says so, because pages it
+        did not reach could link to the ones it lists.
+      </p>
+
+      <h2>Build an internal linking strategy that lasts</h2>
+      <ol>
+        <li><strong>Link related pages to each other.</strong> Guides on one topic should point to each other where the text calls for it, and to the page that covers the topic best.</li>
+        <li><strong>Link from the content, not just the menu.</strong> A link inside a sentence that explains why to click is worth more than one more menu item.</li>
+        <li><strong>Use descriptive link text.</strong> Use the words that describe the target page, as they read naturally in the sentence. Avoid using the same exact phrase every time.</li>
+        <li><strong>Fix links that go through redirects.</strong> Point them straight at the final URL so readers and crawlers skip a hop.</li>
+        <li><strong>Check after you publish.</strong> Run the command again, or a <a href="/docs/crawl">crawl</a>, to confirm the links are live.</li>
+      </ol>
+
+      <h2>Add internal links with your AI agent</h2>
+      <p>
+        The command is built for an agent to run. Ask your agent to audit the
+        site, read each suggestion, open the source page and add the link
+        where it helps a reader. Your agent can then check the work with a
+        crawl. A person approves every change. Ask:
+      </p>
+      <CodeBlock value="Run seo internal-links on example.com, open the strong suggestions, and add each link to the source page in the sentence it names. Show me the diff before you save." wrap />
+      <p>Install the CLI and run setup. The crawl runs from the CLI or the local MCP server:</p>
+      <CodeBlock value="npm i -g seo && seo start" wrap />
+      <p>Or add the hosted MCP server for the rest of your data and sign in with Google:</p>
+    </div>
+
+    <SetupCommands id="internal-links-setup" class="mt-6" />
+
+    <div class="docs-prose mt-16">
+      <h2>Internal linking questions</h2>
+    </div>
+    <div class="mt-6">
+      <FaqAccordion id="internal-links-faq" items={faq} />
+    </div>
+  </main>
+</BaseLayout>

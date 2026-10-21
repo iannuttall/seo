@@ -3,6 +3,7 @@
 // MCP Worker (apps/mcp) serves this page at /account and /oauth/authorize
 // and adds a JSON state block; the script below shows the matching view.
 // Opened directly, it sends the visitor to /account.
+import CodeBlock from '@/components/CodeBlock.astro'
 import FormInput from '@/components/FormInput.astro'
 import PageHeader from '@/components/PageHeader.astro'
 import { getButtonClasses } from '@/components/ui/button'
@@ -312,11 +313,7 @@ const keys: { name: string; label: string; type: 'text' | 'password' }[] = [
               Save this as <code>SEO_TOKEN</code> in your cloud agent's
               secrets. It is shown once.
             </p>
-            <input
-              readonly
-              class="mt-2 w-full rounded-md bg-background px-3 py-2 font-mono text-xs text-foreground"
-              data-token-value
-            />
+            <CodeBlock value="" wrap class="!mt-2 [--muted:var(--background)]" />
           </div>
           <form method="post" data-action="/account/cli/new" class="mt-4">
             <input type="hidden" name="form" />
@@ -505,11 +502,8 @@ const keys: { name: string; label: string; type: 'text' | 'password' }[] = [
       }
       if (account.token) {
         show(root.querySelector('[data-token]'))
-        const value = root.querySelector<HTMLInputElement>('[data-token-value]')
-        if (value) {
-          value.value = account.token
-          value.addEventListener('focus', () => value.select())
-        }
+        const value = root.querySelector('[data-token] pre code')
+        if (value) value.textContent = account.token
       }
       for (const input of all<HTMLInputElement>('input[name="form"]')) {
         input.value = account.form

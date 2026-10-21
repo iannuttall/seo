@@ -1,5 +1,27 @@
 # Changelog
 
+## 0.11.0
+
+### Added
+
+- When a newer `seo` is out, results end with one line saying so and how
+  to update: `npm i -g seo` for a global install, or `npx -y seo@latest`
+  when it runs through npx (in an MCP config, use `seo@latest` and restart
+  the client). It shows in terminal output (on stderr), as `updateNotice`
+  in JSON and in every local MCP tool result. The version check runs in the
+  background at most once a day and never slows a run.
+  `NO_UPDATE_NOTIFIER=1` or `--no-update-notifier` turns it off, and it
+  stays off in CI.
+
+### Fixed
+
+- A busy or unusable local cache no longer fails a report. When another
+  run holds the cache, the report finishes with a temporary cache instead
+  of failing with "database is locked".
+- The local MCP server records the real reason a tool failed (not signed
+  in, no key saved, no access, provider error) in usage counts, instead of
+  "unknown".
+
 ## 0.10.0
 
 ### Changed

@@ -409,7 +409,7 @@ export class PaidToolGuard {
               )
             ),
             calls INTEGER NOT NULL CHECK (
-              calls >= 0 AND calls <= ${PAID_TOOL_DAILY_LIMIT}
+              calls >= 0 AND calls <= ${FREE_TOOL_DAILY_LIMIT}
             ),
             PRIMARY KEY (identity_hash, tool)
           ) WITHOUT ROWID;

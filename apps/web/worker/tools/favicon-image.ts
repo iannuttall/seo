@@ -111,6 +111,28 @@ export function inspectImage(bytes: Uint8Array): FaviconImage {
         (bytes[29] ?? 0) * 65_536
       return { format: 'webp', width, height, square: width === height }
     }
+    // Lossy: 14-bit sizes after the frame start code.
+    if (
+      ascii(bytes, 12, 16) === 'VP8 ' &&
+      bytes[23] === 0x9d &&
+      bytes[24] === 0x01 &&
+      bytes[25] === 0x2a
+    ) {
+      const width = uint16Little(bytes, 26) & 0x3fff
+      const height = uint16Little(bytes, 28) & 0x3fff
+      return { format: 'webp', width, height, square: width === height }
+    }
+    // Lossless: two 14-bit sizes, each stored minus one, after 0x2f.
+    if (ascii(bytes, 12, 16) === 'VP8L' && bytes[20] === 0x2f) {
+      const bits =
+        (bytes[21] ?? 0) |
+        ((bytes[22] ?? 0) << 8) |
+        ((bytes[23] ?? 0) << 16) |
+        ((bytes[24] ?? 0) << 24)
+      const width = (bits & 0x3fff) + 1
+      const height = ((bits >>> 14) & 0x3fff) + 1
+      return { format: 'webp', width, height, square: width === height }
+    }
     return { format: 'webp' }
   }
   if (

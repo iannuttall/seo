@@ -1,0 +1,231 @@
+---
+import Breadcrumbs from '@/components/Breadcrumbs.astro'
+import CodeBlock from '@/components/CodeBlock.astro'
+import FaqAccordion from '@/components/FaqAccordion.astro'
+import PageHeader from '@/components/PageHeader.astro'
+import SetupCommands from '@/components/SetupCommands.astro'
+import OpenGraphChecker from '@/components/tools/OpenGraphChecker.astro'
+import BaseLayout from '@/layouts/BaseLayout.astro'
+import type { SchemaBreadcrumb } from '@/lib/schema'
+
+const breadcrumbs: SchemaBreadcrumb[] = [
+  { label: 'Home', href: '/' },
+  { label: 'Tools', href: '/tools' },
+  { label: 'Open Graph checker' },
+]
+
+const tags = `<meta property="og:title" content="How to brew pour-over coffee">
+<meta property="og:description" content="A five-step method with the grind, ratio and timing that work.">
+<meta property="og:image" content="https://example.com/images/pour-over-1200x630.jpg">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta property="og:image:alt" content="A glass pour-over brewer on a kitchen scale">
+<meta property="og:url" content="https://example.com/guides/pour-over">
+<meta property="og:type" content="article">
+<meta property="og:site_name" content="Example Coffee">
+<meta name="twitter:card" content="summary_large_image">`
+
+const faq = [
+  {
+    question: 'How do I check my Open Graph tags?',
+    answer:
+      'Enter the page URL above. The checker reads the page’s head without running JavaScript, the way link preview crawlers do, lists every Open Graph and X tag, fetches the share image and shows how the link will look on Facebook, X and chat apps.',
+  },
+  {
+    question: 'What size should an Open Graph image be?',
+    answer:
+      '1200×630 pixels, a 1.91:1 shape, as a PNG, JPEG or WebP under 5 MB. That one file works on Facebook, LinkedIn, X, Slack, Discord, WhatsApp and iMessage.',
+  },
+  {
+    question: 'Why is my og:image not showing?',
+    answer:
+      'Usually one of four things: the tag is missing or added by JavaScript, the image URL returns an error or redirects to a login, the image is too small or an SVG, or the platform cached an older version. The checks above point at which one.',
+  },
+  {
+    question: 'How do I update an old link preview?',
+    answer:
+      'Platforms cache what they read. Fix the tags, then ask each platform to read the page again: Facebook’s Sharing Debugger and LinkedIn’s Post Inspector both have a button for it. X and chat apps refresh on their own over time.',
+  },
+  {
+    question: 'Do I need twitter: tags as well as Open Graph?',
+    answer:
+      'Only twitter:card. X reads og:title, og:description and og:image when its own tags are missing, but the card layout has no Open Graph equivalent.',
+  },
+  {
+    question: 'Do Open Graph tags help SEO?',
+    answer:
+      'Not rankings. Google does not use them to rank pages. They decide how your link looks when people share it, which changes how many people click it in feeds and chats.',
+  },
+  {
+    question: 'Can it check a page behind a login or on localhost?',
+    answer:
+      'No. Like the platforms themselves, it can only read public HTTPS pages. Publish to a public staging URL to test before launch.',
+  },
+]
+---
+
+<BaseLayout
+  title="Free Open Graph checker and link preview tester"
+  description="Check any page's Open Graph and X card tags for free. Preview the link on Facebook, X and chat apps, measure the og:image size and file, and find what to fix."
+  canonicalPath="/tools/open-graph-checker"
+  {breadcrumbs}
+>
+  <main data-agent-content>
+    <Breadcrumbs {breadcrumbs} />
+    <PageHeader
+      title="Open Graph checker"
+      description="Enter a URL to see how the link will look when someone shares it, and which tags or image problems to fix."
+    />
+
+    <OpenGraphChecker />
+
+    <div class="docs-prose mt-16">
+      <h2>Read the Open Graph result</h2>
+      <p>
+        The previews show the link as Facebook and LinkedIn, X and chat apps
+        draw it, from the tags the page has now. Under them, each check has
+        a label.
+      </p>
+      <table>
+        <thead>
+          <tr>
+            <th>Label</th>
+            <th>What it means</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>Fix</td>
+            <td>The preview breaks or loses its image on at least one platform.</td>
+          </tr>
+          <tr>
+            <td>Check</td>
+            <td>It works, but looks worse than it could, or depends on a fallback.</td>
+          </tr>
+          <tr>
+            <td>Note</td>
+            <td>Good to know. Often fine as it is.</td>
+          </tr>
+          <tr>
+            <td>OK</td>
+            <td>The tag or image meets the platforms' published rules.</td>
+          </tr>
+        </tbody>
+      </table>
+      <p>
+        The image card gives the real size, shape and file size of the share
+        image, measured from the file, not from what the tags claim. The tag
+        table lists every Open Graph and X tag found in the head, in order.
+      </p>
+
+      <h2>Open Graph image size for each platform</h2>
+      <p>
+        One image at 1200×630 pixels works everywhere. The limits below are
+        from each platform's own documentation.
+      </p>
+      <table>
+        <thead>
+          <tr>
+            <th>Platform</th>
+            <th>What it needs</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>Facebook</td>
+            <td>At least 200×200. A large card from 600×315. 1200×630 recommended. Up to 8 MB.</td>
+          </tr>
+          <tr>
+            <td>LinkedIn</td>
+            <td>1200×627 or larger, 1.91:1. Up to 5 MB.</td>
+          </tr>
+          <tr>
+            <td>X</td>
+            <td>For a large card, at least 300×157, about 2:1. Up to 5 MB. PNG, JPEG, WebP or GIF, not SVG.</td>
+          </tr>
+          <tr>
+            <td>Chat apps</td>
+            <td>The same 1.91:1 image. Keep the file small, because some apps skip large images.</td>
+          </tr>
+        </tbody>
+      </table>
+      <p>
+        Keep the text and faces away from the edges. Each platform crops a
+        little differently, and a square or tall image is cropped hard to
+        fit a wide card.
+      </p>
+
+      <h2>The Open Graph tags to add</h2>
+      <p>
+        These go in the head of every page you expect people to share. Write
+        each one for that page, not one set for the whole site.
+      </p>
+      <CodeBlock value={tags} />
+      <p>
+        The width, height and alt tags are optional but worth it. Facebook
+        shows the image on the very first share only when it knows the size
+        in advance, and the alt text is read to people using screen readers.
+      </p>
+
+      <h2>How link previews are built</h2>
+      <p>
+        When someone pastes a link, the platform's crawler fetches the page,
+        reads the tags in the head and fetches the image. Most of these
+        crawlers do not run JavaScript, so tags added by a script after the
+        page loads are invisible to them. This checker reads the page the
+        same way, so a tag missing here is missing for them too.
+      </p>
+      <p>
+        Platforms then cache the result, often for days. That is why a fixed
+        page can keep an old preview. X falls back to Open Graph when its own
+        tags are missing, and chat apps mostly use Open Graph alone.
+      </p>
+
+      <h2>Fix common link preview problems</h2>
+      <ul>
+        <li><strong>No image.</strong> og:image is missing, relative, or points at a file that redirects to a login or returns an error.</li>
+        <li><strong>Old image or title.</strong> The platform cached it. Refresh it in Facebook's Sharing Debugger or LinkedIn's Post Inspector.</li>
+        <li><strong>Tiny thumbnail instead of a big card.</strong> The image is under 600×315, or twitter:card is summary rather than summary_large_image.</li>
+        <li><strong>Cropped image.</strong> The image is not close to 1.91:1.</li>
+        <li><strong>Tags present in the browser but not here.</strong> They are added by JavaScript. Render them on the server.</li>
+        <li><strong>Blocked crawler.</strong> A firewall or bot challenge can stop platform crawlers. If this checker could not fetch the page, they may not either.</li>
+      </ul>
+
+      <h2>Why Open Graph matters for search traffic</h2>
+      <p>
+        Open Graph tags do not change where a page ranks in Google. They
+        change what happens after: a page that ranks gets shared in Slack,
+        WhatsApp, LinkedIn and group chats, and a link with a clear title and
+        a sharp image gets clicked more than a bare URL. For many sites, that
+        second wave is a real share of their visits.
+      </p>
+      <p>
+        Your title and meta description do the same job in Google's results.
+        The <a href="/tools/serp-preview">SERP preview</a> shows how those
+        look.
+      </p>
+
+      <h2>Check Open Graph tags across your site with your agent</h2>
+      <p>
+        One URL tells you about one template. The <a href="/docs/crawl">seo crawl</a>{' '}
+        command checks every page it reaches on your own machine and reports
+        pages with no Open Graph title, description or image, and no X card.
+        Your agent can then add the missing tags to the right template and
+        check one page here before it ships. Ask:
+      </p>
+      <CodeBlock value="Crawl example.com and list the pages missing og:image or twitter:card, grouped by template" wrap />
+      <p>The crawl runs from the CLI on your machine. Install it and run setup:</p>
+      <CodeBlock value="npm i -g seo && seo start" wrap />
+      <p>Or add the hosted MCP server to your agent and sign in with Google:</p>
+    </div>
+
+    <SetupCommands id="open-graph-setup" class="mt-6" />
+
+    <div class="docs-prose mt-16">
+      <h2>Open Graph questions</h2>
+    </div>
+    <div class="mt-6">
+      <FaqAccordion id="open-graph-faq" items={faq} />
+    </div>
+  </main>
+</BaseLayout>

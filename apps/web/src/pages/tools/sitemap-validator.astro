@@ -1,4 +1,7 @@
 ---
+import CodeBlock from '@/components/CodeBlock.astro'
+import FaqAccordion from '@/components/FaqAccordion.astro'
+import SetupCommands from '@/components/SetupCommands.astro'
 import Breadcrumbs from '@/components/Breadcrumbs.astro'
 import PageHeader from '@/components/PageHeader.astro'
 import SitemapValidator from '@/components/tools/SitemapValidator.astro'
@@ -10,11 +13,44 @@ const breadcrumbs: SchemaBreadcrumb[] = [
   { label: 'Tools', href: '/tools' },
   { label: 'XML sitemap validator' },
 ]
+
+const faq = [
+  {
+    question: "How do I check if my sitemap is valid?",
+    answer:
+      "Paste the XML above, or open the file. The validator checks the XML, the namespace, each location, dates and the protocol limits, and lists every problem with its line.",
+  },
+  {
+    question: "How many URLs can one sitemap have?",
+    answer:
+      "Up to 50,000 URLs and 50 MB uncompressed. A larger site needs several sitemaps and a sitemap index that lists them.",
+  },
+  {
+    question: "Does Google use priority and changefreq?",
+    answer:
+      "No. Google ignores both. It uses the location and, when it is consistently accurate, the last modified date.",
+  },
+  {
+    question: "Why does Search Console say my sitemap could not be read?",
+    answer:
+      "Usually the URL returned an error or HTML instead of XML, the file is blocked by robots.txt, or the XML is broken. Validate the file here, then open its URL in a browser to check what the server returns.",
+  },
+  {
+    question: "Should every page be in the sitemap?",
+    answer:
+      "Every page you want in search should be. Leave out redirects, error pages, noindexed pages and duplicates that point to another canonical.",
+  },
+  {
+    question: "Does a sitemap get my pages indexed?",
+    answer:
+      "It helps Google find them. Whether Google indexes a page depends on the page itself.",
+  },
+]
 ---
 
 <BaseLayout
   title="XML sitemap validator"
-  description="Validate an XML sitemap from a public URL, pasted XML, or a local gzip file. Check structure, locations, dates, limits, and duplicate entries."
+  description="Validate an XML sitemap or sitemap index in your browser. Find broken XML, bad URLs and dates, duplicates and size limit problems, and learn what Google uses from a sitemap."
   canonicalPath="/tools/sitemap-validator"
   {breadcrumbs}
 >
@@ -73,6 +109,60 @@ const breadcrumbs: SchemaBreadcrumb[] = [
         before it goes live. Pasted content and selected files stay in this
         browser tab.
       </p>
+
+      <h2>What Google uses from a sitemap</h2>
+      <p>
+        Google reads the location of each URL and, when it is accurate, the
+        last modified date. It ignores change frequency and priority, so
+        there is no need to tune them. A sitemap helps Google find URLs and
+        notice changes. It does not make Google index a page or rank it
+        higher.
+      </p>
+      <p>
+        The last modified date only helps if it is honest. A sitemap that
+        stamps every URL with today’s date teaches Google to ignore the
+        field. Change it when the main content of the page changes.
+      </p>
+
+      <h2>Fix common sitemap errors</h2>
+      <ul>
+        <li><strong>Relative or wrong-host URLs.</strong> Every location must be a full URL on the same host and protocol as the sitemap.</li>
+        <li><strong>URLs that redirect, return errors or are noindexed.</strong> List only the final, indexable URL of each page.</li>
+        <li><strong>Unescaped characters.</strong> An <code>&amp;</code> in a URL must be written as <code>&amp;amp;</code> or the XML breaks.</li>
+        <li><strong>Dates in the wrong form.</strong> Use W3C dates such as <code>2026-10-21</code> or a full timestamp with a time zone.</li>
+        <li><strong>A file over the limit.</strong> Split it and list the parts in a sitemap index.</li>
+      </ul>
+
+      <h2>After it validates</h2>
+      <p>
+        Add the sitemap to Search Console under Sitemaps and add a{' '}
+        <code>Sitemap:</code> line to your robots.txt. Search Console then
+        shows when Google last read it and how many URLs it found. The{' '}
+        <a href="/tools/robots-txt-validator">robots.txt validator</a> shows
+        whether the line is there.
+      </p>
+
+      <h2>Check the URLs in your sitemap with your agent</h2>
+      <p>
+        A valid file can still list broken pages. The{' '}
+        <a href="/docs/crawl">seo crawl</a> command can read your sitemap and
+        check every URL in it for status codes and redirects, without
+        reading every page, so your agent can tell you which entries should
+        come out. Ask:
+      </p>
+      <CodeBlock value="Check every URL in https://example.com/sitemap.xml and list the ones that redirect or return an error" wrap />
+      <p>The crawl runs from the CLI on your machine. Install it and run setup:</p>
+      <CodeBlock value="npm i -g seo && seo start" wrap />
+      <p>Or add the hosted MCP server to your agent and sign in with Google:</p>
+    </div>
+
+    <SetupCommands id="sitemap-validator-setup" class="mt-6" />
+
+    <div class="docs-prose mt-16">
+      <h2>Sitemap validator questions</h2>
+    </div>
+    <div class="mt-6">
+      <FaqAccordion id="sitemap-validator-faq" items={faq} />
     </div>
   </main>
 </BaseLayout>

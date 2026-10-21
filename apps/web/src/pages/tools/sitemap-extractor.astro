@@ -1,4 +1,7 @@
 ---
+import CodeBlock from '@/components/CodeBlock.astro'
+import FaqAccordion from '@/components/FaqAccordion.astro'
+import SetupCommands from '@/components/SetupCommands.astro'
 import PageHeader from '@/components/PageHeader.astro'
 import SitemapExtractor from '@/components/tools/SitemapExtractor.astro'
 import BaseLayout from '@/layouts/BaseLayout.astro'
@@ -9,11 +12,39 @@ const breadcrumbs: SchemaBreadcrumb[] = [
   { label: 'Tools', href: '/tools' },
   { label: 'Sitemap URL extractor' },
 ]
+
+const faq = [
+  {
+    question: "How do I find the sitemap of a website?",
+    answer:
+      "Enter the domain above. The extractor reads robots.txt for Sitemap lines, then tries common addresses such as /sitemap.xml. You can also open the site’s robots.txt in a browser and look for the line yourself.",
+  },
+  {
+    question: "How do I extract all URLs from a sitemap?",
+    answer:
+      "Enter the sitemap address or the domain. The extractor follows a sitemap index into each child sitemap and lists every URL, which you can download as CSV or JSON.",
+  },
+  {
+    question: "Can it read gzip sitemaps?",
+    answer:
+      "Yes. It reads .xml.gz files as well as plain XML sitemaps, sitemap indexes and text sitemaps.",
+  },
+  {
+    question: "Why did the extractor not find a sitemap?",
+    answer:
+      "The site may have none, use an unusual address, or block automated requests. Try the exact sitemap URL if you know it.",
+  },
+  {
+    question: "Does the sitemap list every page on the site?",
+    answer:
+      "Not always. A sitemap lists what the site chose to list. Pages can exist without being in it, and some listed pages may no longer work.",
+  },
+]
 ---
 
 <BaseLayout
   title="Sitemap URL extractor"
-  description="Extract URLs and metadata from an XML sitemap or sitemap index. Filter the results and download CSV, TXT, or JSON without creating an account."
+  description="Find a website’s sitemap and extract every URL from XML sitemaps, sitemap indexes, gzip and text sitemaps. Download the list as CSV or JSON with dates and sources."
   canonicalPath="/tools/sitemap-extractor"
   {breadcrumbs}
 >
@@ -43,6 +74,16 @@ const breadcrumbs: SchemaBreadcrumb[] = [
     <SitemapExtractor />
 
     <div class="docs-prose mt-16">
+      <h2>How to find a website’s sitemap</h2>
+      <p>
+        Most sites list their sitemap in robots.txt with a{' '}
+        <code>Sitemap:</code> line, so that is the first place the extractor
+        looks. If there is none, it tries the usual addresses, such as{' '}
+        <code>/sitemap.xml</code> and <code>/sitemap_index.xml</code>. Some
+        sites use other names, and some have no sitemap at all. When you
+        know the address, enter it directly.
+      </p>
+
       <h2>Extract URLs from sitemap files</h2>
       <p>
         The extractor reads XML sitemaps, sitemap indexes, gzip files, and text
@@ -95,8 +136,39 @@ const breadcrumbs: SchemaBreadcrumb[] = [
         <a href="/docs/crawl">technical SEO site crawl</a>
         {' '}with the CLI when you need that evidence.
       </p>
-      <pre><code>npm i -g seo &amp;&amp; seo start</code></pre>
+      <CodeBlock value="npm i -g seo && seo start" wrap />
 
+      <h2>What you can do with the URL list</h2>
+      <ul>
+        <li>Count the pages a site says it has, by section, before an audit or a migration.</li>
+        <li>Build a redirect map from the old URL list before you move a site.</li>
+        <li>Compare a competitor’s sitemap month to month to see what they publish.</li>
+        <li>Find sections that are missing from your own sitemap, or listed twice.</li>
+      </ul>
+      <p>
+        The last modified dates show what a site says it changed and when.
+        They are only as honest as the site that writes them.
+      </p>
+
+      <h2>Check the extracted URLs with your agent</h2>
+      <p>
+        A sitemap is a list of what a site claims. To see which of those
+        pages work, ask your agent to check them with{' '}
+        <a href="/docs/crawl">seo crawl</a>, which can read the sitemap and
+        check each URL’s status and redirects without reading every page.
+        Ask:
+      </p>
+      <CodeBlock value="Check every URL in https://example.com/sitemap.xml and list the ones that redirect or return an error" wrap />
+      <p>Or add the hosted MCP server to your agent and sign in with Google:</p>
+    </div>
+
+    <SetupCommands id="sitemap-extractor-setup" class="mt-6" />
+
+    <div class="docs-prose mt-16">
+      <h2>Sitemap extractor questions</h2>
+    </div>
+    <div class="mt-6">
+      <FaqAccordion id="sitemap-extractor-faq" items={faq} />
     </div>
   </main>
 </BaseLayout>

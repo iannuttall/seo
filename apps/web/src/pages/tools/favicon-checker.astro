@@ -1,4 +1,7 @@
 ---
+import CodeBlock from '@/components/CodeBlock.astro'
+import FaqAccordion from '@/components/FaqAccordion.astro'
+import SetupCommands from '@/components/SetupCommands.astro'
 import Breadcrumbs from '@/components/Breadcrumbs.astro'
 import PageHeader from '@/components/PageHeader.astro'
 import FaviconChecker from '@/components/tools/FaviconChecker.astro'
@@ -10,11 +13,39 @@ const breadcrumbs: SchemaBreadcrumb[] = [
   { label: 'Tools', href: '/tools' },
   { label: 'Favicon checker' },
 ]
+
+const faq = [
+  {
+    question: "How do I check my favicon?",
+    answer:
+      "Enter your domain above. The checker reads the home page’s icon tags, the /favicon.ico fallback, Apple touch icons and the web app manifest, then fetches each file and reports its size, type and response.",
+  },
+  {
+    question: "What size should a favicon be?",
+    answer:
+      "For Google, square and at least 8 by 8 pixels, ideally larger than 48 by 48. For browsers, an SVG or 16, 32 and 48 pixel files. For iOS, 180 by 180. For an installed app, 192 and 512.",
+  },
+  {
+    question: "How long does Google take to show a new favicon?",
+    answer:
+      "Google has to crawl the home page and the icon again, which can take days or weeks. You can ask Google to recrawl the home page with URL Inspection in Search Console.",
+  },
+  {
+    question: "Can I use an SVG favicon?",
+    answer:
+      "Yes. Google and modern browsers support SVG. Keep a PNG or ICO fallback for older browsers.",
+  },
+  {
+    question: "Is /favicon.ico still needed?",
+    answer:
+      "Not strictly, but many browsers and tools request it anyway. Serving one avoids a stream of 404s in your logs.",
+  },
+]
 ---
 
 <BaseLayout
   title="Favicon checker"
-  description="Check favicon files, declared sizes, image dimensions, Apple touch icons, and web app manifest icons for a public website."
+  description="Check a website’s favicon for Google Search, browsers, iOS and installed apps. See every declared icon with its size and response, and why a favicon is not showing in Google."
   canonicalPath="/tools/favicon-checker"
   {breadcrumbs}
 >
@@ -86,6 +117,68 @@ const breadcrumbs: SchemaBreadcrumb[] = [
         Use the findings to catch missing files, broken declarations, incorrect
         sizes, and gaps between browser, search, iOS, and installed app icons.
       </p>
+
+      <h2>Favicon sizes to provide</h2>
+      <table>
+        <thead>
+          <tr>
+            <th>Where</th>
+            <th>Size and file</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>Google Search results</td>
+            <td>A square icon, at least 8 by 8 pixels. Larger than 48 by 48 looks sharper.</td>
+          </tr>
+          <tr>
+            <td>Browser tabs</td>
+            <td>An SVG, or PNG and ICO files at 16, 32 and 48 pixels.</td>
+          </tr>
+          <tr>
+            <td>iOS home screen</td>
+            <td>An Apple touch icon, usually 180 by 180 pixels PNG.</td>
+          </tr>
+          <tr>
+            <td>Installed web app</td>
+            <td>Manifest icons at 192 and 512 pixels, plus a maskable one if you want a full-bleed icon.</td>
+          </tr>
+        </tbody>
+      </table>
+
+      <h2>Why your favicon is not showing in Google</h2>
+      <ul>
+        <li><strong>Google has not crawled it yet.</strong> A new or changed favicon can take days or weeks to appear.</li>
+        <li><strong>The icon is not square</strong>, or is smaller than 8 by 8 pixels.</li>
+        <li><strong>It is blocked.</strong> robots.txt stops Googlebot or Googlebot-Image from fetching the home page or the icon.</li>
+        <li><strong>The declaration is on the wrong page.</strong> Google reads the home page of each hostname, not inner pages.</li>
+        <li><strong>The URL changes.</strong> A cache-busting query that changes on every deploy gives Google a new icon to fetch each time.</li>
+      </ul>
+      <p>
+        The favicon sits next to your site name on every result, on phone
+        and desktop, so a blurry or missing one makes a result easier to
+        skip. The <a href="/tools/serp-preview">SERP preview</a> shows how
+        your title and description sit next to it.
+      </p>
+
+      <h2>Fix your icons with your AI agent</h2>
+      <p>
+        SEO Skill has no favicon command, so this page is the check. When it
+        finds a problem, your agent can make the missing sizes and fix the
+        link tags and manifest in your codebase. Run the check again after
+        you deploy. Ask your agent:
+      </p>
+      <CodeBlock value="Make favicon files at 16, 32, 48 and 180 pixels and a 512 pixel manifest icon from logo.svg, and add the right link tags to the site layout" wrap />
+      <p>Add the hosted MCP server to your agent and sign in with Google:</p>
+    </div>
+
+    <SetupCommands id="favicon-checker-setup" class="mt-6" />
+
+    <div class="docs-prose mt-16">
+      <h2>Favicon questions</h2>
+    </div>
+    <div class="mt-6">
+      <FaqAccordion id="favicon-checker-faq" items={faq} />
     </div>
   </main>
 </BaseLayout>

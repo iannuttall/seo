@@ -1,4 +1,6 @@
 ---
+import CodeBlock from '@/components/CodeBlock.astro'
+import FaqAccordion from '@/components/FaqAccordion.astro'
 import Breadcrumbs from '@/components/Breadcrumbs.astro'
 import PageHeader from '@/components/PageHeader.astro'
 import SetupCommands from '@/components/SetupCommands.astro'
@@ -11,11 +13,39 @@ const breadcrumbs: SchemaBreadcrumb[] = [
   { label: 'Tools', href: '/tools' },
   { label: 'Monthly SEO report' },
 ]
+
+const faq = [
+  {
+    question: "What should a monthly SEO report include?",
+    answer:
+      "Clicks, impressions, click-through rate and average position against the previous period, the pages and queries that moved most, and short notes on what changed on the site and what comes next.",
+  },
+  {
+    question: "Is this monthly SEO report free?",
+    answer:
+      "Yes. It builds from your own Search Console export in the browser, with no account, and the export is not uploaded.",
+  },
+  {
+    question: "Should I compare calendar months or 28 days?",
+    answer:
+      "Either, as long as you keep it the same every month. 28 days has the same mix of weekdays each time, which makes the numbers fairer to compare.",
+  },
+  {
+    question: "Can I send the report to a client?",
+    answer:
+      "Yes. Download it and send it. Every number comes from Search Console, so the client sees what Google recorded, with your notes on top.",
+  },
+  {
+    question: "Why are my export numbers lower than the Search Console chart?",
+    answer:
+      "The export’s page and query tables leave out rare and anonymised queries, so they add up to less than the totals. The totals and the chart use all the data.",
+  },
+]
 ---
 
 <BaseLayout
   title="Monthly SEO report"
-  description="Build a monthly SEO report from your Search Console export: clicks, impressions, CTR and position against last month, the pages and queries that moved, and your notes. Download it as HTML or Markdown."
+  description="Build a monthly SEO report from a Search Console export in your browser: clicks, impressions, CTR and position against the previous period, top movers and your notes."
   canonicalPath="/tools/monthly-seo-report"
   {breadcrumbs}
 >
@@ -67,6 +97,20 @@ const breadcrumbs: SchemaBreadcrumb[] = [
         and the reader can judge both.
       </p>
 
+      <h2>Read a month-on-month change</h2>
+      <p>
+        A fall in clicks with flat impressions means fewer people clicked:
+        check titles, a new feature on the results page, or a lower
+        position. A fall in both means fewer people saw you: rankings or
+        demand moved. Average position can rise while clicks fall, because
+        losing a query you ranked badly for lifts the average.
+      </p>
+      <p>
+        Many sites are seasonal. A December dip after a strong November may
+        be normal. When you have a year of data, compare a month with the
+        same month last year as well.
+      </p>
+
       <h2>Have your agent write it every month</h2>
       <p>
         An export only has totals, pages and queries. The{' '}
@@ -78,13 +122,21 @@ const breadcrumbs: SchemaBreadcrumb[] = [
         same dates and Bing beside Google when Bing is connected.
       </p>
       <p>
-        Ask it on the first of the month for "the monthly SEO report for
-        example.com" and keep the same 28-day window each time, so one
+        Ask it on the first of the month and keep the same 28-day window each time, so one
         month compares fairly with the next. Agents that run on a schedule
         can do this without you asking.
       </p>
+      <CodeBlock value="Write the monthly SEO report for example.com for last month, compared with the month before" wrap />
+      <p>Add the hosted MCP server to your agent and sign in with Google:</p>
     </div>
 
     <SetupCommands id="monthly-report-setup" class="mt-6" />
+
+    <div class="docs-prose mt-16">
+      <h2>Monthly SEO report questions</h2>
+    </div>
+    <div class="mt-6">
+      <FaqAccordion id="monthly-seo-report-faq" items={faq} />
+    </div>
   </main>
 </BaseLayout>

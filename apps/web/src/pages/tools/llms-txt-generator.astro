@@ -1,4 +1,7 @@
 ---
+import CodeBlock from '@/components/CodeBlock.astro'
+import FaqAccordion from '@/components/FaqAccordion.astro'
+import SetupCommands from '@/components/SetupCommands.astro'
 import PageHeader from '@/components/PageHeader.astro'
 import LlmsTxtGenerator from '@/components/tools/LlmsTxtGenerator.astro'
 import BaseLayout from '@/layouts/BaseLayout.astro'
@@ -9,11 +12,39 @@ const breadcrumbs: SchemaBreadcrumb[] = [
   { label: 'Tools', href: '/tools' },
   { label: 'llms.txt generator' },
 ]
+
+const faq = [
+  {
+    question: "What is llms.txt?",
+    answer:
+      "A proposed Markdown file at the root of a site, /llms.txt, that gives AI agents a short summary and a curated list of the site’s most useful pages.",
+  },
+  {
+    question: "Does Google use llms.txt?",
+    answer:
+      "No. Google says Search ignores llms.txt for visibility and rankings. Some AI tools and agents read it when they visit a site.",
+  },
+  {
+    question: "Do I need an llms.txt file?",
+    answer:
+      "It is optional. It costs little to publish and can help agents that read it. It will not help you rank.",
+  },
+  {
+    question: "What format does llms.txt use?",
+    answer:
+      "Markdown: one H1 with the site name, an optional blockquote summary, then H2 sections that list links, each with a short note.",
+  },
+  {
+    question: "Is llms.txt the same as robots.txt?",
+    answer:
+      "No. robots.txt controls which crawlers may fetch pages. llms.txt only suggests which pages are worth reading.",
+  },
+]
 ---
 
 <BaseLayout
   title="llms.txt generator"
-  description="Create an llms.txt file from a sitemap or your own links. Choose the pages an agent should read, then copy or download the Markdown file."
+  description="Generate an llms.txt file from your own links or sitemap. Get the right Markdown structure for AI agents, and learn what the file can and cannot do."
   canonicalPath="/tools/llms-txt-generator"
   {breadcrumbs}
 >
@@ -84,6 +115,49 @@ const breadcrumbs: SchemaBreadcrumb[] = [
         <a href="/tools/llms-txt-validator">llms.txt validator</a> before and
         after you publish it.
       </p>
+
+      <h2>What to put in llms.txt</h2>
+      <p>
+        Think of the file as a reading list for an agent that has a few
+        seconds to understand your site. Start with what the site is in one
+        sentence. Then link the pages that answer the questions people ask
+        most: documentation, pricing, setup, policies. Leave out blog
+        archives, tag pages and anything a reader would skip.
+      </p>
+      <p>
+        Put the pages that matter less under an <strong>Optional</strong>{' '}
+        heading. An agent short on space can drop that section and still
+        get the main picture.
+      </p>
+
+      <h2>Where to publish the file</h2>
+      <p>
+        Save it as <code>/llms.txt</code> at the root of the site, served as
+        plain text or Markdown. It does not replace robots.txt or the
+        sitemap, and it does not control which crawlers can read the site.
+      </p>
+
+      <h2>Check your llms.txt with your agent</h2>
+      <p>
+        The <a href="/docs/crawl">seo crawl</a> command checks whether{' '}
+        <code>/llms.txt</code> exists and whether its links load, along with
+        Markdown copies of your pages and the robots.txt rules for AI search
+        and AI training crawlers. Your agent can update the file in your
+        codebase when pages move. Ask:
+      </p>
+      <CodeBlock value="Check whether example.com has an llms.txt with working links, and list the pages that are missing from it" wrap />
+      <p>The crawl runs from the CLI on your machine. Install it and run setup:</p>
+      <CodeBlock value="npm i -g seo && seo start" wrap />
+      <p>Or add the hosted MCP server to your agent and sign in with Google:</p>
+    </div>
+
+    <SetupCommands id="llms-txt-generator-setup" class="mt-6" />
+
+    <div class="docs-prose mt-16">
+      <h2>llms.txt generator questions</h2>
+    </div>
+    <div class="mt-6">
+      <FaqAccordion id="llms-txt-generator-faq" items={faq} />
     </div>
   </main>
 </BaseLayout>

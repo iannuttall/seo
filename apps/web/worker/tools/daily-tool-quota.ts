@@ -4,7 +4,7 @@ import type {
 } from './paid-tool-guard.ts'
 import {
   derivePaidToolIdentityFromRequest,
-  PAID_TOOL_DAILY_LIMIT,
+  FREE_TOOL_DAILY_LIMIT,
   type PublicWorkerToolId,
   paidToolQuotaObjectName,
   utcDay,
@@ -83,7 +83,7 @@ function validReservation(
     reservation.tool === tool &&
     Number.isSafeInteger(reservation.identityRemaining) &&
     reservation.identityRemaining >= 0 &&
-    reservation.identityRemaining <= PAID_TOOL_DAILY_LIMIT &&
+    reservation.identityRemaining <= FREE_TOOL_DAILY_LIMIT &&
     reservation.resetAt === expectedResetAt
   )
 }

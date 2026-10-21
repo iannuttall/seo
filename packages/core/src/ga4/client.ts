@@ -6,7 +6,12 @@ import {
 } from '../google/api.js'
 import { createGoogleAccessTokenClient } from '../gsc/auth.js'
 import { googleFetchFor, LOCAL_SIGN_IN } from '../gsc/client/fetch.js'
-import { getDb, hashKey, noteCacheWrite } from '../storage/database.js'
+import {
+  cacheDb,
+  hashKey,
+  noteCacheWrite,
+  writeToCache,
+} from '../storage/database.js'
 import type { Ga4AccountSummary } from './account-summaries.js'
 
 export type { Ga4DataStream } from '../google/api.js'
@@ -66,7 +71,7 @@ export async function runGa4Report(
   const { client, identity } = await createGoogleAccessTokenClient(
     opts.accountEmail,
   )
-  const db = getDb()
+  const db = cacheDb()
   const queryHash = hashKey([propertyId, identity, body])
   const cacheable = ga4RequestCanUseCache(body)
   const cached = cacheable
@@ -92,22 +97,27 @@ export async function runGa4Report(
   if (cacheable) {
     const requestJson = JSON.stringify(body)
     const responseJson = JSON.stringify(result)
-    db.prepare(
-      `INSERT OR REPLACE INTO ga4_cache
-    (property_id, query_hash, request_json, response_json, row_count, fetched_at, expires_at)
-    VALUES (?, ?, ?, ?, ?, ?, ?)`,
-    ).run(
-      propertyId,
-      queryHash,
-      requestJson,
-      responseJson,
-      result.rowCount ?? result.rows?.length ?? 0,
-      Date.now(),
-      Date.now() + 86_400_000,
-    )
-    noteCacheWrite(
-      Buffer.byteLength(requestJson) + Buffer.byteLength(responseJson),
-    )
+    writeToCache((database) => {
+      database
+        .prepare(
+          `INSERT OR REPLACE INTO ga4_cache
+          (property_id, query_hash, request_json, response_json, row_count, fetched_at, expires_at)
+          VALUES (?, ?, ?, ?, ?, ?, ?)`,
+        )
+        .run(
+          propertyId,
+          queryHash,
+          requestJson,
+          responseJson,
+          result.rowCount ?? result.rows?.length ?? 0,
+          Date.now(),
+          Date.now() + 86_400_000,
+        )
+      noteCacheWrite(
+        Buffer.byteLength(requestJson) + Buffer.byteLength(responseJson),
+        database,
+      )
+    })
   }
   return result
 }

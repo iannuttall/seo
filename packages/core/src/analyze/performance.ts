@@ -2,7 +2,7 @@ import { createHash } from 'node:crypto'
 import type { fetch } from 'undici'
 import { fetchPage } from '../fetch/page-fetcher.js'
 import { normalizeHttpUrl } from '../gsc/property-url.js'
-import { getDb, noteCacheWrite } from '../storage/database.js'
+import { cacheDb, noteCacheWrite, writeToCache } from '../storage/database.js'
 import { performanceActions } from './performance-analysis.js'
 import { fetchCruxFieldData } from './performance-crux.js'
 import {
@@ -31,7 +31,7 @@ function reportId(input: {
 }
 
 function cacheGet(id: string, now: number): PerformanceAuditReport | undefined {
-  const row = getDb()
+  const row = cacheDb()
     .prepare(
       'SELECT report_json FROM performance_reports WHERE id = ? AND expires_at > ?',
     )
@@ -51,21 +51,23 @@ function cacheGet(id: string, now: number): PerformanceAuditReport | undefined {
 function cacheSet(report: PerformanceAuditReport, now: number): void {
   const stored = { ...report, raw: undefined }
   const reportJson = JSON.stringify(stored)
-  getDb()
-    .prepare(
-      `INSERT OR REPLACE INTO performance_reports
-      (id, url, strategy, report_json, created_at, expires_at)
-      VALUES (?, ?, ?, ?, ?, ?)`,
-    )
-    .run(
-      report.id,
-      report.url,
-      report.strategy,
-      reportJson,
-      Date.parse(report.generatedAt),
-      now + CACHE_TTL_MS,
-    )
-  noteCacheWrite(Buffer.byteLength(reportJson))
+  writeToCache((database) => {
+    database
+      .prepare(
+        `INSERT OR REPLACE INTO performance_reports
+        (id, url, strategy, report_json, created_at, expires_at)
+        VALUES (?, ?, ?, ?, ?, ?)`,
+      )
+      .run(
+        report.id,
+        report.url,
+        report.strategy,
+        reportJson,
+        Date.parse(report.generatedAt),
+        now + CACHE_TTL_MS,
+      )
+    noteCacheWrite(Buffer.byteLength(reportJson), database)
+  })
 }
 
 async function fallbackReport(input: {

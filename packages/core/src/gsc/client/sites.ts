@@ -4,7 +4,7 @@ import {
   listSearchConsoleSites,
   type SearchConsoleSite,
 } from '../../google/api.js'
-import { getDb } from '../../storage/database.js'
+import { writeToCache } from '../../storage/database.js'
 import { getAuthorized, googleFetchFor, LOCAL_SIGN_IN } from './fetch.js'
 
 export async function listSites(
@@ -20,20 +20,20 @@ export async function listSites(
           googleFetchFor((await getAuthorized(accountEmail)).client),
           LOCAL_SIGN_IN,
         )
-  const db = getDb()
-  const insert = db.prepare(
-    'INSERT OR REPLACE INTO sites (site_url, display_name, permission, added_at, is_default) VALUES (?, ?, ?, ?, COALESCE((SELECT is_default FROM sites WHERE site_url = ?), 0))',
-  )
-
-  for (const site of entries) {
-    insert.run(
-      site.siteUrl,
-      site.siteUrl,
-      site.permissionLevel ?? null,
-      Date.now(),
-      site.siteUrl,
+  writeToCache((database) => {
+    const insert = database.prepare(
+      'INSERT OR REPLACE INTO sites (site_url, display_name, permission, added_at, is_default) VALUES (?, ?, ?, ?, COALESCE((SELECT is_default FROM sites WHERE site_url = ?), 0))',
     )
-  }
+    for (const site of entries) {
+      insert.run(
+        site.siteUrl,
+        site.siteUrl,
+        site.permissionLevel ?? null,
+        Date.now(),
+        site.siteUrl,
+      )
+    }
+  })
 
   return entries
 }

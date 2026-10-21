@@ -1,5 +1,10 @@
 import robotsParserModule from 'robots-parser'
-import { getDb, hashKey, noteCacheWrite } from '../../storage/database.js'
+import {
+  cacheDb,
+  hashKey,
+  noteCacheWrite,
+  writeToCache,
+} from '../../storage/database.js'
 import { SEO_CRAWLER_USER_AGENT } from '../crawler-identity.js'
 import { publicHttpFetch, readBoundedResponseText } from '../http-client.js'
 import type { RobotsResolver, RobotsResult } from './types.js'
@@ -131,7 +136,7 @@ async function fetchRobotsSource(
   const robotsUrl = new URL('/robots.txt', origin).toString()
   const key = hashKey(['robots', robotsUrl])
   if (!refresh) {
-    const cached = getDb()
+    const cached = cacheDb()
       .prepare(
         'SELECT status, body_blob, expires_at FROM http_cache WHERE url_hash = ?',
       )
@@ -171,23 +176,25 @@ async function fetchRobotsSource(
       'robots.txt response',
     )
     if (options.writeCache !== false && cacheableStatus(response.status)) {
-      getDb()
-        .prepare(
-          `INSERT OR REPLACE INTO http_cache
-          (url_hash, url, status, headers_json, body_blob, etag, fetched_at, expires_at)
-          VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
-        )
-        .run(
-          key,
-          robotsUrl,
-          response.status,
-          '{}',
-          Buffer.from(text),
-          null,
-          Date.now(),
-          Date.now() + 86_400_000,
-        )
-      noteCacheWrite(Buffer.byteLength(text))
+      writeToCache((database) => {
+        database
+          .prepare(
+            `INSERT OR REPLACE INTO http_cache
+            (url_hash, url, status, headers_json, body_blob, etag, fetched_at, expires_at)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
+          )
+          .run(
+            key,
+            robotsUrl,
+            response.status,
+            '{}',
+            Buffer.from(text),
+            null,
+            Date.now(),
+            Date.now() + 86_400_000,
+          )
+        noteCacheWrite(Buffer.byteLength(text), database)
+      })
     }
     return {
       robotsUrl,

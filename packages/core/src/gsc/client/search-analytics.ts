@@ -1,6 +1,11 @@
 import { cloudAccountFor } from '../../cloud.js'
 import { searchAnalyticsRows } from '../../google/api.js'
-import { getDb, hashKey, noteCacheWrite } from '../../storage/database.js'
+import {
+  cacheDb,
+  hashKey,
+  noteCacheWrite,
+  writeToCache,
+} from '../../storage/database.js'
 import type { GscRow } from '../../types.js'
 import { finalGscDateRange } from '../dates.js'
 import { getAuthorized, googleFetchFor, LOCAL_SIGN_IN } from './fetch.js'
@@ -48,7 +53,7 @@ export async function querySearchAnalytics(
   const { client, identity } = await getAuthorized(
     opts.accountEmail ?? (await cloudAccountFor(site)),
   )
-  const db = getDb()
+  const db = cacheDb()
   const queryHash = hashKey([site, identity, body])
   const cached = db
     .prepare(
@@ -74,22 +79,27 @@ export async function querySearchAnalytics(
 
   const requestJson = JSON.stringify(body)
   const responseJson = JSON.stringify(allRows)
-  db.prepare(
-    `INSERT OR REPLACE INTO gsc_cache
-    (site_url, query_hash, request_json, response_json, row_count, fetched_at, expires_at)
-    VALUES (?, ?, ?, ?, ?, ?, ?)`,
-  ).run(
-    site,
-    queryHash,
-    requestJson,
-    responseJson,
-    allRows.length,
-    Date.now(),
-    Date.now() + 86_400_000,
-  )
-  noteCacheWrite(
-    Buffer.byteLength(requestJson) + Buffer.byteLength(responseJson),
-  )
+  writeToCache((database) => {
+    database
+      .prepare(
+        `INSERT OR REPLACE INTO gsc_cache
+        (site_url, query_hash, request_json, response_json, row_count, fetched_at, expires_at)
+        VALUES (?, ?, ?, ?, ?, ?, ?)`,
+      )
+      .run(
+        site,
+        queryHash,
+        requestJson,
+        responseJson,
+        allRows.length,
+        Date.now(),
+        Date.now() + 86_400_000,
+      )
+    noteCacheWrite(
+      Buffer.byteLength(requestJson) + Buffer.byteLength(responseJson),
+      database,
+    )
+  })
 
   return { rows: allRows, calls, rowsFetched: allRows.length }
 }

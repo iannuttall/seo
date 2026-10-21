@@ -182,10 +182,14 @@ function initDb(database: Database.Database, isNewDatabase: boolean): void {
     ensureColumn(database, 'http_cache', 'metadata_json', 'TEXT')
   })
   migrate.immediate()
-  runCacheMaintenance(database, {
-    compact: true,
-    allowFullVacuum: true,
-  })
+  try {
+    runCacheMaintenance(database, {
+      compact: true,
+      allowFullVacuum: true,
+    })
+  } catch {
+    // Another run holds the lock. Maintenance waits for the next open.
+  }
 }
 
 export function getDb(): Database.Database {
@@ -197,11 +201,52 @@ export function getDb(): Database.Database {
   const isNewDatabase = !existsSync(path)
   mkdirSync(dirname(path), { recursive: true, mode: 0o700 })
   ensurePrivateDatabaseFiles(path)
-  db = new Database(path)
-  ensurePrivateDatabaseFiles(path)
-  initDb(db, isNewDatabase)
-  ensurePrivateDatabaseFiles(path)
+  const opened = new Database(path)
+  try {
+    ensurePrivateDatabaseFiles(path)
+    initDb(opened, isNewDatabase)
+    ensurePrivateDatabaseFiles(path)
+  } catch (error) {
+    opened.close()
+    throw error
+  }
+  db = opened
   return db
+}
+
+let memoryDb: Database.Database | undefined
+
+function memoryCache(): Database.Database {
+  if (!memoryDb) {
+    memoryDb = new Database(':memory:')
+    memoryDb.exec(CREATE_SQL)
+  }
+  return memoryDb
+}
+
+// The cache a run reads and writes. The cache only saves repeat calls, so
+// when the file cannot be used (another run holds its lock for too long, it
+// cannot be read, the disk is full), the rest of this run uses an empty cache
+// in memory instead of failing.
+export function cacheDb(): Database.Database {
+  if (memoryDb) return memoryDb
+  try {
+    return getDb()
+  } catch {
+    return memoryCache()
+  }
+}
+
+// Saves to the cache. A write that fails moves the rest of this run to the
+// cache in memory; the result does not depend on it.
+export function writeToCache(
+  write: (database: Database.Database) => void,
+): void {
+  try {
+    write(cacheDb())
+  } catch {
+    memoryCache()
+  }
 }
 
 export function noteCacheWrite(

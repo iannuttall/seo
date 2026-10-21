@@ -1,6 +1,7 @@
 import { spawnSync } from 'node:child_process'
 import { realpathSync } from 'node:fs'
 import { isCancel, log, select } from '@clack/prompts'
+import { isNewerVersion } from '@seo/core'
 import updateNotifier from 'update-notifier'
 
 type PackageInfo = {
@@ -93,29 +94,6 @@ export function inferSelfUpdateCommand(
   }
 
   return undefined
-}
-
-function isNewerVersion(current: string, latest: string): boolean {
-  const parse = (value: string) =>
-    value
-      .replace(/^v/, '')
-      .split('-')[0]
-      ?.split('.')
-      .map((part) => Number.parseInt(part, 10)) ?? []
-  const currentParts = parse(current)
-  const latestParts = parse(latest)
-
-  for (let index = 0; index < 3; index += 1) {
-    const currentPart = currentParts[index] ?? 0
-    const latestPart = latestParts[index] ?? 0
-    if (!Number.isFinite(currentPart) || !Number.isFinite(latestPart)) {
-      return false
-    }
-    if (latestPart > currentPart) return true
-    if (latestPart < currentPart) return false
-  }
-
-  return false
 }
 
 export function canOfferInteractiveUpdate(input: {

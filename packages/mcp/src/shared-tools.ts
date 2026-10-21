@@ -15,6 +15,7 @@ import {
   trackTelemetryReportComplete,
   trackTelemetryReportFailed,
   trackTelemetryReportStart,
+  updateNotice,
 } from '@seo/core'
 import {
   type CommandId,
@@ -41,7 +42,7 @@ function text(value: string): ToolResult {
   return { content: [{ type: 'text', text: value }] }
 }
 
-async function counted(
+async function countedRun(
   command: CommandId,
   args: Record<string, unknown>,
   telemetry: (() => TelemetryOptions) | undefined,
@@ -74,6 +75,23 @@ async function counted(
       trackTelemetryReportFailed(report, failure, telemetry())
     return toolError(failure)
   }
+}
+
+// Every tool result ends with the update notice when this seo is behind.
+async function counted(
+  command: CommandId,
+  args: Record<string, unknown>,
+  telemetry: (() => TelemetryOptions) | undefined,
+  run: () => Promise<ToolResult>,
+): Promise<ToolResult> {
+  const result = await countedRun(command, args, telemetry, run)
+  const notice = updateNotice()
+  return notice
+    ? {
+        ...result,
+        content: [...result.content, { type: 'text' as const, text: notice }],
+      }
+    : result
 }
 
 export function registerSharedTools(

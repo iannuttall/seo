@@ -5,6 +5,7 @@ import {
   initializeTelemetry,
   SEO_VERSION,
   type TelemetryOptions,
+  updateNotice,
 } from '@seo/core'
 import { MCP_INSTRUCTIONS, SKILL_RESOURCE } from '@seo/core/commands'
 import { registerProviderExtensionTools } from './provider-extension-tools.js'
@@ -102,4 +103,6 @@ export async function startMcpServer(
 
   const transport = new StdioServerTransport()
   await server.connect(transport)
+  // Starts the background version check for the tool results.
+  updateNotice()
 }

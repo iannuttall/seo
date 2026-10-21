@@ -1,3 +1,4 @@
+import { updateNotice } from '@seo/core'
 import { createTerminalContext } from './presentation/context.js'
 import {
   renderCallout,
@@ -31,8 +32,16 @@ export function canPrompt(options: { json?: boolean } = {}): boolean {
   )
 }
 
+// JSON output, with the update notice as one more field on an object.
 export function printJson(data: unknown): void {
-  process.stdout.write(`${JSON.stringify(data, null, 2)}\n`)
+  const notice =
+    data && typeof data === 'object' && !Array.isArray(data)
+      ? updateNotice()
+      : undefined
+  const output = notice
+    ? { ...(data as Record<string, unknown>), updateNotice: notice }
+    : data
+  process.stdout.write(`${JSON.stringify(output, null, 2)}\n`)
 }
 
 export function printKeyValue(rows: Array<[string, string]>): void {

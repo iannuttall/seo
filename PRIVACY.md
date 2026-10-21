@@ -337,6 +337,11 @@ public counts are described as installs, active machines, and audits, never
 users. One person can have several installs, and clearing local state creates
 a new install.
 
+Once a day the CLI and local MCP server ask the npm registry for the latest
+version number of `seo`, so they can say when an update is out. The request
+sends nothing about you or your sites. Set `NO_UPDATE_NOTIFIER=1` to turn it
+off.
+
 Installing the package through npm or using GitHub is covered by the policies
 of those services.
 

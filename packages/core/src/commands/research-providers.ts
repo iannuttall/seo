@@ -72,15 +72,27 @@ function requireInput(input: ResearchInput) {
   }
 }
 
+// Rows, plus what DataForSEO says the calls cost (null for Ahrefs, whose
+// responses carry no cost) and whether any call came back partial.
+export type ResearchRows = {
+  rows: Row[]
+  costUsd: number | null
+  partial: boolean
+}
+
 export async function research(
   provider: ResearchProvider,
   headers: Headers,
   input: ResearchInput,
-): Promise<Row[]> {
+): Promise<ResearchRows> {
   requireInput(input)
   const keys = need(headers, provider)
   if (provider === 'dataforseo') return dataForSeo(keys, input)
-  return ahrefs(keys[0] ?? '', input)
+  return {
+    rows: await ahrefs(keys[0] ?? '', input),
+    costUsd: null,
+    partial: false,
+  }
 }
 
 // DataForSEO
@@ -140,12 +152,37 @@ export function dataForSeoKeys(headers: Headers): string[] {
   return need(headers, 'dataforseo')
 }
 
+// A free DataForSEO list, such as an engine's locations or languages.
+export async function dataForSeoList(
+  [login, password]: string[],
+  path: string,
+): Promise<Record<string, unknown>[]> {
+  const response = await call(
+    'dataforseo',
+    new Request(`https://api.dataforseo.com/${path}`, {
+      headers: { authorization: `Basic ${btoa(`${login}:${password}`)}` },
+    }),
+  )
+  const data = (await readJson(response, 'DataForSEO')) as {
+    tasks?: { status_code: number; result?: Record<string, unknown>[] | null }[]
+  }
+  const task = data.tasks?.[0]
+  if (!task || task.status_code >= 40000) {
+    throw new CommandError('PROVIDER_ERROR', `dataforseo: no list at ${path}`)
+  }
+  return task.result ?? []
+}
+
 // One DataForSEO task: its first result and what it cost, in USD.
 export async function dataForSeoTask(
   [login, password]: string[],
   path: string,
   task: Record<string, unknown>,
-): Promise<{ cost: number; result: Record<string, unknown> | null }> {
+): Promise<{
+  cost: number
+  result: Record<string, unknown> | null
+  partial: boolean
+}> {
   const response = await call(
     'dataforseo',
     new Request(`https://api.dataforseo.com/${path}`, {
@@ -166,7 +203,15 @@ export async function dataForSeoTask(
     }[]
   }
   const result = data.tasks?.[0]
-  if (!result || result.status_code >= 40000) {
+  // 40102 is DataForSEO's "No Search Results": an empty answer, not an
+  // error. 40106 is a result with some pages missing.
+  if (result?.status_code === NO_RESULTS) {
+    return { cost: result.cost ?? 0, result: null, partial: false }
+  }
+  if (
+    !result ||
+    (result.status_code >= 40000 && result.status_code !== PARTIAL)
+  ) {
     // A failed task can still be charged; the cost goes with the error.
     throw Object.assign(
       new CommandError(
@@ -176,12 +221,33 @@ export async function dataForSeoTask(
       { cost: result?.cost ?? 0 },
     )
   }
-  return { cost: result.cost ?? 0, result: result.result?.[0] ?? null }
+  return {
+    cost: result.cost ?? 0,
+    result: result.result?.[0] ?? null,
+    partial: result.status_code === PARTIAL,
+  }
 }
+
+const NO_RESULTS = 40102
+const PARTIAL = 40106
 
 async function dataForSeo(
   keys: string[],
   input: ResearchInput,
+): Promise<ResearchRows> {
+  const spent = { cost: 0, partial: false }
+  const rows = await dataForSeoRows(keys, input, spent)
+  return {
+    rows,
+    costUsd: Math.round(spent.cost * 10_000) / 10_000,
+    partial: spent.partial,
+  }
+}
+
+async function dataForSeoRows(
+  keys: string[],
+  input: ResearchInput,
+  spent: { cost: number; partial: boolean },
 ): Promise<Row[]> {
   const language = dataForSeoLanguage(input.country)
   if (!language && input.action !== 'serp' && input.action !== 'backlinks') {
@@ -195,7 +261,12 @@ async function dataForSeo(
     const done = await dataForSeoTask(keys, path, {
       ...market,
       ...task,
+    }).catch((error: unknown) => {
+      spent.cost += (error as { cost?: number }).cost ?? 0
+      throw error
     })
+    spent.cost += done.cost
+    spent.partial ||= done.partial
     return (done.result?.items as Record<string, unknown>[] | undefined) ?? []
   }
   const get = (value: unknown, path: string): unknown =>

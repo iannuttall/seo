@@ -9,6 +9,7 @@ import FeaturePage from '@/components/FeaturePage.astro'
 
 const related = [
   { title: 'seo report', text: 'The ai-queries section and visits from AI assistants in the overview.', href: '/docs/report', icon: Analytics01Icon },
+  { title: 'seo research', text: 'Whether AI answers cite your site for those questions.', href: '/docs/research', icon: AiChat02Icon },
   { title: 'Analytics', text: 'Connect Google Analytics or Clicky.', href: '/docs/analytics', icon: ChartLineData01Icon },
   { title: 'seo crawl', text: 'What AI crawlers can read on your site.', href: '/docs/crawl', icon: Route01Icon },
   { title: 'seo compare', text: 'AI visits before and after a change.', href: '/docs/compare', icon: AiChat02Icon },
@@ -17,7 +18,7 @@ const related = [
 
 <FeaturePage
   title="AI search tracking from your own data"
-  description="See how AI search reaches your site: the questions people ask Google AI Mode and AI assistants that show in Search Console, visits from ChatGPT and Perplexity, and what AI crawlers can read."
+  description="See how AI search reaches your site: the questions people ask AI that show in Search Console, whether AI answers cite you for them, visits from ChatGPT and Perplexity, and what AI crawlers can read."
   path="/features/ai-search"
   lead="See the questions people ask AI about your topic, the visits AI assistants send you, and what AI crawlers can read, all from your own Search Console, analytics and site."
   {related}
@@ -39,6 +40,20 @@ const related = [
     question, and shows the page Google picked for each, with impressions,
     clicks and position. These are real questions from your own data, not a
     list of prompts someone guessed.
+  </p>
+
+  <h2>Whether AI answers cite you</h2>
+  <p>
+    With a DataForSEO key, your agent can take the top 10 of those questions
+    and ask each one on ChatGPT search, Google AI Mode and Google AI
+    Overviews. For every answer you see whether it cited a page on your site,
+    named you without a link, or did neither. A full check costs about 12
+    cents of DataForSEO credit. See <a href="/docs/research">seo research</a>.
+  </p>
+  <p>
+    It only asks questions from your own Search Console, so you are not
+    checking prompts nobody types. Each answer is one sample, and AI answers
+    change from day to day.
   </p>
 
   <h2>Visits from AI assistants</h2>

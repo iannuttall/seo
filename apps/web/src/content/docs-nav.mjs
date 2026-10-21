@@ -84,7 +84,7 @@ export const docsSections = [
         path: '/docs/research',
         label: 'seo research',
         description:
-          'Keyword metrics, rankings, SERPs, competitors and backlinks from your own key.',
+          'Keyword metrics, rankings, SERPs, competitors, backlinks and AI answer citations from your own key.',
       },
       {
         path: '/docs/data',

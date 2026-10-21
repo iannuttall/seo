@@ -1,4 +1,5 @@
 import { z } from 'zod'
+import { runAiAnswers } from './ai-answers.js'
 import { analyticsSignIn, runAnalyticsRows } from './analytics.js'
 import { runBingRows } from './bing.js'
 import { clickyLabel, clickySites, runClickyRows } from './clicky.js'
@@ -244,7 +245,7 @@ export const SHARED_TOOLS: SharedTool[] = [
   tool({
     name: 'seo_research',
     command: 'research',
-    title: 'Keyword, competitor and backlink data',
+    title: 'Keyword, competitor, backlink and AI answer data',
     description: `Data from the person’s own DataForSEO or Ahrefs account, which costs them credits. It uses the key the person saved on their seoskill.dev account (or on this machine for the CLI). Actions: ${RESEARCH_HELP}`,
     input: z.object({
       provider: z.enum(RESEARCH_PROVIDERS),
@@ -258,12 +259,30 @@ export const SHARED_TOOLS: SharedTool[] = [
         .describe('Two-letter country code.'),
       ...detail,
     }),
-    run: async (surface, input) =>
-      runResearch(input, await surface.keys(), {
+    run: async (surface, input) => {
+      const more = (offset: number) =>
+        `seo_research with the same input, detail "rows", offset ${offset}`
+      if (input.action === 'ai_answers') {
+        if (input.provider !== 'dataforseo') {
+          throw new CommandError('INVALID_INPUT', 'ai_answers uses dataforseo.')
+        }
+        return runAiAnswers(
+          {
+            site: await surface.resolveSite(input.target),
+            country: input.country,
+            detail: input.detail,
+            offset: input.offset,
+          },
+          await surface.keys(),
+          surface.deps,
+          more,
+        )
+      }
+      return runResearch(input, await surface.keys(), {
         drKey: surface.drKey,
-        call: (offset) =>
-          `seo_research with the same input, detail "rows", offset ${offset}`,
-      }),
+        call: more,
+      })
+    },
   }),
   tool({
     name: 'seo_data',
@@ -406,7 +425,7 @@ export async function runSharedTool(
 export const MCP_INSTRUCTIONS = `SEO Skill reads the person's own Search Console, Google Analytics, Bing Webmaster Tools, Clicky and optional keyword accounts, and returns facts with their dates and limits. It gives no advice.
 1. seo_sites: the properties the connected accounts can read.
 2. seo_report: the main report. Run it without a section first; it shows the overview and every section's count and top rows. Then ask for the one section you need.
-3. seo_page for one URL, seo_compare for before and after a date, seo_index for pages that lost their clicks, seo_research for keyword, competitor and backlink data from the DataForSEO or Ahrefs key the person saved, seo_data for raw rows, including Google Analytics, Bing and Clicky.`
+3. seo_page for one URL, seo_compare for before and after a date, seo_index for pages that lost their clicks, seo_research for keyword, competitor and backlink data, and whether AI answers cite the site, from the DataForSEO or Ahrefs key the person saved, seo_data for raw rows, including Google Analytics, Bing and Clicky.`
 
 // How an MCP surface writes "run this next": the tool name and its inputs.
 export const mcpCall: Caller = (command, args) => {

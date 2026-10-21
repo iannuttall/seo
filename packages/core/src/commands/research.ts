@@ -1,3 +1,4 @@
+import { AI_ANSWER_QUESTIONS } from './ai-answers.js'
 import {
   bareDomain,
   DR_ATTRIBUTION,
@@ -12,7 +13,7 @@ import {
   research,
 } from './research-providers.js'
 import { PAGE_SIZE, rowsText } from './rows.js'
-import type { CommandResult } from './types.js'
+import { CommandError, type CommandResult } from './types.js'
 
 export type {
   ResearchAction,
@@ -25,6 +26,7 @@ export const RESEARCH_ACTIONS = [
   'serp',
   'competitors',
   'backlinks',
+  'ai_answers',
 ] as const satisfies readonly ResearchAction[]
 
 export const RESEARCH_PROVIDERS = [
@@ -32,8 +34,7 @@ export const RESEARCH_PROVIDERS = [
   'ahrefs',
 ] as const satisfies readonly ResearchProvider[]
 
-export const RESEARCH_HELP =
-  'keyword_metrics (keywords: volume, difficulty, CPC), ranked_keywords (target: keywords a domain or URL ranks for), serp (keywords, up to 5: the ranking pages), competitors (target: domains that share keywords), backlinks (target: referring domains). Rows with a domain, and the target, get a free Ahrefs domain_rating column. Numbers are provider estimates, not Search Console data.'
+export const RESEARCH_HELP = `keyword_metrics (keywords: volume, difficulty, CPC), ranked_keywords (target: keywords a domain or URL ranks for), serp (keywords, up to 5: the ranking pages), competitors (target: domains that share keywords), backlinks (target: referring domains), ai_answers (DataForSEO only; target: the site. It takes the site’s top ${AI_ANSWER_QUESTIONS} chat-style and long questions from Search Console’s AI-shaped queries itself, then asks ChatGPT search, Google AI Mode and Google AI Overviews each one and says whether the answer cites or mentions the site. DataForSEO’s live prices are $0.012 a question, so up to about $0.12 a run: tell the person before running it). Rows with a domain, and the target, get a free Ahrefs domain_rating column. Numbers are provider estimates, not Search Console data.`
 
 // Platforms that share keywords with almost every site. Competitor lists
 // leave them out, with the target itself, and say how many rows went.
@@ -114,6 +115,9 @@ export async function runResearch(
   const offset = input.offset ?? 0
   const language =
     input.provider === 'dataforseo' ? dataForSeoLanguage(country) : null
+  if (input.action === 'ai_answers') {
+    throw new CommandError('INVALID_INPUT', 'ai_answers runs on its own.')
+  }
   const found = await research(input.provider, keys, {
     action: input.action,
     keywords: input.keywords ?? [],

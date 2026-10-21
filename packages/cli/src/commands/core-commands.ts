@@ -14,6 +14,7 @@ import {
   RESEARCH_PROVIDERS,
   type ResearchAction,
   type ResearchProvider,
+  runAiAnswers,
   runBingReport,
   runBingRows,
   runClickyRows,
@@ -429,7 +430,7 @@ export const researchCommand = defineCommand({
   meta: {
     name: 'research',
     description:
-      'Keyword, SERP, competitor and backlink data from your DataForSEO or Ahrefs key',
+      'Keyword, SERP, competitor, backlink and AI answer data from your DataForSEO or Ahrefs key',
   },
   args: {
     action: {
@@ -448,6 +449,7 @@ export const researchCommand = defineCommand({
       description: 'Two-letter country code. Default us.',
     },
     ...detail,
+    account: common.account,
     json: common.json,
   },
   run: async ({ args }) => {
@@ -465,7 +467,9 @@ export const researchCommand = defineCommand({
     }
     const chosen = stringArg(args.provider)
     const provider = (chosen ??
-      RESEARCH_PROVIDERS.find((name) => keys.has(header[name])) ??
+      (action === 'ai_answers'
+        ? 'dataforseo'
+        : RESEARCH_PROVIDERS.find((name) => keys.has(header[name]))) ??
       'dataforseo') as ResearchProvider
     if (!RESEARCH_PROVIDERS.includes(provider)) {
       throw new SeoError(
@@ -482,6 +486,33 @@ export const researchCommand = defineCommand({
     const keywords = csvArg(args.keywords) ?? []
     const target = stringArg(args.target)
     const country = stringArg(args.country)
+    if (action === 'ai_answers') {
+      if (provider !== 'dataforseo') {
+        throw new SeoError('INVALID_INPUT', 'ai_answers uses dataforseo.')
+      }
+      const site = await property(args, target)
+      await run(args, (deps) =>
+        runAiAnswers(
+          {
+            site,
+            country: country ?? 'us',
+            detail: detailArg(args),
+            offset: numberArg(args.offset) ?? 0,
+          },
+          keys,
+          deps,
+          (offset) =>
+            cliCall('research', {
+              action,
+              target,
+              country,
+              detail: 'rows',
+              offset,
+            }).replace('--action ', ''),
+        ),
+      )
+      return
+    }
     await run(args, () =>
       runResearch(
         {

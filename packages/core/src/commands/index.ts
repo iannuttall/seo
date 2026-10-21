@@ -7,6 +7,7 @@ export type {
   SearchAnalyticsQuery,
   SearchAnalyticsRequest,
 } from '../gsc/client/types.js'
+export * from './ai-answers.js'
 export * from './analytics.js'
 export * from './analytics-site.js'
 export * from './bing.js'

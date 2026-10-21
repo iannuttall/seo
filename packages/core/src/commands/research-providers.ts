@@ -14,9 +14,10 @@ export type ResearchAction =
   | 'serp'
   | 'competitors'
   | 'backlinks'
+  | 'ai_answers'
 
 export type ResearchInput = {
-  action: ResearchAction
+  action: Exclude<ResearchAction, 'ai_answers'>
   keywords: string[]
   target: string
   country: string
@@ -127,8 +128,59 @@ export function dataForSeoLanguage(country: string): string | null {
   return LABS_LANGUAGES.get(country.toLowerCase()) ?? null
 }
 
-async function dataForSeo(
+export function dataForSeoMarket(country: string, language: string | null) {
+  return {
+    location_name: countryName(country),
+    language_code: language ?? mainLanguage(country),
+  }
+}
+
+// The DataForSEO login and password, or a NO_KEY error.
+export function dataForSeoKeys(headers: Headers): string[] {
+  return need(headers, 'dataforseo')
+}
+
+// One DataForSEO task: its first result and what it cost, in USD.
+export async function dataForSeoTask(
   [login, password]: string[],
+  path: string,
+  task: Record<string, unknown>,
+): Promise<{ cost: number; result: Record<string, unknown> | null }> {
+  const response = await call(
+    'dataforseo',
+    new Request(`https://api.dataforseo.com/${path}`, {
+      method: 'POST',
+      headers: {
+        authorization: `Basic ${btoa(`${login}:${password}`)}`,
+        'content-type': 'application/json',
+      },
+      body: JSON.stringify([task]),
+    }),
+  )
+  const data = (await readJson(response, 'DataForSEO')) as {
+    tasks?: {
+      status_code: number
+      status_message: string
+      cost?: number
+      result?: Record<string, unknown>[] | null
+    }[]
+  }
+  const result = data.tasks?.[0]
+  if (!result || result.status_code >= 40000) {
+    // A failed task can still be charged; the cost goes with the error.
+    throw Object.assign(
+      new CommandError(
+        'PROVIDER_ERROR',
+        `dataforseo: ${result?.status_message ?? 'no task result'}`,
+      ),
+      { cost: result?.cost ?? 0 },
+    )
+  }
+  return { cost: result.cost ?? 0, result: result.result?.[0] ?? null }
+}
+
+async function dataForSeo(
+  keys: string[],
   input: ResearchInput,
 ): Promise<Row[]> {
   const language = dataForSeoLanguage(input.country)
@@ -138,37 +190,13 @@ async function dataForSeo(
       `DataForSEO has no ${input.action} data for country "${input.country}".`,
     )
   }
-  const market = {
-    location_name: countryName(input.country),
-    language_code: language ?? mainLanguage(input.country),
-  }
+  const market = dataForSeoMarket(input.country, language)
   const post = async (path: string, task: Record<string, unknown>) => {
-    const response = await call(
-      'dataforseo',
-      new Request(`https://api.dataforseo.com/${path}`, {
-        method: 'POST',
-        headers: {
-          authorization: `Basic ${btoa(`${login}:${password}`)}`,
-          'content-type': 'application/json',
-        },
-        body: JSON.stringify([{ ...market, ...task }]),
-      }),
-    )
-    const data = (await readJson(response, 'DataForSEO')) as {
-      tasks?: {
-        status_code: number
-        status_message: string
-        result?: { items?: Record<string, unknown>[] }[] | null
-      }[]
-    }
-    const result = data.tasks?.[0]
-    if (!result || result.status_code >= 40000) {
-      throw new CommandError(
-        'PROVIDER_ERROR',
-        `dataforseo: ${result?.status_message ?? 'no task result'}`,
-      )
-    }
-    return result.result?.[0]?.items ?? []
+    const done = await dataForSeoTask(keys, path, {
+      ...market,
+      ...task,
+    })
+    return (done.result?.items as Record<string, unknown>[] | undefined) ?? []
   }
   const get = (value: unknown, path: string): unknown =>
     path

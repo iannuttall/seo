@@ -60,9 +60,22 @@ install_pnpm() {
   npm install --global --no-fund --no-audit "pnpm@$pnpm_version"
 }
 
+install_seo_cli() {
+  # The published release, for `seo login` and real runs. Try source
+  # changes with `pnpm build:package` and `node dist/cli.js`, never a link.
+  local latest
+  latest="$(npm view seo version)"
+  if [[ "$(seo --version 2>/dev/null || true)" == *"$latest"* ]]; then
+    echo "    seo $latest already installed"
+    return
+  fi
+  npm install --global --no-fund --no-audit "seo@$latest"
+}
+
 step "Install Node $node_version" install_node
 step "Persist Node on login PATH" persist_path
 export PATH="$node_dir/bin:$PATH"
 step "Install pnpm" install_pnpm
+step "Install the published seo CLI" install_seo_cli
 step "Install dependencies" pnpm install --frozen-lockfile
 echo "Node $(node --version), pnpm $(pnpm --version)"

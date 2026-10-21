@@ -1,6 +1,9 @@
 ---
 import Breadcrumbs from '@/components/Breadcrumbs.astro'
+import CodeBlock from '@/components/CodeBlock.astro'
+import FaqAccordion from '@/components/FaqAccordion.astro'
 import PageHeader from '@/components/PageHeader.astro'
+import SetupCommands from '@/components/SetupCommands.astro'
 import ResearchLookup from '@/components/tools/ResearchLookup.astro'
 import BaseLayout from '@/layouts/BaseLayout.astro'
 import type { SchemaBreadcrumb } from '@/lib/schema'
@@ -10,11 +13,49 @@ const breadcrumbs: SchemaBreadcrumb[] = [
   { label: 'Tools', href: '/tools' },
   { label: 'SERP checker' },
 ]
+
+const faq = [
+  {
+    question: 'What is a SERP checker?',
+    answer:
+      'A tool that fetches the Google search results page for a keyword and lists what ranks. This one asks Google live when you press the button, in the country you pick, and lists the organic results with their positions and the Domain Rating of each site.',
+  },
+  {
+    question: 'Is this SERP checker free?',
+    answer:
+      'Yes. You get 10 free lookups a day without an account. For more, your agent can run the same check with your own DataForSEO or Ahrefs key, which bills you directly.',
+  },
+  {
+    question: 'Why is my position different from what I see in Google?',
+    answer:
+      'Google changes results by location, device, language and what you searched before. The checker searches from the country you pick with no history, so it sees a clean page. Your own browser sees a page shaped by where you are and who you are.',
+  },
+  {
+    question: 'Why does the first result say position 3?',
+    answer:
+      'Positions count every block on the page, the way a person scrolling sees it. When an answer box, a video row or a people also ask box sits above the first organic result, that result is position 2, 3 or lower. Only the organic results are listed.',
+  },
+  {
+    question: 'Can I check local or city results?',
+    answer:
+      'This page checks one of ten countries. City results can differ a lot for local searches such as plumbers or restaurants. Your agent can run seo research with your own key for other countries.',
+  },
+  {
+    question: 'How is this different from rank tracking?',
+    answer:
+      'A SERP check is one snapshot. Rank tracking repeats the check on a schedule and keeps the history. For your own site, Search Console already holds your average position for every query over 16 months, which is better data than any tracker for keywords you show up for.',
+  },
+  {
+    question: 'Why is my site not in the results?',
+    answer:
+      'It is not in the organic results the checker read for that country. It may rank lower, rank only in another country, or rank for a different wording. Check Search Console for the queries your pages actually get impressions for.',
+  },
+]
 ---
 
 <BaseLayout
   title="SERP checker"
-  description="Check the live Google results for any keyword in ten countries. See who ranks, with a Domain Rating for each site, and find where your own domain ranks."
+  description="Check the live Google results for any keyword in ten countries for free. See who ranks, each site's Domain Rating, where your domain ranks, and how to read the results page."
   canonicalPath="/tools/serp-checker"
   {breadcrumbs}
 >
@@ -32,43 +73,96 @@ const breadcrumbs: SchemaBreadcrumb[] = [
     />
 
     <div class="docs-prose mt-16">
-      <h2>What the live results show</h2>
+      <h2>Read the live results</h2>
       <p>
         The checker asks Google for the keyword at the moment you press the
-        button and lists the first 50 organic results, with each page's
-        title, address and a Domain Rating for its site. Ads, maps and other
-        boxes are left out, so the numbers are organic positions.
+        button and lists the organic results: each page's title, address,
+        position and the Domain Rating of its site. Add your domain and the
+        result says where it ranks and highlights the row.
+      </p>
+      <table>
+        <thead>
+          <tr>
+            <th>Column</th>
+            <th>What it tells you</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>#</td>
+            <td>The position on the page, counting every block above it.</td>
+          </tr>
+          <tr>
+            <td>Result</td>
+            <td>The title Google shows and the page that ranks.</td>
+          </tr>
+          <tr>
+            <td>Domain Rating</td>
+            <td>Domain Rating by Ahrefs for the site, from 0 to 100.</td>
+          </tr>
+        </tbody>
+      </table>
+
+      <h2>Why the first result can be position 3</h2>
+      <p>
+        A results page is more than ten blue links. Answer boxes, video rows,
+        people also ask and other blocks sit between them. The checker
+        counts every block, so a gap in the numbers means something else
+        took that spot. That is closer to what a person sees when they
+        scroll, and closer to how Search Console counts your position. Ads
+        and the blocks themselves are not listed.
       </p>
 
-      <h2>Find where your site ranks</h2>
+      <h2>Read search intent from the page</h2>
       <p>
-        Add your domain and the result says its position, and the row is
-        highlighted. If it is not in the first 50 results, the result says
-        so rather than showing a number.
+        The kind of page that ranks tells you what Google thinks the search
+        wants. If every result is a product page, a long guide is unlikely
+        to fit. If they are all guides, a product page will struggle. Forums
+        near the top often mean people want real experience, not polished
+        copy. Look at this before you write anything.
       </p>
       <p>
-        One check is one moment in one country. Results move during the day
-        and differ by city and device, so a single check is a snapshot, not
-        your average position.
+        The Domain Rating column shows who you are up against. A first page
+        of sites at DR 80 and above is a hard fight for a new site. A page
+        with a few DR 20 sites in the top ten is a sign that the right page
+        can get in.
       </p>
 
-      <h2>Your average position is in Search Console</h2>
+      <h2>One check is a snapshot</h2>
+      <p>
+        Results move during the day, and they differ by city, device and
+        language. A single check is one moment in one country, not your
+        average position. Check again before you act on a small change, and
+        do not read much into a move of one or two places.
+      </p>
       <p>
         For keywords your site already shows up for, Search Console has the
-        average position over every search, which is steadier than any one
-        check. Your agent reads it with the <a href="/docs/report">SEO
-        report</a>, then uses <a href="/docs/research">seo research</a>{' '}
-        to see who outranks you for the queries that matter. It needs a
-        DataForSEO or Ahrefs key of your own for that part.
+        average position across every real search, which is steadier than
+        any check. The <a href="/tools/competitor-keyword-research">competitor keyword research</a>{' '}
+        tool shows every keyword a site ranks for, when you want the whole
+        picture instead of one search.
       </p>
 
-      <h2>Size up the competition before you write</h2>
+      <h2>Check rankings with your AI agent</h2>
       <p>
-        Look at what kind of pages rank: guides, product pages, forums or
-        tools. If every result is a product page, a long article is unlikely
-        to fit the search. The Domain Rating column shows whether the page
-        is up against large sites or small ones.
+        With SEO Skill your agent can join both sides. The{' '}
+        <a href="/docs/report">SEO report</a> reads your own positions from
+        Search Console, including the quick wins at positions 4 to 10. Then{' '}
+        <a href="/docs/research">seo research</a> pulls the live results for
+        those queries with your own DataForSEO or Ahrefs key, so you can see
+        which pages sit above yours and what they have in common. Ask:
       </p>
+      <CodeBlock value="Find my quick wins for example.com, then check the live Google results for the top five and tell me what the pages above mine have in common" wrap />
+      <p>Add the hosted MCP server to your agent and sign in with Google:</p>
+    </div>
+
+    <SetupCommands id="serp-setup" class="mt-6" />
+
+    <div class="docs-prose mt-16">
+      <h2>SERP checker questions</h2>
+    </div>
+    <div class="mt-6">
+      <FaqAccordion id="serp-faq" items={faq} />
     </div>
   </main>
 </BaseLayout>

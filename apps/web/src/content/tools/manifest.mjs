@@ -90,6 +90,15 @@ export const tools = [
     kind: 'worker',
   },
   {
+    id: 'backlink-checker',
+    path: '/tools/backlink-checker',
+    title: 'Backlink checker',
+    action: 'Open the backlink checker',
+    description:
+      'See the sites that link to a domain or page, with anchor text, followed links and a year of history.',
+    kind: 'protected',
+  },
+  {
     id: 'spam-score-checker',
     path: '/tools/spam-score-checker',
     title: 'Spam score checker',

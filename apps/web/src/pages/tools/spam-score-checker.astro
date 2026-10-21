@@ -1,6 +1,9 @@
 ---
 import Breadcrumbs from '@/components/Breadcrumbs.astro'
+import CodeBlock from '@/components/CodeBlock.astro'
+import FaqAccordion from '@/components/FaqAccordion.astro'
 import PageHeader from '@/components/PageHeader.astro'
+import SetupCommands from '@/components/SetupCommands.astro'
 import ProtectedMetricChecker from '@/components/tools/ProtectedMetricChecker.astro'
 import BaseLayout from '@/layouts/BaseLayout.astro'
 import type { SchemaBreadcrumb } from '@/lib/schema'
@@ -10,11 +13,44 @@ const breadcrumbs: SchemaBreadcrumb[] = [
   { label: 'Tools', href: '/tools' },
   { label: 'Spam score checker' },
 ]
+
+const faq = [
+  {
+    question: 'What is a spam score?',
+    answer:
+      'A 0 to 100 score for how many spam patterns a website’s own pages show. This page uses DataForSEO’s spam score, which checks each page for signals such as an odd domain name, missing contact details, plain HTTP and far more outgoing links than internal ones, then averages the pages.',
+  },
+  {
+    question: 'What is a good spam score?',
+    answer:
+      'DataForSEO calls 0 to 30 low, 31 to 60 medium and 61 to 100 high. Most normal business sites sit in the low band. A medium score is a reason to look at the site, not a verdict.',
+  },
+  {
+    question: 'Does a high spam score mean Google penalised the site?',
+    answer:
+      'No. Google does not use this score and does not publish one. A high score means the site shares patterns that spam sites often have. Whether Google acts on a site depends on its own systems and spam policies, which this score cannot see.',
+  },
+  {
+    question: 'How do I check the spam score of my website?',
+    answer:
+      'Enter your domain above. To check one page, enter its full URL instead. The score covers the pages DataForSEO has crawled, so a new site or a site it has not crawled may come back with no score.',
+  },
+  {
+    question: 'How do I lower my spam score?',
+    answer:
+      'Fix the patterns behind it on your own pages: serve every page over HTTPS, add real contact details, and cut or improve thin pages that are mostly outgoing links. The score updates when DataForSEO crawls the pages again. You cannot change your domain name, so a long or number-heavy name keeps a few points.',
+  },
+  {
+    question: 'Is this an email spam checker?',
+    answer:
+      'No. This checks a website for spam patterns, the way an SEO or a link builder would. To test whether an email lands in spam, you need an email deliverability tester.',
+  },
+]
 ---
 
 <BaseLayout
   title="Spam score checker"
-  description="Check the spam score for a domain or page URL."
+  description="Check the spam score of any website or page for free. See what the 0 to 100 score measures, what counts as low or high, and when a high score matters for links."
   canonicalPath="/tools/spam-score-checker"
   {breadcrumbs}
 >
@@ -22,7 +58,7 @@ const breadcrumbs: SchemaBreadcrumb[] = [
     <Breadcrumbs {breadcrumbs} />
     <PageHeader
       title="Spam score checker"
-      description="Get a spam score for your website, a client site, a competitor, or an individual page."
+      description="Check the spam score of your website, a client site, a link prospect or one page."
     />
 
     <ProtectedMetricChecker
@@ -35,30 +71,99 @@ const breadcrumbs: SchemaBreadcrumb[] = [
     />
 
     <div class="docs-prose mt-16">
-      <h2>Use the score to find sites worth reviewing</h2>
+      <h2>Read the spam score</h2>
       <p>
-        Check your own website, a client site, a competitor, or an individual
-        page. The result gives you a quick way to decide where a closer review
-        may be useful.
+        The score runs from 0 to 100 and comes with a band, using
+        DataForSEO's own cut-offs.
       </p>
+      <table>
+        <thead>
+          <tr>
+            <th>Score</th>
+            <th>What it means</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>0 to 30, low</td>
+            <td>Normal for most real sites. Nothing to act on.</td>
+          </tr>
+          <tr>
+            <td>31 to 60, medium</td>
+            <td>Open the site and look. Often a thin or neglected site, sometimes worse.</td>
+          </tr>
+          <tr>
+            <td>61 to 100, high</td>
+            <td>Many spam patterns. Look hard before you link to it or ask it for a link.</td>
+          </tr>
+        </tbody>
+      </table>
       <p>
-        Lower scores indicate fewer common spam patterns. Higher scores indicate
-        more patterns and make the site a stronger candidate for a manual review.
+        "N/A" means DataForSEO has no score for that target, usually because
+        it has not crawled the site. That is not the same as a score of zero.
       </p>
 
-      <h2>Review the site behind the number</h2>
+      <h2>What the spam score measures</h2>
       <p>
-        Open the site, check its content and contact details, and review the
-        links pointing to it. This helps you understand why the score is high
-        and whether the site is relevant to your work.
+        DataForSEO checks each page it has crawled against 18 signals that
+        spam sites tend to share, then averages the pages for a domain
+        score. The signals are about the site's own pages: things such as a
+        very short or very long domain name, a domain full of numbers, no
+        contact information, pages served over plain HTTP, and pages with
+        far more outgoing links than internal ones.
+      </p>
+      <p>
+        So the score describes the site, not the links pointing to it. A
+        good site with a few junk links aimed at it can still score low.
       </p>
 
-      <h2>Compare scores from the same checker</h2>
+      <h2>When a spam score matters</h2>
       <p>
-        Spam scores vary between checkers, so use the same tool when comparing
-        several domains. That gives you a cleaner view of which sites stand out
-        from the rest of the group.
+        The score is a quick filter for link work. Before you chase a link
+        from a site, or wonder whether a link to you is a problem, it tells
+        you which sites deserve a closer look. Google's{' '}
+        <a href="https://support.google.com/webmasters/answer/2648487" target="_blank" rel="noreferrer">disavow guidance</a>{' '}
+        says most sites never need to disavow links, so a handful of spammy
+        links pointing at you is usually not worth worrying about.
       </p>
+      <p>
+        It matters more when you are about to buy a domain, accept a guest
+        post or place content on a site. There a high score is a good reason
+        to stop and check.
+      </p>
+
+      <h2>Check the site behind a high score</h2>
+      <ul>
+        <li>Does it have real pages a person would read, or mostly ads and outgoing links?</li>
+        <li>Can you find who runs it and how to contact them?</li>
+        <li>Does it rank for anything? Run it through the <a href="/tools/website-traffic-checker">website traffic checker</a>. A site with links but no search traffic is a warning sign.</li>
+        <li>How strong are its own links? The <a href="/tools/domain-rating-checker">Domain Rating checker</a> shows that side.</li>
+      </ul>
+      <p>
+        Spam scores from different checkers use different signals, so
+        compare sites with one checker only.
+      </p>
+
+      <h2>Review link prospects with your AI agent</h2>
+      <p>
+        Checking one site at a time gets slow on a list of fifty prospects.
+        With SEO Skill your agent can pull the domains linking to a
+        competitor with <a href="/docs/research">seo research</a> and your
+        own DataForSEO or Ahrefs key. Every domain comes with a free Domain
+        Rating. Your agent can then sort the list and open the sites worth a
+        human look. Ask:
+      </p>
+      <CodeBlock value="List the referring domains for competitor.example, sort them by Domain Rating, and flag any I should check by hand" wrap />
+      <p>Add the hosted MCP server to your agent and sign in with Google:</p>
+    </div>
+
+    <SetupCommands id="spam-score-setup" class="mt-6" />
+
+    <div class="docs-prose mt-16">
+      <h2>Spam score questions</h2>
+    </div>
+    <div class="mt-6">
+      <FaqAccordion id="spam-score-faq" items={faq} />
     </div>
   </main>
 </BaseLayout>

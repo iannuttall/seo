@@ -39,10 +39,13 @@ const {
   dateModified,
   datePublished,
 } = Astro.props
-const pageTitle =
+// The brand goes on only when the whole title still fits in a search
+// result, about 60 characters.
+const branded =
   titleBrandPosition === 'prefix'
     ? `${site.name} | ${title}`
     : `${title} | ${site.name}`
+const pageTitle = branded.length <= 60 ? branded : title
 const canonical = canonicalUrl(canonicalPath)
 // Pages kept out of search share the home page's card.
 const ogImage = ogImageUrl(noindex ? canonicalUrl('/') : canonical)

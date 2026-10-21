@@ -22,8 +22,10 @@ const QUESTION_DAYS = 90
 // the conversation or the search box they came from.
 const ASKABLE = new Set(['chat', 'long'])
 const PROMPT_CHARACTERS = 500
-const CHATGPT_MODEL = 'gpt-4.1-mini'
-const PERPLEXITY_MODEL = 'sonar'
+
+// What an engine showed: the answer as Markdown, the URLs it cited (never
+// pages it only looked at), and the model DataForSEO says answered.
+type Shown = { markdown: string; sources: string[]; model: string | null }
 
 type Engine = {
   name: string
@@ -31,53 +33,54 @@ type Engine = {
   means: string
   path: string
   task: (question: string, country: string) => Record<string, unknown>
-  // The parts of a result that are the answer, or null when none was shown.
-  answer: (result: Record<string, unknown>) => unknown[] | null
+  // What the engine showed, or null when it showed no AI answer.
+  shown: (result: Record<string, unknown>) => Shown | null
 }
 
-const llm = (model: string) => (question: string, country: string) => ({
-  user_prompt: question,
-  model_name: model,
-  web_search: true,
-  web_search_country_iso_code: country.toUpperCase(),
-  max_output_tokens: 1024,
-})
+type Item = Record<string, unknown>
+const list = (value: unknown) => (Array.isArray(value) ? (value as Item[]) : [])
+const urls = (items: Item[]) =>
+  items.map((item) => item.url).filter((url) => typeof url === 'string')
 
-const messages = (result: Record<string, unknown>) => {
-  const items = (result.items as unknown[] | null) ?? []
-  return items.length ? items : null
-}
-
-const overviews = (result: Record<string, unknown>) => {
-  const items = (
-    (result.items as Record<string, unknown>[] | null) ?? []
-  ).filter((item) => item.type === 'ai_overview')
-  return items.length ? items : null
+// Google AI Mode and AI Overviews: the ai_overview block, its Markdown, and
+// the references on it and on each of its parts.
+const overview = (result: Item): Shown | null => {
+  const block = list(result.items).find((item) => item.type === 'ai_overview')
+  if (!block) return null
+  const parts = list(block.items)
+  return {
+    markdown:
+      typeof block.markdown === 'string'
+        ? block.markdown
+        : parts.map((part) => String(part.markdown ?? '')).join('\n'),
+    sources: urls([
+      ...list(block.references),
+      ...parts.flatMap((part) => list(part.references)),
+    ]),
+    model: null,
+  }
 }
 
 const ENGINES: Engine[] = [
   {
     name: 'chatgpt',
-    means: `OpenAI's ${CHATGPT_MODEL} API with web search, not the ChatGPT app`,
-    path: 'v3/ai_optimization/chat_gpt/llm_responses/live',
+    means: 'a ChatGPT search, read by DataForSEO',
+    path: 'v3/ai_optimization/chat_gpt/llm_scraper/live/advanced',
     task: (question, country) => ({
-      ...llm(CHATGPT_MODEL)(question, country),
-      force_web_search: true,
+      keyword: question,
+      ...dataForSeoMarket(country, null),
     }),
-    answer: messages,
-  },
-  {
-    name: 'perplexity',
-    means: `Perplexity's ${PERPLEXITY_MODEL} API, which always searches the web`,
-    path: 'v3/ai_optimization/perplexity/llm_responses/live',
-    task: (question, country) => {
-      const { web_search: _, ...task } = llm(PERPLEXITY_MODEL)(
-        question,
-        country,
-      )
-      return task
+    shown: (result) => {
+      const markdown =
+        typeof result.markdown === 'string' ? result.markdown : ''
+      const sources = urls(list(result.sources))
+      if (!markdown && !sources.length) return null
+      return {
+        markdown,
+        sources,
+        model: typeof result.model === 'string' ? result.model : null,
+      }
     },
-    answer: messages,
   },
   {
     name: 'google_ai_mode',
@@ -87,7 +90,7 @@ const ENGINES: Engine[] = [
       keyword: question,
       ...dataForSeoMarket(country, null),
     }),
-    answer: overviews,
+    shown: overview,
   },
   {
     name: 'google_ai_overview',
@@ -99,32 +102,19 @@ const ENGINES: Engine[] = [
       load_async_ai_overview: true,
       ...dataForSeoMarket(country, null),
     }),
-    answer: overviews,
+    shown: overview,
   },
 ]
 
-// Each source URL and each piece of answer text in a result. Text quoted
-// from sources (annotations, references) is not the answer's own text.
-function parts(
-  value: unknown,
-  urls: string[],
-  text: string[],
-  key = '',
-  quoted = false,
-) {
-  if (typeof value === 'string') {
-    if (key === 'url') urls.push(value)
-    else if (!quoted && (key === 'text' || key === 'markdown')) text.push(value)
-    return
-  }
-  if (Array.isArray(value)) {
-    for (const item of value) parts(item, urls, text, key, quoted)
-  } else if (value && typeof value === 'object') {
-    for (const [child, item] of Object.entries(value)) {
-      const source = child === 'annotations' || child === 'references'
-      parts(item, urls, text, child, quoted || source)
-    }
-  }
+// The answer's own words: citation pills such as [1](url) or
+// [example.com](url) and bare links go, so a citation is never also counted
+// as a mention by name.
+function prose(markdown: string): string {
+  return markdown
+    .replace(/\[([^\]]*)\]\(https?:\/\/[^)]*\)/g, (_, label: string) =>
+      /^\s*(\d+|[\w-]+(\.[\w-]+)+)\s*$/.test(label) ? ' ' : label,
+    )
+    .replace(/https?:\/\/\S+/g, ' ')
 }
 
 function onSite(url: string, domain: string): boolean {
@@ -138,6 +128,8 @@ function onSite(url: string, domain: string): boolean {
 
 type Answer = {
   result: 'cited' | 'mentioned' | 'neither' | 'no_answer' | 'unavailable'
+  // The model DataForSEO reports for the answer, when it reports one.
+  model: string | null
   cited_url: string | null
   answered_at: string | null
   cost_usd: number
@@ -161,30 +153,31 @@ async function ask(
       answered_at: String(done.result?.datetime ?? '').slice(0, 10) || null,
       cost_usd: done.cost,
     }
-    const answer = done.result && engine.answer(done.result)
-    if (!answer) return { result: 'no_answer', cited_url: null, ...answered }
-    const urls: string[] = []
-    const text: string[] = []
-    parts(answer, urls, text)
-    // Links written into the answer text count as citations, not names.
-    const link = /https?:\/\/[^\s)\]]+/g
-    let all = text.join('\n')
-    urls.push(...(all.match(link) ?? []))
-    all = all.replace(link, ' ')
-    const cited = urls.find((url) => onSite(url, site.domain))
-    if (cited) return { result: 'cited', cited_url: cited, ...answered }
+    const shown = done.result && engine.shown(done.result)
+    if (!shown) {
+      return { result: 'no_answer', model: null, cited_url: null, ...answered }
+    }
+    const base = { model: shown.model, ...answered }
+    // Links written into the answer count as sources too.
+    const linked = shown.markdown.match(/https?:\/\/[^\s)\]]+/g) ?? []
+    const cited = [...shown.sources, ...linked].find((url) =>
+      onSite(url, site.domain),
+    )
+    if (cited) return { result: 'cited', cited_url: cited, ...base }
+    const text = prose(shown.markdown)
     const mentioned =
-      all.toLowerCase().includes(site.domain) || isBrandQuery(all, site.terms)
+      text.toLowerCase().includes(site.domain) || isBrandQuery(text, site.terms)
     return {
       result: mentioned ? 'mentioned' : 'neither',
       cited_url: null,
-      ...answered,
+      ...base,
     }
   } catch (error) {
     // A missing or rejected key stops the run; one engine failing does not.
     if (error instanceof CommandError && error.code === 'NO_KEY') throw error
     return {
       result: 'unavailable',
+      model: null,
       cited_url: null,
       answered_at: null,
       cost_usd: 0,
@@ -252,7 +245,7 @@ export async function runAiAnswers(
       ? [
           `Cited ${count('cited')}, mentioned ${count('mentioned')}, neither ${count('neither')}, no answer shown ${count('no_answer')}, unavailable ${count('unavailable')}. DataForSEO cost: $${cost}.`,
           'Each row is one sample of an answer that changes from run to run, not a ranking.',
-          `cited: a source link to ${domain} or a subdomain. mentioned: no link, but the answer text names ${[domain, ...site.terms].join(' or ')}, a text match. no_answer: the engine showed no AI answer for the question.`,
+          `cited: the answer lists or links a page on ${domain} or a subdomain. mentioned: no such source, but the answer text names ${[domain, ...site.terms].join(' or ')}, a text match. no_answer: the engine showed no AI answer for the question. model: the model DataForSEO reports for the answer, when it reports one.`,
           `Engines: ${ENGINES.map((engine) => `${engine.name} is ${engine.means}`).join('; ')}.`,
         ]
       : []),

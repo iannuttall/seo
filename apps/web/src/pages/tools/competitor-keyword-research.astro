@@ -1,0 +1,83 @@
+---
+import Breadcrumbs from '@/components/Breadcrumbs.astro'
+import PageHeader from '@/components/PageHeader.astro'
+import ResearchLookup from '@/components/tools/ResearchLookup.astro'
+import BaseLayout from '@/layouts/BaseLayout.astro'
+import type { SchemaBreadcrumb } from '@/lib/schema'
+
+const breadcrumbs: SchemaBreadcrumb[] = [
+  { label: 'Home', href: '/' },
+  { label: 'Tools', href: '/tools' },
+  { label: 'Competitor keyword research' },
+]
+---
+
+<BaseLayout
+  title="Competitor keyword research"
+  description="Find the keywords a competitor ranks for, with positions, monthly searches and the ranking page, and see which sites compete with any domain in Google."
+  canonicalPath="/tools/competitor-keyword-research"
+  {breadcrumbs}
+>
+  <main data-agent-content>
+    <Breadcrumbs {breadcrumbs} />
+    <PageHeader
+      title="Competitor keyword research"
+      description="Enter a competitor's domain to see the keywords it ranks for in Google, or find the sites that compete with any domain."
+    />
+
+    <ResearchLookup
+      kind="competitors"
+      heading="Look up a competitor"
+      description="Choose what to look up, enter a domain and pick the country you care about."
+    />
+
+    <div class="docs-prose mt-16">
+      <h2>See the keywords a competitor ranks for</h2>
+      <p>
+        Enter a competitor's domain and keep <strong>Keywords it ranks
+        for</strong> selected. You get its 50 keywords with the most estimated
+        traffic, the position it holds for each one, how many people search
+        for it a month and the page that ranks.
+      </p>
+      <p>
+        Read the page column first. It shows which of their pages pull in
+        that traffic, which tells you more about what is working for them
+        than the keyword list alone.
+      </p>
+
+      <h2>Find the sites you actually compete with</h2>
+      <p>
+        Choose <strong>Sites it competes with</strong> and enter your own
+        domain. You get the domains that rank for the most of the same
+        keywords, with a Domain Rating next to each one. These are often not
+        the businesses you think of as competitors (a publisher or a forum
+        can share more keywords with you than a rival shop does).
+      </p>
+      <p>
+        Large platforms that share keywords with nearly every site are left
+        out so the list stays useful, and the result says which ones. Choose{' '}
+        <strong>Its keywords</strong> on any row to look up that domain next.
+      </p>
+
+      <h2>Compare their keywords with your own</h2>
+      <p>
+        A competitor list only becomes a plan when you hold it up against
+        your own site. Your agent can do that with your data: ask it which of
+        a competitor's keywords you get no impressions for in Search Console,
+        and it pulls their ranked keywords with{' '}
+        <a href="/docs/research">seo research</a>{' '}
+        and your own queries with <a href="/docs/data">seo data</a>, then
+        compares the two. Research data stays labelled as research and
+        is never mixed into your own numbers.
+      </p>
+
+      <h2>Positions and searches are estimates</h2>
+      <p>
+        The keywords, positions and search volumes come from DataForSEO's own
+        index for the country you pick. They are good for comparing sites in
+        the same market. For your own site, Search Console has the real
+        clicks and positions.
+      </p>
+    </div>
+  </main>
+</BaseLayout>

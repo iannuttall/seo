@@ -1,0 +1,90 @@
+---
+import Breadcrumbs from '@/components/Breadcrumbs.astro'
+import PageHeader from '@/components/PageHeader.astro'
+import SetupCommands from '@/components/SetupCommands.astro'
+import MonthlyReportBuilder from '@/components/tools/MonthlyReportBuilder.astro'
+import BaseLayout from '@/layouts/BaseLayout.astro'
+import type { SchemaBreadcrumb } from '@/lib/schema'
+
+const breadcrumbs: SchemaBreadcrumb[] = [
+  { label: 'Home', href: '/' },
+  { label: 'Tools', href: '/tools' },
+  { label: 'Monthly SEO report' },
+]
+---
+
+<BaseLayout
+  title="Monthly SEO report"
+  description="Build a monthly SEO report from your Search Console export: clicks, impressions, CTR and position against last month, the pages and queries that moved, and your notes. Download it as HTML or Markdown."
+  canonicalPath="/tools/monthly-seo-report"
+  {breadcrumbs}
+>
+  <main data-agent-content>
+    <Breadcrumbs {breadcrumbs} />
+    <PageHeader
+      title="Monthly SEO report"
+      description="Turn your Search Console export into a month-on-month report you can send, then download it as HTML or Markdown."
+    />
+
+    <MonthlyReportBuilder />
+
+    <div class="docs-prose mt-16">
+      <h2>Export the right data from Search Console</h2>
+      <ol>
+        <li>Open <strong>Performance</strong>, then <strong>Search results</strong>.</li>
+        <li>
+          Open the date filter, choose <strong>Compare</strong> and pick the
+          last 28 days against the previous period. For calendar months, use{' '}
+          <strong>Custom</strong> and set both months.
+        </li>
+        <li>Choose <strong>Export</strong>, then <strong>Download CSV</strong>, and drop the zip above.</li>
+      </ol>
+      <p>
+        An export without a comparison works too. Export the last 3 months
+        and the report compares the last two complete calendar months. The
+        page and query tables then cover the whole export rather than one
+        month, and the report says so.
+      </p>
+
+      <h2>What goes in the report</h2>
+      <ul>
+        <li>Clicks, impressions, click-through rate and average position, each against the previous period.</li>
+        <li>Daily clicks for both periods on one chart.</li>
+        <li>Clicks by device and by country.</li>
+        <li>The pages and queries that gained and lost the most clicks.</li>
+        <li>Your own notes, word for word.</li>
+      </ul>
+      <p>
+        Every number comes from your export. The report adds no score and no
+        advice, so what you send is what Search Console recorded.
+      </p>
+
+      <h2>Write the part only you know</h2>
+      <p>
+        The numbers say what changed. They cannot say why. Use the notes for
+        what you shipped this month, anything that broke, and what you will
+        check next. Keep what happened apart from what you think caused it,
+        and the reader can judge both.
+      </p>
+
+      <h2>Have your agent write it every month</h2>
+      <p>
+        An export only has totals, pages and queries. The{' '}
+        <a href="/docs/report">SEO report</a> your agent runs reads
+        Search Console directly, so it also finds quick wins, low
+        click-through rates, pages losing clicks, queries split across
+        several of your pages and the day a traffic drop started, with the
+        Google updates around it. It adds Google Analytics sessions for the
+        same dates and Bing beside Google when Bing is connected.
+      </p>
+      <p>
+        Ask it on the first of the month for "the monthly SEO report for
+        example.com" and keep the same 28-day window each time, so one
+        month compares fairly with the next. Agents that run on a schedule
+        can do this without you asking.
+      </p>
+    </div>
+
+    <SetupCommands id="monthly-report-setup" class="mt-6" />
+  </main>
+</BaseLayout>

@@ -37,6 +37,9 @@ export const pageRedirects = {
   '/docs/html-reports': '/docs',
   '/docs/ai-search': '/docs',
   '/docs/ai-visibility': '/docs',
+  // Merged into the tools that now cover the same searches.
+  '/features/google-updates': '/tools/google-algorithm-update-checker',
+  '/tools/seo-report-template': '/tools/monthly-seo-report',
   // The command pages moved up a level after the redesign preview.
   '/docs/commands': '/docs',
   ...Object.fromEntries(
@@ -53,23 +56,38 @@ export const pageRedirects = {
   ),
 }
 
+/**
+ * Old report pages whose searches a free tool now answers. The rest go to
+ * the command page that covers them. Telemetry keeps the command pages.
+ */
+export const reportToolPages = {
+  'update-correlation': '/tools/google-algorithm-update-checker',
+  'search-status-updates': '/tools/google-algorithm-update-checker',
+  'competitor-keyword-gap': '/tools/competitor-keyword-research',
+  'ranked-keywords': '/tools/competitor-keyword-research',
+  'serp-competitors': '/tools/competitor-keyword-research',
+  'serp-results': '/tools/serp-checker',
+  'rank-tracking': '/tools/serp-checker',
+  'monthly-report': '/tools/monthly-seo-report',
+  'monthly-action-plan': '/tools/monthly-seo-report',
+  'domain-rating': '/tools/domain-rating-checker',
+}
+
 /** Every old report URL and where it goes now. */
 export function reportRedirects() {
   /** @type {Array<[string, string]>} */
   const rules = []
+  const destination = (id) => reportToolPages[id] ?? reportDestination(id)
   for (const id of reportIds) {
-    rules.push([
-      `/docs/reports/${reportSlugs[id] ?? id}`,
-      reportDestination(id),
-    ])
-    if (reportSlugs[id])
-      rules.push([`/docs/reports/${id}`, reportDestination(id)])
+    rules.push([`/docs/reports/${reportSlugs[id] ?? id}`, destination(id)])
+    if (reportSlugs[id]) rules.push([`/docs/reports/${id}`, destination(id)])
   }
   for (const [alias, target] of Object.entries(legacyReportAliases)) {
-    const destination = target.startsWith('/')
-      ? target
-      : reportDestination(target)
-    rules.push([`/docs/reports/${alias}`, destination])
+    const to = reportToolPages[alias] ?? target
+    rules.push([
+      `/docs/reports/${alias}`,
+      to.startsWith('/') ? to : destination(to),
+    ])
   }
   return rules
 }

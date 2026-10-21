@@ -1,15 +1,17 @@
 import {
   Analytics02Icon,
+  Calendar03Icon,
   ChartLineData01Icon,
   CheckListIcon,
   CodeIcon,
+  File01Icon,
   FileEditIcon,
-  FileScriptIcon,
   FileValidationIcon,
   Image02Icon,
   Layers01Icon,
   LinkSquare01Icon,
   ListViewIcon,
+  RankingIcon,
   Robot01Icon,
   Search01Icon,
   SecurityCheckIcon,
@@ -17,10 +19,15 @@ import {
   ShuffleIcon,
   StarIcon,
   TranslateIcon,
+  UserGroupIcon,
 } from '@hugeicons/core-free-icons'
 
 // One icon per free tool, keyed by the tool id in tools/manifest.mjs.
 export const toolIcons = {
+  'google-algorithm-update-checker': Calendar03Icon,
+  'competitor-keyword-research': UserGroupIcon,
+  'monthly-seo-report': File01Icon,
+  'serp-checker': RankingIcon,
   'llms-txt-generator': FileEditIcon,
   'llms-txt-validator': FileValidationIcon,
   'server-log-analyzer': ServerStack01Icon,
@@ -34,7 +41,6 @@ export const toolIcons = {
   'robots-txt-validator': Robot01Icon,
   'schema-markup-generator': CodeIcon,
   'schema-markup-validator': CheckListIcon,
-  'seo-report-template': FileScriptIcon,
   'hreflang-generator': TranslateIcon,
   'serp-preview': Search01Icon,
   'canonical-checker': LinkSquare01Icon,

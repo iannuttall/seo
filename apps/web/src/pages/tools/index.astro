@@ -23,7 +23,7 @@ import BaseLayout from '@/layouts/BaseLayout.astro'
       </p>
     </section>
 
-    <div class="mt-14 grid grid-cols-1 gap-2 sm:grid-cols-2 lg:grid-cols-3">
+    <div class="mt-14 grid grid-cols-1 gap-2 sm:grid-cols-2">
       {
         tools.map((tool) => (
           <HomeCard title={tool.title} text={tool.description} icon={toolIcon(tool.id)} href={tool.path} />

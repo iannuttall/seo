@@ -6,6 +6,8 @@ export const PAID_TOOL_PROVIDERS = {
   'spam-score': 'dataforseo-spam',
   'domain-rating': 'ahrefs',
   'website-traffic': 'dataforseo-traffic',
+  'competitor-keywords': 'dataforseo-research',
+  'serp-checker': 'dataforseo-research',
 } as const
 
 export const PUBLIC_WORKER_TOOLS = [

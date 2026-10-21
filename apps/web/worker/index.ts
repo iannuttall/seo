@@ -4,7 +4,9 @@ import { applyDailyToolQuota } from './tools/daily-tool-quota.ts'
 import { handleFaviconCheck } from './tools/favicon-checker.ts'
 import { handleLlmsTxtFetch } from './tools/llms-txt.ts'
 import {
+  handleCompetitorKeywords,
   handleDomainRating,
+  handleSerpChecker,
   handleSpamScore,
   handleWebsiteTraffic,
 } from './tools/paid-tool-routes.ts'
@@ -1016,6 +1018,12 @@ app.all('/api/tools/domain-rating', (context) =>
 )
 app.all('/api/tools/website-traffic', (context) =>
   handleWebsiteTraffic(context.req.raw, context.env),
+)
+app.all('/api/tools/competitor-keywords', (context) =>
+  handleCompetitorKeywords(context.req.raw, context.env),
+)
+app.all('/api/tools/serp-checker', (context) =>
+  handleSerpChecker(context.req.raw, context.env),
 )
 app.all('/api/*', () => jsonResponse({ error: 'Not found' }, 404))
 app.all('*', (context) => context.env.ASSETS.fetch(context.req.raw))

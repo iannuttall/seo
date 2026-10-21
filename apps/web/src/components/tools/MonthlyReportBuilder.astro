@@ -1,0 +1,247 @@
+---
+import Button from '@/components/Button.astro'
+import Card from '@/components/Card.astro'
+import FormInput from '@/components/FormInput.astro'
+import FormTextarea from '@/components/FormTextarea.astro'
+import { REPORT_STYLES } from '@/lib/monthly-report'
+---
+
+<section data-monthly-report class="space-y-6">
+  <style is:global set:html={REPORT_STYLES}></style>
+
+  <Card>
+    <div class="space-y-5 p-5 sm:p-6">
+      <div class="space-y-1">
+        <h2 class="text-lg font-medium">Build your report</h2>
+        <p class="text-sm leading-6 text-foreground-muted">
+          Add your Search Console export and the report below fills in with
+          your numbers. Nothing is uploaded.
+        </p>
+      </div>
+
+      <label class="block space-y-2 text-sm font-medium">
+        <span>Site name <span class="font-normal text-foreground-muted">(for the report title)</span></span>
+        <FormInput data-site type="text" maxlength="120" placeholder="example.com" autocapitalize="off" spellcheck="false" />
+      </label>
+
+      <div data-file-drop class="rounded-lg bg-muted p-5">
+        <input data-file-input class="hidden" type="file" multiple accept=".zip,.csv,text/csv,application/zip" />
+        <div class="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+          <div class="min-w-0 space-y-1">
+            <p data-file-name class="text-sm font-medium">No export added</p>
+            <p data-file-detail class="text-xs leading-5 text-foreground-muted">
+              Drop the zip from Search Console's Export button, or the CSV
+              files inside it.
+            </p>
+          </div>
+          <button data-choose-file type="button" class="shrink-0 rounded-lg border border-border bg-card px-4 py-2.5 text-xs font-medium text-foreground transition-colors hover:border-border-strong">Choose file</button>
+        </div>
+        <p data-error hidden class="mt-3 text-sm leading-6 text-red-700 dark:text-red-400" role="alert"></p>
+      </div>
+
+      <label class="block space-y-2 text-sm font-medium">
+        <span>Your notes <span class="font-normal text-foreground-muted">(optional, added to the report as written)</span></span>
+        <FormTextarea data-notes rows="3" maxlength="4000" placeholder="What changed on the site this month, and what you plan to do next." />
+      </label>
+    </div>
+  </Card>
+
+  <Card inverted>
+    <div class="space-y-4 p-5 sm:p-6">
+      <div class="flex flex-wrap items-center justify-between gap-3">
+        <p data-badge class="rounded-md bg-card px-2.5 py-1 text-xs font-medium text-foreground-muted">Sample report with made-up numbers</p>
+        <div class="flex flex-wrap gap-2">
+          <Button data-download="html" type="button" class="min-h-9 px-3 text-xs">Download HTML</Button>
+          <Button data-download="md" type="button" class="min-h-9 px-3 text-xs">Download Markdown</Button>
+          <Button data-copy type="button" class="min-h-9 px-3 text-xs">Copy Markdown</Button>
+        </div>
+      </div>
+      <article data-report class="monthly-report text-foreground" aria-live="polite"></article>
+      <p data-copy-status class="text-xs text-foreground-muted" aria-live="polite"></p>
+    </div>
+  </Card>
+</section>
+
+<script>
+  import { buildMonthlyReport, type MonthlyReport, REPORT_STYLES, ReportError, reportHtml, reportMarkdown } from '@/lib/monthly-report'
+  import { ExportError, type ExportTables, readSearchConsoleExport } from '@/lib/search-console-export'
+
+  // A made-up shop for the sample, so the page shows a whole report before
+  // anyone adds an export.
+  function sampleTables(): ExportTables {
+    const metric = (clicks: number, impressions: number, position: number) => ({
+      clicks,
+      impressions,
+      ctr: clicks / impressions,
+      position,
+    })
+    const day = (index: number) => new Date(Date.UTC(2026, 8, 20 + index)).toISOString().slice(0, 10)
+    // A weekday rhythm with weekend dips and a little noise, like most sites.
+    const week = [1.04, 1.08, 1.06, 1.03, 0.96, 0.82, 0.86]
+    const noise = [3, -2, 5, 1, -4, 2, 0, -3, 4, -1, 2, -5, 3, 1]
+    const wave = (index: number, base: number) =>
+      Math.round(base * (week[(index + 6) % 7] ?? 1) * (1 + index * 0.003) + (noise[index % noise.length] ?? 0))
+    const pair = (label: string, now: number, before: number) => ({
+      label,
+      current: metric(now, now * 31, 8.4),
+      previous: metric(before, before * 30, 9.1),
+    })
+    const periods = ['Last 28 days', 'Previous 28 days']
+    return {
+      dates: {
+        kind: 'dates',
+        periods,
+        capped: false,
+        rows: Array.from({ length: 28 }, (_, index) => ({
+          label: day(index),
+          current: metric(wave(index, 126), wave(index, 126) * 34, 11.8),
+          previous: metric(wave(index + 3, 112), wave(index + 3, 112) * 33, 12.6),
+        })),
+      },
+      devices: {
+        kind: 'devices',
+        periods,
+        capped: false,
+        rows: [pair('Mobile', 2140, 1890), pair('Desktop', 1310, 1170), pair('Tablet', 46, 52)],
+      },
+      pages: {
+        kind: 'pages',
+        periods,
+        capped: false,
+        rows: [
+          pair('https://shop.example.com/trail-running-shoes', 820, 610),
+          pair('https://shop.example.com/guides/flat-feet', 540, 410),
+          pair('https://shop.example.com/size-guide', 300, 255),
+          pair('https://shop.example.com/sale', 140, 320),
+          pair('https://shop.example.com/guides/marathon-plan', 210, 260),
+          pair('https://shop.example.com/socks', 95, 120),
+        ],
+      },
+      queries: {
+        kind: 'queries',
+        periods,
+        capped: false,
+        rows: [
+          pair('trail running shoes', 410, 290),
+          pair('running shoes for flat feet', 260, 180),
+          pair('running shoe size guide', 150, 120),
+          pair('running shoes sale', 60, 210),
+          pair('marathon training plan', 90, 130),
+          pair('running socks', 40, 52),
+        ],
+      },
+      countries: {
+        kind: 'countries',
+        periods,
+        capped: false,
+        rows: [pair('United Kingdom', 2310, 2050), pair('Ireland', 380, 330), pair('United States', 290, 280), pair('Australia', 120, 110), pair('Canada', 95, 102)],
+      },
+    }
+  }
+
+  function initialise(root: HTMLElement): void {
+    if (root.dataset.initialised === 'true') return
+    root.dataset.initialised = 'true'
+    const $ = <T extends HTMLElement>(selector: string) => root.querySelector<T>(selector)
+    const site = $<HTMLInputElement>('[data-site]')
+    const notes = $<HTMLTextAreaElement>('[data-notes]')
+    const input = $<HTMLInputElement>('[data-file-input]')
+    const drop = $<HTMLElement>('[data-file-drop]')
+    const error = $<HTMLElement>('[data-error]')
+    const article = $<HTMLElement>('[data-report]')
+    const badge = $<HTMLElement>('[data-badge]')
+    const status = $<HTMLElement>('[data-copy-status]')
+    if (!site || !notes || !input || !drop || !error || !article || !badge || !status) return
+
+    let tables: ExportTables = sampleTables()
+    let sample = true
+    let report: MonthlyReport | undefined
+
+    const render = () => {
+      error.hidden = true
+      try {
+        report = buildMonthlyReport(tables, {
+          site: site.value || (sample ? 'shop.example.com' : ''),
+          notes: notes.value,
+        })
+        article.innerHTML = reportHtml(report)
+      } catch (caught) {
+        error.textContent = caught instanceof ReportError ? caught.message : 'The report could not be built from this export.'
+        error.hidden = false
+      }
+    }
+
+    const load = async (files: File[]) => {
+      if (!files.length) return
+      error.hidden = true
+      try {
+        const loaded = await readSearchConsoleExport(files)
+        buildMonthlyReport(loaded, { site: '', notes: '' })
+        tables = loaded
+        sample = false
+        const name = $<HTMLElement>('[data-file-name]')
+        const detail = $<HTMLElement>('[data-file-detail]')
+        if (name) name.textContent = files.map((file) => file.name).join(', ')
+        if (detail) detail.textContent = `Read ${Object.keys(loaded).length} ${Object.keys(loaded).length === 1 ? 'table' : 'tables'}: ${Object.keys(loaded).join(', ')}.`
+        badge.textContent = 'Your report'
+        render()
+      } catch (caught) {
+        error.textContent = caught instanceof ExportError || caught instanceof ReportError ? caught.message : 'That file could not be read as a Search Console export.'
+        error.hidden = false
+      }
+    }
+
+    const fileName = (extension: string) => {
+      const slug = (report?.site ?? 'site').toLowerCase().replace(/[^a-z0-9.]+/g, '-').replace(/^-|-$/g, '') || 'site'
+      return `seo-report-${slug}.${extension}`
+    }
+    const save = (contents: string, type: string, name: string) => {
+      const url = URL.createObjectURL(new Blob([contents], { type }))
+      const link = document.createElement('a')
+      link.href = url
+      link.download = name
+      link.click()
+      setTimeout(() => URL.revokeObjectURL(url), 1000)
+    }
+
+    root.querySelector('[data-download="html"]')?.addEventListener('click', () => {
+      if (!report) return
+      const title = `SEO report for ${report.site}`.replace(/[<>&"]/g, '')
+      save(
+        `<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>${title}</title><style>body{max-width:46rem;margin:2rem auto;padding:0 1rem;color:#222;background:#fff}${REPORT_STYLES}</style></head><body><article class="monthly-report">${reportHtml(report)}</article></body></html>`,
+        'text/html',
+        fileName('html'),
+      )
+    })
+    root.querySelector('[data-download="md"]')?.addEventListener('click', () => {
+      if (report) save(reportMarkdown(report), 'text/markdown', fileName('md'))
+    })
+    root.querySelector('[data-copy]')?.addEventListener('click', async () => {
+      if (!report) return
+      await navigator.clipboard.writeText(reportMarkdown(report))
+      status.textContent = 'Markdown copied.'
+    })
+
+    root.querySelector('[data-choose-file]')?.addEventListener('click', () => input.click())
+    input.addEventListener('change', () => void load([...(input.files ?? [])]))
+    drop.addEventListener('dragover', (event) => {
+      event.preventDefault()
+      drop.classList.add('ring-2', 'ring-primary/40')
+    })
+    drop.addEventListener('dragleave', () => drop.classList.remove('ring-2', 'ring-primary/40'))
+    drop.addEventListener('drop', (event) => {
+      event.preventDefault()
+      drop.classList.remove('ring-2', 'ring-primary/40')
+      void load([...(event.dataTransfer?.files ?? [])])
+    })
+    site.addEventListener('input', render)
+    notes.addEventListener('input', render)
+    render()
+  }
+
+  const initialiseAll = () => {
+    for (const root of document.querySelectorAll<HTMLElement>('[data-monthly-report]')) initialise(root)
+  }
+  initialiseAll()
+  document.addEventListener('astro:page-load', initialiseAll)
+</script>

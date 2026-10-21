@@ -1,0 +1,507 @@
+---
+import Button from '@/components/Button.astro'
+import Card from '@/components/Card.astro'
+import {
+  RANKING_HISTORY_CHECKED,
+  searchUpdatesFromIncidents,
+  withRankingHistory,
+} from '@seo/core/updates/browser'
+import { describeUpdates, rolloutStatus } from '@/lib/google-updates'
+import { renderTimeline, timelineHeight } from '@/lib/update-timeline'
+
+// The saved history, rendered now so the table works without JavaScript.
+// The page script adds anything newer from Google's live feed.
+const updates = describeUpdates(
+  searchUpdatesFromIncidents(withRankingHistory([]), {
+    product: 'Ranking',
+    limit: Number.POSITIVE_INFINITY,
+  }),
+)
+// The default 12-month chart at a typical width, so the page paints with it
+// in place; the page script redraws it at the real width.
+const builtAt = Date.now()
+const initialChart = renderTimeline({
+  width: 646,
+  from: builtAt - 365 * 86_400_000,
+  to: builtAt + 7 * 86_400_000,
+  updates,
+  now: builtAt,
+})
+const years = [...new Set(updates.map((update) => update.year))]
+const toggle =
+  'inline-flex h-8 items-center justify-center rounded-md border border-transparent px-3 text-sm font-medium text-foreground-muted outline-none transition-colors hover:text-foreground focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/20 aria-pressed:bg-card aria-pressed:text-foreground aria-pressed:shadow-xs'
+---
+
+<section data-update-checker class="space-y-6" data-checked={RANKING_HISTORY_CHECKED}>
+  <Card>
+    <div class="space-y-5 p-5 sm:p-6">
+      <div class="space-y-1">
+        <h2 class="text-lg font-medium">Google ranking updates</h2>
+        <div aria-live="polite">
+          <p data-status class="text-sm leading-6 text-foreground-muted">{rolloutStatus(updates, builtAt)}</p>
+          <p data-source class="text-xs leading-5 text-foreground-soft">Checking Google's dashboard for newer posts.</p>
+        </div>
+      </div>
+
+      <div class="flex flex-wrap items-center justify-between gap-3">
+        <div data-ranges role="group" aria-label="Dates shown" class="inline-flex h-9 items-center gap-1 rounded-lg bg-muted p-0.5">
+          <button type="button" class={toggle} data-range="365" aria-pressed="true">12 months</button>
+          <button type="button" class={toggle} data-range="730" aria-pressed="false">2 years</button>
+          <button type="button" class={toggle} data-range="all" aria-pressed="false">Since 2021</button>
+          <button type="button" class={toggle} data-range="data" aria-pressed="false" hidden>Your dates</button>
+        </div>
+        <div data-kinds role="group" aria-label="Update types" class="flex flex-wrap items-center gap-1">
+          {[
+            ['core', 'Core', 'bg-primary'],
+            ['spam', 'Spam', 'bg-warning'],
+            ['other', 'Other', 'bg-foreground-soft'],
+          ].map(([kind, label, colour]) => (
+            <button type="button" data-kind={kind} aria-pressed="true" class="inline-flex h-8 items-center gap-2 rounded-md px-2.5 text-sm font-medium text-foreground-muted outline-none transition-colors hover:text-foreground focus-visible:ring-[3px] focus-visible:ring-ring/20 aria-pressed:text-foreground [&[aria-pressed=false]>span]:opacity-30">
+              <span class:list={['size-2.5 rounded-sm', colour]} aria-hidden="true"></span>{' '}
+              {label}
+            </button>
+          ))}
+        </div>
+      </div>
+
+      <div data-chart class="relative -mx-1 touch-pan-y select-none" style={`height: ${timelineHeight(false)}px`}>
+        <div data-svg class="overflow-hidden" role="img" aria-label="Timeline of Google ranking updates" set:html={initialChart}></div>
+        <div data-tooltip hidden class="pointer-events-none absolute top-0 z-10 w-60 rounded-lg bg-card p-3 text-xs leading-5 shadow-md ring-1 ring-border"></div>
+      </div>
+
+      <div data-file-drop class="rounded-lg bg-muted p-5">
+        <input data-file-input class="hidden" type="file" multiple accept=".zip,.csv,text/csv,application/zip" />
+        <div class="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+          <div class="min-w-0 space-y-1">
+            <p data-file-name class="text-sm font-medium">Add your Search Console clicks</p>
+            <p data-file-detail class="text-xs leading-5 text-foreground-muted">
+              Drop the zip from the Performance report's Export button, or its
+              Dates.csv. It stays in this tab.
+            </p>
+          </div>
+          <div class="flex shrink-0 gap-2">
+            <button data-clear type="button" hidden class="rounded-lg border border-border bg-card px-4 py-2.5 text-xs font-medium text-foreground transition-colors hover:border-border-strong">Remove</button>
+            <button data-choose-file type="button" class="rounded-lg border border-border bg-card px-4 py-2.5 text-xs font-medium text-foreground transition-colors hover:border-border-strong">Choose file</button>
+          </div>
+        </div>
+        <div data-metrics hidden role="group" aria-label="Line shown" class="mt-4 inline-flex h-9 items-center gap-1 rounded-lg bg-card/60 p-0.5">
+          <button type="button" class={toggle} data-metric="clicks" aria-pressed="true">Clicks</button>
+          <button type="button" class={toggle} data-metric="impressions" aria-pressed="false">Impressions</button>
+        </div>
+        <p data-error hidden class="mt-3 text-sm leading-6 text-red-700 dark:text-red-400" role="alert"></p>
+      </div>
+    </div>
+  </Card>
+
+  <div data-finding hidden>
+    <Card inverted>
+      <div class="space-y-4 p-5 sm:p-6">
+        <h3 data-finding-title class="text-xl font-medium text-foreground"></h3>
+        <div data-finding-body class="space-y-3 text-sm leading-6 text-foreground-muted"></div>
+        <p class="border-t border-border pt-4 text-sm leading-6 text-foreground-muted">
+          Your agent can run this check on Search Console directly, then show
+          the pages and queries that moved before and after the date.
+        </p>
+        <div class="flex flex-wrap gap-2">
+          <Button href="/account" class="min-h-10 px-4 text-xs">Get started free</Button>{' '}
+          <Button href="/docs/compare" variant="outline" class="min-h-10 px-4 text-xs">See seo compare</Button>
+        </div>
+      </div>
+    </Card>
+  </div>
+
+  <div class="space-y-2" data-update-list>
+    <h2 class="text-xl/7 font-medium text-foreground">Every Google ranking update and issue since 2021</h2>
+    <p class="text-sm leading-6 text-foreground-muted">
+      Start and end dates in Pacific time, as Google posts them, including
+      the ranking issues Google reported. Each name links to Google's own
+      post.
+    </p>
+    <div class="overflow-x-auto">
+      <table class="mt-2 w-full min-w-[34rem] text-left text-sm">
+        <thead class="text-xs text-foreground-muted">
+          <tr>
+            <th scope="col" class="py-2 pr-3 font-normal">Update</th>
+            <th scope="col" class="py-2 pr-3 font-normal">Started</th>
+            <th scope="col" class="py-2 pr-3 font-normal">Finished</th>
+            <th scope="col" class="py-2 font-normal">Rollout</th>
+          </tr>
+        </thead>
+        <tbody data-rows>
+          {years.map((year) => (
+            <>
+              <tr data-year={year}><th scope="rowgroup" colspan="4" class="pb-1 pt-5 text-sm font-medium text-foreground">{year}</th></tr>
+              {updates.filter((update) => update.year === year).map((update) => (
+                <tr data-row-kind={update.kind} class="border-t border-border">
+                  <td class="py-2 pr-3">
+                    <span class="inline-flex items-center gap-2">
+                      <span class:list={['size-2 shrink-0 rounded-sm', update.kind === 'core' ? 'bg-primary' : update.kind === 'spam' ? 'bg-warning' : 'bg-foreground-soft']} aria-hidden="true"></span>
+                      <a class="text-foreground underline decoration-border underline-offset-4 hover:decoration-foreground" href={update.url} rel="noreferrer">{update.name}</a>
+                    </span>
+                  </td>
+                  <td class="whitespace-nowrap py-2 pr-3 text-foreground-muted">{update.started}</td>
+                  <td class="whitespace-nowrap py-2 pr-3 text-foreground-muted">{update.finished}</td>
+                  <td class="whitespace-nowrap py-2 text-foreground-muted">{update.rollout}</td>
+                </tr>
+              ))}
+            </>
+          ))}
+        </tbody>
+      </table>
+    </div>
+  </div>
+</section>
+
+<script>
+  import {
+    analyzeTrafficAnomalyRows,
+    changeWindow,
+    findOverlappingSearchUpdates,
+    type SearchStatusIncident,
+    type SearchUpdate,
+    searchUpdatesFromIncidents,
+    UPDATE_PADDING_DAYS,
+    withRankingHistory,
+  } from '@seo/core/updates/browser'
+  import { describeUpdates, type DescribedUpdate, formatDay, rolloutStatus } from '@/lib/google-updates'
+  import { dailyRows, ExportError, readSearchConsoleExport } from '@/lib/search-console-export'
+  import { dayTime, renderTimeline, timeAt, timelineHeight, type TimelineInput, updateAt } from '@/lib/update-timeline'
+
+  const FEED = 'https://status.search.google.com/incidents.json'
+  const DAY = 86_400_000
+  const FIRST = Date.parse('2021-11-01T00:00:00Z')
+
+  function initialise(root: HTMLElement): void {
+    if (root.dataset.initialised === 'true') return
+    root.dataset.initialised = 'true'
+    const $ = <T extends HTMLElement>(selector: string) => root.querySelector<T>(selector)
+    const chart = $<HTMLElement>('[data-chart]')
+    const svg = $<HTMLElement>('[data-svg]')
+    const tooltip = $<HTMLElement>('[data-tooltip]')
+    const status = $<HTMLElement>('[data-status]')
+    const input = $<HTMLInputElement>('[data-file-input]')
+    const drop = $<HTMLElement>('[data-file-drop]')
+    const error = $<HTMLElement>('[data-error]')
+    const rows = $<HTMLElement>('[data-rows]')
+    if (!chart || !svg || !tooltip || !status || !input || !drop || !error || !rows) return
+
+    let merged: SearchUpdate[] = []
+    let updates: DescribedUpdate[] = []
+    let range: string = '365'
+    let metric: 'clicks' | 'impressions' = 'clicks'
+    const kinds = new Set(['core', 'spam', 'other'])
+    let days: { date: string; clicks: number; impressions: number }[] = []
+    let changeDate: string | null = null
+    let current: TimelineInput | undefined
+
+    const merge = (live: SearchStatusIncident[]) => {
+      merged = searchUpdatesFromIncidents(withRankingHistory(live), {
+        product: 'Ranking',
+        limit: Number.POSITIVE_INFINITY,
+      })
+      updates = describeUpdates(merged)
+    }
+    merge([])
+
+    const draw = () => {
+      const width = Math.max(280, Math.floor(chart.clientWidth))
+      const now = Date.now()
+      let from = range === 'all' ? FIRST : now - Number(range) * DAY
+      let to = now + 7 * DAY
+      if (range === 'data' && days.length) {
+        from = dayTime(days[0]?.date ?? '') - 2 * DAY
+        to = dayTime(days.at(-1)?.date ?? '') + 2 * DAY
+      }
+      current = {
+        width,
+        from,
+        to,
+        now,
+        updates: updates.filter((update) => kinds.has(update.kind)),
+        ...(range === 'data' && days.length
+          ? {
+              days: days.map((day) => ({ date: day.date, value: day[metric] })),
+              metric,
+              changeDate,
+            }
+          : {}),
+      }
+      chart.style.height = `${timelineHeight(Boolean(current.days))}px`
+      svg.innerHTML = renderTimeline(current)
+      const shown = current.updates.filter((update) => {
+        const end = update.end ? Date.parse(update.end) : now
+        return end >= from && Date.parse(update.start) <= to
+      })
+      svg.setAttribute(
+        'aria-label',
+        `Timeline of ${shown.length} Google ranking ${shown.length === 1 ? 'update' : 'updates'}${current.days ? ` with your daily ${metric}` : ''}. The table below lists every update.`,
+      )
+    }
+
+    const renderRows = () => {
+      const years = [...new Set(updates.map((update) => update.year))]
+      rows.replaceChildren(
+        ...years.flatMap((year) => {
+          const heading = document.createElement('tr')
+          heading.dataset.year = year
+          heading.innerHTML = `<th scope="rowgroup" colspan="4" class="pb-1 pt-5 text-sm font-medium text-foreground"></th>`
+          const cell = heading.firstElementChild
+          if (cell) cell.textContent = year
+          const items = updates.filter((update) => update.year === year).map((update) => {
+            const row = document.createElement('tr')
+            row.dataset.rowKind = update.kind
+            row.className = 'border-t border-border'
+            const colour = update.kind === 'core' ? 'bg-primary' : update.kind === 'spam' ? 'bg-warning' : 'bg-foreground-soft'
+            row.innerHTML = `<td class="py-2 pr-3"><span class="inline-flex items-center gap-2"><span class="size-2 shrink-0 rounded-sm ${colour}" aria-hidden="true"></span><a class="text-foreground underline decoration-border underline-offset-4 hover:decoration-foreground" rel="noreferrer"></a></span></td><td class="whitespace-nowrap py-2 pr-3 text-foreground-muted"></td><td class="whitespace-nowrap py-2 pr-3 text-foreground-muted"></td><td class="whitespace-nowrap py-2 text-foreground-muted"></td>`
+            const [name, started, finished, rollout] = row.querySelectorAll('td')
+            const link = name?.querySelector('a')
+            if (link) {
+              link.href = update.url
+              link.textContent = update.name
+            }
+            if (started) started.textContent = update.started
+            if (finished) finished.textContent = update.finished
+            if (rollout) rollout.textContent = update.rollout
+            return row
+          })
+          return [heading, ...items]
+        }),
+      )
+      filterRows()
+    }
+
+    const filterRows = () => {
+      for (const row of rows.querySelectorAll<HTMLElement>('[data-row-kind]')) {
+        row.hidden = !kinds.has(row.dataset.rowKind ?? '')
+      }
+      for (const heading of rows.querySelectorAll<HTMLElement>('[data-year]')) {
+        let next = heading.nextElementSibling as HTMLElement | null
+        let any = false
+        while (next && !next.dataset.year) {
+          if (!next.hidden) any = true
+          next = next.nextElementSibling as HTMLElement | null
+        }
+        heading.hidden = !any
+      }
+    }
+
+    const source = $<HTMLElement>('[data-source]')
+    const describeStatus = (live: boolean) => {
+      status.textContent = rolloutStatus(updates, Date.now())
+      if (source) {
+        source.textContent = live
+          ? "Checked with Google's dashboard just now."
+          : `Saved dates from ${formatDay(`${root.dataset.checked}T12:00:00Z`)}. Google's feed did not load.`
+      }
+    }
+
+    // Google's feed allows browser reads, so a new update shows up the day
+    // Google posts it, and its end date the day the rollout finishes.
+    fetch(FEED, { signal: AbortSignal.timeout(8000) })
+      .then((response) => (response.ok ? response.json() : Promise.reject()))
+      .then((live: unknown) => {
+        if (!Array.isArray(live)) throw new Error()
+        merge(live as SearchStatusIncident[])
+        renderRows()
+        draw()
+        describeStatus(true)
+      })
+      .catch(() => describeStatus(false))
+
+    const setPressed = (group: string, attribute: string, value: string) => {
+      for (const button of root.querySelectorAll<HTMLButtonElement>(`${group} [${attribute}]`)) {
+        button.setAttribute('aria-pressed', String(button.getAttribute(attribute) === value))
+      }
+    }
+
+    root.querySelector('[data-ranges]')?.addEventListener('click', (event) => {
+      const button = (event.target as HTMLElement).closest<HTMLButtonElement>('[data-range]')
+      if (!button) return
+      range = button.dataset.range ?? '365'
+      setPressed('[data-ranges]', 'data-range', range)
+      draw()
+    })
+    root.querySelector('[data-metrics]')?.addEventListener('click', (event) => {
+      const button = (event.target as HTMLElement).closest<HTMLButtonElement>('[data-metric]')
+      if (!button) return
+      metric = button.dataset.metric === 'impressions' ? 'impressions' : 'clicks'
+      setPressed('[data-metrics]', 'data-metric', metric)
+      draw()
+    })
+    root.querySelector('[data-kinds]')?.addEventListener('click', (event) => {
+      const button = (event.target as HTMLElement).closest<HTMLButtonElement>('[data-kind]')
+      const kind = button?.dataset.kind
+      if (!button || !kind) return
+      if (kinds.has(kind) && kinds.size > 1) kinds.delete(kind)
+      else kinds.add(kind)
+      for (const item of root.querySelectorAll<HTMLButtonElement>('[data-kind]')) {
+        item.setAttribute('aria-pressed', String(kinds.has(item.dataset.kind ?? '')))
+      }
+      filterRows()
+      draw()
+    })
+
+    // Hover or tap a band for its dates.
+    const showTip = (clientX: number) => {
+      if (!current) return
+      const box = chart.getBoundingClientRect()
+      const pixel = clientX - box.left
+      const hit = updateAt(current, pixel) as DescribedUpdate | undefined
+      if (!hit) {
+        tooltip.hidden = true
+        return
+      }
+      const at = timeAt(current, pixel)
+      const day = current.days?.length
+        ? days.reduce((best, item) =>
+            Math.abs(dayTime(item.date) - at) < Math.abs(dayTime(best.date) - at) ? item : best,
+          )
+        : undefined
+      tooltip.innerHTML = '<p class="font-medium text-foreground"></p><p class="text-foreground-muted"></p><p class="text-foreground-muted"></p>'
+      const [title, dates, extra] = tooltip.querySelectorAll('p')
+      if (title) title.textContent = hit.name
+      if (dates) dates.textContent = hit.end ? `${hit.started} to ${hit.finished}, ${hit.rollout}` : `Started ${hit.started}, still rolling out`
+      if (extra) extra.textContent = day ? `${formatDay(`${day.date}T12:00:00Z`)}: ${day[metric].toLocaleString('en-GB')} ${metric}` : ''
+      tooltip.hidden = false
+      const left = Math.min(Math.max(0, pixel - 120), box.width - tooltip.offsetWidth)
+      tooltip.style.left = `${left}px`
+      tooltip.style.top = `${current.days?.length ? 36 : 34}px`
+    }
+    chart.addEventListener('pointermove', (event) => showTip(event.clientX))
+    chart.addEventListener('pointerdown', (event) => showTip(event.clientX))
+    chart.addEventListener('pointerleave', () => {
+      tooltip.hidden = true
+    })
+
+    const fileName = $<HTMLElement>('[data-file-name]')
+    const fileDetail = $<HTMLElement>('[data-file-detail]')
+    const clear = $<HTMLButtonElement>('[data-clear]')
+    const metrics = $<HTMLElement>('[data-metrics]')
+    const dataRange = $<HTMLButtonElement>('[data-range="data"]')
+    const finding = $<HTMLElement>('[data-finding]')
+
+    const load = async (files: File[]) => {
+      error.hidden = true
+      if (!files.length) return
+      try {
+        const tables = await readSearchConsoleExport(files)
+        const loaded = dailyRows(tables.dates)
+        if (loaded.length < 2) {
+          throw new ExportError('No daily Dates table found. Use the zip from Export, or the Dates.csv inside it.')
+        }
+        days = loaded
+        if (fileName) fileName.textContent = files.map((file) => file.name).join(', ')
+        if (fileDetail) fileDetail.textContent = `${days.length} days, ${formatDay(`${days[0]?.date}T12:00:00Z`)} to ${formatDay(`${days.at(-1)?.date}T12:00:00Z`)}.`
+        if (clear) clear.hidden = false
+        if (metrics) metrics.hidden = false
+        if (dataRange) dataRange.hidden = false
+        range = 'data'
+        setPressed('[data-ranges]', 'data-range', range)
+        explain()
+        draw()
+      } catch (caught) {
+        error.textContent = caught instanceof ExportError ? caught.message : 'That file could not be read as a Search Console export.'
+        error.hidden = false
+      }
+    }
+
+    const explain = () => {
+      const title = $<HTMLElement>('[data-finding-title]')
+      const body = $<HTMLElement>('[data-finding-body]')
+      if (!finding || !title || !body) return
+      const paragraphs: string[] = []
+      changeDate = null
+      const first = days[0]?.date ?? ''
+      const last = days.at(-1)?.date ?? ''
+      let window: { start: string; end: string } | undefined
+      try {
+        const result = analyzeTrafficAnomalyRows({
+          site: 'upload',
+          rows: days.map((day) => ({ keys: [day.date], clicks: day.clicks, impressions: day.impressions, ctr: 0, position: 0 })),
+          startDate: first,
+          endDate: last,
+          recentDays: 7,
+        })
+        window = changeWindow(result.anomalies)
+        const step = result.anomalies.find((item) => item.significant && item.detection === 'step-change' && item.changeDate)
+        if (step?.changeDate) {
+          changeDate = step.changeDate
+          title.textContent = `Your ${step.metric} changed level on ${formatDay(`${step.changeDate}T12:00:00Z`)}`
+        } else {
+          title.textContent = 'No sudden lasting change'
+        }
+        for (const item of result.anomalies) {
+          const change = item.percentChange === null ? '' : ` (${item.percentChange > 0 ? '+' : ''}${Math.round(item.percentChange)}%)`
+          const average = (value: number) => Math.round(value).toLocaleString('en-GB')
+          paragraphs.push(
+            item.detection === 'step-change' && item.changeDate
+              ? `${item.metric === 'clicks' ? 'Clicks' : 'Impressions'} went from about ${average(item.baselineMean)} a day to ${average(item.comparisonMean)} a day from ${formatDay(`${item.changeDate}T12:00:00Z`)}${change}.`
+              : `${item.metric === 'clicks' ? 'Clicks' : 'Impressions'} in the last 7 days averaged ${average(item.comparisonMean)} a day, against ${average(item.baselineMean)} before${change}${item.significant ? ', more than normal day-to-day movement' : ', within normal day-to-day movement'}.`,
+          )
+        }
+      } catch {
+        title.textContent = 'Not enough days to check'
+        paragraphs.push('The check needs at least three weeks of daily data. Export the last 3 months from Search Console and add it again.')
+      }
+      if (window) {
+        const overlapping = findOverlappingSearchUpdates({
+          updates: merged,
+          startDate: window.start,
+          endDate: window.end,
+          paddingDays: UPDATE_PADDING_DAYS,
+        })
+        const described = describeUpdates(overlapping)
+        const when = window.start === window.end ? formatDay(`${window.start}T12:00:00Z`) : `${formatDay(`${window.start}T12:00:00Z`)} to ${formatDay(`${window.end}T12:00:00Z`)}`
+        paragraphs.push(
+          described.length
+            ? `Google updates within ${UPDATE_PADDING_DAYS} days of ${when}: ${described.map((update) => `${update.name} (${update.end ? `${update.started} to ${update.finished}` : `from ${update.started}`})`).join('; ')}. The dates line up, which is timing, not proof of cause. Check releases, tracking and seasonality for the same days.`
+            : `No Google ranking update ran within ${UPDATE_PADDING_DAYS} days of ${when}. Look at site releases, tracking and seasonality first.`,
+        )
+      }
+      body.replaceChildren(
+        ...paragraphs.map((text) => {
+          const paragraph = document.createElement('p')
+          paragraph.textContent = text
+          return paragraph
+        }),
+      )
+      finding.hidden = false
+    }
+
+    root.querySelector('[data-choose-file]')?.addEventListener('click', () => input.click())
+    input.addEventListener('change', () => void load([...(input.files ?? [])]))
+    drop.addEventListener('dragover', (event) => {
+      event.preventDefault()
+      drop.classList.add('ring-2', 'ring-primary/40')
+    })
+    drop.addEventListener('dragleave', () => drop.classList.remove('ring-2', 'ring-primary/40'))
+    drop.addEventListener('drop', (event) => {
+      event.preventDefault()
+      drop.classList.remove('ring-2', 'ring-primary/40')
+      void load([...(event.dataTransfer?.files ?? [])])
+    })
+    clear?.addEventListener('click', () => {
+      days = []
+      changeDate = null
+      input.value = ''
+      if (fileName) fileName.textContent = 'Add your Search Console clicks'
+      if (fileDetail) fileDetail.textContent = "Drop the zip from the Performance report's Export button, or its Dates.csv. It stays in this tab."
+      clear.hidden = true
+      if (metrics) metrics.hidden = true
+      if (dataRange) dataRange.hidden = true
+      if (finding) finding.hidden = true
+      range = '365'
+      setPressed('[data-ranges]', 'data-range', range)
+      draw()
+    })
+
+    new ResizeObserver(() => draw()).observe(chart)
+    draw()
+  }
+
+  const initialiseAll = () => {
+    for (const root of document.querySelectorAll<HTMLElement>('[data-update-checker]')) initialise(root)
+  }
+  initialiseAll()
+  document.addEventListener('astro:page-load', initialiseAll)
+</script>

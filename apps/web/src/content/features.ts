@@ -1,7 +1,6 @@
 import {
   AiChat02Icon,
   Analytics01Icon,
-  Calendar03Icon,
   ChartLineData01Icon,
   McpServerIcon,
   Route01Icon,
@@ -34,12 +33,6 @@ export const features = [
     title: 'AI search tracking',
     text: 'The questions people ask AI that show in your Search Console, whether AI answers cite you, visits from AI assistants, and what AI crawlers can read.',
     icon: AiChat02Icon,
-  },
-  {
-    path: '/features/google-updates',
-    title: 'Google update checker',
-    text: 'Line up your clicks and sessions with Google update dates, and see the pages and queries that moved.',
-    icon: Calendar03Icon,
   },
   {
     path: '/features/keyword-research',

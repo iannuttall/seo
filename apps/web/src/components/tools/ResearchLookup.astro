@@ -1,0 +1,397 @@
+---
+import Button from '@/components/Button.astro'
+import Card from '@/components/Card.astro'
+import FormInput from '@/components/FormInput.astro'
+import FormSelect from '@/components/FormSelect.astro'
+import TurnstileWidget from '@/components/tools/TurnstileWidget.astro'
+
+type Props = {
+  kind: 'competitors' | 'serp'
+  heading: string
+  description: string
+}
+
+const { kind, heading, description } = Astro.props
+const markets = [
+  ['us', 'United States'],
+  ['gb', 'United Kingdom'],
+  ['ca', 'Canada'],
+  ['au', 'Australia'],
+  ['in', 'India'],
+  ['de', 'Germany'],
+  ['fr', 'France'],
+  ['es', 'Spain'],
+  ['it', 'Italy'],
+  ['nl', 'Netherlands'],
+]
+const toggle =
+  'inline-flex h-8 items-center justify-center rounded-md border border-transparent px-3 text-sm font-medium text-foreground-muted outline-none transition-colors hover:text-foreground focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/20 aria-pressed:bg-card aria-pressed:text-foreground aria-pressed:shadow-xs'
+// The first results header is drawn here so the table always has a row.
+const columns =
+  kind === 'serp'
+    ? ['#', 'Result', 'Domain Rating']
+    : ['Keyword', 'Position', 'Monthly searches', 'Page']
+const endpoint = kind === 'serp' ? '/api/tools/serp-checker' : '/api/tools/competitor-keywords'
+const action = kind === 'serp' ? 'serp-checker' : 'competitor-keywords'
+---
+
+<section data-research-lookup data-kind={kind} data-endpoint={endpoint} class="space-y-6">
+  <Card>
+    <form data-form class="space-y-5 p-5 sm:p-6" novalidate>
+      <div class="space-y-1">
+        <h2 class="text-lg font-medium">{heading}</h2>
+        <p class="text-sm leading-6 text-foreground-muted">{description}</p>
+      </div>
+
+      {kind === 'competitors' ? (
+        <div data-modes role="group" aria-label="What to look up" class="inline-flex h-9 items-center gap-1 rounded-lg bg-muted p-0.5">
+          <button type="button" class={toggle} data-mode="keywords" aria-pressed="true">Keywords it ranks for</button>
+          <button type="button" class={toggle} data-mode="competitors" aria-pressed="false">Sites it competes with</button>
+        </div>
+      ) : null}
+
+      <div class="grid gap-4 sm:grid-cols-[minmax(0,1fr)_12rem]">
+        <label class="block space-y-2 text-sm font-medium">
+          <span>{kind === 'serp' ? 'Keyword' : 'Domain'}</span>
+          <FormInput
+            data-target
+            type="text"
+            inputmode={kind === 'serp' ? 'text' : 'url'}
+            autocapitalize="off"
+            spellcheck="false"
+            maxlength={kind === 'serp' ? 200 : 253}
+            placeholder={kind === 'serp' ? 'running shoes for flat feet' : 'example.com'}
+            required
+          />
+        </label>
+        <label class="block space-y-2 text-sm font-medium">
+          <span>Country</span>
+          <FormSelect data-country>
+            {markets.map(([code, name]) => <option value={code}>{name}</option>)}
+          </FormSelect>
+        </label>
+      </div>
+
+      {kind === 'serp' ? (
+        <label class="block space-y-2 text-sm font-medium">
+          <span>Your domain <span class="font-normal text-foreground-muted">(optional, to find where it ranks)</span></span>
+          <FormInput data-highlight type="text" inputmode="url" autocapitalize="off" spellcheck="false" maxlength="253" placeholder="example.com" />
+        </label>
+      ) : null}
+
+      <TurnstileWidget {action} />
+
+      <div class="flex items-center justify-between gap-4">
+        <p class="text-xs leading-5 text-foreground-muted">10 free lookups a day.</p>
+        <Button data-submit type="submit" class="min-h-10 shrink-0 px-5 text-xs">{kind === 'serp' ? 'Check results' : 'Look up'}</Button>
+      </div>
+      <p data-error hidden class="text-sm leading-6 text-red-700 dark:text-red-400" role="alert"></p>
+    </form>
+  </Card>
+
+  <div data-results hidden class="space-y-6">
+    <Card inverted>
+      <div class="space-y-4 p-5 sm:p-6">
+        <div class="space-y-1">
+          <h3 data-title class="text-xl font-medium text-foreground"></h3>
+          <p data-summary class="text-sm leading-6 text-foreground-muted"></p>
+        </div>
+        <div class="-mx-5 overflow-x-auto px-5 sm:-mx-6 sm:px-6">
+          <table class="w-full min-w-[32rem] text-left text-sm">
+            <thead data-head class="text-xs text-foreground-muted">
+              <tr>{columns.map((column) => <th scope="col" class="py-2 pr-3 font-normal">{column}</th>)}</tr>
+            </thead>
+            <tbody data-body></tbody>
+          </table>
+        </div>
+        <p data-notes class="border-t border-border pt-3 text-xs leading-5 text-foreground-muted"></p>
+      </div>
+    </Card>
+
+    <Card>
+      <div class="space-y-3 p-5 sm:p-6">
+        <h3 class="text-lg font-medium">Run it from your agent with your own key</h3>
+        <p class="text-sm leading-6 text-foreground-muted">
+          {kind === 'serp'
+            ? 'This page gives you 10 lookups a day. With a free account and your own DataForSEO or Ahrefs key, your agent checks the results for as many keywords as you need, next to the queries your site already gets clicks for in Search Console.'
+            : 'This page gives you 10 lookups a day. With a free account and your own DataForSEO or Ahrefs key, your agent runs the same research whenever it needs to, next to the queries your site already gets clicks for in Search Console.'}
+        </p>
+        <ol class="list-decimal space-y-1 pl-5 text-sm leading-6 text-foreground-muted">
+          <li>Sign in with Google on your account page. That creates the free account.</li>
+          <li>Save your DataForSEO or Ahrefs key in the Keys tab. The provider bills you directly.</li>
+          <li>Connect the hosted MCP to your agent and ask it {kind === 'serp' ? 'who ranks for a keyword' : "which keywords a competitor ranks for that you don't"}.</li>
+        </ol>
+        <div class="flex flex-wrap gap-2 pt-1">
+          <Button href="/account" class="min-h-10 px-4 text-xs">Get started free</Button>{' '}
+          <Button href="/docs/keys" variant="outline" class="min-h-10 px-4 text-xs">How keys work</Button>
+        </div>
+      </div>
+    </Card>
+  </div>
+</section>
+
+<script>
+  type Row = Record<string, string | number | boolean | null>
+  type Result = {
+    action: 'ranked_keywords' | 'competitors' | 'serp'
+    target: string
+    country: string
+    rows: Row[]
+    total: number
+    partial: boolean | null
+    leftOut: string | null
+    targetDomainRating: number | null
+    checkedAt: string
+  }
+
+  declare global {
+    interface Window {
+      turnstile?: { reset(container?: HTMLElement): void }
+    }
+  }
+
+  const MARKETS: Record<string, string> = {
+    us: 'the United States',
+    gb: 'the United Kingdom',
+    ca: 'Canada',
+    au: 'Australia',
+    in: 'India',
+    de: 'Germany',
+    fr: 'France',
+    es: 'Spain',
+    it: 'Italy',
+    nl: 'the Netherlands',
+  }
+
+  const bare = (value: string) =>
+    value.trim().toLowerCase().replace(/^https?:\/\//, '').replace(/\/.*$/, '').replace(/^www\./, '')
+
+  const count = (value: unknown) =>
+    typeof value === 'number' ? Math.round(value).toLocaleString('en-GB') : 'n/a'
+
+  const ordinal = (value: number) => {
+    const tens = value % 100
+    if (tens >= 11 && tens <= 13) return `${value}th`
+    return `${value}${['th', 'st', 'nd', 'rd'][value % 10] ?? 'th'}`
+  }
+
+  function cell(text: string, className = 'py-2 pr-3 text-foreground-muted'): HTMLTableCellElement {
+    const td = document.createElement('td')
+    td.className = className
+    td.textContent = text
+    return td
+  }
+
+  function initialise(root: HTMLElement): void {
+    if (root.dataset.initialised === 'true') return
+    root.dataset.initialised = 'true'
+    const $ = <T extends HTMLElement>(selector: string) => root.querySelector<T>(selector)
+    const form = $<HTMLFormElement>('[data-form]')
+    const target = $<HTMLInputElement>('[data-target]')
+    const market = $<HTMLSelectElement>('[data-country]')
+    const highlight = $<HTMLInputElement>('[data-highlight]')
+    const submit = $<HTMLButtonElement>('[data-submit]')
+    const error = $<HTMLElement>('[data-error]')
+    const results = $<HTMLElement>('[data-results]')
+    const head = $<HTMLElement>('[data-head]')
+    const body = $<HTMLElement>('[data-body]')
+    const title = $<HTMLElement>('[data-title]')
+    const summary = $<HTMLElement>('[data-summary]')
+    const notes = $<HTMLElement>('[data-notes]')
+    if (!form || !target || !market || !submit || !error || !results || !head || !body || !title || !summary || !notes) return
+    const kind = root.dataset.kind
+    const label = submit.textContent ?? ''
+    let mode: 'keywords' | 'competitors' = 'keywords'
+
+    const setMode = (value: 'keywords' | 'competitors') => {
+      mode = value
+      for (const button of root.querySelectorAll<HTMLButtonElement>('[data-mode]')) {
+        button.setAttribute('aria-pressed', String(button.dataset.mode === value))
+      }
+    }
+    root.querySelector('[data-modes]')?.addEventListener('click', (event) => {
+      const button = (event.target as HTMLElement).closest<HTMLButtonElement>('[data-mode]')
+      if (button) setMode(button.dataset.mode === 'competitors' ? 'competitors' : 'keywords')
+    })
+
+    const header = (columns: string[]) => {
+      const row = document.createElement('tr')
+      for (const column of columns) {
+        const th = document.createElement('th')
+        th.scope = 'col'
+        th.className = 'py-2 pr-3 font-normal'
+        th.textContent = column
+        row.append(th)
+      }
+      head.replaceChildren(row)
+    }
+
+    const ahrefsNote = () => {
+      const span = document.createElement('span')
+      span.append('Domain Rating by ')
+      const link = document.createElement('a')
+      link.href = 'https://ahrefs.com'
+      link.rel = 'noreferrer'
+      link.target = '_blank'
+      link.className = 'underline underline-offset-4'
+      link.textContent = 'Ahrefs'
+      span.append(link, '. ')
+      return span
+    }
+
+    const render = (result: Result) => {
+      const where = MARKETS[result.country] ?? result.country
+      const rows = result.rows
+      body.replaceChildren()
+      const parts: (string | Node)[] = []
+      if (result.action === 'ranked_keywords') {
+        title.textContent = `Keywords ${result.target} ranks for`
+        summary.textContent = rows.length
+          ? `Its ${rows.length} keywords with the most estimated traffic in ${where}.`
+          : `DataForSEO has no ranking keywords for ${result.target} in ${where}.`
+        header(['Keyword', 'Position', 'Monthly searches', 'Page'])
+        for (const row of rows) {
+          const tr = document.createElement('tr')
+          tr.className = 'border-t border-border'
+          let path = ''
+          try {
+            path = new URL(String(row.url ?? '')).pathname
+          } catch {}
+          tr.append(
+            cell(String(row.keyword ?? ''), 'py-2 pr-3 text-foreground'),
+            cell(count(row.position)),
+            cell(count(row.search_volume)),
+            cell(path, 'max-w-[14rem] truncate py-2 pr-3 font-mono text-xs text-foreground-muted'),
+          )
+          body.append(tr)
+        }
+        parts.push(`Positions and searches are DataForSEO estimates for ${where}, not Search Console data.`)
+      } else if (result.action === 'competitors') {
+        title.textContent = `Sites that compete with ${result.target}`
+        summary.textContent = rows.length
+          ? `Domains that rank for the most of the same keywords in ${where}. Choose one to see its keywords.`
+          : `DataForSEO found no competing domains for ${result.target} in ${where}.`
+        header(['Domain', 'Domain Rating', 'Shared keywords', 'Ranking keywords', ''])
+        for (const row of rows) {
+          const tr = document.createElement('tr')
+          tr.className = 'border-t border-border'
+          const action = document.createElement('td')
+          action.className = 'py-1.5 text-right'
+          const button = document.createElement('button')
+          button.type = 'button'
+          button.className = 'rounded-lg border border-border bg-card px-3 py-1.5 text-xs font-medium text-foreground transition-colors hover:border-border-strong'
+          button.textContent = 'Its keywords'
+          button.addEventListener('click', () => {
+            target.value = String(row.domain ?? '')
+            setMode('keywords')
+            form.scrollIntoView({ behavior: 'smooth', block: 'start' })
+            submit.focus({ preventScroll: true })
+          })
+          action.append(button)
+          tr.append(
+            cell(String(row.domain ?? ''), 'py-2 pr-3 text-foreground'),
+            cell(row.domain_rating === undefined || row.domain_rating === null ? 'n/a' : String(row.domain_rating)),
+            cell(count(row.shared_keywords)),
+            cell(count(row.organic_keywords)),
+            action,
+          )
+          body.append(tr)
+        }
+        parts.push(`Keyword counts are DataForSEO estimates for ${where}. `, ahrefsNote())
+        if (result.leftOut) parts.push(result.leftOut)
+      } else {
+        const mine = highlight ? bare(highlight.value) : ''
+        const found = mine
+          ? rows.find((row) => {
+              const domain = bare(String(row.domain ?? ''))
+              return domain === mine || domain.endsWith(`.${mine}`)
+            })
+          : undefined
+        title.textContent = `Google results for “${result.target}”`
+        summary.textContent = mine
+          ? found
+            ? `${mine} ranks ${ordinal(Number(found.position))} in ${where}.`
+            : `${mine} is not in the first ${rows.length} organic results in ${where}.`
+          : `The first ${rows.length} organic results in ${where}, checked just now.`
+        header(['#', 'Result', 'Domain Rating'])
+        for (const row of rows) {
+          const tr = document.createElement('tr')
+          const domain = bare(String(row.domain ?? ''))
+          const isMine = Boolean(mine) && (domain === mine || domain.endsWith(`.${mine}`))
+          tr.className = isMine ? 'border-t border-border bg-primary-soft' : 'border-t border-border'
+          const result = document.createElement('td')
+          result.className = 'py-2 pr-3'
+          const name = document.createElement('p')
+          name.className = 'text-foreground'
+          name.textContent = String(row.title ?? row.url ?? '')
+          const url = document.createElement('p')
+          url.className = 'max-w-[26rem] truncate font-mono text-xs text-foreground-muted'
+          url.textContent = String(row.url ?? '')
+          result.append(name, url)
+          tr.append(
+            cell(count(row.position), 'py-2 pr-3 align-top text-foreground-muted'),
+            result,
+            cell(row.domain_rating === undefined || row.domain_rating === null ? 'n/a' : String(row.domain_rating), 'py-2 pr-3 align-top text-foreground-muted'),
+          )
+          body.append(tr)
+        }
+        parts.push('Positions count organic results only. Results change through the day and by location. ', ahrefsNote())
+      }
+      if (result.partial) parts.push(' DataForSEO could not fetch every page of results, so some rows may be missing.')
+      notes.replaceChildren(...parts)
+      results.hidden = false
+      results.scrollIntoView({ behavior: 'smooth', block: 'start' })
+    }
+
+    form.addEventListener('submit', async (event) => {
+      event.preventDefault()
+      error.hidden = true
+      const value = target.value.trim()
+      if (!value) {
+        error.textContent = kind === 'serp' ? 'Enter a keyword.' : 'Enter a domain.'
+        error.hidden = false
+        target.focus()
+        return
+      }
+      const token = new FormData(form).get('turnstileToken')
+      if (typeof token !== 'string' || !token) {
+        error.textContent = 'Complete the security check first.'
+        error.hidden = false
+        return
+      }
+      submit.disabled = true
+      submit.textContent = 'Checking...'
+      try {
+        const response = await fetch(root.dataset.endpoint ?? '', {
+          method: 'POST',
+          headers: { 'content-type': 'application/json' },
+          body: JSON.stringify(
+            kind === 'serp'
+              ? { target: value, country: market.value, turnstileToken: token }
+              : { target: bare(value), country: market.value, mode, turnstileToken: token },
+          ),
+        })
+        if (!response.headers.get('content-type')?.includes('application/json')) {
+          throw new Error('The lookup could not be completed.')
+        }
+        const data = (await response.json()) as { result?: Result; error?: string }
+        if (!response.ok || !data.result) throw new Error(data.error || 'The lookup could not be completed.')
+        render(data.result)
+      } catch (caught) {
+        error.textContent = caught instanceof Error ? caught.message : 'The lookup could not be completed.'
+        error.hidden = false
+      } finally {
+        submit.disabled = false
+        submit.textContent = label
+        const widget = $<HTMLElement>('[data-turnstile-container]')
+        if (widget) window.turnstile?.reset(widget)
+      }
+    })
+  }
+
+  const initialiseAll = () => {
+    for (const root of document.querySelectorAll<HTMLElement>('[data-research-lookup]')) initialise(root)
+  }
+  initialiseAll()
+  document.addEventListener('astro:page-load', initialiseAll)
+</script>

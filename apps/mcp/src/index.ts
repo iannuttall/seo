@@ -13,6 +13,7 @@ import {
   token,
   userOf,
 } from './oauth.ts'
+import { sendSignupReport } from './signup-report.ts'
 import { accountsOf, keysOf } from './store.ts'
 
 // seoskill.dev routes /mcp, /oauth/*, /account, /.well-known/oauth-* and
@@ -145,5 +146,9 @@ export default {
     }
     const response = await route(request, env, ctx)
     return api ? withCors(response) : response
+  },
+  // The weekly sign-up count for Ian's Telegram (wrangler.jsonc triggers).
+  async scheduled(controller, env, ctx) {
+    ctx.waitUntil(sendSignupReport(env, new Date(controller.scheduledTime)))
   },
 } satisfies ExportedHandler<Env>

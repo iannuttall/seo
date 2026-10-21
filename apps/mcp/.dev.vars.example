@@ -7,3 +7,6 @@ AHREFS_DR_KEY=
 # Bing Webmaster OAuth client, from Bing Webmaster Tools Settings > API access.
 BING_CLIENT_ID=
 BING_CLIENT_SECRET=
+# Optional. Telegram bot and chat for the weekly sign-up count (cron).
+TELEGRAM_BOT_TOKEN=
+TELEGRAM_CHAT_ID=

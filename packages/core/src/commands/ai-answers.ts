@@ -19,11 +19,6 @@ import { type CommandDeps, CommandError, type CommandResult } from './types.js'
 
 export const AI_ANSWER_QUESTIONS = 10
 const QUESTION_DAYS = 90
-// Only questions that make sense on their own. Replies such as "yes",
-// follow-ups, tracker probes, agent prompt text and search operators need
-// the conversation or the search box they came from.
-const ASKABLE = new Set(['chat', 'long'])
-const PROMPT_CHARACTERS = 500
 
 // What an engine showed: the answer as Markdown, the URLs it cited (never
 // pages it only looked at), and the model DataForSEO says answered.
@@ -272,16 +267,14 @@ export async function runAiAnswers(
     { site: input.site, ...range },
     deps.searchAnalytics,
   )
+  // Only questions that stand on their own (the report's askable rows).
   const items = (report.items ?? []) as {
     query: string
-    kind: string
+    askable: boolean
     impressions: number
   }[]
   const questions = items
-    .filter(
-      (item) =>
-        ASKABLE.has(item.kind) && item.query.length <= PROMPT_CHARACTERS,
-    )
+    .filter((item) => item.askable)
     .slice(0, AI_ANSWER_QUESTIONS)
   const site = { domain, terms: deriveBrandTerms({ siteUrl: input.site }) }
   const markets = questions.length
@@ -308,8 +301,8 @@ export async function runAiAnswers(
     answers.filter((row) => row.result === result).length
   const notes = [
     questions.length
-      ? `The top ${questions.length} chat-style and long questions in Search Console’s AI-shaped queries for ${range.startDate} to ${range.endDate}, by impressions. No calls were made for other questions.`
-      : `No chat-style or long questions in Search Console’s AI-shaped queries for ${range.startDate} to ${range.endDate}, so no answers were checked and nothing was spent.`,
+      ? `The top ${questions.length} askable questions in Search Console’s AI-shaped queries for ${range.startDate} to ${range.endDate}, by impressions. No calls were made for other questions.`
+      : `No askable questions in Search Console’s AI-shaped queries for ${range.startDate} to ${range.endDate}, so no answers were checked and nothing was spent.`,
     ...(questions.length
       ? [
           `Cited ${count('cited')}, mentioned ${count('mentioned')}, neither ${count('neither')}, no answer shown ${count('no_answer')}, unavailable ${count('unavailable')}. DataForSEO cost: $${cost}.`,

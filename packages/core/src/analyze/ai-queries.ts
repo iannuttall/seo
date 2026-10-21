@@ -20,9 +20,9 @@ export type AiQueryKind =
 const RULES: [AiQueryKind, string][] = [
   [
     'agent_prompt',
-    '^(search the web for|browse the web|find sources)|do not invent|return the [0-9]+ most relevant|include source urls|context: location|do not include location|question: ',
+    '^(search the web for|browse the web|find sources)|do not invent|return the [0-9]+ most relevant|include source urls|context: location|do not include location|question: |reply only with|the model you are using',
   ],
-  ['tracker', '\\. ?my location is |^evaluate the .+ on '],
+  ['tracker', '\\. ?my location is |\\?\\. ?my( |$)|^evaluate the .+ on '],
   [
     'reply',
     '^(yes|yeah|yep|ok|okay|sure|yes please|go on|continue|keep going|tell me more|why not|how so|really|exactly|show me|and then|thanks|thank you|got it|what else|anything else)[?!.,]*$',
@@ -59,6 +59,51 @@ const MATCHERS = RULES.map(
 export const AI_QUERY_PATTERN = RULES.map(
   ([, pattern]) => `(?:${pattern})`,
 ).join('|')
+
+// Rows that match a pattern but are not anything a person or an agent
+// asked: letters split by spaces, text broken by a wrong encoding, and text
+// pasted from a tool or an agent's own output. They are left out and
+// counted.
+export type AiQueryNoise = 'spaced_letters' | 'broken_encoding' | 'pasted_text'
+
+const NOISE: [AiQueryNoise, RegExp][] = [
+  ['spaced_letters', /(^|\s)(\S\s){3,}\S(\s|$)/u],
+  [
+    'broken_encoding',
+    /^(яю|ÿþ|þÿ)|&#[0-9]+;?|&[a-z]+;|[âÃÂ][\u0080-\u00bf€™œ“”]|\ufffd/u,
+  ],
+  [
+    'pasted_text',
+    // A leftover "p" from a <p> tag, an agent's own reply, a tool's status.
+    /^(p [a-z]{3,} |here (are|is) (all )?the |here's the |done[,.!]? (you|here) |current state: )/u,
+  ],
+]
+
+export function aiQueryNoise(query: string): AiQueryNoise | null {
+  const text = query.trim().toLowerCase()
+  return NOISE.find(([, pattern]) => pattern.test(text))?.[0] ?? null
+}
+
+// A question that stands on its own, so an AI engine can be asked it
+// as it is: chat or long, and it opens with a question word or a request
+// such as "i need", or ends with a question mark. Statements, pasted lists
+// and tool text are not.
+const QUESTION =
+  /^(how|what|what's|whats|which|why|when|where|who|is|are|can|could|does|do|should|would|will|i need|i want|i have|i'm looking|we need|we want)\b|\?$/u
+const ASKABLE_KINDS = new Set<AiQueryKind>(['chat', 'long'])
+const PROMPT_CHARACTERS = 500
+
+export function askable(query: string, kind: AiQueryKind | undefined) {
+  const text = query
+    .trim()
+    .toLowerCase()
+    .replace(/^["'“]+/u, '')
+  return (
+    Boolean(kind && ASKABLE_KINDS.has(kind)) &&
+    text.length <= PROMPT_CHARACTERS &&
+    QUESTION.test(text)
+  )
+}
 
 export function aiQueryKind(query: string): AiQueryKind | null {
   const text = query.trim().toLowerCase()
@@ -174,11 +219,19 @@ export async function aiQueriesReport(
   const byWord = new Map<string, Group[]>()
   const byText = new Map<string, Group>()
   const kindOf = new Map<string, AiQueryKind>()
+  const noise = new Map<AiQueryNoise, Set<string>>()
   for (const row of rows) {
     const query = String(row.keys[0] ?? '')
     const page = String(row.keys[1] ?? '')
     const kind = aiQueryKind(query)
     if (!kind) continue
+    const junk = aiQueryNoise(query)
+    if (junk) {
+      const seen = noise.get(junk) ?? new Set()
+      seen.add(query.trim().toLowerCase())
+      noise.set(junk, seen)
+      continue
+    }
     const text = query.trim().toLowerCase()
     const own = words(query)
     let group = byText.get(text)
@@ -259,6 +312,7 @@ export async function aiQueriesReport(
       return {
         query: first ?? '',
         page: most(group.pages)[0] ?? '',
+        askable: askable(first ?? '', kind),
         pages: group.pages.size,
         kind,
         wordings: group.queries.size,
@@ -286,6 +340,11 @@ export async function aiQueriesReport(
     )
     .map(([kind, entry]) => `${kind} ${entry.queries}`)
     .join(', ')
+  const leftOut = [...noise]
+    .sort((a, b) => a[0].localeCompare(b[0]))
+    .map(([reason, seen]) => `${reason.replace('_', ' ')} ${seen.size}`)
+    .join(', ')
+  const asked = items.filter((item) => item.askable).length
   const capped = matched.rowsFetched >= MAX_ROWS
   return {
     range,
@@ -295,14 +354,16 @@ export async function aiQueriesReport(
     summary: {
       queries,
       questions: groups.length,
+      askable: asked,
+      leftOut: leftOut || 'none',
       impressions,
       clicks,
       shareOfImpressionsPct: pct(impressions, total.impressions),
+      byKind: kinds || 'none',
       ctr: impressions ? round(clicks / impressions, 4) : 0,
       siteCtr: total.impressions
         ? round(total.clicks / total.impressions, 4)
         : 0,
-      byKind: kinds || 'none',
     },
     kinds: AI_QUERY_KINDS,
     items,
@@ -310,6 +371,8 @@ export async function aiQueriesReport(
       'A heuristic: these queries match the patterns of AI conversations and agent searches. Search Console does not mark AI Mode or AI Overviews, and people type some of these too.',
       'A minimum: Search Console leaves out rare queries, and these are rare by nature.',
       'Rewordings of one question are grouped by their shared words; page is the page with the most impressions for it.',
+      'Left out and counted, not shown: letters split by spaces, text broken by a wrong encoding, and text pasted from a tool or an agent’s output.',
+      'askable: a chat or long question that opens with a question word or a request such as "i need", or ends with a question mark, so an AI engine can be asked it as it is. ai_answers checks the top askable questions only.',
       'Search Console’s Generative AI report is not in its API, so it is not here.',
       ...(capped
         ? [`Capped at the first ${MAX_ROWS} matching query and page rows.`]

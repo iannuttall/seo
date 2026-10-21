@@ -108,7 +108,7 @@ function nextFor(section: SectionId, call: Caller): string {
     'content-decay': `Next: ${call('index')} for pages that lost most of their clicks; ${call('page')} to see which queries moved.`,
     cannibalization: `Next: ${call('page')} on each competing URL to see Google’s chosen canonical.`,
     'traffic-drop': `Next: ${call('compare')} with the date the drop started, for the pages and queries that moved; ${call('index')} for pages that lost almost all their clicks and their index status.`,
-    'ai-queries': `Next: ${call('page')} for a page that gets many of these questions, to see whether it answers them; ${call('research')} ai_answers with the site as target, to see whether AI answers cite it (about $0.12 of DataForSEO credit).`,
+    'ai-queries': `Next: ${call('page')} for a page that gets many of these questions, to see whether it answers them; ${call('research')} ai_answers with the site as target checks whether AI answers cite it for the top 10 askable questions here (about $0.12 of DataForSEO credit), so show the person those questions and ask first.`,
     bing: `Next: ${call('data', { source: 'bing' })} for every Bing row; ${call('page')} for one page.`,
   }[section]
 }

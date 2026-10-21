@@ -9,6 +9,13 @@ type Props = { class?: string; id?: string }
 
 const { class: className, id = 'setup' } = Astro.props
 
+// Each token stays whole, so a command wraps only between words.
+const tokens = (command: string) =>
+  command.split(' ').flatMap((token, index) => [
+    ...(index ? [' '] : []),
+    { token },
+  ])
+
 const clients = [
   {
     id: 'claude',
@@ -57,6 +64,8 @@ const clients = [
 
   {/* Every panel sits in the same grid cell, so the box is always as tall
       as the tallest panel and switching clients never shifts the page. */}
+  {/* Commands wrap only at spaces. A token wider than the box scrolls
+      inside it rather than splitting mid-word. */}
   <div class="mt-3 grid">
   {
     clients.map((client, index) => (
@@ -74,7 +83,9 @@ const clients = [
           data-copy-value={client.command}
           aria-label={`Copy ${client.label} command`}
         >
-          <span class="min-w-0 flex-1 break-all">{client.command}</span>
+          <span class="min-w-0 flex-1 overflow-x-auto">
+            {tokens(client.command).map((part) => (typeof part === 'string' ? part : <span class="whitespace-nowrap">{part.token}</span>))}
+          </span>
           <span class="shrink-0 text-foreground-muted group-hover:text-foreground">
             <HugeIcon icon={Copy01Icon} class="size-4" data-copy-icon />
             <HugeIcon icon={Tick02Icon} class="hidden size-4" data-copy-check-icon />
@@ -94,7 +105,9 @@ const clients = [
       data-copy-value={setupCommands.install}
       aria-label="Copy the install command"
     >
-      <span class="min-w-0 flex-1 break-all">{setupCommands.install}</span>
+      <span class="min-w-0 flex-1 overflow-x-auto">
+        {tokens(setupCommands.install).map((part) => (typeof part === 'string' ? part : <span class="whitespace-nowrap">{part.token}</span>))}
+      </span>
       <span class="shrink-0 text-foreground-muted group-hover:text-foreground">
         <HugeIcon icon={Copy01Icon} class="size-4" data-copy-icon />
         <HugeIcon icon={Tick02Icon} class="hidden size-4" data-copy-check-icon />

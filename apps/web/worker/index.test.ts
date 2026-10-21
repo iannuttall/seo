@@ -278,6 +278,7 @@ test('Hono preserves API method errors, API 404s, and static asset fallback', as
     'spam-score',
     'domain-rating',
     'website-traffic',
+    'backlinks',
   ]
   const toolResponses = await Promise.all(
     toolRoutes.map((route) =>

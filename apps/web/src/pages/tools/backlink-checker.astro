@@ -1,0 +1,237 @@
+---
+import Breadcrumbs from '@/components/Breadcrumbs.astro'
+import CodeBlock from '@/components/CodeBlock.astro'
+import FaqAccordion from '@/components/FaqAccordion.astro'
+import PageHeader from '@/components/PageHeader.astro'
+import SetupCommands from '@/components/SetupCommands.astro'
+import BacklinkChecker from '@/components/tools/BacklinkChecker.astro'
+import BaseLayout from '@/layouts/BaseLayout.astro'
+import type { SchemaBreadcrumb } from '@/lib/schema'
+
+const breadcrumbs: SchemaBreadcrumb[] = [
+  { label: 'Home', href: '/' },
+  { label: 'Tools', href: '/tools' },
+  { label: 'Backlink checker' },
+]
+
+const faq = [
+  {
+    question: 'How do I check the backlinks to my website?',
+    answer:
+      'Enter your domain above. You get the number of sites and links pointing at it, a year of history, the 100 strongest linking sites with their anchor text, and the most used anchors. For a list Google itself has found, open the Links report in Search Console.',
+  },
+  {
+    question: 'Is this backlink checker free?',
+    answer:
+      'Yes. There is no account and nothing to install. Each person gets 10 checks a day. For more, connect your agent with your own DataForSEO or Ahrefs key.',
+  },
+  {
+    question: 'Can I check the backlinks of a single page?',
+    answer:
+      'Yes. Enter the full URL instead of the domain. You get the same counts, links and anchors for that page. The twelve-month history is only available for whole domains.',
+  },
+  {
+    question: 'Why does it show fewer links than Search Console?',
+    answer:
+      'No outside index sees every link Google sees. This checker reads DataForSEO’s live link index, which is large but not complete, and it only counts links that were still live at the last crawl. Search Console shows links Google found, but only for sites you own.',
+  },
+  {
+    question: 'Are backlinks still important for SEO?',
+    answer:
+      'Yes. Google still uses links to find pages and as one of many signals of which pages deserve to rank. What changed is how much it discounts links that were bought, traded or placed in bulk. A few links from real, relevant sites count for more than many from anywhere.',
+  },
+  {
+    question: 'How many backlinks do I need to rank?',
+    answer:
+      'There is no number. Compare yourself with the pages that rank for your keyword now. If they each have links from 50 sites and you have 3, links are likely part of the gap. If you have as many as they do, look at the content and search intent first.',
+  },
+  {
+    question: 'Should I disavow toxic backlinks?',
+    answer:
+      'Usually not. Google says it ignores most spammy links on its own and that the disavow tool is for sites with a manual action or a clear history of paid links. A high spam score alone is not a reason to disavow.',
+  },
+]
+---
+
+<BaseLayout
+  title="Free backlink checker for any site or page"
+  description="Check the backlinks to any domain or page for free. See referring domains, a year of link history, the 100 strongest linking sites, anchor text and followed links."
+  canonicalPath="/tools/backlink-checker"
+  {breadcrumbs}
+>
+  <main data-agent-content>
+    <Breadcrumbs {breadcrumbs} />
+    <PageHeader
+      title="Backlink checker"
+      description="Enter a domain or a page to see which websites link to it, how strong those sites are, what the links say and how the link count changed over the last year."
+    />
+
+    <BacklinkChecker />
+
+    <div class="docs-prose mt-16">
+      <h2>Read the backlink result</h2>
+      <p>
+        The big number is referring domains: how many different websites link
+        to the site or page. Under it you get the total number of links and
+        how the profile looks from every angle.
+      </p>
+      <table>
+        <thead>
+          <tr>
+            <th>Figure</th>
+            <th>What it tells you</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>Referring domains</td>
+            <td>Different websites with at least one live link to the target.</td>
+          </tr>
+          <tr>
+            <td>Backlinks</td>
+            <td>Every live link, counting each page and each repeat. One site wide footer link can add thousands.</td>
+          </tr>
+          <tr>
+            <td>Linking pages</td>
+            <td>Pages that hold at least one of those links.</td>
+          </tr>
+          <tr>
+            <td>Link strength</td>
+            <td>DataForSEO's score for the target from 0 to 100, based on the links pointing at it. Each linking site in the list has the same score.</td>
+          </tr>
+          <tr>
+            <td>Spam score</td>
+            <td>DataForSEO's estimate of how many of the links look like spam. The <a href="/tools/spam-score-checker">spam score checker</a> explains it.</td>
+          </tr>
+          <tr>
+            <td>Broken backlinks</td>
+            <td>Links that point at a URL on the target that no longer works.</td>
+          </tr>
+        </tbody>
+      </table>
+      <p>
+        The chart shows twelve months of referring domains, backlinks, or the
+        sites won and lost each month. The list shows one link from each of
+        the 100 strongest linking sites, with the anchor text, where the link
+        sits on the page and whether it is followed. Filter it, switch to the
+        newest links, or download it as a spreadsheet.
+      </p>
+
+      <h2>What are backlinks?</h2>
+      <p>
+        A backlink is a link on another website that points to yours. Search
+        engines use them in two ways. They follow links to find new pages,
+        and they read a link as a sign that the linking page thinks the
+        target is worth visiting. Many links from many independent sites
+        about the same subject tell Google that a page is known and trusted
+        on that subject.
+      </p>
+      <p>
+        That is why referring domains matter more than backlinks. Ten
+        thousand links from one site are still one site's opinion. Fifty
+        links from fifty different sites are fifty opinions. When you compare
+        two sites, compare referring domains first.
+      </p>
+
+      <h2>Followed and nofollow links</h2>
+      <p>
+        A link can carry a <code>rel</code> attribute that tells search
+        engines how to treat it. Google reads these as hints, not orders.
+      </p>
+      <table>
+        <thead>
+          <tr>
+            <th>Attribute</th>
+            <th>Meaning</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>None (followed)</td>
+            <td>A normal link. It can pass ranking signals to the target.</td>
+          </tr>
+          <tr>
+            <td><code>nofollow</code></td>
+            <td>The site does not vouch for the target.</td>
+          </tr>
+          <tr>
+            <td><code>sponsored</code></td>
+            <td>The link was paid for, or is an ad or affiliate link.</td>
+          </tr>
+          <tr>
+            <td><code>ugc</code></td>
+            <td>The link was added by users, for example in comments or forums.</td>
+          </tr>
+        </tbody>
+      </table>
+      <p>
+        A healthy profile has both kinds. Nofollow links from busy sites
+        still bring visitors and get pages found. A profile where every link
+        is followed and the anchor text matches one keyword can look built
+        rather than earned.
+      </p>
+
+      <h2>Anchor text</h2>
+      <p>
+        Anchor text is the clickable text of a link. Google uses it to
+        understand what the target page is about, so it is one of the
+        clearest signals a link carries. Most sites earn anchors that are
+        their brand name, their domain or a plain phrase like "this guide".
+        That is normal.
+      </p>
+      <p>
+        Read the anchor list for two things. First, check that the anchors
+        describe what you want the site to be known for. Second, watch for
+        many exact match keyword anchors from unrelated sites. Google's spam
+        policies name links with keyword rich anchors placed in bulk as a
+        link scheme.
+      </p>
+
+      <h2>How to check backlinks and audit them</h2>
+      <ol>
+        <li><strong>Look at the trend first.</strong> A steady rise in referring domains means the site keeps earning links. A sharp drop often means a partner removed a site wide link, or pages that earned links were deleted.</li>
+        <li><strong>Read the strongest linking sites.</strong> Are they real sites about your subject? A few strong, relevant sites are worth more than the total suggests.</li>
+        <li><strong>Check where the links sit.</strong> Links in the main content of an article count for more than footer or sidebar links, which repeat on every page.</li>
+        <li><strong>Fix broken backlinks.</strong> When links point at pages that no longer exist, redirect those URLs to the closest live page so the links count again.</li>
+        <li><strong>Leave most spam alone.</strong> Every site collects junk links. Google ignores most of them. Only act when you know links were bought or traded.</li>
+      </ol>
+
+      <h2>Find link opportunities from competitors</h2>
+      <p>
+        The fastest way to find sites that might link to you is to check who
+        links to the pages that outrank you. Run the checker on a competing
+        page, switch the list to followed links, and look for sites that
+        cover your subject: resource pages, guides that cite sources, and
+        directories people actually use. Sites that link to two or three of
+        your competitors but not to you are the best place to start.
+      </p>
+      <p>
+        Links follow content people want to cite: original data, useful
+        tools, clear explanations. The <a href="/tools/competitor-keyword-research">competitor keyword research</a>{' '}
+        tool shows which of their pages bring their traffic, which is often
+        the same set of pages that earned their links.
+      </p>
+
+      <h2>Check backlinks with your AI agent</h2>
+      <p>
+        One check shows one site. With SEO Skill your agent can list the
+        referring domains for your site and several competitors with{' '}
+        <a href="/docs/research">seo research</a>, using your own DataForSEO
+        or Ahrefs key, then compare the lists and set them beside your own
+        Search Console data. Research data stays labelled as research and is
+        never mixed into your own numbers. Ask:
+      </p>
+      <CodeBlock value="List the referring domains for competitor.example and other.example, and show the sites that link to both of them but not to example.com" wrap />
+      <p>Add the hosted MCP server to your agent and sign in with Google:</p>
+    </div>
+
+    <SetupCommands id="backlink-setup" class="mt-6" />
+
+    <div class="docs-prose mt-16">
+      <h2>Backlink questions</h2>
+    </div>
+    <div class="mt-6">
+      <FaqAccordion id="backlink-faq" items={faq} />
+    </div>
+  </main>
+</BaseLayout>

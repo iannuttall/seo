@@ -6,6 +6,7 @@ import { handleFaviconCheck } from './tools/favicon-checker.ts'
 import { handleLlmsTxtFetch } from './tools/llms-txt.ts'
 import { handleOpenGraphCheck } from './tools/open-graph.ts'
 import {
+  handleBacklinks,
   handleCompetitorKeywords,
   handleDomainRating,
   handleSerpChecker,
@@ -911,6 +912,9 @@ app.all('/api/tools/spam-score', (context) =>
 )
 app.all('/api/tools/domain-rating', (context) =>
   handleDomainRating(context.req.raw, context.env),
+)
+app.all('/api/tools/backlinks', (context) =>
+  handleBacklinks(context.req.raw, context.env),
 )
 app.all('/api/tools/website-traffic', (context) =>
   handleWebsiteTraffic(context.req.raw, context.env),

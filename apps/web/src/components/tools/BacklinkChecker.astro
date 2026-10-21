@@ -1,0 +1,636 @@
+---
+import Button from '@/components/Button.astro'
+import Card from '@/components/Card.astro'
+import FormInput from '@/components/FormInput.astro'
+import FormSelect from '@/components/FormSelect.astro'
+import TurnstileWidget from '@/components/tools/TurnstileWidget.astro'
+
+const toggle =
+  'h-8 rounded-md px-3 text-foreground-muted aria-pressed:bg-background aria-pressed:text-foreground'
+---
+
+<section data-backlink-checker class="space-y-6">
+  <Card>
+    <form data-backlink-form class="space-y-5 p-5 sm:p-6" novalidate>
+      <div class="space-y-1">
+        <h2 class="text-lg font-medium">Check backlinks</h2>
+        <p class="text-sm leading-6 text-foreground-muted">
+          Enter a domain for the whole site, or a full URL for one page.
+        </p>
+      </div>
+      <label class="block space-y-2 text-sm font-medium">
+        <span>Domain or URL</span>
+        <FormInput
+          data-target
+          type="text"
+          inputmode="url"
+          autocomplete="url"
+          autocapitalize="off"
+          spellcheck="false"
+          maxlength="2048"
+          placeholder="example.com"
+          required
+        />
+      </label>
+      <TurnstileWidget action="backlinks" />
+      <div class="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+        <p class="text-xs leading-5 text-foreground-muted">Free, 10 checks a day. Data from DataForSEO.</p>
+        <Button data-submit type="submit" class="min-h-10 shrink-0 px-5 text-xs">Check backlinks</Button>
+      </div>
+      <p data-error hidden class="text-sm leading-6 text-red-700 dark:text-red-400" role="alert"></p>
+    </form>
+  </Card>
+
+  <div data-results hidden class="space-y-6">
+    <Card inverted>
+      <div class="space-y-5 p-5 sm:p-6">
+        <div class="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
+          <div class="min-w-0">
+            <p class="text-xs text-foreground-muted">Referring domains</p>
+            <p data-domains class="mt-1 text-5xl font-medium text-primary"></p>
+            <p data-headline class="mt-2 text-sm leading-6 text-foreground-muted [overflow-wrap:anywhere]"></p>
+          </div>
+          <div class="grid shrink-0 gap-2 sm:grid-cols-2">
+            <Button data-copy type="button" class="min-h-10 px-4 text-xs">Copy summary</Button>
+            <Button data-download type="button" class="min-h-10 px-4 text-xs">Download CSV</Button>
+          </div>
+        </div>
+        <dl data-stats class="grid grid-cols-2 gap-4 border-t border-border pt-5 sm:grid-cols-3"></dl>
+        <div class="space-y-2 border-t border-border pt-5">
+          <p data-checked-at class="text-xs leading-5 text-foreground-muted"></p>
+          <ul data-warnings class="list-disc space-y-1 pl-5 text-xs leading-5 text-foreground-muted"></ul>
+        </div>
+        <p data-action-status class="text-xs text-foreground-muted" aria-live="polite"></p>
+      </div>
+    </Card>
+
+    <div data-history-card>
+    <Card>
+      <div class="space-y-5 p-5 sm:p-6">
+        <div class="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+          <h3 class="text-sm font-medium">Twelve months of links</h3>
+          <div role="group" aria-label="Number shown" class="inline-flex h-9 w-fit items-center gap-1 rounded-lg bg-muted p-0.5 text-xs">
+            <button type="button" data-metric="referringDomains" aria-pressed="true" class={toggle}>Domains</button>
+            <button type="button" data-metric="backlinks" aria-pressed="false" class={toggle}>Backlinks</button>
+            <button type="button" data-metric="change" aria-pressed="false" class={toggle}>Won and lost</button>
+          </div>
+        </div>
+        <p data-readout class="min-h-6 text-sm" aria-live="polite"></p>
+        <div data-bars class="flex h-44 items-end gap-1 sm:gap-2"></div>
+        <div data-bar-labels class="flex gap-1 text-center text-[0.65rem] text-foreground-muted sm:gap-2" aria-hidden="true"></div>
+        <p data-chart-note class="text-xs leading-5 text-foreground-muted"></p>
+      </div>
+    </Card>
+    </div>
+
+    <Card>
+      <div class="space-y-5 p-5 sm:p-6">
+        <div class="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
+          <div class="space-y-1">
+            <h3 class="text-sm font-medium">Backlinks from the strongest sites</h3>
+            <p data-links-note class="text-xs leading-5 text-foreground-muted"></p>
+          </div>
+          <div class="grid grid-cols-2 gap-2 sm:w-80">
+            <FormInput data-link-filter type="search" placeholder="Filter" aria-label="Filter backlinks" class="h-9 text-xs" />
+            <FormSelect data-link-view aria-label="Which links" class="h-9 text-xs">
+              <option value="all">All links</option>
+              <option value="follow">Followed only</option>
+              <option value="nofollow">Nofollow only</option>
+              <option value="new">Newest first</option>
+            </FormSelect>
+          </div>
+        </div>
+        <ol data-links class="divide-y divide-border"></ol>
+        <p data-no-links hidden class="text-sm text-foreground-muted"></p>
+        <Button data-more type="button" variant="outline" class="min-h-10 w-full px-4 text-xs" hidden>Show all</Button>
+      </div>
+    </Card>
+
+    <Card>
+      <div class="space-y-5 p-5 sm:p-6">
+        <div class="space-y-1">
+          <h3 class="text-sm font-medium">Anchor text</h3>
+          <p data-anchors-note class="text-xs leading-5 text-foreground-muted"></p>
+        </div>
+        <ol data-anchors class="space-y-3"></ol>
+      </div>
+    </Card>
+
+    <Card>
+      <div class="space-y-5 p-5 sm:p-6">
+        <h3 class="text-sm font-medium">Link profile</h3>
+        <div data-profile class="grid gap-6 sm:grid-cols-2"></div>
+      </div>
+    </Card>
+
+    <Card inverted>
+      <div class="space-y-3 p-5 sm:p-6">
+        <h3 class="text-lg font-medium">Run it from your agent with your own key</h3>
+        <p class="text-sm leading-6 text-foreground-muted">
+          This page gives you 10 checks a day. With a free account and your own DataForSEO or Ahrefs key, your agent lists the referring domains for any site whenever it needs to, and sets them beside your own Search Console data.
+        </p>
+        <ol class="list-decimal space-y-1 pl-5 text-sm leading-6 text-foreground-muted">
+          <li>Sign in with Google on your account page. That creates the free account.</li>
+          <li>Save your DataForSEO or Ahrefs key in the Keys tab. The provider bills you directly.</li>
+          <li>Connect the hosted MCP to your agent and ask it which sites link to a competitor but not to you.</li>
+        </ol>
+        <div class="flex flex-wrap gap-2 pt-1">
+          <Button href="/account" class="min-h-10 px-4 text-xs">Get started free</Button>{' '}
+          <Button href="/docs/keys" variant="outline" class="min-h-10 px-4 text-xs">How keys work</Button>
+        </div>
+      </div>
+    </Card>
+  </div>
+</section>
+
+<script>
+  type Count = { name: string; count: number }
+  type Link = {
+    sourceUrl: string
+    sourceDomain: string
+    sourceTitle: string | null
+    targetUrl: string | null
+    anchor: string | null
+    linkType: string | null
+    dofollow: boolean
+    domainRank: number | null
+    spamScore: number | null
+    placement: string | null
+    firstSeen: string | null
+    lastSeen: string | null
+    isNew: boolean
+    isBroken: boolean
+  }
+  type Anchor = { anchor: string; referringDomains: number | null; referringDomainsNofollow: number | null; backlinks: number | null }
+  type Month = { month: string; backlinks: number | null; referringDomains: number | null; newReferringDomains: number | null; lostReferringDomains: number | null }
+  type Result = {
+    target: string
+    targetType: 'domain' | 'page'
+    dataStatus: 'complete' | 'partial' | 'unavailable'
+    summary: {
+      backlinks: number | null
+      referringDomains: number | null
+      referringDomainsNofollow: number | null
+      referringPages: number | null
+      brokenBacklinks: number | null
+      rank: number | null
+      spamScore: number | null
+      firstSeen: string | null
+      linkTypes: Count[]
+      attributes: Count[]
+      placements: Count[]
+      tlds: Count[]
+    }
+    backlinks: Link[]
+    backlinkDomainsTotal: number | null
+    anchors: Anchor[]
+    anchorsTotal: number | null
+    history: Month[]
+    warnings: Array<{ code?: string; message: string }>
+    provenance: { checkedAt: string; providerCostUsd: number | null }
+  }
+  type Metric = 'referringDomains' | 'backlinks' | 'change'
+
+  declare global {
+    interface Window {
+      turnstile?: { reset(container?: HTMLElement): void }
+    }
+  }
+
+  const PAGE_SIZE = 25
+  const number = new Intl.NumberFormat()
+  const count = (value: number | null | undefined) =>
+    value === null || value === undefined ? 'N/A' : number.format(value)
+  const monthName = (month: string, style: 'short' | 'long' = 'long') => {
+    const [year, index] = month.split('-').map(Number)
+    return new Date(Date.UTC(year ?? 2000, (index ?? 1) - 1, 1)).toLocaleString(undefined, {
+      month: style,
+      year: style === 'long' ? 'numeric' : undefined,
+      timeZone: 'UTC',
+    })
+  }
+  const dateText = (value: string | null) =>
+    value ? new Date(`${value}T00:00:00Z`).toLocaleDateString(undefined, { day: 'numeric', month: 'short', year: 'numeric', timeZone: 'UTC' }) : 'N/A'
+  const pathOf = (url: string | null) => {
+    if (!url) return 'N/A'
+    try {
+      const parsed = new URL(url)
+      return `${parsed.hostname.replace(/^www\./u, '')}${parsed.pathname === '/' ? '' : parsed.pathname}`
+    } catch {
+      return url
+    }
+  }
+  const placementWords: Record<string, string> = {
+    main: 'main content',
+    article: 'article',
+    section: 'page section',
+    footer: 'footer',
+    nav: 'navigation',
+    aside: 'sidebar',
+    header: 'header',
+  }
+  const el = <K extends keyof HTMLElementTagNameMap>(tag: K, className = '', text?: string) => {
+    const node = document.createElement(tag)
+    if (className) node.className = className
+    if (text !== undefined) node.textContent = text
+    return node
+  }
+  const csvCell = (value: string | number | boolean | null) => {
+    const text = value === null ? '' : String(value)
+    return /[",\n]/u.test(text) ? `"${text.replaceAll('"', '""')}"` : text
+  }
+
+  function initialise(root: HTMLElement): void {
+    if (root.dataset.initialised === 'true') return
+    root.dataset.initialised = 'true'
+    const $ = <T extends HTMLElement>(selector: string) => root.querySelector<T>(selector)
+    const form = $<HTMLFormElement>('[data-backlink-form]')
+    const target = $<HTMLInputElement>('[data-target]')
+    const submit = $<HTMLButtonElement>('[data-submit]')
+    const error = $<HTMLElement>('[data-error]')
+    const results = $<HTMLElement>('[data-results]')
+    const filter = $<HTMLInputElement>('[data-link-filter]')
+    const view = $<HTMLSelectElement>('[data-link-view]')
+    const more = $<HTMLButtonElement>('[data-more]')
+    if (!form || !target || !submit || !error || !results || !filter || !view || !more) return
+    const [formEl, targetEl, submitEl, errorEl, resultsEl, filterEl, viewEl, moreEl] = [form, target, submit, error, results, filter, view, more]
+    let current: Result | undefined
+    let metric: Metric = 'referringDomains'
+    let selectedMonth = ''
+    let showAll = false
+
+    const setText = (selector: string, value: string) => {
+      const node = $<HTMLElement>(selector)
+      if (node) node.textContent = value
+    }
+
+    function monthValue(row: Month): number | null {
+      if (metric === 'change') {
+        return row.newReferringDomains === null || row.lostReferringDomains === null
+          ? null
+          : row.newReferringDomains - row.lostReferringDomains
+      }
+      return row[metric]
+    }
+
+    function readout(result: Result): void {
+      const row = result.history.find((entry) => entry.month === selectedMonth) ?? result.history.at(-1)
+      if (!row) return
+      setText(
+        '[data-readout]',
+        metric === 'change'
+          ? `${monthName(row.month)}: ${count(row.newReferringDomains)} domains won, ${count(row.lostReferringDomains)} lost`
+          : `${monthName(row.month)}: ${count(row[metric])} ${metric === 'backlinks' ? 'backlinks' : 'referring domains'}`,
+      )
+      for (const bar of root.querySelectorAll<HTMLElement>('[data-bar]')) {
+        bar.dataset.active = String(bar.dataset.bar === row.month)
+      }
+    }
+
+    function renderChart(result: Result): void {
+      const card = $<HTMLElement>('[data-history-card]')
+      const bars = $<HTMLElement>('[data-bars]')
+      const labels = $<HTMLElement>('[data-bar-labels]')
+      if (!card || !bars || !labels) return
+      card.hidden = result.history.length === 0
+      if (card.hidden) return
+      if (metric === 'change') {
+        // Won and lost are drawn as two bars per month on one scale.
+        const max = Math.max(1, ...result.history.flatMap((row) => [row.newReferringDomains ?? 0, row.lostReferringDomains ?? 0]))
+        bars.replaceChildren(
+          ...result.history.map((row) => {
+            const button = el('button', 'group flex h-full min-w-0 flex-1 cursor-pointer items-end gap-px rounded-t-sm focus-visible:outline-2 focus-visible:outline-ring')
+            button.type = 'button'
+            button.dataset.bar = row.month
+            button.setAttribute('aria-label', `${monthName(row.month)}: ${count(row.newReferringDomains)} domains won, ${count(row.lostReferringDomains)} lost`)
+            const won = el('span', 'block w-1/2 rounded-t-sm bg-primary/45 group-hover:bg-primary group-data-[active=true]:bg-primary')
+            won.style.height = `${Math.max(1, ((row.newReferringDomains ?? 0) / max) * 100)}%`
+            const lost = el('span', 'block w-1/2 rounded-t-sm bg-foreground-soft/35 group-hover:bg-foreground-soft group-data-[active=true]:bg-foreground-soft')
+            lost.style.height = `${Math.max(1, ((row.lostReferringDomains ?? 0) / max) * 100)}%`
+            button.append(won, lost)
+            return wire(button, row, result)
+          }),
+        )
+        setText('[data-chart-note]', 'Blue bars are referring domains won that month, grey bars are domains lost. Point at or tap a month to read it.')
+      } else {
+        const values = result.history.map((row) => monthValue(row) ?? 0)
+        const max = Math.max(1, ...values)
+        const min = Math.min(...values)
+        // Start the scale near the lowest month so small changes stay visible.
+        const floor = min > max * 0.5 ? min * 0.9 : 0
+        bars.replaceChildren(
+          ...result.history.map((row, index) => {
+            const button = el('button', 'group flex h-full min-w-0 flex-1 cursor-pointer items-end rounded-t-sm focus-visible:outline-2 focus-visible:outline-ring')
+            button.type = 'button'
+            button.dataset.bar = row.month
+            button.setAttribute('aria-label', `${monthName(row.month)}: ${count(monthValue(row))} ${metric === 'backlinks' ? 'backlinks' : 'referring domains'}`)
+            const fill = el('span', 'block w-full rounded-t-sm bg-primary/35 group-hover:bg-primary group-data-[active=true]:bg-primary')
+            fill.style.height = `${Math.max(2, (((values[index] ?? 0) - floor) / (max - floor || 1)) * 100)}%`
+            button.append(fill)
+            return wire(button, row, result)
+          }),
+        )
+        setText(
+          '[data-chart-note]',
+          floor > 0
+            ? `The scale starts at ${number.format(Math.round(floor))}, so the changes are easier to see. Point at or tap a month to read it.`
+            : 'Point at or tap a month to read it.',
+        )
+      }
+      labels.replaceChildren(...result.history.map((row) => el('span', 'min-w-0 flex-1 truncate', monthName(row.month, 'short'))))
+      readout(result)
+    }
+
+    function wire(button: HTMLButtonElement, row: Month, result: Result): HTMLButtonElement {
+      const select = () => {
+        selectedMonth = row.month
+        readout(result)
+      }
+      button.addEventListener('mouseenter', select)
+      button.addEventListener('focus', select)
+      button.addEventListener('click', select)
+      return button
+    }
+
+    function visibleLinks(result: Result): Link[] {
+      const query = filterEl.value.trim().toLowerCase()
+      const mode = viewEl.value
+      return result.backlinks
+        .filter((link) => mode !== 'follow' || link.dofollow)
+        .filter((link) => mode !== 'nofollow' || !link.dofollow)
+        .filter(
+          (link) =>
+            !query ||
+            [link.sourceUrl, link.sourceTitle, link.anchor, link.targetUrl].some((value) => value?.toLowerCase().includes(query)),
+        )
+        .sort((left, right) =>
+          mode === 'new'
+            ? (right.firstSeen ?? '').localeCompare(left.firstSeen ?? '') || (right.domainRank ?? -1) - (left.domainRank ?? -1)
+            : (right.domainRank ?? -1) - (left.domainRank ?? -1) || left.sourceUrl.localeCompare(right.sourceUrl),
+        )
+    }
+
+    function renderLinks(result: Result): void {
+      const list = $<HTMLElement>('[data-links]')
+      const empty = $<HTMLElement>('[data-no-links]')
+      if (!list || !empty) return
+      const rows = visibleLinks(result)
+      const shown = showAll ? rows : rows.slice(0, PAGE_SIZE)
+      list.replaceChildren(
+        ...shown.map((link) => {
+          const item = el('li', 'grid gap-1.5 py-4 first:pt-0')
+          const top = el('div', 'flex items-start justify-between gap-3')
+          const source = el('a', 'min-w-0 text-sm text-foreground hover:text-primary [overflow-wrap:anywhere]', link.sourceTitle ?? link.sourceDomain)
+          source.href = link.sourceUrl
+          source.rel = 'nofollow noopener noreferrer'
+          source.target = '_blank'
+          const rank = el('span', 'shrink-0 rounded-md bg-muted px-2 py-0.5 font-mono text-xs', link.domainRank === null ? 'N/A' : String(link.domainRank))
+          rank.title = 'Strength of the linking site, 0 to 100'
+          top.append(source, rank)
+          const from = el('p', 'font-mono text-[0.7rem] text-foreground-muted [overflow-wrap:anywhere]', pathOf(link.sourceUrl))
+          const anchor = el('p', 'text-xs leading-5 text-foreground-muted [overflow-wrap:anywhere]')
+          anchor.append(
+            el('span', 'text-foreground', link.anchor ? `“${link.anchor}”` : link.linkType === 'image' ? 'Image link' : 'No anchor text'),
+            document.createTextNode(` to ${pathOf(link.targetUrl)}`),
+          )
+          const badges = el('div', 'flex flex-wrap gap-1.5 text-[0.7rem]')
+          badges.append(
+            el('span', `rounded-md px-1.5 py-0.5 ${link.dofollow ? 'bg-primary-soft text-foreground' : 'bg-muted text-foreground-muted'}`, link.dofollow ? 'Followed' : 'Nofollow'),
+          )
+          if (link.placement && placementWords[link.placement]) badges.append(el('span', 'rounded-md bg-muted px-1.5 py-0.5 text-foreground-muted', `In the ${placementWords[link.placement]}`))
+          if (link.linkType && link.linkType !== 'anchor') badges.append(el('span', 'rounded-md bg-muted px-1.5 py-0.5 text-foreground-muted', link.linkType === 'image' ? 'Image' : link.linkType))
+          if (link.isBroken) badges.append(el('span', 'rounded-md bg-warning-soft px-1.5 py-0.5 text-foreground', 'Broken target'))
+          badges.append(el('span', 'px-1.5 py-0.5 text-foreground-muted', `First seen ${dateText(link.firstSeen)}`))
+          item.append(top, from, anchor, badges)
+          return item
+        }),
+      )
+      empty.textContent = result.backlinks.length === 0 ? 'No backlinks were found for this target.' : 'No backlinks match.'
+      empty.hidden = rows.length > 0
+      moreEl.hidden = showAll || rows.length <= PAGE_SIZE
+      moreEl.textContent = `Show all ${rows.length}`
+    }
+
+    function bars(title: string, rows: Count[], total: number | null, label: (name: string) => string): HTMLElement {
+      const block = el('div', 'space-y-2')
+      block.append(el('h4', 'text-xs font-medium', title))
+      if (rows.length === 0) {
+        block.append(el('p', 'text-xs text-foreground-muted', 'No data.'))
+        return block
+      }
+      const max = Math.max(1, ...rows.map((row) => row.count))
+      const list = el('ul', 'space-y-2')
+      for (const row of rows.slice(0, 6)) {
+        const item = el('li', 'space-y-1')
+        const line = el('div', 'flex justify-between gap-3 text-xs')
+        line.append(
+          el('span', 'min-w-0 truncate text-foreground-muted', label(row.name)),
+          el('span', 'shrink-0 font-mono', `${number.format(row.count)}${total ? ` · ${Math.max(1, Math.round((row.count / total) * 100))}%` : ''}`),
+        )
+        const track = el('div', 'h-1.5 overflow-hidden rounded-full bg-muted')
+        const fill = el('span', 'block h-full rounded-full bg-primary/70')
+        fill.style.width = `${(row.count / max) * 100}%`
+        track.append(fill)
+        item.append(line, track)
+        list.append(item)
+      }
+      block.append(list)
+      return block
+    }
+
+    function render(result: Result): void {
+      const summary = result.summary
+      setText('[data-domains]', count(summary.referringDomains))
+      const followed =
+        summary.referringDomains !== null && summary.referringDomainsNofollow !== null
+          ? summary.referringDomains - summary.referringDomainsNofollow
+          : null
+      setText(
+        '[data-headline]',
+        `${result.targetType === 'page' ? 'Websites linking to this page' : 'Websites linking to'} ${result.target}${followed !== null && summary.referringDomains ? `. ${number.format(followed)} of them (${Math.round((followed / summary.referringDomains) * 100)}%) send at least one followed link.` : '.'}`,
+      )
+      const stats: Array<[string, string]> = [
+        ['Backlinks', count(summary.backlinks)],
+        ['Linking pages', count(summary.referringPages)],
+        ['Link strength', summary.rank === null ? 'N/A' : `${summary.rank} / 100`],
+        ['Spam score', summary.spamScore === null ? 'N/A' : `${summary.spamScore}%`],
+        ['Broken backlinks', count(summary.brokenBacklinks)],
+        ['First link seen', dateText(summary.firstSeen)],
+      ]
+      $<HTMLElement>('[data-stats]')?.replaceChildren(
+        ...stats.map(([label, value]) => {
+          const item = el('div')
+          item.append(el('dt', 'text-xs text-foreground-muted', label), el('dd', 'mt-1 font-mono text-lg', value))
+          return item
+        }),
+      )
+      setText(
+        '[data-checked-at]',
+        `${result.dataStatus === 'complete' ? 'Complete result' : 'Partial result'}. Live links in DataForSEO’s index, checked ${new Date(result.provenance.checkedAt).toLocaleString()}. Link strength and spam score are DataForSEO’s own measures.`,
+      )
+      const warnings = $<HTMLElement>('[data-warnings]')
+      if (warnings) {
+        const visible = result.warnings.filter((warning) => warning.code !== 'provider-estimate')
+        warnings.replaceChildren(...visible.map((warning) => el('li', '', warning.message)))
+        warnings.hidden = visible.length === 0
+      }
+
+      selectedMonth = result.history.at(-1)?.month ?? ''
+      renderChart(result)
+
+      setText(
+        '[data-links-note]',
+        result.backlinks.length
+          ? `One link from each of the ${result.backlinks.length} strongest linking sites${result.backlinkDomainsTotal ? `, out of ${number.format(result.backlinkDomainsTotal)}` : ''}. The number is the linking site's strength, 0 to 100.`
+          : 'No backlink list was returned.',
+      )
+      showAll = false
+      filterEl.value = ''
+      viewEl.value = 'all'
+      renderLinks(result)
+
+      const anchors = $<HTMLElement>('[data-anchors]')
+      const topAnchor = Math.max(1, ...result.anchors.map((anchor) => anchor.referringDomains ?? 0))
+      setText(
+        '[data-anchors-note]',
+        result.anchors.length
+          ? `The ${result.anchors.length} most used anchors${result.anchorsTotal ? ` of ${number.format(result.anchorsTotal)}` : ''}, by the number of sites that use them.`
+          : 'No anchor text was returned.',
+      )
+      anchors?.replaceChildren(
+        ...result.anchors.map((anchor) => {
+          const item = el('li', 'space-y-1')
+          const line = el('div', 'flex items-baseline justify-between gap-3 text-xs')
+          line.append(
+            el('span', `min-w-0 [overflow-wrap:anywhere] ${anchor.anchor ? 'text-foreground' : 'italic text-foreground-muted'}`, anchor.anchor || 'No anchor text (often images)'),
+            el('span', 'shrink-0 font-mono', `${count(anchor.referringDomains)} sites`),
+          )
+          const track = el('div', 'h-1.5 overflow-hidden rounded-full bg-muted')
+          const fill = el('span', 'block h-full rounded-full bg-primary')
+          fill.style.width = `${((anchor.referringDomains ?? 0) / topAnchor) * 100}%`
+          track.append(fill)
+          item.append(line, track)
+          return item
+        }),
+      )
+
+      const linkTotal = summary.backlinks
+      $<HTMLElement>('[data-profile]')?.replaceChildren(
+        bars('Where the links sit on the page', summary.placements, linkTotal, (name) => (name && name !== 'unknown' ? (placementWords[name] ?? name) : 'not marked up')),
+        bars('Link attributes', summary.attributes, linkTotal, (name) => name),
+        bars('Link types', summary.linkTypes, linkTotal, (name) => name),
+        bars('Linking domain endings', summary.tlds, linkTotal, (name) => `.${name}`),
+      )
+      resultsEl.hidden = false
+    }
+
+    for (const button of root.querySelectorAll<HTMLButtonElement>('[data-metric]')) {
+      button.addEventListener('click', () => {
+        metric = button.dataset.metric as Metric
+        for (const other of root.querySelectorAll<HTMLButtonElement>('[data-metric]')) {
+          other.setAttribute('aria-pressed', String(other === button))
+        }
+        if (current) renderChart(current)
+      })
+    }
+    filterEl.addEventListener('input', () => current && renderLinks(current))
+    viewEl.addEventListener('change', () => current && renderLinks(current))
+    moreEl.addEventListener('click', () => {
+      showAll = true
+      if (current) renderLinks(current)
+    })
+
+    formEl.addEventListener('submit', async (event) => {
+      event.preventDefault()
+      errorEl.hidden = true
+      const token = new FormData(formEl).get('turnstileToken')
+      if (!targetEl.value.trim()) {
+        errorEl.textContent = 'Enter a domain or URL.'
+        errorEl.hidden = false
+        targetEl.focus()
+        return
+      }
+      if (typeof token !== 'string' || token.length === 0) {
+        errorEl.textContent = 'Complete the security check first.'
+        errorEl.hidden = false
+        return
+      }
+      submitEl.disabled = true
+      submitEl.textContent = 'Checking…'
+      try {
+        const response = await fetch('/api/tools/backlinks', {
+          method: 'POST',
+          headers: { 'content-type': 'application/json' },
+          body: JSON.stringify({ target: targetEl.value.trim(), turnstileToken: token }),
+        })
+        if (!response.headers.get('content-type')?.includes('application/json')) {
+          throw new Error('The backlink check could not be completed.')
+        }
+        const data = (await response.json()) as { result?: Result; error?: string }
+        if (!response.ok || !data.result) throw new Error(data.error || 'The backlink check could not be completed.')
+        current = data.result
+        render(data.result)
+        resultsEl.scrollIntoView({ behavior: 'smooth', block: 'start' })
+      } catch (caught) {
+        errorEl.textContent = caught instanceof Error ? caught.message : 'The backlink check could not be completed.'
+        errorEl.hidden = false
+      } finally {
+        submitEl.disabled = false
+        submitEl.textContent = 'Check backlinks'
+        const widget = $<HTMLElement>('[data-turnstile-container]')
+        if (widget) window.turnstile?.reset(widget)
+      }
+    })
+
+    $<HTMLElement>('[data-copy]')?.addEventListener('click', async () => {
+      if (!current) return
+      const summary = current.summary
+      await navigator.clipboard.writeText(
+        [
+          `Target: ${current.target}`,
+          `Referring domains: ${count(summary.referringDomains)} (${count(summary.referringDomainsNofollow)} nofollow only)`,
+          `Backlinks: ${count(summary.backlinks)}`,
+          `Link strength (DataForSEO, 0 to 100): ${summary.rank ?? 'N/A'}`,
+          `Spam score (DataForSEO): ${summary.spamScore ?? 'N/A'}`,
+          `Strongest linking sites: ${current.backlinks.slice(0, 10).map((link) => link.sourceDomain).join(', ') || 'N/A'}`,
+          `Top anchors: ${current.anchors.slice(0, 5).map((anchor) => anchor.anchor || '(none)').join(', ') || 'N/A'}`,
+          `Source: DataForSEO, checked ${current.provenance.checkedAt}`,
+        ].join('\n'),
+      )
+      setText('[data-action-status]', 'Summary copied.')
+    })
+
+    $<HTMLElement>('[data-download]')?.addEventListener('click', () => {
+      if (!current) return
+      const rows: Array<Array<string | number | boolean | null>> = [
+        ['source_url', 'source_title', 'target_url', 'anchor', 'followed', 'link_type', 'placement', 'site_strength', 'spam_score', 'first_seen', 'last_seen'],
+        ...current.backlinks.map((link) => [
+          link.sourceUrl,
+          link.sourceTitle,
+          link.targetUrl,
+          link.anchor,
+          link.dofollow,
+          link.linkType,
+          link.placement,
+          link.domainRank,
+          link.spamScore,
+          link.firstSeen,
+          link.lastSeen,
+        ]),
+      ]
+      const url = URL.createObjectURL(new Blob([rows.map((row) => row.map(csvCell).join(',')).join('\n')], { type: 'text/csv;charset=utf-8' }))
+      const link = document.createElement('a')
+      link.href = url
+      link.download = `${current.target.replace(/^https?:\/\//u, '').replace(/[^a-z0-9.-]+/giu, '-')}-backlinks.csv`
+      link.click()
+      URL.revokeObjectURL(url)
+      setText('[data-action-status]', 'CSV downloaded.')
+    })
+  }
+
+  function initialiseAll(): void {
+    for (const root of document.querySelectorAll<HTMLElement>('[data-backlink-checker]')) initialise(root)
+  }
+  initialiseAll()
+  document.addEventListener('astro:page-load', initialiseAll)
+</script>

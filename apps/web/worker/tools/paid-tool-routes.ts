@@ -1,5 +1,6 @@
 import { runResearch } from '@seo/core/commands'
 import { checkAhrefsDomainRating } from './ahrefs-domain-rating.ts'
+import { checkDataForSeoBacklinks } from './dataforseo-backlinks.ts'
 import { checkDataForSeoSpamScore } from './dataforseo-spam-score.ts'
 import { checkDataForSeoWebsiteTraffic } from './dataforseo-traffic.ts'
 import {
@@ -111,6 +112,26 @@ export function handleSpamScore(
     parse: parseTarget,
     provider: ({ target }) =>
       checkDataForSeoSpamScore({
+        target,
+        login: env.DATAFORSEO_LOGIN,
+        password: env.DATAFORSEO_PASSWORD,
+      }),
+  })
+}
+
+export function handleBacklinks(
+  request: Request,
+  env: Cloudflare.Env,
+): Promise<Response> {
+  return handleProtectedTool(request, env, {
+    tool: 'backlinks',
+    providerDailyLimit: dailyLimit(
+      env.DATAFORSEO_BACKLINKS_DAILY_PROVIDER_LIMIT,
+    ),
+    allowLocalhostTurnstileForTests: allowLocalTurnstileTest(request),
+    parse: parseTarget,
+    provider: ({ target }) =>
+      checkDataForSeoBacklinks({
         target,
         login: env.DATAFORSEO_LOGIN,
         password: env.DATAFORSEO_PASSWORD,

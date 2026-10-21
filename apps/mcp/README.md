@@ -134,7 +134,10 @@ request logs. Workers Logs are off. Read sign-ups as totals only with
 site, landing page and `utm_*`). A weekly cron sends the same kind of
 totals for the last 7 days to the maintainer's Telegram chat when
 `TELEGRAM_BOT_TOKEN` and `TELEGRAM_CHAT_ID` are set (`src/signup-report.ts`);
-it never sends a row for one person. **Delete everything** on the account page
+it never sends a row for one person. The same cron reads the site's
+anonymous usage events (the `seo-telemetry` D1, SELECT only) and sends the
+week's failed runs as totals by version, split into expected states, network
+or provider trouble and errors (`src/failure-report.ts`). **Delete everything** on the account page
 removes every row for you and revokes the Google sign-ins, so your agents
 ask you to sign in again. You can also remove access in your
 [Google account](https://myaccount.google.com/connections).

@@ -332,7 +332,8 @@ you open the link, and you can review the form before submitting it.
 
 Aggregate event counts are public at
 [seoskill.dev/stats](https://seoskill.dev/stats). Failure counts are not
-shown there; the maintainer reads them privately to find and fix bugs. The
+shown there; the maintainer reads them privately to find and fix bugs,
+including a weekly Telegram message with failure totals by version. The
 public counts are described as installs, active machines, and audits, never
 users. One person can have several installs, and clearing local state creates
 a new install.

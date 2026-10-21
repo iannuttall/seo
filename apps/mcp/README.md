@@ -145,12 +145,23 @@ pnpm --filter @seo/hosted-mcp dev
 pnpm --filter @seo/hosted-mcp typecheck
 ```
 
-Deploy with `pnpm --filter @seo/hosted-mcp deploy`. Production secrets
+The `seo-mcp` Worker deploys from `main` through Cloudflare's Git builds, like
+the site. Merging a PR deploys it. Its build settings:
+
+| Setting | Value |
+| --- | --- |
+| Production branch | `main` |
+| Root directory | Repository root (leave blank) |
+| Build command | `pnpm build:mcp` |
+| Deploy command | `pnpm deploy:mcp` |
+| Non-production branch builds | Off |
+
+`pnpm deploy:mcp` applies new D1 migrations before it deploys, so a merged
+migration reaches the database first. A deploy keeps the Worker's secrets
 (`GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET`, `SEAL_KEY`, `AHREFS_DR_KEY`,
-and the unused-for-now `BING_CLIENT_ID`, `BING_CLIENT_SECRET`) live in
-`.dev.vars.production`; upload them with
-`wrangler deploy --secrets-file .dev.vars.production`. Apply new migrations
-with `wrangler d1 migrations apply seo-mcp --remote` before deploying. A new
+`BING_CLIENT_ID`, `BING_CLIENT_SECRET`, `TELEGRAM_BOT_TOKEN`,
+`TELEGRAM_CHAT_ID`). Set or change one with
+`pnpm --filter @seo/hosted-mcp exec wrangler secret put <NAME>`. A new
 `SEAL_KEY` signs everyone out and makes every stored token and key
 unreadable. Set `PUBLIC_URL` in `wrangler.jsonc` to move the server,
 for example to `https://example.com/seo`, and add `<PUBLIC_URL>/oauth/callback` to

@@ -56,7 +56,7 @@ export const GENERIC_PLATFORMS = [
 const within = (domain: string, parent: string) =>
   domain === parent || domain.endsWith(`.${parent}`)
 
-type Row = Awaited<ReturnType<typeof research>>[number]
+type Row = Awaited<ReturnType<typeof research>>['rows'][number]
 
 // Competitor rows without the target (or its subdomains) and generic
 // platforms. The note says how many rows went, which ones and why.
@@ -118,7 +118,11 @@ export async function runResearch(
   if (input.action === 'ai_answers') {
     throw new CommandError('INVALID_INPUT', 'ai_answers runs on its own.')
   }
-  const found = await research(input.provider, keys, {
+  const {
+    rows: found,
+    costUsd,
+    partial,
+  } = await research(input.provider, keys, {
     action: input.action,
     keywords: input.keywords ?? [],
     target,
@@ -144,6 +148,12 @@ export async function runResearch(
       detail: input.detail ?? 'summary',
       notes: [
         `${input.provider} estimates, in the provider’s own units.`,
+        ...(costUsd !== null ? [`DataForSEO cost: $${costUsd}.`] : []),
+        ...(partial
+          ? [
+              'Partial: DataForSEO could not fetch some pages of results, so rows may be missing.',
+            ]
+          : []),
         ...(note ? [note] : []),
         ...(hasTargetDr
           ? [`${bareDomain(target)} domain_rating: ${targetDr}.`]
@@ -161,6 +171,8 @@ export async function runResearch(
       targetDomainRating: hasTargetDr ? targetDr : null,
       attribution: rated.added || hasTargetDr ? DR_ATTRIBUTION : null,
       leftOut: note,
+      costUsd,
+      partial,
       total: rated.rows.length,
       offset,
       rows: rated.rows.slice(offset, offset + PAGE_SIZE),

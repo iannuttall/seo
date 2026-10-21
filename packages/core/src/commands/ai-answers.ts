@@ -3,6 +3,8 @@ import { deriveBrandTerms, isBrandQuery, registrableDomain } from '../brand.js'
 import type { Detail } from './present.js'
 import {
   dataForSeoKeys,
+  dataForSeoLanguage,
+  dataForSeoList,
   dataForSeoMarket,
   dataForSeoTask,
 } from './research-providers.js'
@@ -27,12 +29,21 @@ const PROMPT_CHARACTERS = 500
 // pages it only looked at), and the model DataForSEO says answered.
 type Shown = { markdown: string; sources: string[]; model: string | null }
 
+// Where and in which language an engine is asked. location is the code
+// from DataForSEO's own list when it has the country, else its name.
+type Market = { language_code: string } & (
+  | { location_code: number }
+  | { location_name: string }
+)
+
 type Engine = {
   name: string
   // What the engine name means here, for the notes.
   means: string
   path: string
-  task: (question: string, country: string) => Record<string, unknown>
+  // DataForSEO's free list of the languages this engine takes.
+  languages: string
+  task: (question: string, market: Market) => Record<string, unknown>
   // What the engine showed, or null when it showed no AI answer.
   shown: (result: Record<string, unknown>) => Shown | null
 }
@@ -66,10 +77,8 @@ const ENGINES: Engine[] = [
     name: 'chatgpt',
     means: 'a ChatGPT search, read by DataForSEO',
     path: 'v3/ai_optimization/chat_gpt/llm_scraper/live/advanced',
-    task: (question, country) => ({
-      keyword: question,
-      ...dataForSeoMarket(country, null),
-    }),
+    languages: 'v3/ai_optimization/chat_gpt/llm_scraper/languages',
+    task: (question, market) => ({ keyword: question, ...market }),
     shown: (result) => {
       const markdown =
         typeof result.markdown === 'string' ? result.markdown : ''
@@ -86,21 +95,20 @@ const ENGINES: Engine[] = [
     name: 'google_ai_mode',
     means: 'Google AI Mode',
     path: 'v3/serp/google/ai_mode/live/advanced',
-    task: (question, country) => ({
-      keyword: question,
-      ...dataForSeoMarket(country, null),
-    }),
+    languages: 'v3/serp/google/ai_mode/languages',
+    task: (question, market) => ({ keyword: question, ...market }),
     shown: overview,
   },
   {
     name: 'google_ai_overview',
     means: 'the AI Overview on a Google search',
     path: 'v3/serp/google/organic/live/advanced',
-    task: (question, country) => ({
+    languages: 'v3/serp/google/languages',
+    task: (question, market) => ({
       keyword: question,
       depth: 10,
       load_async_ai_overview: true,
-      ...dataForSeoMarket(country, null),
+      ...market,
     }),
     shown: overview,
   },
@@ -140,14 +148,25 @@ async function ask(
   keys: string[],
   engine: Engine,
   question: string,
-  country: string,
+  market: Market | string,
   site: { domain: string; terms: string[] },
 ): Promise<Answer> {
+  // A market DataForSEO does not support is never sent, so it costs nothing.
+  if (typeof market === 'string') {
+    return {
+      result: 'unavailable',
+      model: null,
+      cited_url: null,
+      answered_at: null,
+      cost_usd: 0,
+      error: market,
+    }
+  }
   try {
     const done = await dataForSeoTask(
       keys,
       engine.path,
-      engine.task(question, country),
+      engine.task(question, market),
     )
     const answered = {
       answered_at: String(done.result?.datetime ?? '').slice(0, 10) || null,
@@ -184,6 +203,47 @@ async function ask(
       error: error instanceof Error ? error.message.slice(0, 200) : 'failed',
     }
   }
+}
+
+// The market for each engine, checked against DataForSEO's free location
+// and language lists before any paid call. A string says why an engine
+// cannot be asked.
+async function marketsFor(
+  keys: string[],
+  country: string,
+): Promise<Map<string, Market | string>> {
+  const code = country.toUpperCase()
+  const language =
+    dataForSeoLanguage(country) ?? dataForSeoMarket(country, null).language_code
+  const [locations, ...languages] = await Promise.all([
+    dataForSeoList(keys, 'v3/ai_optimization/chat_gpt/llm_scraper/locations'),
+    ...ENGINES.map((engine) => dataForSeoList(keys, engine.languages)),
+  ])
+  const place = locations.find(
+    (row) => row.location_type === 'Country' && row.country_iso_code === code,
+  )
+  const where = place
+    ? { location_code: Number(place.location_code) }
+    : { location_name: dataForSeoMarket(country, null).location_name }
+  return new Map(
+    ENGINES.map((engine, index) => {
+      if (engine.name === 'chatgpt' && !place) {
+        return [
+          engine.name,
+          `DataForSEO's ChatGPT search has no data for country "${country}".`,
+        ]
+      }
+      const known = (languages[index] ?? []).some(
+        (row) => row.language_code === language,
+      )
+      return [
+        engine.name,
+        known
+          ? { ...where, language_code: language }
+          : `DataForSEO's ${engine.name} has no "${language}" language, the language used for country "${country}".`,
+      ]
+    }),
+  )
 }
 
 const usd = (value: number) => Math.round(value * 10_000) / 10_000
@@ -224,13 +284,22 @@ export async function runAiAnswers(
     )
     .slice(0, AI_ANSWER_QUESTIONS)
   const site = { domain, terms: deriveBrandTerms({ siteUrl: input.site }) }
+  const markets = questions.length
+    ? await marketsFor(keys, input.country)
+    : new Map<string, Market | string>()
   const answers = await Promise.all(
     questions.flatMap((question) =>
       ENGINES.map(async (engine) => ({
         question: question.query,
         impressions: question.impressions,
         engine: engine.name,
-        ...(await ask(keys, engine, question.query, input.country, site)),
+        ...(await ask(
+          keys,
+          engine,
+          question.query,
+          markets.get(engine.name) ?? 'no market',
+          site,
+        )),
       })),
     ),
   )

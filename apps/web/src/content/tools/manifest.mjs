@@ -90,6 +90,15 @@ export const tools = [
     kind: 'worker',
   },
   {
+    id: 'internal-linking-tool',
+    path: '/tools/internal-linking-tool',
+    title: 'Internal linking tool',
+    action: 'Open the internal linking tool',
+    description:
+      'Find the internal links your site is missing, placed in sentences you already wrote, plus orphan and weakly linked pages.',
+    kind: 'browser',
+  },
+  {
     id: 'backlink-checker',
     path: '/tools/backlink-checker',
     title: 'Backlink checker',

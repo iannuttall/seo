@@ -45,6 +45,68 @@ is not audited yet is added, which starts its crawl and checks. `seo_page`
 uses a stored result while it is current. Every other account sees the tools
 unchanged.
 
+## Alerts
+
+An account in the weekly-audit beta gets alerts without asking: when a page
+drops out of Google's index (a top page's drop only after a second check
+agrees) or comes back. Each run of a site's background checks that finds
+changes sends one alert for that site. Under Alerts on the Beta tab, each
+alert type has its own email and webhook switch; both are on by default, and
+the webhook only once a URL is saved. Email goes to the first linked Google
+account from `alerts@e.seoskill.dev`, through PostShiba, at most 550 a day
+for all accounts; the rest wait for the next day and say so. Every email has
+a link that turns that type's email off.
+
+### Alert webhooks
+
+A webhook URL must be `https://` on a public host name. Each alert is one
+`POST` with a JSON body, signed the
+[Standard Webhooks](https://www.standardwebhooks.com/) way:
+
+- `webhook-id`: the alert id, the same on every retry, so you can drop
+  repeats,
+- `webhook-timestamp`: seconds since 1970,
+- `webhook-signature`: `v1,` and the base64 HMAC-SHA256 of
+  `<id>.<timestamp>.<body>`, keyed with the bytes of the signing secret
+  after its `whsec_` prefix (base64). The secret is on the Beta tab.
+
+Answer with any 2xx within 10 seconds. A timeout, 408, 429 or 5xx is tried
+again up to 6 times over about a day. Redirects are not followed, and any
+other answer stops that alert. The Beta tab shows the last call's result.
+
+```json
+{
+  "id": "alt_0f4c2a9e8b7d4c1fa3e5b6c7d8e9f001",
+  "type": "index-changes",
+  "site": "sc-domain:example.com",
+  "created_at": "2026-10-22T14:17:03.000Z",
+  "data": {
+    "dropped": 1,
+    "returned": 1,
+    "pages": [
+      {
+        "url": "https://example.com/pricing",
+        "change": "dropped",
+        "at": "2026-10-22T14:16:58.000Z",
+        "verdict": "NEUTRAL",
+        "coverage": "Crawled - currently not indexed"
+      },
+      {
+        "url": "https://example.com/blog/guide",
+        "change": "returned",
+        "at": "2026-10-22T14:17:01.000Z",
+        "verdict": "PASS",
+        "coverage": "Submitted and indexed"
+      }
+    ]
+  }
+}
+```
+
+`type` says what `data` holds. `index-changes` lists up to 100 pages, drops
+first; `dropped` and `returned` count them all. `verdict` and `coverage` are
+Google's own words. More types may come; ignore one you do not know.
+
 Each tool call uses the linked Google account that can read the site, the one
 with the most access. `seo_sites` lists properties from every linked account
 with an account column. A `NO_ACCESS` error names the linked accounts and
@@ -147,6 +209,10 @@ A small Cloudflare D1 database (`migrations/`) keeps only:
   a day, its properties and the folders worth adding as URL-prefix
   properties. Removing the site, or Delete everything, deletes the object's
   storage.
+- for alerts (`src/alerts`): each alert type's email and webhook switches,
+  the webhook URL and its sealed signing secret (`alert_settings`), each
+  alert with its site, changed URLs and delivery state for 30 days
+  (`alerts`), and alert emails sent and held per day (`alert_email_days`).
 - for "Create these in Search Console" on the Beta tab
   (`src/audit/properties.ts`): only when clicked, an incremental Google
   sign-in for the Search Console write scope with online access, so no

@@ -4,6 +4,7 @@ import {
   bingCallback,
   propertiesCallback,
 } from './account.ts'
+import { sendDueAlerts } from './alerts/deliver.ts'
 import { startDue } from './audit/schedule.ts'
 import { betaFlags } from './beta.ts'
 import { credentials, finishLogin, logout, startLogin } from './cli.ts'
@@ -171,6 +172,7 @@ export default {
   async scheduled(controller, env, ctx) {
     if (controller.cron === '17 * * * *') {
       ctx.waitUntil(startDue(env, controller.scheduledTime))
+      ctx.waitUntil(sendDueAlerts(env, controller.scheduledTime))
       return
     }
     const now = new Date(controller.scheduledTime)

@@ -117,6 +117,23 @@ export type View =
             error: string | null
           }[]
         }
+        // Alert settings, for an account with a beta that has alerts.
+        alerts?: {
+          // Where alert email goes: the first linked Google account.
+          email: string | null
+          types: {
+            id: string
+            title: string
+            text: string
+            email: boolean
+            webhook: boolean
+          }[]
+          webhookUrl: string | null
+          webhookSecret: string | null
+          webhookLast: { at: number; result: string } | null
+          // This account's alert emails waiting for the next day's limit.
+          held: number
+        }
         // A token just made for a cloud agent, shown once.
         token?: string
         // The tab to open: accounts, keys, machines or settings.

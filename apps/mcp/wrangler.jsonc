@@ -28,7 +28,15 @@
   "limits": { "cpu_ms": 60000 },
   // Bundles skills/seo/SKILL.md as text for the skill resource.
   "rules": [{ "type": "Text", "globs": ["**/*.md"], "fallthrough": true }],
-  "vars": { "PUBLIC_URL": "https://seoskill.dev" },
+  "vars": {
+    "PUBLIC_URL": "https://seoskill.dev",
+    // Alert email: the PostShiba team and transactional cluster, and the
+    // sender on its verified sending domain. ALERT_REPLY_TO is optional.
+    "POSTSHIBA_TEAM": "nvoZjB",
+    "POSTSHIBA_CLUSTER": "MenNeb",
+    "ALERT_FROM": "SEO Skill <alerts@e.seoskill.dev>",
+    "ALERT_REPLY_TO": ""
+  },
   // The site Worker, for the account page design (/account-shell).
   "services": [{ "binding": "SITE", "service": "seo-skill" }],
   "d1_databases": [
@@ -55,9 +63,10 @@
   // No Workers Logs: the server keeps no logs of requests or user data.
   "observability": { "enabled": false },
   // Mondays 08:00 UTC: the week's sign-up and failure counts to Telegram.
-  // Hourly at :17: start the weekly audits that are due.
+  // Hourly at :17: start the weekly audits that are due, and retry alerts.
   "triggers": { "crons": ["0 8 * * 1", "17 * * * *"] }
   // Secrets: GOOGLE_CLIENT_ID, GOOGLE_CLIENT_SECRET, SEAL_KEY, AHREFS_DR_KEY,
   // BING_CLIENT_ID, BING_CLIENT_SECRET, and optionally TELEGRAM_BOT_TOKEN and
-  // TELEGRAM_CHAT_ID for the weekly sign-up and failure counts.
+  // TELEGRAM_CHAT_ID for the weekly sign-up and failure counts, and
+  // optionally POSTSHIBA_API_KEY for alert email.
 }

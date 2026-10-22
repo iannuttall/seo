@@ -861,6 +861,59 @@ function rowOut(row: CheckRow): AuditCheckRow {
   }
 }
 
+// Drops and returns not alerted yet, for one index-changes alert: counts,
+// up to `limit` rows (drops first), and the newest transition time, which
+// markAlerted takes once the alert is queued. A URL that changed twice
+// since the last alert shows only its latest change.
+export function unalertedChanges(meter: Meter, limit: number) {
+  const where = 'transition_at > coalesce(alerted_at, 0)'
+  const counts = meter.one<{
+    dropped: number
+    returned: number
+    upto: number | null
+  }>(
+    `SELECT count(*) FILTER (WHERE transition = 'dropped') AS dropped,
+       count(*) FILTER (WHERE transition = 'returned') AS returned,
+       max(transition_at) AS upto
+     FROM checks WHERE ${where}`,
+  )
+  const rows = meter.all<{
+    url: string
+    transition: string
+    transition_at: number
+    verdict: string | null
+    coverage: string | null
+  }>(
+    `SELECT url, transition, transition_at, verdict, coverage FROM checks
+     WHERE ${where}
+     ORDER BY transition = 'dropped' DESC, top DESC, prev_clicks + clicks DESC, url
+     LIMIT ?`,
+    limit,
+  )
+  return {
+    dropped: counts?.dropped ?? 0,
+    returned: counts?.returned ?? 0,
+    upto: counts?.upto ?? null,
+    pages: rows.map((row) => ({
+      url: row.url,
+      change:
+        row.transition === 'dropped'
+          ? ('dropped' as const)
+          : ('returned' as const),
+      at: new Date(row.transition_at).toISOString(),
+      verdict: row.verdict,
+      coverage: row.coverage,
+    })),
+  }
+}
+
+export function markAlerted(meter: Meter, upto: number): void {
+  meter.run(
+    'UPDATE checks SET alerted_at = transition_at WHERE transition_at > coalesce(alerted_at, 0) AND transition_at <= ?',
+    upto,
+  )
+}
+
 // Drops out of and returns to Google's index since a time, for the weekly
 // report: counts and up to `limit` rows, drops first.
 export function indexChanges(meter: Meter, since: number, limit: number) {

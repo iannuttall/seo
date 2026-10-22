@@ -105,8 +105,9 @@ follows the site's `robots.txt`. It keeps, per site:
 - Google's URL Inspection result for each known URL of the site (the
   sitemap's, the crawl's and the Search Console pages with clicks or
   impressions, up to 50,000 from the sitemap and crawl): its indexing
-  reason and Google's details, when it was checked and the reason before it
-  last changed. The server checks these in the background each day, within
+  reason and Google's details, when it was checked and is due again, the
+  reason before it last changed, and when it last dropped out of or came
+  back to Google's index. The server checks these in the background each day, within
   Google's 2,000 checks a day per property, and `seo_page` and `seo_index`
   read and add to the same results;
 - for each of those Search Console pages, its clicks and impressions in the

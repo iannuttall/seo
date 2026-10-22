@@ -8,6 +8,7 @@ import {
   addKnown,
   checksView,
   type Google,
+  indexChanges,
   inspectThrough,
   runChecks,
   saveState,
@@ -17,7 +18,7 @@ import {
 import { extractPage, resolveUrl } from './extract.ts'
 import { Meter } from './meter.ts'
 import { analyse, type RunSummary } from './rules.ts'
-import { DISPOSABLE, KEPT } from './schema.ts'
+import { CHECKS_ADDED, DISPOSABLE, KEPT } from './schema.ts'
 import { readSitemap } from './sitemap.ts'
 
 // One object per person and Search Console property (the weekly-audit
@@ -155,6 +156,25 @@ export class SiteAudit extends DurableObject<Env> {
     ctx.blockConcurrencyWhile(async () => {
       ctx.storage.sql.exec(KEPT)
       ctx.storage.sql.exec(DISPOSABLE)
+      const have = new Set(
+        ctx.storage.sql
+          .exec<{ name: string }>(
+            "SELECT name FROM pragma_table_info('checks')",
+          )
+          .toArray()
+          .map((row) => row.name),
+      )
+      for (const [name, type] of CHECKS_ADDED) {
+        if (!have.has(name)) {
+          ctx.storage.sql.exec(`ALTER TABLE checks ADD COLUMN ${name} ${type}`)
+        }
+      }
+      // Results from before index monitoring are its baseline.
+      if (!have.has('indexed')) {
+        ctx.storage.sql.exec(
+          "UPDATE checks SET indexed = (verdict = 'PASS') WHERE verdict IS NOT NULL",
+        )
+      }
     })
   }
 
@@ -274,6 +294,7 @@ export class SiteAudit extends DurableObject<Env> {
       summary: last ? (JSON.parse(last.summary) as RunSummary) : null,
       finished_at: last?.finished_at ?? null,
       findings,
+      index_changes: indexChanges(meter, Date.now() - 7 * 86_400_000, 20),
       history,
     }
   }

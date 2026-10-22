@@ -35,12 +35,14 @@ An account in the weekly-audit beta also gets a `weekly-audit` section in
 `seo_report` for the sites it audits, with what is new, back or resolved
 since the crawl before. Its `seo_index` answers at once from the site's
 stored URL Inspection results, which the server keeps up to date in the
-background (pages that lost their clicks first, then by clicks and
-impressions, then sitemap URLs never checked, then the oldest), with how
-many URLs are covered, how many are queued and the time left. A site it
-asks about that is not audited yet is added, which starts its crawl and
-checks. `seo_page` uses a stored result when it is fresh (7 days, or until
-the crawl sees the page change). Every other account sees the tools
+background with each property's full 2,000 checks a day: its top pages
+(lost clicks, then clicks, then impressions, up to 1,000) daily, the rest
+as often as the quota allows, and a page the crawl saw change at once. It
+lists the URLs that dropped out of or came back to Google's index this
+week first, as does the weekly-audit section, and says how many URLs are
+covered, how many are queued and the time left. A site it asks about that
+is not audited yet is added, which starts its crawl and checks. `seo_page`
+uses a stored result while it is current. Every other account sees the tools
 unchanged.
 
 Each tool call uses the linked Google account that can read the site, the one

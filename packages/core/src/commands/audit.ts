@@ -66,6 +66,19 @@ export type AuditSnapshot = {
   finished_at: number | null
   // Open findings, and those resolved in the last finished run.
   findings: AuditFinding[]
+  // URLs that dropped out of or came back to Google's index in the last 7
+  // days, from the daily checks: counts and up to 20 rows, drops first.
+  index_changes?: {
+    dropped: number
+    returned: number
+    rows: {
+      url: string
+      change: 'dropped' | 'returned'
+      at: number
+      coverage: string | null
+      top: boolean
+    }[]
+  }
   // Newest first.
   history: {
     started_at: number
@@ -257,6 +270,28 @@ export function runAuditReport(
   ]
     .filter(Boolean)
     .join('\n')
+  const index = snapshot.index_changes
+  const indexText =
+    index && (index.dropped || index.returned)
+      ? [
+          `Google's index in the last 7 days, from the daily checks: ${index.dropped} ${index.dropped === 1 ? 'URL' : 'URLs'} dropped out, ${index.returned} came back.`,
+          'change | url | date | reason now | top page',
+          ...index.rows.map((row) =>
+            [
+              row.change === 'dropped' ? 'dropped out' : 'back in',
+              relative(row.url, origin),
+              day(row.at),
+              row.coverage ?? '',
+              row.top ? 'yes' : 'no',
+            ].join(' | '),
+          ),
+          index.rows.length < index.dropped + index.returned
+            ? `More: ${call('index', { site })}.`
+            : null,
+        ]
+          .filter(Boolean)
+          .join('\n')
+      : null
   if (detail === 'rows') {
     const offset = input.offset ?? 0
     const slice = findings.slice(offset, offset + PAGE_SIZE)
@@ -287,6 +322,7 @@ export function runAuditReport(
   return {
     text: [
       head,
+      indexText,
       byRule.length
         ? [
             'finding | open | what it is',
@@ -323,5 +359,10 @@ export function auditPreview(snapshot: AuditSnapshot | null): string | null {
     return snapshot ? 'The first weekly crawl has not finished.' : null
   }
   const { findings } = snapshot.summary
-  return `Last crawl ${day(snapshot.finished_at)}: ${findings.open} open findings, ${findings.new + findings.reopened} new or back, ${findings.resolved} resolved.`
+  const index = snapshot.index_changes
+  const moved =
+    index && (index.dropped || index.returned)
+      ? `${index.dropped} URLs dropped out of Google's index this week and ${index.returned} came back. `
+      : ''
+  return `${moved}Last crawl ${day(snapshot.finished_at)}: ${findings.open} open findings, ${findings.new + findings.reopened} new or back, ${findings.resolved} resolved.`
 }

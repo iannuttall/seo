@@ -103,7 +103,17 @@ CREATE TABLE IF NOT EXISTS checks (
   -- Google's reason before it last changed, and when it changed.
   prev_coverage TEXT,
   changed_at INTEGER,
-  error TEXT
+  error TEXT,
+  -- When to check it next (see checks.ts), and whether it is a top page
+  -- (checked daily), worked out once a day.
+  due_at INTEGER,
+  top INTEGER NOT NULL DEFAULT 0,
+  -- Indexed at the last check (verdict PASS), a top page's drop waiting for
+  -- its confirming check, and the last drop out of or return to the index.
+  indexed INTEGER,
+  pending_drop_at INTEGER,
+  transition TEXT,
+  transition_at INTEGER
 );
 
 -- Checks used per property on the current Search Console day (Pacific
@@ -162,3 +172,14 @@ CREATE TABLE IF NOT EXISTS sitemaps (
   error TEXT
 );
 `
+
+// Columns added to checks after it first shipped, for objects created
+// before them. SQLite adds a column without rewriting rows.
+export const CHECKS_ADDED: [string, string][] = [
+  ['due_at', 'INTEGER'],
+  ['top', 'INTEGER NOT NULL DEFAULT 0'],
+  ['indexed', 'INTEGER'],
+  ['pending_drop_at', 'INTEGER'],
+  ['transition', 'TEXT'],
+  ['transition_at', 'INTEGER'],
+]

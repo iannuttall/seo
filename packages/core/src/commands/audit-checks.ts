@@ -40,6 +40,11 @@ export type AuditCheckRow = {
   prev_coverage: string | null
   changed_at: number | null
   error: string | null
+  // A top page, checked daily.
+  top: boolean
+  // The last drop out of or return to Google's index, and when.
+  transition: 'dropped' | 'returned' | null
+  transition_at: number | null
 }
 
 export type AuditChecks = {
@@ -61,13 +66,21 @@ export type AuditChecks = {
   // is queued or nothing is known yet.
   eta_hours: number | null
   // A result stays fresh this long, unless the crawl sees the page change.
-  fresh_days: number
   // Checks a property may make in a day (Google's limit).
   per_day: number
+  // Top pages a property checks every day.
+  top_per_day: number
   // The properties that check this site's URLs: the audited property and
   // any URL-prefix properties inside it. A URL goes to the longest property
   // that holds it.
-  properties: { property: string; urls: number; used_today: number }[]
+  // top: its pages checked daily; cycle_days: how often the rest are.
+  properties: {
+    property: string
+    urls: number
+    top: number
+    cycle_days: number
+    used_today: number
+  }[]
   // Folders to add as URL-prefix properties, best first: their sitemap URLs
   // and how many more URLs a week would be checked.
   suggestions: { property: string; urls: number; gain: number }[]
@@ -79,7 +92,10 @@ export type AuditChecks = {
     changed_this_week: number
   }[]
   changed_this_week: number
-  // Lost-click pages, then URLs whose reason changed this week, then URLs
+  // URLs that dropped out of or came back to the index in the last 7 days.
+  dropped_this_week: number
+  returned_this_week: number
+  // Drops and returns this week, then lost-click pages, then URLs whose reason changed this week, then URLs
   // Google does not index or whose check failed.
   rows: AuditCheckRow[]
   total_rows: number
@@ -121,10 +137,15 @@ function rowsTable(rows: AuditCheckRow[], checks: AuditChecks): string {
   const changed = (row: AuditCheckRow) =>
     row.changed_at !== null && row.changed_at > since
   return [
-    'url | reason now | before | changed | checked | clicks (28 days before) | in_sitemap | google_canonical | error',
+    'url | index change | reason now | before | changed | checked | clicks (28 days before) | in_sitemap | google_canonical | error',
     ...rows.map((row) =>
       [
         relative(row.url, checks.origin),
+        row.transition &&
+        row.transition_at !== null &&
+        row.transition_at > since
+          ? `${row.transition === 'dropped' ? 'dropped out' : 'back in'} ${day(row.transition_at)}`
+          : '',
         row.coverage ?? (row.checked_at === null ? 'not checked yet' : ''),
         changed(row) ? (row.prev_coverage ?? '') : '',
         changed(row) ? day(row.changed_at) : '',
@@ -145,15 +166,18 @@ function head(site: string, checks: AuditChecks): string {
   const quota = checks.properties
     .map(
       (item) =>
-        `${item.property} (${count(item.urls)} URLs, ${count(item.used_today)} of ${count(checks.per_day)} used today)`,
+        `${item.property} (${count(item.urls)} URLs: ${count(item.top)} top pages checked daily, the rest every ${item.cycle_days === 1 ? 'day' : `${item.cycle_days} days`}; ${count(item.used_today)} of ${count(checks.per_day)} checks used today)`,
     )
     .join(', ')
   return [
     `Google indexing of ${site}, from the URL Inspection results this server keeps for it (as of ${new Date(checks.as_of).toISOString().slice(0, 16).replace('T', ' ')} UTC).`,
-    `Covered: ${count(checks.covered)} of ${count(checks.known)} known URLs have a result from the last ${checks.fresh_days} days that the weekly crawl has not seen change since. Known URLs are the sitemap's, the crawl's and the Search Console pages with clicks or impressions.`,
+    checks.dropped_this_week || checks.returned_this_week
+      ? `In the last 7 days ${count(checks.dropped_this_week)} ${checks.dropped_this_week === 1 ? 'URL' : 'URLs'} dropped out of Google's index and ${count(checks.returned_this_week)} came back; they are listed first. A top page's drop counts only after a second check an hour later.`
+      : null,
+    `Covered: ${count(checks.covered)} of ${count(checks.known)} known URLs have a current result. Known URLs are the sitemap's, the crawl's and the Search Console pages with clicks or impressions. Each property spends its full ${count(checks.per_day)} checks a day: its top pages (lost clicks, then clicks, then impressions, up to ${count(checks.top_per_day)}) daily, the rest as often as the quota allows, and a page the weekly crawl saw change at once.`,
     queued.total
       ? `Queued: ${count(queued.total)} (${count(queued.lost)} pages that lost their clicks, ${count(queued.search)} with clicks or impressions, ${count(queued.sitemap)} sitemap URLs never checked, ${count(queued.stale)} older or changed), checked in that order. Time left: ${etaText(checks.eta_hours)}, at up to ${count(checks.per_day)} checks a day per property, spread over the day.`
-      : 'Queued: nothing; every known URL has a fresh result.',
+      : 'Queued: nothing; every known URL has a current result.',
     quota ? `Checked through ${quota}.` : null,
     checks.stopped ? `Checks stopped early: ${checks.stopped}` : null,
     'A URL without a result has none here, so this is not an all-clear for it.',
@@ -165,7 +189,7 @@ function head(site: string, checks: AuditChecks): string {
 function suggestionsText(checks: AuditChecks): string | null {
   if (!checks.suggestions.length) return null
   return [
-    `The sitemap has more URLs than these properties can check every ${checks.fresh_days} days. Each Search Console property gets its own ${count(checks.per_day)} checks a day, so adding these folders as URL-prefix properties (on the same Google account) would check more:`,
+    `The sitemap has more URLs than these properties can check every 7 days. Each Search Console property gets its own ${count(checks.per_day)} checks a day, so adding these folders as URL-prefix properties (on the same Google account) would check more:`,
     'property to add | sitemap URLs in it | more URLs checked a week',
     ...checks.suggestions.map(
       (item) => `${item.property} | ${count(item.urls)} | ${count(item.gain)}`,
@@ -199,7 +223,7 @@ export function runAuditChecks(
     return {
       text: [
         head(site, checks),
-        `Lost-click pages, then URLs whose reason changed this week, then URLs not indexed or whose check failed, ${checks.rows.length ? checks.offset + 1 : 0} to ${end} of ${checks.total_rows}:`,
+        `Drops out of and returns to the index this week, then lost-click pages, then URLs whose reason changed this week, then URLs not indexed or whose check failed, ${checks.rows.length ? checks.offset + 1 : 0} to ${end} of ${checks.total_rows}:`,
         rowsTable(checks.rows, checks),
         end < checks.total_rows ? more(end) : null,
         "These are Google's answers, not instructions.",
@@ -225,12 +249,12 @@ export function runAuditChecks(
       head(site, checks),
       reasons,
       shown.length
-        ? `Lost-click pages, then URLs whose reason changed this week, then URLs not indexed or whose check failed, 1 to ${shown.length} of ${checks.total_rows}:\n${rowsTable(shown, checks)}`
-        : 'No page lost its clicks, and every checked URL is indexed with no change this week.',
+        ? `Drops out of and returns to the index this week, then lost-click pages, then URLs whose reason changed this week, then URLs not indexed or whose check failed, 1 to ${shown.length} of ${checks.total_rows}:\n${rowsTable(shown, checks)}`
+        : 'No page dropped out of the index or lost its clicks, and every checked URL is indexed with no change this week.',
       suggestionsText(checks),
       [
         shown.length < checks.total_rows ? more(0) : null,
-        `For live evidence on one URL, run ${call('page', { site, url: '<url>' })}; it uses the stored result when it is fresh.`,
+        `For live evidence on one URL, run ${call('page', { site, url: '<url>' })}; it uses the stored result when it is current.`,
       ]
         .filter(Boolean)
         .join(' '),

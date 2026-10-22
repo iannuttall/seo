@@ -15,16 +15,25 @@ import type { Meter } from './meter.ts'
 // The site's one store of Google URL Inspection results (the weekly-audit
 // beta), and the background checks that fill it.
 //
-// Freshness: a result is fresh for 7 days, or until the weekly crawl sees
-// the page's status, redirect, canonical or noindex change. Every hosted
-// call reads the store first and inspects only a missing or stale URL.
+// Every hosted call reads the store first and inspects only a URL whose
+// result is due: never checked, past its due_at, or changed in a crawl since
+// (status, redirect, canonical or noindex).
 //
-// Background checks use up to Google's 2,000 a day per property, spread
-// evenly over what is left of the Search Console day (Pacific time), one
-// wake an hour. They take due URLs in this order: pages that lost their
-// clicks, pages by clicks then impressions, sitemap URLs never checked, then
-// the least recently checked. A fresh result is never checked again just to
-// rotate.
+// The cycle is set by the quota. Each property spends its full 2,000 checks
+// a day, spread evenly over what is left of the Search Console day (Pacific
+// time), one wake an hour. Its top pages (lost clicks, then clicks, then
+// impressions; up to TOP_PER_DAY) are due daily. The rest are due every
+// cycle_days, the fewest days in which the checks left after the top pages
+// can cover them. A wake takes due URLs first (a drop waiting for its
+// confirming check, then pages that lost their clicks, by clicks, by
+// impressions, sitemap URLs never checked, the oldest), then spends any
+// quota left on the least recently checked URLs not checked in the last 20
+// hours.
+//
+// A URL that was indexed (verdict PASS) and is not on a later check has
+// dropped out of the index; the reverse is a return. A top page's drop is
+// confirmed by a second check an hour later, so a one-off answer is not
+// reported. The first check of a URL is its baseline.
 //
 // Each property has its own quota, so a URL-prefix property inside the site
 // (such as https://example.com/blog/) checks the URLs under it. When the
@@ -32,9 +41,16 @@ import type { Meter } from './meter.ts'
 // names the folders that would add the most checks as their own properties.
 
 export const PER_DAY = 2000
-export const FRESH_DAYS = 7
-const FRESH_MS = FRESH_DAYS * 86_400_000
-const PER_WEEK = PER_DAY * FRESH_DAYS
+// Top pages a property checks daily: half its quota, so the rest always
+// moves.
+export const TOP_PER_DAY = 1000
+const DAY_MS = 86_400_000
+// Results from before due_at existed were fresh for 7 days.
+const LEGACY_MS = 7 * DAY_MS
+// A URL checked this recently is not checked again just to spend quota.
+const RECHECK_MS = 20 * 3_600_000
+// What a property can cover in 7 days, for the folder suggestions.
+const PER_WEEK = PER_DAY * 7
 // Sitemap and crawl URLs kept; Search Console pages come on top (at most
 // 25,000 a window, the same cap as seo index).
 export const MAX_KNOWN = 50_000
@@ -68,14 +84,15 @@ type State = {
   updated_at: number | null
 }
 
-// Due: never checked, older than FRESH_DAYS, or changed in a crawl since.
-const DUE = `(checked_at IS NULL OR checked_at <= ?
+// Due at the bound time: never checked, past due_at, or changed in a crawl
+// since.
+const DUE = `(checked_at IS NULL OR coalesce(due_at, checked_at + ${LEGACY_MS}) <= ?
   OR coalesce(live_changed_at > checked_at, 0))`
 // The queue order. Lost-click pages by the clicks they had, the rest of
 // Search Console's pages by clicks then impressions.
 const RANK = `CASE WHEN lost = 1 THEN 0 WHEN clicks > 0 OR impressions > 0 THEN 1
   WHEN checked_at IS NULL AND in_sitemap = 1 THEN 2 ELSE 3 END`
-const ORDER = `${RANK}, CASE WHEN lost = 1 THEN prev_clicks ELSE clicks END DESC,
+const ORDER = `pending_drop_at IS NOT NULL DESC, ${RANK}, CASE WHEN lost = 1 THEN prev_clicks ELSE clicks END DESC,
   impressions DESC, coalesce(checked_at, 0), url`
 
 export function state(meter: Meter): State | null {
@@ -411,17 +428,57 @@ async function refreshDay(
       )
     }
     meter.run('DELETE FROM quota WHERE day != ?', today)
-    const all = meter.all<{ url: string }>('SELECT url FROM checks')
-    const urls = new Map<string, number>()
+    // Each property's top pages, and the cycle its other URLs get.
+    const all = meter.all<{
+      url: string
+      lost: number
+      prev_clicks: number
+      clicks: number
+      impressions: number
+    }>('SELECT url, lost, prev_clicks, clicks, impressions FROM checks')
+    const byProperty = new Map<string, typeof all>()
     for (const row of all) {
       const property = propertyFor(row.url, site, list)
-      urls.set(property, (urls.get(property) ?? 0) + 1)
+      byProperty.set(property, [...(byProperty.get(property) ?? []), row])
     }
+    const top: string[] = []
+    const plan = list.map((item) => {
+      const rows = byProperty.get(item.property) ?? []
+      const ranked = rows
+        .filter((row) => row.lost || row.clicks || row.impressions)
+        .sort(
+          (a, b) =>
+            b.lost - a.lost ||
+            (b.lost ? b.prev_clicks - a.prev_clicks : 0) ||
+            b.clicks - a.clicks ||
+            b.impressions - a.impressions ||
+            (a.url < b.url ? -1 : a.url > b.url ? 1 : 0),
+        )
+        .slice(0, TOP_PER_DAY)
+      for (const row of ranked) top.push(row.url)
+      const rest = rows.length - ranked.length
+      return {
+        ...item,
+        urls: rows.length,
+        top: ranked.length,
+        cycle_days: Math.max(
+          1,
+          Math.ceil(rest / Math.max(1, PER_DAY - ranked.length)),
+        ),
+      }
+    })
+    const topJson = JSON.stringify(top)
+    meter.run(
+      'UPDATE checks SET top = 0 WHERE top = 1 AND url NOT IN (SELECT value FROM json_each(?))',
+      topJson,
+    )
+    meter.run(
+      'UPDATE checks SET top = 1 WHERE top = 0 AND url IN (SELECT value FROM json_each(?))',
+      topJson,
+    )
     saveState(meter, {
       day: today,
-      properties: JSON.stringify(
-        list.map((item) => ({ ...item, urls: urls.get(item.property) ?? 0 })),
-      ),
+      properties: JSON.stringify(plan),
       suggestions: JSON.stringify(
         suggestions.map((item) => ({
           property: `${origin}${item.path}`,
@@ -481,9 +538,9 @@ export async function runChecks(
   )
   const want = [...budget.values()].reduce((sum, n) => sum + n, 0)
 
-  // Due URLs in queue order whose property has budget this wake.
+  // Due URLs in queue order, then the least recently checked, whose
+  // property has budget this wake.
   const due: { url: string; property: string }[] = []
-  const dueFor = new Set<string>()
   const taken = new Map<string, number>()
   for (
     let offset = 0;
@@ -491,13 +548,15 @@ export async function runChecks(
     offset += 500
   ) {
     const rows = meter.all<{ url: string }>(
-      `SELECT url FROM checks WHERE ${DUE} ORDER BY ${ORDER} LIMIT 500 OFFSET ?`,
-      started - FRESH_MS,
+      `SELECT url FROM checks WHERE ${DUE} OR checked_at <= ?
+       ORDER BY ${DUE} DESC, ${ORDER} LIMIT 500 OFFSET ?`,
+      started,
+      started - RECHECK_MS,
+      started,
       offset,
     )
     for (const row of rows) {
       const property = propertyFor(row.url, site, list)
-      dueFor.add(property)
       const n = taken.get(property) ?? 0
       if (n < (budget.get(property) ?? 0)) {
         taken.set(property, n + 1)
@@ -534,18 +593,43 @@ export async function runChecks(
   }
   if (state(meter)?.stopped) saveState(meter, { stopped: null })
   if (timedOut) return Date.now() + 1000
-  if (dueFor.size === 0) {
-    // Nothing due: wake when the oldest result goes stale.
-    const oldest = meter.one<{ at: number | null }>(
-      'SELECT min(checked_at) AS at FROM checks',
-    )?.at
-    return oldest === null || oldest === undefined ? null : oldest + FRESH_MS
-  }
+  // Quota left today: the next hourly wake, or sooner for a confirming
+  // check; none left: the next Search Console day.
   const left = usedToday(meter, today)
-  const more = [...dueFor].some(
-    (property) => !full.has(property) && (left.get(property) ?? 0) < PER_DAY,
+  const more = list.some(
+    (item) =>
+      !full.has(item.property) && (left.get(item.property) ?? 0) < PER_DAY,
   )
-  return more ? started + HOUR_MS : dayEnd(started) + 10 * 60_000
+  if (!more) return dayEnd(started) + 10 * 60_000
+  const next = meter.one<{ at: number | null }>(
+    `SELECT min(coalesce(due_at, checked_at + ${LEGACY_MS}),
+       checked_at + ${RECHECK_MS}) AS at FROM checks WHERE checked_at IS NOT NULL`,
+  )?.at
+  if (due.length === 0 && (next === null || next === undefined)) return null
+  return Math.max(
+    Date.now() + 1000,
+    Math.min(started + HOUR_MS, next ?? started + HOUR_MS),
+  )
+}
+
+// When a URL is due again after a check.
+function dueAfter(
+  now: number,
+  input: { top: boolean; cycleDays: number; changed: boolean },
+): number {
+  // An hour early, so the hourly wake on that day takes it.
+  if (input.top) return now + DAY_MS - HOUR_MS
+  const days = input.changed ? Math.min(2, input.cycleDays) : input.cycleDays
+  return now + days * DAY_MS - HOUR_MS
+}
+
+// The cycle a property's other URLs get, as worked out today.
+function cycleOf(meter: Meter, property: string): number {
+  const saved = JSON.parse(state(meter)?.properties ?? '[]') as {
+    property: string
+    cycle_days?: number
+  }[]
+  return saved.find((item) => item.property === property)?.cycle_days ?? 7
 }
 
 type Outcome =
@@ -613,11 +697,12 @@ export async function inspectOne(
     // An answer about this URL only, such as a URL Google will not inspect.
     meter.transaction(() => {
       meter.run(
-        `INSERT INTO checks (url, checked_at, property, error) VALUES (?, ?, ?, ?)
+        `INSERT INTO checks (url, checked_at, due_at, property, error) VALUES (?, ?, ?, ?, ?)
          ON CONFLICT (url) DO UPDATE SET checked_at = excluded.checked_at,
-           property = excluded.property, error = excluded.error`,
+           due_at = excluded.due_at, property = excluded.property, error = excluded.error`,
         item.url,
         Date.now(),
+        Date.now() + LEGACY_MS,
         item.property,
         error.message.slice(0, 300),
       )
@@ -630,26 +715,67 @@ export async function inspectOne(
     (raw as { inspectionResult?: { indexStatusResult?: unknown } })
       ?.inspectionResult?.indexStatusResult ?? {}
   const now = Date.now()
+  const cycleDays = cycleOf(meter, item.property)
   meter.transaction(() => {
     meter.run(
       'INSERT INTO checks (url) VALUES (?) ON CONFLICT (url) DO NOTHING',
       item.url,
     )
+    const before = meter.one<{
+      coverage: string | null
+      top: number
+      indexed: number | null
+      pending_drop_at: number | null
+    }>(
+      'SELECT coverage, top, indexed, pending_drop_at FROM checks WHERE url = ?',
+      item.url,
+    )
+    const indexed = status.verdict === 'PASS' ? 1 : 0
+    const changed =
+      before?.coverage != null && before.coverage !== status.coverage
+    // Drops and returns. The first check is the baseline; a top page's drop
+    // waits for one confirming check an hour later.
+    let pending: number | null = null
+    let transition: 'dropped' | 'returned' | null = null
+    if (before?.pending_drop_at != null) {
+      if (!indexed) transition = 'dropped'
+    } else if (before?.indexed === 1 && !indexed) {
+      if (before.top) pending = now
+      else transition = 'dropped'
+    } else if (before?.indexed === 0 && indexed) {
+      transition = 'returned'
+    }
+    const dueAt =
+      pending !== null
+        ? now + HOUR_MS
+        : dueAfter(now, {
+            top: Boolean(before?.top),
+            cycleDays,
+            changed: changed || transition !== null,
+          })
     // A change is a new reason after an earlier answer from Google.
     meter.run(
       `UPDATE checks SET
          prev_coverage = CASE WHEN coverage IS NOT NULL AND coverage IS NOT ? THEN coverage ELSE prev_coverage END,
          changed_at = CASE WHEN coverage IS NOT NULL AND coverage IS NOT ? THEN ? ELSE changed_at END,
-         checked_at = ?, property = ?, verdict = ?, coverage = ?, result = ?, error = NULL
+         checked_at = ?, due_at = ?, property = ?, verdict = ?, coverage = ?, result = ?, error = NULL,
+         indexed = ?, pending_drop_at = ?,
+         transition = coalesce(?, transition), transition_at = CASE WHEN ? IS NULL THEN transition_at ELSE ? END
        WHERE url = ?`,
       status.coverage,
       status.coverage,
       now,
       now,
+      dueAt,
       item.property,
       status.verdict,
       status.coverage,
       JSON.stringify(result).slice(0, MAX_RESULT_CHARS),
+      indexed,
+      pending,
+      transition,
+      transition,
+      now,
       item.url,
     )
     count()
@@ -670,7 +796,7 @@ export async function inspectThrough(
   const row = meter.one<{ result: string | null }>(
     `SELECT result FROM checks WHERE url = ? AND result IS NOT NULL AND NOT ${DUE}`,
     url,
-    now - FRESH_MS,
+    now,
   )
   if (row?.result) {
     return { inspectionResult: { indexStatusResult: JSON.parse(row.result) } }
@@ -699,6 +825,9 @@ type CheckRow = {
   prev_coverage: string | null
   changed_at: number | null
   error: string | null
+  top: number
+  transition: string | null
+  transition_at: number | null
 }
 
 function rowOut(row: CheckRow): AuditCheckRow {
@@ -723,6 +852,51 @@ function rowOut(row: CheckRow): AuditCheckRow {
     prev_coverage: row.prev_coverage,
     changed_at: row.changed_at,
     error: row.error,
+    top: row.top === 1,
+    transition:
+      row.transition === 'dropped' || row.transition === 'returned'
+        ? row.transition
+        : null,
+    transition_at: row.transition_at,
+  }
+}
+
+// Drops out of and returns to Google's index since a time, for the weekly
+// report: counts and up to `limit` rows, drops first.
+export function indexChanges(meter: Meter, since: number, limit: number) {
+  const counts = meter.one<{ dropped: number; returned: number }>(
+    `SELECT count(*) FILTER (WHERE transition = 'dropped') AS dropped,
+       count(*) FILTER (WHERE transition = 'returned') AS returned
+     FROM checks WHERE transition_at > ?`,
+    since,
+  )
+  const rows = meter.all<{
+    url: string
+    transition: string
+    transition_at: number
+    coverage: string | null
+    top: number
+  }>(
+    `SELECT url, transition, transition_at, coverage, top FROM checks
+     WHERE transition_at > ?
+     ORDER BY transition = 'dropped' DESC, top DESC, prev_clicks + clicks DESC, url
+     LIMIT ?`,
+    since,
+    limit,
+  )
+  return {
+    dropped: counts?.dropped ?? 0,
+    returned: counts?.returned ?? 0,
+    rows: rows.map((row) => ({
+      url: row.url,
+      change:
+        row.transition === 'dropped'
+          ? ('dropped' as const)
+          : ('returned' as const),
+      at: row.transition_at,
+      coverage: row.coverage,
+      top: row.top === 1,
+    })),
   }
 }
 
@@ -758,7 +932,6 @@ export function checksView(
 ): AuditChecks {
   const now = Date.now()
   const week = now - 7 * 86_400_000
-  const stale = now - FRESH_MS
   const saved = state(meter)
   const counts = meter.one<{
     known: number
@@ -768,6 +941,8 @@ export function checksView(
     sitemap: number
     stale: number
     changed: number
+    dropped: number
+    returned: number
   }>(
     `SELECT count(*) AS known,
        count(*) FILTER (WHERE result IS NOT NULL AND NOT ${DUE}) AS covered,
@@ -775,20 +950,24 @@ export function checksView(
        count(*) FILTER (WHERE ${DUE} AND ${RANK} = 1) AS search,
        count(*) FILTER (WHERE ${DUE} AND ${RANK} = 2) AS sitemap,
        count(*) FILTER (WHERE ${DUE} AND ${RANK} = 3) AS stale,
-       count(*) FILTER (WHERE changed_at > ?) AS changed
+       count(*) FILTER (WHERE changed_at > ?) AS changed,
+       count(*) FILTER (WHERE transition = 'dropped' AND transition_at > ?) AS dropped,
+       count(*) FILTER (WHERE transition = 'returned' AND transition_at > ?) AS returned
      FROM checks`,
-    stale,
-    stale,
-    stale,
-    stale,
-    stale,
+    now,
+    now,
+    now,
+    now,
+    now,
+    week,
+    week,
     week,
   )
   const list = owners(meter, site)
   const queued = new Map<string, number>()
   for (const row of meter.all<{ url: string }>(
     `SELECT url FROM checks WHERE ${DUE}`,
-    stale,
+    now,
   )) {
     const property = propertyFor(row.url, site, list)
     queued.set(property, (queued.get(property) ?? 0) + 1)
@@ -806,19 +985,25 @@ export function checksView(
      GROUP BY verdict, coverage ORDER BY coverage, verdict`,
     week,
   )
-  const listed = `lost = 1 OR changed_at > ? OR (verdict IS NOT NULL AND verdict != 'PASS') OR error IS NOT NULL`
+  const listed = `transition_at > ? OR lost = 1 OR changed_at > ? OR (verdict IS NOT NULL AND verdict != 'PASS') OR error IS NOT NULL`
   const total =
     meter.one<{ n: number }>(
       `SELECT count(*) AS n FROM checks WHERE ${listed}`,
+      week,
       week,
     )?.n ?? 0
   const rows = meter
     .all<CheckRow>(
       `SELECT url, in_sitemap, clicks, prev_clicks, impressions, lost, checked_at, property,
-         verdict, coverage, result, prev_coverage, changed_at, error
+         verdict, coverage, result, prev_coverage, changed_at, error, top, transition, transition_at
        FROM checks WHERE ${listed}
-       ORDER BY lost DESC, prev_clicks DESC, coalesce(changed_at > ?, 0) DESC, coverage, url
+       ORDER BY coalesce(transition = 'dropped' AND transition_at > ?, 0) DESC,
+         coalesce(transition = 'returned' AND transition_at > ?, 0) DESC,
+         lost DESC, prev_clicks DESC, coalesce(changed_at > ?, 0) DESC, coverage, url
        LIMIT ? OFFSET ?`,
+      week,
+      week,
+      week,
       week,
       week,
       limit,
@@ -829,10 +1014,14 @@ export function checksView(
     JSON.parse(saved?.properties ?? '[]') as {
       property: string
       urls: number
+      top?: number
+      cycle_days?: number
     }[]
   ).map((item) => ({
     property: item.property,
     urls: item.urls,
+    top: item.top ?? 0,
+    cycle_days: item.cycle_days ?? 7,
     used_today: used.get(item.property) ?? 0,
   }))
   const q = {
@@ -848,12 +1037,14 @@ export function checksView(
     covered: counts?.covered ?? 0,
     queued: { ...q, total: q.lost + q.search + q.sitemap + q.stale },
     eta_hours: etaHours(queued, used, now),
-    fresh_days: FRESH_DAYS,
     per_day: PER_DAY,
+    top_per_day: TOP_PER_DAY,
     properties,
     suggestions: JSON.parse(saved?.suggestions ?? '[]'),
     reasons,
     changed_this_week: counts?.changed ?? 0,
+    dropped_this_week: counts?.dropped ?? 0,
+    returned_this_week: counts?.returned ?? 0,
     rows,
     total_rows: total,
     offset,

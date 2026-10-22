@@ -1,6 +1,19 @@
 import { DurableObject } from 'cloudflare:workers'
-import type { AuditSnapshot } from '@seo/core/commands'
+import type { AuditChecks, AuditSnapshot } from '@seo/core/commands'
 import robotsParser from 'robots-parser'
+import { betaFlags } from '../beta.ts'
+import { directory } from '../google.ts'
+import { accountsOf } from '../store.ts'
+import {
+  addKnown,
+  checksView,
+  type Google,
+  inspectThrough,
+  runChecks,
+  saveState,
+  state,
+  syncKnown,
+} from './checks.ts'
 import { extractPage, resolveUrl } from './extract.ts'
 import { Meter } from './meter.ts'
 import { analyse, type RunSummary } from './rules.ts'
@@ -272,6 +285,7 @@ export class SiteAudit extends DurableObject<Env> {
     if (!run || !site) return
     if (run.status !== 'running') {
       await this.pushSummary(site, run)
+      await this.checkWake()
       return
     }
     const wake: Wake = {
@@ -329,6 +343,7 @@ export class SiteAudit extends DurableObject<Env> {
     )
     this.flush(wake, run, alarms)
     if (finished || failed) await this.finish(site, failed ? 'failed' : 'done')
+    await this.checkWake()
   }
 
   // Adds the wake's counters to the run row and to `run`. Called in each
@@ -520,6 +535,13 @@ export class SiteAudit extends DurableObject<Env> {
         return
       }
       this.enqueue(wake, run, site, robots, found, 1, 1)
+      // Every sitemap URL in scope is checked with Google, crawled or not.
+      addKnown(
+        meter,
+        found.filter((href) => new URL(href).pathname.startsWith(site.scope)),
+        run.id,
+        1,
+      )
       // New URLs were inserted marked; this marks URLs already known (the
       // start URL, or a URL in two sitemaps), one row per URL changed.
       for (let index = 0; index < found.length; index += 1000) {
@@ -772,6 +794,12 @@ export class SiteAudit extends DurableObject<Env> {
     const now = Date.now()
     const summary = await analyse(meter, run, status, now)
     meter.transaction(() => {
+      syncKnown(meter, run.id, summary.complete, now)
+      // New and changed URLs are checked from the next wake.
+      const next = state(meter)?.next_at
+      if (next === null || next === undefined || next > now + 1000) {
+        saveState(meter, { next_at: now + 1000 })
+      }
       meter.run(
         "UPDATE run SET status = ?, finished_at = ?, summary = ? WHERE status = 'running'",
         status,
@@ -803,6 +831,49 @@ export class SiteAudit extends DurableObject<Env> {
     )
     const finished = this.run(meter)
     if (finished) await this.pushSummary(site, finished)
+  }
+
+  // seo_index: coverage, the queue and the time left, from the store.
+  checks(offset: number, limit: number): AuditChecks | null {
+    const meter = new Meter(this.ctx.storage)
+    const site = meter.one<Site>('SELECT * FROM site')
+    return site ? checksView(meter, site, offset, Math.min(limit, 50)) : null
+  }
+
+  // seo_page and the hosted seo_index: one URL's Google result, from the
+  // store when it is fresh, else inspected now and stored.
+  async inspect(url: string): Promise<unknown | null> {
+    const meter = new Meter(this.ctx.storage)
+    const site = meter.one<Site>('SELECT * FROM site')
+    if (!site) return null
+    return inspectThrough(meter, site, await this.google(site), url)
+  }
+
+  // The person's Google accounts, read from D1 each time so a refreshed or
+  // removed sign-in counts at once.
+  private async google(site: Site): Promise<Google> {
+    return directory(this.env, await accountsOf(this.env, site.user_id))
+  }
+
+  // The background Google checks, when due, while the owner is still in the
+  // beta. They share the one alarm with the crawl: this sets it to the
+  // checks' next wake only when that is sooner than the crawl's.
+  private async checkWake(): Promise<void> {
+    const meter = new Meter(this.ctx.storage)
+    const site = meter.one<Site>('SELECT * FROM site')
+    if (!site) return
+    const saved = state(meter)
+    // A new site's checks start at once.
+    let at = saved ? saved.next_at : Date.now()
+    if (at !== null && at <= Date.now()) {
+      at = (await betaFlags(this.env, site.user_id)).has('weekly-audit')
+        ? await runChecks(meter, site, await this.google(site), Date.now())
+        : null
+      saveState(meter, { next_at: at })
+    }
+    if (at === null) return
+    const current = await this.ctx.storage.getAlarm()
+    if (current === null || at < current) await this.ctx.storage.setAlarm(at)
   }
 
   // One row per site in D1, so the account page and the scheduler never

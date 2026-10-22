@@ -2,9 +2,15 @@ import { z } from 'zod'
 import { runAiAnswers } from './ai-answers.js'
 import { analyticsSignIn, runAnalyticsRows } from './analytics.js'
 import { AUDIT_SECTION, AUDIT_SECTION_TEXT } from './audit.js'
+import {
+  CHECKS_PAGE_SIZE,
+  CHECKS_SUMMARY_ROWS,
+  runAuditChecks,
+} from './audit-checks.js'
 import { runBingRows } from './bing.js'
 import { clickyLabel, clickySites, runClickyRows } from './clicky.js'
 import { INSPECT_LIMIT, MAX_INSPECT_LIMIT } from './indexing.js'
+import type { Detail } from './present.js'
 import { runBingReport, runReport, SECTION_IDS, SECTIONS } from './report.js'
 import {
   RESEARCH_ACTIONS,
@@ -432,28 +438,74 @@ export const SHARED_TOOLS: SharedTool[] = [
   }),
 ]
 
-// Parses the input with the tool's schema, so bad input fails the same way on
-// every surface.
-// The shared tools for an account in the weekly site audit beta: seo_report
-// also takes the weekly-audit section. Only the hosted server uses them, so
-// every other account and surface sees the tools unchanged.
-export const AUDIT_TOOLS: SharedTool[] = SHARED_TOOLS.map((shared) =>
-  shared.name === 'seo_report'
-    ? {
-        ...shared,
-        description: `${shared.description}\n- ${AUDIT_SECTION}: ${AUDIT_SECTION_TEXT}`,
-        input: shared.input.extend({
-          section: z
-            .enum([...SECTION_IDS, AUDIT_SECTION])
-            .optional()
-            .describe(
-              'Optional. Leave it out first; then ask for one section.',
-            ),
-        }),
+// seo_index for an account in the weekly site audit beta: it answers at once
+// from the site's stored URL Inspection results, with the same input. A site
+// with no store is added to the audit, which starts its checks; when the
+// account audits the most sites already, it runs the usual seo_index.
+function indexFromStore(shared: SharedTool): SharedTool {
+  // detail and offset page through the rows only where seo_index takes them.
+  const paged = 'detail' in shared.input.shape
+  return {
+    ...shared,
+    description: `${shared.description} For a site in the weekly site audit beta it answers at once from the URL Inspection results this server keeps for the site, checked in the background each day, and says how many URLs are covered, how many are queued and the time left.`,
+    run: async (surface, parsed: never) => {
+      const input = parsed as {
+        site: string
+        detail?: Detail
+        offset?: number
       }
-    : shared,
+      const audit = surface.deps.audit
+      if (!audit) return shared.run(surface, parsed)
+      const site = await surface.resolveSite(input.site)
+      const detail = input.detail ?? 'summary'
+      const offset = detail === 'rows' ? (input.offset ?? 0) : 0
+      const limit = detail === 'rows' ? CHECKS_PAGE_SIZE : CHECKS_SUMMARY_ROWS
+      let checks = await audit.checks(site, offset, limit)
+      if (!checks) {
+        if ((await audit.add(site)) === 'full') {
+          const result = await shared.run(surface, parsed)
+          return {
+            text: `${result.text}\n\n${site} is not in the weekly site audit, and this account already audits the most sites the beta allows, so this ran the usual way. Remove a site under Beta on the account page to keep its checks here.`,
+            data: result.data,
+          }
+        }
+        checks = await audit.checks(site, offset, limit)
+        if (!checks) throw new Error(`The audit of ${site} did not start.`)
+      }
+      return runAuditChecks(
+        { site, detail, offset, paged },
+        checks,
+        surface.deps.call,
+      )
+    },
+  }
+}
+
+// The shared tools for an account in the weekly site audit beta: seo_report
+// also takes the weekly-audit section, and seo_index answers from the
+// site's stored checks. Only the hosted server uses them, so every other
+// account and surface sees the tools unchanged.
+export const AUDIT_TOOLS: SharedTool[] = SHARED_TOOLS.map((shared) =>
+  shared.name === 'seo_index'
+    ? indexFromStore(shared)
+    : shared.name === 'seo_report'
+      ? {
+          ...shared,
+          description: `${shared.description}\n- ${AUDIT_SECTION}: ${AUDIT_SECTION_TEXT}`,
+          input: shared.input.extend({
+            section: z
+              .enum([...SECTION_IDS, AUDIT_SECTION])
+              .optional()
+              .describe(
+                'Optional. Leave it out first; then ask for one section.',
+              ),
+          }),
+        }
+      : shared,
 )
 
+// Parses the input with the tool's schema, so bad input fails the same way on
+// every surface.
 export async function runSharedTool(
   tool: SharedTool,
   surface: ToolSurface,

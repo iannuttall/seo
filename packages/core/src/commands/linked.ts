@@ -128,6 +128,11 @@ export class LinkedAccounts {
     return this.owners
   }
 
+  // Every property the linked accounts can read, sorted.
+  async properties(): Promise<string[]> {
+    return [...(await this.ownerMap()).keys()].sort()
+  }
+
   // The property the caller means: an exact property, else the closest
   // domain property, else a URL-prefix property for the same origin.
   async resolve(site: string): Promise<string> {

@@ -101,7 +101,17 @@ follows the site's `robots.txt`. It keeps, per site:
 - the findings worked out from them (such as broken links or missing
   titles), with when each was first seen and resolved; resolved findings
   are removed after 90 days;
-- a one-line summary of each of the last 52 crawls (counts only).
+- a one-line summary of each of the last 52 crawls (counts only);
+- Google's URL Inspection result for each known URL of the site (the
+  sitemap's, the crawl's and the Search Console pages with clicks or
+  impressions, up to 50,000 from the sitemap and crawl): its indexing
+  reason and Google's details, when it was checked and the reason before it
+  last changed. The server checks these in the background each day, within
+  Google's 2,000 checks a day per property, and `seo_page` and `seo_index`
+  read and add to the same results;
+- for each of those Search Console pages, its clicks and impressions in the
+  last 28 days and its clicks in the 28 days before, replaced each day;
+- how many URL Inspection checks each property used today.
 
 Remove a site on the account page and all of this is deleted at once.
 Delete everything deletes it for every site.

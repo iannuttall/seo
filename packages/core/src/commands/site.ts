@@ -293,6 +293,11 @@ const LOST_SHARE = 0.2
 const MIN_LOST = 3
 const CHECKED = 20
 const INSPECTED = 10
+
+// A page that lost its clicks, by the same rule as seo index.
+export const isLostPage = (previousClicks: number, clicks: number) =>
+  previousClicks >= MIN_LOST && clicks <= previousClicks * LOST_SHARE
+
 // Most of the inspected pages, and at least this many, out of the index.
 const SITE_WIDE_MIN = 5
 // Most Search Console page rows read per period.

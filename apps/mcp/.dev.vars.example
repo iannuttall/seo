@@ -12,5 +12,7 @@ TELEGRAM_BOT_TOKEN=
 TELEGRAM_CHAT_ID=
 # Optional. PostShiba API key for alert email; without it email is skipped.
 POSTSHIBA_API_KEY=
+# Optional. Reply-To address for alert email.
+ALERT_REPLY_TO=
 # Optional, local checks only: "true" composes alert email without sending.
 POSTSHIBA_SANDBOX=

@@ -31,11 +31,10 @@
   "vars": {
     "PUBLIC_URL": "https://seoskill.dev",
     // Alert email: the PostShiba team and transactional cluster, and the
-    // sender on its verified sending domain. ALERT_REPLY_TO is optional.
+    // sender on its verified sending domain.
     "POSTSHIBA_TEAM": "nvoZjB",
     "POSTSHIBA_CLUSTER": "MenNeb",
-    "ALERT_FROM": "SEO Skill <alerts@e.seoskill.dev>",
-    "ALERT_REPLY_TO": ""
+    "ALERT_FROM": "SEO Skill <alerts@e.seoskill.dev>"
   },
   // The site Worker, for the account page design (/account-shell).
   "services": [{ "binding": "SITE", "service": "seo-skill" }],
@@ -68,5 +67,6 @@
   // Secrets: GOOGLE_CLIENT_ID, GOOGLE_CLIENT_SECRET, SEAL_KEY, AHREFS_DR_KEY,
   // BING_CLIENT_ID, BING_CLIENT_SECRET, and optionally TELEGRAM_BOT_TOKEN and
   // TELEGRAM_CHAT_ID for the weekly sign-up and failure counts, and
-  // optionally POSTSHIBA_API_KEY for alert email.
+  // optionally POSTSHIBA_API_KEY for alert email and ALERT_REPLY_TO for its
+  // Reply-To address.
 }

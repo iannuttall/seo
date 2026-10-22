@@ -21,6 +21,11 @@ const faq = [
       'Yes. The command is free and open source. Jev is optional: with your own TypeSafe key it judges each link, and a 500-page site costs about 10 to 20 cents in requests. Without a key it uses text matching and says so.',
   },
   {
+    question: 'What is Jev, and do I need it?',
+    answer:
+      'Jev is an AI model from TypeSafe AI that answers fixed questions with a choice and a probability instead of writing text. The tool uses it to judge whether each suggested link would help a reader. You do not need it: without a TypeSafe key the tool still finds links by text matching and says so.',
+  },
+  {
     question: 'Does it add the links for me?',
     answer:
       'No. It tells you which page to edit, which sentence the link fits in and which phrase to use as the link text. You or your agent make the edit, and a person approves it.',
@@ -114,6 +119,26 @@ const faq = [
         candidates, but it cannot tell a helpful link from a forced one, so
         the result says Jev was not used.
       </p>
+
+      <h3>What Jev is</h3>
+      <p>
+        <a href="https://typesafe.ai" target="_blank" rel="noreferrer">Jev</a> is an AI model from TypeSafe AI built to make decisions inside
+        software, not to write text. You ask it a fixed question, such as
+        "would this link help a reader of this page?", and it answers with a
+        choice and a probability: yes at 82%, for example. Because it only
+        picks an answer and says how sure it is, it cannot invent a page,
+        sentence or phrase that is not on your site. It is also fast and
+        cheap enough to judge every candidate link on a site, which a chat
+        model is not.
+      </p>
+      <p>
+        To use it, get an API key from <a href="https://typesafe.ai" target="_blank" rel="noreferrer">TypeSafe AI</a> and add it on the <a href="/account#keys">Keys tab of your account</a>,
+        then run <code>seo login</code>.
+        You can also set <code>TYPESAFE_API_KEY</code> on your machine to keep the key there.
+        You pay TypeSafe for the requests directly.
+      </p>
+
+      <h3>What Jev does in an audit</h3>
       <p>
         With a TypeSafe key, Jev sorts every page into a type (guide,
         article, tool, product page and so on), then judges each link: how

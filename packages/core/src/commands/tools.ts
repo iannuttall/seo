@@ -1,6 +1,7 @@
 import { z } from 'zod'
 import { runAiAnswers } from './ai-answers.js'
 import { analyticsSignIn, runAnalyticsRows } from './analytics.js'
+import { AUDIT_SECTION, AUDIT_SECTION_TEXT } from './audit.js'
 import { runBingRows } from './bing.js'
 import { clickyLabel, clickySites, runClickyRows } from './clicky.js'
 import { INSPECT_LIMIT, MAX_INSPECT_LIMIT } from './indexing.js'
@@ -433,6 +434,26 @@ export const SHARED_TOOLS: SharedTool[] = [
 
 // Parses the input with the tool's schema, so bad input fails the same way on
 // every surface.
+// The shared tools for an account in the weekly site audit beta: seo_report
+// also takes the weekly-audit section. Only the hosted server uses them, so
+// every other account and surface sees the tools unchanged.
+export const AUDIT_TOOLS: SharedTool[] = SHARED_TOOLS.map((shared) =>
+  shared.name === 'seo_report'
+    ? {
+        ...shared,
+        description: `${shared.description}\n- ${AUDIT_SECTION}: ${AUDIT_SECTION_TEXT}`,
+        input: shared.input.extend({
+          section: z
+            .enum([...SECTION_IDS, AUDIT_SECTION])
+            .optional()
+            .describe(
+              'Optional. Leave it out first; then ask for one section.',
+            ),
+        }),
+      }
+    : shared,
+)
+
 export async function runSharedTool(
   tool: SharedTool,
   surface: ToolSurface,

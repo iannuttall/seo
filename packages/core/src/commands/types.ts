@@ -2,6 +2,7 @@ import type { BingCall } from '../bing/api.js'
 import { SeoError, type SeoErrorCode } from '../errors.js'
 import type { SearchAnalyticsQuery } from '../gsc/client/types.js'
 import type { AnalyticsAccess } from './analytics-site.js'
+import type { AuditSnapshot } from './audit.js'
 import type { LiveCheck } from './page-facts.js'
 
 // The eight public commands. Each runs the same core code in the CLI, the
@@ -143,6 +144,9 @@ export type CommandDeps = {
   // The Google sign-ins that can read Google Analytics. The report and
   // compare show the matching property's sessions beside Search Console.
   analytics?: AnalyticsAccess
+  // The weekly site audit of a property, or null when it is not audited.
+  // Only the hosted server sets it, and only for accounts in that beta.
+  audit?: (site: string) => Promise<AuditSnapshot | null>
   now?: () => Date
 }
 

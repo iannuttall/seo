@@ -9,6 +9,7 @@ import { changeWindow } from '../analyze/traffic-anomaly-analysis.js'
 import { trafficAnomalyWith } from '../analyze/traffic-anomaly-report.js'
 import type { SearchAnalyticsQuery } from '../gsc/client/types.js'
 import { analyticsBeside } from './analytics-site.js'
+import { AUDIT_SECTION, auditPreview, runAuditReport } from './audit.js'
 import {
   type BingSource,
   bingFor,
@@ -496,7 +497,7 @@ export function pageFactsTable(
 
 export type ReportInput = DateInput & {
   site: string
-  section?: SectionId
+  section?: SectionId | typeof AUDIT_SECTION
   detail?: Detail
   offset?: number
 }
@@ -544,6 +545,7 @@ async function allSections(
   if (bingFirst) parts.push(bingFirst.text)
   const ga = await analytics
   if (ga) parts.push(ga.text)
+  const audit = deps.audit ? auditPreview(await deps.audit(input.site)) : null
   const brand = rest.find(
     (run): run is Record<string, unknown> =>
       !(run instanceof Error) && brandNote(run) !== null,
@@ -573,8 +575,15 @@ async function allSections(
         .join('\n'),
     )
   })
+  if (deps.audit) {
+    parts.push(
+      `## ${AUDIT_SECTION}\n${audit ?? 'This site is not in the weekly site audit.'}`,
+    )
+    sections[AUDIT_SECTION] = { line: audit }
+  }
+  const names = deps.audit ? [...ids, AUDIT_SECTION] : ids
   parts.push(
-    `More: ${deps.call('report', { site: input.site, section: '<section>' })} for its rows (${ids.join(', ')}). Page sections also check their top 20 URLs live and merge same-site redirects.`,
+    `More: ${deps.call('report', { site: input.site, section: '<section>' })} for its rows (${names.join(', ')}). Page sections also check their top 20 URLs live and merge same-site redirects.`,
   )
   return {
     text: `${parts.join('\n\n')}\n\n${FACTS_ONLY}`,
@@ -717,6 +726,18 @@ export function runReport(
   input: ReportInput,
   deps: CommandDeps,
 ): Promise<CommandResult> {
+  if (input.section === AUDIT_SECTION) {
+    const audit = deps.audit
+    if (!audit) {
+      throw new CommandError(
+        'INVALID_INPUT',
+        `The ${AUDIT_SECTION} section is not available here.`,
+      )
+    }
+    return audit(input.site).then((snapshot) =>
+      runAuditReport(input, snapshot, deps.call),
+    )
+  }
   return input.section
     ? oneSection({ ...input, section: input.section }, deps)
     : allSections(input, deps)

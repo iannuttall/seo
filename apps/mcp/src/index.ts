@@ -1,5 +1,6 @@
 import { account, accountCallback, bingCallback } from './account.ts'
 import { startDue } from './audit/schedule.ts'
+import { betaFlags } from './beta.ts'
 import { credentials, finishLogin, logout, startLogin } from './cli.ts'
 import { failureReport } from './failure-report.ts'
 import { directory } from './google.ts'
@@ -112,9 +113,10 @@ async function route(
     if (method !== 'POST') {
       return new Response(null, { status: 405, headers: { allow: 'POST' } })
     }
-    const [accounts, keys] = await Promise.all([
+    const [accounts, keys, beta] = await Promise.all([
       accountsOf(env, userId),
       keysOf(env, userId),
+      betaFlags(env, userId),
     ])
     // A deleted person, or one with no Google account, signs in again.
     if (!accounts.some((item) => item.provider === 'google')) {
@@ -126,6 +128,7 @@ async function route(
     return serveMcp(request, {
       env,
       userId,
+      beta,
       directory: directory(env, accounts),
       headers,
       waitUntil: (promise) => ctx.waitUntil(promise),

@@ -1,4 +1,4 @@
-import type { AuditSnapshot } from './site-audit.ts'
+import type { AuditSnapshot } from '@seo/core/commands'
 
 // The weekly-audit schedule in D1: add and remove a site, list an account's
 // sites without waking their objects, and the hourly cron that starts the
@@ -141,7 +141,13 @@ export async function auditSnapshot(
   userId: string,
   property: string,
 ): Promise<AuditSnapshot | null> {
-  return siteObject(env, userId, property).snapshot()
+  // A site that is not audited has no object; asking would create one.
+  const row = await env.DB.prepare(
+    'SELECT 1 AS n FROM audit_sites WHERE user_id = ? AND property = ?',
+  )
+    .bind(userId, property)
+    .first()
+  return row ? siteObject(env, userId, property).snapshot() : null
 }
 
 // Starts one site's run and moves its schedule only once the object said

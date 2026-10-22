@@ -31,6 +31,10 @@ Sign in with Google at `https://seoskill.dev/account` to:
   try,
 - delete everything, which also revokes the Google sign-ins, or sign out.
 
+An account in the weekly-audit beta also gets a `weekly-audit` section in
+`seo_report` for the sites it audits, with what is new, back or resolved
+since the crawl before. Every other account sees the tools unchanged.
+
 Each tool call uses the linked Google account that can read the site, the one
 with the most access. `seo_sites` lists properties from every linked account
 with an account column. A `NO_ACCESS` error names the linked accounts and

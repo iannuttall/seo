@@ -1,5 +1,14 @@
 # Changelog
 
+## Unreleased
+
+### Fixed
+
+- URL Inspection no longer fails with "database is locked" when another
+  `seo` run holds the local cache. The inspection goes ahead uncounted and
+  Google's own daily limit applies, as it already did for the rest of the
+  cache.
+
 ## 0.12.0
 
 ### Added

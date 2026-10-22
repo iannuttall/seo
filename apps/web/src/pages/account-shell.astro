@@ -343,12 +343,33 @@ const keys: { name: string; label: string; type: 'text' | 'password' }[] = [
           </p>
           <ul class="mt-4 divide-y divide-border text-sm" data-beta-list></ul>
         </div>
+
+        <div class={panel} id="weekly-audit" data-audit-panel hidden>
+          <h2 class={heading}>Weekly site audit</h2>
+          <p class={note}>
+            Each site is crawled once a week, up to 5,000 pages. Ask your
+            agent for the report on a site to see what is new since last week.
+          </p>
+          <ul class="mt-4 divide-y divide-border text-sm" data-audit-list></ul>
+          <form method="post" data-action="/account/audit" class="mt-4 flex flex-col gap-4" data-audit-add>
+            <input type="hidden" name="form" />
+            <label class="flex flex-col gap-1.5 text-sm font-medium text-foreground">
+              <span>Search Console property</span>
+              <FormInput name="property" type="text" autocomplete="off" spellcheck="false" placeholder="sc-domain:example.com" />
+            </label>
+            <div class="flex flex-wrap gap-3">
+              <button type="submit" class={outline}>Audit this site</button>
+            </div>
+          </form>
+          <p class={note} data-audit-full hidden></p>
+        </div>
       </div>
 
       <div class="mt-10 border-t border-border pt-6" id="delete">
         <p class="text-sm/6 text-foreground-muted">
           Delete everything removes your Google and Bing sign-ins, keys,
-          Clicky sites and linked machines from SEO Skill and revokes the
+          Clicky sites, linked machines and any audited sites with their
+          crawl data from SEO Skill and revokes the
           Google sign-ins. Your agents will ask you to sign in again.
         </p>
         <div class="mt-4 flex flex-wrap items-center gap-3">
@@ -394,6 +415,19 @@ const keys: { name: string; label: string; type: 'text' | 'password' }[] = [
         <p class="mt-0.5 text-foreground-muted" data-beta-text></p>
       </li>
     </template>
+    <template data-audit-row>
+      <li class="flex items-center justify-between gap-4 py-2.5">
+        <span class="min-w-0">
+          <span class="block break-all text-foreground" data-audit-property></span>
+          <span class="block text-foreground-muted" data-audit-state></span>
+        </span>
+        <form method="post" data-action="/account/audit/remove">
+          <input type="hidden" name="form" />
+          <input type="hidden" name="property" data-audit-input />
+          <button type="submit" class={quiet}>Remove</button>
+        </form>
+      </li>
+    </template>
     <template data-machine-row>
       <li class="flex items-center justify-between gap-4 py-2.5">
         <span class="min-w-0 text-foreground">
@@ -429,6 +463,18 @@ const keys: { name: string; label: string; type: 'text' | 'password' }[] = [
       machines: { id: string; label: string; usedAt: number | null }[]
       login?: { code: string; label: string }
       beta?: { id: string; title: string; text: string }[]
+      audit?: {
+        max: number
+        sites: {
+          property: string
+          lastFinishedAt: number | null
+          lastStatus: string | null
+          pages: number | null
+          open: number | null
+          new: number | null
+          error: string | null
+        }[]
+      }
       token?: string
       tab?: string
     }
@@ -534,6 +580,34 @@ const keys: { name: string; label: string; type: 'text' | 'password' }[] = [
           const text = copy.querySelector('[data-beta-text]')
           if (text) text.textContent = feature.text
           betaList?.append(copy)
+        }
+        const audit = account.audit
+        if (audit) {
+          show(root.querySelector('[data-audit-panel]'))
+          const auditRow = root.querySelector<HTMLTemplateElement>('[data-audit-row]')
+          const auditList = root.querySelector('[data-audit-list]')
+          for (const site of audit.sites) {
+            const copy = auditRow?.content.cloneNode(true) as DocumentFragment
+            const name = copy.querySelector('[data-audit-property]')
+            if (name) name.textContent = site.property
+            const state = copy.querySelector('[data-audit-state]')
+            if (state) {
+              state.textContent = site.lastFinishedAt
+                ? `Last crawl ${new Date(site.lastFinishedAt).toLocaleDateString()}${site.lastStatus === 'failed' ? ' (stopped early)' : ''}: ${site.pages ?? 0} pages, ${site.open ?? 0} open findings, ${site.new ?? 0} new`
+                : site.error
+                  ? `Could not start yet: ${site.error}`
+                  : 'First crawl running'
+            }
+            const input = copy.querySelector<HTMLInputElement>('[data-audit-input]')
+            if (input) input.value = site.property
+            auditList?.append(copy)
+          }
+          if (audit.sites.length >= audit.max) {
+            root.querySelector('[data-audit-add]')?.remove()
+            const full = root.querySelector('[data-audit-full]')
+            if (full) full.textContent = `The beta audits up to ${audit.max} sites. Remove one to add another.`
+            show(full)
+          }
         }
       } else {
         root.querySelector('[data-account-tab="beta"]')?.remove()

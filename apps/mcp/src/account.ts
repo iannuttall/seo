@@ -10,9 +10,17 @@ import {
   isClickySitekey,
   listBingSites,
 } from '@seo/core/commands'
+import {
+  addAuditSite,
+  auditSites,
+  MAX_SITES,
+  removeAllAuditSites,
+  removeAuditSite,
+} from './audit/schedule.ts'
 import { BETA, betaFlags } from './beta.ts'
 import { loginUrl, newToken } from './cli.ts'
 import { importClicky, removeClickyAccount } from './clicky.ts'
+import { directory } from './google.ts'
 import { signInPerson } from './oauth.ts'
 import { view } from './page.ts'
 import {
@@ -112,6 +120,7 @@ async function accountPage(
     extra.link ? pendingLogin(env, extra.link) : null,
     betaFlags(env, userId),
   ])
+  const audits = beta.has('weekly-audit') ? await auditSites(env, userId) : []
   return view(env, {
     view: 'account',
     message:
@@ -156,6 +165,22 @@ async function accountPage(
               title: BETA[id].title,
               text: BETA[id].text,
             })),
+            ...(beta.has('weekly-audit')
+              ? {
+                  audit: {
+                    max: MAX_SITES,
+                    sites: audits.map((site) => ({
+                      property: site.property,
+                      lastFinishedAt: site.lastFinishedAt,
+                      lastStatus: site.lastStatus,
+                      pages: site.pagesFetched,
+                      open: site.openFindings,
+                      new: site.newFindings,
+                      error: site.lastError,
+                    })),
+                  },
+                }
+              : {}),
           }
         : {}),
       ...(extra.token ? { token: extra.token } : {}),
@@ -363,7 +388,37 @@ export async function account(
       }
       return redirect(`${home}#clicky`)
     }
+    case '/account/audit': {
+      if (!(await betaFlags(env, userId)).has('weekly-audit')) break
+      // Only a property one of the person's Google accounts can read.
+      const property = await directory(env, await accountsOf(env, userId))
+        .resolve(field('property'))
+        .catch(() => null)
+      if (!property) {
+        return accountPage(
+          env,
+          userId,
+          'None of your Google accounts can read that site in Search Console. Use a property name such as sc-domain:example.com or https://example.com/.',
+          { tab: 'beta' },
+        )
+      }
+      const added = await addAuditSite(env, userId, property)
+      return accountPage(
+        env,
+        userId,
+        added === 'full'
+          ? `The beta audits up to ${MAX_SITES} sites. Remove one first.`
+          : added === 'exists'
+            ? `${property} is already audited.`
+            : `Added ${property}. The first crawl has started.`,
+        { tab: 'beta', ok: added !== 'full' },
+      )
+    }
+    case '/account/audit/remove':
+      await removeAuditSite(env, userId, field('property'))
+      return redirect(`${home}#beta`)
     case '/account/delete': {
+      await removeAllAuditSites(env, userId)
       const accounts = await accountsOf(env, userId)
       await Promise.all(
         accounts

@@ -136,6 +136,12 @@ importers:
       '@seo/core':
         specifier: workspace:*
         version: link:../../packages/core
+      htmlparser2:
+        specifier: 10.1.0
+        version: 10.1.0
+      robots-parser:
+        specifier: ^3.0.1
+        version: 3.0.1
       zod:
         specifier: 4.4.3
         version: 4.4.3
@@ -1303,6 +1309,7 @@ packages:
   '@opentelemetry/sdk-trace-base@2.9.0':
     resolution: {integrity: sha512-cp9zmTl62R8PJrpvFcmc8N2JQU/xfa0S+61q511Nji+QxCfZ8Ifvg7H27G8cANe4crg4RTrWsVvanHiXjSp6ag==}
     engines: {node: ^18.19.0 || >=20.6.0}
+    deprecated: Use @opentelemetry/sdk-trace package
     peerDependencies:
       '@opentelemetry/api': '>=1.3.0 <1.10.0'
 

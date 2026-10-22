@@ -104,6 +104,19 @@ export type View =
         login?: { code: string; label: string }
         // Beta features granted to this account. Absent when there are none.
         beta?: { id: string; title: string; text: string }[]
+        // The weekly-audit beta's sites, from D1 only.
+        audit?: {
+          max: number
+          sites: {
+            property: string
+            lastFinishedAt: number | null
+            lastStatus: string | null
+            pages: number | null
+            open: number | null
+            new: number | null
+            error: string | null
+          }[]
+        }
         // A token just made for a cloud agent, shown once.
         token?: string
         // The tab to open: accounts, keys, machines or settings.

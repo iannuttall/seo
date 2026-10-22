@@ -1,4 +1,5 @@
 import { account, accountCallback, bingCallback } from './account.ts'
+import { startDue } from './audit/schedule.ts'
 import { credentials, finishLogin, logout, startLogin } from './cli.ts'
 import { failureReport } from './failure-report.ts'
 import { directory } from './google.ts'
@@ -16,6 +17,8 @@ import {
 } from './oauth.ts'
 import { sendSignupReport, sendTelegram } from './signup-report.ts'
 import { accountsOf, keysOf } from './store.ts'
+
+export { SiteAudit } from './audit/site-audit.ts'
 
 // seoskill.dev routes /mcp, /oauth/*, /account, /.well-known/oauth-* and
 // /.well-known/mcp/* to this Worker.
@@ -151,6 +154,10 @@ export default {
   // The weekly sign-up and failure counts for Ian's Telegram
   // (wrangler.jsonc triggers).
   async scheduled(controller, env, ctx) {
+    if (controller.cron === '17 * * * *') {
+      ctx.waitUntil(startDue(env, controller.scheduledTime))
+      return
+    }
     const now = new Date(controller.scheduledTime)
     ctx.waitUntil(sendSignupReport(env, now))
     ctx.waitUntil(sendTelegram(env, () => failureReport(env.TELEMETRY_DB, now)))

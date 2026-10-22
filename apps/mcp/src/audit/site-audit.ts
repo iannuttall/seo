@@ -1,4 +1,5 @@
 import { DurableObject } from 'cloudflare:workers'
+import type { AuditSnapshot } from '@seo/core/commands'
 import robotsParser from 'robots-parser'
 import { extractPage, resolveUrl } from './extract.ts'
 import { Meter } from './meter.ts'
@@ -72,41 +73,6 @@ type Site = {
   property: string
   origin: string | null
   scope: string
-}
-
-// The latest run for the report: its summary, the findings that are new,
-// reopened or resolved in it, the open ones, and the run history.
-export type AuditSnapshot = {
-  property: string
-  origin: string | null
-  run: {
-    id: string
-    status: Run['status']
-    started_at: number
-    finished_at: number | null
-    fetched: number
-    error: string | null
-  } | null
-  // The last finished run's summary; null before the first one finishes.
-  summary: RunSummary | null
-  finished_at: number | null
-  findings: {
-    rule: string
-    subject: string
-    details: string
-    state: 'open' | 'resolved'
-    first_seen_at: number
-    reopened_at: number | null
-    resolved_at: number | null
-  }[]
-  history: {
-    started_at: number
-    finished_at: number
-    status: string
-    open: number
-    new: number
-    resolved: number
-  }[]
 }
 
 type Robots = ReturnType<typeof robotsParser>

@@ -1,4 +1,3 @@
-import type { LinkedAccounts } from '@seo/core/commands'
 import {
   type CommandDeps,
   checkPages,
@@ -6,7 +5,9 @@ import {
   liveCheck,
   mcpCall,
 } from '@seo/core/commands'
+import { auditSnapshot } from '../audit/schedule.ts'
 import { accountUrl, signInHint } from '../google.ts'
+import type { ToolContext } from './registry.ts'
 
 // The core commands' functions for the hosted MCP: Search Console and Bing
 // through the person's linked accounts, the shared live page checks, and
@@ -17,7 +18,12 @@ import { accountUrl, signInHint } from '../google.ts'
 // The account store, Bing sign-in and routing stay ready for that.
 export const HOSTED_BING = false
 
-export function deps(env: Env, directory: LinkedAccounts): CommandDeps {
+export function deps({
+  env,
+  userId,
+  directory,
+  beta,
+}: Pick<ToolContext, 'env' | 'userId' | 'directory' | 'beta'>): CommandDeps {
   return {
     searchAnalytics: directory.searchAnalytics(),
     checkPages,
@@ -28,6 +34,9 @@ export function deps(env: Env, directory: LinkedAccounts): CommandDeps {
       accounts: async () => directory.accounts(),
       signIn: signInHint(env),
     },
+    ...(beta.has('weekly-audit')
+      ? { audit: (site: string) => auditSnapshot(env, userId, site) }
+      : {}),
     ...(HOSTED_BING
       ? {
           bing: async () => directory.bing,

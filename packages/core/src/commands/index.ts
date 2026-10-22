@@ -10,6 +10,7 @@ export type {
 export * from './ai-answers.js'
 export * from './analytics.js'
 export * from './analytics-site.js'
+export * from './audit.js'
 export * from './bing.js'
 export * from './clicky.js'
 export * from './domain-rating.js'

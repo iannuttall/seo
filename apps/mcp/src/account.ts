@@ -10,6 +10,14 @@ import {
   isClickySitekey,
   listBingSites,
 } from '@seo/core/commands'
+import { ALERTS, isAlertType } from './alerts/registry.ts'
+import {
+  alertSettings,
+  rotateSecret,
+  saveAlertSettings,
+  turnOff,
+  webhookUrlProblem,
+} from './alerts/settings.ts'
 import {
   addProperties,
   recordAdded,
@@ -126,6 +134,14 @@ async function accountPage(
     betaFlags(env, userId),
   ])
   const audits = beta.has('weekly-audit') ? await auditSites(env, userId) : []
+  const alerts = await alertSettings(env, userId)
+  const held = alerts.types.length
+    ? await env.DB.prepare(
+        "SELECT count(*) AS n FROM alerts WHERE user_id = ? AND email = 'held'",
+      )
+        .bind(userId)
+        .first<{ n: number }>()
+    : null
   return view(env, {
     view: 'account',
     message:
@@ -187,6 +203,24 @@ async function accountPage(
                   },
                 }
               : {}),
+            ...(alerts.types.length
+              ? {
+                  alerts: {
+                    email:
+                      accounts.find((item) => item.provider === 'google')
+                        ?.label ?? null,
+                    types: alerts.types.map((item) => ({
+                      ...item,
+                      title: ALERTS[item.id].title,
+                      text: ALERTS[item.id].text,
+                    })),
+                    webhookUrl: alerts.webhookUrl,
+                    webhookSecret: alerts.webhookSecret,
+                    webhookLast: alerts.webhookLast,
+                    held: held?.n ?? 0,
+                  },
+                }
+              : {}),
           }
         : {}),
       ...(extra.token ? { token: extra.token } : {}),
@@ -208,6 +242,10 @@ export async function account(
     return userId
       ? accountPage(env, userId, '', { link })
       : signInPage(env, '', link)
+  }
+  // The link in an alert email, opened (GET) or one-click (POST, RFC 8058).
+  if (path === '/account/alerts/off') {
+    return alertsOff(request, env)
   }
   if (request.method !== 'POST') {
     return new Response('Not found', { status: 404 })
@@ -447,6 +485,35 @@ export async function account(
         ),
       )
     }
+    case '/account/alerts': {
+      const settings = await alertSettings(env, userId)
+      if (!settings.types.length) break
+      const url = field('webhook_url') || null
+      const problem = url ? webhookUrlProblem(url) : null
+      if (problem) {
+        return accountPage(env, userId, problem, { tab: 'beta' })
+      }
+      await saveAlertSettings(env, userId, {
+        types: settings.types.map((item) => ({
+          id: item.id,
+          email: data?.get(`email:${item.id}`) === 'on',
+          webhook: data?.get(`webhook:${item.id}`) === 'on',
+        })),
+        webhookUrl: url,
+      })
+      return accountPage(env, userId, 'Saved your alert settings.', {
+        tab: 'beta',
+        ok: true,
+      })
+    }
+    case '/account/alerts/secret':
+      await rotateSecret(env, userId)
+      return accountPage(
+        env,
+        userId,
+        'Made a new signing secret. Update it where you check webhook signatures.',
+        { tab: 'beta', ok: true },
+      )
     case '/account/audit/remove':
       await removeAuditSite(env, userId, field('property'))
       return redirect(`${home}#beta`)
@@ -612,5 +679,42 @@ export async function propertiesCallback(
   return accountPage(env, userId, lines.join(' '), {
     tab: 'beta',
     ok: added.every((item) => item.state === 'verified'),
+  })
+}
+
+// Turns off one alert type's email from the link in that email. The sealed
+// token names the person and the type, so no sign-in is needed.
+async function alertsOff(request: Request, env: Env): Promise<Response> {
+  const off = await unseal(
+    env.SEAL_KEY,
+    new URL(request.url).searchParams.get('t'),
+    'alert-off',
+  )
+  if (
+    !off ||
+    !isAlertType(off.type) ||
+    !(request.method === 'GET' || request.method === 'POST') ||
+    !(await userExists(env, off.userId))
+  ) {
+    return view(
+      env,
+      {
+        view: 'notice',
+        notice: {
+          title: 'Link not recognised',
+          text: 'Sign in to your account page to change your alerts.',
+        },
+      },
+      404,
+    )
+  }
+  await turnOff(env, off.userId, off.type, 'email')
+  if (request.method === 'POST') return new Response(null, { status: 204 })
+  return view(env, {
+    view: 'notice',
+    notice: {
+      title: 'Alert emails off',
+      text: `You will get no more ${ALERTS[off.type].title.toLowerCase()} emails. Turn them back on under Alerts on the Beta tab of your account page.`,
+    },
   })
 }

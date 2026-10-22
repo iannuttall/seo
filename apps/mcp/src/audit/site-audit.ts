@@ -1,6 +1,8 @@
 import { DurableObject } from 'cloudflare:workers'
 import type { AuditChecks, AuditSnapshot } from '@seo/core/commands'
 import robotsParser from 'robots-parser'
+import { queueAlert } from '../alerts/deliver.ts'
+import { MAX_LISTED } from '../alerts/registry.ts'
 import { betaFlags } from '../beta.ts'
 import { directory } from '../google.ts'
 import { accountsOf } from '../store.ts'
@@ -10,11 +12,13 @@ import {
   type Google,
   indexChanges,
   inspectThrough,
+  markAlerted,
   PER_DAY,
   runChecks,
   saveState,
   state,
   syncKnown,
+  unalertedChanges,
 } from './checks.ts'
 import { extractPage, resolveUrl } from './extract.ts'
 import { Meter } from './meter.ts'
@@ -169,6 +173,10 @@ export class SiteAudit extends DurableObject<Env> {
         if (!have.has(name)) {
           ctx.storage.sql.exec(`ALTER TABLE checks ADD COLUMN ${name} ${type}`)
         }
+      }
+      // Changes from before alerts existed are not alerted.
+      if (!have.has('alerted_at')) {
+        ctx.storage.sql.exec('UPDATE checks SET alerted_at = transition_at')
       }
       // Results from before index monitoring are its baseline.
       if (!have.has('indexed')) {
@@ -892,6 +900,7 @@ export class SiteAudit extends DurableObject<Env> {
         ? await runChecks(meter, site, await this.google(site), Date.now())
         : null
       saveState(meter, { next_at: at })
+      await this.alertChanges(meter, site)
       // A new day's plan goes to D1 for the account page.
       const now = state(meter)
       if (now?.day && now.day !== saved?.day) await this.pushCoverage(site)
@@ -899,6 +908,26 @@ export class SiteAudit extends DurableObject<Env> {
     if (at === null) return
     const current = await this.ctx.storage.getAlarm()
     if (current === null || at < current) await this.ctx.storage.setAlarm(at)
+  }
+
+  // This wake's drops out of and returns to the index, as one alert. They
+  // are marked only once the alert is queued, so a failed queue is tried
+  // again on the next wake with anything new added.
+  private async alertChanges(meter: Meter, site: Site): Promise<void> {
+    const changes = unalertedChanges(meter, MAX_LISTED)
+    if (changes.upto === null) return
+    const { upto, ...data } = changes
+    try {
+      await queueAlert(this.env, {
+        userId: site.user_id,
+        type: 'index-changes',
+        site: site.property,
+        data,
+      })
+    } catch {
+      return
+    }
+    markAlerted(meter, upto)
   }
 
   // Properties added in Search Console count from the next wake: the day's

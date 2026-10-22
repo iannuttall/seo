@@ -113,7 +113,9 @@ CREATE TABLE IF NOT EXISTS checks (
   indexed INTEGER,
   pending_drop_at INTEGER,
   transition TEXT,
-  transition_at INTEGER
+  transition_at INTEGER,
+  -- The transition_at an alert last covered (src/alerts).
+  alerted_at INTEGER
 );
 
 -- Checks used per property on the current Search Console day (Pacific
@@ -182,4 +184,5 @@ export const CHECKS_ADDED: [string, string][] = [
   ['pending_drop_at', 'INTEGER'],
   ['transition', 'TEXT'],
   ['transition_at', 'INTEGER'],
+  ['alerted_at', 'INTEGER'],
 ]

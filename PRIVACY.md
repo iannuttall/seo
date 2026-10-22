@@ -44,6 +44,13 @@ Cloudflare D1 with only these things:
   manage your Search Console properties. The server uses it once, to add
   the folders listed on the page, and does not keep that permission or its
   token. It keeps which folders it added and whether Google verified them.
+- **Alerts, for accounts in the weekly-audit beta.** Which alerts you want
+  by email and by webhook, your webhook URL and its signing secret, and
+  each alert sent in the last 30 days: the site, the pages that changed
+  and whether it was delivered. Alert email goes to your first linked
+  Google account's address through PostShiba, our email provider, which
+  receives that address and the alert's text to send it. A webhook gets
+  the same alert at the URL you save.
 - **Your API keys, if you save them.** A DataForSEO login and password, an
   Ahrefs key and a TypeSafe key.
 - **Your Clicky sites, if you save them.** Each site's numeric site ID,

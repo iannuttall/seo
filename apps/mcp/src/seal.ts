@@ -21,6 +21,9 @@ export type Sealed =
   | { k: 'web'; userId: string | null; link?: string; exp: number }
   // The write scope for one click of "Create these in Search Console".
   | { k: 'gsc-write'; userId: string; property: string; exp: number }
+  // The "turn these emails off" link in an alert email. It does not expire,
+  // so an old email's link still works.
+  | { k: 'alert-off'; userId: string; type: string }
   // A Bing sign-in from the account page.
   | { k: 'bing'; userId: string; exp: number }
   | {

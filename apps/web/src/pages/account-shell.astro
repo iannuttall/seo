@@ -363,6 +363,37 @@ const keys: { name: string; label: string; type: 'text' | 'password' }[] = [
           </form>
           <p class={note} data-audit-full hidden></p>
         </div>
+        <div class={panel} id="alerts" data-alerts-panel hidden>
+          <h2 class={heading}>Alerts</h2>
+          <p class={note} data-alerts-to></p>
+          <form method="post" data-action="/account/alerts" class="mt-4 flex flex-col gap-4">
+            <input type="hidden" name="form" />
+            <ul class="divide-y divide-border text-sm" data-alerts-list></ul>
+            <label class="flex flex-col gap-1.5 text-sm font-medium text-foreground">
+              <span>Webhook URL</span>
+              <FormInput name="webhook_url" type="url" autocomplete="off" spellcheck="false" placeholder="https://example.com/hooks/seo" data-alerts-url />
+            </label>
+            <p class="-mt-2 text-sm/6 text-foreground-muted">
+              Optional. Each alert is sent as signed JSON, the same alert as
+              the email. <a class="text-foreground underline" href="https://github.com/iannuttall/seo/blob/main/apps/mcp/README.md#alert-webhooks" target="_blank" rel="noopener">How to read it</a>
+            </p>
+            <div class="flex flex-wrap gap-3">
+              <button type="submit" class={outline}>Save alerts</button>
+            </div>
+          </form>
+          <div class="mt-6" data-alerts-secret hidden>
+            <p class="text-sm/6 text-foreground">
+              Signing secret: check each call's <code>webhook-signature</code> header with it.
+            </p>
+            <CodeBlock value="" wrap class="!mt-2 [--muted:var(--background)]" />
+            <p class={note} data-alerts-last hidden></p>
+            <form method="post" data-action="/account/alerts/secret" class="mt-2">
+              <input type="hidden" name="form" />
+              <button type="submit" class={quiet}>Make a new secret</button>
+            </form>
+          </div>
+          <p class={note} data-alerts-held hidden></p>
+        </div>
       </div>
 
       <div class="mt-10 border-t border-border pt-6" id="delete">
@@ -445,6 +476,22 @@ const keys: { name: string; label: string; type: 'text' | 'password' }[] = [
         </form>
       </li>
     </template>
+    <template data-alert-row>
+      <li class="flex flex-wrap items-start justify-between gap-x-4 gap-y-2 py-2.5">
+        <span class="min-w-0">
+          <span class="block text-foreground" data-alert-title></span>
+          <span class="block text-foreground-muted" data-alert-text></span>
+        </span>
+        <span class="flex shrink-0 gap-4">
+          <label class="flex items-center gap-1.5 text-foreground">
+            <input type="checkbox" class="size-4 accent-primary" data-alert-email /> Email
+          </label>
+          <label class="flex items-center gap-1.5 text-foreground">
+            <input type="checkbox" class="size-4 accent-primary" data-alert-webhook /> Webhook
+          </label>
+        </span>
+      </li>
+    </template>
     <template data-machine-row>
       <li class="flex items-center justify-between gap-4 py-2.5">
         <span class="min-w-0 text-foreground">
@@ -501,6 +548,14 @@ const keys: { name: string; label: string; type: 'text' | 'password' }[] = [
             }[]
           } | null
         }[]
+      }
+      alerts?: {
+        email: string | null
+        types: { id: string; title: string; text: string; email: boolean; webhook: boolean }[]
+        webhookUrl: string | null
+        webhookSecret: string | null
+        webhookLast: { at: number; result: string } | null
+        held: number
       }
       token?: string
       tab?: string
@@ -690,6 +745,57 @@ const keys: { name: string; label: string; type: 'text' | 'password' }[] = [
             const full = root.querySelector('[data-audit-full]')
             if (full) full.textContent = `The beta audits up to ${audit.max} sites. Remove one to add another.`
             show(full)
+          }
+        }
+        const alerts = account.alerts
+        if (alerts) {
+          show(root.querySelector('[data-alerts-panel]'))
+          const to = root.querySelector('[data-alerts-to]')
+          if (to) {
+            to.textContent = alerts.email
+              ? `Alert emails go to ${alerts.email}, one per site each time something changes.`
+              : 'Link a Google account to get alert emails.'
+          }
+          const alertRow = root.querySelector<HTMLTemplateElement>('[data-alert-row]')
+          const alertList = root.querySelector('[data-alerts-list]')
+          for (const type of alerts.types) {
+            const copy = alertRow?.content.cloneNode(true) as DocumentFragment
+            const title = copy.querySelector('[data-alert-title]')
+            if (title) title.textContent = type.title
+            const text = copy.querySelector('[data-alert-text]')
+            if (text) text.textContent = type.text
+            const email = copy.querySelector<HTMLInputElement>('[data-alert-email]')
+            if (email) {
+              email.name = `email:${type.id}`
+              email.checked = type.email
+            }
+            const webhook = copy.querySelector<HTMLInputElement>('[data-alert-webhook]')
+            if (webhook) {
+              webhook.name = `webhook:${type.id}`
+              webhook.checked = type.webhook
+            }
+            alertList?.append(copy)
+          }
+          const url = root.querySelector<HTMLInputElement>('[data-alerts-url]')
+          if (url) url.value = alerts.webhookUrl ?? ''
+          if (alerts.webhookUrl && alerts.webhookSecret) {
+            show(root.querySelector('[data-alerts-secret]'))
+            const value = root.querySelector('[data-alerts-secret] pre code')
+            if (value) value.textContent = alerts.webhookSecret
+            const last = root.querySelector('[data-alerts-last]')
+            if (last && alerts.webhookLast) {
+              const when = new Date(alerts.webhookLast.at).toLocaleString()
+              last.textContent =
+                alerts.webhookLast.result === 'ok'
+                  ? `Last webhook call ${when}: delivered.`
+                  : `Last webhook call ${when}: failed (${alerts.webhookLast.result}).`
+              show(last)
+            }
+          }
+          const held = root.querySelector('[data-alerts-held]')
+          if (held && alerts.held) {
+            held.textContent = `${alerts.held === 1 ? 'One alert email is' : `${alerts.held} alert emails are`} waiting for tomorrow: SEO Skill sends a limited number of emails a day.`
+            show(held)
           }
         }
       } else {

@@ -122,6 +122,12 @@ A small Cloudflare D1 database (`migrations/`) keeps only:
   `pnpm --filter @seo/hosted-mcp beta grant <google email> <flag>` (or
   `revoke`, or `list`); nothing on the account page or in the tools can.
   `src/beta.ts` names the flags, and `betaFlags()` is the one check.
+- for the weekly-audit beta only: the properties an account audits and
+  their schedule and last summary (`audit_sites`), and, in one SQLite
+  Durable Object per account and property (`SiteAudit`, `src/audit`), the
+  last two crawls' pages, findings with their first-seen and resolved dates,
+  and 52 run summaries. Removing the site, or Delete everything, deletes the
+  object's storage.
 - how you signed up, written once when your person id is created: the path
   (MCP client, account page or `seo login`), the MCP client's name and user
   agent or the agent running the CLI, and, if you visited seoskill.dev first
@@ -135,8 +141,8 @@ written. They are used only to fetch your own data when you ask. The token
 your MCP client keeps, and the account page cookie, hold only your sealed
 person id.
 
-There are no reports, Search Console or analytics rows, site lists or
-request logs. Workers Logs are off. Read sign-ups as totals only with
+Outside the weekly-audit beta there are no reports, Search Console or
+analytics rows, site lists or request logs. Workers Logs are off. Read sign-ups as totals only with
 `pnpm --filter @seo/hosted-mcp run signups` (by day, path, client, referring
 site, landing page and `utm_*`). A weekly cron sends the same kind of
 totals for the last 7 days to the maintainer's Telegram chat when

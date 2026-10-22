@@ -13,7 +13,8 @@ keeps your Search Console or analytics data, your reports or a log of your
 requests. When you first sign up it also notes how you found it: the
 sign-in path, the agent or app, and the site that sent you there. The only
 thing kept about your use is an anonymous usage count (the event, report,
-agent, version and week).
+agent, version and week). Accounts in the weekly site audit beta also have
+their audited sites' crawl results kept, as described below.
 
 The command-line tool runs on your machine. It does not create an SEO
 account, upload reports to a hosted SEO service, or send reports or connected
@@ -83,7 +84,27 @@ it. The token your MCP client keeps carries only your person id.
 
 The server keeps nothing else. It does not keep reports, Search Console
 or Google Analytics rows, lists of your sites, or the pages it checked.
-Request logs are turned off.
+Request logs are turned off. The one exception is the weekly site audit
+beta, below, and only for the sites you add to it.
+
+### Weekly site audit (beta)
+
+The maintainer turns this beta on for chosen accounts; no one else has it.
+For each Search Console property you add on the account page, the server
+crawls the site once a week, up to 5,000 pages, as `SEOSkillBot`, and
+follows the site's `robots.txt`. It keeps, per site:
+
+- the property name, when you added it and when the next crawl is due;
+- the latest crawl and the one before it: each page's URL, status,
+  redirect target, title, description, first heading, canonical, robots
+  settings, word count and the internal links on it with their link text;
+- the findings worked out from them (such as broken links or missing
+  titles), with when each was first seen and resolved; resolved findings
+  are removed after 90 days;
+- a one-line summary of each of the last 52 crawls (counts only).
+
+Remove a site on the account page and all of this is deleted at once.
+Delete everything deletes it for every site.
 
 - **Your data.** Search Console, Google Analytics, Clicky and provider responses are
   fetched for each request, returned to your MCP client and not kept. Pages checked live are fetched for the request and not kept.
@@ -112,7 +133,8 @@ Request logs are turned off.
 
 Sign in at [seoskill.dev/account](https://seoskill.dev/account) and choose
 **Delete everything**. It deletes your person id, linked accounts, keys,
-Clicky sites, linked machines, beta features and how you signed up,
+Clicky sites, linked machines, beta features, audited sites with their
+crawl data and how you signed up,
 and revokes the Google sign-ins. Your agents will ask you to sign in again if
 you use the hosted server later. You can also revoke SEO Skill in your
 [Google Account connections](https://myaccount.google.com/connections), which

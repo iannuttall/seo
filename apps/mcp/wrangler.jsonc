@@ -2,7 +2,8 @@
   "$schema": "./node_modules/wrangler/config-schema.json",
   // The hosted MCP. D1 keeps only linked Google and Bing sign-ins and
   // research keys, sealed with SEAL_KEY, and how each person signed up.
-  // No report data and no logs.
+  // No report data and no logs, except the weekly-audit beta's crawl
+  // results for the sites a granted account adds (src/audit).
   "name": "seo-mcp",
   "main": "./src/index.ts",
   "account_id": "ab5ec097e2579c5f3639612c755e6f15",
@@ -45,10 +46,17 @@
       "database_id": "4b8c5f37-983d-4229-a712-77dbcd853efe"
     }
   ],
+  // The weekly-audit beta: one SQLite Durable Object per person and
+  // Search Console property (src/audit).
+  "durable_objects": {
+    "bindings": [{ "name": "SITE_AUDIT", "class_name": "SiteAudit" }]
+  },
+  "migrations": [{ "tag": "v1", "new_sqlite_classes": ["SiteAudit"] }],
   // No Workers Logs: the server keeps no logs of requests or user data.
   "observability": { "enabled": false },
   // Mondays 08:00 UTC: the week's sign-up and failure counts to Telegram.
-  "triggers": { "crons": ["0 8 * * 1"] }
+  // Hourly at :17: start the weekly audits that are due.
+  "triggers": { "crons": ["0 8 * * 1", "17 * * * *"] }
   // Secrets: GOOGLE_CLIENT_ID, GOOGLE_CLIENT_SECRET, SEAL_KEY, AHREFS_DR_KEY,
   // BING_CLIENT_ID, BING_CLIENT_SECRET, and optionally TELEGRAM_BOT_TOKEN and
   // TELEGRAM_CHAT_ID for the weekly sign-up and failure counts.

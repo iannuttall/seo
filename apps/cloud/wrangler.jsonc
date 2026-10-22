@@ -1,0 +1,31 @@
+{
+  "$schema": "./node_modules/wrangler/config-schema.json",
+  // Proof of concept for the hosted crawler and weekly audit. Not deployed.
+  // One SQLite Durable Object per site does the crawl; D1 holds the schedule
+  // and one summary row per site.
+  "name": "seo-cloud-poc",
+  "main": "./src/index.ts",
+  "compatibility_date": "2026-07-15",
+  "compatibility_flags": ["nodejs_compat"],
+  "workers_dev": false,
+  "preview_urls": false,
+  "limits": { "cpu_ms": 60000 },
+  // The fixture's stand-in for Google's URL Inspection API, locally.
+  "vars": { "INSPECT_API": "http://127.0.0.1:8788/__inspect" },
+  "d1_databases": [
+    {
+      "binding": "DB",
+      "database_name": "seo-cloud-poc",
+      "database_id": "00000000-0000-0000-0000-000000000000",
+      "migrations_dir": "migrations"
+    }
+  ],
+  "durable_objects": {
+    "bindings": [{ "name": "SITE", "class_name": "SiteCrawler" }]
+  },
+  "migrations": [{ "tag": "v1", "new_sqlite_classes": ["SiteCrawler"] }],
+  "observability": { "enabled": false },
+  // Hourly: start the weekly runs that are due.
+  "triggers": { "crons": ["7 * * * *"] }
+  // Secret: POC_TOKEN, required on every request.
+}

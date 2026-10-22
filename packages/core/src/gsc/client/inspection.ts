@@ -8,7 +8,10 @@ import {
   finalizeUrlInspectionQuota,
   readUrlInspectionQuota,
   reserveUrlInspectionQuota,
+  URL_INSPECTION_DAILY_LIMIT,
   UrlInspectionQuotaError,
+  type UrlInspectionQuotaReservation,
+  urlInspectionQuotaResetAt,
 } from './inspection-quota.js'
 import type { UrlInspectionRequest, UrlInspectionResult } from './types.js'
 
@@ -78,6 +81,36 @@ export async function urlInspectionQuota(input: {
   })
 }
 
+// The local count of inspections is best-effort, like the rest of the
+// cache. When the cache file cannot be used (another run holds its lock,
+// the disk is full), the inspection goes ahead uncounted and Google's own
+// 429 is the limit. A refusal from the count, or a bad limit, still stops
+// the run.
+function reserveOrSkip(
+  input: Parameters<typeof reserveUrlInspectionQuota>[0],
+): UrlInspectionQuotaReservation | undefined {
+  try {
+    return reserveUrlInspectionQuota(input)
+  } catch (error) {
+    if (error instanceof SeoError) throw error
+    return undefined
+  }
+}
+
+function finalize(
+  reservation: UrlInspectionQuotaReservation | undefined,
+  outcome: 'consumed' | 'exhausted',
+  blockedUntil?: Date,
+  now?: Date,
+): void {
+  if (!reservation) return
+  try {
+    finalizeUrlInspectionQuota({ reservation, outcome, blockedUntil, now })
+  } catch {
+    // The reservation expires on its own after a few minutes.
+  }
+}
+
 export async function inspectUrl(
   input: UrlInspectionRequest,
 ): Promise<UrlInspectionResult> {
@@ -88,7 +121,7 @@ export async function inspectUrl(
   const { client, quotaIdentity } = await getAuthorized(
     input.accountEmail ?? (await cloudAccountFor(input.siteUrl)),
   )
-  const reservation = reserveUrlInspectionQuota({
+  const reservation = reserveOrSkip({
     credentialKey: credentialKey(quotaIdentity),
     property: input.siteUrl,
     limit: input.quotaLimit,
@@ -109,7 +142,7 @@ export async function inspectUrl(
       },
     )
   } catch (error) {
-    finalizeUrlInspectionQuota({ reservation, outcome: 'consumed' })
+    finalize(reservation, 'consumed')
     if (error instanceof SeoError) throw error
     throw new SeoError(
       'PROVIDER_UNAVAILABLE',
@@ -120,23 +153,23 @@ export async function inspectUrl(
   if (response.status === 429) {
     const now = new Date()
     const blockedUntil = retryAfter(response, now)
-    finalizeUrlInspectionQuota({
-      reservation,
-      outcome: 'exhausted',
-      blockedUntil,
-      now,
-    })
+    finalize(reservation, 'exhausted', blockedUntil, now)
     throw new UrlInspectionQuotaError({
       property: input.siteUrl,
-      resetAt: (blockedUntil ?? new Date(reservation.resetAt)).toISOString(),
-      used: reservation.used + reservation.count,
-      limit: reservation.limit,
+      resetAt: (
+        blockedUntil ??
+        (reservation
+          ? new Date(reservation.resetAt)
+          : urlInspectionQuotaResetAt(now))
+      ).toISOString(),
+      used: reservation ? reservation.used + reservation.count : 0,
+      limit: reservation?.limit ?? URL_INSPECTION_DAILY_LIMIT,
       reason: 'provider',
       requestSent: true,
     })
   }
 
-  finalizeUrlInspectionQuota({ reservation, outcome: 'consumed' })
+  finalize(reservation, 'consumed')
   if (!response.ok) throw inspectionResponseError(response, input)
   return (await readJson(response, 'URL Inspection')) as UrlInspectionResult
 }

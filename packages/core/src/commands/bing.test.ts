@@ -94,7 +94,12 @@ function deps(bing: CommandDeps['bing']): CommandDeps {
   return {
     searchAnalytics: google,
     checkPages: async () => [],
-    inspect: async () => null,
+    liveCheck: async () => {
+      throw new Error('not used')
+    },
+    inspect: async () => {
+      throw new Error('not used')
+    },
     call: mcpCall,
     bing,
     bingConnect: 'Connect Bing here.',

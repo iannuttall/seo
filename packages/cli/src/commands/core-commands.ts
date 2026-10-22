@@ -266,7 +266,7 @@ export const indexCommand = defineCommand({
   meta: {
     name: 'index',
     description:
-      'Pages that lost most of their clicks, checked live and with URL Inspection',
+      'Google indexing reasons for known URLs, checked live, and pages that lost most of their clicks',
   },
   args: {
     site: {
@@ -274,6 +274,7 @@ export const indexCommand = defineCommand({
       description: 'Site, URL or Search Console property.',
     },
     ...dates,
+    ...detail,
     ...common,
   },
   run: async ({ args }) => {
@@ -284,6 +285,8 @@ export const indexCommand = defineCommand({
           site,
           startDate: stringArg(args['start-date']),
           endDate: stringArg(args['end-date']),
+          detail: detailArg(args),
+          offset: numberArg(args.offset),
         },
         deps,
       ),

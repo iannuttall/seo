@@ -294,6 +294,39 @@ export function reserveUrlInspectionQuota(input: {
   return result.reservation
 }
 
+// Inspections this machine has used or reserved today for one sign-in and
+// property, against the daily limit. Read-only.
+export function readUrlInspectionQuota(input: {
+  credentialKey: string
+  property: string
+  now?: Date
+  database?: Database.Database
+}): { used: number; limit: number; resetAt: string } {
+  const database = input.database ?? getDb()
+  const now = input.now ?? new Date()
+  const bucket = database
+    .prepare(
+      `SELECT limit_count, used_count, reserved_count, blocked_until
+      FROM url_inspection_quota_buckets
+      WHERE credential_key = ? AND property_site_url = ? AND quota_date = ?`,
+    )
+    .get(input.credentialKey, input.property, urlInspectionQuotaDate(now)) as
+    | BucketRow
+    | undefined
+  const limit = bucket?.limit_count ?? URL_INSPECTION_DAILY_LIMIT
+  const blocked = (bucket?.blocked_until ?? 0) > now.getTime()
+  return {
+    used: blocked
+      ? limit
+      : Math.min(
+          limit,
+          (bucket?.used_count ?? 0) + (bucket?.reserved_count ?? 0),
+        ),
+    limit,
+    resetAt: urlInspectionQuotaResetAt(now).toISOString(),
+  }
+}
+
 export function finalizeUrlInspectionQuota(input: {
   reservation: UrlInspectionQuotaReservation
   outcome: 'consumed' | 'exhausted' | 'released'

@@ -6,6 +6,7 @@ import { assertUrlMatchesGscProperty } from '../property-url.js'
 import { authedFetch, getAuthorized } from './fetch.js'
 import {
   finalizeUrlInspectionQuota,
+  readUrlInspectionQuota,
   reserveUrlInspectionQuota,
   UrlInspectionQuotaError,
 } from './inspection-quota.js'
@@ -60,6 +61,21 @@ function inspectionResponseError(
     'PROVIDER_UNAVAILABLE',
     `URL Inspection failed with ${response.status}.`,
   )
+}
+
+// URL Inspections this machine has used today for a property, and the
+// daily limit. Google also counts inspections from other tools.
+export async function urlInspectionQuota(input: {
+  siteUrl: string
+  accountEmail?: string
+}) {
+  const { quotaIdentity } = await getAuthorized(
+    input.accountEmail ?? (await cloudAccountFor(input.siteUrl)),
+  )
+  return readUrlInspectionQuota({
+    credentialKey: credentialKey(quotaIdentity),
+    property: input.siteUrl,
+  })
 }
 
 export async function inspectUrl(

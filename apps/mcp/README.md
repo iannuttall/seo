@@ -79,7 +79,7 @@ repository.
 | `seo_report` | The main report. Without a section: the overview plus each section's count and top rows. Sections: overview, quick-wins, low-ctr, striking-distance, second-page, content-decay, cannibalization, traffic-drop. Page sections check their top 20 URLs live and merge same-site redirects. |
 | `seo_page` | One URL: live page facts, Google index status and its queries against the previous period. The page's main content as Markdown is CLI and local server only; with detail `full` this server says how to get it. |
 | `seo_compare` | Equal periods before and after a date, for the site or URLs that contain some text, with Google updates |
-| `seo_index` | Pages that lost most of their clicks, checked live and with URL Inspection |
+| `seo_index` | Google's indexing reasons for up to 100 known URLs a run, checked live and labelled, and pages that lost most of their clicks |
 | `seo_research` | Keyword metrics, ranked keywords, SERPs, competitors and backlinks from DataForSEO or Ahrefs, with a free Ahrefs Domain Rating column |
 | `seo_data` | Raw Search Console rows, search landing pages from Google Analytics, or Clicky visits by landing page with traffic sources and search engines. |
 

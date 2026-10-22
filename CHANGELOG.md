@@ -1,5 +1,26 @@
 # Changelog
 
+## Unreleased
+
+### Added
+
+- `seo index` explains Google's page indexing reasons. Search Console's
+  Page indexing report has no API, so it inspects up to 100 known URLs a
+  run (pages that lost clicks, the home page, the sitemap, then Search
+  Console pages by impressions) within the URL Inspection quota left, and
+  says how many it inspected out of how many it knows and what stopped it.
+  Rows are grouped by Google's exact reason and sorted by reason then URL,
+  so a weekly result can be compared with the last one. Each URL shows its
+  live status and redirects (permanent or temporary, followed to the final
+  URL), the declared and Google canonicals, referring URLs, whether the
+  sitemap lists it and the last crawl, with a label (fix, check, expected
+  or indexed) and the evidence for it. It takes `--detail` and `--offset`
+  like the other commands, and runs the same in the CLI, the local MCP and
+  the hosted MCP.
+- `seo page` follows redirects to the final URL, shows Google's reason with
+  its label, and adds the fetch state, robots.txt state, crawler, referring
+  URLs and sitemaps from URL Inspection.
+
 ## 0.11.0
 
 ### Added

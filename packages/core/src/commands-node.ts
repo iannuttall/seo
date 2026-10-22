@@ -14,13 +14,13 @@ import type {
   CommandDeps,
   CommandErrorCode,
   GoogleAccount,
-  IndexStatus,
 } from './commands/index.js'
 import {
   CLICKY_KEY_PREFIX,
   CommandError,
   checkPages,
   indexStatusFrom,
+  liveCheck,
   matchProperty,
 } from './commands/index.js'
 import { typesafeDecisionModel } from './decision-model.js'
@@ -33,7 +33,7 @@ import {
   googleFetchFor,
   LOCAL_SIGN_IN,
 } from './gsc/client/fetch.js'
-import { inspectUrl } from './gsc/client/inspection.js'
+import { inspectUrl, urlInspectionQuota } from './gsc/client/inspection.js'
 import { querySearchAnalytics } from './gsc/client/search-analytics.js'
 import { listSites } from './gsc/client/sites.js'
 import { readAhrefsApiKey } from './providers/ahrefs/credentials.js'
@@ -56,19 +56,17 @@ export function nodeCommandDeps(options: {
         accountEmail: options.account,
       }),
     checkPages,
-    inspect: async (site, url): Promise<IndexStatus | null> => {
-      try {
-        return indexStatusFrom(
-          await inspectUrl({
-            siteUrl: site,
-            inspectionUrl: url,
-            accountEmail: options.account,
-          }),
-        )
-      } catch {
-        return null
-      }
-    },
+    liveCheck,
+    inspect: async (site, url) =>
+      indexStatusFrom(
+        await inspectUrl({
+          siteUrl: site,
+          inspectionUrl: url,
+          accountEmail: options.account,
+        }),
+      ),
+    inspectionQuota: (site) =>
+      urlInspectionQuota({ siteUrl: site, accountEmail: options.account }),
     pageMarkdown: async (url) =>
       extractMainMarkdown(await fetchPage(url, { refresh: options.refresh })),
     call: options.call,

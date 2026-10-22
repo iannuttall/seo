@@ -78,7 +78,7 @@ export const docsSections = [
         path: '/docs/indexing',
         label: 'seo index',
         description:
-          'Pages that lost their clicks, checked live and with URL Inspection.',
+          'Why Google does or does not index your pages, checked live, and pages that lost their clicks.',
       },
       {
         path: '/docs/research',

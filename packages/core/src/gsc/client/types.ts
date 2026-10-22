@@ -68,6 +68,7 @@ export interface UrlInspectionResult {
       googleCanonical?: string
       userCanonical?: string
       referringUrls?: string[]
+      sitemap?: string[]
       crawledAs?: string
     }
     mobileUsabilityResult?: unknown

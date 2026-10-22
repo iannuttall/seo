@@ -1,4 +1,9 @@
-import { account, accountCallback, bingCallback } from './account.ts'
+import {
+  account,
+  accountCallback,
+  bingCallback,
+  propertiesCallback,
+} from './account.ts'
 import { startDue } from './audit/schedule.ts'
 import { betaFlags } from './beta.ts'
 import { credentials, finishLogin, logout, startLogin } from './cli.ts'
@@ -16,6 +21,7 @@ import {
   token,
   userOf,
 } from './oauth.ts'
+import { unseal } from './seal.ts'
 import { sendSignupReport, sendTelegram } from './signup-report.ts'
 import { accountsOf, keysOf } from './store.ts'
 
@@ -74,6 +80,12 @@ async function route(
     return toGoogle(request, env)
   }
   if (pathname === '/oauth/callback' && method === 'GET') {
+    const write = await unseal(
+      env.SEAL_KEY,
+      new URL(request.url).searchParams.get('state'),
+      'gsc-write',
+    )
+    if (write) return propertiesCallback(request, env, write)
     return callback(request, env, (req, state) =>
       accountCallback(req, env, state),
     )

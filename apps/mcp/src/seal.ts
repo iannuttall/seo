@@ -19,6 +19,8 @@ export type Sealed =
   // A Google sign-in from the account page: to sign in, or to link another
   // account to a signed-in person.
   | { k: 'web'; userId: string | null; link?: string; exp: number }
+  // The write scope for one click of "Create these in Search Console".
+  | { k: 'gsc-write'; userId: string; property: string; exp: number }
   // A Bing sign-in from the account page.
   | { k: 'bing'; userId: string; exp: number }
   | {

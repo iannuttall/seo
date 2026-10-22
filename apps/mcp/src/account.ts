@@ -11,6 +11,11 @@ import {
   listBingSites,
 } from '@seo/core/commands'
 import {
+  addProperties,
+  recordAdded,
+  writeSignInUrl,
+} from './audit/properties.ts'
+import {
   addAuditSite,
   auditSites,
   MAX_SITES,
@@ -177,6 +182,7 @@ async function accountPage(
                       open: site.openFindings,
                       new: site.newFindings,
                       error: site.lastError,
+                      coverage: site.coverage,
                     })),
                   },
                 }
@@ -414,6 +420,33 @@ export async function account(
         { tab: 'beta', ok: added !== 'full' },
       )
     }
+    // Create the suggested folders as Search Console properties: ask for the
+    // write scope now, for the Google account that reads the site.
+    case '/account/audit/properties': {
+      if (!(await betaFlags(env, userId)).has('weekly-audit')) break
+      const property = field('property')
+      const site = (await auditSites(env, userId)).find(
+        (item) => item.property === property,
+      )
+      const owner = site?.coverage?.suggestions.some((item) => !item.added)
+        ? await directory(env, await accountsOf(env, userId))
+            .owner(property)
+            .catch(() => null)
+        : null
+      if (!owner) return redirect(`${home}#weekly-audit`)
+      return redirect(
+        writeSignInUrl(
+          env,
+          await seal(env.SEAL_KEY, {
+            k: 'gsc-write',
+            userId,
+            property,
+            exp: Date.now() + STATE_TTL,
+          }),
+          owner.email,
+        ),
+      )
+    }
     case '/account/audit/remove':
       await removeAuditSite(env, userId, field('property'))
       return redirect(`${home}#beta`)
@@ -531,4 +564,53 @@ async function bingLabel(access: string): Promise<string> {
   return verified.length > 1
     ? `${first} and ${verified.length - 1} more`
     : first
+}
+
+// Google sends the write-scope sign-in back here: add each folder still to
+// add, then show what Google says about each.
+export async function propertiesCallback(
+  request: Request,
+  env: Env,
+  state: Extract<Sealed, { k: 'gsc-write' }>,
+): Promise<Response> {
+  const home = `${env.PUBLIC_URL}/account`
+  const userId = await sessionUser(request, env)
+  if (userId !== state.userId) {
+    return signInPage(env, 'Your session ended. Sign in again.')
+  }
+  const code = new URL(request.url).searchParams.get('code')
+  const site = (await auditSites(env, userId)).find(
+    (item) => item.property === state.property,
+  )
+  if (
+    !code ||
+    !site?.coverage ||
+    !(await betaFlags(env, userId)).has('weekly-audit')
+  ) {
+    return redirect(`${home}#weekly-audit`)
+  }
+  const wanted = site.coverage.suggestions
+    .filter((item) => !item.added)
+    .map((item) => item.property)
+  const added = await addProperties(env, code, wanted)
+  if (added === 'no-scope') {
+    return accountPage(
+      env,
+      userId,
+      'Google did not give permission to add properties, so nothing was added.',
+      { tab: 'beta' },
+    )
+  }
+  await recordAdded(env, userId, state.property, site.coverage, added)
+  const lines = added.map((item) =>
+    item.state === 'verified'
+      ? `${item.property}: added and verified.`
+      : item.state === 'unverified'
+        ? `${item.property}: added, not verified. Verify it in Search Console before it can check URLs.`
+        : `${item.property}: not added (${item.error}).`,
+  )
+  return accountPage(env, userId, lines.join(' '), {
+    tab: 'beta',
+    ok: added.every((item) => item.state === 'verified'),
+  })
 }

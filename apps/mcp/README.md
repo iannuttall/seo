@@ -137,7 +137,8 @@ totals for the last 7 days to the maintainer's Telegram chat when
 it never sends a row for one person. The same cron reads the site's
 anonymous usage events (the `seo-telemetry` D1, SELECT only) and sends the
 week's failed runs as totals by version, split into expected states, network
-or provider trouble and errors (`src/failure-report.ts`). **Delete everything** on the account page
+or provider trouble and errors, plus the week's installs and first audits
+and day 7 retention by install week (`src/failure-report.ts`). **Delete everything** on the account page
 removes every row for you and revokes the Google sign-ins, so your agents
 ask you to sign in again. You can also remove access in your
 [Google account](https://myaccount.google.com/connections).

@@ -231,24 +231,14 @@ export type Stats = {
   }
   totals: {
     installs: number
-    setupCompletions: number
     firstAuditCompletions: number
-    auditsStarted: number
     auditsCompleted: number
     auditsThisMonth: number
-    firstAuditConversionPercent: number | null
   }
   agents: {
     installs: Array<{ agent: string; count: number; percent: number }>
     audits: Array<{ agent: string; count: number; percent: number }>
   }
-  retentionD7: Array<{
-    cohort: string
-    installs: number
-    retained: number
-    percent: number | null
-    complete: boolean
-  }>
   reports: Array<{ report: string; count: number }>
 }
 
@@ -514,24 +504,11 @@ function distribution(
     .sort((a, b) => b.count - a.count || a.agent.localeCompare(b.agent))
 }
 
-function cohortStart(cohort: string): Date | undefined {
-  const match = /^(\d{4})-W(\d{2})$/.exec(cohort)
-  if (!match) return undefined
-  const year = Number(match[1])
-  const week = Number(match[2])
-  const januaryFourth = new Date(Date.UTC(year, 0, 4))
-  const weekday = januaryFourth.getUTCDay() || 7
-  januaryFourth.setUTCDate(januaryFourth.getUTCDate() - weekday + 1)
-  januaryFourth.setUTCDate(januaryFourth.getUTCDate() + (week - 1) * 7)
-  return januaryFourth
-}
-
 export function aggregateStats(
   input: {
     events: StatsRow[]
     month: StatsRow[]
     agents: StatsRow[]
-    cohorts: StatsRow[]
     reports: StatsRow[]
   },
   now = new Date(),
@@ -539,17 +516,6 @@ export function aggregateStats(
   const eventCounts = new Map(
     input.events.map((row) => [rowString(row, 'event'), rowCount(row)]),
   )
-  const cohortCounts = new Map<string, { installs: number; retained: number }>()
-  for (const row of input.cohorts) {
-    const cohort = rowString(row, 'cohort')
-    const current = cohortCounts.get(cohort) ?? { installs: 0, retained: 0 }
-    if (rowString(row, 'event') === 'first_run')
-      current.installs += rowCount(row)
-    if (rowString(row, 'event') === 'active_d7')
-      current.retained += rowCount(row)
-    cohortCounts.set(cohort, current)
-  }
-
   const installs = eventCounts.get('first_run') ?? 0
   const firstAuditCompletions = eventCounts.get('first_audit_complete') ?? 0
   const firstMonth = input.events
@@ -566,34 +532,14 @@ export function aggregateStats(
     },
     totals: {
       installs,
-      setupCompletions: eventCounts.get('setup_complete') ?? 0,
       firstAuditCompletions,
-      auditsStarted: eventCounts.get('audit_start') ?? 0,
       auditsCompleted: eventCounts.get('audit_complete') ?? 0,
       auditsThisMonth: input.month.reduce((sum, row) => sum + rowCount(row), 0),
-      firstAuditConversionPercent: percentage(firstAuditCompletions, installs),
     },
     agents: {
       installs: distribution(input.agents, 'first_run'),
       audits: distribution(input.agents, 'audit_start'),
     },
-    retentionD7: [...cohortCounts.entries()]
-      .filter(([, counts]) => counts.installs > 0)
-      .map(([cohort, counts]) => {
-        const start = cohortStart(cohort)
-        const complete = Boolean(
-          start && now.getTime() >= start.getTime() + 14 * 86_400_000,
-        )
-        return {
-          cohort,
-          ...counts,
-          percent: complete
-            ? percentage(counts.retained, counts.installs)
-            : null,
-          complete,
-        }
-      })
-      .sort((a, b) => b.cohort.localeCompare(a.cohort)),
     reports: reportIds
       .map((report) => ({
         report,
@@ -791,12 +737,6 @@ async function liveStats(env: Env): Promise<Stats & { timeline: Timeline }> {
        GROUP BY event, agent`,
     ),
     env.TELEMETRY_DB.prepare(
-      `SELECT event, cohort, COUNT(*) AS count
-       FROM telemetry_events
-       WHERE event IN ('first_run', 'active_d7')
-       GROUP BY event, cohort`,
-    ),
-    env.TELEMETRY_DB.prepare(
       `SELECT report, COUNT(*) AS count
        FROM telemetry_events
        WHERE event = 'audit_start'
@@ -821,8 +761,9 @@ async function liveStats(env: Env): Promise<Stats & { timeline: Timeline }> {
        WHERE day >= ?1`,
     ).bind(sinceDay),
   ])
-  const [events, month, agents, cohorts, reports, daily, monthly, skills] =
-    results.map((result) => result.results)
+  const [events, month, agents, reports, daily, monthly, skills] = results.map(
+    (result) => result.results,
+  )
   // Every account counts toward the total; the chart shows the last 90 days.
   const signups = await env.ACCOUNTS_DB.prepare(
     `SELECT date(created_at / 1000, 'unixepoch') AS day, COUNT(*) AS count
@@ -837,7 +778,6 @@ async function liveStats(env: Env): Promise<Stats & { timeline: Timeline }> {
       events,
       month,
       agents,
-      cohorts,
       reports,
     }),
     timeline: timeline({ daily, monthly, skills, signups }),

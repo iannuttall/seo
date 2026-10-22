@@ -545,7 +545,9 @@ async function allSections(
   if (bingFirst) parts.push(bingFirst.text)
   const ga = await analytics
   if (ga) parts.push(ga.text)
-  const audit = deps.audit ? auditPreview(await deps.audit(input.site)) : null
+  const audit = deps.audit
+    ? auditPreview(await deps.audit.snapshot(input.site))
+    : null
   const brand = rest.find(
     (run): run is Record<string, unknown> =>
       !(run instanceof Error) && brandNote(run) !== null,
@@ -734,9 +736,9 @@ export function runReport(
         `The ${AUDIT_SECTION} section is not available here.`,
       )
     }
-    return audit(input.site).then((snapshot) =>
-      runAuditReport(input, snapshot, deps.call),
-    )
+    return audit
+      .snapshot(input.site)
+      .then((snapshot) => runAuditReport(input, snapshot, deps.call))
   }
   return input.section
     ? oneSection({ ...input, section: input.section }, deps)

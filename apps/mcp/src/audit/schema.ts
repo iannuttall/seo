@@ -1,7 +1,8 @@
 // The site object's tables. Two kinds:
 //
 // Kept between runs, small and capped: the site, the current run, run
-// history (52 runs) and findings (resolved ones removed after 90 days).
+// history (52 runs), findings (resolved ones removed after 90 days) and the
+// store of Google URL Inspection results.
 //
 // Disposable, one crawl only: pages and sitemaps. A new run renames pages to
 // pages_prev (for "what changed since last week") and drops the older
@@ -68,6 +69,63 @@ CREATE TABLE IF NOT EXISTS findings (
   first_seen_at INTEGER NOT NULL,
   reopened_at INTEGER,
   resolved_at INTEGER
+);
+
+-- The site's one store of Google URL Inspection results. Every hosted call
+-- that inspects a URL of this site (the daily checks, seo index, seo page)
+-- reads it first and writes its answer here. Known URLs come from the
+-- sitemap and the weekly crawl (up to 50,000) and from Search Console pages
+-- with clicks or impressions (up to 25,000 a 28-day window). A result is
+-- fresh for 7 days, or until the weekly crawl sees the page change (live).
+CREATE TABLE IF NOT EXISTS checks (
+  url TEXT PRIMARY KEY,
+  in_sitemap INTEGER NOT NULL DEFAULT 0,
+  -- The last crawl that found it; a complete crawl drops URLs it did not
+  -- find that have no Search Console clicks or impressions.
+  seen_run TEXT,
+  -- Search Console, refreshed once a day: the last 28 days, the 28 before,
+  -- and whether the page lost its clicks (the seo index rule).
+  clicks INTEGER NOT NULL DEFAULT 0,
+  impressions INTEGER NOT NULL DEFAULT 0,
+  prev_clicks INTEGER NOT NULL DEFAULT 0,
+  lost INTEGER NOT NULL DEFAULT 0,
+  -- Status, redirect, canonical and noindex at the last crawl, and when
+  -- they last changed.
+  live TEXT,
+  live_changed_at INTEGER,
+  checked_at INTEGER,
+  -- The Search Console property whose quota checked it.
+  property TEXT,
+  verdict TEXT,
+  coverage TEXT,
+  -- Google's indexStatusResult as JSON, capped.
+  result TEXT,
+  -- Google's reason before it last changed, and when it changed.
+  prev_coverage TEXT,
+  changed_at INTEGER,
+  error TEXT
+);
+
+-- Checks used per property on the current Search Console day (Pacific
+-- time); other days' rows are removed once a day.
+CREATE TABLE IF NOT EXISTS quota (
+  property TEXT NOT NULL,
+  day TEXT NOT NULL,
+  used INTEGER NOT NULL,
+  PRIMARY KEY (property, day)
+);
+
+-- One row: the properties that check this site's URLs, the folders worth
+-- adding as properties (both worked out once a day), why checks last
+-- stopped, and when the checks wake next.
+CREATE TABLE IF NOT EXISTS check_state (
+  id INTEGER PRIMARY KEY CHECK (id = 1),
+  day TEXT,
+  properties TEXT,
+  suggestions TEXT,
+  stopped TEXT,
+  next_at INTEGER,
+  updated_at INTEGER
 );
 `
 

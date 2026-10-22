@@ -1,4 +1,4 @@
-import type { AuditSnapshot } from '@seo/core/commands'
+import type { AuditAccess } from '@seo/core/commands'
 
 // The weekly-audit schedule in D1: add and remove a site, list an account's
 // sites without waking their objects, and the hourly cron that starts the
@@ -136,18 +136,50 @@ export async function removeAllAuditSites(
   }
 }
 
-export async function auditSnapshot(
+// The audit as the tools read it, for an account in the beta. A site that
+// is not audited has no object, and asking would create one, so D1 is
+// checked first (once per site per request).
+export function auditAccess(
   env: Env,
   userId: string,
-  property: string,
-): Promise<AuditSnapshot | null> {
-  // A site that is not audited has no object; asking would create one.
-  const row = await env.DB.prepare(
-    'SELECT 1 AS n FROM audit_sites WHERE user_id = ? AND property = ?',
-  )
-    .bind(userId, property)
-    .first()
-  return row ? siteObject(env, userId, property).snapshot() : null
+): AuditAccess & {
+  // One URL's Google result through the site's store (null when the
+  // property has no checks left today), or null when the site is not
+  // audited.
+  inspect(
+    property: string,
+    url: string,
+  ): Promise<{ result: unknown | null } | null>
+} {
+  const seen = new Map<string, Promise<boolean>>()
+  const audited = (property: string) => {
+    let found = seen.get(property)
+    if (!found) {
+      found = env.DB.prepare(
+        'SELECT 1 AS n FROM audit_sites WHERE user_id = ? AND property = ?',
+      )
+        .bind(userId, property)
+        .first()
+        .then(Boolean)
+      seen.set(property, found)
+    }
+    return found
+  }
+  const object = (property: string) => siteObject(env, userId, property)
+  return {
+    snapshot: async (property) =>
+      (await audited(property)) ? object(property).snapshot() : null,
+    checks: async (property, offset, limit) =>
+      (await audited(property)) ? object(property).checks(offset, limit) : null,
+    add: async (property) => {
+      seen.delete(property)
+      return addAuditSite(env, userId, property)
+    },
+    inspect: async (property, url) =>
+      (await audited(property))
+        ? { result: await object(property).inspect(url) }
+        : null,
+  }
 }
 
 // Starts one site's run and moves its schedule only once the object said

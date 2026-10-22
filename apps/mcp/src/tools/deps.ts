@@ -1,11 +1,12 @@
 import {
   type CommandDeps,
+  CommandError,
   checkPages,
   indexStatusFrom,
   liveCheck,
   mcpCall,
 } from '@seo/core/commands'
-import { auditSnapshot } from '../audit/schedule.ts'
+import { auditAccess } from '../audit/schedule.ts'
 import { accountUrl, signInHint } from '../google.ts'
 import type { ToolContext } from './registry.ts'
 
@@ -24,19 +25,31 @@ export function deps({
   directory,
   beta,
 }: Pick<ToolContext, 'env' | 'userId' | 'directory' | 'beta'>): CommandDeps {
+  const audit = beta.has('weekly-audit') ? auditAccess(env, userId) : null
   return {
     searchAnalytics: directory.searchAnalytics(),
     checkPages,
     liveCheck,
-    inspect: (site, url) => directory.inspect(site, url).then(indexStatusFrom),
+    // An audited site's URLs go through its store of results, so a fresh
+    // one is never inspected again. A property with no checks left today
+    // stops the run like Google's own quota does.
+    inspect: async (site, url) => {
+      const stored = audit ? await audit.inspect(site, url) : null
+      if (!stored) return indexStatusFrom(await directory.inspect(site, url))
+      if (stored.result === null) {
+        throw new CommandError(
+          'RATE_LIMITED',
+          `This server has used today's URL Inspection quota for ${site}.`,
+        )
+      }
+      return indexStatusFrom(stored.result)
+    },
     call: mcpCall,
     analytics: {
       accounts: async () => directory.accounts(),
       signIn: signInHint(env),
     },
-    ...(beta.has('weekly-audit')
-      ? { audit: (site: string) => auditSnapshot(env, userId, site) }
-      : {}),
+    ...(audit ? { audit } : {}),
     ...(HOSTED_BING
       ? {
           bing: async () => directory.bing,

@@ -33,7 +33,15 @@ Sign in with Google at `https://seoskill.dev/account` to:
 
 An account in the weekly-audit beta also gets a `weekly-audit` section in
 `seo_report` for the sites it audits, with what is new, back or resolved
-since the crawl before. Every other account sees the tools unchanged.
+since the crawl before. Its `seo_index` answers at once from the site's
+stored URL Inspection results, which the server keeps up to date in the
+background (pages that lost their clicks first, then by clicks and
+impressions, then sitemap URLs never checked, then the oldest), with how
+many URLs are covered, how many are queued and the time left. A site it
+asks about that is not audited yet is added, which starts its crawl and
+checks. `seo_page` uses a stored result when it is fresh (7 days, or until
+the crawl sees the page change). Every other account sees the tools
+unchanged.
 
 Each tool call uses the linked Google account that can read the site, the one
 with the most access. `seo_sites` lists properties from every linked account
@@ -130,8 +138,10 @@ A small Cloudflare D1 database (`migrations/`) keeps only:
   their schedule and last summary (`audit_sites`), and, in one SQLite
   Durable Object per account and property (`SiteAudit`, `src/audit`), the
   last two crawls' pages, findings with their first-seen and resolved dates,
-  and 52 run summaries. Removing the site, or Delete everything, deletes the
-  object's storage.
+  52 run summaries, and the site's one store of URL Inspection results
+  (`src/audit/checks.ts`) with each page's Search Console clicks and
+  impressions and today's inspection count per property. Removing the site,
+  or Delete everything, deletes the object's storage.
 - how you signed up, written once when your person id is created: the path
   (MCP client, account page or `seo login`), the MCP client's name and user
   agent or the agent running the CLI, and, if you visited seoskill.dev first

@@ -1,3 +1,4 @@
+import type { AuditChecks } from './audit-checks.js'
 import type { Detail } from './present.js'
 import type { Caller, CommandResult } from './types.js'
 
@@ -74,6 +75,19 @@ export type AuditSnapshot = {
     new: number
     resolved: number
   }[]
+}
+
+// What the hosted server reads from a site's audit. Each returns null when
+// the person does not audit that site.
+export type AuditAccess = {
+  snapshot: (site: string) => Promise<AuditSnapshot | null>
+  checks: (
+    site: string,
+    offset: number,
+    limit: number,
+  ) => Promise<AuditChecks | null>
+  // Adds a site to the audit, which starts its crawl and Google checks.
+  add: (site: string) => Promise<'added' | 'exists' | 'full'>
 }
 
 export const AUDIT_SECTION = 'weekly-audit'

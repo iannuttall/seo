@@ -142,8 +142,18 @@ A small Cloudflare D1 database (`migrations/`) keeps only:
   last two crawls' pages, findings with their first-seen and resolved dates,
   52 run summaries, and the site's one store of URL Inspection results
   (`src/audit/checks.ts`) with each page's Search Console clicks and
-  impressions and today's inspection count per property. Removing the site,
-  or Delete everything, deletes the object's storage.
+  impressions and today's inspection count per property. Once a day the
+  object pushes the site's coverage to D1 (`audit_sites.coverage`): checks
+  a day, its properties and the folders worth adding as URL-prefix
+  properties. Removing the site, or Delete everything, deletes the object's
+  storage.
+- for "Create these in Search Console" on the Beta tab
+  (`src/audit/properties.ts`): only when clicked, an incremental Google
+  sign-in for the Search Console write scope with online access, so no
+  refresh token is issued; the access token adds each folder with
+  `sites.add`, reads back whether it is verified, and is dropped. A folder
+  under a domain property the person owns is verified by the parent's
+  method; one that is not shows "added, not verified".
 - how you signed up, written once when your person id is created: the path
   (MCP client, account page or `seo login`), the MCP client's name and user
   agent or the agent running the CLI, and, if you visited seoskill.dev first

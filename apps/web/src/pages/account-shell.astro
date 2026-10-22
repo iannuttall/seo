@@ -416,10 +416,27 @@ const keys: { name: string; label: string; type: 'text' | 'password' }[] = [
       </li>
     </template>
     <template data-audit-row>
-      <li class="flex items-center justify-between gap-4 py-2.5">
+      <li class="flex items-start justify-between gap-4 py-2.5">
         <span class="min-w-0">
           <span class="block break-all text-foreground" data-audit-property></span>
           <span class="block text-foreground-muted" data-audit-state></span>
+          <span class="block text-foreground-muted" data-audit-coverage hidden></span>
+          <span class="mt-2 block" data-audit-folders hidden>
+            <span class="block text-foreground">
+              Add these folders as their own Search Console properties to
+              check more pages each day:
+            </span>
+            <span class="mt-1 block" data-audit-folder-list></span>
+            <form method="post" data-action="/account/audit/properties" class="mt-2" data-audit-create>
+              <input type="hidden" name="form" />
+              <input type="hidden" name="property" data-audit-create-input />
+              <button type="submit" class={outline}>Create these in Search Console</button>
+            </form>
+            <span class="mt-1 block text-foreground-muted" data-audit-create-note>
+              Google asks once for permission to add properties. SEO Skill
+              uses it only for this, and does not keep it.
+            </span>
+          </span>
         </span>
         <form method="post" data-action="/account/audit/remove">
           <input type="hidden" name="form" />
@@ -473,6 +490,16 @@ const keys: { name: string; label: string; type: 'text' | 'password' }[] = [
           open: number | null
           new: number | null
           error: string | null
+          coverage: {
+            perDay: number
+            properties: { property: string; urls: number }[]
+            suggestions: {
+              property: string
+              urls: number
+              gain: number
+              added?: 'verified' | 'unverified'
+            }[]
+          } | null
         }[]
       }
       token?: string
@@ -600,6 +627,62 @@ const keys: { name: string; label: string; type: 'text' | 'password' }[] = [
             }
             const input = copy.querySelector<HTMLInputElement>('[data-audit-input]')
             if (input) input.value = site.property
+            const coverage = site.coverage
+            if (coverage) {
+              const known = coverage.properties.reduce((sum, item) => sum + item.urls, 0)
+              const perDay = coverage.perDay * coverage.properties.length
+              const line = copy.querySelector('[data-audit-coverage]')
+              if (line) {
+                line.textContent = `Google can check ${perDay.toLocaleString()} of its ${known.toLocaleString()} pages a day (${coverage.properties.length === 1 ? 'one property' : `${coverage.properties.length} properties`}).`
+                show(line)
+              }
+              if (coverage.suggestions.length) {
+                const box = copy.querySelector('[data-audit-folders]')
+                const list = copy.querySelector('[data-audit-folder-list]')
+                for (const folder of coverage.suggestions) {
+                  const item = document.createElement('span')
+                  item.className = 'mt-1 block'
+                  const name = document.createElement('span')
+                  name.className = 'block break-all text-foreground'
+                  name.textContent = folder.property
+                  const detail = document.createElement('span')
+                  detail.className = 'block text-foreground-muted'
+                  const status =
+                    folder.added === 'verified'
+                      ? 'added and verified'
+                      : folder.added === 'unverified'
+                        ? 'added, not verified'
+                        : `${folder.urls.toLocaleString()} pages`
+                  detail.textContent = status
+                  item.append(name, detail)
+                  if (!folder.added) {
+                    detail.append(' · ')
+                    const link = document.createElement('a')
+                    link.href = 'https://search.google.com/search-console/welcome'
+                    link.target = '_blank'
+                    link.rel = 'noopener'
+                    link.className = 'text-foreground underline'
+                    link.textContent = 'add it yourself'
+                    detail.append(link)
+                  }
+                  list?.append(item)
+                }
+                const open = coverage.suggestions.filter((folder) => !folder.added).length
+                if (open) {
+                  const total = document.createElement('span')
+                  total.className = 'mt-1 block text-foreground'
+                  total.textContent = `With ${open === 1 ? 'it' : 'them'}, Google could check up to ${(perDay + open * coverage.perDay).toLocaleString()} pages a day.`
+                  list?.append(total)
+                }
+                const create = copy.querySelector<HTMLInputElement>('[data-audit-create-input]')
+                if (create) create.value = site.property
+                if (coverage.suggestions.every((folder) => folder.added)) {
+                  copy.querySelector('[data-audit-create]')?.remove()
+                  copy.querySelector('[data-audit-create-note]')?.remove()
+                }
+                show(box)
+              }
+            }
             auditList?.append(copy)
           }
           if (audit.sites.length >= audit.max) {

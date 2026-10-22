@@ -10,6 +10,7 @@ import {
   type Google,
   indexChanges,
   inspectThrough,
+  PER_DAY,
   runChecks,
   saveState,
   state,
@@ -891,10 +892,69 @@ export class SiteAudit extends DurableObject<Env> {
         ? await runChecks(meter, site, await this.google(site), Date.now())
         : null
       saveState(meter, { next_at: at })
+      // A new day's plan goes to D1 for the account page.
+      const now = state(meter)
+      if (now?.day && now.day !== saved?.day) await this.pushCoverage(site)
     }
     if (at === null) return
     const current = await this.ctx.storage.getAlarm()
     if (current === null || at < current) await this.ctx.storage.setAlarm(at)
+  }
+
+  // Properties added in Search Console count from the next wake: the day's
+  // plan is worked out again at once.
+  async refreshProperties(): Promise<void> {
+    const meter = new Meter(this.ctx.storage)
+    if (!state(meter)) return
+    saveState(meter, { day: null, next_at: Date.now() })
+    await this.ctx.storage.setAlarm(Date.now())
+  }
+
+  // The day's properties and suggested folders, for the account page. A
+  // failed push is tried again with the next day's plan.
+  private async pushCoverage(site: Site): Promise<void> {
+    const saved = state(new Meter(this.ctx.storage))
+    const coverage = {
+      perDay: PER_DAY,
+      properties: (
+        JSON.parse(saved?.properties ?? '[]') as {
+          property: string
+          urls: number
+        }[]
+      ).map(({ property, urls }) => ({ property, urls })),
+      suggestions: JSON.parse(saved?.suggestions ?? '[]') as {
+        property: string
+        added?: string
+      }[],
+    }
+    // Folders already created from the Beta tab keep their mark.
+    const before = await this.env.DB.prepare(
+      'SELECT coverage FROM audit_sites WHERE user_id = ? AND property = ?',
+    )
+      .bind(site.user_id, site.property)
+      .first<{ coverage: string | null }>()
+      .catch(() => null)
+    const marks = new Map(
+      (
+        (
+          JSON.parse(before?.coverage ?? 'null') as {
+            suggestions?: { property: string; added?: string }[]
+          } | null
+        )?.suggestions ?? []
+      )
+        .filter((item) => item.added)
+        .map((item) => [item.property, item.added]),
+    )
+    for (const item of coverage.suggestions) {
+      const mark = marks.get(item.property)
+      if (mark) item.added = mark
+    }
+    await this.env.DB.prepare(
+      'UPDATE audit_sites SET coverage = ? WHERE user_id = ? AND property = ?',
+    )
+      .bind(JSON.stringify(coverage), site.user_id, site.property)
+      .run()
+      .catch(() => null)
   }
 
   // One row per site in D1, so the account page and the scheduler never

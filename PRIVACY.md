@@ -39,6 +39,11 @@ Cloudflare D1 with only these things:
 - **Your linked Bing account, if you link one.** Its refresh and access
   tokens, with read-only access to Bing Webmaster Tools, and a name made
   from its sites.
+- **Search Console folders you add from the Beta tab.** "Create these in
+  Search Console" asks Google, at that moment, for permission to add and
+  manage your Search Console properties. The server uses it once, to add
+  the folders listed on the page, and does not keep that permission or its
+  token. It keeps which folders it added and whether Google verified them.
 - **Your API keys, if you save them.** A DataForSEO login and password, an
   Ahrefs key and a TypeSafe key.
 - **Your Clicky sites, if you save them.** Each site's numeric site ID,
@@ -112,7 +117,16 @@ follows the site's `robots.txt`. It keeps, per site:
   read and add to the same results;
 - for each of those Search Console pages, its clicks and impressions in the
   last 28 days and its clicks in the 28 days before, replaced each day;
-- how many URL Inspection checks each property used today.
+- how many URL Inspection checks each property used today;
+- how many pages a day Google can check for the site, and the folders worth
+  adding as their own Search Console properties, with which of them you
+  added from the account page.
+
+If you click Create these in Search Console, Google asks you for
+permission to manage Search Console for that Google account. The server
+uses that permission once, to add the listed folders as properties and
+read back whether each is verified. It asks for no refresh token and
+keeps no token afterwards.
 
 Remove a site on the account page and all of this is deleted at once.
 Delete everything deletes it for every site.

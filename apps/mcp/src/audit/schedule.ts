@@ -24,6 +24,23 @@ export type AuditSite = {
   newFindings: number | null
   resolvedFindings: number | null
   lastError: string | null
+  // Pushed by the site object once a day; null before its first checks.
+  coverage: AuditCoverage | null
+}
+
+export type AuditCoverage = {
+  // Checks Search Console allows each property a day.
+  perDay: number
+  // The properties that check the site's URLs, and how many each holds.
+  properties: { property: string; urls: number }[]
+  // Folders to add as URL-prefix properties, best first; added says the
+  // Beta tab's button already created it.
+  suggestions: {
+    property: string
+    urls: number
+    gain: number
+    added?: 'verified' | 'unverified'
+  }[]
 }
 
 type Row = {
@@ -40,6 +57,7 @@ type Row = {
   new_findings: number | null
   resolved_findings: number | null
   last_error: string | null
+  coverage: string | null
 }
 
 // One object per person and property, so two people who audit the same
@@ -71,6 +89,7 @@ export async function auditSites(
     newFindings: row.new_findings,
     resolvedFindings: row.resolved_findings,
     lastError: row.last_error,
+    coverage: row.coverage ? (JSON.parse(row.coverage) as AuditCoverage) : null,
   }))
 }
 

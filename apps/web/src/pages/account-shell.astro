@@ -22,6 +22,8 @@ const tabs = [
   { id: 'accounts', label: 'Accounts' },
   { id: 'keys', label: 'Keys' },
   { id: 'machines', label: 'Machines' },
+  // Only for accounts granted a beta feature; removed otherwise.
+  { id: 'beta', label: 'Beta' },
 ]
 const keys: { name: string; label: string; type: 'text' | 'password' }[] = [
   { name: 'x-dataforseo-login', label: 'DataForSEO API login', type: 'text' },
@@ -325,6 +327,24 @@ const keys: { name: string; label: string; type: 'text' | 'password' }[] = [
         </div>
       </div>
 
+      <div
+        role="tabpanel"
+        id="account-panel-beta"
+        aria-labelledby="account-tab-beta"
+        data-account-panel="beta"
+        class="mt-4 flex flex-col gap-4"
+        hidden
+      >
+        <div class={panel} id="beta">
+          <h2 class={heading}>Beta</h2>
+          <p class={note}>
+            Features your account can try before everyone else. They may
+            change, and we may turn them off.
+          </p>
+          <ul class="mt-4 divide-y divide-border text-sm" data-beta-list></ul>
+        </div>
+      </div>
+
       <div class="mt-10 border-t border-border pt-6" id="delete">
         <p class="text-sm/6 text-foreground-muted">
           Delete everything removes your Google and Bing sign-ins, keys,
@@ -368,6 +388,12 @@ const keys: { name: string; label: string; type: 'text' | 'password' }[] = [
         </form>
       </li>
     </template>
+    <template data-beta-row>
+      <li class="py-2.5" data-beta-feature>
+        <p class="font-medium text-foreground" data-beta-title></p>
+        <p class="mt-0.5 text-foreground-muted" data-beta-text></p>
+      </li>
+    </template>
     <template data-machine-row>
       <li class="flex items-center justify-between gap-4 py-2.5">
         <span class="min-w-0 text-foreground">
@@ -402,6 +428,7 @@ const keys: { name: string; label: string; type: 'text' | 'password' }[] = [
       clickyAccount?: string | null
       machines: { id: string; label: string; usedAt: number | null }[]
       login?: { code: string; label: string }
+      beta?: { id: string; title: string; text: string }[]
       token?: string
       tab?: string
     }
@@ -493,6 +520,24 @@ const keys: { name: string; label: string; type: 'text' | 'password' }[] = [
         const id = copy.querySelector<HTMLInputElement>('[data-machine-id]')
         if (id) id.value = machine.id
         machineList?.append(copy)
+      }
+      // The Beta tab exists only for an account with a beta feature.
+      if (account.beta?.length) {
+        const betaRow = root.querySelector<HTMLTemplateElement>('[data-beta-row]')
+        const betaList = root.querySelector('[data-beta-list]')
+        for (const feature of account.beta) {
+          const copy = betaRow?.content.cloneNode(true) as DocumentFragment
+          const item = copy.querySelector<HTMLElement>('[data-beta-feature]')
+          if (item) item.id = `beta-${feature.id}`
+          const title = copy.querySelector('[data-beta-title]')
+          if (title) title.textContent = feature.title
+          const text = copy.querySelector('[data-beta-text]')
+          if (text) text.textContent = feature.text
+          betaList?.append(copy)
+        }
+      } else {
+        root.querySelector('[data-account-tab="beta"]')?.remove()
+        root.querySelector('[data-account-panel="beta"]')?.remove()
       }
       if (account.login) {
         show(root.querySelector('[data-login]'))

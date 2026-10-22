@@ -2,7 +2,9 @@
 // Ian's Telegram chat by the cron trigger. It reads the site's telemetry D1
 // (SELECT only) and sends totals, never a row. Failures are split into
 // expected states, network or provider trouble, and errors, by version, so
-// old 0.2 installs stay apart from current releases.
+// old 0.2 installs stay apart from current releases. It also sends the
+// install numbers the public stats page leaves out: how many new installs
+// complete a first audit, and day 7 retention by install week.
 
 const DAYS = 7
 const VERSIONS = 8
@@ -111,6 +113,86 @@ async function reasons(
   return results
 }
 
+type InstallRow = { line: string; installs: number; first: number }
+type CohortRow = {
+  cohort: string
+  installs: number
+  retained: number
+}
+
+const LINE = `CASE WHEN version LIKE '0.2.%' THEN '0.2.x' ELSE '0.3+' END`
+
+const percent = (part: number, whole: number) =>
+  whole > 0 ? `${Math.round((part / whole) * 1_000) / 10}%` : 'n/a'
+
+// Monday of an ISO week such as 2026-W41.
+function weekStart(cohort: string): number | undefined {
+  const match = /^(\d{4})-W(\d{2})$/.exec(cohort)
+  if (!match) return undefined
+  const start = new Date(Date.UTC(Number(match[1]), 0, 4))
+  start.setUTCDate(
+    start.getUTCDate() -
+      (start.getUTCDay() || 7) +
+      1 +
+      (Number(match[2]) - 1) * 7,
+  )
+  return start.getTime()
+}
+
+async function installLines(
+  db: D1Database,
+  now: Date,
+  from: string,
+  to: string,
+): Promise<string[]> {
+  const [installs, cohorts] = await Promise.all([
+    db
+      .prepare(
+        `SELECT ${LINE} AS line,
+           SUM(event = 'first_run') AS installs,
+           SUM(event = 'first_audit_complete') AS first
+         FROM telemetry_events
+         WHERE ${WINDOW} AND event IN ('first_run', 'first_audit_complete')
+         GROUP BY 1 ORDER BY 1 DESC`,
+      )
+      .bind(from, to)
+      .all<InstallRow>(),
+    db
+      .prepare(
+        `SELECT cohort,
+           SUM(event = 'first_run') AS installs,
+           SUM(event = 'active_d7') AS retained
+         FROM telemetry_events
+         WHERE event IN ('first_run', 'active_d7') AND cohort >= ?1
+         GROUP BY 1 ORDER BY 1 DESC`,
+      )
+      // Week ids sort as text, so this keeps this year and last year's end.
+      .bind(`${now.getUTCFullYear() - 1}-W40`)
+      .all<CohortRow>(),
+  ])
+  // A week is complete once its last install has had seven days to return.
+  const complete = cohorts.results
+    .filter((row) => {
+      const start = weekStart(row.cohort)
+      return start !== undefined && now.getTime() >= start + 14 * 86_400_000
+    })
+    .slice(0, 3)
+  return [
+    'Installs this week (first audits / installs, same days):',
+    ...installs.results.map(
+      (row) =>
+        `- ${row.line}: ${count(row.installs)} installs, ${count(row.first)} first audits (${percent(row.first, row.installs)})`,
+    ),
+    // An install keeps its first week but reports day 7 from whatever
+    // version it runs then, so retention is not split by version.
+    'Day 7 retention, all versions, last complete install weeks:',
+    ...complete.map(
+      (row) =>
+        `- ${row.cohort}: ${count(row.retained)} of ${count(row.installs)} (${percent(row.retained, row.installs)})`,
+    ),
+  ]
+}
+
 export async function failureReport(
   db: D1Database,
   now: Date,
@@ -153,9 +235,10 @@ export async function failureReport(
       ]
     : []
   const legacy = rows.filter((row) => row.version === '0.2.x')
-  const [errors, expected] = await Promise.all([
+  const [errors, expected, installs] = await Promise.all([
     reasons(db, 'error', from, to),
     reasons(db, 'expected', from, to),
+    installLines(db, now, from, to),
   ])
   return [
     head,
@@ -165,6 +248,8 @@ export async function failureReport(
     '',
     ...reasonLines('Top errors, 0.3 and later:', errors),
     ...reasonLines('Top expected states, 0.3 and later:', expected),
+    '',
+    ...installs,
   ]
     .join('\n')
     .trim()

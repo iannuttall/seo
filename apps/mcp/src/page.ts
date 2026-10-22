@@ -102,6 +102,8 @@ export type View =
         machines: { id: string; label: string; usedAt: number | null }[]
         // A `seo login` waiting for this person to approve it.
         login?: { code: string; label: string }
+        // Beta features granted to this account. Absent when there are none.
+        beta?: { id: string; title: string; text: string }[]
         // A token just made for a cloud agent, shown once.
         token?: string
         // The tab to open: accounts, keys, machines or settings.

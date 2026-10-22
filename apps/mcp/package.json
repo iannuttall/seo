@@ -5,6 +5,7 @@
   "type": "module",
   "scripts": {
     "deploy": "wrangler deploy",
+    "beta": "node scripts/beta.mjs",
     "dev": "wrangler dev",
     "signups": "node scripts/signups.mjs",
     "test": "node --test src/*.test.ts",

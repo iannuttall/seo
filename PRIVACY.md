@@ -1,6 +1,6 @@
 # Privacy policy
 
-Last updated: 20 October 2026
+Last updated: 22 October 2026
 
 This policy covers the official `seo` command-line tool, library, MCP server,
 the hosted MCP server at seoskill.dev/mcp with its account page, and the
@@ -55,6 +55,9 @@ Cloudflare D1 with only these things:
   used. A linked machine asks for short-lived Google and Bing tokens and your
   keys, and makes the Google and Bing requests itself. Nothing it fetches is
   sent back.
+- **Beta features turned on for you.** The name of each beta feature the
+  maintainer turned on for your account, and when. Only the maintainer sets
+  these; most accounts have none.
 - **How you signed up.** Written once, when your person id is created, and
   never changed:
   - the way you signed up: an MCP client, the account page, or `seo login`;
@@ -109,7 +112,7 @@ Request logs are turned off.
 
 Sign in at [seoskill.dev/account](https://seoskill.dev/account) and choose
 **Delete everything**. It deletes your person id, linked accounts, keys,
-Clicky sites, linked machines and how you signed up,
+Clicky sites, linked machines, beta features and how you signed up,
 and revokes the Google sign-ins. Your agents will ask you to sign in again if
 you use the hosted server later. You can also revoke SEO Skill in your
 [Google Account connections](https://myaccount.google.com/connections), which

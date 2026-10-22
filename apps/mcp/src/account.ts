@@ -10,6 +10,7 @@ import {
   isClickySitekey,
   listBingSites,
 } from '@seo/core/commands'
+import { BETA, betaFlags } from './beta.ts'
 import { loginUrl, newToken } from './cli.ts'
 import { importClicky, removeClickyAccount } from './clicky.ts'
 import { signInPerson } from './oauth.ts'
@@ -104,11 +105,12 @@ async function accountPage(
   message = '',
   extra: { link?: string; token?: string; tab?: string; ok?: boolean } = {},
 ): Promise<Response> {
-  const [accounts, keys, machines, login] = await Promise.all([
+  const [accounts, keys, machines, login, beta] = await Promise.all([
     accountsOf(env, userId),
     keysOf(env, userId),
     cliLinksOf(env, userId),
     extra.link ? pendingLogin(env, extra.link) : null,
+    betaFlags(env, userId),
   ])
   return view(env, {
     view: 'account',
@@ -145,6 +147,16 @@ async function accountPage(
       })),
       ...(login
         ? { login: { code: login.code ?? '', label: login.label } }
+        : {}),
+      // Only granted beta features; none for everyone else.
+      ...(beta.size
+        ? {
+            beta: [...beta].sort().map((id) => ({
+              id,
+              title: BETA[id].title,
+              text: BETA[id].text,
+            })),
+          }
         : {}),
       ...(extra.token ? { token: extra.token } : {}),
       ...(extra.tab ? { tab: extra.tab } : {}),

@@ -27,6 +27,8 @@ Sign in with Google at `https://seoskill.dev/account` to:
   account login and Clicky sites (never shown again),
 - **Machines:** approve a `seo login`, remove a linked machine, or make a
   token for a cloud agent,
+- **Beta:** only on an account granted a beta feature, the features it can
+  try,
 - delete everything, which also revokes the Google sign-ins, or sign out.
 
 Each tool call uses the linked Google account that can read the site, the one
@@ -115,6 +117,11 @@ A small Cloudflare D1 database (`migrations/`) keeps only:
   only to read your Clicky site list,
 - machines linked with `seo login` (a name from the host name and the date
   last used).
+- beta features granted to the account, and when (`beta_flags`). Only a
+  maintainer grants or revokes one, with
+  `pnpm --filter @seo/hosted-mcp beta grant <google email> <flag>` (or
+  `revoke`, or `list`); nothing on the account page or in the tools can.
+  `src/beta.ts` names the flags, and `betaFlags()` is the one check.
 - how you signed up, written once when your person id is created: the path
   (MCP client, account page or `seo login`), the MCP client's name and user
   agent or the agent running the CLI, and, if you visited seoskill.dev first

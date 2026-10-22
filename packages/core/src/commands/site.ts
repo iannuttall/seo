@@ -349,12 +349,15 @@ export function indexSummary(
 
 export const LOST_PAGES_RULE = `Pages that had at least ${MIN_LOST} clicks in the previous 28 days and kept ${LOST_SHARE * 100}% or less of them in the last 28 days, with a live check of the top ${CHECKED} and Google’s index status for the top ${INSPECTED} and the home page.`
 
-export const INDEXING_RULE = `Google’s indexing reasons for up to ${INSPECT_LIMIT} known URLs a run (lost-click pages, the home page, the sitemap, then Search Console pages by impressions), each checked live and labelled fix, check, expected or indexed from the evidence, sorted by reason then URL.`
+export const INDEXING_RULE = `Google’s indexing reasons for ${INSPECT_LIMIT} known URLs a run in a fixed order (lost-click pages, Search Console pages by clicks then impressions, sitemap URLs, then the rest), each checked live and labelled fix, check, expected or indexed from the evidence, sorted by reason then URL.`
 
 export type IndexInput = DateInput & {
   site: string
   detail?: Detail
   offset?: number
+  // URLs to inspect, INSPECT_LIMIT by default. Only the CLI and the local
+  // MCP pass it, where the quota left today is counted and caps it.
+  maxUrls?: number
 }
 
 export async function runLostPages(
@@ -393,18 +396,19 @@ export async function runLostPages(
   const first = top[0]?.url ?? sitemap.urls[0] ?? now.rows[0]?.keys[0]
   const homeUrl = first ? `${new URL(first).origin}/` : null
   const known = knownUrls({
-    lost: top.slice(0, INSPECTED).map((row) => row.url),
+    lost: lost.map((row) => row.url),
     home: homeUrl,
     sitemap,
     pages: now.rows.map((row) => ({
       url: row.keys[0] ?? '',
+      clicks: row.clicks,
       impressions: row.impressions,
     })),
     pagesCapped: now.rows.length >= PAGE_ROWS,
   })
   const [facts, run] = await Promise.all([
     deps.checkPages(top.map((row) => row.url)),
-    inspectKnown(input.site, known, deps),
+    inspectKnown(input.site, known, deps, input.maxUrls),
   ])
   const status = (url: string | null) =>
     url ? (run.statuses.get(url) ?? null) : null
@@ -440,9 +444,18 @@ export async function runLostPages(
       offset,
       size: detail === 'summary' ? 25 : PAGE_SIZE,
       more: (next) =>
-        deps.call('index', { site: input.site, detail: 'rows', offset: next }),
+        deps.call('index', {
+          site: input.site,
+          max_urls: input.maxUrls,
+          detail: 'rows',
+          offset: next,
+        }),
     },
     origin,
+    // The option to inspect more exists where the quota is counted.
+    deps.inspectionQuota
+      ? (count) => deps.call('index', { site: input.site, max_urls: count })
+      : null,
   )
   const lostText = [
     `Pages that lost their clicks on ${input.site}: ${range.startDate} to ${range.endDate} against ${before.startDate} to ${before.endDate}.`,
@@ -465,7 +478,7 @@ export async function runLostPages(
       searchConsoleCapped: known.searchConsoleCapped,
       lostClicks: known.lostClicks,
     },
-    limit: INSPECT_LIMIT,
+    limit: run.limit,
     inspected: run.inspected,
     failed: run.failed,
     stoppedBy: run.stoppedBy,
@@ -482,7 +495,7 @@ export async function runLostPages(
       : [
           ...(detail === 'summary' ? lostText : []),
           ...reasons,
-          `To see what changed, keep this run's full result (${deps.call('index', { site: input.site, detail: 'full' })}) and compare it with the next run by url and reason. Each run inspects again and uses URL Inspection quota.`,
+          `To see what changed, keep this run's full result (${deps.call('index', { site: input.site, max_urls: input.maxUrls, detail: 'full' })}) and compare it with the next run by url and reason. Inspect the same number each week: the order is fixed, so the same first URLs come back. Each run inspects again and uses URL Inspection quota.`,
           `Next: ${firstFix ? deps.call('page', { url: firstFix.url }) : deps.call('page')} for one URL, including a URL from a Search Console email that is not in this set; ${deps.call('report', { site: input.site, section: 'content-decay' })} for pages that lost part of their clicks.`,
         ]
   return {

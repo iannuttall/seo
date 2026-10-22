@@ -10,6 +10,8 @@ import {
   type CommandResult,
   DIMENSIONS,
   type Dimension,
+  INSPECT_LIMIT,
+  MAX_INSPECT_LIMIT,
   RESEARCH_ACTIONS,
   RESEARCH_PROVIDERS,
   type ResearchAction,
@@ -45,6 +47,7 @@ const FLAGS: Record<string, string> = {
   dimensions: '--dimensions',
   detail: '--detail',
   offset: '--offset',
+  max_urls: '--max-urls',
 }
 
 const quote = (value: string | number) =>
@@ -273,12 +276,26 @@ export const indexCommand = defineCommand({
       type: 'string',
       description: 'Site, URL or Search Console property.',
     },
+    'max-urls': {
+      type: 'string',
+      description: `How many URLs to ask Google about, ${INSPECT_LIMIT} by default. Ask for more when you want a fuller picture; it stops at the URL Inspection quota left today.`,
+    },
     ...dates,
     ...detail,
     ...common,
   },
   run: async ({ args }) => {
     const site = await property(args, stringArg(args.site))
+    const maxUrls = numberArg(args['max-urls'])
+    if (
+      maxUrls !== undefined &&
+      (!Number.isInteger(maxUrls) || maxUrls < 1 || maxUrls > MAX_INSPECT_LIMIT)
+    ) {
+      throw new SeoError(
+        'INVALID_INPUT',
+        `--max-urls is a whole number from 1 to ${MAX_INSPECT_LIMIT}.`,
+      )
+    }
     await run(args, (deps) =>
       runLostPages(
         {
@@ -287,6 +304,7 @@ export const indexCommand = defineCommand({
           endDate: stringArg(args['end-date']),
           detail: detailArg(args),
           offset: numberArg(args.offset),
+          maxUrls,
         },
         deps,
       ),

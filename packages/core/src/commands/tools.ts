@@ -3,6 +3,7 @@ import { runAiAnswers } from './ai-answers.js'
 import { analyticsSignIn, runAnalyticsRows } from './analytics.js'
 import { runBingRows } from './bing.js'
 import { clickyLabel, clickySites, runClickyRows } from './clicky.js'
+import { INSPECT_LIMIT, MAX_INSPECT_LIMIT } from './indexing.js'
 import { runBingReport, runReport, SECTION_IDS, SECTIONS } from './report.js'
 import {
   RESEARCH_ACTIONS,
@@ -98,6 +99,9 @@ export type SharedTool = {
   title: string
   description: string
   input: z.ZodObject
+  // A wider input for the local MCP only, for options that need this
+  // machine (such as the URL Inspection quota count).
+  localInput?: z.ZodObject
   run: (surface: ToolSurface, input: never) => Promise<CommandResult>
 }
 
@@ -107,6 +111,7 @@ function tool<S extends z.ZodObject>(spec: {
   title: string
   description: string
   input: S
+  localInput?: z.ZodObject
   run: (surface: ToolSurface, input: z.output<S>) => Promise<CommandResult>
 }): SharedTool {
   return spec as unknown as SharedTool
@@ -238,6 +243,20 @@ export const SHARED_TOOLS: SharedTool[] = [
     title: 'Google indexing reasons and pages that lost their clicks',
     description: `${INDEXING_RULE} Use it for a first baseline and then weekly: keep the full result and compare by URL and reason to find new reasons. Also: ${LOST_PAGES_RULE}`,
     input: z.object({ site, ...dates, ...detail }),
+    localInput: z.object({
+      site,
+      ...dates,
+      max_urls: z
+        .number()
+        .int()
+        .min(1)
+        .max(MAX_INSPECT_LIMIT)
+        .optional()
+        .describe(
+          `URLs to inspect with Google, ${INSPECT_LIMIT} by default, up to the URL Inspection quota left today.`,
+        ),
+      ...detail,
+    }),
     run: async (surface, input) =>
       runLostPages(
         {
@@ -246,6 +265,7 @@ export const SHARED_TOOLS: SharedTool[] = [
           endDate: input.end_date,
           detail: input.detail,
           offset: input.offset,
+          maxUrls: (input as { max_urls?: number }).max_urls,
         },
         surface.deps,
       ),
@@ -417,8 +437,12 @@ export async function runSharedTool(
   tool: SharedTool,
   surface: ToolSurface,
   input: unknown,
+  // The local MCP reads the wider local input.
+  local = false,
 ): Promise<CommandResult> {
-  const parsed = tool.input.safeParse(input ?? {})
+  const parsed = ((local && tool.localInput) || tool.input).safeParse(
+    input ?? {},
+  )
   if (!parsed.success) {
     throw new CommandError(
       'INVALID_INPUT',

@@ -25,7 +25,15 @@ seo index --site example.com
 
 ## What comes back
 
-Search Console's Page indexing report has no API, so `seo index` asks Google about pages one at a time. It takes the pages it knows about (pages that lost clicks, the home page, your sitemap, then pages with Search Console impressions) and checks up to 100 of them on each run. It always says how many it checked out of how many it knows, and whether it stopped at 100 or at Google's daily limit. A page it did not check has no result, so a short run is never an all-clear.
+Search Console's Page indexing report has no API, so `seo index` asks Google about pages one at a time. It always works through the pages it knows in the same order: pages that lost clicks, then pages with Search Console clicks and impressions (most clicks first), then pages in your sitemap, then the rest. It checks the first 100 on each run, so it answers quickly. It always says how many it checked out of how many it knows, and whether it stopped at 100 or at Google's daily limit. A page it did not check has no result, so a short run is never an all-clear.
+
+In a terminal or the local MCP server you can ask for more, up to the quota Google has left for the site today (2,000 a day per property):
+
+```sh
+seo index --site example.com --max-urls 500
+```
+
+The hosted MCP checks 100 each run.
 
 For each page you get Google's reason, word for word, then what the page does now: its status, where it redirects and whether that redirect is permanent, the canonical the page declares and the one Google chose, the pages Google saw linking to it, whether your sitemap lists it, and when Google last crawled it.
 
@@ -50,7 +58,7 @@ Run it once to get a baseline and keep the full result:
 seo index --site example.com --detail full
 ```
 
-Then run it again each week and compare the two by page and reason. A new reason, or a page that moved to fix, is the thing to look at. `seo` keeps no history, so your agent stores each week's result (a scheduled agent task is ideal for this).
+Then run it again each week with the same number of pages and compare the two by page and reason. The order is fixed, so the same pages come back each time. A new reason, or a page that moved to fix, is the thing to look at. `seo` keeps no history, so your agent stores each week's result (a scheduled agent task is ideal for this).
 
 Once your agent runs this every week, you can turn off Search Console's indexing emails. For one page from an email you already have, use [`seo page`](/docs/page).
 

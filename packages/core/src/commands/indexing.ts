@@ -9,8 +9,11 @@ import type { CommandDeps, IndexStatus } from './types.js'
 // by the rules in labelOf. Rows sort by reason, then URL, so an agent can
 // compare one week's result with the next. Nothing is kept between runs.
 
-// Most URL Inspections in one run, set before any work starts.
+// URL Inspections in one run unless the person asks for more (CLI and
+// local MCP only), set before any work starts. Never more than the quota
+// left today, and never more than Google's daily limit.
 export const INSPECT_LIMIT = 100
+export const MAX_INSPECT_LIMIT = 2_000
 const CONCURRENCY = 20
 const REFERRING_KEPT = 10
 
@@ -383,14 +386,15 @@ export type KnownUrls = {
   lostClicks: number
 }
 
-// Known URLs in the order they are inspected: lost-click pages, the home
-// page, the sitemap in its own order, then Search Console pages by
-// impressions.
+// Known URLs in the fixed order they are inspected: lost-click pages,
+// Search Console pages by clicks then impressions, sitemap URLs in sitemap
+// order, then the rest (the home page). The same input always gives the
+// same order, so a run of N inspects the same first N URLs each time.
 export function knownUrls(input: {
   lost: string[]
   home: string | null
   sitemap: SitemapUrls
-  pages: { url: string; impressions: number }[]
+  pages: { url: string; clicks: number; impressions: number }[]
   pagesCapped: boolean
 }): KnownUrls {
   const found = new Map<string, IndexingSource[]>()
@@ -399,13 +403,18 @@ export function knownUrls(input: {
     if (!sources.includes(source)) sources.push(source)
     found.set(url, sources)
   }
-  for (const url of input.lost) add(url, 'lost_clicks')
-  if (input.home) add(input.home, 'home')
-  for (const url of input.sitemap.urls) add(url, 'sitemap')
   const pages = input.pages
     .filter((page) => page.impressions > 0 && !page.url.includes('#'))
-    .sort((a, b) => b.impressions - a.impressions || byText(a.url, b.url))
+    .sort(
+      (a, b) =>
+        b.clicks - a.clicks ||
+        b.impressions - a.impressions ||
+        byText(a.url, b.url),
+    )
+  for (const url of input.lost) add(url, 'lost_clicks')
   for (const page of pages) add(page.url, 'search_console')
+  for (const url of input.sitemap.urls) add(url, 'sitemap')
+  if (input.home) add(input.home, 'home')
   return {
     urls: [...found].map(([url, sources]) => ({ url, sources })),
     sitemap: input.sitemap,
@@ -432,18 +441,21 @@ export async function inspectKnown(
   site: string,
   known: KnownUrls,
   deps: CommandDeps,
+  // How many to inspect; INSPECT_LIMIT unless the person asked for more.
+  asked = INSPECT_LIMIT,
 ): Promise<IndexingRun> {
   const quota = deps.inspectionQuota
     ? await deps.inspectionQuota(site).catch(() => null)
     : null
-  const left = quota ? Math.max(0, quota.limit - quota.used) : INSPECT_LIMIT
-  const limit = Math.min(INSPECT_LIMIT, left)
+  const cap = Math.min(Math.max(1, Math.floor(asked)), MAX_INSPECT_LIMIT)
+  const left = quota ? Math.max(0, quota.limit - quota.used) : cap
+  const limit = Math.min(cap, left)
   const queue = known.urls.slice(0, limit)
   const statuses = new Map<string, IndexStatus>()
   const rows: IndexingRow[] = []
   const failed: IndexingRun['failed'] = []
   // The quota left is below what this run would inspect.
-  const quotaShort = left < Math.min(INSPECT_LIMIT, known.urls.length)
+  const quotaShort = left < Math.min(cap, known.urls.length)
   const sitemap = new Set(known.sitemap.urls)
   let quotaStop = false
   let next = 0
@@ -524,25 +536,40 @@ export function indexingText(
     more: (offset: number) => string
   },
   origin: string | null,
+  // How to inspect more URLs on this surface, or null where it cannot.
+  askMore: ((count: number) => string) | null,
 ): string[] {
   const { known } = run
   const total = known.urls.length
   const notInspected = total - run.inspected - run.failed.length
   const sources = [
-    `sitemap ${n(known.sitemap.urls.length)} from ${plural(known.sitemap.files, 'file')}${known.sitemap.partial ? ', partial' : ''}`,
-    `Search Console pages with impressions in the last 28 days ${n(known.searchConsole)}${known.searchConsoleCapped ? ', capped' : ''}`,
     `lost-click pages ${n(known.lostClicks)}`,
+    `Search Console pages with impressions in the last 28 days ${n(known.searchConsole)}${known.searchConsoleCapped ? ', capped' : ''}`,
+    `sitemap ${n(known.sitemap.urls.length)} from ${plural(known.sitemap.files, 'file')}${known.sitemap.partial ? ', partial' : ''}`,
   ]
   const lowerBound =
     known.sitemap.partial || known.searchConsoleCapped ? ' at least' : ''
+  // The most a next run could inspect: every known URL, within the quota
+  // left after this run.
+  const most = Math.min(
+    total,
+    MAX_INSPECT_LIMIT,
+    run.quota
+      ? run.quota.limit - run.quota.used - run.inspected
+      : MAX_INSPECT_LIMIT,
+  )
   const stop =
     run.stoppedBy === 'quota'
       ? 'The URL Inspection quota stopped it.'
       : run.stoppedBy === 'limit'
-        ? `It stops at ${INSPECT_LIMIT} inspections a run.`
+        ? `It stopped at ${n(run.limit)}, the number of inspections for this run${
+            askMore && most > run.limit
+              ? `; to inspect more, up to the quota left today: ${askMore(most)}`
+              : ''
+          }.`
         : 'Every known URL was inspected.'
   const lines = [
-    `Google's indexing reasons for ${site}, from URL Inspection. Search Console's Page indexing report has no API, so known URLs are inspected one at a time and checked live from here.`,
+    `Google's indexing reasons for ${site}, from URL Inspection. Search Console's Page indexing report has no API, so known URLs are inspected one at a time, in a fixed order (lost-click pages, Search Console pages by clicks then impressions, sitemap URLs, then the rest), and checked live from here.`,
     `Known URLs:${lowerBound} ${n(total)} (${sources.join('; ')}). Inspected ${n(run.inspected)} of ${n(total)}. ${stop}${notInspected > 0 ? ` The ${n(notInspected)} URLs not inspected have no result here, so this is not an all-clear for them.` : ''}${known.sitemap.notes.length ? ` Sitemap: ${known.sitemap.notes.join('; ')}.` : ''}`,
     run.quota
       ? `URL Inspection quota: this machine had used ${n(run.quota.used)} of ${n(run.quota.limit)} today for this property before the run. Google also counts inspections from other tools.`

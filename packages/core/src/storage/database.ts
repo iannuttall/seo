@@ -126,6 +126,17 @@ CREATE INDEX IF NOT EXISTS idx_url_inspection_reservations_minute
     credential_key, property_site_url, created_at
   );
 
+CREATE TABLE IF NOT EXISTS url_inspection_cache (
+  site_url TEXT NOT NULL,
+  url TEXT NOT NULL,
+  status_json TEXT NOT NULL,
+  fetched_at INTEGER NOT NULL,
+  expires_at INTEGER NOT NULL,
+  PRIMARY KEY(site_url, url)
+) WITHOUT ROWID;
+CREATE INDEX IF NOT EXISTS idx_url_inspection_cache_expires
+  ON url_inspection_cache(expires_at);
+
 CREATE TABLE IF NOT EXISTS performance_reports (
   id TEXT PRIMARY KEY,
   url TEXT NOT NULL,
@@ -306,6 +317,9 @@ export function getCacheStats(): CacheStats {
     gsc_cache: database
       .prepare('SELECT COUNT(*) AS count FROM gsc_cache')
       .get() as { count: number },
+    url_inspection_cache: database
+      .prepare('SELECT COUNT(*) AS count FROM url_inspection_cache')
+      .get() as { count: number },
     google_analytics_cache: database
       .prepare('SELECT COUNT(*) AS count FROM ga4_cache')
       .get() as { count: number },
@@ -369,12 +383,18 @@ export function clearCache(
 
   const tables =
     provider === 'gsc'
-      ? ['gsc_cache']
+      ? ['gsc_cache', 'url_inspection_cache']
       : provider === 'google-analytics'
         ? ['ga4_cache']
         : provider === 'http'
           ? ['http_cache']
-          : ['gsc_cache', 'ga4_cache', 'provider_cache', 'http_cache']
+          : [
+              'gsc_cache',
+              'url_inspection_cache',
+              'ga4_cache',
+              'provider_cache',
+              'http_cache',
+            ]
 
   let removed = 0
 

@@ -2,6 +2,7 @@ import type { BingCall } from '../bing/api.js'
 import { SeoError, type SeoErrorCode } from '../errors.js'
 import type { SearchAnalyticsQuery } from '../gsc/client/types.js'
 import type { AnalyticsAccess } from './analytics-site.js'
+import type { LiveCheck } from './page-facts.js'
 
 // The eight public commands. Each runs the same core code in the CLI, the
 // local MCP and the hosted MCP; only the functions that reach Google and the
@@ -26,7 +27,7 @@ export const COMMANDS = {
   index: {
     where: 'anywhere',
     summary:
-      'Pages that lost most of their clicks, checked live and with URL Inspection.',
+      'Google indexing reasons for known URLs, labelled from live checks, and pages that lost most of their clicks.',
   },
   research: {
     where: 'anywhere',
@@ -67,6 +68,8 @@ export type PageFacts = {
   h1: string | null
   canonical: string | null
   robots: string | null
+  // The WWW-Authenticate header, sent when the server asks for sign-in.
+  www_authenticate?: string
   error?: string
 }
 
@@ -77,6 +80,13 @@ export type IndexStatus = {
   last_crawl: string | null
   google_canonical: string | null
   user_canonical: string | null
+  page_fetch: string | null
+  robots_txt: string | null
+  crawled_as: string | null
+  // Pages Google saw linking here, and the sitemaps Google found it in, as
+  // of its last crawl.
+  referring_urls: string[]
+  sitemaps: string[]
 }
 
 export type CommandErrorCode =
@@ -103,8 +113,24 @@ export type CommandDeps = {
   searchAnalytics: SearchAnalyticsQuery
   // Live facts for up to 20 URLs, one request each, no redirects followed.
   checkPages: (urls: string[]) => Promise<PageFacts[]>
-  // Google's index status for one URL, or null when it cannot be read.
-  inspect: (site: string, url: string) => Promise<IndexStatus | null>
+  // One URL live, following up to 5 redirects one request at a time.
+  liveCheck: (url: string) => Promise<LiveCheck>
+  // Google's index status for one URL. Throws when it cannot be read; a
+  // RATE_LIMITED error means the URL Inspection quota stopped it.
+  inspect: (site: string, url: string) => Promise<IndexStatus>
+  // URL Inspections used today for a property and the daily limit, where
+  // this surface counts them (the CLI and the local MCP).
+  inspectionQuota?: (site: string) => Promise<{ used: number; limit: number }>
+  // URL Inspection results saved on this machine (the CLI and the local
+  // MCP), so a repeat call reuses a fresh one instead of inspecting again.
+  // Best-effort: read returns what it can, save never throws.
+  savedInspections?: {
+    read: (
+      site: string,
+      urls: string[],
+    ) => Map<string, { status: IndexStatus; inspectedAt: string }>
+    save: (site: string, url: string, status: IndexStatus) => void
+  }
   // One page's main content as Markdown, read live. Only where the
   // extraction packages run (the CLI and the local MCP server).
   pageMarkdown?: (url: string) => Promise<PageMarkdown>

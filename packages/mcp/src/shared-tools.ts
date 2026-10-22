@@ -115,12 +115,12 @@ export function registerSharedTools(
       {
         title: shared.title,
         description: shared.description,
-        inputSchema: shared.input.shape,
+        inputSchema: (shared.localInput ?? shared.input).shape,
         annotations: readOnly,
       },
       async (input: Record<string, unknown>) =>
         counted(shared.command, input, options.telemetry, async () => {
-          const result = await runSharedTool(shared, surface, input)
+          const result = await runSharedTool(shared, surface, input, true)
           return text(result.text)
         }),
     )

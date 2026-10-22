@@ -3,6 +3,7 @@ import {
   type CommandDeps,
   checkPages,
   indexStatusFrom,
+  liveCheck,
   mcpCall,
 } from '@seo/core/commands'
 import { accountUrl, signInHint } from '../google.ts'
@@ -20,11 +21,8 @@ export function deps(env: Env, directory: LinkedAccounts): CommandDeps {
   return {
     searchAnalytics: directory.searchAnalytics(),
     checkPages,
-    inspect: (site, url) =>
-      directory
-        .inspect(site, url)
-        .then(indexStatusFrom)
-        .catch(() => null),
+    liveCheck,
+    inspect: (site, url) => directory.inspect(site, url).then(indexStatusFrom),
     call: mcpCall,
     analytics: {
       accounts: async () => directory.accounts(),

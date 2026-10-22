@@ -46,7 +46,7 @@ export const commands = [
     tool: 'seo_index',
     path: '/docs/indexing',
     icon: Alert02Icon,
-    text: 'Pages that lost their clicks, checked live and with Google URL Inspection.',
+    text: 'Why Google does or does not index your pages, with a live check of each one, and pages that lost their clicks.',
   },
   {
     id: 'research',

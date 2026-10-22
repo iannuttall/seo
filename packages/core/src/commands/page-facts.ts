@@ -120,6 +120,8 @@ async function facts(url: string): Promise<PageFacts> {
     const location = response.headers.get('location')
     if (location) out.redirects_to = new URL(location, url).toString()
     const headerRobots = response.headers.get('x-robots-tag')
+    const auth = response.headers.get('www-authenticate')
+    if (auth) out.www_authenticate = auth.slice(0, 200)
     if (
       response.status !== 200 ||
       !response.headers.get('content-type')?.includes('html')
@@ -139,6 +141,50 @@ async function facts(url: string): Promise<PageFacts> {
 
 export function checkPages(urls: string[]): Promise<PageFacts[]> {
   return Promise.all(urls.slice(0, MAX_PAGES).map(facts))
+}
+
+const MAX_HOPS = 5
+
+export type RedirectKind = 'permanent' | 'temporary'
+
+export type LiveCheck = {
+  // The URL's own response.
+  first: PageFacts
+  // Each redirect followed, in order, with its status.
+  hops: { from: string; status: number; to: string; kind: RedirectKind }[]
+  // The last response: the URL itself when it does not redirect. Null when
+  // the redirects loop or go past MAX_HOPS.
+  last: PageFacts | null
+}
+
+export const redirectKind = (status: number | null): RedirectKind | null =>
+  status === 301 || status === 308
+    ? 'permanent'
+    : status === 302 || status === 303 || status === 307
+      ? 'temporary'
+      : null
+
+// One URL fetched live from this machine or server, following up to
+// MAX_HOPS redirects one request at a time. These are the redirects the
+// server sends; a browser's HSTS upgrade (shown as "307 Internal Redirect")
+// never reaches a server-side fetch.
+export async function liveCheck(url: string): Promise<LiveCheck> {
+  const first = await facts(url)
+  const hops: LiveCheck['hops'] = []
+  const seen = new Set([url])
+  let last = first
+  while (last.redirects_to && last.status !== null) {
+    const kind = redirectKind(last.status)
+    if (!kind) break
+    const to = last.redirects_to
+    hops.push({ from: last.url, status: last.status, to, kind })
+    if (seen.has(to) || hops.length > MAX_HOPS) {
+      return { first, hops, last: null }
+    }
+    seen.add(to)
+    last = await facts(to)
+  }
+  return { first, hops, last }
 }
 
 // A note, not a defect: same-site 302 and 307 redirects are temporary, and a

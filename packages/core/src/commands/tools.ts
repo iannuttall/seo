@@ -3,6 +3,7 @@ import { runAiAnswers } from './ai-answers.js'
 import { analyticsSignIn, runAnalyticsRows } from './analytics.js'
 import { runBingRows } from './bing.js'
 import { clickyLabel, clickySites, runClickyRows } from './clicky.js'
+import { INSPECT_LIMIT, MAX_INSPECT_LIMIT } from './indexing.js'
 import { runBingReport, runReport, SECTION_IDS, SECTIONS } from './report.js'
 import {
   RESEARCH_ACTIONS,
@@ -11,7 +12,13 @@ import {
   runResearch,
 } from './research.js'
 import { DIMENSIONS, runRows } from './rows.js'
-import { LOST_PAGES_RULE, runCompare, runLostPages, runPage } from './site.js'
+import {
+  INDEXING_RULE,
+  LOST_PAGES_RULE,
+  runCompare,
+  runLostPages,
+  runPage,
+} from './site.js'
 import { type GoogleAccount, runSites } from './sites.js'
 import {
   type Caller,
@@ -92,6 +99,9 @@ export type SharedTool = {
   title: string
   description: string
   input: z.ZodObject
+  // A wider input for the local MCP only, for options that need this
+  // machine (such as the URL Inspection quota count).
+  localInput?: z.ZodObject
   run: (surface: ToolSurface, input: never) => Promise<CommandResult>
 }
 
@@ -101,6 +111,7 @@ function tool<S extends z.ZodObject>(spec: {
   title: string
   description: string
   input: S
+  localInput?: z.ZodObject
   run: (surface: ToolSurface, input: z.output<S>) => Promise<CommandResult>
 }): SharedTool {
   return spec as unknown as SharedTool
@@ -229,15 +240,32 @@ export const SHARED_TOOLS: SharedTool[] = [
   tool({
     name: 'seo_index',
     command: 'index',
-    title: 'Pages that lost their clicks',
-    description: `${LOST_PAGES_RULE} It shows pages that broke, redirect, block indexing or dropped out of Google.`,
-    input: z.object({ site, ...dates }),
+    title: 'Google indexing reasons and pages that lost their clicks',
+    description: `${INDEXING_RULE} Use it for a first baseline and then weekly: keep the full result and compare by URL and reason to find new reasons. Also: ${LOST_PAGES_RULE}`,
+    input: z.object({ site, ...dates, ...detail }),
+    localInput: z.object({
+      site,
+      ...dates,
+      max_urls: z
+        .number()
+        .int()
+        .min(1)
+        .max(MAX_INSPECT_LIMIT)
+        .optional()
+        .describe(
+          `URLs to inspect with Google, ${INSPECT_LIMIT} by default, up to the URL Inspection quota left today.`,
+        ),
+      ...detail,
+    }),
     run: async (surface, input) =>
       runLostPages(
         {
           site: await surface.resolveSite(input.site),
           startDate: input.start_date,
           endDate: input.end_date,
+          detail: input.detail,
+          offset: input.offset,
+          maxUrls: (input as { max_urls?: number }).max_urls,
         },
         surface.deps,
       ),
@@ -409,8 +437,12 @@ export async function runSharedTool(
   tool: SharedTool,
   surface: ToolSurface,
   input: unknown,
+  // The local MCP reads the wider local input.
+  local = false,
 ): Promise<CommandResult> {
-  const parsed = tool.input.safeParse(input ?? {})
+  const parsed = ((local && tool.localInput) || tool.input).safeParse(
+    input ?? {},
+  )
   if (!parsed.success) {
     throw new CommandError(
       'INVALID_INPUT',
@@ -425,7 +457,7 @@ export async function runSharedTool(
 export const MCP_INSTRUCTIONS = `SEO Skill reads the person's own Search Console, Google Analytics, Bing Webmaster Tools, Clicky and optional keyword accounts, and returns facts with their dates and limits. It gives no advice.
 1. seo_sites: the properties the connected accounts can read.
 2. seo_report: the main report. Run it without a section first; it shows the overview and every section's count and top rows. Then ask for the one section you need.
-3. seo_page for one URL, seo_compare for before and after a date, seo_index for pages that lost their clicks, seo_research for keyword, competitor and backlink data, and whether AI answers cite the site, from the DataForSEO or Ahrefs key the person saved, seo_data for raw rows, including Google Analytics, Bing and Clicky.`
+3. seo_page for one URL, seo_compare for before and after a date, seo_index for Google's indexing reasons and pages that lost their clicks, seo_research for keyword, competitor and backlink data, and whether AI answers cite the site, from the DataForSEO or Ahrefs key the person saved, seo_data for raw rows, including Google Analytics, Bing and Clicky.`
 
 // How an MCP surface writes "run this next": the tool name and its inputs.
 export const mcpCall: Caller = (command, args) => {

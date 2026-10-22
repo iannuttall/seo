@@ -46,6 +46,7 @@ export const cacheCommand = defineCommand({
           ],
           ['Sites', String(stats.counts.sites ?? 0)],
           ['Search Console', String(stats.counts.gsc_cache ?? 0)],
+          ['URL Inspection', String(stats.counts.url_inspection_cache ?? 0)],
           [
             'Google Analytics',
             String(stats.counts.google_analytics_cache ?? 0),

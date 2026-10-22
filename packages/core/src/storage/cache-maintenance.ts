@@ -9,6 +9,7 @@ export const CACHE_MAINTENANCE_WRITE_COUNT = 50
 
 type CacheTable =
   | 'gsc_cache'
+  | 'url_inspection_cache'
   | 'ga4_cache'
   | 'provider_cache'
   | 'http_cache'
@@ -18,6 +19,7 @@ export type CacheLimits = Record<CacheTable, number>
 
 export const CACHE_LIMITS: CacheLimits = {
   gsc_cache: 48 * MEBIBYTE,
+  url_inspection_cache: 16 * MEBIBYTE,
   ga4_cache: 24 * MEBIBYTE,
   provider_cache: 32 * MEBIBYTE,
   http_cache: 128 * MEBIBYTE,
@@ -43,6 +45,12 @@ const CACHE_POLICIES: CachePolicy[] = [
     keys: ['site_url', 'query_hash'],
     timestamp: 'fetched_at',
     sizeColumns: ['site_url', 'query_hash', 'request_json', 'response_json'],
+  },
+  {
+    table: 'url_inspection_cache',
+    keys: ['site_url', 'url'],
+    timestamp: 'fetched_at',
+    sizeColumns: ['site_url', 'url', 'status_json'],
   },
   {
     table: 'ga4_cache',

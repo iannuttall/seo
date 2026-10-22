@@ -193,7 +193,11 @@ test('labels Google reasons from the URL Inspection payload and live checks', ()
 
   // Reason first, then URL, whatever order the inspections finish in.
   const rows = sortRows(
-    [...cases].reverse().map((item) => indexingRow({ ...item, sitemap }, [])),
+    [...cases]
+      .reverse()
+      .map((item) =>
+        indexingRow({ ...item, sitemap }, [], '2026-10-22T08:00:00.000Z'),
+      ),
   )
   assert.deepEqual(
     rows.map((row) => `${row.reason} ${row.url}`),

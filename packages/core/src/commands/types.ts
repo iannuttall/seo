@@ -121,6 +121,16 @@ export type CommandDeps = {
   // URL Inspections used today for a property and the daily limit, where
   // this surface counts them (the CLI and the local MCP).
   inspectionQuota?: (site: string) => Promise<{ used: number; limit: number }>
+  // URL Inspection results saved on this machine (the CLI and the local
+  // MCP), so a repeat call reuses a fresh one instead of inspecting again.
+  // Best-effort: read returns what it can, save never throws.
+  savedInspections?: {
+    read: (
+      site: string,
+      urls: string[],
+    ) => Map<string, { status: IndexStatus; inspectedAt: string }>
+    save: (site: string, url: string, status: IndexStatus) => void
+  }
   // One page's main content as Markdown, read live. Only where the
   // extraction packages run (the CLI and the local MCP server).
   pageMarkdown?: (url: string) => Promise<PageMarkdown>

@@ -38,7 +38,8 @@ the options.
 Console pages by clicks, the sitemap, the rest), 100 by default, and labels
 each Google reason fix, check, expected or indexed from a live check. In the
 CLI or local MCP, `--max-urls` (`max_urls`) asks for more, up to today's
-quota. Run it once for a baseline and keep the full result (`--detail full`).
+quota, and reuses saved inspections up to 7 days old, so paging or `--detail
+full` costs no quota. Run it once for a baseline and keep the full result (`--detail full`).
 Run it again each week with the same number and compare by URL and reason: a
 new reason, or a URL that moved to fix, is what to report.
 `seo` keeps no history, so you store the results. Once this runs weekly, the

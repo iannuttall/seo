@@ -119,6 +119,7 @@ export async function runPage(
           sitemap: new Set(sitemap.urls),
         },
         [],
+        (deps.now?.() ?? new Date()).toISOString(),
       )
     : null
   const old = new Map(then.rows.map((row) => [row.keys[0], row]))
@@ -456,6 +457,7 @@ export async function runLostPages(
     deps.inspectionQuota
       ? (count) => deps.call('index', { site: input.site, max_urls: count })
       : null,
+    deps.now?.() ?? new Date(),
   )
   const lostText = [
     `Pages that lost their clicks on ${input.site}: ${range.startDate} to ${range.endDate} against ${before.startDate} to ${before.endDate}.`,
@@ -480,6 +482,8 @@ export async function runLostPages(
     },
     limit: run.limit,
     inspected: run.inspected,
+    fromSaved: run.fromSaved,
+    oldestSaved: run.oldestSaved,
     failed: run.failed,
     stoppedBy: run.stoppedBy,
     quota: run.quota,
@@ -495,7 +499,7 @@ export async function runLostPages(
       : [
           ...(detail === 'summary' ? lostText : []),
           ...reasons,
-          `To see what changed, keep this run's full result (${deps.call('index', { site: input.site, max_urls: input.maxUrls, detail: 'full' })}) and compare it with the next run by url and reason. Inspect the same number each week: the order is fixed, so the same first URLs come back. Each run inspects again and uses URL Inspection quota.`,
+          `To see what changed, keep this run's full result (${deps.call('index', { site: input.site, max_urls: input.maxUrls, detail: 'full' })}) and compare it with the next run by url and reason. Inspect the same number each week: the order is fixed, so the same first URLs come back. Where results are saved (the CLI and the local MCP), a URL inspected in the last 7 days is reused; any other URL is inspected again and uses URL Inspection quota.`,
           `Next: ${firstFix ? deps.call('page', { url: firstFix.url }) : deps.call('page')} for one URL, including a URL from a Search Console email that is not in this set; ${deps.call('report', { site: input.site, section: 'content-decay' })} for pages that lost part of their clicks.`,
         ]
   return {

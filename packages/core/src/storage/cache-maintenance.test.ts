@@ -19,6 +19,11 @@ function cacheDatabase(input: { incremental?: boolean } = {}): {
       fetched_at INTEGER, expires_at INTEGER,
       PRIMARY KEY(site_url, query_hash)
     );
+    CREATE TABLE url_inspection_cache (
+      site_url TEXT, url TEXT, status_json TEXT,
+      fetched_at INTEGER, expires_at INTEGER,
+      PRIMARY KEY(site_url, url)
+    );
     CREATE TABLE ga4_cache (
       property_id TEXT, query_hash TEXT, request_json TEXT, response_json TEXT,
       fetched_at INTEGER, expires_at INTEGER,

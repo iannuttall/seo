@@ -10,7 +10,12 @@
   impressions, sitemap URLs, then the rest), 100 a run by default, and says
   how many it inspected out of how many it knows and what stopped it. In
   the CLI and the local MCP, `--max-urls` (`max_urls`) inspects more, up to
-  the URL Inspection quota left today.
+  the URL Inspection quota left today. There, each URL Inspection result is
+  saved in the local cache for 7 days and reused: paging rows, `--detail
+  full` or a larger `--max-urls` inspects only URLs that are missing or
+  older, and the result says how many came from saved results and how old
+  the oldest is. `--refresh` asks Google again. `seo cache clear --provider
+  gsc` removes them.
   Rows are grouped by Google's exact reason and sorted by reason then URL,
   so a weekly result can be compared with the last one. Each URL shows its
   live status and redirects (permanent or temporary, followed to the final

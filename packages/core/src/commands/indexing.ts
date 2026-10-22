@@ -53,6 +53,8 @@ export type IndexingRow = {
   in_sitemap: boolean
   referring_urls: string[]
   last_crawl: string | null
+  // When URL Inspection returned this result, ISO.
+  inspected_at: string
   page_fetch: string | null
   robots_txt: string | null
   crawled_as: string | null
@@ -313,6 +315,7 @@ export function labelOf(e: Evidence): { label: IndexingLabel; why: string } {
 export function indexingRow(
   e: Evidence,
   sources: IndexingSource[],
+  inspectedAt: string,
 ): IndexingRow {
   const { status, live } = e
   const { label, why } = labelOf(e)
@@ -336,6 +339,7 @@ export function indexingRow(
     in_sitemap: e.inSitemap,
     referring_urls: status.referring_urls.slice(0, REFERRING_KEPT),
     last_crawl: status.last_crawl,
+    inspected_at: inspectedAt,
     page_fetch: status.page_fetch,
     robots_txt: status.robots_txt,
     crawled_as: status.crawled_as,
@@ -428,8 +432,13 @@ export type IndexingRun = {
   rows: IndexingRow[]
   statuses: Map<string, IndexStatus>
   known: KnownUrls
+  // How many URLs this run covers at most.
   limit: number
+  // URLs with a result: inspected now or from a fresh saved result.
   inspected: number
+  fromSaved: number
+  // When the oldest saved result used was inspected, ISO.
+  oldestSaved: string | null
   failed: { url: string; error: string }[]
   stoppedBy: 'limit' | 'quota' | null
   quota: { used: number; limit: number } | null
@@ -441,45 +450,72 @@ export async function inspectKnown(
   site: string,
   known: KnownUrls,
   deps: CommandDeps,
-  // How many to inspect; INSPECT_LIMIT unless the person asked for more.
+  // How many URLs to cover; INSPECT_LIMIT unless the person asked for more.
   asked = INSPECT_LIMIT,
 ): Promise<IndexingRun> {
+  const cap = Math.min(Math.max(1, Math.floor(asked)), MAX_INSPECT_LIMIT)
+  const wanted = known.urls.slice(0, cap)
+  // Fresh saved results cover their URLs, so only missing or stale URLs
+  // are inspected, in the same order.
+  let saved = new Map<string, { status: IndexStatus; inspectedAt: string }>()
+  try {
+    saved =
+      deps.savedInspections?.read(
+        site,
+        wanted.map((item) => item.url),
+      ) ?? saved
+  } catch {}
+  const missing = wanted.filter((item) => !saved.has(item.url))
   const quota = deps.inspectionQuota
     ? await deps.inspectionQuota(site).catch(() => null)
     : null
-  const cap = Math.min(Math.max(1, Math.floor(asked)), MAX_INSPECT_LIMIT)
-  const left = quota ? Math.max(0, quota.limit - quota.used) : cap
-  const limit = Math.min(cap, left)
-  const queue = known.urls.slice(0, limit)
+  const left = quota ? Math.max(0, quota.limit - quota.used) : missing.length
+  const asking = new Set(missing.slice(0, left).map((item) => item.url))
+  const queue = wanted.filter(
+    (item) => saved.has(item.url) || asking.has(item.url),
+  )
+  // The quota left is below what this run would inspect.
+  const quotaShort = left < missing.length
   const statuses = new Map<string, IndexStatus>()
   const rows: IndexingRow[] = []
   const failed: IndexingRun['failed'] = []
-  // The quota left is below what this run would inspect.
-  const quotaShort = left < Math.min(cap, known.urls.length)
   const sitemap = new Set(known.sitemap.urls)
+  const now = () => (deps.now?.() ?? new Date()).toISOString()
   let quotaStop = false
   let next = 0
   let fatal: unknown = null
   const worker = async () => {
-    while (!quotaStop && fatal === null && next < queue.length) {
+    while (fatal === null && next < queue.length) {
       const item = queue[next++] as KnownUrls['urls'][number]
+      const stored = saved.get(item.url)
       let status: IndexStatus
-      try {
-        status = await deps.inspect(site, item.url)
-      } catch (error) {
-        if (isCode(error, ['RATE_LIMITED'])) {
-          quotaStop = true
-        } else if (
-          isCode(error, ['AUTH_EXPIRED', 'AUTH_REQUIRED', 'NOT_CONNECTED'])
-        ) {
-          fatal = error
-        } else {
-          failed.push({
-            url: item.url,
-            error: error instanceof Error ? error.message : String(error),
-          })
+      let inspectedAt: string
+      if (stored) {
+        status = stored.status
+        inspectedAt = stored.inspectedAt
+      } else {
+        if (quotaStop) continue
+        try {
+          status = await deps.inspect(site, item.url)
+          inspectedAt = now()
+        } catch (error) {
+          if (isCode(error, ['RATE_LIMITED'])) {
+            quotaStop = true
+          } else if (
+            isCode(error, ['AUTH_EXPIRED', 'AUTH_REQUIRED', 'NOT_CONNECTED'])
+          ) {
+            fatal = error
+          } else {
+            failed.push({
+              url: item.url,
+              error: error instanceof Error ? error.message : String(error),
+            })
+          }
+          continue
         }
-        continue
+        try {
+          deps.savedInspections?.save(site, item.url, status)
+        } catch {}
       }
       statuses.set(item.url, status)
       const live = await deps.liveCheck(item.url)
@@ -493,24 +529,32 @@ export async function inspectKnown(
             sitemap,
           },
           item.sources,
+          inspectedAt,
         ),
       )
     }
   }
   await Promise.all(Array.from({ length: CONCURRENCY }, worker))
   if (fatal !== null) throw fatal
-  const inspected = rows.length
+  const reused = rows.filter((row) => saved.has(row.url))
+  const oldest = reused.reduce<string | null>(
+    (first, row) =>
+      first === null || row.inspected_at < first ? row.inspected_at : first,
+    null,
+  )
   return {
     rows: sortRows(rows),
     statuses,
     known,
-    limit,
-    inspected,
+    limit: cap,
+    inspected: rows.length,
+    fromSaved: reused.length,
+    oldestSaved: oldest,
     failed: failed.sort((a, b) => byText(a.url, b.url)),
     stoppedBy:
       quotaStop || quotaShort
         ? 'quota'
-        : known.urls.length > queue.length
+        : known.urls.length > wanted.length
           ? 'limit'
           : null,
     quota,
@@ -538,6 +582,7 @@ export function indexingText(
   origin: string | null,
   // How to inspect more URLs on this surface, or null where it cannot.
   askMore: ((count: number) => string) | null,
+  now: Date,
 ): string[] {
   const { known } = run
   const total = known.urls.length
@@ -549,15 +594,22 @@ export function indexingText(
   ]
   const lowerBound =
     known.sitemap.partial || known.searchConsoleCapped ? ' at least' : ''
-  // The most a next run could inspect: every known URL, within the quota
-  // left after this run.
+  // The most a next run could cover: this run's URLs (saved now) plus the
+  // quota left after this run, within the known URLs.
+  const asked = run.inspected - run.fromSaved
   const most = Math.min(
     total,
     MAX_INSPECT_LIMIT,
     run.quota
-      ? run.quota.limit - run.quota.used - run.inspected
+      ? run.inspected + run.quota.limit - run.quota.used - asked
       : MAX_INSPECT_LIMIT,
   )
+  const days = run.oldestSaved
+    ? Math.floor((now.getTime() - Date.parse(run.oldestSaved)) / 86_400_000)
+    : 0
+  const savedNote = run.fromSaved
+    ? ` (${n(asked)} asked of Google now, ${n(run.fromSaved)} from saved results; the oldest was inspected ${run.oldestSaved?.slice(0, 16).replace('T', ' ')} UTC, ${days === 0 ? 'under a day' : plural(days, 'day')} ago. Saved results are reused for 7 days)`
+    : ''
   const stop =
     run.stoppedBy === 'quota'
       ? 'The URL Inspection quota stopped it.'
@@ -567,10 +619,10 @@ export function indexingText(
               ? `; to inspect more, up to the quota left today: ${askMore(most)}`
               : ''
           }.`
-        : 'Every known URL was inspected.'
+        : 'Every known URL has a result.'
   const lines = [
     `Google's indexing reasons for ${site}, from URL Inspection. Search Console's Page indexing report has no API, so known URLs are inspected one at a time, in a fixed order (lost-click pages, Search Console pages by clicks then impressions, sitemap URLs, then the rest), and checked live from here.`,
-    `Known URLs:${lowerBound} ${n(total)} (${sources.join('; ')}). Inspected ${n(run.inspected)} of ${n(total)}. ${stop}${notInspected > 0 ? ` The ${n(notInspected)} URLs not inspected have no result here, so this is not an all-clear for them.` : ''}${known.sitemap.notes.length ? ` Sitemap: ${known.sitemap.notes.join('; ')}.` : ''}`,
+    `Known URLs:${lowerBound} ${n(total)} (${sources.join('; ')}). Inspected ${n(run.inspected)} of ${n(total)}${savedNote}. ${stop}${notInspected > 0 ? ` The ${n(notInspected)} URLs not inspected have no result here, so this is not an all-clear for them.` : ''}${known.sitemap.notes.length ? ` Sitemap: ${known.sitemap.notes.join('; ')}.` : ''}`,
     run.quota
       ? `URL Inspection quota: this machine had used ${n(run.quota.used)} of ${n(run.quota.limit)} today for this property before the run. Google also counts inspections from other tools.`
       : 'URL Inspection quota: not counted on this server; Google stops inspections at 2,000 a day per property.',

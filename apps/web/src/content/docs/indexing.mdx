@@ -35,6 +35,8 @@ seo index --site example.com --max-urls 500
 
 The hosted MCP checks 100 each run.
 
+In a terminal or the local MCP server, each answer from Google is saved on your machine for 7 days. Paging through the rows, asking for the full result, or asking for more pages reuses those answers instead of asking Google again, and the result says how many came from saved answers and how old the oldest is. Add `--refresh` to ask Google again. The live check of each page still runs every time.
+
 For each page you get Google's reason, word for word, then what the page does now: its status, where it redirects and whether that redirect is permanent, the canonical the page declares and the one Google chose, the pages Google saw linking to it, whether your sitemap lists it, and when Google last crawled it.
 
 Each page also gets one of four labels, with the reason for it:

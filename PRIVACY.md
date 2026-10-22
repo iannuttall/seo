@@ -200,14 +200,17 @@ local token record.
 
 Google Analytics and Search Console API responses are cached locally so repeat
 commands do not make the same request unnecessarily. A cached response is
-eligible for reuse for up to 24 hours. Expired cache rows are removed during
+eligible for reuse for up to 24 hours. URL Inspection results (Google's index
+status for each URL, keyed by property and URL) are kept so `seo index` can
+page through or repeat a result without asking Google again; each is reused
+for up to 7 days. Expired cache rows are removed during
 automatic cache maintenance, which also removes cache rows older than 30 days
 and enforces local size limits. On a machine where the command is no longer
 run, expired rows may remain in the local cache file until you delete them.
 
 Run `seo cache clear --provider google-analytics` to remove cached Google
 Analytics responses immediately. Run `seo cache clear --provider gsc` to do
-the same for Search Console. Run `seo cache clear --provider clicky` to remove
+the same for Search Console, including saved URL Inspection results. Run `seo cache clear --provider clicky` to remove
 cached Clicky responses. Settings and saved provider credentials remain until
 you delete them with the relevant command or run `seo reset --yes`. The reset
 command removes Google tokens, local configuration, caches, logs, any

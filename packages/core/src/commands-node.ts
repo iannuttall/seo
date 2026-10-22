@@ -34,6 +34,10 @@ import {
   LOCAL_SIGN_IN,
 } from './gsc/client/fetch.js'
 import { inspectUrl, urlInspectionQuota } from './gsc/client/inspection.js'
+import {
+  readSavedInspections,
+  saveInspection,
+} from './gsc/client/inspection-cache.js'
 import { querySearchAnalytics } from './gsc/client/search-analytics.js'
 import { listSites } from './gsc/client/sites.js'
 import { readAhrefsApiKey } from './providers/ahrefs/credentials.js'
@@ -67,6 +71,12 @@ export function nodeCommandDeps(options: {
       ),
     inspectionQuota: (site) =>
       urlInspectionQuota({ siteUrl: site, accountEmail: options.account }),
+    savedInspections: {
+      // --refresh asks Google again; the new results are still saved.
+      read: (site, urls) =>
+        options.refresh ? new Map() : readSavedInspections(site, urls),
+      save: saveInspection,
+    },
     pageMarkdown: async (url) =>
       extractMainMarkdown(await fetchPage(url, { refresh: options.refresh })),
     call: options.call,

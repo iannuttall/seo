@@ -39,6 +39,11 @@ Cloudflare D1 with only these things:
 - **Your linked Bing account, if you link one.** Its refresh and access
   tokens, with read-only access to Bing Webmaster Tools, and a name made
   from its sites.
+- **Search Console folders you add from the Beta tab.** "Create these in
+  Search Console" asks Google, at that moment, for permission to add and
+  manage your Search Console properties. The server uses it once, to add
+  the folders listed on the page, and does not keep that permission or its
+  token. It keeps which folders it added and whether Google verified them.
 - **Your API keys, if you save them.** A DataForSEO login and password, an
   Ahrefs key and a TypeSafe key.
 - **Your Clicky sites, if you save them.** Each site's numeric site ID,

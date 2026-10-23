@@ -132,9 +132,9 @@ export function formatBytes(bytes: number): string {
   return `${(bytes / (1024 * 1024)).toFixed(1)} MB`
 }
 
-export function maybeExitCancelled<T>(value: T | symbol): T {
+export function maybeExitCancelled<T>(value: T): Exclude<T, symbol> {
   if (typeof value === 'symbol') {
     process.exit(1)
   }
-  return value
+  return value as Exclude<T, symbol>
 }

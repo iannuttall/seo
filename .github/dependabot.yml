@@ -1,0 +1,34 @@
+# Dependabot version updates. Security updates use the same entries once
+# Dependabot security updates are enabled in the repository settings.
+# Policy: weekly, grouped minor/patch, 7-day cooldown, no automatic majors.
+version: 2
+updates:
+  - package-ecosystem: npm
+    directories: ["/"]
+    schedule:
+      interval: weekly
+    open-pull-requests-limit: 5
+    cooldown:
+      default-days: 7
+    groups:
+      npm-minor-and-patch:
+        update-types: [minor, patch]
+    ignore:
+      # Major upgrades, including @types/node and the Node major, are done by hand.
+      - dependency-name: "*"
+        update-types: ["version-update:semver-major"]
+
+  - package-ecosystem: github-actions
+    directories: ["/"]
+    schedule:
+      interval: weekly
+    open-pull-requests-limit: 5
+    cooldown:
+      default-days: 7
+    groups:
+      github-actions-minor-and-patch:
+        update-types: [minor, patch]
+    ignore:
+      # Major upgrades are done by hand, not by Dependabot.
+      - dependency-name: "*"
+        update-types: ["version-update:semver-major"]

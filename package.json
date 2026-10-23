@@ -1,6 +1,6 @@
 {
   "name": "seo",
-  "version": "0.12.0",
+  "version": "0.12.1",
   "mcpName": "dev.seoskill/seo",
   "description": "The SEO command for AI agents: a free Google Search Console MCP server and CLI. Reads your real Search Console, Google Analytics and Bing data for traffic drops, quick wins, content decay, cannibalization and indexing, plus DataForSEO and Ahrefs keyword research.",
   "type": "module",

@@ -109,7 +109,7 @@ export const AUDIT_SECTION_TEXT =
   'What the weekly crawl of the site found (broken and redirected internal links, missing or duplicate titles, descriptions and H1s, noindex, canonicals to another page, sitemap URLs that do not return 200, thin pages), with what is new, back or resolved since the crawl before. Only for sites added to the weekly site audit beta.'
 
 // Plain names for each rule. Heuristics say so.
-const RULES: Record<string, string> = {
+export const AUDIT_RULES: Record<string, string> = {
   link_to_error: 'Internal links to a page that returns an error',
   link_to_redirect: 'Internal links to a redirect',
   link_failed: 'Internal links to a page that could not be fetched',
@@ -327,7 +327,8 @@ export function runAuditReport(
         ? [
             'finding | open | what it is',
             ...byRule.map(
-              ([rule, count]) => `${rule} | ${count} | ${RULES[rule] ?? rule}`,
+              ([rule, count]) =>
+                `${rule} | ${count} | ${AUDIT_RULES[rule] ?? rule}`,
             ),
           ].join('\n')
         : 'No findings in this crawl.',

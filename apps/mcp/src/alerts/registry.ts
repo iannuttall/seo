@@ -1,9 +1,16 @@
+import {
+  siteName,
+  type WeekData,
+  weekMarkdown,
+  weekTitle,
+} from '@seo/core/commands'
 import type { BetaFlag } from '../beta.ts'
 
 // Every kind of alert, in one place. A background job queues an alert of a
 // type with its data (alerts/deliver.ts); this file says what the type is
 // called, who may get it, whether it is on before the person chooses, and
-// how its email reads. The webhook body is the same data as JSON, so a new
+// how its email reads, as Markdown (alerts/email.ts draws every email in
+// the same plain layout). The webhook body is the same data as JSON, so a new
 // type documents its data in apps/mcp/README.md.
 
 export type Channel = 'email' | 'webhook'
@@ -15,7 +22,10 @@ export type AlertType<Data> = {
   flag: BetaFlag
   // On or off before the person changes it.
   defaults: Record<Channel, boolean>
-  email(data: Data, site: string): { subject: string; text: string }
+  email(
+    data: Data,
+    site: string,
+  ): { subject: string; preview: string; markdown: string }
 }
 
 // index-changes: pages that dropped out of Google's index (a top page's
@@ -46,6 +56,7 @@ const indexChanges: AlertType<IndexChanges> = {
   flag: 'weekly-audit',
   defaults: { email: true, webhook: true },
   email(data, site) {
+    const name = siteName(site)
     const parts = [
       data.dropped
         ? `${plural(data.dropped, 'page', 'pages')} dropped out`
@@ -54,15 +65,17 @@ const indexChanges: AlertType<IndexChanges> = {
         ? `${plural(data.returned, 'page', 'pages')} came back`
         : '',
     ].filter(Boolean)
+    const summary = `${parts.join(', ')} of Google’s index`
     const lines = data.pages.map(
       (page) =>
-        `${page.change === 'dropped' ? 'Dropped out' : 'Back in'}: ${page.url}\n  Google says: ${page.coverage ?? page.verdict ?? 'no reason given'}`,
+        `- ${page.change === 'dropped' ? 'Dropped out' : 'Back in'}: ${page.url}. Google says: ${page.coverage ?? page.verdict ?? 'no reason given'}.`,
     )
     const more = data.dropped + data.returned - data.pages.length
     return {
-      subject: `${site}: ${parts.join(', ')} of Google’s index`,
-      text: [
-        `Google URL Inspection found these changes on ${site}.`,
+      subject: `${name}: ${summary}`,
+      preview: `Google URL Inspection found ${summary} on ${name}.`,
+      markdown: [
+        `Google URL Inspection found these changes on ${name}.`,
         '',
         ...lines,
         ...(more > 0
@@ -78,12 +91,31 @@ const indexChanges: AlertType<IndexChanges> = {
   },
 }
 
+// weekly-summary: every audited site's last full week, Monday to Sunday,
+// sent on Monday morning (audit/week.ts). The same Markdown as seo week.
+const weeklySummary: AlertType<WeekData> = {
+  title: 'Weekly summary',
+  text: 'Every Monday, what needs a look on your sites and what was quiet.',
+  flag: 'weekly-audit',
+  defaults: { email: true, webhook: true },
+  email(data) {
+    const markdown = weekMarkdown(data)
+    // The verdict line, for the inbox preview.
+    const verdict = markdown.split('\n')[2] ?? ''
+    return { subject: weekTitle(data), preview: verdict, markdown }
+  },
+}
+
 export const ALERTS = {
   'index-changes': indexChanges,
+  'weekly-summary': weeklySummary,
 } as const
 
 export type AlertTypeId = keyof typeof ALERTS
-export type AlertData = { 'index-changes': IndexChanges }
+export type AlertData = {
+  'index-changes': IndexChanges
+  'weekly-summary': WeekData
+}
 
 export const isAlertType = (value: string): value is AlertTypeId =>
   Object.hasOwn(ALERTS, value)

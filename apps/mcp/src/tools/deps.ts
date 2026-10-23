@@ -7,6 +7,7 @@ import {
   mcpCall,
 } from '@seo/core/commands'
 import { auditAccess } from '../audit/schedule.ts'
+import { weekData } from '../audit/week.ts'
 import { accountUrl, signInHint } from '../google.ts'
 import type { ToolContext } from './registry.ts'
 
@@ -49,7 +50,7 @@ export function deps({
       accounts: async () => directory.accounts(),
       signIn: signInHint(env),
     },
-    ...(audit ? { audit } : {}),
+    ...(audit ? { audit, week: () => weekData(env, userId) } : {}),
     ...(HOSTED_BING
       ? {
           bing: async () => directory.bing,

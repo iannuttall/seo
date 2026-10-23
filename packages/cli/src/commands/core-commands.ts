@@ -26,6 +26,7 @@ import {
   runReport,
   runResearch,
   runRows,
+  runWeek,
   SECTION_IDS,
   type SectionId,
 } from '@seo/core/commands'
@@ -309,6 +310,20 @@ export const indexCommand = defineCommand({
         deps,
       ),
     )
+  },
+})
+
+export const weekCommand = defineCommand({
+  meta: {
+    name: 'week',
+    description:
+      'The last full week of the sites in the weekly site audit beta (needs `seo login`)',
+  },
+  args: {
+    json: common.json,
+  },
+  run: async ({ args }) => {
+    await run(args, (deps) => runWeek(deps))
   },
 })
 

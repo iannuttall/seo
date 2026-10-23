@@ -110,7 +110,18 @@ other answer stops that alert. The Beta tab shows the last call's result.
 
 `type` says what `data` holds. `index-changes` lists up to 100 pages, drops
 first; `dropped` and `returned` count them all. `verdict` and `coverage` are
-Google's own words. More types may come; ignore one you do not know.
+Google's own words.
+
+`weekly-summary` goes out on Monday morning (UTC) for the week from the
+Monday before to Sunday. It covers every audited site, so `site` is `null`.
+`data` is what `seo week` and `seo_week` show: `start` and `end`, and per
+site `property`, `link`, `crawl` (the last finished crawl, with `new_issues`
+first seen or back that week), `index` (the week's `checked`, `dropped` and
+`returned`, with up to 5 `dropped_pages`) and `clicks` (the latest 7 days
+of final Search Console data against the 7 before). Each is `null` when it
+is not known yet.
+
+More types may come; ignore one you do not know.
 
 Each tool call uses the linked Google account that can read the site, the one
 with the most access. `seo_sites` lists properties from every linked account
@@ -218,6 +229,10 @@ A small Cloudflare D1 database (`migrations/`) keeps only:
   the webhook URL and its sealed signing secret (`alert_settings`), each
   alert with its site, changed URLs and delivery state for 30 days
   (`alerts`), and alert emails sent and held per day (`alert_email_days`).
+  Every alert email uses one plain layout (`src/alerts/email.ts`), HTML and
+  text drawn from the same Markdown, with no tracking. The Monday weekly
+  summary (`src/audit/week.ts`) records each account's week for 90 days
+  (`weekly_summaries`) so it is sent once.
 - for the Sites tab: after each run of a site's index checks, its object
   pushes counts to D1 (`audit_sites.monitor`): checks used today, pages
   known, covered, indexed and waiting, the newest and oldest check, and

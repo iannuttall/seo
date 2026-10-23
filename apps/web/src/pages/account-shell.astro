@@ -1307,7 +1307,7 @@ const keys: { name: string; label: string; type: 'text' | 'password' }[] = [
           const to = root.querySelector('[data-alerts-to]')
           if (to) {
             to.textContent = alerts.email
-              ? `Alert emails go to ${alerts.email}, one per site each time something changes.`
+              ? `Alert emails go to ${alerts.email}.`
               : 'Link a Google account to get alert emails.'
           }
           const alertRow = root.querySelector<HTMLTemplateElement>('[data-alert-row]')

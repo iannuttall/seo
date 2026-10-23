@@ -8,6 +8,7 @@ import {
   cloudGoogleToken,
   cloudKeys,
   cloudLinked,
+  cloudWeek,
 } from './cloud.js'
 import type {
   Caller,
@@ -83,6 +84,7 @@ export function nodeCommandDeps(options: {
     bing: localBing,
     bingConnect: LOCAL_BING_CONNECT,
     analytics: { accounts: localAccounts, signIn: LOCAL_SIGN_IN.signIn },
+    ...(cloudLinked() ? { week: cloudWeek } : {}),
   }
 }
 

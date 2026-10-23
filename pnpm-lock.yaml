@@ -116,7 +116,7 @@ importers:
         specifier: ^2.5.4
         version: 2.5.4
       '@modelcontextprotocol/sdk':
-        specifier: ^1.31.0
+        specifier: ^1.32.1
         version: 1.32.1(zod@4.4.3)
       tsdown:
         specifier: ^0.22.12
@@ -131,7 +131,7 @@ importers:
   apps/mcp:
     dependencies:
       '@modelcontextprotocol/sdk':
-        specifier: ^1.31.0
+        specifier: ^1.32.1
         version: 1.32.1(zod@4.4.3)
       '@seo/core':
         specifier: workspace:*
@@ -307,7 +307,7 @@ importers:
   packages/mcp:
     dependencies:
       '@modelcontextprotocol/sdk':
-        specifier: ^1.31.0
+        specifier: ^1.32.1
         version: 1.32.1(zod@4.4.3)
       '@seo/core':
         specifier: workspace:*

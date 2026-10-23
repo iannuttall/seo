@@ -19,7 +19,7 @@ link for them to approve, then run it again.
 
 | CLI | MCP tool | Returns |
 |---|---|---|
-| `seo report --site <site>` | `seo_report` | Search Console overview and sections |
+| `seo report --site <site>` | `seo_report` | Search Console overview and sections; with no site, last week across the sites in the weekly site audit beta |
 | `seo page --url <url>` | `seo_page` | One URL: live page, index status, queries |
 | `seo compare --site <site> --date <date>` | `seo_compare` | Before and after a date, with Google updates |
 | `seo index --site <site>` | `seo_index` | Google's indexing reasons, labelled, and pages that lost their clicks |
@@ -28,10 +28,10 @@ link for them to approve, then run it again.
 | `seo crawl --url <url>` | `seo_crawl` | Technical issues across a site |
 | `seo internal-links --site <site>` or `--url <url>` | `seo_internal_links` | Links to add across a site, or to one page |
 | `seo sites` | `seo_sites` | The properties the person can read |
-| `seo week` | `seo_week` | Last week of the sites in the weekly site audit beta, after `seo login` |
 
-Each result ends with the command to run next. `seo <command> --help` shows
-the options.
+Each result ends with the command to run next. Start small and ask for more:
+a site, then a `--section` (`section`), then `--detail rows` or `full`.
+`seo <command> --help` shows the options.
 
 ## Indexing reasons each week
 

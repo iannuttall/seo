@@ -113,8 +113,9 @@ export async function cloudCredentials(
   return credentials
 }
 
-// seo week: the weekly summary from the linked seoskill.dev account.
-export async function cloudWeek(): Promise<WeekData> {
+// seo report with no site: the weekly summary from the linked seoskill.dev
+// account, or null when the account is not in the weekly site audit beta.
+export async function cloudWeek(): Promise<WeekData | null> {
   const token = cloudToken()
   if (!token) throw new SeoError('AUTH_REQUIRED', notSignedIn())
   const result = await call<WeekData & { message?: string }>(
@@ -127,13 +128,7 @@ export async function cloudWeek(): Promise<WeekData> {
       `This machine is not linked to a seoskill.dev account any more. ${CLOUD_SIGN_IN}`,
     )
   }
-  if (result.status === 403) {
-    throw new SeoError(
-      'ACCESS_DENIED',
-      result.body.message ??
-        'The weekly summary is for accounts in the weekly site audit beta.',
-    )
-  }
+  if (result.status === 403) return null
   if (!result.ok) {
     throw new SeoError(
       'PROVIDER_UNAVAILABLE',

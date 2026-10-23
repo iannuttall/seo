@@ -114,7 +114,7 @@ Google's own words.
 
 `weekly-summary` goes out on Monday morning (UTC) for the week from the
 Monday before to Sunday. It covers every audited site, so `site` is `null`.
-`data` is what `seo week` and `seo_week` show: `start` and `end`, and per
+`data` is what `seo report` and `seo_report` summarise with no site: `start` and `end`, and per
 site `property`, `link`, `crawl` (the last finished crawl, with `new_issues`
 first seen or back that week), `index` (the week's `checked`, `dropped` and
 `returned`, with up to 5 `dropped_pages`) and `clicks` (the latest 7 days

@@ -313,14 +313,31 @@ export function weekMarkdown(data: WeekData): string {
   return out.join('\n')
 }
 
-// seo week: the summary of the last full week.
-export async function runWeek(deps: CommandDeps): Promise<CommandResult> {
-  if (!deps.week) {
+// seo report with no site: the all-sites summary, the same Markdown as the
+// Monday email, then one line naming the parameter for one site's report.
+// Only an account in the weekly site audit beta has it; any other caller
+// gets the same "name a site" error as before.
+export async function runAllSites(deps: CommandDeps): Promise<CommandResult> {
+  const data = deps.week ? await deps.week() : null
+  if (!data) {
     throw new CommandError(
-      'NOT_CONNECTED',
-      'The weekly summary covers the sites in the weekly site audit beta on a seoskill.dev account. On this machine, run `seo login` first.',
+      'INVALID_INPUT',
+      `No site given. Name one: ${deps.call('report', { site: '<site>' })}. The summary of every site is for accounts in the weekly site audit beta.`,
     )
   }
-  const data = await deps.week()
-  return { text: weekMarkdown(data), data }
+  // The site to name next: the most urgent one, else the first by name.
+  const startMs = Date.parse(`${data.start}T00:00:00Z`)
+  const endMs = Date.parse(`${data.end}T00:00:00Z`) + DAY_MS
+  const urgency = (site: WeekSite) =>
+    issues(site, startMs, endMs)[0]?.rank ?? Number.POSITIVE_INFINITY
+  const first = [...data.sites].sort(
+    (a, b) =>
+      urgency(a) - urgency(b) ||
+      siteName(a.property).localeCompare(siteName(b.property)),
+  )[0]
+  const example = first ? siteName(first.property) : '<site>'
+  return {
+    text: `${weekMarkdown(data)}\n\nFull report on one site: ${deps.call('report', { site: example })}`,
+    data,
+  }
 }

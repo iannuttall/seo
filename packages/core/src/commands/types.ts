@@ -6,7 +6,7 @@ import type { AuditAccess } from './audit.js'
 import type { LiveCheck } from './page-facts.js'
 import type { WeekData } from './week.js'
 
-// The public commands. Each runs the same core code in the CLI, the
+// The eight public commands. Each runs the same core code in the CLI, the
 // local MCP and the hosted MCP; only the functions that reach Google and the
 // web differ. "local" commands need the person's machine (a crawl).
 
@@ -47,11 +47,6 @@ export const COMMANDS = {
   'internal-links': {
     where: 'local',
     summary: 'Pages that could link to a target page.',
-  },
-  week: {
-    where: 'anywhere',
-    summary:
-      'The last week of the sites in the weekly site audit beta: what needs a look and what was quiet.',
   },
 } as const
 
@@ -153,9 +148,10 @@ export type CommandDeps = {
   // The weekly site audit and daily indexing checks of a property. Only the
   // hosted server sets it, and only for accounts in that beta.
   audit?: AuditAccess
-  // The last full week of the weekly site audit, for seo week: from the
-  // hosted server, or through it on a linked machine.
-  week?: () => Promise<WeekData>
+  // The last full week of the weekly site audit, for seo report with no
+  // site: from the hosted server, or through it on a linked machine. null
+  // when the account is not in that beta.
+  week?: () => Promise<WeekData | null>
   now?: () => Date
 }
 

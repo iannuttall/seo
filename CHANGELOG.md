@@ -1,6 +1,6 @@
 # Changelog
 
-## Unreleased
+## 0.12.1
 
 ### Fixed
 
@@ -8,6 +8,12 @@
   `seo` run holds the local cache. The inspection goes ahead uncounted and
   Google's own daily limit applies, as it already did for the rest of the
   cache.
+
+### Security
+
+- `seo` now needs Node 22.23.4, 24.22.1, 26.12.1 or a later release of the
+  same line, the versions with the Node.js security fixes of 21 October
+  2026, and installs undici 8.12.2 or later for its fixes of 15 October 2026.
 
 ## 0.12.0
 

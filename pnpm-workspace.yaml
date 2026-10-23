@@ -37,7 +37,7 @@ allowBuilds:
   esbuild@0.28.1: true
   sharp: set this to true or false
   sharp@0.35.5: true
-  workerd@1.20260714.1: true
+  workerd: true
 
 minimumReleaseAgeExclude:
   - '@iannuttall/seo-graph-astro'

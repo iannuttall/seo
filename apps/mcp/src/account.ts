@@ -30,6 +30,7 @@ import {
   MAX_SITES,
   removeAllAuditSites,
   removeAuditSite,
+  siteId,
 } from './audit/schedule.ts'
 import { BETA, betaFlags } from './beta.ts'
 import { loginUrl, newToken } from './cli.ts'
@@ -125,7 +126,14 @@ async function accountPage(
   env: Env,
   userId: string,
   message = '',
-  extra: { link?: string; token?: string; tab?: string; ok?: boolean } = {},
+  extra: {
+    link?: string
+    token?: string
+    tab?: string
+    ok?: boolean
+    // A site page: /account/sites/<id>.
+    site?: string
+  } = {},
 ): Promise<Response> {
   const [accounts, keys, machines, login, beta] = await Promise.all([
     accountsOf(env, userId),
@@ -134,7 +142,18 @@ async function accountPage(
     extra.link ? pendingLogin(env, extra.link) : null,
     betaFlags(env, userId),
   ])
-  const audits = beta.has('weekly-audit') ? await auditSites(env, userId) : []
+  const audits = beta.has('weekly-audit')
+    ? await Promise.all(
+        (await auditSites(env, userId)).map(async (site) => ({
+          ...site,
+          id: await siteId(userId, site.property),
+        })),
+      )
+    : []
+  const site = extra.site
+    ? audits.find((item) => item.id === extra.site)?.id
+    : undefined
+  const missing = extra.site && !site ? 'That site is not in your audit.' : ''
   const alerts = await alertSettings(env, userId)
   const held = alerts.types.length
     ? await env.DB.prepare(
@@ -148,9 +167,11 @@ async function accountPage(
     message:
       (extra.link && !login
         ? 'This link expired or was already used. Run `seo login` again.'
-        : message) || undefined,
+        : missing || message) || undefined,
     // Every account page message is an error unless the caller says ok.
-    error: Boolean(message || (extra.link && !login)) && !extra.ok,
+    error:
+      Boolean(missing || message || (extra.link && !login)) &&
+      !(extra.ok && !missing),
     account: {
       form: await seal(env.SEAL_KEY, {
         k: 'form',
@@ -192,6 +213,7 @@ async function accountPage(
                   audit: {
                     max: MAX_SITES,
                     sites: audits.map((site) => ({
+                      id: site.id,
                       property: site.property,
                       lastFinishedAt: site.lastFinishedAt,
                       lastStatus: site.lastStatus,
@@ -228,6 +250,7 @@ async function accountPage(
         : {}),
       ...(extra.token ? { token: extra.token } : {}),
       ...(extra.tab ? { tab: extra.tab } : {}),
+      ...(site ? { site } : {}),
     },
   })
 }
@@ -272,6 +295,14 @@ export async function account(
       },
       { headers: { 'cache-control': 'no-store' } },
     )
+  }
+  // One audited site's page, by its opaque id.
+  const sitePage = /^\/account\/sites\/([\w-]{16})$/.exec(path)
+  if (request.method === 'GET' && sitePage) {
+    const userId = await sessionUser(request, env)
+    return userId
+      ? accountPage(env, userId, '', { tab: 'sites', site: sitePage[1] })
+      : signInPage(env)
   }
   if (request.method !== 'POST') {
     return new Response('Not found', { status: 404 })
@@ -709,6 +740,7 @@ export async function propertiesCallback(
   )
   return accountPage(env, userId, lines.join(' '), {
     tab: 'sites',
+    site: await siteId(userId, state.property),
     ok: added.every((item) => item.state === 'verified'),
   })
 }

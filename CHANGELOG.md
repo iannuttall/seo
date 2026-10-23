@@ -1,6 +1,6 @@
 # Changelog
 
-## Unreleased
+## 0.13.0
 
 ### Added
 
@@ -10,6 +10,15 @@
   summary as the Monday email, and it ends with the site to ask about next.
   On a machine, run `seo login` first. Without the beta, a missing site is
   still an error that says to name one.
+
+### Changed
+
+- Dependencies are updated to their latest minor and patch releases.
+
+### Security
+
+- The MCP SDK must be 1.32.1 or later, the release with the MCP TypeScript
+  SDK fixes of 20 October 2026.
 
 ## 0.12.1
 

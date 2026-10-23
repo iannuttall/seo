@@ -220,8 +220,10 @@ A small Cloudflare D1 database (`migrations/`) keeps only:
   (`alerts`), and alert emails sent and held per day (`alert_email_days`).
 - for the Sites tab: after each run of a site's index checks, its object
   pushes counts to D1 (`audit_sites.monitor`): checks used today, pages
-  known, covered and waiting, the newest and oldest check, and this week's
-  drops and returns. The picker's property list comes from one bounded
+  known, covered, indexed and waiting, the newest and oldest check, and
+  this week's drops and returns. A site's page, `/account/sites/<id>`, uses
+  a short hash of the person and the property as its id, so the link never
+  shows the domain. The picker's property list comes from one bounded
   `sites.list` call per linked Google account and is held only in the
   Worker's memory for 5 minutes (`src/audit/choices.ts`).
 - for "Create these in Search Console" on the Sites tab

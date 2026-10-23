@@ -16,6 +16,11 @@ const quiet = getButtonClasses('link-muted', 'xs')
 const panel = 'rounded-lg bg-muted p-6'
 const heading = 'text-base font-medium text-foreground'
 const note = 'mt-1 text-sm/6 text-foreground-muted'
+// A small toggle group, in the tab bar's style.
+const toggles =
+  'inline-flex h-9 shrink-0 items-center gap-1 rounded-lg bg-muted p-0.5 text-foreground-muted'
+const toggle =
+  'inline-flex h-8 items-center rounded-md px-3 text-sm font-medium outline-none transition-colors hover:text-foreground focus-visible:ring-[3px] focus-visible:ring-ring/20 aria-pressed:bg-card aria-pressed:text-foreground aria-pressed:shadow-xs'
 const description =
   'The Google accounts, Bing, API keys and Clicky sites your agents use, through the hosted MCP server or the seo CLI.'
 const tabs = [
@@ -125,31 +130,45 @@ const keys: { name: string; label: string; type: 'text' | 'password' }[] = [
         </div>
       </div>
 
-      {/* The ilo toggle group from SetupCommands. It wraps onto a second
-          row on a narrow screen, so every tab stays visible. Each tab has a hash, and
+      {/* The ilo toggle group from SetupCommands, on one row. On a narrow
+          screen it scrolls sideways with no scrollbar, and a fade shows on
+          each edge that has more tabs past it. Each tab has a hash, and
           the #google, #bing, #clicky and #machines links open the tab that
           holds them. */}
-      <div
-        role="tablist"
-        aria-label="Account sections"
-        class="inline-flex max-w-full flex-wrap items-center gap-1 rounded-lg bg-muted p-0.5 text-foreground-muted"
-      >
-        {
-          tabs.map((tab, index) => (
-            <button
-              type="button"
-              role="tab"
-              id={`account-tab-${tab.id}`}
-              aria-controls={`account-panel-${tab.id}`}
-              aria-selected={index === 0 ? 'true' : 'false'}
-              tabindex={index === 0 ? undefined : -1}
-              data-account-tab={tab.id}
-              class="inline-flex h-8 min-w-7 shrink-0 items-center justify-center rounded-md border border-transparent px-2.5 text-sm sm:px-3 font-medium outline-none transition-colors hover:text-foreground focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/20 aria-selected:bg-card aria-selected:text-foreground aria-selected:shadow-xs"
-            >
-              {tab.label}
-            </button>
-          ))
-        }
+      <div class="relative w-fit max-w-full">
+        <div
+          role="tablist"
+          aria-label="Account sections"
+          class="relative flex h-9 max-w-full items-center gap-1 overflow-x-auto rounded-lg bg-muted p-0.5 text-foreground-muted [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
+          data-tab-strip
+        >
+          {
+            tabs.map((tab, index) => (
+              <button
+                type="button"
+                role="tab"
+                id={`account-tab-${tab.id}`}
+                aria-controls={`account-panel-${tab.id}`}
+                aria-selected={index === 0 ? 'true' : 'false'}
+                tabindex={index === 0 ? undefined : -1}
+                data-account-tab={tab.id}
+                class="inline-flex h-8 min-w-7 shrink-0 items-center justify-center rounded-md border border-transparent px-3 text-sm font-medium outline-none transition-colors hover:text-foreground focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/20 aria-selected:bg-card aria-selected:text-foreground aria-selected:shadow-xs"
+              >
+                {tab.label}
+              </button>
+            ))
+          }
+        </div>
+        <span
+          aria-hidden="true"
+          class="pointer-events-none absolute inset-y-0 left-0 w-10 rounded-l-lg bg-linear-to-r from-muted to-transparent opacity-0 transition-opacity"
+          data-tab-fade="left"
+        ></span>
+        <span
+          aria-hidden="true"
+          class="pointer-events-none absolute inset-y-0 right-0 w-10 rounded-r-lg bg-linear-to-l from-muted to-transparent opacity-0 transition-opacity"
+          data-tab-fade="right"
+        ></span>
       </div>
 
       <div
@@ -338,44 +357,166 @@ const keys: { name: string; label: string; type: 'text' | 'password' }[] = [
         class="mt-4 flex flex-col gap-4"
         hidden
       >
-        <div class={panel} id="sites">
-          <h2 class={heading}>Sites</h2>
-          <p class={note}>
-            Each site is crawled once a week, up to 5,000 pages, and Google
-            checks its pages every day. Ask your agent for the report
-            or <code>seo index</code> on a site to see the results.
-          </p>
-          <form method="post" data-action="/account/audit" class="mt-4" data-audit-add>
-            <input type="hidden" name="form" />
-            <input type="hidden" name="property" data-picker-value />
-            <label for="site-picker" class="text-sm font-medium text-foreground">Add a site</label>
-            <div class="relative mt-1.5">
-              <FormInput
-                id="site-picker"
-                type="text"
-                role="combobox"
-                aria-expanded="false"
-                aria-controls="site-picker-list"
-                aria-autocomplete="list"
-                autocomplete="off"
-                spellcheck="false"
-                placeholder="Search your Search Console properties"
-                data-picker
-              />
-              <ul
-                id="site-picker-list"
-                role="listbox"
-                aria-label="Search Console properties"
-                class="absolute inset-x-0 z-10 mt-1 max-h-80 overflow-y-auto rounded-lg bg-card p-1 text-sm shadow-lg"
-                data-picker-list
-                hidden
-              ></ul>
+        <div class="flex flex-col gap-4" data-sites-overview>
+          <div class="flex items-center gap-3 rounded-lg bg-info-soft px-4 py-2.5 text-sm/6 text-foreground" data-sites-notice hidden>
+            <p class="min-w-0 flex-1">
+              <span data-sites-notice-text></span><a class="underline" data-sites-notice-link>Review</a>
+            </p>
+            <button
+              type="button"
+              aria-label="Dismiss"
+              class="-mr-1 inline-flex size-7 shrink-0 items-center justify-center rounded-md text-foreground-muted hover:text-foreground"
+              data-sites-notice-close
+            >
+              <svg viewBox="0 0 16 16" class="size-3.5" aria-hidden="true"><path d="M3.5 3.5l9 9m0-9l-9 9" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" /></svg>
+            </button>
+          </div>
+
+          <div class={panel} id="sites">
+            <h2 class={heading}>Sites</h2>
+            <p class={note}>
+              Each site is crawled once a week and Google checks its pages
+              every day. Ask your agent for the report.
+            </p>
+            <form method="post" data-action="/account/audit" class="mt-4" data-audit-add>
+              <input type="hidden" name="form" />
+              <input type="hidden" name="property" data-picker-value />
+              <label for="site-picker" class="text-sm font-medium text-foreground">Add a site</label>
+              <div class="relative mt-1.5">
+                <FormInput
+                  id="site-picker"
+                  type="text"
+                  role="combobox"
+                  aria-expanded="false"
+                  aria-controls="site-picker-list"
+                  aria-autocomplete="list"
+                  autocomplete="off"
+                  spellcheck="false"
+                  placeholder="Search your Search Console properties"
+                  data-picker
+                />
+                <ul
+                  id="site-picker-list"
+                  role="listbox"
+                  aria-label="Search Console properties"
+                  class="absolute inset-x-0 z-10 mt-1 max-h-80 overflow-y-auto rounded-lg bg-card p-1 text-sm shadow-lg"
+                  data-picker-list
+                  hidden
+                ></ul>
+              </div>
+              <p class={note} data-picker-status aria-live="polite"></p>
+            </form>
+            <p class={note} data-audit-full hidden></p>
+          </div>
+
+          <div class="flex flex-wrap items-center gap-2" data-sites-tools hidden>
+            <label for="site-filter" class="sr-only">Filter sites by name</label>
+            <FormInput
+              id="site-filter"
+              type="search"
+              autocomplete="off"
+              spellcheck="false"
+              placeholder="Filter sites"
+              class="h-9 basis-full sm:basis-0 sm:flex-1"
+              data-site-filter
+            />
+            <div role="group" aria-label="Show" class={toggles}>
+              <button type="button" class={toggle} aria-pressed="true" data-health="all">All</button>
+              <button type="button" class={toggle} aria-pressed="false" data-health="issues">Issues</button>
+              <button type="button" class={toggle} aria-pressed="false" data-health="healthy">Healthy</button>
             </div>
-            <p class={note} data-picker-status aria-live="polite"></p>
-          </form>
-          <p class={note} data-audit-full hidden></p>
+            <div role="group" aria-label="Layout" class:list={[toggles, 'ml-auto sm:ml-0']}>
+              <button type="button" class={toggle} aria-pressed="true" data-layout="cards">Cards</button>
+              <button type="button" class={toggle} aria-pressed="false" data-layout="list">List</button>
+            </div>
+          </div>
+
+          <ul class="grid gap-4 sm:grid-cols-2" aria-label="Audited sites" data-site-cards></ul>
+          <div class="overflow-hidden rounded-lg bg-muted" data-site-table hidden>
+            <table class="w-full text-left text-sm">
+              <caption class="sr-only">Audited sites</caption>
+              <thead class="text-foreground-muted">
+                <tr>
+                  <th scope="col" class="px-4 py-2.5 font-normal">Site</th>
+                  <th scope="col" class="hidden px-2 py-2.5 font-normal sm:table-cell">Health</th>
+                  <th scope="col" class="hidden px-2 py-2.5 text-right font-normal sm:table-cell">Crawled</th>
+                  <th scope="col" class="whitespace-nowrap px-2 py-2.5 text-right font-normal">In index</th>
+                  <th scope="col" class="px-2 py-2.5 text-right font-normal">New issues</th>
+                  <th scope="col" class="hidden px-4 py-2.5 font-normal sm:table-cell">Alerts</th>
+                </tr>
+              </thead>
+              <tbody class="divide-y divide-border" data-site-rows></tbody>
+            </table>
+          </div>
+          <p class="text-sm text-foreground-muted" data-sites-empty hidden>No site matches.</p>
         </div>
-        <ul class="flex flex-col gap-4" aria-label="Audited sites" data-audit-list></ul>
+
+        <div data-site-page hidden>
+          <a href="/account#sites" data-href="/account#sites" class="inline-flex items-center gap-1 text-sm text-foreground-muted hover:text-foreground">
+            <span aria-hidden="true">←</span> All sites
+          </a>
+          <h2 class="mt-3 break-all text-xl font-semibold text-foreground" data-page-name></h2>
+          <p class={note} data-page-owner></p>
+          <div class="mt-5 grid gap-4 sm:grid-cols-2">
+            {
+              [
+                { id: 'crawl', label: 'Weekly crawl' },
+                { id: 'checks', label: 'Index checks' },
+                { id: 'coverage', label: 'Coverage' },
+                { id: 'alerts', label: 'Alerts' },
+              ].map((tile) => (
+                <section class="flex flex-col rounded-lg bg-muted p-5" data-tile={tile.id}>
+                  <h3 class="flex items-center gap-2 text-sm font-medium text-foreground">
+                    <span class="size-2 shrink-0 rounded-full bg-foreground-soft" data-tile-dot></span>
+                    <span>{tile.label}</span>
+                  </h3>
+                  <p class="mt-3 text-3xl font-semibold tabular-nums text-foreground" data-tile-value></p>
+                  <p class="mt-1 text-sm/6 text-foreground-muted" data-tile-line></p>
+                  {tile.id === 'coverage' && (
+                    <button type="button" class:list={[outline, 'mt-4 self-start']} data-coverage-open hidden>
+                      Improve coverage
+                    </button>
+                  )}
+                  {tile.id === 'alerts' && (
+                    <a href="/account#alerts" data-href="/account#alerts" class="mt-4 self-start text-sm text-foreground underline">
+                      Change alerts
+                    </a>
+                  )}
+                </section>
+              ))
+            }
+          </div>
+          <form method="post" data-action="/account/audit/remove" class="mt-8">
+            <input type="hidden" name="form" />
+            <input type="hidden" name="property" data-page-input />
+            <button type="submit" class={quiet}>Remove from audit</button>
+          </form>
+        </div>
+
+        <dialog
+          id="coverage"
+          aria-labelledby="coverage-title"
+          class="m-auto w-[min(30rem,calc(100%-2rem))] rounded-xl border-0 bg-card shadow-xl outline-none p-6 text-foreground backdrop:bg-overlay-scrim"
+          data-coverage-dialog
+        >
+          <h2 id="coverage-title" class={heading}>Improve coverage</h2>
+          <p class={note}>
+            Google checks up to 2,000 pages a day for each property, so each
+            folder you add checks more.
+          </p>
+          <ul class="mt-4 divide-y divide-border text-sm" data-coverage-list></ul>
+          <form method="post" data-action="/account/audit/properties" class="mt-5" data-coverage-create>
+            <input type="hidden" name="form" />
+            <input type="hidden" name="property" data-coverage-input />
+            <button type="submit" class={primary}>Create these in Search Console</button>
+            <p class="mt-2 text-xs/5 text-foreground-muted">
+              Google asks once for permission to add properties, and SEO Skill does not keep it.
+            </p>
+          </form>
+          <form method="dialog" class="mt-4">
+            <button type="submit" class={outline}>Close</button>
+          </form>
+        </dialog>
       </div>
 
       <div
@@ -478,48 +619,59 @@ const keys: { name: string; label: string; type: 'text' | 'password' }[] = [
         <p class="mt-0.5 text-foreground-muted" data-beta-text></p>
       </li>
     </template>
-    <template data-audit-row>
-      <li class={panel}>
-        <div class="flex items-start justify-between gap-4">
-          <div class="min-w-0">
-            <h3 class="break-all text-base font-medium text-foreground" data-audit-property></h3>
-            <p class={note} data-audit-owner>Finding the Google account that reads it…</p>
-          </div>
-          <form method="post" data-action="/account/audit/remove" class="shrink-0">
-            <input type="hidden" name="form" />
-            <input type="hidden" name="property" data-audit-input />
-            <button type="submit" class={quiet}>Remove from audit</button>
-          </form>
+    <template data-site-card>
+      <li class="flex flex-col rounded-lg bg-muted p-5" data-site>
+        <a class="flex items-center justify-between gap-3 text-sm font-medium text-foreground hover:underline" data-site-link>
+          <span class="min-w-0 [overflow-wrap:anywhere]" data-site-name></span>
+          <span aria-hidden="true" class="text-foreground-muted">›</span>
+        </a>
+        {/* The right side of this row is kept free for a small trend chart. */}
+        <div class="mt-2 flex items-center justify-between gap-4">
+          <p class="flex items-center gap-2 text-xl font-semibold text-foreground">
+            <span class="size-2.5 shrink-0 rounded-full" data-site-dot></span>
+            <span data-site-health></span>
+          </p>
         </div>
-        <dl class="mt-4 grid gap-x-6 gap-y-1 text-sm/6 sm:grid-cols-[11rem_minmax(0,1fr)] sm:gap-y-4">
-          <dt class="text-foreground-muted">Weekly crawl</dt>
-          <dd class="mb-3 text-foreground sm:mb-0" data-audit-crawl></dd>
-          <dt class="text-foreground-muted">Index checks</dt>
-          <dd class="mb-3 text-foreground sm:mb-0" data-audit-checks></dd>
-          <dt class="text-foreground-muted">Subfolder properties</dt>
-          <dd class="mb-3 text-foreground sm:mb-0">
-            <span class="block" data-audit-coverage>Worked out after the first checks.</span>
-            <span class="mt-2 block" data-audit-folders hidden>
-              <span class="block text-foreground-muted">
-                Add these folders as their own Search Console properties to
-                check more pages each day:
-              </span>
-              <span class="mt-1 block" data-audit-folder-list></span>
-              <form method="post" data-action="/account/audit/properties" class="mt-3" data-audit-create>
-                <input type="hidden" name="form" />
-                <input type="hidden" name="property" data-audit-create-input />
-                <button type="submit" class={outline}>Create these in Search Console</button>
-              </form>
-              <span class="mt-1 block text-foreground-muted" data-audit-create-note>
-                Google asks once for permission to add properties. SEO Skill
-                uses it only for this, and does not keep it.
-              </span>
-            </span>
-          </dd>
-          <dt class="text-foreground-muted">Alerts</dt>
-          <dd class="text-foreground" data-audit-alerts></dd>
+        <dl class="mt-4 grid grid-cols-3 gap-3 text-sm">
+          <div class="flex flex-col-reverse">
+            <dt class="text-xs text-foreground-muted">crawled</dt>
+            <dd class="font-medium tabular-nums text-foreground" data-site-crawled></dd>
+          </div>
+          <div class="flex flex-col-reverse">
+            <dt class="text-xs text-foreground-muted">in index</dt>
+            <dd class="font-medium tabular-nums text-foreground" data-site-indexed></dd>
+          </div>
+          <div class="flex flex-col-reverse">
+            <dt class="text-xs text-foreground-muted">new issues</dt>
+            <dd class="font-medium tabular-nums text-foreground" data-site-new></dd>
+          </div>
         </dl>
+        <div class="mt-5 flex items-center justify-between gap-3 text-sm">
+          <span class="text-foreground-muted" data-site-alerts></span>
+          <a class="font-medium text-primary hover:underline" data-site-view>View site <span aria-hidden="true">→</span></a>
+        </div>
       </li>
+    </template>
+    <template data-site-row>
+      <tr data-site>
+        <td class="px-4 py-3">
+          <a class="font-medium text-foreground [overflow-wrap:anywhere] hover:underline" data-site-link data-site-name></a>
+          <span class="mt-0.5 flex items-center gap-1.5 text-foreground-muted sm:hidden">
+            <span class="size-2 shrink-0 rounded-full" data-site-dot></span>
+            <span data-site-health></span>
+          </span>
+        </td>
+        <td class="hidden px-2 py-3 sm:table-cell">
+          <span class="inline-flex items-center gap-1.5 whitespace-nowrap text-foreground">
+            <span class="size-2 shrink-0 rounded-full" data-site-dot></span>
+            <span data-site-health></span>
+          </span>
+        </td>
+        <td class="hidden px-2 py-3 text-right tabular-nums text-foreground sm:table-cell" data-site-crawled></td>
+        <td class="px-2 py-3 text-right tabular-nums text-foreground" data-site-indexed></td>
+        <td class="px-2 py-3 text-right tabular-nums text-foreground" data-site-new></td>
+        <td class="hidden whitespace-nowrap px-4 py-3 text-foreground-muted sm:table-cell" data-site-alerts></td>
+      </tr>
     </template>
     <template data-alert-row>
       <li class="flex flex-wrap items-start justify-between gap-x-4 gap-y-2 py-2.5">
@@ -575,6 +727,7 @@ const keys: { name: string; label: string; type: 'text' | 'password' }[] = [
       audit?: {
         max: number
         sites: {
+          id: string
           property: string
           lastFinishedAt: number | null
           lastStatus: string | null
@@ -589,6 +742,7 @@ const keys: { name: string; label: string; type: 'text' | 'password' }[] = [
             perDay: number
             known: number
             covered: number
+            indexed?: number
             queued: number
             lastCheckedAt: number | null
             oldestCheckedAt: number | null
@@ -617,6 +771,7 @@ const keys: { name: string; label: string; type: 'text' | 'password' }[] = [
       }
       token?: string
       tab?: string
+      site?: string
     }
     link?: string
   }
@@ -634,6 +789,9 @@ const keys: { name: string; label: string; type: 'text' | 'password' }[] = [
       element?.toggleAttribute('hidden', !visible)
 
     type Audit = NonNullable<NonNullable<State['account']>['audit']>
+    type Site = Audit['sites'][number]
+    // A property as people say it: example.com, or shop.example.org/blog.
+    const siteName = (site: Site) => site.property.replace(/^sc-domain:|^https?:\/\//, '').replace(/\/$/, '')
     type Alerts = NonNullable<State['account']>['alerts']
     type Choice = { property: string; email: string; audited: boolean }
     const day = (ms: number) =>
@@ -658,129 +816,267 @@ const keys: { name: string; label: string; type: 'text' | 'password' }[] = [
         .catch(() => null)
       return choices
     }
-    let sitesShown = () => {}
 
-    const renderSites = (audit: Audit, alerts: Alerts) => {
-      const siteRow = root.querySelector<HTMLTemplateElement>('[data-audit-row]')
-      const siteList = root.querySelector('[data-audit-list]')
-      const owners = new Map<string, Element>()
-      for (const site of audit.sites) {
-        const copy = siteRow?.content.cloneNode(true) as DocumentFragment
-        const name = copy.querySelector('[data-audit-property]')
-        if (name) name.textContent = site.property
-        const owner = copy.querySelector('[data-audit-owner]')
-        if (owner) owners.set(site.property, owner)
-        const input = copy.querySelector<HTMLInputElement>('[data-audit-input]')
-        if (input) input.value = site.property
+    // One site's page: four short tiles, and the step to add folders.
+    let sitePageShown = () => {}
+    const renderSitePage = (
+      site: Site,
+      alerts: Alerts,
+      alertsOn: boolean,
+      number: (value: number | null | undefined) => string,
+    ) => {
+      show(root.querySelector('[data-sites-overview]'), false)
+      show(root.querySelector('[data-site-page]'))
+      const name = root.querySelector('[data-page-name]')
+      if (name) name.textContent = siteName(site)
+      const input = root.querySelector<HTMLInputElement>('[data-page-input]')
+      if (input) input.value = site.property
+      document.title = `${name?.textContent} · Your account`
+      const tile = (id: string, value: string, text: string, dot: string) => {
+        const element = root.querySelector(`[data-tile="${id}"]`)
+        const valueCell = element?.querySelector('[data-tile-value]')
+        if (valueCell) valueCell.textContent = value
+        const lineCell = element?.querySelector('[data-tile-line]')
+        if (lineCell) lineCell.textContent = text
+        element?.querySelector('[data-tile-dot]')?.classList.replace('bg-foreground-soft', dot)
+      }
+      const next = site.nextRunAt > Date.now() ? `next ${day(site.nextRunAt)}` : 'next within the hour'
+      if (site.lastFinishedAt) {
+        const failed = site.lastStatus === 'failed'
+        tile(
+          'crawl',
+          count(site.pages ?? 0),
+          `${failed ? 'stopped early' : `pages · ${count(site.new ?? 0)} new ${site.new === 1 ? 'issue' : 'issues'}`} · ${next}`,
+          failed ? 'bg-destructive' : 'bg-success',
+        )
+      } else {
+        tile('crawl', '–', site.error ? `Could not start: ${site.error}` : 'First crawl running', site.error ? 'bg-destructive' : 'bg-foreground-soft')
+      }
+      const monitor = site.monitor
+      if (monitor) {
+        const changes =
+          monitor.dropped || monitor.returned
+            ? `${count(monitor.dropped)} dropped, ${count(monitor.returned)} back this week`
+            : 'no drops this week'
+        tile(
+          'checks',
+          number(monitor.indexed),
+          `of ${count(monitor.known)} in index · ${changes}`,
+          monitor.dropped ? 'bg-warning' : 'bg-success',
+        )
+      } else {
+        tile('checks', '–', 'Starts after the first crawl', 'bg-foreground-soft')
+      }
+      const coverage = site.coverage
+      const folders = coverage?.suggestions ?? []
+      const open = folders.filter((folder) => !folder.added)
+      if (coverage) {
+        const perDay = coverage.perDay * coverage.properties.length
+        tile(
+          'coverage',
+          count(perDay),
+          open.length
+            ? `pages a day · add ${open.length === 1 ? 'one folder' : `${open.length} folders`} for ${count(perDay + open.length * coverage.perDay)}`
+            : 'pages a day',
+          open.length ? 'bg-warning' : 'bg-success',
+        )
+      } else {
+        tile('coverage', '–', 'Worked out after the first checks', 'bg-foreground-soft')
+      }
+      const channels = [
+        alerts?.types.some((type) => type.email) && 'email',
+        alerts?.webhookUrl && alerts.types.some((type) => type.webhook) && 'webhook',
+      ].filter(Boolean)
+      tile(
+        'alerts',
+        alertsOn ? 'On' : 'Off',
+        alertsOn ? `By ${channels.join(' and ')}` : 'No alerts for your sites',
+        alertsOn ? 'bg-success' : 'bg-foreground-soft',
+      )
 
-        const crawl = copy.querySelector('[data-audit-crawl]')
-        if (site.lastFinishedAt) {
-          line(
-            crawl,
-            `Last crawl ${day(site.lastFinishedAt)}${site.lastStatus === 'failed' ? ', stopped early' : ''}: ${pages(site.pages ?? 0)} found, ${count(site.open ?? 0)} open ${site.open === 1 ? 'finding' : 'findings'}, ${count(site.new ?? 0)} new.`,
-          )
-        } else {
-          line(crawl, site.error ? `Could not start yet: ${site.error}` : 'First crawl running.')
-        }
-        if (site.lastFinishedAt || !site.error) {
-          line(
-            crawl,
-            site.nextRunAt > Date.now() ? `Next crawl ${day(site.nextRunAt)}.` : 'Next crawl starting within the hour.',
+      // Improve coverage: the suggested folders as a short checklist.
+      const dialog = root.querySelector<HTMLDialogElement>('[data-coverage-dialog]')
+      const opener = root.querySelector('[data-coverage-open]')
+      if (dialog && folders.length) {
+        show(opener)
+        opener?.addEventListener('click', () => dialog.showModal())
+        const list = dialog.querySelector('[data-coverage-list]')
+        for (const folder of folders) {
+          const item = document.createElement('li')
+          item.className = 'flex items-start gap-3 py-2.5'
+          const mark = document.createElement('span')
+          mark.setAttribute('aria-hidden', 'true')
+          mark.className = `mt-0.5 inline-flex size-4 shrink-0 items-center justify-center rounded text-[10px] ${
+            folder.added === 'verified'
+              ? 'bg-success text-background'
+              : folder.added
+                ? 'bg-warning text-background'
+                : 'border border-border-strong'
+          }`
+          mark.textContent = folder.added === 'verified' ? '✓' : folder.added ? '!' : ''
+          const text = document.createElement('span')
+          text.className = 'min-w-0 flex-1'
+          line(text, folder.property).classList.add('break-all', 'text-foreground')
+          const status = line(
+            text,
+            `${pages(folder.urls)} · ${
+              folder.added === 'verified' ? 'verified' : folder.added ? 'added, not verified' : 'suggested'
+            }`,
             true,
           )
+          if (!folder.added) {
+            status.append(' · ')
+            const link = document.createElement('a')
+            link.href = 'https://search.google.com/search-console/welcome'
+            link.target = '_blank'
+            link.rel = 'noopener'
+            link.className = 'text-foreground underline'
+            link.textContent = 'add it yourself'
+            status.append(link)
+          }
+          item.append(mark, text)
+          list?.append(item)
+        }
+        const create = dialog.querySelector<HTMLInputElement>('[data-coverage-input]')
+        if (create) create.value = site.property
+        show(dialog.querySelector('[data-coverage-create]'), open.length > 0)
+        if (window.location.hash === '#coverage') dialog.showModal()
+      }
+
+      sitePageShown = () => {
+        const owner = root.querySelector('[data-page-owner]')
+        if (owner) owner.textContent = 'Finding the Google account that reads it…'
+        loadChoices().then((found) => {
+          const match = found?.choices.find((item) => item.property === site.property)
+          if (!owner) return
+          owner.textContent = !found
+            ? 'Could not check which Google account reads it.'
+            : match
+              ? `${site.property.startsWith('sc-domain:') ? 'Domain property' : 'URL-prefix property'} · read with ${match.email}`
+              : 'None of your linked Google accounts can read it now. Link one on the Accounts tab.'
+        })
+      }
+    }
+
+    const renderSites = (audit: Audit, alerts: Alerts, pageId?: string) => {
+      const alertsOn = (alerts?.types ?? []).filter((type) => type.email || (type.webhook && alerts?.webhookUrl))
+      const alertsWord = alertsOn.length ? 'Alerts on' : 'Alerts off'
+      const siteLink = (site: Site) => `${base}/account/sites/${site.id}`
+      // One health line per site: drops first, then crawl trouble.
+      const health = (site: Site) => {
+        const dropped = site.monitor?.dropped ?? 0
+        if (dropped) return { kind: 'issues', text: `${pages(dropped)} dropped`, dot: 'bg-warning' }
+        if (site.lastStatus === 'failed' || (site.error && !site.lastFinishedAt)) {
+          return { kind: 'issues', text: 'Crawl issues', dot: 'bg-destructive' }
+        }
+        if (!site.lastFinishedAt) return { kind: 'pending', text: 'First crawl running', dot: 'bg-foreground-soft' }
+        return { kind: 'healthy', text: 'Healthy', dot: 'bg-success' }
+      }
+      const number = (value: number | null | undefined) => (value == null ? '–' : count(value))
+      const fillSite = (copy: DocumentFragment, site: Site) => {
+        const state = health(site)
+        for (const link of copy.querySelectorAll<HTMLAnchorElement>('[data-site-link], [data-site-view]')) {
+          link.href = siteLink(site)
+        }
+        const set = (name: string, text: string) => {
+          for (const element of copy.querySelectorAll(`[data-site-${name}]`)) element.textContent = text
+        }
+        set('name', siteName(site))
+        set('health', state.text)
+        set('crawled', number(site.pages))
+        set('indexed', number(site.monitor?.indexed))
+        set('new', number(site.new))
+        set('alerts', alertsWord)
+        for (const dot of copy.querySelectorAll('[data-site-dot]')) dot.classList.add(state.dot)
+        const item = copy.querySelector<HTMLElement>('[data-site]')
+        if (item) {
+          item.dataset.health = state.kind
+          item.dataset.name = site.property.toLowerCase()
+        }
+        return copy
+      }
+
+      // Every site's open folder suggestions, for the notice and the step.
+      const openFolders = (site: Site) => site.coverage?.suggestions.filter((folder) => !folder.added) ?? []
+      const page = audit.sites.find((site) => site.id === pageId)
+      if (page) {
+        renderSitePage(page, alerts, alertsOn.length > 0, number)
+      } else {
+        show(root.querySelector('[data-site-page]'), false)
+        const cards = root.querySelector('[data-site-cards]')
+        const rows = root.querySelector('[data-site-rows]')
+        const cardTemplate = root.querySelector<HTMLTemplateElement>('[data-site-card]')
+        const rowTemplate = root.querySelector<HTMLTemplateElement>('[data-site-row]')
+        // By name as shown, so a domain property and its URL-prefix sit together.
+        const sorted = [...audit.sites].sort(
+          (a, b) => siteName(a).localeCompare(siteName(b)) || a.property.localeCompare(b.property),
+        )
+        for (const site of sorted) {
+          if (cardTemplate) cards?.append(fillSite(cardTemplate.content.cloneNode(true) as DocumentFragment, site))
+          if (rowTemplate) rows?.append(fillSite(rowTemplate.content.cloneNode(true) as DocumentFragment, site))
         }
 
-        const checks = copy.querySelector('[data-audit-checks]')
-        const monitor = site.monitor
-        if (!monitor) {
-          line(checks, 'Starting: the first checks run once the crawl has found the site.')
-        } else {
-          line(checks, `${count(monitor.used)} of ${count(monitor.perDay)} checks used today.`)
-          line(
-            checks,
-            monitor.known
-              ? `${count(monitor.covered)} of ${pages(monitor.known)} ${monitor.covered === 1 ? 'has' : 'have'} a current result${monitor.queued ? `, ${count(monitor.queued)} waiting` : ''}.`
-              : 'No pages known yet: they come from the sitemap, the crawl and Search Console.',
-          )
-          if (monitor.lastCheckedAt) {
-            line(
-              checks,
-              `Last check ${time(monitor.lastCheckedAt)}${monitor.oldestCheckedAt ? `, oldest result ${day(monitor.oldestCheckedAt)}` : ''}.`,
-              true,
-            )
+        // Filters and the card or list layout, kept in this browser.
+        const table = root.querySelector('[data-site-table]')
+        const empty = root.querySelector('[data-sites-empty]')
+        const filter = root.querySelector<HTMLInputElement>('[data-site-filter]')
+        const healthButtons = all<HTMLButtonElement>('[data-health]')
+        const layoutButtons = all<HTMLButtonElement>('[data-layout]')
+        let wanted = 'all'
+        let layout = localStorage.getItem('seo-sites-layout') === 'list' ? 'list' : 'cards'
+        const apply = () => {
+          const words = (filter?.value ?? '').toLowerCase().split(/\s+/).filter(Boolean)
+          let shown = 0
+          for (const item of all<HTMLElement>('[data-site-cards] [data-site], [data-site-rows] [data-site]')) {
+            const match =
+              words.every((word) => item.dataset.name?.includes(word)) &&
+              (wanted === 'all' || item.dataset.health === wanted)
+            item.hidden = !match
+            if (match && item.tagName === 'LI') shown += 1
           }
-          line(
-            checks,
-            monitor.dropped || monitor.returned
-              ? `This week ${pages(monitor.dropped)} dropped out of Google’s index and ${count(monitor.returned)} came back.`
-              : 'No page dropped out of Google’s index or came back this week.',
-            !(monitor.dropped || monitor.returned),
-          )
+          for (const button of healthButtons) button.setAttribute('aria-pressed', String(button.dataset.health === wanted))
+          for (const button of layoutButtons) button.setAttribute('aria-pressed', String(button.dataset.layout === layout))
+          show(cards, layout === 'cards' && shown > 0)
+          show(table, layout === 'list' && shown > 0)
+          show(empty, audit.sites.length > 0 && shown === 0)
         }
+        filter?.addEventListener('input', apply)
+        for (const button of healthButtons) {
+          button.addEventListener('click', () => {
+            wanted = button.dataset.health ?? 'all'
+            apply()
+          })
+        }
+        for (const button of layoutButtons) {
+          button.addEventListener('click', () => {
+            layout = button.dataset.layout ?? 'cards'
+            localStorage.setItem('seo-sites-layout', layout)
+            apply()
+          })
+        }
+        show(root.querySelector('[data-sites-tools]'), audit.sites.length > 0)
+        apply()
 
-        const coverage = site.coverage
-        if (coverage) {
-          const known = coverage.properties.reduce((sum, item) => sum + item.urls, 0)
-          const perDay = coverage.perDay * coverage.properties.length
-          const summary = copy.querySelector('[data-audit-coverage]')
-          if (summary) {
-            summary.textContent = `Google can check ${count(perDay)} of its ${count(known)} pages a day with ${coverage.properties.length === 1 ? 'one property' : `${coverage.properties.length} properties`}.${coverage.suggestions.length ? '' : ' None to add.'}`
+        // A slim notice while any site has folders to add, until dismissed;
+        // new suggestions bring it back.
+        const suggested = audit.sites.flatMap((site) => openFolders(site).map((folder) => ({ site, folder })))
+        const notice = root.querySelector('[data-sites-notice]')
+        const seen = suggested.map((item) => item.folder.property).sort().join(' ')
+        if (suggested.length && localStorage.getItem('seo-sites-notice') !== seen) {
+          const gain = suggested.reduce((sum, item) => sum + item.folder.gain, 0)
+          const text = root.querySelector('[data-sites-notice-text]')
+          if (text) {
+            text.textContent = `${suggested.length === 1 ? 'One suggested folder' : `${suggested.length} suggested folders`} could check ${count(gain)} more pages a day · `
           }
-          if (coverage.suggestions.length) {
-            const list = copy.querySelector('[data-audit-folder-list]')
-            for (const folder of coverage.suggestions) {
-              const item = document.createElement('span')
-              item.className = 'mt-1 block'
-              line(item, folder.property).classList.add('break-all')
-              const detail = line(
-                item,
-                folder.added === 'verified'
-                  ? 'Added and verified'
-                  : folder.added === 'unverified'
-                    ? 'Added, not verified'
-                    : `Suggested: ${count(folder.urls)} pages`,
-                true,
-              )
-              if (!folder.added) {
-                detail.append(' · ')
-                const link = document.createElement('a')
-                link.href = 'https://search.google.com/search-console/welcome'
-                link.target = '_blank'
-                link.rel = 'noopener'
-                link.className = 'text-foreground underline'
-                link.textContent = 'add it yourself'
-                detail.append(link)
-              }
-              list?.append(item)
-            }
-            const open = coverage.suggestions.filter((folder) => !folder.added).length
-            if (open) {
-              line(
-                list,
-                `With ${open === 1 ? 'it' : 'them'}, Google could check up to ${count(perDay + open * coverage.perDay)} pages a day.`,
-              ).classList.add('mt-2')
-            }
-            const create = copy.querySelector<HTMLInputElement>('[data-audit-create-input]')
-            if (create) create.value = site.property
-            if (!open) {
-              copy.querySelector('[data-audit-create]')?.remove()
-              copy.querySelector('[data-audit-create-note]')?.remove()
-            }
-            show(copy.querySelector('[data-audit-folders]'))
-          }
+          const review = root.querySelector<HTMLAnchorElement>('[data-sites-notice-link]')
+          const first = suggested[0]
+          if (review && first) review.href = `${siteLink(first.site)}#coverage`
+          root.querySelector('[data-sites-notice-close]')?.addEventListener('click', () => {
+            localStorage.setItem('seo-sites-notice', seen)
+            show(notice, false)
+          })
+          show(notice)
         }
-
-        const alertCell = copy.querySelector('[data-audit-alerts]')
-        for (const type of alerts?.types ?? []) {
-          const webhook = type.webhook && alerts?.webhookUrl
-          line(alertCell, `${type.title}: email ${type.email ? 'on' : 'off'}, webhook ${webhook ? 'on' : 'off'}.`)
-        }
-        const change = document.createElement('a')
-        change.href = '#alerts'
-        change.className = 'text-foreground-muted underline'
-        change.textContent = 'Change alerts'
-        alertCell?.append(change)
-        siteList?.append(copy)
       }
 
       const form = root.querySelector<HTMLFormElement>('[data-audit-add]')
@@ -789,19 +1085,6 @@ const keys: { name: string; label: string; type: 'text' | 'password' }[] = [
         const full = root.querySelector('[data-audit-full]')
         if (full) full.textContent = `The beta audits up to ${audit.max} sites. Remove one to add another.`
         show(full)
-      }
-
-      sitesShown = () => {
-        loadChoices().then((found) => {
-          for (const [property, cell] of owners) {
-            const match = found?.choices.find((item) => item.property === property)
-            cell.textContent = !found
-              ? 'Could not check which Google account reads it.'
-              : match
-                ? `Read with ${match.email}`
-                : 'None of your linked Google accounts can read it now. Link the account that can on the Accounts tab.'
-          }
-        })
       }
 
       // The picker: the linked accounts' properties, filtered as you type.
@@ -1013,7 +1296,7 @@ const keys: { name: string; label: string; type: 'text' | 'password' }[] = [
         }
         const audit = account.audit
         if (audit) {
-          renderSites(audit, account.alerts)
+          renderSites(audit, account.alerts, account.site)
         } else {
           root.querySelector('[data-account-tab="sites"]')?.remove()
           root.querySelector('[data-account-panel="sites"]')?.remove()
@@ -1131,9 +1414,34 @@ const keys: { name: string; label: string; type: 'text' | 'password' }[] = [
     // Tabs: the hash names a tab, or a panel inside one, so links such as
     // /account#google and the redirects after a change open the right tab.
     const tabs = all<HTMLButtonElement>('[data-account-tab]')
+    // On a narrow screen the tab row scrolls: a fade marks each edge with
+    // more tabs past it, and the selected tab is scrolled into view.
+    const strip = root.querySelector<HTMLElement>('[data-tab-strip]')
+    const fades = () => {
+      if (!strip) return
+      const left = strip.scrollLeft > 1
+      const right = strip.scrollLeft + strip.clientWidth < strip.scrollWidth - 1
+      root.querySelector('[data-tab-fade="left"]')?.classList.toggle('opacity-0', !left)
+      root.querySelector('[data-tab-fade="right"]')?.classList.toggle('opacity-0', !right)
+    }
+    strip?.addEventListener('scroll', fades, { passive: true })
+    window.addEventListener('resize', fades)
+    const reveal = (tab: HTMLElement, smooth: boolean) => {
+      if (!strip) return
+      const edge = 32
+      let to = strip.scrollLeft
+      if (tab.offsetLeft - edge < strip.scrollLeft) to = tab.offsetLeft - edge
+      else if (tab.offsetLeft + tab.offsetWidth + edge > strip.scrollLeft + strip.clientWidth) {
+        to = tab.offsetLeft + tab.offsetWidth + edge - strip.clientWidth
+      }
+      strip.scrollTo({ left: Math.max(0, to), behavior: smooth ? 'smooth' : 'auto' })
+      fades()
+    }
+    let shown = false
     const select = (id: string, focus = false) => {
       for (const tab of tabs) {
         const selected = tab.dataset.accountTab === id
+        if (selected) reveal(tab, shown)
         tab.setAttribute('aria-selected', String(selected))
         if (selected) tab.removeAttribute('tabindex')
         else tab.tabIndex = -1
@@ -1143,7 +1451,8 @@ const keys: { name: string; label: string; type: 'text' | 'password' }[] = [
           selected,
         )
       }
-      if (id === 'sites') sitesShown()
+      if (id === 'sites') sitePageShown()
+      shown = true
     }
     const tabFor = (hash: string) => {
       const id = hash.replace(/^#/, '')
@@ -1173,6 +1482,11 @@ const keys: { name: string; label: string; type: 'text' | 'password' }[] = [
     for (const tab of tabs) {
       tab.addEventListener('click', () => {
         const id = tab.dataset.accountTab ?? 'accounts'
+        // From a site's page, the Sites tab goes back to every site.
+        if (id === 'sites' && account?.site) {
+          window.location.href = `${base}/account#sites`
+          return
+        }
         select(id)
         history.replaceState(null, '', `#${id}`)
       })
@@ -1201,5 +1515,8 @@ const keys: { name: string; label: string; type: 'text' | 'password' }[] = [
     for (const view of all('[data-view]')) {
       show(view, view.getAttribute('data-view') === state.view)
     }
+    // Measured only now that the account view shows.
+    const current = tabs.find((tab) => tab.getAttribute('aria-selected') === 'true')
+    if (current) reveal(current, false)
   }
 </script>

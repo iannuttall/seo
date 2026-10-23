@@ -1,4 +1,5 @@
 import type { AuditAccess } from '@seo/core/commands'
+import { sha256Base64Url } from '../seal.ts'
 import type { AuditMonitor } from './checks.ts'
 
 // The weekly-audit schedule in D1: add and remove a site, list an account's
@@ -69,6 +70,17 @@ type Row = {
 export function siteObject(env: Env, userId: string, property: string) {
   return env.SITE_AUDIT.get(
     env.SITE_AUDIT.idFromName(JSON.stringify([userId, property])),
+  )
+}
+
+// The site's id in account page links (/account/sites/<id>): a hash of the
+// person and the property, so the URL never shows the domain and needs no
+// stored column. The page only ever matches it against the signed-in
+// person's own sites.
+export async function siteId(userId: string, property: string) {
+  return (await sha256Base64Url(JSON.stringify([userId, property]))).slice(
+    0,
+    16,
   )
 }
 

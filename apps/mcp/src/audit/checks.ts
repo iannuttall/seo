@@ -984,6 +984,7 @@ export function monitorOf(meter: Meter, site: Site, now = Date.now()) {
   const counts = meter.one<{
     known: number
     covered: number
+    indexed: number
     queued: number
     newest: number | null
     oldest: number | null
@@ -992,6 +993,7 @@ export function monitorOf(meter: Meter, site: Site, now = Date.now()) {
   }>(
     `SELECT count(*) AS known,
        count(*) FILTER (WHERE result IS NOT NULL AND NOT ${DUE}) AS covered,
+       count(*) FILTER (WHERE indexed = 1) AS indexed,
        count(*) FILTER (WHERE ${DUE}) AS queued,
        max(checked_at) AS newest,
        min(checked_at) FILTER (WHERE result IS NOT NULL) AS oldest,
@@ -1013,6 +1015,8 @@ export function monitorOf(meter: Meter, site: Site, now = Date.now()) {
     perDay: PER_DAY * owners(meter, site).length,
     known: counts?.known ?? 0,
     covered: counts?.covered ?? 0,
+    // Pages whose last check said Google has them indexed.
+    indexed: counts?.indexed ?? 0,
     queued: counts?.queued ?? 0,
     lastCheckedAt: counts?.newest ?? null,
     oldestCheckedAt: counts?.oldest ?? null,

@@ -110,6 +110,8 @@ export type View =
         audit?: {
           max: number
           sites: {
+            // The opaque id in the site's page link, /account/sites/<id>.
+            id: string
             property: string
             lastFinishedAt: number | null
             lastStatus: string | null
@@ -142,8 +144,10 @@ export type View =
         }
         // A token just made for a cloud agent, shown once.
         token?: string
-        // The tab to open: accounts, keys, machines or settings.
+        // The tab to open: accounts, keys, machines, sites or beta.
         tab?: string
+        // The id of the audited site whose page to show.
+        site?: string
       }
     }
 

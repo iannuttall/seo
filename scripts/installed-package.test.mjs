@@ -245,7 +245,10 @@ test('the packed package installs and runs without the workspace', {
     [cli, 'report', '--help'],
     { cwd: consumerDirectory, env },
   )
-  assert.match(reportHelp.stdout, /Start here. No --site: last week across your audited sites/)
+  assert.match(
+    reportHelp.stdout,
+    /Start here. No --site: last week across your audited sites/,
+  )
 
   const mcp = await execFileAsync(
     process.execPath,

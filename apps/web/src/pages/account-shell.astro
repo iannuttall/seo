@@ -125,13 +125,14 @@ const keys: { name: string; label: string; type: 'text' | 'password' }[] = [
         </div>
       </div>
 
-      {/* The ilo toggle group from SetupCommands. Each tab has a hash, and
+      {/* The ilo toggle group from SetupCommands. It wraps onto a second
+          row on a narrow screen, so every tab stays visible. Each tab has a hash, and
           the #google, #bing, #clicky and #machines links open the tab that
           holds them. */}
       <div
         role="tablist"
         aria-label="Account sections"
-        class="inline-flex h-9 max-w-full items-center gap-1 overflow-x-auto rounded-lg bg-muted p-0.5 text-foreground-muted"
+        class="inline-flex max-w-full flex-wrap items-center gap-1 rounded-lg bg-muted p-0.5 text-foreground-muted"
       >
         {
           tabs.map((tab, index) => (
@@ -143,7 +144,7 @@ const keys: { name: string; label: string; type: 'text' | 'password' }[] = [
               aria-selected={index === 0 ? 'true' : 'false'}
               tabindex={index === 0 ? undefined : -1}
               data-account-tab={tab.id}
-              class="inline-flex h-8 min-w-7 shrink-0 items-center justify-center rounded-md border border-transparent px-3 text-sm font-medium outline-none transition-colors hover:text-foreground focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/20 aria-selected:bg-card aria-selected:text-foreground aria-selected:shadow-xs"
+              class="inline-flex h-8 min-w-7 shrink-0 items-center justify-center rounded-md border border-transparent px-2.5 text-sm sm:px-3 font-medium outline-none transition-colors hover:text-foreground focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/20 aria-selected:bg-card aria-selected:text-foreground aria-selected:shadow-xs"
             >
               {tab.label}
             </button>

@@ -1,4 +1,5 @@
 import type { AuditAccess } from '@seo/core/commands'
+import type { AuditMonitor } from './checks.ts'
 
 // The weekly-audit schedule in D1: add and remove a site, list an account's
 // sites without waking their objects, and the hourly cron that starts the
@@ -26,6 +27,8 @@ export type AuditSite = {
   lastError: string | null
   // Pushed by the site object once a day; null before its first checks.
   coverage: AuditCoverage | null
+  // Pushed by the site object after each run of its checks.
+  monitor: AuditMonitor | null
 }
 
 export type AuditCoverage = {
@@ -34,7 +37,7 @@ export type AuditCoverage = {
   // The properties that check the site's URLs, and how many each holds.
   properties: { property: string; urls: number }[]
   // Folders to add as URL-prefix properties, best first; added says the
-  // Beta tab's button already created it.
+  // Sites tab's button already created it.
   suggestions: {
     property: string
     urls: number
@@ -58,6 +61,7 @@ type Row = {
   resolved_findings: number | null
   last_error: string | null
   coverage: string | null
+  monitor: string | null
 }
 
 // One object per person and property, so two people who audit the same
@@ -90,6 +94,7 @@ export async function auditSites(
     resolvedFindings: row.resolved_findings,
     lastError: row.last_error,
     coverage: row.coverage ? (JSON.parse(row.coverage) as AuditCoverage) : null,
+    monitor: row.monitor ? (JSON.parse(row.monitor) as AuditMonitor) : null,
   }))
 }
 

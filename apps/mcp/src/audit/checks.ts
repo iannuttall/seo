@@ -975,6 +975,54 @@ function etaHours(
   return worst
 }
 
+// What the Sites tab shows about the checks, pushed to D1 after each run:
+// checks used today out of what the properties allow, how many known URLs
+// have a current result, the newest and oldest check, and this week's drops
+// and returns.
+export function monitorOf(meter: Meter, site: Site, now = Date.now()) {
+  const week = now - 7 * 86_400_000
+  const counts = meter.one<{
+    known: number
+    covered: number
+    queued: number
+    newest: number | null
+    oldest: number | null
+    dropped: number
+    returned: number
+  }>(
+    `SELECT count(*) AS known,
+       count(*) FILTER (WHERE result IS NOT NULL AND NOT ${DUE}) AS covered,
+       count(*) FILTER (WHERE ${DUE}) AS queued,
+       max(checked_at) AS newest,
+       min(checked_at) FILTER (WHERE result IS NOT NULL) AS oldest,
+       count(*) FILTER (WHERE transition = 'dropped' AND transition_at > ?) AS dropped,
+       count(*) FILTER (WHERE transition = 'returned' AND transition_at > ?) AS returned
+     FROM checks`,
+    now,
+    now,
+    week,
+    week,
+  )
+  const used = [...usedToday(meter, searchConsoleDay(now)).values()].reduce(
+    (sum, n) => sum + Math.min(n, PER_DAY),
+    0,
+  )
+  return {
+    at: now,
+    used,
+    perDay: PER_DAY * owners(meter, site).length,
+    known: counts?.known ?? 0,
+    covered: counts?.covered ?? 0,
+    queued: counts?.queued ?? 0,
+    lastCheckedAt: counts?.newest ?? null,
+    oldestCheckedAt: counts?.oldest ?? null,
+    dropped: counts?.dropped ?? 0,
+    returned: counts?.returned ?? 0,
+  }
+}
+
+export type AuditMonitor = ReturnType<typeof monitorOf>
+
 // What seo_index shows: coverage, the queue and the time left, Google's
 // reasons, and one page of rows.
 export function checksView(

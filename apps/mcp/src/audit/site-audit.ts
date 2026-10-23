@@ -13,6 +13,7 @@ import {
   indexChanges,
   inspectThrough,
   markAlerted,
+  monitorOf,
   PER_DAY,
   runChecks,
   saveState,
@@ -901,6 +902,7 @@ export class SiteAudit extends DurableObject<Env> {
         : null
       saveState(meter, { next_at: at })
       await this.alertChanges(meter, site)
+      await this.pushMonitor(meter, site)
       // A new day's plan goes to D1 for the account page.
       const now = state(meter)
       if (now?.day && now.day !== saved?.day) await this.pushCoverage(site)
@@ -939,6 +941,17 @@ export class SiteAudit extends DurableObject<Env> {
     await this.ctx.storage.setAlarm(Date.now())
   }
 
+  // What the checks are doing, for the account page's Sites tab. A failed
+  // push is tried again after the next run of the checks.
+  private async pushMonitor(meter: Meter, site: Site): Promise<void> {
+    await this.env.DB.prepare(
+      'UPDATE audit_sites SET monitor = ? WHERE user_id = ? AND property = ?',
+    )
+      .bind(JSON.stringify(monitorOf(meter, site)), site.user_id, site.property)
+      .run()
+      .catch(() => null)
+  }
+
   // The day's properties and suggested folders, for the account page. A
   // failed push is tried again with the next day's plan.
   private async pushCoverage(site: Site): Promise<void> {
@@ -956,7 +969,7 @@ export class SiteAudit extends DurableObject<Env> {
         added?: string
       }[],
     }
-    // Folders already created from the Beta tab keep their mark.
+    // Folders already created from the Sites tab keep their mark.
     const before = await this.env.DB.prepare(
       'SELECT coverage FROM audit_sites WHERE user_id = ? AND property = ?',
     )

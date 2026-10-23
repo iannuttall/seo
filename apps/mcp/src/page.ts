@@ -1,3 +1,5 @@
+import type { AuditMonitor } from './audit/checks.ts'
+
 // One small HTML page for the sign-in steps, in the seoskill.dev design: the
 // same Inter font, colours and logo as the site.
 
@@ -115,6 +117,10 @@ export type View =
             open: number | null
             new: number | null
             error: string | null
+            nextRunAt: number
+            // The index checks now (audit/checks.ts monitorOf), or null
+            // before their first run.
+            monitor: AuditMonitor | null
           }[]
         }
         // Alert settings, for an account with a beta that has alerts.

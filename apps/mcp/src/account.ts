@@ -18,6 +18,7 @@ import {
   turnOff,
   webhookUrlProblem,
 } from './alerts/settings.ts'
+import { forgetChoices, propertyChoices } from './audit/choices.ts'
 import {
   addProperties,
   recordAdded,
@@ -199,6 +200,8 @@ async function accountPage(
                       new: site.newFindings,
                       error: site.lastError,
                       coverage: site.coverage,
+                      nextRunAt: site.nextRunAt,
+                      monitor: site.monitor,
                     })),
                   },
                 }
@@ -246,6 +249,29 @@ export async function account(
   // The link in an alert email, opened (GET) or one-click (POST, RFC 8058).
   if (path === '/account/alerts/off') {
     return alertsOff(request, env)
+  }
+  // The Sites tab's property picker: what the linked Google accounts can
+  // read, fetched once when the picker opens.
+  if (request.method === 'GET' && path === '/account/audit/choices') {
+    const userId = await sessionUser(request, env)
+    if (!userId || !(await betaFlags(env, userId)).has('weekly-audit')) {
+      return Response.json({ error: 'not_signed_in' }, { status: 403 })
+    }
+    const [found, audited] = await Promise.all([
+      propertyChoices(env, userId, await accountsOf(env, userId)),
+      auditSites(env, userId),
+    ])
+    const added = new Set(audited.map((site) => site.property))
+    return Response.json(
+      {
+        choices: found.choices.map((item) => ({
+          ...item,
+          audited: added.has(item.property),
+        })),
+        failed: found.failed,
+      },
+      { headers: { 'cache-control': 'no-store' } },
+    )
   }
   if (request.method !== 'POST') {
     return new Response('Not found', { status: 404 })
@@ -321,6 +347,7 @@ export async function account(
         )
       }
       await removeAccount(env, userId, provider, target.subject)
+      forgetChoices(userId)
       if (provider === 'google') await revokeGoogle(target.refresh)
       return redirect(`${home}#${provider}`)
     }
@@ -434,16 +461,18 @@ export async function account(
     }
     case '/account/audit': {
       if (!(await betaFlags(env, userId)).has('weekly-audit')) break
-      // Only a property one of the person's Google accounts can read.
-      const property = await directory(env, await accountsOf(env, userId))
-        .resolve(field('property'))
-        .catch(() => null)
+      // Only a property from the picker's list: one the person's Google
+      // accounts can read, from the same short-lived cache.
+      const wanted = field('property')
+      const property = (
+        await propertyChoices(env, userId, await accountsOf(env, userId))
+      ).choices.find((item) => item.property === wanted)?.property
       if (!property) {
         return accountPage(
           env,
           userId,
-          'None of your Google accounts can read that site in Search Console. Use a property name such as sc-domain:example.com or https://example.com/.',
-          { tab: 'beta' },
+          'None of your linked Google accounts can read that property in Search Console. Pick one from the list.',
+          { tab: 'sites' },
         )
       }
       const added = await addAuditSite(env, userId, property)
@@ -455,7 +484,7 @@ export async function account(
           : added === 'exists'
             ? `${property} is already audited.`
             : `Added ${property}. The first crawl has started.`,
-        { tab: 'beta', ok: added !== 'full' },
+        { tab: 'sites', ok: added !== 'full' },
       )
     }
     // Create the suggested folders as Search Console properties: ask for the
@@ -471,7 +500,7 @@ export async function account(
             .owner(property)
             .catch(() => null)
         : null
-      if (!owner) return redirect(`${home}#weekly-audit`)
+      if (!owner) return redirect(`${home}#sites`)
       return redirect(
         writeSignInUrl(
           env,
@@ -516,7 +545,7 @@ export async function account(
       )
     case '/account/audit/remove':
       await removeAuditSite(env, userId, field('property'))
-      return redirect(`${home}#beta`)
+      return redirect(`${home}#sites`)
     case '/account/delete': {
       await removeAllAuditSites(env, userId)
       const accounts = await accountsOf(env, userId)
@@ -570,6 +599,8 @@ export async function accountCallback(
   if (!userId) {
     return signInPage(env, 'Google did not return a sign-in. Try again.')
   }
+  // A newly linked Google account can read more properties.
+  forgetChoices(userId)
   const session = await seal(env.SEAL_KEY, {
     k: 'session',
     userId,
@@ -654,7 +685,7 @@ export async function propertiesCallback(
     !site?.coverage ||
     !(await betaFlags(env, userId)).has('weekly-audit')
   ) {
-    return redirect(`${home}#weekly-audit`)
+    return redirect(`${home}#sites`)
   }
   const wanted = site.coverage.suggestions
     .filter((item) => !item.added)
@@ -665,7 +696,7 @@ export async function propertiesCallback(
       env,
       userId,
       'Google did not give permission to add properties, so nothing was added.',
-      { tab: 'beta' },
+      { tab: 'sites' },
     )
   }
   await recordAdded(env, userId, state.property, site.coverage, added)
@@ -677,7 +708,7 @@ export async function propertiesCallback(
         : `${item.property}: not added (${item.error}).`,
   )
   return accountPage(env, userId, lines.join(' '), {
-    tab: 'beta',
+    tab: 'sites',
     ok: added.every((item) => item.state === 'verified'),
   })
 }

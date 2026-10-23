@@ -39,7 +39,7 @@ Cloudflare D1 with only these things:
 - **Your linked Bing account, if you link one.** Its refresh and access
   tokens, with read-only access to Bing Webmaster Tools, and a name made
   from its sites.
-- **Search Console folders you add from the Beta tab.** "Create these in
+- **Search Console folders you add from the Sites tab.** "Create these in
   Search Console" asks Google, at that moment, for permission to add and
   manage your Search Console properties. The server uses it once, to add
   the folders listed on the page, and does not keep that permission or its

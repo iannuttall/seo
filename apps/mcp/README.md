@@ -27,8 +27,13 @@ Sign in with Google at `https://seoskill.dev/account` to:
   account login and Clicky sites (never shown again),
 - **Machines:** approve a `seo login`, remove a linked machine, or make a
   token for a cloud agent,
+- **Sites:** only in the weekly-audit beta, add a site by picking one of
+  the Search Console properties your linked Google accounts can read, see
+  what each audited site is doing now (its Google account, last and next
+  crawl, today's index checks and coverage, this week's drops and returns,
+  subfolder properties, alerts), and remove it,
 - **Beta:** only on an account granted a beta feature, the features it can
-  try,
+  try, and alert settings,
 - delete everything, which also revokes the Google sign-ins, or sign out.
 
 An account in the weekly-audit beta also gets a `weekly-audit` section in
@@ -213,7 +218,13 @@ A small Cloudflare D1 database (`migrations/`) keeps only:
   the webhook URL and its sealed signing secret (`alert_settings`), each
   alert with its site, changed URLs and delivery state for 30 days
   (`alerts`), and alert emails sent and held per day (`alert_email_days`).
-- for "Create these in Search Console" on the Beta tab
+- for the Sites tab: after each run of a site's index checks, its object
+  pushes counts to D1 (`audit_sites.monitor`): checks used today, pages
+  known, covered and waiting, the newest and oldest check, and this week's
+  drops and returns. The picker's property list comes from one bounded
+  `sites.list` call per linked Google account and is held only in the
+  Worker's memory for 5 minutes (`src/audit/choices.ts`).
+- for "Create these in Search Console" on the Sites tab
   (`src/audit/properties.ts`): only when clicked, an incremental Google
   sign-in for the Search Console write scope with online access, so no
   refresh token is issued; the access token adds each folder with

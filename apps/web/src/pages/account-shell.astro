@@ -22,6 +22,8 @@ const tabs = [
   { id: 'accounts', label: 'Accounts' },
   { id: 'keys', label: 'Keys' },
   { id: 'machines', label: 'Machines' },
+  // Only for accounts in the weekly-audit beta; removed otherwise.
+  { id: 'sites', label: 'Sites' },
   // Only for accounts granted a beta feature; removed otherwise.
   { id: 'beta', label: 'Beta' },
 ]
@@ -329,6 +331,54 @@ const keys: { name: string; label: string; type: 'text' | 'password' }[] = [
 
       <div
         role="tabpanel"
+        id="account-panel-sites"
+        aria-labelledby="account-tab-sites"
+        data-account-panel="sites"
+        class="mt-4 flex flex-col gap-4"
+        hidden
+      >
+        <div class={panel} id="sites">
+          <h2 class={heading}>Sites</h2>
+          <p class={note}>
+            Each site is crawled once a week, up to 5,000 pages, and Google
+            checks its pages every day. Ask your agent for the report
+            or <code>seo index</code> on a site to see the results.
+          </p>
+          <form method="post" data-action="/account/audit" class="mt-4" data-audit-add>
+            <input type="hidden" name="form" />
+            <input type="hidden" name="property" data-picker-value />
+            <label for="site-picker" class="text-sm font-medium text-foreground">Add a site</label>
+            <div class="relative mt-1.5">
+              <FormInput
+                id="site-picker"
+                type="text"
+                role="combobox"
+                aria-expanded="false"
+                aria-controls="site-picker-list"
+                aria-autocomplete="list"
+                autocomplete="off"
+                spellcheck="false"
+                placeholder="Search your Search Console properties"
+                data-picker
+              />
+              <ul
+                id="site-picker-list"
+                role="listbox"
+                aria-label="Search Console properties"
+                class="absolute inset-x-0 z-10 mt-1 max-h-80 overflow-y-auto rounded-lg bg-card p-1 text-sm shadow-lg"
+                data-picker-list
+                hidden
+              ></ul>
+            </div>
+            <p class={note} data-picker-status aria-live="polite"></p>
+          </form>
+          <p class={note} data-audit-full hidden></p>
+        </div>
+        <ul class="flex flex-col gap-4" aria-label="Audited sites" data-audit-list></ul>
+      </div>
+
+      <div
+        role="tabpanel"
         id="account-panel-beta"
         aria-labelledby="account-tab-beta"
         data-account-panel="beta"
@@ -344,25 +394,6 @@ const keys: { name: string; label: string; type: 'text' | 'password' }[] = [
           <ul class="mt-4 divide-y divide-border text-sm" data-beta-list></ul>
         </div>
 
-        <div class={panel} id="weekly-audit" data-audit-panel hidden>
-          <h2 class={heading}>Weekly site audit</h2>
-          <p class={note}>
-            Each site is crawled once a week, up to 5,000 pages. Ask your
-            agent for the report on a site to see what is new since last week.
-          </p>
-          <ul class="mt-4 divide-y divide-border text-sm" data-audit-list></ul>
-          <form method="post" data-action="/account/audit" class="mt-4 flex flex-col gap-4" data-audit-add>
-            <input type="hidden" name="form" />
-            <label class="flex flex-col gap-1.5 text-sm font-medium text-foreground">
-              <span>Search Console property</span>
-              <FormInput name="property" type="text" autocomplete="off" spellcheck="false" placeholder="sc-domain:example.com" />
-            </label>
-            <div class="flex flex-wrap gap-3">
-              <button type="submit" class={outline}>Audit this site</button>
-            </div>
-          </form>
-          <p class={note} data-audit-full hidden></p>
-        </div>
         <div class={panel} id="alerts" data-alerts-panel hidden>
           <h2 class={heading}>Alerts</h2>
           <p class={note} data-alerts-to></p>
@@ -447,33 +478,46 @@ const keys: { name: string; label: string; type: 'text' | 'password' }[] = [
       </li>
     </template>
     <template data-audit-row>
-      <li class="flex items-start justify-between gap-4 py-2.5">
-        <span class="min-w-0">
-          <span class="block break-all text-foreground" data-audit-property></span>
-          <span class="block text-foreground-muted" data-audit-state></span>
-          <span class="block text-foreground-muted" data-audit-coverage hidden></span>
-          <span class="mt-2 block" data-audit-folders hidden>
-            <span class="block text-foreground">
-              Add these folders as their own Search Console properties to
-              check more pages each day:
+      <li class={panel}>
+        <div class="flex items-start justify-between gap-4">
+          <div class="min-w-0">
+            <h3 class="break-all text-base font-medium text-foreground" data-audit-property></h3>
+            <p class={note} data-audit-owner>Finding the Google account that reads it…</p>
+          </div>
+          <form method="post" data-action="/account/audit/remove" class="shrink-0">
+            <input type="hidden" name="form" />
+            <input type="hidden" name="property" data-audit-input />
+            <button type="submit" class={quiet}>Remove from audit</button>
+          </form>
+        </div>
+        <dl class="mt-4 grid gap-x-6 gap-y-1 text-sm/6 sm:grid-cols-[11rem_minmax(0,1fr)] sm:gap-y-4">
+          <dt class="text-foreground-muted">Weekly crawl</dt>
+          <dd class="mb-3 text-foreground sm:mb-0" data-audit-crawl></dd>
+          <dt class="text-foreground-muted">Index checks</dt>
+          <dd class="mb-3 text-foreground sm:mb-0" data-audit-checks></dd>
+          <dt class="text-foreground-muted">Subfolder properties</dt>
+          <dd class="mb-3 text-foreground sm:mb-0">
+            <span class="block" data-audit-coverage>Worked out after the first checks.</span>
+            <span class="mt-2 block" data-audit-folders hidden>
+              <span class="block text-foreground-muted">
+                Add these folders as their own Search Console properties to
+                check more pages each day:
+              </span>
+              <span class="mt-1 block" data-audit-folder-list></span>
+              <form method="post" data-action="/account/audit/properties" class="mt-3" data-audit-create>
+                <input type="hidden" name="form" />
+                <input type="hidden" name="property" data-audit-create-input />
+                <button type="submit" class={outline}>Create these in Search Console</button>
+              </form>
+              <span class="mt-1 block text-foreground-muted" data-audit-create-note>
+                Google asks once for permission to add properties. SEO Skill
+                uses it only for this, and does not keep it.
+              </span>
             </span>
-            <span class="mt-1 block" data-audit-folder-list></span>
-            <form method="post" data-action="/account/audit/properties" class="mt-2" data-audit-create>
-              <input type="hidden" name="form" />
-              <input type="hidden" name="property" data-audit-create-input />
-              <button type="submit" class={outline}>Create these in Search Console</button>
-            </form>
-            <span class="mt-1 block text-foreground-muted" data-audit-create-note>
-              Google asks once for permission to add properties. SEO Skill
-              uses it only for this, and does not keep it.
-            </span>
-          </span>
-        </span>
-        <form method="post" data-action="/account/audit/remove">
-          <input type="hidden" name="form" />
-          <input type="hidden" name="property" data-audit-input />
-          <button type="submit" class={quiet}>Remove</button>
-        </form>
+          </dd>
+          <dt class="text-foreground-muted">Alerts</dt>
+          <dd class="text-foreground" data-audit-alerts></dd>
+        </dl>
       </li>
     </template>
     <template data-alert-row>
@@ -537,6 +581,19 @@ const keys: { name: string; label: string; type: 'text' | 'password' }[] = [
           open: number | null
           new: number | null
           error: string | null
+          nextRunAt: number
+          monitor: {
+            at: number
+            used: number
+            perDay: number
+            known: number
+            covered: number
+            queued: number
+            lastCheckedAt: number | null
+            oldestCheckedAt: number | null
+            dropped: number
+            returned: number
+          } | null
           coverage: {
             perDay: number
             properties: { property: string; urls: number }[]
@@ -574,6 +631,296 @@ const keys: { name: string; label: string; type: 'text' | 'password' }[] = [
       Array.from(root.querySelectorAll<T>(selector))
     const show = (element: Element | null, visible = true) =>
       element?.toggleAttribute('hidden', !visible)
+
+    type Audit = NonNullable<NonNullable<State['account']>['audit']>
+    type Alerts = NonNullable<State['account']>['alerts']
+    type Choice = { property: string; email: string; audited: boolean }
+    const day = (ms: number) =>
+      new Date(ms).toLocaleDateString(undefined, { day: 'numeric', month: 'short', year: 'numeric' })
+    const time = (ms: number) =>
+      new Date(ms).toLocaleString(undefined, { day: 'numeric', month: 'short', hour: 'numeric', minute: '2-digit' })
+    const count = (n: number) => n.toLocaleString()
+    const pages = (n: number) => `${count(n)} ${n === 1 ? 'page' : 'pages'}`
+    const line = (parent: Element | null, text: string, muted = false) => {
+      const item = document.createElement('span')
+      item.className = muted ? 'block text-foreground-muted' : 'block'
+      item.textContent = text
+      parent?.append(item)
+      return item
+    }
+    // The property list for the picker and the "read with" lines, fetched
+    // once, when the Sites tab or the picker is first used.
+    let choices: Promise<{ choices: Choice[]; failed: string[] } | null> | undefined
+    const loadChoices = () => {
+      choices ??= fetch(`${base}/account/audit/choices`, { credentials: 'same-origin' })
+        .then((response) => (response.ok ? response.json() : null))
+        .catch(() => null)
+      return choices
+    }
+    let sitesShown = () => {}
+
+    const renderSites = (audit: Audit, alerts: Alerts) => {
+      const siteRow = root.querySelector<HTMLTemplateElement>('[data-audit-row]')
+      const siteList = root.querySelector('[data-audit-list]')
+      const owners = new Map<string, Element>()
+      for (const site of audit.sites) {
+        const copy = siteRow?.content.cloneNode(true) as DocumentFragment
+        const name = copy.querySelector('[data-audit-property]')
+        if (name) name.textContent = site.property
+        const owner = copy.querySelector('[data-audit-owner]')
+        if (owner) owners.set(site.property, owner)
+        const input = copy.querySelector<HTMLInputElement>('[data-audit-input]')
+        if (input) input.value = site.property
+
+        const crawl = copy.querySelector('[data-audit-crawl]')
+        if (site.lastFinishedAt) {
+          line(
+            crawl,
+            `Last crawl ${day(site.lastFinishedAt)}${site.lastStatus === 'failed' ? ', stopped early' : ''}: ${pages(site.pages ?? 0)} found, ${count(site.open ?? 0)} open ${site.open === 1 ? 'finding' : 'findings'}, ${count(site.new ?? 0)} new.`,
+          )
+        } else {
+          line(crawl, site.error ? `Could not start yet: ${site.error}` : 'First crawl running.')
+        }
+        if (site.lastFinishedAt || !site.error) {
+          line(
+            crawl,
+            site.nextRunAt > Date.now() ? `Next crawl ${day(site.nextRunAt)}.` : 'Next crawl starting within the hour.',
+            true,
+          )
+        }
+
+        const checks = copy.querySelector('[data-audit-checks]')
+        const monitor = site.monitor
+        if (!monitor) {
+          line(checks, 'Starting: the first checks run once the crawl has found the site.')
+        } else {
+          line(checks, `${count(monitor.used)} of ${count(monitor.perDay)} checks used today.`)
+          line(
+            checks,
+            monitor.known
+              ? `${count(monitor.covered)} of ${pages(monitor.known)} ${monitor.covered === 1 ? 'has' : 'have'} a current result${monitor.queued ? `, ${count(monitor.queued)} waiting` : ''}.`
+              : 'No pages known yet: they come from the sitemap, the crawl and Search Console.',
+          )
+          if (monitor.lastCheckedAt) {
+            line(
+              checks,
+              `Last check ${time(monitor.lastCheckedAt)}${monitor.oldestCheckedAt ? `, oldest result ${day(monitor.oldestCheckedAt)}` : ''}.`,
+              true,
+            )
+          }
+          line(
+            checks,
+            monitor.dropped || monitor.returned
+              ? `This week ${pages(monitor.dropped)} dropped out of Google’s index and ${count(monitor.returned)} came back.`
+              : 'No page dropped out of Google’s index or came back this week.',
+            !(monitor.dropped || monitor.returned),
+          )
+        }
+
+        const coverage = site.coverage
+        if (coverage) {
+          const known = coverage.properties.reduce((sum, item) => sum + item.urls, 0)
+          const perDay = coverage.perDay * coverage.properties.length
+          const summary = copy.querySelector('[data-audit-coverage]')
+          if (summary) {
+            summary.textContent = `Google can check ${count(perDay)} of its ${count(known)} pages a day with ${coverage.properties.length === 1 ? 'one property' : `${coverage.properties.length} properties`}.${coverage.suggestions.length ? '' : ' None to add.'}`
+          }
+          if (coverage.suggestions.length) {
+            const list = copy.querySelector('[data-audit-folder-list]')
+            for (const folder of coverage.suggestions) {
+              const item = document.createElement('span')
+              item.className = 'mt-1 block'
+              line(item, folder.property).classList.add('break-all')
+              const detail = line(
+                item,
+                folder.added === 'verified'
+                  ? 'Added and verified'
+                  : folder.added === 'unverified'
+                    ? 'Added, not verified'
+                    : `Suggested: ${count(folder.urls)} pages`,
+                true,
+              )
+              if (!folder.added) {
+                detail.append(' · ')
+                const link = document.createElement('a')
+                link.href = 'https://search.google.com/search-console/welcome'
+                link.target = '_blank'
+                link.rel = 'noopener'
+                link.className = 'text-foreground underline'
+                link.textContent = 'add it yourself'
+                detail.append(link)
+              }
+              list?.append(item)
+            }
+            const open = coverage.suggestions.filter((folder) => !folder.added).length
+            if (open) {
+              line(
+                list,
+                `With ${open === 1 ? 'it' : 'them'}, Google could check up to ${count(perDay + open * coverage.perDay)} pages a day.`,
+              ).classList.add('mt-2')
+            }
+            const create = copy.querySelector<HTMLInputElement>('[data-audit-create-input]')
+            if (create) create.value = site.property
+            if (!open) {
+              copy.querySelector('[data-audit-create]')?.remove()
+              copy.querySelector('[data-audit-create-note]')?.remove()
+            }
+            show(copy.querySelector('[data-audit-folders]'))
+          }
+        }
+
+        const alertCell = copy.querySelector('[data-audit-alerts]')
+        for (const type of alerts?.types ?? []) {
+          const webhook = type.webhook && alerts?.webhookUrl
+          line(alertCell, `${type.title}: email ${type.email ? 'on' : 'off'}, webhook ${webhook ? 'on' : 'off'}.`)
+        }
+        const change = document.createElement('a')
+        change.href = '#alerts'
+        change.className = 'text-foreground-muted underline'
+        change.textContent = 'Change alerts'
+        alertCell?.append(change)
+        siteList?.append(copy)
+      }
+
+      const form = root.querySelector<HTMLFormElement>('[data-audit-add]')
+      if (audit.sites.length >= audit.max) {
+        form?.remove()
+        const full = root.querySelector('[data-audit-full]')
+        if (full) full.textContent = `The beta audits up to ${audit.max} sites. Remove one to add another.`
+        show(full)
+      }
+
+      sitesShown = () => {
+        loadChoices().then((found) => {
+          for (const [property, cell] of owners) {
+            const match = found?.choices.find((item) => item.property === property)
+            cell.textContent = !found
+              ? 'Could not check which Google account reads it.'
+              : match
+                ? `Read with ${match.email}`
+                : 'None of your linked Google accounts can read it now. Link the account that can on the Accounts tab.'
+          }
+        })
+      }
+
+      // The picker: the linked accounts' properties, filtered as you type.
+      const picker = root.querySelector<HTMLInputElement>('[data-picker]')
+      const listbox = root.querySelector<HTMLElement>('[data-picker-list]')
+      const value = root.querySelector<HTMLInputElement>('[data-picker-value]')
+      const status = root.querySelector('[data-picker-status]')
+      if (!form || !picker || !listbox || !value) return
+      let options: HTMLElement[] = []
+      let matchesNow: Choice[] = []
+      let active = -1
+      const close = () => {
+        show(listbox, false)
+        picker.setAttribute('aria-expanded', 'false')
+        picker.removeAttribute('aria-activedescendant')
+        active = -1
+      }
+      const highlight = (index: number) => {
+        options.forEach((option, at) => {
+          const on = at === index
+          option.setAttribute('aria-selected', String(on))
+          option.classList.toggle('bg-muted', on)
+        })
+        active = index
+        const option = options[index]
+        if (option) {
+          picker.setAttribute('aria-activedescendant', option.id)
+          option.scrollIntoView({ block: 'nearest' })
+        }
+      }
+      const choose = (choice: Choice) => {
+        if (choice.audited) return
+        value.value = choice.property
+        picker.value = choice.property
+        close()
+        if (status) status.textContent = `Adding ${choice.property}…`
+        form.requestSubmit()
+      }
+      const render = async () => {
+        if (status && !choices) status.textContent = 'Loading your Search Console properties…'
+        const found = await loadChoices()
+        if (!found) {
+          if (status) status.textContent = 'Could not read your Search Console properties. Reload the page to try again.'
+          close()
+          return
+        }
+        if (status) {
+          status.textContent = found.failed.length
+            ? `Could not read the properties of ${found.failed.join(', ')}.`
+            : found.choices.length
+              ? ''
+              : 'None of your linked Google accounts has a verified Search Console property.'
+        }
+        const words = picker.value.toLowerCase().split(/\s+/).filter(Boolean)
+        const matches = found.choices.filter((choice) =>
+          words.every((word) => `${choice.property} ${choice.email}`.toLowerCase().includes(word)),
+        )
+        listbox.replaceChildren()
+        options = []
+        for (const [index, choice] of matches.slice(0, 50).entries()) {
+          const option = document.createElement('li')
+          option.id = `site-picker-option-${index}`
+          option.setAttribute('role', 'option')
+          option.setAttribute('aria-selected', 'false')
+          if (choice.audited) option.setAttribute('aria-disabled', 'true')
+          option.className = `rounded-md px-3 py-2 ${choice.audited ? 'cursor-default opacity-60' : 'cursor-pointer hover:bg-muted'}`
+          line(option, choice.property).classList.add('break-all', 'text-foreground')
+          line(
+            option,
+            `${choice.property.startsWith('sc-domain:') ? 'Domain property' : 'URL-prefix property'} · ${choice.email}${choice.audited ? ' · already audited' : ''}`,
+            true,
+          )
+          // mousedown, so the pick happens before the input loses focus.
+          option.addEventListener('mousedown', (event) => {
+            event.preventDefault()
+            choose(choice)
+          })
+          listbox.append(option)
+          options.push(option)
+        }
+        if (!matches.length && found.choices.length) {
+          const empty = document.createElement('li')
+          empty.className = 'px-3 py-2 text-foreground-muted'
+          empty.textContent = `No property matches “${picker.value.trim()}”.`
+          listbox.append(empty)
+        }
+        if (matches.length > 50) {
+          line(listbox, `${count(matches.length - 50)} more. Keep typing to narrow the list.`, true).classList.add('px-3', 'py-2')
+        }
+        show(listbox, listbox.childElementCount > 0)
+        picker.setAttribute('aria-expanded', String(listbox.childElementCount > 0))
+        highlight(options.findIndex((option) => option.getAttribute('aria-disabled') !== 'true'))
+        matchesNow = matches
+      }
+      picker.addEventListener('focus', render)
+      picker.addEventListener('input', render)
+      picker.addEventListener('blur', close)
+      picker.addEventListener('keydown', (event) => {
+        if (event.key === 'Escape') return close()
+        if (event.key === 'ArrowDown' || event.key === 'ArrowUp') {
+          event.preventDefault()
+          if (listbox.hidden) return void render()
+          const step = event.key === 'ArrowDown' ? 1 : -1
+          let next = active
+          for (let tries = 0; tries < options.length; tries += 1) {
+            next = (next + step + options.length) % options.length
+            if (options[next]?.getAttribute('aria-disabled') !== 'true') break
+          }
+          highlight(next)
+        }
+        if (event.key === 'Enter') {
+          event.preventDefault()
+          const choice = matchesNow[active]
+          if (!listbox.hidden && choice) choose(choice)
+        }
+      })
+      form.addEventListener('submit', (event) => {
+        if (!value.value) event.preventDefault()
+      })
+    }
 
     // The account rows come first so their forms get actions below.
     const account = state.account
@@ -665,87 +1012,10 @@ const keys: { name: string; label: string; type: 'text' | 'password' }[] = [
         }
         const audit = account.audit
         if (audit) {
-          show(root.querySelector('[data-audit-panel]'))
-          const auditRow = root.querySelector<HTMLTemplateElement>('[data-audit-row]')
-          const auditList = root.querySelector('[data-audit-list]')
-          for (const site of audit.sites) {
-            const copy = auditRow?.content.cloneNode(true) as DocumentFragment
-            const name = copy.querySelector('[data-audit-property]')
-            if (name) name.textContent = site.property
-            const state = copy.querySelector('[data-audit-state]')
-            if (state) {
-              state.textContent = site.lastFinishedAt
-                ? `Last crawl ${new Date(site.lastFinishedAt).toLocaleDateString()}${site.lastStatus === 'failed' ? ' (stopped early)' : ''}: ${site.pages ?? 0} pages, ${site.open ?? 0} open findings, ${site.new ?? 0} new`
-                : site.error
-                  ? `Could not start yet: ${site.error}`
-                  : 'First crawl running'
-            }
-            const input = copy.querySelector<HTMLInputElement>('[data-audit-input]')
-            if (input) input.value = site.property
-            const coverage = site.coverage
-            if (coverage) {
-              const known = coverage.properties.reduce((sum, item) => sum + item.urls, 0)
-              const perDay = coverage.perDay * coverage.properties.length
-              const line = copy.querySelector('[data-audit-coverage]')
-              if (line) {
-                line.textContent = `Google can check ${perDay.toLocaleString()} of its ${known.toLocaleString()} pages a day (${coverage.properties.length === 1 ? 'one property' : `${coverage.properties.length} properties`}).`
-                show(line)
-              }
-              if (coverage.suggestions.length) {
-                const box = copy.querySelector('[data-audit-folders]')
-                const list = copy.querySelector('[data-audit-folder-list]')
-                for (const folder of coverage.suggestions) {
-                  const item = document.createElement('span')
-                  item.className = 'mt-1 block'
-                  const name = document.createElement('span')
-                  name.className = 'block break-all text-foreground'
-                  name.textContent = folder.property
-                  const detail = document.createElement('span')
-                  detail.className = 'block text-foreground-muted'
-                  const status =
-                    folder.added === 'verified'
-                      ? 'added and verified'
-                      : folder.added === 'unverified'
-                        ? 'added, not verified'
-                        : `${folder.urls.toLocaleString()} pages`
-                  detail.textContent = status
-                  item.append(name, detail)
-                  if (!folder.added) {
-                    detail.append(' · ')
-                    const link = document.createElement('a')
-                    link.href = 'https://search.google.com/search-console/welcome'
-                    link.target = '_blank'
-                    link.rel = 'noopener'
-                    link.className = 'text-foreground underline'
-                    link.textContent = 'add it yourself'
-                    detail.append(link)
-                  }
-                  list?.append(item)
-                }
-                const open = coverage.suggestions.filter((folder) => !folder.added).length
-                if (open) {
-                  const total = document.createElement('span')
-                  total.className = 'mt-1 block text-foreground'
-                  total.textContent = `With ${open === 1 ? 'it' : 'them'}, Google could check up to ${(perDay + open * coverage.perDay).toLocaleString()} pages a day.`
-                  list?.append(total)
-                }
-                const create = copy.querySelector<HTMLInputElement>('[data-audit-create-input]')
-                if (create) create.value = site.property
-                if (coverage.suggestions.every((folder) => folder.added)) {
-                  copy.querySelector('[data-audit-create]')?.remove()
-                  copy.querySelector('[data-audit-create-note]')?.remove()
-                }
-                show(box)
-              }
-            }
-            auditList?.append(copy)
-          }
-          if (audit.sites.length >= audit.max) {
-            root.querySelector('[data-audit-add]')?.remove()
-            const full = root.querySelector('[data-audit-full]')
-            if (full) full.textContent = `The beta audits up to ${audit.max} sites. Remove one to add another.`
-            show(full)
-          }
+          renderSites(audit, account.alerts)
+        } else {
+          root.querySelector('[data-account-tab="sites"]')?.remove()
+          root.querySelector('[data-account-panel="sites"]')?.remove()
         }
         const alerts = account.alerts
         if (alerts) {
@@ -801,6 +1071,8 @@ const keys: { name: string; label: string; type: 'text' | 'password' }[] = [
       } else {
         root.querySelector('[data-account-tab="beta"]')?.remove()
         root.querySelector('[data-account-panel="beta"]')?.remove()
+        root.querySelector('[data-account-tab="sites"]')?.remove()
+        root.querySelector('[data-account-panel="sites"]')?.remove()
       }
       if (account.login) {
         show(root.querySelector('[data-login]'))
@@ -870,6 +1142,7 @@ const keys: { name: string; label: string; type: 'text' | 'password' }[] = [
           selected,
         )
       }
+      if (id === 'sites') sitesShown()
     }
     const tabFor = (hash: string) => {
       const id = hash.replace(/^#/, '')
@@ -888,6 +1161,14 @@ const keys: { name: string; label: string; type: 'text' | 'password' }[] = [
           : (account.tab ?? tabFor(window.location.hash) ?? 'accounts'),
       )
     }
+    // In-page links such as "Change alerts" open their tab.
+    window.addEventListener('hashchange', () => {
+      const id = tabFor(window.location.hash)
+      if (id) {
+        select(id)
+        root.querySelector(`[id="${CSS.escape(window.location.hash.slice(1))}"]`)?.scrollIntoView()
+      }
+    })
     for (const tab of tabs) {
       tab.addEventListener('click', () => {
         const id = tab.dataset.accountTab ?? 'accounts'

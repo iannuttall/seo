@@ -2,7 +2,7 @@ import { exchangeGoogleCode, readJsonOrUndefined } from '@seo/core/hosted'
 import type { AuditCoverage } from './schedule.ts'
 import { siteObject } from './schedule.ts'
 
-// "Create these in Search Console" on the Beta tab (the weekly-audit beta).
+// "Create these in Search Console" on the Sites tab (the weekly-audit beta).
 // Search Console's sites.add needs the read and write scope, which the
 // server asks for only when the button is clicked: an incremental sign-in
 // for that one Google account, online access, so Google returns no refresh
@@ -97,7 +97,7 @@ export async function addProperties(
   return added
 }
 
-// Marks the folders on the site's D1 row, so the Beta tab shows what was
+// Marks the folders on the site's D1 row, so the Sites tab shows what was
 // added until the next day's plan replaces the list, and asks the site
 // object to count new properties from its next wake.
 export async function recordAdded(

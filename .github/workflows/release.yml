@@ -42,7 +42,7 @@ jobs:
           version: 11.11.0
       - uses: actions/setup-node@v6
         with:
-          node-version: 24
+          node-version: 24.22.1
           registry-url: "https://registry.npmjs.org"
           package-manager-cache: false
       - name: Use an npm CLI with trusted publishing support

@@ -18,7 +18,7 @@ Use these settings for the `seo-skill` Worker. Changing `name` in Wrangler creat
 | Deploy command | `pnpm deploy:web` |
 | Non-production deploy command | `pnpm --filter @seo/web exec wrangler versions upload` |
 
-The root `.node-version` file pins Node `22.20.0`. Agent markdown comes from the published `@iannuttall/seo-graph-astro` package. The integration's per-file Cloudflare headers are disabled because they grow by one rule for every page. The tracked `_headers` file uses bounded wildcard rules instead.
+The root `.node-version` file pins Node `22.23.4`. Agent markdown comes from the published `@iannuttall/seo-graph-astro` package. The integration's per-file Cloudflare headers are disabled because they grow by one rule for every page. The tracked `_headers` file uses bounded wildcard rules instead.
 
 The Wrangler config declares both custom domains:
 

@@ -6,6 +6,7 @@ import {
   CLI_LINK,
   commandErrorFrom,
   MCP_INSTRUCTIONS,
+  MCP_SERVER_INFO,
   runSharedTool,
   SHARED_TOOLS,
   type SharedTool,
@@ -64,7 +65,7 @@ const AUDIT_BETA_TOOLS: Tool[] = AUDIT_TOOLS.map(sharedTool)
 const instructions = (env: Env) => `${MCP_INSTRUCTIONS}
 Crawls, internal links and Bing run on a machine with the open-source CLI, not on this server. ${CLI_LINK} Then run, for example, \`npx -y seo crawl https://example.com --json\`, \`npx -y seo internal-links --url https://example.com/page --json\` or \`npx -y seo report --site <site> --section bing --json\`. When a site or key is missing, open ${accountUrl(env)} in the person's browser (with \`open <url>\` on macOS, \`xdg-open\` on Linux or \`start\` on Windows when you have a shell, otherwise show the link), let them add the Google account or key there, then run the same call again. This server keeps only those sign-ins and keys, encrypted, and no report data.`
 
-const SERVER_INFO = { name: 'seo', title: 'SEO Skill', version: '1.0.0' }
+const SERVER_INFO = { ...MCP_SERVER_INFO, version: '1.0.0' }
 
 // The static server card at /.well-known/mcp/server-card.json, so
 // directories such as Smithery can list the tools without signing in.

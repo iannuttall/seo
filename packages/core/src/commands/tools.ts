@@ -527,6 +527,37 @@ export async function runSharedTool(
   return tool.run(surface, parsed.data as never)
 }
 
+// What an MCP client shows for the server: one identity for the hosted and
+// local servers. The local server changes only its title and description.
+// Icons are absolute so a client can fetch them from either server; sizes
+// must be a list, per the 2025-11-25 spec.
+export const MCP_SERVER_INFO = {
+  name: 'seo',
+  title: 'SEO Skill',
+  description:
+    'Search Console, Google Analytics and keyword data for your AI agent.',
+  websiteUrl: 'https://seoskill.dev',
+  icons: [
+    {
+      src: 'https://seoskill.dev/favicon-light.png',
+      mimeType: 'image/png',
+      sizes: ['512x512'],
+      theme: 'light' as const,
+    },
+    {
+      src: 'https://seoskill.dev/favicon-dark.png',
+      mimeType: 'image/png',
+      sizes: ['512x512'],
+      theme: 'dark' as const,
+    },
+    {
+      src: 'https://seoskill.dev/favicon.svg',
+      mimeType: 'image/svg+xml',
+      sizes: ['any'],
+    },
+  ],
+}
+
 export const MCP_INSTRUCTIONS = `SEO Skill reads the person's own Search Console, Google Analytics, Bing Webmaster Tools, Clicky and optional keyword accounts, and returns facts with their dates and limits. It gives no advice.
 1. seo_sites: the properties the connected accounts can read.
 2. seo_report: the main report. Run it without a section first; it shows the overview and every section's count and top rows. Then ask for the one section you need.

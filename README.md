@@ -142,7 +142,7 @@ ends with the command to run next, so your agent always knows where to go.
 
 | Command | What it returns |
 | --- | --- |
-| [`seo report`](https://seoskill.dev/docs/report) | Your Search Console overview, then the top rows of each section |
+| [`seo report`](https://seoskill.dev/docs/report) | Your Search Console overview for `--site`, then the top rows of each section |
 | [`seo page`](https://seoskill.dev/docs/page) | One URL: the live page, its Google index status and its queries |
 | [`seo compare`](https://seoskill.dev/docs/compare) | Before and after a date, with Google updates |
 | [`seo index`](https://seoskill.dev/docs/indexing) | Google's indexing reasons for known URLs, labelled from live checks, and pages that lost their clicks |

@@ -34,7 +34,7 @@ import {
   type CommandId,
   type CommandResult,
 } from './types.js'
-import { runWeek } from './week.js'
+import { runAllSites } from './week.js'
 
 // The MCP tools for the shared commands, defined once for the hosted MCP and
 // the local MCP. Each surface supplies how it reaches Google and the keys.
@@ -147,32 +147,48 @@ export const SHARED_TOOLS: SharedTool[] = [
     name: 'seo_report',
     command: 'report',
     title: 'Search Console report',
-    description: `The main report for a Search Console property. Without a section it returns the overview plus each section's row count and top rows. With a section it returns that section's rows; page sections also check their top 20 URLs live. Sections:\n${Object.entries(
+    description: `Start here. Without site: a short summary of every site in the person's weekly site audit (beta) for last week, with what needs a look and the next step for each, ending with the site to ask about next; an account outside that beta must send site. With site: the main report for that Search Console property, the overview plus each section's row count and top rows. With site and section: that section's rows; page sections also check their top 20 URLs live. Sections:\n${Object.entries(
       SECTIONS,
     )
       .map(([id, text]) => `- ${id}: ${text}`)
       .join('\n')}`,
     input: z.object({
-      site,
+      site: site
+        .optional()
+        .describe(
+          'Leave it out for the summary of every audited site (weekly site audit beta). Otherwise a Search Console property or site, such as sc-domain:example.com, https://example.com/ or example.com.',
+        ),
       section: z
         .enum(SECTION_IDS)
         .optional()
-        .describe('Optional. Leave it out first; then ask for one section.'),
+        .describe(
+          'Optional, needs site. Leave it out first; then ask for one section.',
+        ),
       ...dates,
       ...detail,
     }),
     run: async (surface, input) => {
+      if (!input.site) {
+        if (input.section) {
+          throw new CommandError(
+            'INVALID_INPUT',
+            `section needs a site: ${surface.deps.call('report', { site: '<site>', section: input.section })}.`,
+          )
+        }
+        return runAllSites(surface.deps)
+      }
+      const target = input.site
       // A site with no Search Console property can still have Bing, on a
       // surface that reads Bing.
       const resolved = await surface
-        .resolveSite(input.site)
+        .resolveSite(target)
         .catch((error: unknown) =>
           error instanceof Error ? error : new Error(String(error)),
         )
       if (resolved instanceof Error && !input.section && surface.deps.bing) {
         return runBingReport(
           {
-            site: input.site,
+            site: target,
             startDate: input.start_date,
             endDate: input.end_date,
           },
@@ -186,7 +202,7 @@ export const SHARED_TOOLS: SharedTool[] = [
       if (resolved instanceof Error && input.section !== 'bing') throw resolved
       return runReport(
         {
-          site: resolved instanceof Error ? input.site : resolved,
+          site: resolved instanceof Error ? target : resolved,
           section: input.section,
           startDate: input.start_date,
           endDate: input.end_date,
@@ -482,44 +498,28 @@ function indexFromStore(shared: SharedTool): SharedTool {
   }
 }
 
-// The weekly summary, for the weekly site audit beta: the hosted server
-// lists it for accounts in the beta, the local server for a machine linked
-// to a seoskill.dev account.
-export const WEEK_TOOL: SharedTool = tool({
-  name: 'seo_week',
-  command: 'week',
-  title: 'The last week of the audited sites',
-  description:
-    'The last full week, Monday to Sunday, of the sites in the weekly site audit beta: which need a look and the next step for each, which were quiet, and a prompt to ask next. The same summary goes out by email on Monday.',
-  input: z.object({}),
-  run: async (surface) => runWeek(surface.deps),
-})
-
 // The shared tools for an account in the weekly site audit beta: seo_report
 // also takes the weekly-audit section, and seo_index answers from the
 // site's stored checks. Only the hosted server uses them, so every other
 // account and surface sees the tools unchanged.
-export const AUDIT_TOOLS: SharedTool[] = [
-  ...SHARED_TOOLS.map((shared) =>
-    shared.name === 'seo_index'
-      ? indexFromStore(shared)
-      : shared.name === 'seo_report'
-        ? {
-            ...shared,
-            description: `${shared.description}\n- ${AUDIT_SECTION}: ${AUDIT_SECTION_TEXT}`,
-            input: shared.input.extend({
-              section: z
-                .enum([...SECTION_IDS, AUDIT_SECTION])
-                .optional()
-                .describe(
-                  'Optional. Leave it out first; then ask for one section.',
-                ),
-            }),
-          }
-        : shared,
-  ),
-  WEEK_TOOL,
-]
+export const AUDIT_TOOLS: SharedTool[] = SHARED_TOOLS.map((shared) =>
+  shared.name === 'seo_index'
+    ? indexFromStore(shared)
+    : shared.name === 'seo_report'
+      ? {
+          ...shared,
+          description: `${shared.description}\n- ${AUDIT_SECTION}: ${AUDIT_SECTION_TEXT}`,
+          input: shared.input.extend({
+            section: z
+              .enum([...SECTION_IDS, AUDIT_SECTION])
+              .optional()
+              .describe(
+                'Optional. Leave it out first; then ask for one section.',
+              ),
+          }),
+        }
+      : shared,
+)
 
 // Parses the input with the tool's schema, so bad input fails the same way on
 // every surface.
@@ -577,7 +577,7 @@ export const MCP_SERVER_INFO = {
 
 export const MCP_INSTRUCTIONS = `SEO Skill reads the person's own Search Console, Google Analytics, Bing Webmaster Tools, Clicky and optional keyword accounts, and returns facts with their dates and limits. It gives no advice.
 1. seo_sites: the properties the connected accounts can read.
-2. seo_report: the main report. Run it without a section first; it shows the overview and every section's count and top rows. Then ask for the one section you need.
+2. seo_report: start here. Without site it summarises last week across every site in the weekly site audit (beta) and names the site to ask about next. With site it shows that property's overview and every section's count and top rows; then ask for the one section you need.
 3. seo_page for one URL, seo_compare for before and after a date, seo_index for Google's indexing reasons and pages that lost their clicks, seo_research for keyword, competitor and backlink data, and whether AI answers cite the site, from the DataForSEO or Ahrefs key the person saved, seo_data for raw rows, including Google Analytics, Bing and Clicky.`
 
 // How an MCP surface writes "run this next": the tool name and its inputs.

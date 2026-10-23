@@ -2,7 +2,7 @@ import { previousWeek, type WeekData } from '@seo/core/commands'
 import { queueAlert } from '../alerts/deliver.ts'
 import { auditSites, siteId, siteObject } from './schedule.ts'
 
-// The weekly summary (seo week, and the Monday email): the last full week,
+// The weekly summary (seo report with no site, and the Monday email): the last full week,
 // Monday to Sunday in UTC, of every site a person audits. Each site's
 // object answers for its own week; the rest comes from D1.
 

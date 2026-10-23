@@ -92,7 +92,8 @@ const indexChanges: AlertType<IndexChanges> = {
 }
 
 // weekly-summary: every audited site's last full week, Monday to Sunday,
-// sent on Monday morning (audit/week.ts). The same Markdown as seo week.
+// sent on Monday morning (audit/week.ts). The same Markdown as seo report
+// with no site.
 const weeklySummary: AlertType<WeekData> = {
   title: 'Weekly summary',
   text: 'Every Monday, what needs a look on your sites and what was quiet.',

@@ -1,5 +1,16 @@
 # Changelog
 
+## Unreleased
+
+### Added
+
+- `seo report` and `seo_report` with no site give last week across every
+  site in the weekly site audit beta: a verdict, what needs a look with one
+  next step each, what was quiet, and a prompt to ask next. It is the same
+  summary as the Monday email, and it ends with the site to ask about next.
+  On a machine, run `seo login` first. Without the beta, a missing site is
+  still an error that says to name one.
+
 ## 0.12.1
 
 ### Fixed

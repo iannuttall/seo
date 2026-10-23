@@ -1,4 +1,5 @@
 import {
+  cloudLinked,
   localError,
   localRefreshClicky,
   localResearchKeys,
@@ -17,6 +18,7 @@ import {
   type ResearchAction,
   type ResearchProvider,
   runAiAnswers,
+  runAllSites,
   runBingReport,
   runBingRows,
   runClickyRows,
@@ -26,7 +28,6 @@ import {
   runReport,
   runResearch,
   runRows,
-  runWeek,
   SECTION_IDS,
   type SectionId,
 } from '@seo/core/commands'
@@ -132,16 +133,17 @@ export const reportCommand = defineCommand({
   meta: {
     name: 'report',
     description:
-      'The main Search Console report: overview and every section, then one section on request',
+      'Start here. No --site: last week across your audited sites (beta, after `seo login`). --site: overview and every section. Add --section for one',
   },
   args: {
     site: {
       type: 'string',
-      description: 'Site, URL or Search Console property.',
+      description:
+        'Site, URL or Search Console property. Leave it out for the summary of every audited site (beta, after `seo login`).',
     },
     section: {
       type: 'string',
-      description: `Optional. One of ${SECTION_IDS.join(', ')}.`,
+      description: `Optional, needs --site. One of ${SECTION_IDS.join(', ')}.`,
     },
     ...dates,
     ...detail,
@@ -155,9 +157,15 @@ export const reportCommand = defineCommand({
         `--section is one of ${SECTION_IDS.join(', ')}.`,
       )
     }
+    const target = stringArg(args.site)
+    // No site on a machine linked to a seoskill.dev account: the summary of
+    // every audited site. Unlinked, the "no site given" error stays.
+    if (!target && !section && cloudLinked()) {
+      await run(args, (deps) => runAllSites(deps))
+      return
+    }
     // The bing section needs only Bing: without a Google property it shows
     // the Bing rows and says Google was not available.
-    const target = stringArg(args.site)
     const site =
       section === 'bing'
         ? await property(args, target).catch(() => requireSite(target))
@@ -310,20 +318,6 @@ export const indexCommand = defineCommand({
         deps,
       ),
     )
-  },
-})
-
-export const weekCommand = defineCommand({
-  meta: {
-    name: 'week',
-    description:
-      'The last full week of the sites in the weekly site audit beta (needs `seo login`)',
-  },
-  args: {
-    json: common.json,
-  },
-  run: async ({ args }) => {
-    await run(args, (deps) => runWeek(deps))
   },
 })
 

@@ -175,8 +175,8 @@ export async function credentials(
   })
 }
 
-// seo week on a linked machine: the weekly summary's data, for an account
-// in the weekly site audit beta.
+// seo report with no site on a linked machine: the weekly summary's data,
+// for an account in the weekly site audit beta.
 export async function cliWeek(request: Request, env: Env): Promise<Response> {
   const link = await linkOf(request, env)
   if (!link) return unlinked()

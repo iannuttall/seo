@@ -29,7 +29,6 @@ import {
   pageCommand,
   reportCommand,
   researchCommand,
-  weekCommand,
 } from './commands/core-commands.js'
 import { crawlCommand } from './commands/crawl.js'
 import { gscQueryCommand, urlInspectCommand } from './commands/data.js'
@@ -103,9 +102,13 @@ const helpSections: HelpSection[] = [
     title: 'Start here',
     commands: [
       ['seo start', 'Sign in with Google, then add the MCP server and skill'],
-      ['seo report', 'The main report: overview and every section'],
       [
-        'seo report --section quick-wins',
+        'seo report',
+        'Last week across your audited sites (beta, after seo login)',
+      ],
+      ['seo report --site <site>', 'One site: overview and every section'],
+      [
+        'seo report --site <site> --section quick-wins',
         'One section of the report, with live page checks',
       ],
     ],
@@ -123,7 +126,6 @@ const helpSections: HelpSection[] = [
       ['seo data', 'Raw Search Console, Bing or Clicky rows'],
       ['seo crawl', 'Crawl a site and list technical issues'],
       ['seo internal-links', 'Pages that could link to a target page'],
-      ['seo week', 'Last week of your audited sites (beta, after seo login)'],
     ],
   },
   {
@@ -235,7 +237,6 @@ const main = defineCommand({
     index: indexCommand,
     data: dataCommand,
     research: researchCommand,
-    week: weekCommand,
     reports: reportCatalogCommand,
     'segment-impact': segmentImpactCommand,
     'striking-distance': strikingDistanceCommand,

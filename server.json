@@ -2,8 +2,27 @@
   "$schema": "https://static.modelcontextprotocol.io/schemas/2025-12-11/server.schema.json",
   "name": "dev.seoskill/seo",
   "title": "SEO Skill",
-  "description": "Free Google Search Console MCP: your real GSC, Google Analytics and keyword data for AI agents.",
+  "description": "Search Console, Google Analytics and keyword data for your AI agent.",
   "websiteUrl": "https://seoskill.dev",
+  "icons": [
+    {
+      "src": "https://seoskill.dev/favicon-light.png",
+      "mimeType": "image/png",
+      "sizes": ["512x512"],
+      "theme": "light"
+    },
+    {
+      "src": "https://seoskill.dev/favicon-dark.png",
+      "mimeType": "image/png",
+      "sizes": ["512x512"],
+      "theme": "dark"
+    },
+    {
+      "src": "https://seoskill.dev/favicon.svg",
+      "mimeType": "image/svg+xml",
+      "sizes": ["any"]
+    }
+  ],
   "repository": {
     "url": "https://github.com/iannuttall/seo",
     "source": "github"

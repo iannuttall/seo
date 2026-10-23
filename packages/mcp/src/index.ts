@@ -7,7 +7,11 @@ import {
   type TelemetryOptions,
   updateNotice,
 } from '@seo/core'
-import { MCP_INSTRUCTIONS, SKILL_RESOURCE } from '@seo/core/commands'
+import {
+  MCP_INSTRUCTIONS,
+  MCP_SERVER_INFO,
+  SKILL_RESOURCE,
+} from '@seo/core/commands'
 import { registerProviderExtensionTools } from './provider-extension-tools.js'
 import { registerSharedTools } from './shared-tools.js'
 
@@ -59,7 +63,9 @@ export function createServer(
 ): SeoMcpServer {
   const server = new McpServer(
     {
-      name: 'seo',
+      ...MCP_SERVER_INFO,
+      title: 'SEO Skill (local)',
+      description: `${MCP_SERVER_INFO.description} Runs on your machine.`,
       version: SEO_VERSION,
     },
     {

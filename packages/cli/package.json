@@ -19,14 +19,14 @@
     "typecheck": "tsc -p tsconfig.json --noEmit"
   },
   "dependencies": {
-    "@clack/prompts": "^1.7.0",
+    "@clack/prompts": "^1.8.1",
     "@seo/core": "workspace:*",
     "@seo/mcp": "workspace:*",
     "citty": "^0.2.2",
     "cli-table3": "^0.6.5",
     "jsonc-parser": "^3.3.1",
     "picocolors": "^1.1.1",
-    "string-width": "^8.2.2",
+    "string-width": "^8.3.0",
     "update-notifier": "^7.3.1"
   }
 }

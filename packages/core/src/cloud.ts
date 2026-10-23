@@ -3,6 +3,7 @@ import { join } from 'node:path'
 import open from 'open'
 import { type BingCall, bingCall } from './bing/api.js'
 import { bingRouter, LinkedAccounts } from './commands/linked.js'
+import type { WeekData } from './commands/week.js'
 import { SeoError } from './errors.js'
 import { readJson } from './http/read-json.js'
 import { ensureSeoCliDirs, getSeoCliPaths } from './paths.js'
@@ -110,6 +111,36 @@ export async function cloudCredentials(
     return result.body
   })()
   return credentials
+}
+
+// seo week: the weekly summary from the linked seoskill.dev account.
+export async function cloudWeek(): Promise<WeekData> {
+  const token = cloudToken()
+  if (!token) throw new SeoError('AUTH_REQUIRED', notSignedIn())
+  const result = await call<WeekData & { message?: string }>(
+    '/account/cli/week',
+    { token },
+  )
+  if (result.status === 401) {
+    throw new SeoError(
+      'AUTH_EXPIRED',
+      `This machine is not linked to a seoskill.dev account any more. ${CLOUD_SIGN_IN}`,
+    )
+  }
+  if (result.status === 403) {
+    throw new SeoError(
+      'ACCESS_DENIED',
+      result.body.message ??
+        'The weekly summary is for accounts in the weekly site audit beta.',
+    )
+  }
+  if (!result.ok) {
+    throw new SeoError(
+      'PROVIDER_UNAVAILABLE',
+      `seoskill.dev returned ${result.status}. Try again in a minute.`,
+    )
+  }
+  return result.body
 }
 
 // What to tell someone with no sign-in on this machine.

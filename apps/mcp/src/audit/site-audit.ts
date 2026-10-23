@@ -1,5 +1,12 @@
 import { DurableObject } from 'cloudflare:workers'
-import type { AuditChecks, AuditSnapshot } from '@seo/core/commands'
+import {
+  type AuditChecks,
+  type AuditSnapshot,
+  dateWindow,
+  earlierRange,
+  MAX_DROPPED_PAGES,
+  type WeekSite,
+} from '@seo/core/commands'
 import robotsParser from 'robots-parser'
 import { queueAlert } from '../alerts/deliver.ts'
 import { MAX_LISTED } from '../alerts/registry.ts'
@@ -878,6 +885,106 @@ export class SiteAudit extends DurableObject<Env> {
     const site = meter.one<Site>('SELECT * FROM site')
     if (!site) return null
     return inspectThrough(meter, site, await this.google(site), url)
+  }
+
+  // The weekly summary's part of this site for one week [start, end): the
+  // last crawl that finished before the week ended, the issues it first
+  // saw or saw again in the week, the week's drops and returns, and search
+  // clicks over the latest 7 final days against the 7 before (two Search
+  // Console calls; null when they fail).
+  async week(
+    start: number,
+    end: number,
+  ): Promise<Pick<WeekSite, 'crawl' | 'index' | 'clicks'> | null> {
+    const meter = new Meter(this.ctx.storage)
+    const site = meter.one<Site>('SELECT * FROM site')
+    if (!site) return null
+    const run = meter.one<{
+      id: string
+      finished_at: number
+      status: string
+      summary: string
+    }>(
+      'SELECT id, finished_at, status, summary FROM runs WHERE finished_at < ? ORDER BY finished_at DESC, id LIMIT 1',
+      end,
+    )
+    const error = run
+      ? (meter.one<{ error: string | null }>(
+          'SELECT error FROM run WHERE id = ?',
+          run.id,
+        )?.error ?? null)
+      : null
+    const rules = meter.all<{ rule: string; n: number }>(
+      `SELECT rule, count(*) AS n FROM findings
+       WHERE (first_seen_at >= ? AND first_seen_at < ?) OR (reopened_at >= ? AND reopened_at < ?)
+       GROUP BY rule ORDER BY n DESC, rule`,
+      start,
+      end,
+      start,
+      end,
+    )
+    const counts = meter.one<{
+      checked: number
+      dropped: number
+      returned: number
+    }>(
+      `SELECT count(*) FILTER (WHERE checked_at >= ? AND checked_at < ?) AS checked,
+         count(*) FILTER (WHERE transition = 'dropped' AND transition_at >= ? AND transition_at < ?) AS dropped,
+         count(*) FILTER (WHERE transition = 'returned' AND transition_at >= ? AND transition_at < ?) AS returned
+       FROM checks`,
+      start,
+      end,
+      start,
+      end,
+      start,
+      end,
+    )
+    const dropped = meter.all<{ url: string; coverage: string | null }>(
+      `SELECT url, coverage FROM checks
+       WHERE transition = 'dropped' AND transition_at >= ? AND transition_at < ?
+       ORDER BY top DESC, prev_clicks + clicks DESC, url LIMIT ?`,
+      start,
+      end,
+      MAX_DROPPED_PAGES,
+    )
+    const range = dateWindow({}, 7)
+    const total = async (window: typeof range) => {
+      const result = await (await this.google(site)).searchAnalytics()(
+        site.property,
+        { ...window, dimensions: [], type: 'web', maxRows: 1 },
+      )
+      return result.rows[0]?.clicks ?? 0
+    }
+    const clicks = await Promise.all([total(range), total(earlierRange(range))])
+      .then(([now, before]) => ({
+        start: range.startDate,
+        end: range.endDate,
+        clicks: now,
+        previous: before,
+      }))
+      .catch(() => null)
+    return {
+      crawl: run
+        ? {
+            finished_at: run.finished_at,
+            status: run.status === 'failed' ? 'failed' : 'done',
+            error,
+            pages: (JSON.parse(run.summary) as RunSummary).pages.fetched,
+            new_issues: rules.reduce((sum, row) => sum + row.n, 0),
+            top_rule: rules[0]?.rule ?? null,
+          }
+        : null,
+      index:
+        counts && (counts.checked || counts.dropped || counts.returned)
+          ? {
+              checked: counts.checked,
+              dropped: counts.dropped,
+              returned: counts.returned,
+              dropped_pages: dropped,
+            }
+          : null,
+      clicks,
+    }
   }
 
   // The person's Google accounts, read from D1 each time so a refreshed or

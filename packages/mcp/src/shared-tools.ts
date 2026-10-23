@@ -1,5 +1,6 @@
 import type { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js'
 import {
+  cloudLinked,
   internalLinksReport,
   LOCAL_SIGN_IN,
   localAccounts,
@@ -24,6 +25,7 @@ import {
   runSharedTool,
   SHARED_TOOLS,
   telemetryReportFor,
+  WEEK_TOOL,
 } from '@seo/core/commands'
 import * as z from 'zod/v4'
 import { executeReport } from './reports.js'
@@ -109,7 +111,11 @@ export function registerSharedTools(
     connect:
       'run `seo login` to use your seoskill.dev account (Google, Bing and keys in one place), or `seo auth login`, `seo providers bing connect` and `seo providers dataforseo connect` or `seo providers ahrefs connect` on this machine only.',
   }
-  for (const shared of SHARED_TOOLS) {
+  // seo_week only on a machine linked to a seoskill.dev account, where the
+  // weekly site audit lives.
+  for (const shared of cloudLinked()
+    ? [...SHARED_TOOLS, WEEK_TOOL]
+    : SHARED_TOOLS) {
     server.registerTool(
       shared.name,
       {

@@ -1,4 +1,6 @@
 import { CLICKY_ACCOUNT_KEY } from '@seo/core/commands'
+import { weekData } from './audit/week.ts'
+import { betaFlags } from './beta.ts'
 import { refreshClicky } from './clicky.ts'
 import { freshAccess } from './google.ts'
 import { seal, unseal } from './seal.ts'
@@ -171,6 +173,21 @@ export async function credentials(
       .map(({ provider: _, ...rest }) => rest),
     keys,
   })
+}
+
+// seo week on a linked machine: the weekly summary's data, for an account
+// in the weekly site audit beta.
+export async function cliWeek(request: Request, env: Env): Promise<Response> {
+  const link = await linkOf(request, env)
+  if (!link) return unlinked()
+  if (!(await betaFlags(env, link.userId)).has('weekly-audit')) {
+    return error(
+      'not_in_beta',
+      'The weekly summary is for accounts in the weekly site audit beta.',
+      403,
+    )
+  }
+  return json(await weekData(env, link.userId))
 }
 
 export async function logout(request: Request, env: Env): Promise<Response> {

@@ -6,8 +6,9 @@ import {
 } from './account.ts'
 import { sendDueAlerts } from './alerts/deliver.ts'
 import { startDue } from './audit/schedule.ts'
+import { sendWeeklySummaries } from './audit/week.ts'
 import { betaFlags } from './beta.ts'
-import { credentials, finishLogin, logout, startLogin } from './cli.ts'
+import { cliWeek, credentials, finishLogin, logout, startLogin } from './cli.ts'
 import { failureReport } from './failure-report.ts'
 import { directory } from './google.ts'
 import { serveMcp, serverCard } from './mcp.ts'
@@ -104,6 +105,9 @@ async function route(
   if (pathname === '/account/cli/credentials' && method === 'GET') {
     return credentials(request, env)
   }
+  if (pathname === '/account/cli/week' && method === 'GET') {
+    return cliWeek(request, env)
+  }
   if (pathname === '/account/cli/logout' && method === 'POST') {
     return logout(request, env)
   }
@@ -173,6 +177,7 @@ export default {
     if (controller.cron === '17 * * * *') {
       ctx.waitUntil(startDue(env, controller.scheduledTime))
       ctx.waitUntil(sendDueAlerts(env, controller.scheduledTime))
+      ctx.waitUntil(sendWeeklySummaries(env, controller.scheduledTime))
       return
     }
     const now = new Date(controller.scheduledTime)

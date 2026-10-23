@@ -2,6 +2,7 @@ import { readJsonOrUndefined } from '@seo/core/hosted'
 import { betaFlags } from '../beta.ts'
 import { seal } from '../seal.ts'
 import { accountsOf } from '../store.ts'
+import { renderEmail } from './email.ts'
 import {
   ALERTS,
   type AlertData,
@@ -195,20 +196,24 @@ async function sendEmail(env: Env, row: Row, now: number): Promise<Outcome> {
     env.SEAL_KEY,
     { k: 'alert-off', userId: row.user_id, type },
   )}`
-  const text = [
-    message.text,
-    ...(row.held_on
-      ? [
-          '',
-          `This alert was held back on ${row.held_on} by the daily email limit.`,
-        ]
-      : []),
-    '',
-    '--',
-    `SEO Skill sends this because ${ALERTS[type].title.toLowerCase()} alerts are on for your account.`,
-    `Turn these emails off: ${off}`,
-    `Change alerts: ${env.PUBLIC_URL}/account#alerts`,
-  ].join('\n')
+  const { html, text } = renderEmail({
+    subject: message.subject,
+    preview: message.preview,
+    markdown: [
+      message.markdown,
+      ...(row.held_on
+        ? [
+            '',
+            `This email was held back on ${row.held_on} by the daily email limit.`,
+          ]
+        : []),
+    ].join('\n'),
+    footer: {
+      why: `You got this email because “${ALERTS[type].title}” is on in your SEO Skill alerts.`,
+      prefs: `${env.PUBLIC_URL}/account#alerts`,
+      unsubscribe: off,
+    },
+  })
   const tried = { tried: true }
   let response: Response
   try {
@@ -227,6 +232,7 @@ async function sendEmail(env: Env, row: Row, now: number): Promise<Outcome> {
           ...(env.ALERT_REPLY_TO ? { reply_to: env.ALERT_REPLY_TO } : {}),
           subject: message.subject,
           text,
+          html,
           headers: {
             'List-Unsubscribe': `<${off}>`,
             'List-Unsubscribe-Post': 'List-Unsubscribe=One-Click',
@@ -285,7 +291,8 @@ export function webhookBody(
   return JSON.stringify({
     id: row.id,
     type: row.type,
-    site: row.site,
+    // null for an alert about the whole account, such as the weekly summary.
+    site: row.site || null,
     created_at: new Date(row.created_at).toISOString(),
     data: JSON.parse(row.data),
   })

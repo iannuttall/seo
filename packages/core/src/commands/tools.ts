@@ -34,6 +34,7 @@ import {
   type CommandId,
   type CommandResult,
 } from './types.js'
+import { runWeek } from './week.js'
 
 // The MCP tools for the shared commands, defined once for the hosted MCP and
 // the local MCP. Each surface supplies how it reaches Google and the keys.
@@ -481,28 +482,44 @@ function indexFromStore(shared: SharedTool): SharedTool {
   }
 }
 
+// The weekly summary, for the weekly site audit beta: the hosted server
+// lists it for accounts in the beta, the local server for a machine linked
+// to a seoskill.dev account.
+export const WEEK_TOOL: SharedTool = tool({
+  name: 'seo_week',
+  command: 'week',
+  title: 'The last week of the audited sites',
+  description:
+    'The last full week, Monday to Sunday, of the sites in the weekly site audit beta: which need a look and the next step for each, which were quiet, and a prompt to ask next. The same summary goes out by email on Monday.',
+  input: z.object({}),
+  run: async (surface) => runWeek(surface.deps),
+})
+
 // The shared tools for an account in the weekly site audit beta: seo_report
 // also takes the weekly-audit section, and seo_index answers from the
 // site's stored checks. Only the hosted server uses them, so every other
 // account and surface sees the tools unchanged.
-export const AUDIT_TOOLS: SharedTool[] = SHARED_TOOLS.map((shared) =>
-  shared.name === 'seo_index'
-    ? indexFromStore(shared)
-    : shared.name === 'seo_report'
-      ? {
-          ...shared,
-          description: `${shared.description}\n- ${AUDIT_SECTION}: ${AUDIT_SECTION_TEXT}`,
-          input: shared.input.extend({
-            section: z
-              .enum([...SECTION_IDS, AUDIT_SECTION])
-              .optional()
-              .describe(
-                'Optional. Leave it out first; then ask for one section.',
-              ),
-          }),
-        }
-      : shared,
-)
+export const AUDIT_TOOLS: SharedTool[] = [
+  ...SHARED_TOOLS.map((shared) =>
+    shared.name === 'seo_index'
+      ? indexFromStore(shared)
+      : shared.name === 'seo_report'
+        ? {
+            ...shared,
+            description: `${shared.description}\n- ${AUDIT_SECTION}: ${AUDIT_SECTION_TEXT}`,
+            input: shared.input.extend({
+              section: z
+                .enum([...SECTION_IDS, AUDIT_SECTION])
+                .optional()
+                .describe(
+                  'Optional. Leave it out first; then ask for one section.',
+                ),
+            }),
+          }
+        : shared,
+  ),
+  WEEK_TOOL,
+]
 
 // Parses the input with the tool's schema, so bad input fails the same way on
 // every surface.

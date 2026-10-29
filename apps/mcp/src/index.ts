@@ -130,11 +130,15 @@ async function route(
     if (method !== 'POST') {
       return new Response(null, { status: 405, headers: { allow: 'POST' } })
     }
-    const [accounts, keys, beta] = await Promise.all([
-      accountsOf(env, userId),
-      keysOf(env, userId),
-      betaFlags(env, userId),
-    ])
+    const load = () =>
+      Promise.all([
+        accountsOf(env, userId),
+        keysOf(env, userId),
+        betaFlags(env, userId),
+      ])
+    // D1 sometimes fails a read for a moment (SQLITE_NOMEM, a lost
+    // connection); these reads are safe to repeat once.
+    const [accounts, keys, beta] = await load().catch(load)
     // A deleted person, or one with no Google account, signs in again.
     if (!accounts.some((item) => item.provider === 'google')) {
       return challenge(env)
@@ -168,7 +172,21 @@ export default {
     if (request.method === 'OPTIONS') {
       return new Response(null, { status: 204, headers: cors })
     }
-    const response = await route(request, env, ctx)
+    // A failure outside the tools, such as D1 being unavailable, answers
+    // with a retryable 503 instead of Cloudflare's error 1101.
+    const response = await route(request, env, ctx).catch((error) => {
+      console.error(request.method, pathname, error)
+      return Response.json(
+        {
+          error: 'temporarily_unavailable',
+          error_description: 'The server failed for a moment. Try again.',
+        },
+        {
+          status: 503,
+          headers: { 'retry-after': '5', 'cache-control': 'no-store' },
+        },
+      )
+    })
     return api ? withCors(response) : response
   },
   // The weekly sign-up and failure counts for Ian's Telegram

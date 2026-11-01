@@ -1,5 +1,38 @@
 # Changelog
 
+## 0.13.1
+
+### Fixed
+
+- A local MCP client that starts `seo mcp` or `seo mcp --stdio` without
+  `serve` now gets the server instead of an error on every launch.
+- On Windows, skill install, `seo start`'s skill step, self-update and
+  Codex MCP setup now run `npx`, `npm` and `codex`.
+- A Search Console property is found for more ways of naming a site:
+  http-only and subfolder URL-prefix properties, `www` domain properties,
+  and stray spaces. When none matches, the error lists the properties the
+  sign-in can read.
+- A traffic drop check without enough daily data now says so and what to
+  send, instead of reporting an internal error.
+- `seo compare` rejects a date that is not on the calendar instead of
+  failing, and names the latest date it can use when the date is too recent.
+- A rejected DataForSEO or Ahrefs key is reported as a key problem, not as a
+  bug to report.
+- `seo reports` with no subcommand lists the reports, `seo reports --site x`
+  runs `seo report`, and `seo reports <id>` runs that report. Section names
+  such as `content-decay` and the spelling `cannibalization` work as report
+  ids, and an unknown id lists the valid ones.
+- `seo crawl example.com` and `seo crawl --site example.com` crawl
+  `https://example.com/`. Crawl option mistakes are reported as input errors.
+- A command group run on its own, such as `seo providers`, shows its help.
+- `seo start` without a terminal says to run `seo login` instead of itself.
+- A start date alone runs to the latest final day of Search Console data.
+
+### Changed
+
+- `seo login` names the agent that runs it from `AI_AGENT` or `AGENT`, or
+  from more agents' own settings, when usage counts are on.
+
 ## 0.13.0
 
 ### Added

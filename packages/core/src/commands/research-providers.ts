@@ -43,20 +43,64 @@ function need(headers: Headers, provider: ResearchProvider): string[] {
   return values as string[]
 }
 
+// How long one attempt may take. DataForSEO's live tasks, AI answers among
+// them, can take most of a minute; lists and Ahrefs answer in seconds.
+const TASK_TIMEOUT_MS = 60_000
+const READ_TIMEOUT_MS = 30_000
+const RETRY_DELAY_MS = 250
+
+const retryStatus = (status: number) => status === 429 || status >= 500
+
+// One provider request with a timeout, tried twice when that is safe. A
+// read (GET) is retried after a timeout, a network failure, a 429 or a 5xx.
+// A DataForSEO task (POST) is charged once the provider takes it, so it is
+// retried only when the provider refused it with a 429 or a 5xx, never
+// after a timeout that may have been charged.
 async function call(
   provider: ResearchProvider,
   request: Request,
 ): Promise<Response> {
-  const response = await fetch(request)
-  if (response.ok) return response
-  const text = (await response.text()).slice(0, 300)
-  throw new CommandError(
-    response.status === 401 || response.status === 403
-      ? 'NO_KEY'
-      : 'PROVIDER_ERROR',
-    `${provider} answered ${response.status}. ${text}`,
-  )
+  const read = request.method === 'GET'
+  const timeoutMs = read ? READ_TIMEOUT_MS : TASK_TIMEOUT_MS
+  for (let attempt = 1; ; attempt += 1) {
+    const last = attempt === 2
+    let response: Response
+    try {
+      response = await fetch(request.clone(), {
+        signal: AbortSignal.timeout(timeoutMs),
+      })
+    } catch (error) {
+      if (read && !last) {
+        await wait(RETRY_DELAY_MS)
+        continue
+      }
+      const timedOut = (error as { name?: string }).name === 'TimeoutError'
+      throw new CommandError(
+        'PROVIDER_ERROR',
+        timedOut
+          ? `${provider} did not answer within ${timeoutMs / 1000} seconds.`
+          : `${provider} could not be reached: ${(error as Error).message}`,
+      )
+    }
+    if (response.ok) return response
+    if (retryStatus(response.status) && !last) {
+      await response.body?.cancel()
+      await wait(RETRY_DELAY_MS)
+      continue
+    }
+    const text = (await response.text()).slice(0, 300)
+    throw new CommandError(
+      response.status === 401 || response.status === 403
+        ? 'NO_KEY'
+        : response.status === 429
+          ? 'RATE_LIMITED'
+          : 'PROVIDER_ERROR',
+      `${provider} answered ${response.status}. ${text}`,
+    )
+  }
 }
+
+const wait = (ms: number) => new Promise((done) => setTimeout(done, ms))
 
 function requireInput(input: ResearchInput) {
   const needsKeywords =
@@ -73,11 +117,36 @@ function requireInput(input: ResearchInput) {
 }
 
 // Rows, plus what DataForSEO says the calls cost (null for Ahrefs, whose
-// responses carry no cost) and whether any call came back partial.
+// responses carry no cost), whether any call came back partial, and the
+// keywords that failed while others answered.
 export type ResearchRows = {
   rows: Row[]
   costUsd: number | null
   partial: boolean
+  missed: string[]
+}
+
+// Each keyword's rows in order. A keyword that fails is listed in missed
+// and the others still count; it throws only when every keyword failed, or
+// at once when the key is missing or rejected.
+async function eachKeyword(
+  keywords: string[],
+  missed: string[],
+  rowsFor: (keyword: string) => Promise<Row[]>,
+): Promise<Row[]> {
+  const rows: Row[] = []
+  let failure: unknown
+  for (const keyword of keywords) {
+    try {
+      rows.push(...(await rowsFor(keyword)))
+    } catch (error) {
+      if (error instanceof CommandError && error.code === 'NO_KEY') throw error
+      failure ??= error
+      missed.push(keyword)
+    }
+  }
+  if (missed.length === keywords.length) throw failure
+  return rows
 }
 
 export async function research(
@@ -88,10 +157,12 @@ export async function research(
   requireInput(input)
   const keys = need(headers, provider)
   if (provider === 'dataforseo') return dataForSeo(keys, input)
+  const missed: string[] = []
   return {
-    rows: await ahrefs(keys[0] ?? '', input),
+    rows: await ahrefs(keys[0] ?? '', input, missed),
     costUsd: null,
     partial: false,
+    missed,
   }
 }
 
@@ -235,19 +306,20 @@ async function dataForSeo(
   keys: string[],
   input: ResearchInput,
 ): Promise<ResearchRows> {
-  const spent = { cost: 0, partial: false }
+  const spent = { cost: 0, partial: false, missed: [] as string[] }
   const rows = await dataForSeoRows(keys, input, spent)
   return {
     rows,
     costUsd: Math.round(spent.cost * 10_000) / 10_000,
     partial: spent.partial,
+    missed: spent.missed,
   }
 }
 
 async function dataForSeoRows(
   keys: string[],
   input: ResearchInput,
-  spent: { cost: number; partial: boolean },
+  spent: { cost: number; partial: boolean; missed: string[] },
 ): Promise<Row[]> {
   const language = dataForSeoLanguage(input.country)
   if (!language && input.action !== 'serp' && input.action !== 'backlinks') {
@@ -323,26 +395,27 @@ async function dataForSeoRows(
     )
   }
   if (input.action === 'serp') {
-    const rows: Row[] = []
-    for (const keyword of input.keywords.slice(0, 5)) {
-      const items = await post('v3/serp/google/organic/live/advanced', {
-        keyword,
-        depth: Math.min(input.limit, 100),
-      })
-      for (const item of items) {
-        if (item.type !== 'organic') continue
-        rows.push({
+    return eachKeyword(
+      input.keywords.slice(0, 5),
+      spent.missed,
+      async (keyword) => {
+        const items = await post('v3/serp/google/organic/live/advanced', {
           keyword,
-          ...pick(item, {
-            position: 'rank_absolute',
-            url: 'url',
-            domain: 'domain',
-            title: 'title',
-          }),
+          depth: Math.min(input.limit, 100),
         })
-      }
-    }
-    return rows
+        return items
+          .filter((item) => item.type === 'organic')
+          .map((item) => ({
+            keyword,
+            ...pick(item, {
+              position: 'rank_absolute',
+              url: 'url',
+              domain: 'domain',
+              title: 'title',
+            }),
+          }))
+      },
+    )
   }
   if (input.action === 'backlinks') {
     const items = await post('v3/backlinks/referring_domains/live', {
@@ -389,7 +462,11 @@ function bareTarget(target: string): string {
 
 // Ahrefs API v3
 
-async function ahrefs(key: string, input: ResearchInput): Promise<Row[]> {
+async function ahrefs(
+  key: string,
+  input: ResearchInput,
+  missed: string[],
+): Promise<Row[]> {
   const get = async (path: string, params: Record<string, string>) => {
     const url = new URL(`https://api.ahrefs.com/v3/${path}`)
     for (const [name, value] of Object.entries(params)) {
@@ -426,17 +503,15 @@ async function ahrefs(key: string, input: ResearchInput): Promise<Row[]> {
     return data.keywords ?? []
   }
   if (input.action === 'serp') {
-    const rows: Row[] = []
-    for (const keyword of input.keywords.slice(0, 5)) {
+    return eachKeyword(input.keywords.slice(0, 5), missed, async (keyword) => {
       const data = await get('serp-overview/serp-overview', {
         select: 'position,type,url,title,domain_rating,traffic,keywords',
         keyword,
         country: input.country,
         top_positions: String(Math.min(input.limit, 100)),
       })
-      for (const row of data.positions ?? []) rows.push({ keyword, ...row })
-    }
-    return rows
+      return (data.positions ?? []).map((row) => ({ keyword, ...row }))
+    })
   }
   if (input.action === 'backlinks') {
     const data = await get('site-explorer/refdomains', {

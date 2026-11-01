@@ -3,13 +3,14 @@ packages:
   - packages/*
 
 overrides:
-  "@hono/node-server": 2.0.11
+  "@hono/node-server": 2.1.5
   "@sentry/node": 10.60.0
   "@xmldom/xmldom": 0.9.12
   devalue: 5.9.3
   esbuild: 0.28.1
-  fast-uri: 3.1.8
+  fast-uri: 3.1.9
   "hono@<4.13.11": 4.13.13
+  "body-parser@<2.4.0": 2.4.0
   "fast-copy@<4.1.0": 4.1.0
   "http-cache-semantics@<4.2.1": 4.3.0
   "ip-address@<10.5.1": 10.7.4
@@ -18,7 +19,7 @@ overrides:
   "nanoid@<3.3.18": 3.3.18
   postcss: 8.5.23
   "proxy-addr@<2.0.8": 2.0.8
-  "qs@<6.16.0": 6.16.0
+  "qs@<6.16.1": 6.16.1
   sharp: 0.35.5
   smol-toml: 1.9.1
   source-map-js: 1.2.2

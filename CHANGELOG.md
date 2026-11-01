@@ -33,6 +33,12 @@
 - `seo login` names the agent that runs it from `AI_AGENT` or `AGENT`, or
   from more agents' own settings, when usage counts are on.
 
+### Security
+
+- Installs body-parser 2.4.0, qs 6.16.1, fast-uri 3.1.9 and
+  @hono/node-server 2.1.5 or later, for the advisories published since
+  0.13.0.
+
 ## 0.13.0
 
 ### Added

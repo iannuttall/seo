@@ -88,7 +88,7 @@ test('start JSON does not silently skip missing authentication', async () => {
       error: {
         code: 'AUTH_REQUIRED',
         message:
-          'Not signed in. Run `seo start` or `seo auth login` in a terminal.',
+          'Not signed in. Run `seo login` to use your seoskill.dev account on this machine (it prints a link to approve), or `seo auth login` to sign in with Google on this machine only. `seo crawl --url <url>` works without sign-in.',
         retryable: false,
       },
     })

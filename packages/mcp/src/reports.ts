@@ -69,7 +69,16 @@ export const REMOVED_REPORT_IDS: Readonly<Record<string, string | null>> = {
   'technical-watch': 'seo crawl',
 }
 
-function activeReport(id: string) {
+// seo report section names and the US spelling, as the report they run.
+const REPORT_ALIASES: Readonly<Record<string, string>> = {
+  cannibalization: 'cannibalisation',
+  'content-decay': 'decaying-pages',
+  'low-ctr': 'ctr-underperformers',
+  'traffic-drop': 'traffic-anomaly',
+}
+
+function activeReport(name: string) {
+  const id = REPORT_ALIASES[name] ?? name
   if (Object.hasOwn(REMOVED_REPORT_IDS, id)) {
     const replacement = REMOVED_REPORT_IDS[id]
     throw new SeoError(
@@ -80,7 +89,14 @@ function activeReport(id: string) {
     )
   }
   const report = getReportDefinition(id)
-  if (!report) throw new SeoError('INVALID_INPUT', `Unknown report: ${id}.`)
+  if (!report) {
+    throw new SeoError(
+      'INVALID_INPUT',
+      `Unknown report: ${id}. Reports: ${listReportDefinitions()
+        .map((item) => item.id)
+        .join(', ')}.`,
+    )
+  }
   return report
 }
 

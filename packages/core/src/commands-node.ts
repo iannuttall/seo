@@ -23,6 +23,7 @@ import {
   indexStatusFrom,
   liveCheck,
   matchProperty,
+  readable,
 } from './commands/index.js'
 import { typesafeDecisionModel } from './decision-model.js'
 import { SeoError, type SeoErrorCode } from './errors.js'
@@ -207,7 +208,7 @@ export async function resolveLocalSite(
   if (!found) {
     throw new CommandError(
       'NO_ACCESS',
-      `This Google login has no Search Console property for ${site}. Run \`seo sites\` to list the properties it can read.`,
+      `This Google login has no Search Console property for ${site}. ${readable(names)}`,
     )
   }
   return found
@@ -218,6 +219,7 @@ const ERROR_CODES: Record<CommandErrorCode, SeoErrorCode> = {
   NOT_CONNECTED: 'AUTH_REQUIRED',
   NO_ACCESS: 'PROPERTY_NOT_FOUND',
   NO_KEY: 'AUTH_CONFIG_REQUIRED',
+  NO_DATA: 'INSUFFICIENT_DATA',
   RATE_LIMITED: 'RATE_LIMITED',
   GOOGLE_ERROR: 'PROVIDER_UNAVAILABLE',
   PROVIDER_ERROR: 'PROVIDER_UNAVAILABLE',

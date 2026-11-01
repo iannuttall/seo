@@ -1,6 +1,10 @@
 import { decayComparisonRange } from '../analyze/site-diagnostics/decay-report-input.js'
 import type { SearchAnalyticsQuery } from '../gsc/client/types.js'
-import { finalGscDateRange } from '../gsc/dates.js'
+import {
+  finalGscDateRange,
+  latestFinalGscDate,
+  shiftIsoDate,
+} from '../gsc/dates.js'
 import { readJson } from '../http/read-json.js'
 import {
   findOverlappingSearchUpdates,
@@ -31,17 +35,27 @@ export function factsOnly(value: unknown): unknown {
 
 export type DateInput = { startDate?: string; endDate?: string }
 
+// A YYYY-MM-DD date that exists on the calendar, so 2026-02-30 fails.
+export function realIsoDate(value: string): boolean {
+  return (
+    /^\d{4}-\d{2}-\d{2}$/.test(value) &&
+    new Date(`${value}T00:00:00Z`).toISOString().startsWith(value)
+  )
+}
+
+// The dates sent, or the last fallbackDays of final data. A start date alone
+// runs to the latest final day; an end date alone covers fallbackDays to it.
 export function dateWindow(input: DateInput, fallbackDays: number): DateRange {
-  if (input.startDate || input.endDate) {
-    if (!input.startDate || !input.endDate || input.startDate > input.endDate) {
-      throw new CommandError(
-        'INVALID_INPUT',
-        'Send a start date and an end date together, in order.',
-      )
-    }
-    return { startDate: input.startDate, endDate: input.endDate }
+  if (!input.startDate && !input.endDate) return finalGscDateRange(fallbackDays)
+  const endDate = input.endDate ?? latestFinalGscDate()
+  const startDate = input.startDate ?? shiftIsoDate(endDate, 1 - fallbackDays)
+  if (!realIsoDate(startDate) || !realIsoDate(endDate) || startDate > endDate) {
+    throw new CommandError(
+      'INVALID_INPUT',
+      `Send real YYYY-MM-DD dates with the start before the end (got ${startDate} to ${endDate}).`,
+    )
   }
-  return finalGscDateRange(fallbackDays)
+  return { startDate, endDate }
 }
 
 export function earlierRange(range: DateRange): DateRange {
@@ -185,35 +199,66 @@ export function listOfUpdates(
     .join('; ')}.`
 }
 
+// The properties the sign-ins can read, for a "no property" error, so the
+// agent can send one of them. At most 20.
+export function readable(names: string[], who = 'it'): string {
+  if (!names.length) return `Search Console properties ${who} can read: none.`
+  const more = names.length > 20 ? `, and ${names.length - 20} more` : ''
+  return `Search Console properties ${who} can read: ${names.slice(0, 20).join(', ')}${more}.`
+}
+
 // The Search Console property that covers a site or URL: an exact name, the
-// longest matching domain property, or a URL-prefix property for the origin.
+// longest matching domain property, or the longest URL-prefix property the
+// URL sits under, with or without www. A bare host tries https, then http.
 export function matchProperty(names: string[], site: string): string | null {
-  if (names.includes(site)) return site
-  let host: string
-  let origin: string
+  const value = site.trim()
+  if (names.includes(value)) return value
+  let url: URL
   try {
-    const url = new URL(
-      site.includes('://')
-        ? site
-        : `https://${site.replace(/^sc-domain:/, '')}`,
+    url = new URL(
+      value.includes('://')
+        ? value
+        : `https://${value.replace(/^sc-domain:/i, '')}`,
     )
-    host = url.hostname.replace(/^www\./, '')
-    origin = url.origin
   } catch {
     return null
   }
+  const bare = (name: string) => name.replace(/^www\./, '')
+  const host = bare(url.hostname)
   const domain = names
     .filter((name) => name.startsWith('sc-domain:'))
-    .map((name) => name.slice('sc-domain:'.length))
-    .filter((name) => host === name || host.endsWith(`.${name}`))
-    .sort((a, b) => b.length - a.length)[0]
-  if (domain) return `sc-domain:${domain}`
-  return (
-    names.find(
-      (name) =>
-        name === `${origin}/` ||
-        name === `${origin.replace('://', '://www.')}/` ||
-        name === `${origin.replace('://www.', '://')}/`,
-    ) ?? null
-  )
+    .filter((name) => {
+      const own = name.slice('sc-domain:'.length)
+      // A www domain property covers only www, so it matches that host only.
+      return own.startsWith('www.')
+        ? bare(own) === host
+        : host === own || host.endsWith(`.${own}`)
+    })
+    .sort((a, b) => b.length - a.length || a.localeCompare(b))[0]
+  if (domain) return domain
+  const schemes = value.includes('://') ? [url.protocol] : ['https:', 'http:']
+  const prefixes = names
+    .map((name) => {
+      try {
+        return { name, url: new URL(name) }
+      } catch {
+        return null
+      }
+    })
+    .filter(
+      (entry): entry is { name: string; url: URL } =>
+        entry !== null &&
+        schemes.includes(entry.url.protocol) &&
+        bare(entry.url.hostname) === host &&
+        `${url.pathname}/`.startsWith(entry.url.pathname),
+    )
+    .sort(
+      (a, b) =>
+        b.url.pathname.length - a.url.pathname.length ||
+        schemes.indexOf(a.url.protocol) - schemes.indexOf(b.url.protocol) ||
+        Number(b.url.hostname === url.hostname) -
+          Number(a.url.hostname === url.hostname) ||
+        a.name.localeCompare(b.name),
+    )
+  return prefixes[0]?.name ?? null
 }

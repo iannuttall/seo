@@ -22,6 +22,7 @@ import {
   googleUpdates,
   listOfUpdates,
   originOf,
+  realIsoDate,
   sharedReader,
 } from './shared.js'
 import { sitemapUrls } from './sitemap-urls.js'
@@ -234,8 +235,11 @@ export async function runCompare(
   input: CompareInput,
   deps: CommandDeps,
 ): Promise<CommandResult> {
-  if (!/^\d{4}-\d{2}-\d{2}$/.test(input.date)) {
-    throw new CommandError('INVALID_INPUT', 'The date must be YYYY-MM-DD.')
+  if (!realIsoDate(input.date)) {
+    throw new CommandError(
+      'INVALID_INPUT',
+      'The date must be a real day as YYYY-MM-DD.',
+    )
   }
   const last = latestFinalGscDate(deps.now?.() ?? new Date())
   const daysAfter =
@@ -243,7 +247,7 @@ export async function runCompare(
   if (daysAfter < 3) {
     throw new CommandError(
       'INVALID_INPUT',
-      `Search Console has final data to ${last}. Use a date at least 3 days before that.`,
+      `Search Console has final data to ${last}, and a comparison needs 3 days after the change. The latest date that works is ${shiftIsoDate(last, -2)}.`,
     )
   }
   const days = Math.min(28, daysAfter)

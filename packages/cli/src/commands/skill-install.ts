@@ -1,4 +1,4 @@
-import { spawnSync } from 'node:child_process'
+import { spawnCommand } from '../spawn.js'
 
 export type SkillInstallOutcome =
   | { status: 'installed' }
@@ -11,9 +11,13 @@ export type SkillInstallOutcome =
 export function installSeoSkill(
   options: { quiet?: boolean } = {},
 ): SkillInstallOutcome {
-  const result = spawnSync('npx', ['-y', 'skills', 'add', 'iannuttall/seo'], {
-    stdio: options.quiet ? 'ignore' : 'inherit',
-  })
+  const result = spawnCommand(
+    'npx',
+    ['-y', 'skills', 'add', 'iannuttall/seo'],
+    {
+      stdio: options.quiet ? 'ignore' : 'inherit',
+    },
+  )
   if (result.error) {
     return { status: 'failed', error: result.error.message }
   }

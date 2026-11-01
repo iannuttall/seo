@@ -1,6 +1,7 @@
 import assert from 'node:assert/strict'
 import { test } from 'node:test'
 import { LinkedAccounts } from './linked.js'
+import { matchProperty } from './shared.js'
 
 const account = (email: string, token: string) => ({
   email,
@@ -64,4 +65,28 @@ test('each site goes to the linked Google account with the most access to it', a
     directory.resolve('nobody.org'),
     /None of the connected Google accounts \(a@example.com, b@example.com\).*Add the Google account/,
   )
+})
+
+test('a site, host or URL finds the property that covers it', () => {
+  const names = [
+    'sc-domain:example.com',
+    'sc-domain:www.site.example',
+    'http://www.example.org/',
+    'https://blog.example/',
+    'https://blog.example/blog/',
+  ]
+  const cases: [string, string | null][] = [
+    [' example.com ', 'sc-domain:example.com'],
+    ['https://shop.example.com/a', 'sc-domain:example.com'],
+    ['site.example', 'sc-domain:www.site.example'],
+    ['shop.site.example', null],
+    // A bare host tries http too; a URL keeps its scheme.
+    ['example.org', 'http://www.example.org/'],
+    ['https://example.org/', null],
+    ['https://blog.example/blog/post', 'https://blog.example/blog/'],
+    ['https://blog.example/blogger', 'https://blog.example/'],
+  ]
+  for (const [site, expected] of cases) {
+    assert.equal(matchProperty(names, site), expected, site)
+  }
 })

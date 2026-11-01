@@ -1,8 +1,8 @@
-import { spawnSync } from 'node:child_process'
 import { realpathSync } from 'node:fs'
 import { isCancel, log, select } from '@clack/prompts'
 import { isNewerVersion } from '@seo/core'
 import updateNotifier from 'update-notifier'
+import { spawnCommand } from './spawn.js'
 
 type PackageInfo = {
   name: string
@@ -152,7 +152,8 @@ async function promptForUpdate(input: {
 }
 
 function runUpdate(command: SelfUpdateCommand): number | null {
-  return spawnSync(command.command, command.args, { stdio: 'inherit' }).status
+  return spawnCommand(command.command, command.args, { stdio: 'inherit' })
+    .status
 }
 
 export async function maybeOfferSelfUpdate(

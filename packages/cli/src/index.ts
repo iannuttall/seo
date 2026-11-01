@@ -330,7 +330,32 @@ function telemetryReportId(args: string[]): string | undefined {
   )
 }
 
-const argv = process.argv.slice(2)
+const given = process.argv.slice(2)
+// Agents also mistype the report catalog: `seo reports` lists it, `seo
+// reports --site x` means `seo report --site x`, and `seo reports <id>`
+// runs that report.
+function reportsArgs(args: string[]): string[] {
+  const next = args[1]
+  if (next && ['list', 'describe', 'run', '-h', '--help'].includes(next)) {
+    return args
+  }
+  if (next === undefined) return ['reports', 'list']
+  if (next.startsWith('-')) {
+    process.stderr.write('Running `seo report`: `seo reports` lists reports.\n')
+    return ['report', ...args.slice(1)]
+  }
+  return ['reports', 'run', ...args.slice(1)]
+}
+// An MCP client that launches `seo mcp` or `seo mcp --stdio` without serve
+// gets the server: it pipes stdin, where a person has a terminal.
+const argv =
+  given[0] === 'mcp' &&
+  (given[1] === undefined || /^-(?!h$|-help$)/.test(given[1])) &&
+  !process.stdin.isTTY
+    ? ['mcp', 'serve', ...given.slice(1)]
+    : given[0] === 'reports'
+      ? reportsArgs(given)
+      : given
 showUpgradeNotice(argv)
 const removed = removedNotice(argv) ?? removedFlagNotice(argv)
 if (removed) {
@@ -398,6 +423,10 @@ if (helpRequested || versionRequested) {
       trackTelemetrySetupComplete(telemetryOptions)
     }
   } catch (error) {
+    // A command group run alone, such as `seo providers`, shows its help.
+    if ((error as { code?: unknown } | null)?.code === 'E_NO_COMMAND') {
+      await runMain(main, { rawArgs: [...commandArgs, '--help'] })
+    }
     if (trackedReport) {
       trackTelemetryReportFailed(trackedReport, error, telemetryOptions)
     } else if (!isTelemetryControl) {

@@ -41,6 +41,7 @@ const FAILURES: Record<ErrorCode, [string, string]> = {
   NOT_CONNECTED: ['auth', 'auth_required'],
   NO_ACCESS: ['config', 'property_not_found'],
   NO_KEY: ['auth', 'auth_config_required'],
+  NO_DATA: ['data', 'insufficient_data'],
   RATE_LIMITED: ['network', 'rate_limited'],
   GOOGLE_ERROR: ['network', 'provider_unavailable'],
   PROVIDER_ERROR: ['network', 'provider_unavailable'],

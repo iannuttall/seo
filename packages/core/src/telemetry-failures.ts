@@ -1,3 +1,8 @@
+import {
+  PROVIDER_ERROR_CODES,
+  type ProviderErrorCode,
+} from './providers/errors.js'
+
 export const TELEMETRY_ERROR_CATEGORIES = [
   'auth',
   'crawl_timeout',
@@ -306,6 +311,10 @@ function classify(error: unknown): TelemetryFailureClassification {
       failureReason: 'crawl_timeout',
     }
   }
+  const provider = signals.find((signal) => signal.name === 'ProviderError')
+  const providerCode = PROVIDER_ERROR_CODES[provider?.code as ProviderErrorCode]
+  const fromProvider = providerCode && PRODUCT_FAILURES[providerCode]
+  if (fromProvider) return fromProvider
   for (const code of codes) {
     const product = PRODUCT_FAILURES[code]
     if (product) return product

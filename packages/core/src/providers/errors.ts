@@ -1,3 +1,4 @@
+import type { SeoErrorCode } from '../errors.js'
 import type { ExternalServiceId } from './contracts.js'
 
 export type ProviderErrorCode =
@@ -8,6 +9,18 @@ export type ProviderErrorCode =
   | 'response-too-large'
   | 'invalid-response'
   | 'remote-error'
+
+// The product error each provider failure reports as, so a rejected key or a
+// provider outage is not counted or shown as a bug.
+export const PROVIDER_ERROR_CODES: Record<ProviderErrorCode, SeoErrorCode> = {
+  configuration: 'AUTH_CONFIG_REQUIRED',
+  authentication: 'AUTH_CONFIG_REQUIRED',
+  'rate-limit': 'RATE_LIMITED',
+  timeout: 'PROVIDER_UNAVAILABLE',
+  'response-too-large': 'PROVIDER_UNAVAILABLE',
+  'invalid-response': 'PROVIDER_UNAVAILABLE',
+  'remote-error': 'PROVIDER_UNAVAILABLE',
+}
 
 export class ProviderError extends Error {
   readonly provider: ExternalServiceId

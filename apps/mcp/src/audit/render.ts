@@ -1,7 +1,7 @@
 import { readJson } from '@seo/core/hosted'
+import { addUsage } from '../usage.ts'
 import { extractPage, type PageFacts } from './extract.ts'
 import type { Meter } from './meter.ts'
-import type { Run } from './site-audit.ts'
 
 // JavaScript rendering for the weekly audit, with Browser Run's content
 // quick action: Cloudflare's browser loads the page, runs its scripts and
@@ -21,6 +21,17 @@ const MIN_WORD_RATIO = 0.2
 // HTML pages rendered both ways at the start of each run, to find out
 // whether the site needs JavaScript rendering.
 const PROBE_PAGES = 5
+
+// A run's JavaScript rendering columns (schema.ts).
+export type RenderState = {
+  render: 'on' | 'off' | 'unavailable' | null
+  render_probes: number
+  render_errors: number
+  browser_ms: number
+  renders: number
+  metered_ms: number
+  metered_renders: number
+}
 
 export type Rendered =
   | { kind: 'rendered'; facts: PageFacts; browserMs: number }
@@ -173,10 +184,12 @@ export type RunRender =
 // Renders one raw 200 HTML page when the run needs it: every page while
 // the first PROBE_PAGES decide whether the site needs JavaScript, then
 // every page if it does. Updates the run's rendering state in memory; the
-// caller saves it with the page. Null when the page is not rendered.
+// caller saves it with the page, except when Browser Run is busy. Null
+// when the page is not rendered.
 export async function renderForRun(
+  meter: Meter,
   browser: BrowserRun | undefined,
-  run: Run,
+  run: RenderState,
   url: string,
   origin: string,
   rawFacts: PageFacts,
@@ -185,7 +198,10 @@ export async function renderForRun(
   if (run.render !== null && run.render !== 'on') return null
   const rendered = await renderPage(browser, url, origin, userAgent)
   run.browser_ms += rendered.browserMs
+  if (browser) run.renders += 1
   if (rendered.kind === 'busy') {
+    // No page is written, so save the browser time here.
+    saveRendering(meter, run)
     return { kind: 'busy', retryAfterMs: rendered.retryAfterMs }
   }
   const result: RunRender =
@@ -217,12 +233,43 @@ export async function renderForRun(
 }
 
 // Saves the run's rendering state that renderForRun changed in memory.
-export function saveRendering(meter: Meter, run: Run): void {
+export function saveRendering(meter: Meter, run: RenderState): void {
   meter.run(
-    'UPDATE run SET render = ?, render_probes = ?, render_errors = ?, browser_ms = ?',
+    'UPDATE run SET render = ?, render_probes = ?, render_errors = ?, browser_ms = ?, renders = ?',
     run.render,
     run.render_probes,
     run.render_errors,
     run.browser_ms,
+    run.renders,
+  )
+}
+
+// Adds the run's Browser Run use since the last call to the account's
+// usage in D1, then notes it as counted in the run row. Run at the end of
+// each wake; a wake cut short is counted by the next one. A D1 failure
+// leaves the use uncounted until a later wake, and never stops the crawl.
+export async function meterRendering(
+  env: Env,
+  meter: Meter,
+  run: RenderState,
+  userId: string,
+): Promise<void> {
+  const ms = run.browser_ms - run.metered_ms
+  const renders = run.renders - run.metered_renders
+  if (ms <= 0 && renders <= 0) return
+  try {
+    await addUsage(env, userId, {
+      browser_run_ms: ms,
+      browser_run_pages: renders,
+    })
+  } catch {
+    return
+  }
+  run.metered_ms = run.browser_ms
+  run.metered_renders = run.renders
+  meter.run(
+    'UPDATE run SET metered_ms = ?, metered_renders = ?',
+    run.metered_ms,
+    run.metered_renders,
   )
 }

@@ -68,6 +68,10 @@ Cloudflare D1 with only these things:
   used. A linked machine asks for short-lived Google and Bing tokens and your
   keys, and makes the Google and Bing requests itself. Nothing it fetches is
   sent back.
+- **How much metered work the server did for you.** One number a day per
+  kind of work, such as the browser time and pages the weekly audit
+  rendered with JavaScript. It holds no URLs or page content. It is kept to
+  see what the hosted features cost to run.
 - **Beta features turned on for you.** The name of each beta feature the
   maintainer turned on for your account, and when. Only the maintainer sets
   these; most accounts have none.
@@ -109,7 +113,9 @@ follows the site's `robots.txt`. It keeps, per site:
 - the property name, when you added it and when the next crawl is due;
 - the latest crawl and the one before it: each page's URL, status,
   redirect target, title, description, first heading, canonical, robots
-  settings, word count and the internal links on it with their link text;
+  settings, word count and the internal links on it with their link text,
+  and for pages rendered with JavaScript (below) the raw HTML's values where
+  rendering changed them;
 - the findings worked out from them (such as broken links or missing
   titles), with when each was first seen and resolved; resolved findings
   are removed after 90 days;
@@ -128,6 +134,13 @@ follows the site's `robots.txt`. It keeps, per site:
 - how many pages a day Google can check for the site, and the folders worth
   adding as their own Search Console properties, with which of them you
   added from the account page.
+
+Some sites build their titles, canonicals and links with JavaScript. To
+read those, the crawl loads the first pages of each crawl in Cloudflare
+Browser Run, a browser Cloudflare runs for the server, and if JavaScript
+changes what they show, it loads every HTML page of that crawl there too.
+Browser Run fetches the page from the site as `SEOSkillBot` and returns
+the page after its scripts run. The server asks it not to cache pages.
 
 If you click Create these in Search Console, Google asks you for
 permission to manage Search Console for that Google account. The server

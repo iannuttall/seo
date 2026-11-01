@@ -315,10 +315,21 @@ export function weekMarkdown(data: WeekData): string {
 
 // seo report with no site: the all-sites summary, the same Markdown as the
 // Monday email, then one line naming the parameter for one site's report.
-// Only an account in the weekly site audit beta has it; any other caller
-// gets the same "name a site" error as before.
-export async function runAllSites(deps: CommandDeps): Promise<CommandResult> {
+// Only an account in the weekly site audit beta has it. Any other caller
+// gets its site list from sites, when given, to pick one from; else the
+// "name a site" error.
+export async function runAllSites(
+  deps: CommandDeps,
+  sites?: () => Promise<CommandResult>,
+): Promise<CommandResult> {
   const data = deps.week ? await deps.week() : null
+  if (!data && sites) {
+    const list = await sites()
+    return {
+      text: `No site given. Pick one below and send it: ${deps.call('report', { site: '<site>' })}. The summary of every site is for accounts in the weekly site audit beta.\n\n${list.text}`,
+      data: list.data,
+    }
+  }
   if (!data) {
     throw new CommandError(
       'INVALID_INPUT',

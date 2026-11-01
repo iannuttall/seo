@@ -1,4 +1,3 @@
-import { spawnSync } from 'node:child_process'
 import {
   constants,
   copyFileSync,
@@ -20,6 +19,7 @@ import {
   parse,
   printParseErrorCode,
 } from 'jsonc-parser'
+import { spawnCommand } from '../spawn.js'
 import type {
   ClientConfigTarget,
   JsonClientConfigTarget,
@@ -162,11 +162,11 @@ function writeConfigEdit(input: {
 }
 
 function defaultCommandRunner(command: string, args: string[]): CommandResult {
-  const result = spawnSync(command, args, { encoding: 'utf8' })
+  const result = spawnCommand(command, args, { encoding: 'utf8' })
   return {
     status: result.status,
-    stdout: result.stdout ?? '',
-    stderr: result.stderr ?? '',
+    stdout: String(result.stdout ?? ''),
+    stderr: String(result.stderr ?? ''),
     error: result.error,
   }
 }

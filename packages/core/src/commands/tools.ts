@@ -71,12 +71,14 @@ const dates = {
     .string()
     .regex(/^\d{4}-\d{2}-\d{2}$/)
     .optional()
-    .describe('YYYY-MM-DD. Optional; send with end_date.'),
+    .describe(
+      'YYYY-MM-DD. Optional; without end_date it runs to the latest final day.',
+    ),
   end_date: z
     .string()
     .regex(/^\d{4}-\d{2}-\d{2}$/)
     .optional()
-    .describe('YYYY-MM-DD. Optional; send with start_date.'),
+    .describe('YYYY-MM-DD. Optional.'),
 }
 
 const detail = {
@@ -125,6 +127,16 @@ function tool<S extends z.ZodObject>(spec: {
   return spec as unknown as SharedTool
 }
 
+const listSites = async (surface: ToolSurface) =>
+  runSites({
+    accounts: await surface.accounts(),
+    keys: await surface.keys(),
+    clicky: clickySites(await surface.keys()).map(clickyLabel),
+    signIn: surface.signIn,
+    bing: surface.deps.bing ? await surface.deps.bing() : undefined,
+    connect: surface.connect,
+  })
+
 export const SHARED_TOOLS: SharedTool[] = [
   tool({
     name: 'seo_sites',
@@ -133,21 +145,13 @@ export const SHARED_TOOLS: SharedTool[] = [
     description:
       'Lists the Search Console and Google Analytics properties the connected Google accounts can read, the Bing Webmaster site for each, and which research keys are set. Call it first.',
     input: z.object({}),
-    run: async (surface) =>
-      runSites({
-        accounts: await surface.accounts(),
-        keys: await surface.keys(),
-        clicky: clickySites(await surface.keys()).map(clickyLabel),
-        signIn: surface.signIn,
-        bing: surface.deps.bing ? await surface.deps.bing() : undefined,
-        connect: surface.connect,
-      }),
+    run: listSites,
   }),
   tool({
     name: 'seo_report',
     command: 'report',
     title: 'Search Console report',
-    description: `Start here. Without site: a short summary of every site in the person's weekly site audit (beta) for last week, with what needs a look and the next step for each, ending with the site to ask about next; an account outside that beta must send site. With site: the main report for that Search Console property, the overview plus each section's row count and top rows. With site and section: that section's rows; page sections also check their top 20 URLs live. Sections:\n${Object.entries(
+    description: `Start here. Without site: a short summary of every site in the person's weekly site audit (beta) for last week, with what needs a look and the next step for each, ending with the site to ask about next; an account outside that beta gets its site list to pick from. With site: the main report for that Search Console property, the overview plus each section's row count and top rows. With site and section: that section's rows; page sections also check their top 20 URLs live. Sections:\n${Object.entries(
       SECTIONS,
     )
       .map(([id, text]) => `- ${id}: ${text}`)
@@ -175,7 +179,7 @@ export const SHARED_TOOLS: SharedTool[] = [
             `section needs a site: ${surface.deps.call('report', { site: '<site>', section: input.section })}.`,
           )
         }
-        return runAllSites(surface.deps)
+        return runAllSites(surface.deps, () => listSites(surface))
       }
       const target = input.site
       // A site with no Search Console property can still have Bing, on a

@@ -185,22 +185,31 @@ export const crawlCommand = defineCommand({
     const health = booleanArg(args.health)
     const explicitMode = crawlModeArg(args.mode)
     if (format === 'junit' && !health) {
-      throw new Error('--format junit requires --health.')
+      throw new SeoError('INVALID_INPUT', '--format junit requires --health.')
     }
     if ((health || sitemapUrl) && explicitMode && explicitMode !== 'sitemap') {
-      throw new Error('--health and --sitemap-url require sitemap mode.')
+      throw new SeoError(
+        'INVALID_INPUT',
+        '--health and --sitemap-url require sitemap mode.',
+      )
     }
     if (health && negatedBooleanArg(args, 'sitemap')) {
-      throw new Error('--health cannot be combined with --no-sitemap.')
+      throw new SeoError(
+        'INVALID_INPUT',
+        '--health cannot be combined with --no-sitemap.',
+      )
     }
     if ((health || sitemapUrl) && urls.length) {
-      throw new Error(
+      throw new SeoError(
+        'INVALID_INPUT',
         '--health and --sitemap-url cannot be combined with URL list input.',
       )
     }
     const site = stringArg(args.site)
     const crawlUrl =
-      explicitUrl ??
+      (explicitUrl
+        ? (startUrlForSite(explicitUrl) ?? explicitUrl)
+        : undefined) ??
       (site ? startUrlForSite(site) : undefined) ??
       (sitemapUrl ? new URL('/', sitemapUrl).toString() : undefined) ??
       urls[0]
@@ -311,7 +320,10 @@ function crawlModeArg(value: unknown) {
   if (['site', 'page', 'list', 'sitemap'].includes(mode)) {
     return mode as 'site' | 'page' | 'list' | 'sitemap'
   }
-  throw new Error('Mode must be one of: site, page, list, sitemap.')
+  throw new SeoError(
+    'INVALID_INPUT',
+    'Mode must be one of: site, page, list, sitemap.',
+  )
 }
 
 function severityArg(value: unknown): Severity | undefined {
@@ -320,14 +332,20 @@ function severityArg(value: unknown): Severity | undefined {
   if (['low', 'medium', 'high'].includes(severity)) {
     return severity as Severity
   }
-  throw new Error('Severity must be one of: low, medium, high.')
+  throw new SeoError(
+    'INVALID_INPUT',
+    'Severity must be one of: low, medium, high.',
+  )
 }
 
 function crawlUrlArg(args: Record<string, unknown>): string | undefined {
   const positional = stringArg(args.crawlUrl)
   const flag = stringArg(args.url)
   if (positional && flag && positional !== flag) {
-    throw new Error('Use either a URL argument or --url, not both.')
+    throw new SeoError(
+      'INVALID_INPUT',
+      'Use either a URL argument or --url, not both.',
+    )
   }
   return positional ?? flag
 }
@@ -335,13 +353,17 @@ function crawlUrlArg(args: Record<string, unknown>): string | undefined {
 function crawlFormatArg(value: unknown, json: boolean): CrawlOutputFormat {
   const format = stringArg(value)
   if (json && format && format !== 'json') {
-    throw new Error('Use either --json or --format, not both.')
+    throw new SeoError(
+      'INVALID_INPUT',
+      'Use either --json or --format, not both.',
+    )
   }
   if (!format) return json ? 'json' : 'pretty'
   if (['pretty', 'json', 'csv', 'html', 'markdown', 'junit'].includes(format)) {
     return format as CrawlOutputFormat
   }
-  throw new Error(
+  throw new SeoError(
+    'INVALID_INPUT',
     'Format must be one of: pretty, json, csv, html, markdown, junit.',
   )
 }
@@ -350,7 +372,10 @@ function crawlCsvArg(value: unknown): 'issues' | 'pages' {
   const csv = stringArg(value)
   if (!csv) return 'issues'
   if (['issues', 'pages'].includes(csv)) return csv as 'issues' | 'pages'
-  throw new Error('CSV table must be one of: issues, pages.')
+  throw new SeoError(
+    'INVALID_INPUT',
+    'CSV table must be one of: issues, pages.',
+  )
 }
 
 async function urlListArgs(args: Record<string, unknown>): Promise<string[]> {

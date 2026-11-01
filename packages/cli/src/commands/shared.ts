@@ -3,9 +3,15 @@ import type {
   QueryContentClassification,
 } from '@seo/core'
 
+// A crawl's start URL from a site: a URL as given, a domain property's
+// https home page, or https:// before a bare host such as example.com.
 export function startUrlForSite(site: string): string | undefined {
-  if (site.startsWith('http://') || site.startsWith('https://')) return site
-  if (site.startsWith('sc-domain:')) return `https://${site.slice(10)}/`
+  const value = site.trim()
+  if (/^https?:\/\//i.test(value)) return value
+  if (value.startsWith('sc-domain:')) return `https://${value.slice(10)}/`
+  if (/^[a-z0-9-]+(\.[a-z0-9-]+)+(:\d+)?(\/\S*)?$/i.test(value)) {
+    return `https://${value.includes('/') ? value : `${value}/`}`
+  }
   return undefined
 }
 

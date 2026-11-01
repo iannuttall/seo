@@ -1,3 +1,5 @@
+import { PROVIDER_ERROR_CODES, ProviderError } from './providers/errors.js'
+
 export type SeoErrorCode =
   | 'ACCESS_DENIED'
   | 'AUTH_CONFIG_REQUIRED'
@@ -52,6 +54,9 @@ export function toSeoError(error: unknown): SeoError {
   }
 
   const message = errorMessage(error)
+  if (error instanceof ProviderError) {
+    return new SeoError(PROVIDER_ERROR_CODES[error.code], message)
+  }
   if (/not logged in/i.test(message)) {
     return new SeoError('AUTH_REQUIRED', message)
   }

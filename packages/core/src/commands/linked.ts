@@ -6,7 +6,7 @@ import {
   searchAnalyticsRows,
 } from '../google/api.js'
 import type { SearchAnalyticsQuery } from '../gsc/client/types.js'
-import { matchProperty } from './shared.js'
+import { matchProperty, readable } from './shared.js'
 import { type GoogleAccount, readableSites } from './sites.js'
 import { CommandError } from './types.js'
 
@@ -142,12 +142,12 @@ export class LinkedAccounts {
         `No Google account is connected. ${this.hint.signIn}`,
       )
     }
-    const owners = await this.ownerMap()
-    const found = matchProperty([...owners.keys()], site)
+    const names = await this.properties()
+    const found = matchProperty(names, site)
     if (found) return found
     throw new CommandError(
       'NO_ACCESS',
-      `None of the connected Google accounts (${this.google.map((linked) => linked.email).join(', ')}) has a Search Console property for ${site}. ${this.hint.addGoogle}`,
+      `None of the connected Google accounts (${this.google.map((linked) => linked.email).join(', ')}) has a Search Console property for ${site}. ${readable(names, 'they')} ${this.hint.addGoogle}`,
     )
   }
 

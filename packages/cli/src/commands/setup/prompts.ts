@@ -11,6 +11,7 @@ import {
   cloudCredentials,
   cloudLinked,
   listGoogleAccounts,
+  notSignedIn,
   SeoError,
   setActiveGoogleAccount,
   writeOauthClient,
@@ -147,10 +148,7 @@ export async function maybeConnectAuth(input: {
         accountEmail: status.tokens.account_email,
       }
     }
-    throw new SeoError(
-      'AUTH_REQUIRED',
-      'Not signed in. Run `seo start` or `seo auth login` in a terminal.',
-    )
+    throw new SeoError('AUTH_REQUIRED', notSignedIn())
   }
 
   const accounts = listGoogleAccounts()

@@ -611,7 +611,7 @@ export function analyzeTrafficAnomalyRows(input: {
   if (comparisonStart < input.startDate || baselineExpectedDays < 14) {
     throw new SeoError(
       'INSUFFICIENT_DATA',
-      'The requested calendar range does not contain at least 14 baseline days before the comparison window.',
+      `The date range needs at least ${input.recentDays + 14} days: 14 baseline days before the last ${input.recentDays}. Send a longer range, or leave the dates out for the default.`,
     )
   }
 
@@ -629,7 +629,7 @@ export function analyzeTrafficAnomalyRows(input: {
   if (baselineRows.length < 14 || comparisonRows.length < 3) {
     throw new SeoError(
       'INSUFFICIENT_DATA',
-      `Not enough observed daily GSC data for anomaly detection (${baselineRows.length} baseline days and ${comparisonRows.length} comparison days).`,
+      `Not enough daily Search Console data to look for a drop: ${baselineRows.length} baseline days and ${comparisonRows.length} comparison days, and it needs 14 and 3. The site may be new or get too few clicks for daily rows.`,
     )
   }
 

@@ -62,7 +62,20 @@ export const TOOLS: Tool[] = SHARED_TOOLS.map(sharedTool)
 // seo_report with the weekly-audit section, for accounts in that beta.
 const AUDIT_BETA_TOOLS: Tool[] = AUDIT_TOOLS.map(sharedTool)
 
-const instructions = (env: Env) => `${MCP_INSTRUCTIONS}
+// Which research keys this person saved, so the agent asks for a missing
+// key before it calls seo_research instead of after the call fails.
+function savedKeys(env: Env, headers: Headers): string {
+  const saved = [
+    headers.get('x-dataforseo-login') && 'dataforseo',
+    headers.get('x-ahrefs-key') && 'ahrefs',
+  ].filter(Boolean)
+  return saved.length
+    ? `Research keys saved: ${saved.join(', ')}. seo_research with another provider needs that key saved first.`
+    : `No research key is saved, so seo_research fails until the person saves a DataForSEO or Ahrefs key at ${accountUrl(env)}#keys. Ask them first.`
+}
+
+const instructions = (env: Env, headers: Headers) => `${MCP_INSTRUCTIONS}
+${savedKeys(env, headers)}
 Crawls, internal links and Bing run on a machine with the open-source CLI, not on this server. ${CLI_LINK} Then run, for example, \`npx -y seo crawl https://example.com --json\`, \`npx -y seo internal-links --url https://example.com/page --json\` or \`npx -y seo report --site <site> --section bing --json\`. When a site or key is missing, open ${accountUrl(env)} in the person's browser (with \`open <url>\` on macOS, \`xdg-open\` on Linux or \`start\` on Windows when you have a shell, otherwise show the link), let them add the Google account or key there, then run the same call again. This server keeps only those sign-ins and keys, encrypted, and no report data.`
 
 const SERVER_INFO = { ...MCP_SERVER_INFO, version: '1.0.0' }
@@ -91,7 +104,7 @@ export async function serveMcp(
   context: ToolContext,
 ): Promise<Response> {
   const server = new McpServer(SERVER_INFO, {
-    instructions: instructions(context.env),
+    instructions: instructions(context.env, context.headers),
   })
   const { name, uri, ...meta } = SKILL_RESOURCE
   server.registerResource(name, uri, meta, async (url) => ({

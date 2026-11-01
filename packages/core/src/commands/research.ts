@@ -122,6 +122,7 @@ export async function runResearch(
     rows: found,
     costUsd,
     partial,
+    missed,
   } = await research(input.provider, keys, {
     action: input.action,
     keywords: input.keywords ?? [],
@@ -154,6 +155,11 @@ export async function runResearch(
               'Partial: DataForSEO could not fetch some pages of results, so rows may be missing.',
             ]
           : []),
+        ...(missed.length
+          ? [
+              `Partial: ${input.provider} failed for ${missed.join(', ')}, so those keywords have no rows. Ask for them again.`,
+            ]
+          : []),
         ...(note ? [note] : []),
         ...(hasTargetDr
           ? [`${bareDomain(target)} domain_rating: ${targetDr}.`]
@@ -173,6 +179,7 @@ export async function runResearch(
       leftOut: note,
       costUsd,
       partial,
+      missedKeywords: missed,
       total: rated.rows.length,
       offset,
       rows: rated.rows.slice(offset, offset + PAGE_SIZE),

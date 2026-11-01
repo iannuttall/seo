@@ -8,7 +8,7 @@ import { SeoError } from './errors.js'
 import { readJson } from './http/read-json.js'
 import { ensureSeoCliDirs, getSeoCliPaths } from './paths.js'
 import { readJsonFile, safeRemove, writeJsonAtomic } from './storage/files.js'
-import { detectTelemetryAgent, getTelemetryStatus } from './telemetry.js'
+import { detectAgentName, getTelemetryStatus } from './telemetry.js'
 import { SEO_VERSION } from './version.js'
 
 // A CLI linked to a seoskill.dev account with `seo login`. The account keeps
@@ -242,7 +242,7 @@ export async function startCloudLogin(): Promise<Pending> {
         0,
         60,
       ),
-      agent: getTelemetryStatus().enabled ? detectTelemetryAgent() : undefined,
+      agent: getTelemetryStatus().enabled ? detectAgentName() : undefined,
     }),
   })
   const { device, code, url, expiresIn } = result.body

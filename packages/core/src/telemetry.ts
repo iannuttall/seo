@@ -312,6 +312,25 @@ export function detectTelemetryAgent(
   return 'cli'
 }
 
+// The agent running the CLI by name, for where a `seo login` sign-up came
+// from, or null when none is found. Any agent can name itself with the
+// AI_AGENT or AGENT environment variable; otherwise known markers are read.
+export function detectAgentName(
+  env: NodeJS.ProcessEnv = process.env,
+): string | null {
+  const named = (env.AI_AGENT || env.AGENT)?.trim().toLowerCase()
+  if (named) return named.slice(0, 40)
+  const agent = detectTelemetryAgent({ env })
+  if (agent !== 'cli') return agent
+  if (env.GEMINI_CLI) return 'gemini'
+  if (env.OPENCODE || env.OPENCODE_CLIENT) return 'opencode'
+  if (env.ANTIGRAVITY_AGENT) return 'antigravity'
+  if (env.AUGMENT_AGENT) return 'augment'
+  if (env.COPILOT_MODEL || env.COPILOT_ALLOW_ALL) return 'github-copilot'
+  if (env.REPL_ID) return 'replit'
+  return null
+}
+
 function telemetryAgent(options: TelemetryOptions): TelemetryAgent {
   return (
     options.agent ??

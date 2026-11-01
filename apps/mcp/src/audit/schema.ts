@@ -51,7 +51,12 @@ CREATE TABLE IF NOT EXISTS run (
   render TEXT,
   render_probes INTEGER NOT NULL DEFAULT 0,
   render_errors INTEGER NOT NULL DEFAULT 0,
-  browser_ms INTEGER NOT NULL DEFAULT 0
+  browser_ms INTEGER NOT NULL DEFAULT 0,
+  -- Pages sent to Browser Run, and how much of both the account's usage
+  -- in D1 already counts.
+  renders INTEGER NOT NULL DEFAULT 0,
+  metered_ms INTEGER NOT NULL DEFAULT 0,
+  metered_renders INTEGER NOT NULL DEFAULT 0
 );
 
 CREATE TABLE IF NOT EXISTS runs (
@@ -207,6 +212,9 @@ export const RUN_ADDED: [string, string][] = [
   ['render_probes', 'INTEGER NOT NULL DEFAULT 0'],
   ['render_errors', 'INTEGER NOT NULL DEFAULT 0'],
   ['browser_ms', 'INTEGER NOT NULL DEFAULT 0'],
+  ['renders', 'INTEGER NOT NULL DEFAULT 0'],
+  ['metered_ms', 'INTEGER NOT NULL DEFAULT 0'],
+  ['metered_renders', 'INTEGER NOT NULL DEFAULT 0'],
 ]
 
 export const PAGES_ADDED: [string, string][] = [

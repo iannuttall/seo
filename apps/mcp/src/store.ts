@@ -243,6 +243,7 @@ export async function deleteUser(env: Env, userId: string): Promise<void> {
     env.DB.prepare('DELETE FROM beta_flags WHERE user_id = ?').bind(userId),
     env.DB.prepare('DELETE FROM alerts WHERE user_id = ?').bind(userId),
     env.DB.prepare('DELETE FROM alert_settings WHERE user_id = ?').bind(userId),
+    env.DB.prepare('DELETE FROM usage WHERE user_id = ?').bind(userId),
     env.DB.prepare('DELETE FROM users WHERE id = ?').bind(userId),
   ])
 }

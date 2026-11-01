@@ -30,7 +30,12 @@ import {
 } from './checks.ts'
 import { extractPage, resolveUrl } from './extract.ts'
 import { Meter } from './meter.ts'
-import { renderForRun, saveRendering } from './render.ts'
+import {
+  meterRendering,
+  type RenderState,
+  renderForRun,
+  saveRendering,
+} from './render.ts'
 import { analyse, type RunSummary } from './rules.ts'
 import { DISPOSABLE, migrate } from './schema.ts'
 import { readSitemap } from './sitemap.ts'
@@ -94,11 +99,7 @@ export type Run = {
   consecutive_errors: number
   summary: string | null
   summary_pushed_at: number | null
-  render: 'on' | 'off' | 'unavailable' | null
-  render_probes: number
-  render_errors: number
-  browser_ms: number
-}
+} & RenderState
 
 type Site = {
   user_id: string
@@ -359,6 +360,7 @@ export class SiteAudit extends DurableObject<Env> {
       run.pause_until,
     )
     this.flush(wake, run, alarms)
+    await meterRendering(this.env, meter, run, site.user_id)
     if (finished || failed) await this.finish(site, failed ? 'failed' : 'done')
     await this.checkWake()
   }
@@ -774,6 +776,7 @@ export class SiteAudit extends DurableObject<Env> {
 
     const rendered = rawFacts
       ? await renderForRun(
+          meter,
           this.env.BROWSER,
           run,
           page.url,
@@ -782,10 +785,7 @@ export class SiteAudit extends DurableObject<Env> {
           USER_AGENT,
         )
       : null
-    if (rendered?.kind === 'busy') {
-      saveRendering(meter, run)
-      return rendered
-    }
+    if (rendered?.kind === 'busy') return rendered
     const facts = rendered?.facts ?? rawFacts
 
     meter.transaction(() => {

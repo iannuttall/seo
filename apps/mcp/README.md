@@ -224,7 +224,14 @@ A small Cloudflare D1 database (`migrations/`) keeps only:
   object pushes the site's coverage to D1 (`audit_sites.coverage`): checks
   a day, its properties and the folders worth adding as URL-prefix
   properties. Removing the site, or Delete everything, deletes the object's
-  storage.
+  storage. Pages whose titles, canonicals or links need JavaScript are
+  rendered with Cloudflare Browser Run (`src/audit/render.ts`): the first
+  pages of each crawl are compared raw and rendered, and if they differ
+  every HTML page of that crawl is rendered, keeping the raw values that
+  changed.
+- metered use (`usage`, `src/usage.ts`): one amount per account, UTC day
+  and kind, such as `browser_run_ms` and `browser_run_pages`. No URLs or
+  content. Metering only; nothing limits or charges an account from it.
 - for alerts (`src/alerts`): each alert type's email and webhook switches,
   the webhook URL and its sealed signing secret (`alert_settings`), each
   alert with its site, changed URLs and delivery state for 30 days

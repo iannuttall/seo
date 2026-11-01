@@ -33,6 +33,15 @@ export type RunSummary = {
     capped_rules: string[]
     resolution: 'all' | 'crawled-pages-only'
   }
+  // JavaScript rendering: 'on' when the site needed it, 'off' when the
+  // first pages read the same raw, 'unavailable' when rendering failed on
+  // them, null when the crawl ended before they were all compared.
+  rendering: {
+    mode: 'on' | 'off' | 'unavailable' | null
+    rendered: number
+    failed: number
+    browser_ms: number
+  }
   changes: {
     compared: boolean
     new_urls: number
@@ -69,12 +78,20 @@ async function findingId(rule: string, subject: string): Promise<string> {
     .join('')
 }
 
-const HTML_OK =
-  "state = 'fetched' AND status = 200 AND content_type LIKE 'text/html%'"
+// When the site needs JavaScript, a page whose rendering failed holds raw
+// HTML facts, which say nothing reliable about its tags or text.
+function htmlOk(rendering: Run['render']): string {
+  const base =
+    "state = 'fetched' AND status = 200 AND content_type LIKE 'text/html%'"
+  return rendering === 'on'
+    ? `${base} AND coalesce(render, '') != 'failed'`
+    : base
+}
 
 // Every rule, as SQL that returns rule, subject and a JSON details string,
 // ordered by subject so the cap keeps the same rows each week.
-function rules(): { rule: string; sql: string }[] {
+function rules(rendering: Run['render']): { rule: string; sql: string }[] {
+  const HTML_OK = htmlOk(rendering)
   const linkTargets = (where: string) => `
     SELECT t.url AS subject, json_object('status', t.status, 'location', t.location,
       'linking_pages', count(DISTINCT p.url),
@@ -147,6 +164,17 @@ function rules(): { rule: string; sql: string }[] {
           AND p.content_type LIKE 'text/html%' AND i.url IS NULL ORDER BY p.url`,
     },
     {
+      // The raw HTML says another title, canonical or robots than the
+      // rendered page: crawlers that do not run JavaScript see the raw one.
+      rule: 'js_changed_tags',
+      sql: `SELECT url AS subject, json_object('raw', json(raw)) AS details FROM pages
+        WHERE ${HTML_OK} AND render = 'rendered' AND raw IS NOT NULL
+          AND (json_type(raw, '$.title') IS NOT NULL
+            OR json_type(raw, '$.canonical') IS NOT NULL
+            OR json_type(raw, '$.robots') IS NOT NULL)
+        ORDER BY url`,
+    },
+    {
       rule: 'thin_page',
       sql: `SELECT url AS subject, json_object('words', words) AS details FROM pages
         WHERE ${HTML_OK} AND words < 100 AND coalesce(robots, '') NOT LIKE '%noindex%'
@@ -162,6 +190,15 @@ export async function analyse(
   now: number,
 ): Promise<RunSummary> {
   const counts = { queued: 0, fetched: 0, failed: 0, blocked: 0 }
+  const renders = { rendered: 0, failed: 0 }
+  for (const row of meter.all<{ render: keyof typeof renders; n: number }>(
+    'SELECT render, count(*) AS n FROM pages WHERE render IS NOT NULL GROUP BY render',
+  )) {
+    renders[row.render] = row.n
+  }
+  // Pages that could not be rendered on a site that needs it cannot show
+  // that their findings are gone.
+  const unrendered = run.render === 'on' && renders.failed > 0
   for (const row of meter.all<{ state: keyof typeof counts; n: number }>(
     'SELECT state, count(*) AS n FROM pages GROUP BY state',
   )) {
@@ -175,7 +212,7 @@ export async function analyse(
   const detected: Detected[] = []
   const byRule: Record<string, number> = {}
   const cappedRules: string[] = []
-  for (const { rule, sql } of rules()) {
+  for (const { rule, sql } of rules(run.render)) {
     const rows = meter.all<{ subject: string; details: string }>(
       `${sql} LIMIT ${MAX_PER_RULE + 1}`,
     )
@@ -245,15 +282,16 @@ export async function analyse(
 
     // A capped or failed crawl cannot show that a problem is gone, except
     // for findings about a page this run fetched again.
-    const fetchedNow = complete
-      ? null
-      : new Set(
-          meter
-            .all<{ url: string }>(
-              "SELECT url FROM pages WHERE state = 'fetched'",
-            )
-            .map((row) => row.url),
-        )
+    const fetchedNow =
+      complete && !unrendered
+        ? null
+        : new Set(
+            meter
+              .all<{ url: string }>(
+                `SELECT url FROM pages WHERE state = 'fetched'${unrendered ? " AND coalesce(render, '') != 'failed'" : ''}`,
+              )
+              .map((row) => row.url),
+          )
     for (const [id, before] of stored) {
       if (before.state !== 'open' || seen.has(id)) continue
       // A finding resolves only after a complete crawl, or when this run
@@ -295,7 +333,12 @@ export async function analyse(
       resolved,
       by_rule: byRule,
       capped_rules: cappedRules,
-      resolution: complete ? 'all' : 'crawled-pages-only',
+      resolution: complete && !unrendered ? 'all' : 'crawled-pages-only',
+    },
+    rendering: {
+      mode: run.render,
+      ...renders,
+      browser_ms: run.browser_ms,
     },
     changes: compare(meter),
     usage: {

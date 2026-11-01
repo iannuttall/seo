@@ -28,6 +28,13 @@ export type AuditSummary = {
     capped_rules: string[]
     resolution: 'all' | 'crawled-pages-only'
   }
+  // Missing from crawls made before JavaScript rendering.
+  rendering?: {
+    mode: 'on' | 'off' | 'unavailable' | null
+    rendered: number
+    failed: number
+    browser_ms: number
+  }
   changes: {
     compared: boolean
     new_urls: number
@@ -106,7 +113,7 @@ export type AuditAccess = {
 export const AUDIT_SECTION = 'weekly-audit'
 
 export const AUDIT_SECTION_TEXT =
-  'What the weekly crawl of the site found (broken and redirected internal links, missing or duplicate titles, descriptions and H1s, noindex, canonicals to another page, sitemap URLs that do not return 200, thin pages), with what is new, back or resolved since the crawl before. Only for sites added to the weekly site audit beta.'
+  'What the weekly crawl of the site found (broken and redirected internal links, missing or duplicate titles, descriptions and H1s, noindex, canonicals to another page, sitemap URLs that do not return 200, thin pages, tags that JavaScript changes), with what is new, back or resolved since the crawl before. Only for sites added to the weekly site audit beta.'
 
 // Plain names for each rule. Heuristics say so.
 export const AUDIT_RULES: Record<string, string> = {
@@ -123,6 +130,8 @@ export const AUDIT_RULES: Record<string, string> = {
   sitemap_page_unlinked:
     'Sitemap pages no crawled page links to (heuristic: the crawl may not reach every page)',
   thin_page: 'Pages under 100 words (heuristic)',
+  js_changed_tags:
+    'Pages whose raw HTML has another title, canonical or robots tag than the page after JavaScript runs',
 }
 
 const PAGE_SIZE = 50
@@ -148,6 +157,17 @@ function evidence(finding: AuditFinding, origin: string | null): string {
     parts.push(`canonical ${relative(details.canonical, origin)}`)
   }
   if (typeof details.words === 'number') parts.push(`${details.words} words`)
+  if (details.raw && typeof details.raw === 'object') {
+    const raw = details.raw as Record<string, unknown>
+    for (const key of ['title', 'canonical', 'robots']) {
+      if (key in raw) {
+        const value = raw[key]
+        parts.push(
+          `raw ${key} ${typeof value === 'string' ? (key === 'canonical' ? relative(value, origin) : value) : 'none'}`,
+        )
+      }
+    }
+  }
   const linking = typeof details.linking_pages === 'number'
   const count = linking ? details.linking_pages : details.pages
   if (typeof count === 'number') {
@@ -207,6 +227,24 @@ function ordered(findings: AuditFinding[], since: number): AuditFinding[] {
   )
 }
 
+// How the crawl read pages: rendered with JavaScript, or raw HTML and why.
+function renderingText(rendering: AuditSummary['rendering']): string | null {
+  if (!rendering) return null
+  const pages = (n: number) => (n === 1 ? '1 page' : `${n} pages`)
+  if (rendering.mode === 'on') {
+    return `JavaScript changed what the first pages show, so the crawl rendered every HTML page (${pages(rendering.rendered)} rendered${rendering.failed ? `; ${pages(rendering.failed)} could not be rendered, so ${rendering.failed === 1 ? 'it is' : 'they are'} left out of the tag and text checks` : ''}).`
+  }
+  if (rendering.mode === 'off') {
+    return 'JavaScript did not change the first pages, so the crawl read raw HTML.'
+  }
+  if (rendering.mode === 'unavailable') {
+    return 'JavaScript rendering failed on the first pages, so the crawl read raw HTML. If the site builds its pages with JavaScript, titles, canonicals and links may be missing here.'
+  }
+  return rendering.failed && !rendering.rendered
+    ? 'JavaScript rendering failed, so the crawl read raw HTML.'
+    : null
+}
+
 export function runAuditReport(
   input: { site: string; detail?: Detail; offset?: number },
   snapshot: AuditSnapshot | null,
@@ -260,8 +298,11 @@ export function runAuditReport(
     previous
       ? `Since the crawl of ${day(previous.finished_at)}: ${summary.findings.new} new, ${summary.findings.reopened} back, ${summary.findings.resolved} resolved. ${summary.findings.open} open now.`
       : `This is the first crawl, so every finding is new: ${summary.findings.open} open.`,
+    renderingText(summary.rendering),
     summary.findings.resolution === 'crawled-pages-only'
-      ? 'Because the crawl is partial, a finding counts as resolved only when this crawl fetched its page again; a finding not seen here is not an all-clear.'
+      ? summary.complete
+        ? 'Because some pages could not be rendered, a finding counts as resolved only when this crawl rendered its page; a finding not seen here is not an all-clear.'
+        : 'Because the crawl is partial, a finding counts as resolved only when this crawl fetched its page again; a finding not seen here is not an all-clear.'
       : null,
     summary.findings.capped_rules.length
       ? `Capped at 1,000 findings each, so these counts are lower bounds: ${summary.findings.capped_rules.join(', ')}.`

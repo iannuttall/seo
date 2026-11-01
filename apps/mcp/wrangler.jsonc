@@ -59,6 +59,9 @@
     "bindings": [{ "name": "SITE_AUDIT", "class_name": "SiteAudit" }]
   },
   "migrations": [{ "tag": "v1", "new_sqlite_classes": ["SiteAudit"] }],
+  // Browser Run, for the weekly audit's pages that need JavaScript to show
+  // their titles, canonicals and links (src/audit/render.ts).
+  "browser": { "binding": "BROWSER" },
   // No Workers Logs: the server keeps no logs of requests or user data.
   "observability": { "enabled": false },
   // Mondays 08:00 UTC: the week's sign-up and failure counts to Telegram.

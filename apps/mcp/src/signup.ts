@@ -20,9 +20,6 @@ export type SignupSource = {
 // it on seoskill.dev pages, once, as URL-encoded r, p, s, m and c.
 export const FIRST_TOUCH_COOKIE = 'seo_first'
 
-// Agents the CLI can name in a `seo login` start request.
-const CLI_AGENTS = new Set(['claude-code', 'cursor', 'codex'])
-
 // Printable text without control characters, cut to max, or null.
 export function clip(value: unknown, max: number): string | null {
   if (typeof value !== 'string') return null
@@ -31,8 +28,12 @@ export function clip(value: unknown, max: number): string | null {
   return text ? text.slice(0, max) : null
 }
 
+// The agent a `seo login` start request names, such as claude-code or
+// gemini: a short lowercase name, or null. Older CLIs send cli when they
+// found no agent.
 export function cliAgent(value: unknown): string | null {
-  return typeof value === 'string' && CLI_AGENTS.has(value) ? value : null
+  const name = clip(value, 40)?.toLowerCase() ?? ''
+  return /^[a-z0-9][a-z0-9._-]*$/.test(name) && name !== 'cli' ? name : null
 }
 
 export function userAgentOf(request: Request): string | null {

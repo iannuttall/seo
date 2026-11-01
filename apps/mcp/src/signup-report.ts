@@ -38,7 +38,11 @@ export async function signupReport(db: D1Database, now: Date): Promise<string> {
   if (!total?.week) return head
   const [entry, client, referrer, landing, utm] = await Promise.all([
     counts(db, 'entry', since),
-    counts(db, "COALESCE(client_name, client, '(unknown)')", since),
+    counts(
+      db,
+      "COALESCE(client_name, client, CASE entry WHEN 'web' THEN '(website, no agent)' WHEN 'cli' THEN '(cli, agent not found)' ELSE '(unknown)' END)",
+      since,
+    ),
     counts(
       db,
       "CASE WHEN landing_path IS NULL THEN '(no site visit)' WHEN referrer_host IS NULL THEN '(direct)' ELSE referrer_host END",

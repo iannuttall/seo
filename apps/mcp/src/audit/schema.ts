@@ -45,7 +45,13 @@ CREATE TABLE IF NOT EXISTS run (
   error TEXT,
   consecutive_errors INTEGER NOT NULL DEFAULT 0,
   summary TEXT,
-  summary_pushed_at INTEGER
+  summary_pushed_at INTEGER,
+  -- JavaScript rendering for this run: null while the first pages are
+  -- compared raw and rendered, then 'on', 'off' or 'unavailable'.
+  render TEXT,
+  render_probes INTEGER NOT NULL DEFAULT 0,
+  render_errors INTEGER NOT NULL DEFAULT 0,
+  browser_ms INTEGER NOT NULL DEFAULT 0
 );
 
 CREATE TABLE IF NOT EXISTS runs (
@@ -163,7 +169,14 @@ CREATE TABLE IF NOT EXISTS pages (
   -- JSON array of {u, a, n?}: one row per page, not one per link.
   links TEXT,
   external INTEGER,
-  error TEXT
+  error TEXT,
+  -- JavaScript rendering: 'rendered' when the facts above come from the
+  -- rendered page, 'failed' when they are the raw HTML's because rendering
+  -- failed (render_error says why), null when the page was not rendered.
+  render TEXT,
+  render_error TEXT,
+  -- JSON: the raw HTML's values where rendering changed them (render.ts).
+  raw TEXT
 );
 
 CREATE TABLE IF NOT EXISTS sitemaps (
@@ -186,3 +199,56 @@ export const CHECKS_ADDED: [string, string][] = [
   ['transition_at', 'INTEGER'],
   ['alerted_at', 'INTEGER'],
 ]
+
+// The same for run and for a pages table made before rendering, which a
+// crawl running at deploy time still uses.
+export const RUN_ADDED: [string, string][] = [
+  ['render', 'TEXT'],
+  ['render_probes', 'INTEGER NOT NULL DEFAULT 0'],
+  ['render_errors', 'INTEGER NOT NULL DEFAULT 0'],
+  ['browser_ms', 'INTEGER NOT NULL DEFAULT 0'],
+]
+
+export const PAGES_ADDED: [string, string][] = [
+  ['render', 'TEXT'],
+  ['render_error', 'TEXT'],
+  ['raw', 'TEXT'],
+]
+
+// Creates the tables and adds columns an older object lacks. Run when the
+// object starts, before anything reads them.
+export function migrate(sql: SqlStorage): void {
+  sql.exec(KEPT)
+  sql.exec(DISPOSABLE)
+  const columns = (table: string) =>
+    new Set(
+      sql
+        .exec<{ name: string }>(
+          `SELECT name FROM pragma_table_info('${table}')`,
+        )
+        .toArray()
+        .map((row) => row.name),
+    )
+  const add = (table: string, added: [string, string][]) => {
+    const existing = columns(table)
+    for (const [name, type] of added) {
+      if (!existing.has(name)) {
+        sql.exec(`ALTER TABLE ${table} ADD COLUMN ${name} ${type}`)
+      }
+    }
+    return existing
+  }
+  const have = add('checks', CHECKS_ADDED)
+  add('run', RUN_ADDED)
+  add('pages', PAGES_ADDED)
+  // Changes from before alerts existed are not alerted.
+  if (!have.has('alerted_at')) {
+    sql.exec('UPDATE checks SET alerted_at = transition_at')
+  }
+  // Results from before index monitoring are its baseline.
+  if (!have.has('indexed')) {
+    sql.exec(
+      "UPDATE checks SET indexed = (verdict = 'PASS') WHERE verdict IS NOT NULL",
+    )
+  }
+}

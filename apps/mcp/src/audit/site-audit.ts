@@ -30,8 +30,9 @@ import {
 } from './checks.ts'
 import { extractPage, resolveUrl } from './extract.ts'
 import { Meter } from './meter.ts'
+import { renderForRun, saveRendering } from './render.ts'
 import { analyse, type RunSummary } from './rules.ts'
-import { CHECKS_ADDED, DISPOSABLE, KEPT } from './schema.ts'
+import { DISPOSABLE, migrate } from './schema.ts'
 import { readSitemap } from './sitemap.ts'
 
 // One object per person and Search Console property (the weekly-audit
@@ -93,6 +94,10 @@ export type Run = {
   consecutive_errors: number
   summary: string | null
   summary_pushed_at: number | null
+  render: 'on' | 'off' | 'unavailable' | null
+  render_probes: number
+  render_errors: number
+  browser_ms: number
 }
 
 type Site = {
@@ -166,33 +171,7 @@ type Wake = {
 export class SiteAudit extends DurableObject<Env> {
   constructor(ctx: DurableObjectState, env: Env) {
     super(ctx, env)
-    ctx.blockConcurrencyWhile(async () => {
-      ctx.storage.sql.exec(KEPT)
-      ctx.storage.sql.exec(DISPOSABLE)
-      const have = new Set(
-        ctx.storage.sql
-          .exec<{ name: string }>(
-            "SELECT name FROM pragma_table_info('checks')",
-          )
-          .toArray()
-          .map((row) => row.name),
-      )
-      for (const [name, type] of CHECKS_ADDED) {
-        if (!have.has(name)) {
-          ctx.storage.sql.exec(`ALTER TABLE checks ADD COLUMN ${name} ${type}`)
-        }
-      }
-      // Changes from before alerts existed are not alerted.
-      if (!have.has('alerted_at')) {
-        ctx.storage.sql.exec('UPDATE checks SET alerted_at = transition_at')
-      }
-      // Results from before index monitoring are its baseline.
-      if (!have.has('indexed')) {
-        ctx.storage.sql.exec(
-          "UPDATE checks SET indexed = (verdict = 'PASS') WHERE verdict IS NOT NULL",
-        )
-      }
-    })
+    ctx.blockConcurrencyWhile(async () => migrate(ctx.storage.sql))
   }
 
   // Starts a run unless one is running. Starting again while one runs only
@@ -704,12 +683,15 @@ export class SiteAudit extends DurableObject<Env> {
       nextStart = Math.max(nextStart + gap, Date.now())
       const task = this.fetchPage(wake, run, site, robots, page).then(
         (result) => {
-          if (result.kind === 'throttled') {
-            // 429 or 503: halve concurrency and pause the whole crawl.
+          if (result.kind !== 'done') {
+            // 429 or 503: halve concurrency and pause the whole crawl. A
+            // busy Browser Run only pauses it: the site is not at fault.
             stop = true
-            run.concurrency = Math.max(1, Math.floor(run.concurrency / 2))
+            if (result.kind === 'throttled') {
+              run.concurrency = Math.max(1, Math.floor(run.concurrency / 2))
+              healthy = 0
+            }
             run.pause_until = Date.now() + result.retryAfterMs
-            healthy = 0
             return
           }
           healthy += 1
@@ -746,7 +728,9 @@ export class SiteAudit extends DurableObject<Env> {
     robots: Robots,
     page: { url: string; depth: number },
   ): Promise<
-    { kind: 'done'; ms: number } | { kind: 'throttled'; retryAfterMs: number }
+    | { kind: 'done'; ms: number }
+    | { kind: 'throttled'; retryAfterMs: number }
+    | { kind: 'busy'; retryAfterMs: number }
   > {
     const { meter } = wake
     const origin = site.origin as string
@@ -784,15 +768,33 @@ export class SiteAudit extends DurableObject<Env> {
     const target = location ? resolveUrl(location, page.url) : null
     const html =
       response.status === 200 && /^\s*text\/html/i.test(contentType ?? '')
-    const facts = html ? await extractPage(response, page.url, origin) : null
+    const rawFacts = html ? await extractPage(response, page.url, origin) : null
     if (!html) await response.body?.cancel()
     const ms = Date.now() - begin
 
+    const rendered = rawFacts
+      ? await renderForRun(
+          this.env.BROWSER,
+          run,
+          page.url,
+          origin,
+          rawFacts,
+          USER_AGENT,
+        )
+      : null
+    if (rendered?.kind === 'busy') {
+      saveRendering(meter, run)
+      return rendered
+    }
+    const facts = rendered?.facts ?? rawFacts
+
     meter.transaction(() => {
+      if (rendered) saveRendering(meter, run)
       meter.run(
         `UPDATE pages SET state = 'fetched', status = ?, location = ?, content_type = ?,
            x_robots = ?, title = ?, description = ?, h1 = ?, canonical = ?, robots = ?,
-           words = ?, bytes = ?, ms = ?, links = ?, external = ? WHERE url = ?`,
+           words = ?, bytes = ?, ms = ?, links = ?, external = ?,
+           render = ?, render_error = ?, raw = ? WHERE url = ?`,
         response.status,
         target?.href ?? location,
         contentType,
@@ -807,6 +809,9 @@ export class SiteAudit extends DurableObject<Env> {
         ms,
         facts?.internal.length ? JSON.stringify(facts.internal) : null,
         facts?.external ?? null,
+        rendered?.render ?? null,
+        rendered?.error ?? null,
+        rendered?.raw ? JSON.stringify(rendered.raw) : null,
         page.url,
       )
       wake.fetched += 1

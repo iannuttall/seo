@@ -131,7 +131,6 @@ export type View =
         // billing portal can open (the person has paid before).
         billing?: {
           price: number
-          max: number
           sites: number
           status: string | null
           manage: boolean

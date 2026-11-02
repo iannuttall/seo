@@ -53,18 +53,22 @@ unchanged.
 
 ## Paid plan
 
-The weekly site audit is $50 a month per site (`src/billing.ts`). The
-Sites tab sends the chosen number of sites to Stripe Checkout as the
-subscription quantity; Manage billing opens Stripe's customer portal to
-change it or cancel. Stripe posts `customer.subscription.created`,
-`.updated` and `.deleted` to `POST /account/billing/webhook`, which checks
-the `Stripe-Signature` and keeps one `billing` row per account. An active,
-trialing or past-due plan grants `weekly-audit` like the beta flag, and
-the site limit is the larger of the beta's 5 and the sites paid for; when
-the plan shrinks, only the oldest sites up to the limit keep running.
-Delete everything cancels the subscription first. Billing stays off until
-`STRIPE_PRICE_ID`, `STRIPE_SECRET_KEY` and `STRIPE_WEBHOOK_SECRET` are all
-set.
+The weekly site audit is $50 a month per site (`src/billing.ts`), with
+nothing to set: the plan is the sites you audit. Without a plan, picking a
+site on the Sites tab opens Stripe Checkout for that one site, and the
+webhook adds it once the plan is active. With a plan, adding a site past
+the limit raises the subscription by one site, charged at once for the
+rest of the month (a card that fails refuses it), and removing one lowers
+it from the next bill, never below one site. Manage billing opens Stripe's
+customer portal for the card, invoices and cancelling. Stripe posts
+`customer.subscription.created`, `.updated` and `.deleted` to
+`POST /account/billing/webhook`, which checks the `Stripe-Signature` and
+keeps one `billing` row per account. An active, trialing or past-due plan
+grants `weekly-audit` like the beta flag; the site limit is the beta's 5
+free sites plus the sites paid for, and over the limit only the oldest
+sites keep running. Delete everything cancels the subscription first.
+Billing stays off until `STRIPE_PRICE_ID`, `STRIPE_SECRET_KEY` and
+`STRIPE_WEBHOOK_SECRET` are all set.
 
 ## Alerts
 

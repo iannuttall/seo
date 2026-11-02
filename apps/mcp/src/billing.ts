@@ -1,5 +1,7 @@
+import type { StartAudit } from '@seo/core/commands'
 import { readJsonOrUndefined } from '@seo/core/hosted'
-import { addAuditSite } from './audit/schedule.ts'
+import { addAuditSite, siteLimit } from './audit/schedule.ts'
+import { betaFlags } from './beta.ts'
 
 // The paid weekly audit: one Stripe price per site a month, bought as a
 // quantity. Stripe Checkout takes the first payment and Stripe's billing
@@ -149,6 +151,41 @@ export async function setPaidSites(
   )
     .bind(wanted, Date.now(), userId)
     .run()
+}
+
+// Starts the weekly audit of a property the person's Google accounts can
+// read, for the Sites tab and seo_sites. Without a plan it is a Checkout
+// link for that site; a full paid plan grows by one site, charged now.
+export async function startAuditSite(
+  env: Env,
+  userId: string,
+  property: string,
+): Promise<StartAudit> {
+  const audits = (await betaFlags(env, userId)).has('weekly-audit')
+  const checkout = async (): Promise<StartAudit> => ({
+    status: 'checkout',
+    url: await checkoutUrl(env, userId, property),
+    price: PRICE_PER_SITE_USD,
+  })
+  if (!audits) {
+    if (!billingOn(env)) return { status: 'full', limit: 0 }
+    return checkout()
+  }
+  let added = await addAuditSite(env, userId, property)
+  if (added === 'full' && billingOn(env)) {
+    const paid = await billingOf(env, userId)
+    if (!paid?.active) return checkout()
+    try {
+      await setPaidSites(env, userId, paid.sites + 1)
+    } catch (error) {
+      console.error('billing: adding a site failed', error)
+      return { status: 'payment_failed' }
+    }
+    added = await addAuditSite(env, userId, property)
+  }
+  return added === 'full'
+    ? { status: 'full', limit: await siteLimit(env, userId) }
+    : { status: added }
 }
 
 // Stripe's billing portal, where the person changes the number of sites,

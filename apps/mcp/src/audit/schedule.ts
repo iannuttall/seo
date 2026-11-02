@@ -1,5 +1,5 @@
 import type { AuditAccess } from '@seo/core/commands'
-import { ACTIVE_SQL } from '../billing.ts'
+import { ACTIVE_SQL, MAX_PAID_SITES } from '../billing.ts'
 import { sha256Base64Url } from '../seal.ts'
 import type { AuditMonitor } from './checks.ts'
 
@@ -15,10 +15,13 @@ const STALE_MS = 6 * 3_600_000
 // Sites per account in the beta.
 export const MAX_SITES = 5
 
-// SQL for how many sites the account in column may audit: MAX_SITES free
-// with the beta flag, plus the sites an active plan pays for.
+// SQL for how many sites the account in column may audit: MAX_PAID_SITES
+// free with unlimited-sites, MAX_SITES free with the beta flag, plus the
+// sites an active plan pays for.
 const siteLimitSql = (column: string) =>
-  `(CASE WHEN EXISTS (SELECT 1 FROM beta_flags f WHERE f.user_id = ${column} AND f.flag = 'weekly-audit')
+  `(CASE WHEN EXISTS (SELECT 1 FROM beta_flags f WHERE f.user_id = ${column} AND f.flag = 'unlimited-sites')
+      THEN ${MAX_PAID_SITES}
+    WHEN EXISTS (SELECT 1 FROM beta_flags f WHERE f.user_id = ${column} AND f.flag = 'weekly-audit')
       THEN ${MAX_SITES} ELSE 0 END
     + COALESCE((SELECT b.sites FROM billing b WHERE b.user_id = ${column} AND b.status IN ${ACTIVE_SQL}), 0))`
 

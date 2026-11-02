@@ -109,8 +109,8 @@ below, and only for the sites you add to it.
 
 The weekly site audit is a paid plan, and the maintainer also turns it on
 for some beta accounts. If you pay for it, Stripe takes the payment and
-keeps your card details; the server keeps only your Stripe customer and
-subscription ids, the subscription's status and how many sites you pay
+keeps your card details; the server keeps only your Stripe customer,
+subscription and open checkout ids, the subscription's status and how many sites you pay
 for. Deleting your account cancels the subscription.
 For each Search Console property you add on the account page, the server
 crawls the site once a week, up to 5,000 pages, as `SEOSkillBot`, and

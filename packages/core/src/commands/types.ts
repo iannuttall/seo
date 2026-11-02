@@ -160,9 +160,10 @@ export type CommandDeps = {
 }
 
 // What starting the audit of a site did: started now, already running, a
-// Stripe Checkout link for the person to pay for the site, or refused.
+// Stripe Checkout link for the person to pay for the site, paid and about to
+// start, or refused.
 export type StartAudit =
-  | { status: 'added' | 'exists' }
+  | { status: 'added' | 'exists' | 'pending' }
   | { status: 'checkout'; url: string; price: number }
   | { status: 'full'; limit: number }
   | { status: 'payment_failed' }

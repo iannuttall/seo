@@ -68,7 +68,10 @@ one site, or returns the Checkout link for the person to open. Stripe posts
 keeps one `billing` row per account. An active, trialing or past-due plan
 grants `weekly-audit` like the beta flag; the site limit is the beta's 5
 free sites plus the sites paid for, and over the limit only the oldest
-sites keep running. Delete everything cancels the subscription first.
+sites keep running. Each account has one open Checkout session at a time: a new link expires
+the older one, and a paid one waiting for the webhook says the plan is
+starting, so nobody pays twice. Delete everything expires an open Checkout
+and cancels the subscription first.
 Billing stays off until `STRIPE_PRICE_ID`, `STRIPE_SECRET_KEY` and
 `STRIPE_WEBHOOK_SECRET` are all set.
 
@@ -256,8 +259,9 @@ A small Cloudflare D1 database (`migrations/`) keeps only:
   `seo_research` calls by provider. No URLs or content. A site object
   holds its share in its `unmetered` table until it reaches D1. Metering
   only; nothing limits or charges an account from it.
-- for the paid plan: the Stripe customer and subscription ids, the
-  subscription status and number of sites (`billing`). Card details stay
+- for the paid plan: the Stripe customer and subscription ids, the open
+  Checkout session's id, the subscription status and number of sites
+  (`billing`). Card details stay
   with Stripe.
 - for alerts (`src/alerts`): each alert type's email and webhook switches,
   the webhook URL and its sealed signing secret (`alert_settings`), each

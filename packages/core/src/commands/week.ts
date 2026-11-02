@@ -2,8 +2,8 @@ import { AUDIT_RULES } from './audit.js'
 import { type CommandDeps, CommandError, type CommandResult } from './types.js'
 
 // The weekly summary of the sites in the weekly site audit beta: one
-// verdict, the sites that need a look with one next step each, the quiet
-// ones in one line, and a prompt to paste into an agent. The hosted server
+// verdict, then each site's week as facts (Google's index, the weekly crawl
+// and search clicks), sites with changes first. The hosted server
 // gathers the week (WeekData); this writes the one Markdown that the CLI,
 // both MCP servers and the Monday email all show.
 
@@ -110,6 +110,9 @@ const list = (items: string[]) =>
     ? (items[0] ?? '')
     : `${items.slice(0, -1).join(', ')} and ${items.at(-1)}`
 
+// An error message that ends as a sentence.
+const sentence = (text: string) => (/[.!?]$/.test(text) ? text : `${text}.`)
+
 function path(url: string): string {
   try {
     const parsed = new URL(url)
@@ -145,72 +148,100 @@ type Issue = {
   // Lower is more urgent: drops, then crawl trouble, clicks, new issues.
   rank: number
   heading: string
-  line: string
-  next: string
-  prompt: string
 }
 
-// What needs a look on one site, most urgent first.
+// What changed on one site that is worth a look, most urgent first. Only
+// facts: what to do about them is for the person or their agent.
 function issues(site: WeekSite, startMs: number, endMs: number): Issue[] {
-  const name = siteName(site.property)
   const found: Issue[] = []
-  const index = site.index
-  if (index?.dropped) {
-    const paths = index.dropped_pages.map((page) => path(page.url))
-    const more = index.dropped - paths.length
-    const shown =
-      more > 0 ? `${paths.join(', ')} and ${plural(more, 'more')}` : list(paths)
-    const reasons = new Set(index.dropped_pages.map((page) => page.coverage))
-    const reason = reasons.size === 1 ? [...reasons][0] : null
+  if (site.index?.dropped) {
     found.push({
       rank: 0,
-      heading: `${plural(index.dropped, 'page')} dropped`,
-      line: `${shown} dropped out of Google’s index.${reason ? ` Google says: ${reason}.` : ''}`,
-      next: `check ${index.dropped === 1 ? 'it' : 'they'} still return${index.dropped === 1 ? 's' : ''} 200 and ${index.dropped === 1 ? 'is' : 'are'} not noindexed.`,
-      prompt: `Why did ${paths[0] ?? 'a page'} on ${name} drop out of Google’s index this week, and how do I fix it?`,
+      heading: `${plural(site.index.dropped, 'page')} dropped`,
     })
   }
   const crawl = site.crawl
   const crawled =
     crawl !== null && crawl.finished_at >= startMs && crawl.finished_at < endMs
   if (crawled && crawl.status === 'failed') {
-    found.push({
-      rank: 1,
-      heading: 'crawl stopped early',
-      line: `The weekly crawl stopped after ${plural(crawl.pages, 'page')}${crawl.error ? `: ${crawl.error}` : '.'}`,
-      next: 'check the site is up. The next weekly crawl tries again.',
-      prompt: `Why did the weekly crawl of ${name} stop early, and what should I check?`,
-    })
+    found.push({ rank: 1, heading: 'crawl stopped early' })
   } else if (!crawled && site.added_at < startMs) {
-    found.push({
-      rank: 1,
-      heading: 'no crawl this week',
-      line: `No weekly crawl finished this week${site.start_error ? `: ${site.start_error}` : '.'}`,
-      next: 'check the site is up. The crawl tries again each hour.',
-      prompt: `Why has the weekly crawl of ${name} not finished, and what should I check?`,
-    })
+    found.push({ rank: 1, heading: 'no crawl this week' })
   }
   if (clicksChange(site) === 'fell') {
-    const clicks = site.clicks as NonNullable<WeekSite['clicks']>
-    found.push({
-      rank: 2,
-      heading: `clicks down ${percent(site)}%`,
-      line: `Search clicks fell ${percent(site)}%, from ${count(clicks.previous)} to ${count(clicks.clicks)} (${weekLabel(clicks.start, clicks.end)}, against the 7 days before).`,
-      next: 'ask your agent which pages and queries lost them.',
-      prompt: `Which pages and queries lost search clicks on ${name} in the last week, and why?`,
-    })
+    found.push({ rank: 2, heading: `clicks down ${percent(site)}%` })
   }
   if (crawled && crawl.new_issues > 0) {
-    const rule = crawl.top_rule ? AUDIT_RULES[crawl.top_rule] : undefined
-    found.push({
-      rank: 3,
-      heading: plural(crawl.new_issues, 'new issue'),
-      line: `The weekly crawl found ${plural(crawl.new_issues, 'new issue')}${rule ? `, most of them ${rule.charAt(0).toLowerCase()}${rule.slice(1)}` : ''}.`,
-      next: 'ask your agent for the weekly audit of this site.',
-      prompt: `What did the weekly crawl of ${name} find this week, and what should I fix first?`,
-    })
+    found.push({ rank: 3, heading: plural(crawl.new_issues, 'new issue') })
   }
   return found
+}
+
+// One site's week as facts: Google's index, the weekly crawl and search
+// clicks, each said even when nothing changed, so a quiet week reads as
+// checked rather than missing.
+function siteLines(site: WeekSite, startMs: number, endMs: number): string[] {
+  const lines: string[] = []
+  const index = site.index
+  if (!index) {
+    lines.push('Google index: no checks ran this week yet.')
+  } else if (index.dropped) {
+    const paths = index.dropped_pages.map((page) => path(page.url))
+    const more = index.dropped - paths.length
+    const shown =
+      more > 0 ? `${paths.join(', ')} and ${plural(more, 'more')}` : list(paths)
+    const reasons = new Set(index.dropped_pages.map((page) => page.coverage))
+    const reason = reasons.size === 1 ? [...reasons][0] : null
+    lines.push(
+      `Google index: ${plural(index.dropped, 'page')} dropped out (${shown}).${reason ? ` Google says: ${reason}.` : ''}${index.returned ? ` ${plural(index.returned, 'page')} came back.` : ''} ${plural(index.checked, 'page')} checked.`,
+    )
+  } else {
+    lines.push(
+      `Google index: ${plural(index.checked, 'page')} checked, none dropped${index.returned ? `, ${plural(index.returned, 'page')} came back` : ''}.`,
+    )
+  }
+  const crawl = site.crawl
+  const crawled =
+    crawl !== null && crawl.finished_at >= startMs && crawl.finished_at < endMs
+  if (crawled && crawl.status === 'failed') {
+    lines.push(
+      `Weekly crawl: stopped after ${plural(crawl.pages, 'page')}${crawl.error ? `: ${sentence(crawl.error)}` : '.'} It tries again next week.`,
+    )
+  } else if (crawled) {
+    const rule = crawl.top_rule ? AUDIT_RULES[crawl.top_rule] : undefined
+    lines.push(
+      crawl.new_issues
+        ? `Weekly crawl: ${plural(crawl.pages, 'page')}, ${plural(crawl.new_issues, 'new issue')}${rule ? `, most of them ${rule.charAt(0).toLowerCase()}${rule.slice(1)}` : ''}.`
+        : `Weekly crawl: ${plural(crawl.pages, 'page')}, no new issues.`,
+    )
+  } else if (site.added_at < startMs) {
+    lines.push(
+      `Weekly crawl: none finished this week${site.start_error ? `: ${sentence(site.start_error)}` : '.'} It tries again each hour.`,
+    )
+  } else {
+    lines.push('Weekly crawl: the first crawl is still running.')
+  }
+  const clicks = site.clicks
+  if (clicks) {
+    const change =
+      clicks.previous > 0
+        ? Math.round(
+            ((clicks.clicks - clicks.previous) / clicks.previous) * 100,
+          )
+        : null
+    const trend =
+      change === null
+        ? `from ${count(clicks.previous)}`
+        : change === 0
+          ? 'level with'
+          : `${change > 0 ? 'up' : 'down'} ${Math.abs(change)}% on`
+    lines.push(
+      `Search clicks: ${count(clicks.clicks)} (${weekLabel(clicks.start, clicks.end)}), ${trend}${change === null ? '' : ` ${count(clicks.previous)}`} the 7 days before.`,
+    )
+  } else {
+    lines.push('Search clicks: not available this week.')
+  }
+  return lines
 }
 
 // The week as Markdown.
@@ -224,27 +255,25 @@ export function weekMarkdown(data: WeekData): string {
   const byName = (a: WeekSite, b: WeekSite) =>
     siteName(a.property).localeCompare(siteName(b.property)) ||
     a.property.localeCompare(b.property)
-  const sites = [...data.sites].sort(byName)
-  const attention: { site: WeekSite; found: Issue[] }[] = []
-  const quiet: WeekSite[] = []
-  const waiting: WeekSite[] = []
-  for (const site of sites) {
-    const found = issues(site, startMs, endMs)
-    if (found.length) attention.push({ site, found })
-    else if (!site.crawl || !site.index) waiting.push(site)
-    else quiet.push(site)
-  }
-  // The most urgent first; equal ones by name.
-  attention.sort(
+  const rows = data.sites.map((site) => ({
+    site,
+    found: issues(site, startMs, endMs),
+    waiting: !site.crawl || !site.index,
+  }))
+  const attention = rows.filter((row) => row.found.length)
+  const quiet = rows.filter((row) => !row.found.length && !row.waiting)
+  // Sites with changes first, the most urgent first; the rest by name.
+  rows.sort(
     (a, b) =>
-      (a.found[0] as Issue).rank - (b.found[0] as Issue).rank ||
+      (a.found[0]?.rank ?? Number.POSITIVE_INFINITY) -
+        (b.found[0]?.rank ?? Number.POSITIVE_INFINITY) ||
       byName(a.site, b.site),
   )
-  const total = sites.length
+  const total = rows.length
   const verdict = attention.length
     ? total === 1
-      ? 'Your site needs a look this week.'
-      : `${attention.length} of your ${total} sites ${attention.length === 1 ? 'needs' : 'need'} a look this week.`
+      ? 'Your site had changes worth a look this week.'
+      : `${attention.length} of your ${total} sites had changes worth a look this week.`
     : quiet.length
       ? total === 1
         ? 'Your site had a quiet week.'
@@ -253,63 +282,15 @@ export function weekMarkdown(data: WeekData): string {
           : `${quiet.length} of your ${total} sites had a quiet week.`
       : 'Your sites are still on their first checks.'
   const out = [title, '', verdict]
-  if (attention.length) {
-    out.push('', '## Needs attention')
-    for (const { site, found } of attention) {
-      const [first, ...rest] = found as [Issue, ...Issue[]]
-      const also = rest.length
-        ? ` Also: ${list(rest.map((item) => item.heading))}.`
-        : ''
-      const rose =
-        clicksChange(site) === 'rose'
-          ? ` Search clicks rose ${percent(site)}%.`
-          : ''
-      out.push(
-        '',
-        `### ${siteName(site.property)}: ${first.heading}`,
-        '',
-        `- ${first.line}${also}${rose}`,
-        `- Next step: ${first.next}`,
-        ...(site.link ? [`- [View site](${site.link})`] : []),
-      )
-    }
-  }
-  if (quiet.length) {
-    const risen = quiet.filter((site) => clicksChange(site) === 'rose')
+  for (const { site, found } of rows) {
     out.push(
       '',
-      '## All quiet',
+      `## ${siteName(site.property)}${found.length ? `: ${list(found.map((item) => item.heading))}` : ''}`,
       '',
-      `${list(quiet.map((site) => siteName(site.property)))}: no drops, no new issues.${risen
-        .map(
-          (site) =>
-            ` Search clicks rose ${percent(site)}% on ${siteName(site.property)}.`,
-        )
-        .join('')}`,
+      ...siteLines(site, startMs, endMs).map((line) => `- ${line}`),
+      ...(site.link ? [`- [View site](${site.link})`] : []),
     )
   }
-  if (waiting.length) {
-    out.push(
-      '',
-      '## Not checked yet',
-      '',
-      `${list(waiting.map((site) => siteName(site.property)))}: the first crawl or Google checks are still running.`,
-    )
-  }
-  const first = attention[0]
-  const prompt = first
-    ? (first.found[0] as Issue).prompt
-    : `What are the best quick wins on ${siteName((quiet[0] ?? (sites[0] as WeekSite)).property)} this month?`
-  out.push(
-    '',
-    '## Ask your agent',
-    '',
-    'Paste this into your agent:',
-    '',
-    '```',
-    prompt,
-    '```',
-  )
   return out.join('\n')
 }
 

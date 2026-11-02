@@ -91,16 +91,30 @@ const indexChanges: AlertType<IndexChanges> = {
   },
 }
 
+// How to hand the week to an agent instead of reading it, at the end of
+// the summary email only. Tools already run inside an agent.
+const autopilot = (account: string) =>
+  [
+    '',
+    '',
+    '## Put it on autopilot',
+    '',
+    `- This summary also goes out as signed JSON to a webhook every Monday, with the same data as this email. Save a URL under Alerts: ${account}#alerts`,
+    '- Point the webhook at a weekly agent run, such as a Claude Code or Codex job, n8n or a GitHub Action, so an agent looks into each change as it lands.',
+    '- Index drops also go to the webhook as they happen, not only on Monday.',
+    '- Any agent connected to SEO Skill can read this week with seo_report and no site.',
+  ].join('\n')
+
 // weekly-summary: every audited site's last full week, Monday to Sunday,
 // sent on Monday morning (audit/week.ts). The same Markdown as seo report
-// with no site.
+// with no site, then how to automate it.
 const weeklySummary: AlertType<WeekData> = {
   title: 'Weekly summary',
-  text: 'Every Monday, what needs a look on your sites and what was quiet.',
+  text: 'Every Monday, what happened on each of your sites last week.',
   flag: 'weekly-audit',
   defaults: { email: true, webhook: true },
   email(data) {
-    const markdown = weekMarkdown(data)
+    const markdown = `${weekMarkdown(data)}${data.sites.length ? autopilot(data.account) : ''}`
     // The verdict line, for the inbox preview.
     const verdict = markdown.split('\n')[2] ?? ''
     return { subject: weekTitle(data), preview: verdict, markdown }

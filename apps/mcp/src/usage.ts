@@ -1,7 +1,14 @@
+import type { Meter } from './audit/meter.ts'
+
 // Metered use by account (migrations/0010_usage.sql). Each kind names its
 // unit. Add a kind here, and to the migration's list, before recording it.
 
-export type UsageKind = 'browser_run_ms' | 'browser_run_pages'
+export type UsageKind =
+  | 'browser_run_ms'
+  | 'browser_run_pages'
+  | 'url_inspections'
+  | 'research_dataforseo_calls'
+  | 'research_ahrefs_calls'
 
 // Adds amounts to the account's rows for today (UTC), all or none, in one
 // D1 batch. Zero and negative amounts are skipped.
@@ -21,4 +28,51 @@ export async function addUsage(
       ).bind(userId, day, kind, Math.round(amount as number)),
     )
   if (statements.length) await env.DB.batch(statements)
+}
+
+// A site object's use waiting for D1 (the unmetered table, schema.ts). Call
+// it in the transaction that does the work, so the two are kept together.
+export function addUnmetered(
+  meter: Meter,
+  kind: UsageKind,
+  amount: number,
+): void {
+  meter.run(
+    `INSERT INTO unmetered (kind, amount) VALUES (?, ?)
+     ON CONFLICT (kind) DO UPDATE SET amount = amount + excluded.amount`,
+    kind,
+    amount,
+  )
+}
+
+// Sends a site object's waiting use to the account's usage in D1, then
+// lowers it by what was sent, so use added meanwhile waits for the next
+// flush. A D1 failure keeps it waiting and never stops the caller.
+export async function flushUnmetered(
+  env: Env,
+  meter: Meter,
+  userId: string,
+): Promise<void> {
+  const pending = meter.all<{ kind: UsageKind; amount: number }>(
+    'SELECT kind, amount FROM unmetered WHERE amount > 0 ORDER BY kind',
+  )
+  if (pending.length === 0) return
+  try {
+    await addUsage(
+      env,
+      userId,
+      Object.fromEntries(pending.map((row) => [row.kind, row.amount])),
+    )
+  } catch {
+    return
+  }
+  meter.transaction(() => {
+    for (const row of pending) {
+      meter.run(
+        'UPDATE unmetered SET amount = amount - ? WHERE kind = ?',
+        row.amount,
+        row.kind,
+      )
+    }
+  })
 }

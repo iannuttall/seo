@@ -21,6 +21,7 @@ import { accountUrl, openForPerson, signInHint } from './google.ts'
 import { events, send } from './telemetry.ts'
 import { deps } from './tools/deps.ts'
 import { type Tool, type ToolContext, ToolError } from './tools/registry.ts'
+import { addUsage } from './usage.ts'
 
 // The shared tools from core, run with the person's linked accounts and keys.
 function sharedTool(shared: SharedTool): Tool {
@@ -53,6 +54,28 @@ function sharedTool(shared: SharedTool): Tool {
         },
         input,
       )
+      // Research runs on the person's own key; this counts logical calls
+      // that returned, by provider: one per seo_research call, or one per
+      // serp keyword. Never per fetch, so a retry is not counted twice.
+      const { provider, action, keywords } = (input ?? {}) as {
+        provider?: unknown
+        action?: unknown
+        keywords?: unknown
+      }
+      if (
+        shared.name === 'seo_research' &&
+        (provider === 'dataforseo' || provider === 'ahrefs')
+      ) {
+        const calls =
+          action === 'serp' && Array.isArray(keywords)
+            ? Math.max(1, keywords.length)
+            : 1
+        context.waitUntil(
+          addUsage(context.env, context.userId, {
+            [`research_${provider}_calls`]: calls,
+          }).catch(() => undefined),
+        )
+      }
       return result.text
     },
   }

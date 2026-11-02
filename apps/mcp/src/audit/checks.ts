@@ -10,6 +10,7 @@ import {
   type SearchAnalyticsQuery,
   searchConsoleDay,
 } from '@seo/core/commands'
+import { addUnmetered } from '../usage.ts'
 import type { Meter } from './meter.ts'
 
 // The site's one store of Google URL Inspection results (the weekly-audit
@@ -647,13 +648,15 @@ export async function inspectOne(
   item: { url: string; property: string },
   today: string,
 ): Promise<Outcome> {
-  const count = () =>
+  const count = () => {
     meter.run(
       `INSERT INTO quota (property, day, used) VALUES (?, ?, 1)
        ON CONFLICT (property, day) DO UPDATE SET used = used + 1`,
       item.property,
       today,
     )
+    addUnmetered(meter, 'url_inspections', 1)
+  }
   let raw: unknown
   try {
     raw = await google.inspect(item.property, item.url)

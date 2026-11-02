@@ -45,11 +45,11 @@ tell you. Product and privacy decisions are not rules for this file.
 
 ## Real data never goes in the repo
 
-Never write a real domain, site, client name or real account data into
-code, tests, fixtures, comments, docs, commits or PR text. Use
-`example.com`, `example.org` or `*.example`. Grep the diff for real domains
-before every commit. The only allowed real domain is the author link in the
-site layout.
+Never write Ian's sites, a client's site or real account data into code,
+tests, fixtures, examples, comments, docs, commits or PR text. Use
+`example.com`, `example.org` or `*.example` for examples. Grep the diff for
+such domains before every commit. Marketing pages on the site may name
+competitors and their domains.
 
 ## Tests and CI
 

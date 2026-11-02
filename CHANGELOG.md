@@ -1,5 +1,25 @@
 # Changelog
 
+## 0.13.3
+
+### Fixed
+
+- `seo data gsc-query` without `--start-date` and `--end-date` now covers
+  the last 28 days of final data, as `seo report` does, instead of being
+  refused by Google. A start date alone runs to the latest final day.
+- A request Google refuses with a 400, such as a bad date or dimension, is
+  reported as an input error with Google's reason, not as a provider outage
+  to try again.
+
+### Changed
+
+- `seo report` with no site gives every audited site its week as facts,
+  even in a quiet week: Google index checks, the weekly crawl and search
+  clicks, with the sites that changed first. It no longer suggests next
+  steps.
+- The local MCP server's `seo_sites` says that adding a site to the weekly
+  site audit happens on the hosted server at seoskill.dev/mcp.
+
 ## 0.13.2
 
 ### Fixed

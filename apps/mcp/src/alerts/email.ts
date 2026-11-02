@@ -118,8 +118,11 @@ export function markdownToHtml(markdown: string): string {
   return out.join('\n')
 }
 
-// Stops inboxes filling a short preheader with visible body copy.
-const PREVIEW_PADDING = '&#847;&zwnj;&nbsp;'.repeat(50)
+// Fills the inbox preview after the preheader, so inboxes do not add body
+// copy after it. Only characters with no width: an &nbsp; here shows as a
+// row of spaces after the preheader. 200 pairs is more than any inbox
+// preview shows.
+const PREVIEW_PADDING = '&#847;&zwnj;'.repeat(200)
 
 // The mailing address, with zero-width spaces so clients do not link it.
 const ADDRESS =

@@ -1,4 +1,5 @@
 import type { AuditAccess } from '@seo/core/commands'
+import { ACTIVE_SQL } from '../billing.ts'
 import { sha256Base64Url } from '../seal.ts'
 import type { AuditMonitor } from './checks.ts'
 
@@ -13,6 +14,23 @@ const DUE_PER_TICK = 50
 const STALE_MS = 6 * 3_600_000
 // Sites per account in the beta.
 export const MAX_SITES = 5
+
+// SQL for how many sites the account in column may audit: MAX_SITES with
+// the beta flag, the number paid for with an active subscription, the
+// larger of the two, or 0.
+const siteLimitSql = (column: string) =>
+  `MAX(
+    CASE WHEN EXISTS (SELECT 1 FROM beta_flags f WHERE f.user_id = ${column} AND f.flag = 'weekly-audit')
+      THEN ${MAX_SITES} ELSE 0 END,
+    COALESCE((SELECT b.sites FROM billing b WHERE b.user_id = ${column} AND b.status IN ${ACTIVE_SQL}), 0))`
+
+// How many sites the account may audit.
+export async function siteLimit(env: Env, userId: string): Promise<number> {
+  const row = await env.DB.prepare(`SELECT ${siteLimitSql('?1')} AS n`)
+    .bind(userId)
+    .first<{ n: number }>()
+  return row?.n ?? 0
+}
 
 export type AuditSite = {
   property: string
@@ -110,25 +128,27 @@ export async function auditSites(
   }))
 }
 
-// Adds a site and starts its first run now. The caller checks the beta flag
-// and that the person's Google accounts can read the property.
+// Adds a site and starts its first run now, up to the account's site
+// limit. The caller checks that the person's Google accounts can read the
+// property.
 export async function addAuditSite(
   env: Env,
   userId: string,
   property: string,
 ): Promise<'added' | 'exists' | 'full'> {
   const now = Date.now()
-  const count = await env.DB.prepare(
-    'SELECT count(*) AS n FROM audit_sites WHERE user_id = ?',
-  )
-    .bind(userId)
-    .first<{ n: number }>()
+  const [count, limit] = await Promise.all([
+    env.DB.prepare('SELECT count(*) AS n FROM audit_sites WHERE user_id = ?')
+      .bind(userId)
+      .first<{ n: number }>(),
+    siteLimit(env, userId),
+  ])
   const result = await env.DB.prepare(
     `INSERT INTO audit_sites (user_id, property, added_at, next_run_at)
      SELECT ?, ?, ?, ? WHERE ? < ?
      ON CONFLICT (user_id, property) DO NOTHING`,
   )
-    .bind(userId, property, now, now, count?.n ?? 0, MAX_SITES)
+    .bind(userId, property, now, now, count?.n ?? 0, limit)
     .run()
   if (!result.meta.changes) {
     const exists = await env.DB.prepare(
@@ -250,12 +270,14 @@ async function wake(env: Env, row: Row, now: number): Promise<boolean> {
   }
 }
 
-// The hourly cron. Only sites whose owner still has the beta flag run, so
-// revoking the flag stops new runs at the next tick.
+// The hourly cron. Only sites within their owner's site limit run, oldest
+// first, so revoking the flag, a cancelled plan or fewer paid sites stops
+// new runs at the next tick.
 export async function startDue(env: Env, now = Date.now(), userId?: string) {
   const owner = userId ? 'AND s.user_id = ?' : ''
-  const flagged = `EXISTS (SELECT 1 FROM beta_flags f
-    WHERE f.user_id = s.user_id AND f.flag = 'weekly-audit')`
+  const flagged = `(SELECT count(*) FROM audit_sites o WHERE o.user_id = s.user_id
+      AND (o.added_at < s.added_at OR (o.added_at = s.added_at AND o.property <= s.property)))
+    <= ${siteLimitSql('s.user_id')}`
   const binds = (...values: unknown[]) =>
     userId ? [...values, userId] : values
   const due = await env.DB.prepare(

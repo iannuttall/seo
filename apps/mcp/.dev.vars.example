@@ -16,3 +16,8 @@ POSTSHIBA_API_KEY=
 ALERT_REPLY_TO=
 # Optional, local checks only: "true" composes alert email without sending.
 POSTSHIBA_SANDBOX=
+# Optional. Stripe for the paid weekly audit: a restricted secret key and
+# the webhook signing secret. Billing stays off until both and the
+# STRIPE_PRICE_ID var are set.
+STRIPE_SECRET_KEY=
+STRIPE_WEBHOOK_SECRET=

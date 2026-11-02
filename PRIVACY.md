@@ -13,7 +13,7 @@ keeps your Search Console or analytics data, your reports or a log of your
 requests. When you first sign up it also notes how you found it: the
 sign-in path, the agent or app, and the site that sent you there. The only
 thing kept about your use is an anonymous usage count (the event, report,
-agent, version and week). Accounts in the weekly site audit beta also have
+agent, version and week). Accounts with the weekly site audit also have
 their audited sites' crawl results kept, as described below.
 
 The command-line tool runs on your machine. It does not create an SEO
@@ -102,12 +102,16 @@ it. The token your MCP client keeps carries only your person id.
 
 The server keeps nothing else. It does not keep reports, Search Console
 or Google Analytics rows, lists of your sites, or the pages it checked.
-Request logs are turned off. The one exception is the weekly site audit
-beta, below, and only for the sites you add to it.
+Request logs are turned off. The one exception is the weekly site audit,
+below, and only for the sites you add to it.
 
-### Weekly site audit (beta)
+### Weekly site audit
 
-The maintainer turns this beta on for chosen accounts; no one else has it.
+The weekly site audit is a paid plan, and the maintainer also turns it on
+for some beta accounts. If you pay for it, Stripe takes the payment and
+keeps your card details; the server keeps only your Stripe customer and
+subscription ids, the subscription's status and how many sites you pay
+for. Deleting your account cancels the subscription.
 For each Search Console property you add on the account page, the server
 crawls the site once a week, up to 5,000 pages, as `SEOSkillBot`, and
 follows the site's `robots.txt`. It keeps, per site:
@@ -181,7 +185,7 @@ Delete everything deletes it for every site.
 Sign in at [seoskill.dev/account](https://seoskill.dev/account) and choose
 **Delete everything**. It deletes your person id, linked accounts, keys,
 Clicky sites, linked machines, beta features, audited sites with their
-crawl data and how you signed up,
+crawl data, your plan's Stripe ids (after cancelling it) and how you signed up,
 and revokes the Google sign-ins. Your agents will ask you to sign in again if
 you use the hosted server later. You can also revoke SEO Skill in your
 [Google Account connections](https://myaccount.google.com/connections), which

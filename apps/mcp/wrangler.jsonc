@@ -34,7 +34,10 @@
     // sender on its verified sending domain.
     "POSTSHIBA_TEAM": "nvoZjB",
     "POSTSHIBA_CLUSTER": "MenNeb",
-    "ALERT_FROM": "SEO Skill <alerts@e.seoskill.dev>"
+    "ALERT_FROM": "SEO Skill <alerts@e.seoskill.dev>",
+    // The paid weekly audit's Stripe price, $50 a month per site. Empty
+    // keeps billing off.
+    "STRIPE_PRICE_ID": ""
   },
   // The site Worker, for the account page design (/account-shell).
   "services": [{ "binding": "SITE", "service": "seo-skill" }],
@@ -71,5 +74,6 @@
   // BING_CLIENT_ID, BING_CLIENT_SECRET, and optionally TELEGRAM_BOT_TOKEN and
   // TELEGRAM_CHAT_ID for the weekly sign-up and failure counts, and
   // optionally POSTSHIBA_API_KEY for alert email and ALERT_REPLY_TO for its
-  // Reply-To address.
+  // Reply-To address, and optionally STRIPE_SECRET_KEY and
+  // STRIPE_WEBHOOK_SECRET for the paid weekly audit.
 }

@@ -27,11 +27,12 @@ Sign in with Google at `https://seoskill.dev/account` to:
   account login and Clicky sites (never shown again),
 - **Machines:** approve a `seo login`, remove a linked machine, or make a
   token for a cloud agent,
-- **Sites:** only in the weekly-audit beta, add a site by picking one of
+- **Sites:** with the weekly site audit, add a site by picking one of
   the Search Console properties your linked Google accounts can read, see
   what each audited site is doing now (its Google account, last and next
   crawl, today's index checks and coverage, this week's drops and returns,
-  subfolder properties, alerts), and remove it,
+  subfolder properties, alerts), and remove it. Without it, and once
+  Stripe is set up, the tab offers the paid plan instead,
 - **Beta:** only on an account granted a beta feature, the features it can
   try, and alert settings,
 - delete everything, which also revokes the Google sign-ins, or sign out.
@@ -49,6 +50,21 @@ covered, how many are queued and the time left. A site it asks about that
 is not audited yet is added, which starts its crawl and checks. `seo_page`
 uses a stored result while it is current. Every other account sees the tools
 unchanged.
+
+## Paid plan
+
+The weekly site audit is $50 a month per site (`src/billing.ts`). The
+Sites tab sends the chosen number of sites to Stripe Checkout as the
+subscription quantity; Manage billing opens Stripe's customer portal to
+change it or cancel. Stripe posts `customer.subscription.created`,
+`.updated` and `.deleted` to `POST /account/billing/webhook`, which checks
+the `Stripe-Signature` and keeps one `billing` row per account. An active,
+trialing or past-due plan grants `weekly-audit` like the beta flag, and
+the site limit is the larger of the beta's 5 and the sites paid for; when
+the plan shrinks, only the oldest sites up to the limit keep running.
+Delete everything cancels the subscription first. Billing stays off until
+`STRIPE_PRICE_ID`, `STRIPE_SECRET_KEY` and `STRIPE_WEBHOOK_SECRET` are all
+set.
 
 ## Alerts
 
@@ -234,6 +250,9 @@ A small Cloudflare D1 database (`migrations/`) keeps only:
   `seo_research` calls by provider. No URLs or content. A site object
   holds its share in its `unmetered` table until it reaches D1. Metering
   only; nothing limits or charges an account from it.
+- for the paid plan: the Stripe customer and subscription ids, the
+  subscription status and number of sites (`billing`). Card details stay
+  with Stripe.
 - for alerts (`src/alerts`): each alert type's email and webhook switches,
   the webhook URL and its sealed signing secret (`alert_settings`), each
   alert with its site, changed URLs and delivery state for 30 days

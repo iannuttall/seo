@@ -252,10 +252,13 @@ A small Cloudflare D1 database (`migrations/`) keeps only:
   a day, its properties and the folders worth adding as URL-prefix
   properties. Removing the site, or Delete everything, deletes the object's
   storage. Pages whose titles, canonicals or links need JavaScript are
-  rendered with Cloudflare Browser Run (`src/audit/render.ts`): the first
-  pages of each crawl are compared raw and rendered, and if they differ
-  every HTML page of that crawl is rendered, keeping the raw values that
-  changed.
+  rendered with Cloudflare Browser Run (`src/audit/render.ts`), decided
+  per section (first folder, or / for top-level pages): two pages of each
+  section are compared raw and rendered, and if they differ every HTML
+  page of that section is rendered, keeping the raw values that changed.
+  The answer is kept for 28 days (`render_sections`); until then a section
+  that reads the same raw renders only pages with warning signs (no title,
+  under 50 words, no internal links, or 100 KB of mostly script).
 - metered use (`usage`, `src/usage.ts`): one amount per account, UTC day
   and kind: Browser Run time and pages, URL Inspection checks and
   `seo_research` calls by provider. No URLs or content. A site object

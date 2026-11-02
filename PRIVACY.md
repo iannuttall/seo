@@ -142,9 +142,11 @@ follows the site's `robots.txt`. It keeps, per site:
   added from the account page.
 
 Some sites build their titles, canonicals and links with JavaScript. To
-read those, the crawl loads the first pages of each crawl in Cloudflare
-Browser Run, a browser Cloudflare runs for the server, and if JavaScript
-changes what they show, it loads every HTML page of that crawl there too.
+read those, the crawl loads a few pages of each part of the site in
+Cloudflare Browser Run, a browser Cloudflare runs for the server, and if
+JavaScript changes what they show, it loads every HTML page of that part
+there too. It also loads pages whose HTML looks built by JavaScript. The
+server keeps which parts of the site need this for 28 days.
 Browser Run fetches the page from the site as `SEOSkillBot` and returns
 the page after its scripts run. The server asks it not to cache pages.
 

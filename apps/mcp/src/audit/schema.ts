@@ -46,12 +46,22 @@ CREATE TABLE IF NOT EXISTS run (
   consecutive_errors INTEGER NOT NULL DEFAULT 0,
   summary TEXT,
   summary_pushed_at INTEGER,
-  -- JavaScript rendering for this run: null while the first pages are
-  -- compared raw and rendered, then 'on', 'off' or 'unavailable'.
+  -- JavaScript rendering for this run: 'on' when any section needed it,
+  -- 'off' when the sections checked read the same raw, 'unavailable' when
+  -- rendering only failed, null before any section was decided.
   render TEXT,
   render_probes INTEGER NOT NULL DEFAULT 0,
   render_errors INTEGER NOT NULL DEFAULT 0,
   browser_ms INTEGER NOT NULL DEFAULT 0
+);
+
+-- Whether each section of the site (its first folder, or / for pages at
+-- the top) needs JavaScript rendering, as the last check found, so the next
+-- crawls skip the check for 28 days (render.ts). Capped at 200 sections.
+CREATE TABLE IF NOT EXISTS render_sections (
+  section TEXT PRIMARY KEY,
+  needs INTEGER NOT NULL,
+  decided_at INTEGER NOT NULL
 );
 
 CREATE TABLE IF NOT EXISTS runs (
@@ -185,6 +195,16 @@ CREATE TABLE IF NOT EXISTS pages (
   render_error TEXT,
   -- JSON: the raw HTML's values where rendering changed them (render.ts).
   raw TEXT
+);
+
+-- This crawl's check of each section: pages compared raw and rendered,
+-- how many of those failed, and the result (1 needs rendering, 0 does not,
+-- -1 rendering failed on every page compared, null still checking).
+CREATE TABLE IF NOT EXISTS render_probes (
+  section TEXT PRIMARY KEY,
+  probes INTEGER NOT NULL DEFAULT 0,
+  errors INTEGER NOT NULL DEFAULT 0,
+  needs INTEGER
 );
 
 CREATE TABLE IF NOT EXISTS sitemaps (

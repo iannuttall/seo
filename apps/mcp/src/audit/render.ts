@@ -6,7 +6,7 @@ import type { Meter } from './meter.ts'
 // JavaScript rendering for the weekly audit, with Browser Run's content
 // quick action: Cloudflare's browser loads the page, runs its scripts and
 // returns the DOM as HTML. The audit fetches every page raw first; this
-// renders the 200 HTML ones when the site needs it (see site-audit.ts).
+// renders the 200 HTML ones where the site needs it (see plan below).
 
 const RENDER_TIMEOUT_MS = 15_000
 // The rendered HTML comes back as a JSON string, so allow for escaping on
@@ -18,9 +18,11 @@ const MAX_BUSY_RETRY_MS = 120_000
 // banner, not content that needs JavaScript.
 const MIN_WORD_CHANGE = 50
 const MIN_WORD_RATIO = 0.2
-// HTML pages rendered both ways at the start of each run, to find out
-// whether the site needs JavaScript rendering.
-const PROBE_PAGES = 5
+// HTML pages of each section rendered both ways to find out whether the
+// section needs JavaScript rendering, and how long that answer is kept.
+const PROBE_PAGES = 2
+const DECISION_MS = 28 * 86_400_000
+const MAX_SECTIONS = 200
 
 // A run's JavaScript rendering columns (schema.ts).
 export type RenderState = {
@@ -178,11 +180,129 @@ export type RunRender =
     }
   | { kind: 'busy'; retryAfterMs: number }
 
-// Renders one raw 200 HTML page when the run needs it: every page while
-// the first PROBE_PAGES decide whether the site needs JavaScript, then
-// every page if it does. Updates the run's rendering state in memory; the
-// caller saves it with the page, except when Browser Run is busy. Null
-// when the page is not rendered.
+// The section a page belongs to: its first folder, such as /docs/, or /
+// for the home page and pages at the top. Sections are decided apart, so a
+// client-rendered /app/ does not make a server-rendered blog render.
+export function sectionOf(url: string): string {
+  const parts = (URL.parse(url)?.pathname ?? '/').split('/').filter(Boolean)
+  return parts.length > 1 ? `/${parts[0]}/` : '/'
+}
+
+// Signs in the raw HTML that the page may be built with JavaScript
+// (heuristic): no title, almost no text, no internal links, or a large
+// page that is mostly script. A server-rendered page has none of them.
+export function warningSigns(raw: PageFacts): boolean {
+  return (
+    !raw.title ||
+    raw.words < 50 ||
+    raw.internal.length === 0 ||
+    (raw.bytes >= 100_000 && raw.words < 200)
+  )
+}
+
+type Probe = { probes: number; errors: number; needs: number | null }
+
+// Whether to render one raw 200 HTML page, and whether it is part of its
+// section's check. A section with a result from the last 28 days, this
+// crawl's or a stored one, renders every page when it needs rendering and
+// only pages with warning signs when it does not. Otherwise its first
+// PROBE_PAGES pages are rendered and compared; a section where every
+// compared page failed to render reads raw.
+function plan(
+  meter: Meter,
+  section: string,
+  raw: PageFacts,
+  now: number,
+): { render: boolean; probe: boolean; needs: number | null } {
+  const needs =
+    meter.one<Probe>(
+      'SELECT probes, errors, needs FROM render_probes WHERE section = ?',
+      section,
+    )?.needs ??
+    meter.one<{ needs: number }>(
+      'SELECT needs FROM render_sections WHERE section = ? AND decided_at > ?',
+      section,
+      now - DECISION_MS,
+    )?.needs ??
+    null
+  if (needs === -1) return { render: false, probe: false, needs }
+  if (needs === 1) return { render: true, probe: false, needs }
+  if (needs === 0) return { render: warningSigns(raw), probe: false, needs }
+  return { render: true, probe: true, needs }
+}
+
+// The run's mode from one section's answer: 'on' wins over 'off', and
+// 'unavailable' only stands while nothing else is known. Whether it changed.
+function setMode(run: RenderState, needs: number | null): boolean {
+  const before = run.render
+  if (needs === 1) run.render = 'on'
+  else if (needs === 0 && run.render !== 'on') run.render = 'off'
+  else if (needs === -1 && run.render === null) run.render = 'unavailable'
+  return run.render !== before
+}
+
+// Records a rendered page's answer for its section. A new answer is one
+// that changes what the section needs: the end of its check, or a page that
+// reads differently rendered in a section that did not need rendering.
+// Only those are written, so a section that needs rendering is checked
+// again once its answer is 28 days old.
+function record(
+  meter: Meter,
+  run: RenderState,
+  section: string,
+  planned: { probe: boolean; needs: number | null },
+  result: { failed: boolean; changed: boolean },
+  now: number,
+): void {
+  let row: Probe | null = null
+  if (planned.probe) {
+    run.render_probes += 1
+    if (result.failed) run.render_errors += 1
+    meter.run(
+      `INSERT INTO render_probes (section, probes, errors) VALUES (?, 1, ?)
+       ON CONFLICT (section) DO UPDATE SET probes = probes + 1, errors = errors + excluded.errors`,
+      section,
+      result.failed ? 1 : 0,
+    )
+    row = meter.one<Probe>(
+      'SELECT probes, errors, needs FROM render_probes WHERE section = ?',
+      section,
+    )
+  }
+  let needs: number | null = null
+  if (result.changed && planned.needs !== 1) needs = 1
+  else if (row && row.needs === null && row.probes >= PROBE_PAGES) {
+    needs = row.errors >= row.probes ? -1 : 0
+  }
+  if (needs === null) return
+  meter.run(
+    `INSERT INTO render_probes (section, needs) VALUES (?, ?)
+     ON CONFLICT (section) DO UPDATE SET needs = excluded.needs`,
+    section,
+    needs,
+  )
+  // Failures are tried again next week, so only real answers are kept.
+  if (needs !== -1) {
+    meter.run(
+      `INSERT INTO render_sections (section, needs, decided_at) VALUES (?, ?, ?)
+       ON CONFLICT (section) DO UPDATE SET needs = excluded.needs, decided_at = excluded.decided_at`,
+      section,
+      needs,
+      now,
+    )
+    meter.run(
+      `DELETE FROM render_sections WHERE section NOT IN
+         (SELECT section FROM render_sections ORDER BY decided_at DESC, section LIMIT ?)`,
+      MAX_SECTIONS,
+    )
+  }
+  setMode(run, needs)
+}
+
+// Renders one raw 200 HTML page when its section needs it (see plan).
+// Updates the run's rendering state in memory; the caller saves it with
+// the page, except when Browser Run is busy. Null when the page is not
+// rendered.
 export async function renderForRun(
   meter: Meter,
   browser: BrowserRun | undefined,
@@ -191,8 +311,16 @@ export async function renderForRun(
   origin: string,
   rawFacts: PageFacts,
   userAgent: string,
+  now = Date.now(),
 ): Promise<RunRender | null> {
-  if (run.render !== null && run.render !== 'on') return null
+  const section = sectionOf(url)
+  const planned = plan(meter, section, rawFacts, now)
+  // A stored answer sets the run's mode even when no page is rendered.
+  const moved = setMode(run, planned.needs)
+  if (!planned.render) {
+    if (moved) saveRendering(meter, run)
+    return null
+  }
   const rendered = await renderPage(browser, url, origin, userAgent)
   run.browser_ms += rendered.browserMs
   // Counted at once, before the page is written: a page rendered again
@@ -222,15 +350,14 @@ export async function renderForRun(
           raw: null,
           error: rendered.error,
         }
-  if (result.render === 'failed') run.render_errors += 1
-  if (run.render === null) {
-    run.render_probes += 1
-    if (result.raw) run.render = 'on'
-    else if (run.render_probes >= PROBE_PAGES) {
-      run.render =
-        run.render_errors >= run.render_probes ? 'unavailable' : 'off'
-    }
-  }
+  record(
+    meter,
+    run,
+    section,
+    planned,
+    { failed: result.render === 'failed', changed: Boolean(result.raw) },
+    now,
+  )
   return result
 }
 

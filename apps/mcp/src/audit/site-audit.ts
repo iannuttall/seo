@@ -201,6 +201,7 @@ export class SiteAudit extends DurableObject<Env> {
       if (hasPages) meter.run('ALTER TABLE pages RENAME TO pages_prev')
       else meter.run('DROP TABLE pages')
       meter.run('DROP TABLE sitemaps')
+      meter.run('DROP TABLE IF EXISTS render_probes')
       meter.run(DISPOSABLE)
       meter.run('DELETE FROM run')
       meter.run(

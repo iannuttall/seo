@@ -33,9 +33,9 @@ export type RunSummary = {
     capped_rules: string[]
     resolution: 'all' | 'crawled-pages-only'
   }
-  // JavaScript rendering: 'on' when the site needed it, 'off' when the
-  // first pages read the same raw, 'unavailable' when rendering failed on
-  // them, null when the crawl ended before they were all compared.
+  // JavaScript rendering: 'on' when a section of the site needed it, 'off'
+  // when the sections checked read the same raw, 'unavailable' when
+  // rendering only failed, null when no section was decided.
   rendering: {
     mode: 'on' | 'off' | 'unavailable' | null
     rendered: number

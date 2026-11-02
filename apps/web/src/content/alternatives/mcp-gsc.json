@@ -1,0 +1,50 @@
+{
+  "slug": "mcp-gsc",
+  "name": "mcp-gsc (Google Search Console MCP Server for SEOs)",
+  "url": "https://github.com/AminForou/mcp-gsc",
+  "kind": "self-hosted",
+  "checked": "2026-11-02",
+  "summary": "mcp-gsc is a free open source Python server by Amin Foroutan that you run on your own machine with your own Google Cloud project.",
+  "signIn": "Your own Google Cloud OAuth client (Desktop app client secrets JSON, browser sign-in on first use) or a Google Cloud service account JSON key added as a user on the Search Console property.",
+  "tools": "README says get_capabilities returns 'the full list of all 20 tools'. The README tools table lists 15 of them. Source: GitHub README, Available Tools section.",
+  "dataSources": ["Google Search Console"],
+  "clients": [
+    "Claude Desktop",
+    "Cursor",
+    "Codex CLI",
+    "Gemini CLI",
+    "Antigravity"
+  ],
+  "webChat": "No",
+  "free": "Yes, MIT licensed open source. The README also promotes a separate hosted product, Advanced GSC MCP, with no price stated.",
+  "price": "Free and open source",
+  "freeShort": "Open source",
+  "priceFrom": "No paid plan",
+  "writeActions": "Can submit and delete sitemaps and add or remove Search Console properties. add_site, delete_site and delete_sitemap are disabled unless GSC_ALLOW_DESTRUCTIVE is set to true.",
+  "dataStorage": "Runs locally on your machine by default (optional SSE transport or Docker for remote use). The OAuth token is cached in the platform user config directory.",
+  "history": "Google's 16 months",
+  "licence": "MIT",
+  "github": {
+    "repo": "AminForou/mcp-gsc",
+    "stars": 2092,
+    "lastCommit": "2026-09-15",
+    "version": "0.4.1 (pyproject.toml and PyPI package mcp-search-console; no GitHub release, latest tag v0.3.1)",
+    "read": "2026-11-02"
+  },
+  "setup": "Create or select a Google Cloud project, enable the Search Console API, create an OAuth Desktop client (or a service account key) and download the JSON, install uv, then edit the MCP client's JSON or TOML config with the full uvx path and the credentials path, and restart the client. A clone install needs Python 3.11 or newer.",
+  "pickIf": [
+    "You want everything on your own machine and are happy to set up a Google Cloud project.",
+    "You want to sign in with a Google service account.",
+    "You want to inspect up to 10 URLs in one request."
+  ],
+  "sources": [
+    {
+      "fact": "README, tools, setup, clients, web app limit",
+      "url": "https://github.com/AminForou/mcp-gsc"
+    },
+    {
+      "fact": "Version 0.4.1",
+      "url": "https://github.com/AminForou/mcp-gsc/blob/main/pyproject.toml"
+    }
+  ]
+}

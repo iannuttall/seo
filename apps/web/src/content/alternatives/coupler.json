@@ -1,0 +1,75 @@
+{
+  "slug": "coupler",
+  "name": "Coupler.io",
+  "url": "https://www.coupler.io/mcp/google-search-console",
+  "kind": "connector",
+  "checked": "2026-11-02",
+  "summary": "Coupler.io is a data integration platform. Its MCP server lets your AI query Search Console data that a Coupler.io data flow has imported.",
+  "signIn": "Connect Google Search Console in a Coupler.io data flow, then add an AI tool as the destination. Access uses a personal access token generated in the Coupler.io web app. The Custom MCP destination gives an MCP server URL and a generated token.",
+  "tools": "No count stated. Its MCP docs list 24 tool names.",
+  "dataSources": [
+    "Google Search Console: Search Results Performance (clicks, impressions, CTR, position)",
+    "Google Search Console: Performance by Appearance (Video, Image, AMP results)",
+    "Google Search Console: Discover Performance",
+    "Google Search Console: Google News Performance",
+    "Google Search Console: URL Inspection Data",
+    "Google Search Console: Page Index Performance",
+    "400+ other Coupler.io data sources, such as Google Analytics 4, Google Ads and HubSpot (the MCP page FAQ says over 70)"
+  ],
+  "clients": [
+    "Claude",
+    "ChatGPT",
+    "Cursor",
+    "Gemini CLI",
+    "Gemini",
+    "Copilot",
+    "OpenClaw",
+    "Perplexity",
+    "Zapier",
+    "n8n",
+    "Make"
+  ],
+  "webChat": "Yes",
+  "free": "A Free plan at $0 forever: 1 account, 1 user, 1 data source, 1 destination, manual refresh, 100 rows per data flow run. New accounts get 7 free days with Pro plan limits. The MCP page says MCP needs at least the Professional plan, a name that does not appear on the pricing page.",
+  "price": "Starter $32 per month, or $24 per month billed annually. Active $132 per month, or $99 per month billed annually. Pro $259 per month, or $199 per month billed annually. Custom is priced by sales. Prices in USD.",
+  "freeShort": "1 data source, 100 rows a run",
+  "priceFrom": "$24 a month, billed yearly",
+  "writeActions": "No Google Search Console write actions stated. Data queries are read only. The AI can change Coupler.io configuration: create data flows, add sources and destinations, change schedules, build SQL data sets and trigger a run.",
+  "dataStorage": "Data is imported into Coupler.io data sets by data flows, and SQL queries run on Coupler.io's side. Coupler.io says the data is never used for AI model training.",
+  "history": "Not stated",
+  "licence": "Hosted service",
+  "github": {
+    "repo": "coupler-io/coupler-io-mcp-server",
+    "stars": 5,
+    "lastCommit": "2026-11-02",
+    "version": "v1.0.0 (MIT licence)",
+    "read": "2026-11-02"
+  },
+  "pickIf": [
+    "You already move marketing data through Coupler.io and want to ask about it in chat.",
+    "You want Search Console next to over 400 other sources, queried with SQL on Coupler.io's side.",
+    "You want saved business context that later conversations reuse."
+  ],
+  "sources": [
+    {
+      "fact": "GSC MCP data, token sign in, Professional plan requirement",
+      "url": "https://www.coupler.io/mcp/google-search-console"
+    },
+    {
+      "fact": "Plans, prices, free plan, SOC 2 and GDPR",
+      "url": "https://www.coupler.io/pricing"
+    },
+    {
+      "fact": "Tool list, read only queries, config changes, supported AI tools",
+      "url": "https://docs.coupler.io/ai/mcp"
+    },
+    {
+      "fact": "Custom MCP token and clients",
+      "url": "https://docs.coupler.io/destinations/categories/ai/custom_mcp"
+    },
+    {
+      "fact": "GitHub repo",
+      "url": "https://github.com/coupler-io/coupler-io-mcp-server"
+    }
+  ]
+}

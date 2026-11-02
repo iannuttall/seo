@@ -15,6 +15,15 @@ const { tools } = await import(
   resolve(appRoot, 'src/content/tools/manifest.mjs')
 )
 const { docsPaths } = await import(resolve(appRoot, 'src/content/docs-nav.mjs'))
+const { integrationPaths } = await import(
+  resolve(appRoot, 'src/content/integrations.ts')
+)
+const alternativePaths = [
+  '/alternatives',
+  ...readdirSync(resolve(appRoot, 'src/content/alternatives'))
+    .filter((file) => file.endsWith('.json'))
+    .map((file) => `/alternatives/${file.replace(/\.json$/, '')}`),
+]
 const pagePath = (path) =>
   path === '/' ? 'index.html' : `${path.slice(1)}/index.html`
 const expectedPages = new Map([
@@ -31,7 +40,10 @@ const expectedPages = new Map([
     `${tool.path.slice(1)}/index.html`,
     `https://seoskill.dev${tool.path}`,
   ]),
-  ...docsPaths.map((path) => [pagePath(path), `https://seoskill.dev${path}`]),
+  ...[...docsPaths, ...integrationPaths, ...alternativePaths].map((path) => [
+    pagePath(path),
+    `https://seoskill.dev${path}`,
+  ]),
   ['stats/index.html', 'https://seoskill.dev/stats'],
   ['telemetry/index.html', 'https://seoskill.dev/telemetry'],
   ['privacy/index.html', 'https://seoskill.dev/privacy'],
@@ -281,6 +293,8 @@ test('sitemap is exact and contains only indexable canonical pages', () => {
         path.startsWith('docs/') ||
         path.startsWith('features/') ||
         path.startsWith('tools/') ||
+        path.startsWith('integrations/') ||
+        path.startsWith('alternatives/') ||
         path === 'stats/index.html' ||
         path === 'telemetry/index.html',
     )

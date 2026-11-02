@@ -1,0 +1,56 @@
+{
+  "slug": "google-analytics-mcp",
+  "name": "Google Analytics MCP Server",
+  "url": "https://developers.google.com/analytics/devguides/MCP",
+  "kind": "self-hosted",
+  "checked": "2026-11-02",
+  "summary": "Google's own Google Analytics MCP server. It is experimental, runs on your machine and reads reports and property settings through Google's APIs.",
+  "signIn": "Google Application Default Credentials: either your Google user account through gcloud auth application-default login (optionally with your own OAuth desktop or web client JSON), or a service account key or impersonation. A Google Cloud project with the Analytics Admin and Data APIs enabled is required.",
+  "tools": "9 tools listed in the GitHub README and 9 listed on the Google developers page. The lists differ: the README includes create_property_annotation and the developers page includes run_conversions_report instead.",
+  "dataSources": ["Google Analytics"],
+  "clients": [
+    "Gemini CLI",
+    "Gemini Code Assist",
+    "Claude Code",
+    "Claude Desktop",
+    "Cursor",
+    "Antigravity CLI",
+    "Antigravity IDE"
+  ],
+  "webChat": "Not stated",
+  "free": "Open source under Apache 2.0. No price is stated.",
+  "price": "Free and open source",
+  "freeShort": "Open source",
+  "priceFrom": "No paid plan",
+  "writeActions": "The developers page says it is read only and cannot create, modify or delete Google Analytics settings. The GitHub README lists create_property_annotation, which needs the --allow-write flag and the analytics.edit scope.",
+  "dataStorage": "Runs locally on your machine (the README calls it a local MCP server). Storage is not stated beyond the credentials file you create.",
+  "history": "Not stated",
+  "licence": "Apache 2.0",
+  "github": {
+    "repo": "googleanalytics/google-analytics-mcp",
+    "stars": 3617,
+    "lastCommit": "2026-10-27",
+    "version": "0.8.0",
+    "read": "2026-11-02"
+  },
+  "setup": "Install Python 3.10 or higher and pipx or uv, create or select a Google Cloud project, enable the Google Analytics Admin API and Data API, install the gcloud CLI and set up Application Default Credentials, then edit the MCP client's JSON config with the credentials path and project ID.",
+  "pickIf": [
+    "You want the server Google's Analytics team publishes.",
+    "You need realtime and funnel reports, or your custom dimensions and metrics.",
+    "You want to read account settings such as Google Ads links and annotations."
+  ],
+  "sources": [
+    {
+      "fact": "README, tools, setup, write flag",
+      "url": "https://github.com/googleanalytics/google-analytics-mcp"
+    },
+    {
+      "fact": "Developers page, read only note, tools, clients",
+      "url": "https://developers.google.com/analytics/devguides/MCP"
+    },
+    {
+      "fact": "Latest release 0.8.0",
+      "url": "https://github.com/googleanalytics/google-analytics-mcp/releases/latest"
+    }
+  ]
+}

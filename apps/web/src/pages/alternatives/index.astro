@@ -1,0 +1,94 @@
+---
+// Every alternative, grouped by kind, as a landing page: why SEO Skill, then
+// one card per alternative that opens its comparison.
+import FaqAccordion from '@/components/FaqAccordion.astro'
+import HomeCard from '@/components/HomeCard.astro'
+import LandingHero from '@/components/LandingHero.astro'
+import SectionHeading from '@/components/SectionHeading.astro'
+import SplitList from '@/components/SplitList.astro'
+import { competitors, groups } from '@/content/alternatives'
+import BaseLayout from '@/layouts/BaseLayout.astro'
+import type { SchemaBreadcrumb } from '@/lib/schema'
+
+const breadcrumbs: SchemaBreadcrumb[] = [{ label: 'Home', href: '/' }, { label: 'Alternatives' }]
+const latest = competitors.map((item) => item.checked).sort().at(-1)
+
+const why = [
+  { title: 'Free, with no usage cap', text: 'Every tool your agent calls on demand costs nothing, with no trial and no daily limit.' },
+  { title: 'One Google sign-in', text: 'Search Console, Google Analytics and URL Inspection with read-only access. No Google Cloud project, no API key.' },
+  { title: 'Works in every client', text: 'Claude, ChatGPT and Le Chat on the web, plus Claude Code, Codex, Cursor, VS Code and Gemini CLI.' },
+  { title: 'Your data is never stored', text: 'Rows are fetched when your agent asks and returned. Only your sign-ins and saved keys are kept, encrypted.' },
+  { title: 'Keyword research with your own key', text: 'DataForSEO or Ahrefs results next to your own numbers, kept clearly apart from them.' },
+]
+
+const names = (list: typeof competitors) => list.map((item) => item.short).join(', ')
+const webChat = competitors.filter((item) => item.webChat === 'Yes')
+const openSource = competitors.filter((item) => item.kind === 'self-hosted')
+const faqs = [
+  { question: 'What is the best free Google Search Console MCP server?', answer: `SEO Skill is free for every on-demand tool with no usage cap, and it runs hosted, so there is nothing to install. The free open source servers (${names(openSource)}) run on your own machine with your own Google Cloud project.` },
+  { question: 'Which Search Console MCP servers work in claude.ai and ChatGPT?', answer: `SEO Skill does, and so do ${names(webChat)}, according to their own pages.` },
+  { question: 'Do I need a Google Cloud project?', answer: 'Not for SEO Skill. You add one URL and sign in with Google. Most open source servers ask you to create a Google Cloud project and an OAuth client first.' },
+  { question: 'Where do the facts on these pages come from?', answer: 'From each tool\'s own product, docs, pricing and GitHub pages, linked at the bottom of every comparison. GitHub numbers are refreshed by script, and a person re-reads prices and plans.' },
+]
+---
+
+<BaseLayout
+  title="Google Search Console MCP servers compared"
+  description={`Compare ${competitors.length} Google Search Console and SEO MCP servers, skills and connectors with SEO Skill: setup, AI clients, free use, price and data handling.`}
+  canonicalPath="/alternatives"
+  schemaType="CollectionPage"
+  {breadcrumbs}
+  dateModified={latest}
+  framed={false}
+>
+  <main data-agent-content>
+    <LandingHero
+      title="Search Console MCP servers compared"
+      lead="Every way to give an AI agent your Search Console and SEO data, next to SEO Skill: how you connect, what it costs and what it keeps."
+      setupId="alternatives-setup"
+    />
+
+    <div class="space-y-24 py-24 sm:space-y-32 sm:py-32">
+      <SplitList
+        id="why-heading"
+        title="Why teams pick SEO Skill"
+        text="One hosted MCP server for your own search data. Add the URL, sign in with Google and ask."
+        items={why}
+      />
+
+      {
+        groups.map((group) => {
+          const items = competitors.filter((item) => item.kind === group.kind)
+          if (!items.length) return null
+          return (
+            <section class="site-frame" aria-labelledby={`group-${group.kind.replace(' ', '-')}`}>
+              <SectionHeading id={`group-${group.kind.replace(' ', '-')}`} title={group.title} text={group.text} />
+              <div class="grid grid-cols-1 gap-2 sm:grid-cols-2">
+                {items.map((item) => (
+                  <HomeCard
+                    title={item.short}
+                    text={`Free: ${item.freeShort}. Paid: ${item.priceFrom}.`}
+                    icon={group.icon}
+                    href={`/alternatives/${item.slug}`}
+                    link={`SEO Skill vs ${item.short}`}
+                  />
+                ))}
+              </div>
+            </section>
+          )
+        })
+      }
+
+      <section class="site-frame" aria-labelledby="alternatives-faq">
+        <div class="max-w-2xl">
+          <h2 id="alternatives-faq" class="text-pretty text-2xl font-medium -tracking-[0.4px] text-foreground xl:text-3xl xl:-tracking-[0.6px]">
+            Questions about the alternatives
+          </h2>
+        </div>
+        <div class="mt-10">
+          <FaqAccordion items={faqs} id="alternatives-faq-list" />
+        </div>
+      </section>
+    </div>
+  </main>
+</BaseLayout>

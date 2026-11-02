@@ -1,0 +1,52 @@
+{
+  "slug": "suganthan-gsc-mcp",
+  "name": "Suganthan's GSC MCP",
+  "url": "https://github.com/Suganthan-Mohanadasan/Suganthans-GSC-MCP",
+  "kind": "self-hosted",
+  "checked": "2026-11-02",
+  "summary": "Suganthan's GSC MCP is a free open source Node.js server by Suganthan Mohanadasan that runs on your own machine for Claude Desktop and Claude Code.",
+  "signIn": "Your own Google Cloud OAuth client (Desktop app client secrets JSON, browser sign-in) or a service account JSON key added to the Search Console property. The setup wizard still needs your own OAuth client JSON; the README says a built in Google sign in ships once Google verifies a shared client.",
+  "tools": "29 tools, stated in the README ('All 29 tools') and the setup guide on suganthan.com.",
+  "dataSources": ["Google Search Console", "Google Indexing API"],
+  "clients": ["Claude Desktop", "Claude Code"],
+  "webChat": "Not stated",
+  "free": "Yes. The README says 'Free and open source' and the setup guide lists the server as free with no ongoing cost.",
+  "price": "Free and open source",
+  "freeShort": "Open source",
+  "priceFrom": "No paid plan",
+  "writeActions": "Can submit URLs to Google's Indexing API (single or batch up to 200 a day) and submit sitemaps. generate_report saves a report to disk. The setup wizard defaults to a read only scope; a manual config with no GSC_SCOPES gets full access.",
+  "dataStorage": "Runs on your machine. Tokens are cached locally at ~/.gsc-mcp/. The README says data goes directly between your machine and Google and the developer operates no servers. image_page_audit also fetches pages from your own site.",
+  "history": "Google's 16 months (the README says genai_conversation_queries classifies sixteen months of queries)",
+  "licence": "Apache 2.0",
+  "github": {
+    "repo": "Suganthan-Mohanadasan/Suganthans-GSC-MCP",
+    "stars": 169,
+    "lastCommit": "2026-09-27",
+    "version": "v2.5.1",
+    "read": "2026-11-02"
+  },
+  "setup": "Create a Google Cloud project, enable the Search Console API, create an OAuth Desktop client and download the JSON, then run npx -y suganthan-gsc-mcp setup, which signs in and writes the Claude Desktop and Claude Code config. Alternatives are a .mcpb bundle for Claude Desktop or editing the JSON config by hand. Node.js is needed for npx. Indexing tools also need the Web Search Indexing API enabled and owner access.",
+  "pickIf": [
+    "You want image search tools, including an on-page image audit.",
+    "You want a tool that re-queries Search Console to double-check a number.",
+    "You want a one-click bundle for Claude Desktop."
+  ],
+  "sources": [
+    {
+      "fact": "README, tools, sign in, storage, licence",
+      "url": "https://github.com/Suganthan-Mohanadasan/Suganthans-GSC-MCP"
+    },
+    {
+      "fact": "Setup guide, cost, 29 tools",
+      "url": "https://suganthan.com/blog/google-search-console-mcp-server/"
+    },
+    {
+      "fact": "Latest release v2.5.1",
+      "url": "https://github.com/Suganthan-Mohanadasan/Suganthans-GSC-MCP/releases/latest"
+    },
+    {
+      "fact": "npm package",
+      "url": "https://www.npmjs.com/package/suganthan-gsc-mcp"
+    }
+  ]
+}

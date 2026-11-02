@@ -1,0 +1,74 @@
+{
+  "slug": "treg",
+  "name": "treg",
+  "url": "https://treg.to/tools/google-search-console",
+  "kind": "developer platform",
+  "checked": "2026-11-02",
+  "summary": "treg is an open source tool gateway with one MCP server and one key for over 4,100 API endpoints. Search Console works through your own Google connection.",
+  "signIn": "Create a treg account, add its server URL to the AI client, and connect your Google Search Console account once. treg keeps the credential on its servers and adds it to each call.",
+  "tools": "11 Google Search Console tools on its Search Console page, within a catalog of 4,100+ endpoints.",
+  "dataSources": [
+    "Google Search Console",
+    "Google Analytics 4",
+    "Google Ads",
+    "Google Business Profile",
+    "4,100+ catalog endpoints from 122 providers"
+  ],
+  "clients": [
+    "ChatGPT",
+    "Claude",
+    "Claude Code",
+    "Claude Desktop",
+    "Codex",
+    "Cursor",
+    "Grok",
+    "Gemini CLI"
+  ],
+  "webChat": "Yes",
+  "free": "Calls on your own connected Search Console account are never metered. New verified accounts get $1.00 of free credit once, with no card, for metered catalog calls.",
+  "price": "No subscription. Prepaid balance charged per metered call at the provider's rate with no markup. Search Console calls on your own account are not metered.",
+  "freeShort": "Your own Search Console calls are not metered",
+  "priceFrom": "Pay per call, no subscription",
+  "writeActions": "Its Search Console tools include submitting and deleting sitemaps and adding and removing Search Console sites.",
+  "dataStorage": "Not stated for Search Console data. It says it stores the credential server-side and relays the provider's answer verbatim.",
+  "history": "Not stated",
+  "licence": "Apache 2.0 with additional terms that bar offering it as a hosted service to third parties without permission (LICENSE file).",
+  "github": {
+    "repo": "superdesigndev/treg",
+    "stars": 7008,
+    "lastCommit": "2026-11-02",
+    "version": "0.29.0 (package.json; no tagged releases)",
+    "read": "2026-11-02"
+  },
+  "pickIf": [
+    "You want one key for SEO, enrichment, social and ads data, paid per call.",
+    "You want to see the price of each paid call before your agent makes it.",
+    "You want your agent to manage Search Console sitemaps and sites."
+  ],
+  "sources": [
+    {
+      "fact": "11 GSC tools, clients, setup, write tools, not metered",
+      "url": "https://treg.to/tools/google-search-console"
+    },
+    {
+      "fact": "4,100+ endpoints, 122 providers, open source",
+      "url": "https://treg.to"
+    },
+    {
+      "fact": "Prepaid balance, $1 credit, no markup, own accounts not metered",
+      "url": "https://treg.to/pricing"
+    },
+    {
+      "fact": "Licence terms",
+      "url": "https://github.com/superdesigndev/treg/blob/main/LICENSE"
+    },
+    {
+      "fact": "Stars and last commit",
+      "url": "https://github.com/superdesigndev/treg"
+    },
+    {
+      "fact": "Version",
+      "url": "https://github.com/superdesigndev/treg/blob/main/package.json"
+    }
+  ]
+}

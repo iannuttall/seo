@@ -1,10 +1,21 @@
-import { writeFileSync } from 'node:fs'
+import { readdirSync, writeFileSync } from 'node:fs'
 import { resolve } from 'node:path'
 import { docsPaths } from '../src/content/docs-nav.mjs'
+import { integrationPaths } from '../src/content/integrations.ts'
 import { toolPaths } from '../src/content/tools/manifest.mjs'
 
 const site = (process.env.SITE_URL ?? 'https://seoskill.dev').replace(/\/$/, '')
 const publicDirectory = resolve(import.meta.dirname, '..', 'public')
+// One comparison page for each fact file in src/content/alternatives.
+const alternativePaths = [
+  '/alternatives',
+  ...readdirSync(
+    resolve(import.meta.dirname, '..', 'src', 'content', 'alternatives'),
+  )
+    .filter((file) => file.endsWith('.json'))
+    .sort()
+    .map((file) => `/alternatives/${file.replace(/\.json$/, '')}`),
+]
 // The feature pages target search phrases from the earlier site and keep
 // their URLs. src/content/features.ts lists the same pages.
 const featurePaths = [
@@ -20,6 +31,8 @@ const paths = [
   '/tools',
   ...toolPaths,
   ...docsPaths,
+  ...integrationPaths,
+  ...alternativePaths,
   '/stats',
   '/telemetry',
 ]

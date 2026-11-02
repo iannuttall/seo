@@ -1,0 +1,54 @@
+{
+  "slug": "windsor",
+  "name": "Windsor.ai",
+  "url": "https://windsor.ai/connect/google-search-console-mcp/",
+  "kind": "connector",
+  "checked": "2026-11-02",
+  "summary": "Windsor.ai is a data integration platform with over 350 sources. Its hosted MCP server lets your AI query Search Console next to GA4, Google Ads and more.",
+  "signIn": "Sign in to Windsor.ai, connect Search Console once and pick the property, then add Windsor in the assistant: from Claude's connector directory, as a ChatGPT plugin, or by URL in Claude Code.",
+  "tools": "Not stated",
+  "dataSources": [
+    "Google Search Console",
+    "Google Analytics 4",
+    "Google Ads",
+    "350+ other data sources"
+  ],
+  "clients": [
+    "Claude",
+    "Claude Code",
+    "ChatGPT",
+    "Gemini Enterprise",
+    "Copilot",
+    "Perplexity",
+    "Cursor",
+    "Grok",
+    "Manus",
+    "Lovable",
+    "Antigravity"
+  ],
+  "webChat": "Yes",
+  "free": "30-day free trial (1 user, 10 data sources, 15 accounts, 30-day history limit), then a Forever Free plan with 1 user, 1 data source and 1 account. No credit card needed.",
+  "price": "Basic $19 a month billed annually or $23 monthly (3 sources). Standard $99 annually or $118 monthly (7 sources). Plus $249 annually or $299 monthly (10 sources). Professional $499 annually or $598 monthly (14 sources). Enterprise by quote.",
+  "freeShort": "1 data source, 30-day history",
+  "priceFrom": "$19 a month, billed yearly",
+  "writeActions": "Read-only for Search Console, per its Search Console MCP page, with no URL inspection and read-only sitemaps. Its pricing page says write functions such as pausing campaigns or adjusting budgets are on every plan for other sources.",
+  "dataStorage": "Not stated for Search Console data. Its pricing FAQ says it refreshes a data cache every 6 hours and its servers are in Germany.",
+  "history": "Its Search Console page cites Google's 16 months for Search Analytics. Its pricing page lists up to 10 years of data history on all plans, and a 30-day limit during the free trial.",
+  "licence": "Hosted service",
+  "github": null,
+  "pickIf": [
+    "You want Search Console next to Google Ads and other paid channels in one connector.",
+    "You want extra Search Console fields such as words in a query and URL path levels.",
+    "You want to add it from Claude's connector directory or as a ChatGPT plugin."
+  ],
+  "sources": [
+    {
+      "fact": "Setup, read-only, no URL inspection, clients, fields, 16 months",
+      "url": "https://windsor.ai/connect/google-search-console-mcp/"
+    },
+    {
+      "fact": "Plans, prices, free plan, history, cache, write functions, destinations",
+      "url": "https://windsor.ai/pricing/"
+    }
+  ]
+}

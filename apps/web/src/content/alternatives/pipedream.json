@@ -1,0 +1,61 @@
+{
+  "slug": "pipedream",
+  "name": "Pipedream",
+  "url": "https://mcp.pipedream.com/app/google_search_console",
+  "kind": "developer platform",
+  "checked": "2026-11-02",
+  "summary": "Pipedream runs one hosted MCP server for over 3,000 APIs. Google Search Console is one of them, with 8 actions.",
+  "signIn": "Add Pipedream's server URL to the AI client, authorize a Pipedream account, then connect the Google Search Console account.",
+  "tools": "8 actions available as tools, stated on the Google Search Console MCP page.",
+  "dataSources": [
+    "Google Search Console search analytics, single range and two range comparison",
+    "Google Search Console URL inspection (1 to 10 URLs per call)",
+    "Google Search Console sites and sitemaps",
+    "Google Indexing API (JobPosting and BroadcastEvent pages only)",
+    "3,000+ other APIs"
+  ],
+  "clients": ["ChatGPT", "Claude", "Cursor", "VS Code", "Le Chat"],
+  "webChat": "Yes",
+  "free": "Pipedream's MCP page says the tools can be added to an AI assistant for free. The Pipedream Free plan is $0 with every feature in development only.",
+  "price": "Free $0. Startup $99 per month billed annually or $150 per month billed monthly, with 100 users and 10,000 usage credits, then $2 per user and $0.012 per credit. Business custom. Prices in USD. These plans are for Pipedream Connect, which serves external users in production.",
+  "freeShort": "Free to add to an AI assistant",
+  "priceFrom": "$99 a month for Connect, billed yearly",
+  "writeActions": "Yes. Submit Sitemap, Delete Sitemap, and Submit URL for Indexing through the Indexing API.",
+  "dataStorage": "Credentials are encrypted at rest and scoped per project. Storage of query results is not stated.",
+  "history": "Not stated",
+  "licence": "Hosted service. The Google Search Console component source is in PipedreamHQ/pipedream under the Pipedream Source Available License 1.0.",
+  "github": {
+    "repo": "PipedreamHQ/pipedream",
+    "stars": 11766,
+    "lastCommit": "2026-11-02",
+    "version": "google_search_console component 1.1.0",
+    "read": "2026-11-02"
+  },
+  "pickIf": [
+    "You already build on Pipedream and want Search Console in the same toolbox.",
+    "You want your agent to submit and delete sitemaps and send Indexing API notifications.",
+    "You want the tool code to be public on GitHub."
+  ],
+  "sources": [
+    {
+      "fact": "8 tools, tool descriptions, server URL",
+      "url": "https://mcp.pipedream.com/app/google_search_console"
+    },
+    {
+      "fact": "Free for AI assistants, 3,000+ APIs",
+      "url": "https://mcp.pipedream.com/"
+    },
+    {
+      "fact": "Clients and sign in steps",
+      "url": "https://mcp.pipedream.com/configuration"
+    },
+    {
+      "fact": "Plans, prices, credential encryption",
+      "url": "https://pipedream.com/pricing"
+    },
+    {
+      "fact": "Component source and licence",
+      "url": "https://github.com/PipedreamHQ/pipedream/tree/master/components/google_search_console"
+    }
+  ]
+}

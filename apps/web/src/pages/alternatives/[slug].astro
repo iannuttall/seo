@@ -1,0 +1,197 @@
+---
+// SEO Skill compared with one alternative, from its fact file, laid out as
+// a landing page: the choice first, then the facts side by side.
+import FaqAccordion from '@/components/FaqAccordion.astro'
+import HomeCard from '@/components/HomeCard.astro'
+import LandingHero from '@/components/LandingHero.astro'
+import SectionHeading from '@/components/SectionHeading.astro'
+import SplitList from '@/components/SplitList.astro'
+import {
+  type CompetitorEntry,
+  cell,
+  compareRows,
+  competitors,
+  kindIcon,
+  reasonsFor,
+  seoSkill,
+} from '@/content/alternatives'
+import BaseLayout from '@/layouts/BaseLayout.astro'
+import type { SchemaBreadcrumb } from '@/lib/schema'
+
+export function getStaticPaths() {
+  return competitors.map((item) => ({ params: { slug: item.slug }, props: { item } }))
+}
+
+type Props = { item: CompetitorEntry }
+const { item } = Astro.props
+
+const readDate = (date: string) =>
+  new Date(`${date}T00:00:00Z`).toLocaleDateString('en-GB', {
+    day: 'numeric',
+    month: 'long',
+    year: 'numeric',
+    timeZone: 'UTC',
+  })
+const breadcrumbs: SchemaBreadcrumb[] = [
+  { label: 'Home', href: '/' },
+  { label: 'Alternatives', href: '/alternatives' },
+  { label: item.short },
+]
+const description = `${item.short} alternative: compare it with the free SEO Skill MCP server on setup, tools, AI clients, price and data handling.`
+const related = competitors.filter((other) => other.kind === item.kind && other.slug !== item.slug)
+const others = (related.length ? related : competitors.filter((other) => other.slug !== item.slug)).slice(0, 4)
+
+const glance = [
+  { label: 'Free use', ours: 'Every on-demand tool, no usage cap', theirs: item.freeShort },
+  { label: 'Paid', ours: '$50 a month per site, for the weekly audit', theirs: item.priceFrom },
+  { label: 'Works in web chat', ours: seoSkill.webChat, theirs: item.webChat },
+  { label: 'Connect', ours: 'One URL and a Google sign-in', theirs: item.kind === 'self-hosted' ? 'Run it on your own machine' : item.kind === 'skill' ? 'Install it in your agent' : 'Through its own account' },
+]
+
+const switchSteps = [
+  { title: 'Add SEO Skill to your agent', text: 'Use the setup box above, or the steps for your client on the integrations page.', href: '/integrations' },
+  { title: 'Check your access', text: 'Ask "list my Search Console properties". Every Google account you link shows up.' },
+  { title: 'Add your research key', text: 'Save a DataForSEO or Ahrefs key on your account page if you use keyword research.', href: '/account' },
+  { title: 'Carry your prompts over', text: `Prompts in plain words work as they are. Prompts that name ${item.short}'s own tools need rewording.` },
+]
+
+const faq = [
+  { question: `Is SEO Skill a free alternative to ${item.short}?`, answer: `Yes. Every SEO Skill tool your agent calls on demand is free with no usage cap. ${item.short}: ${item.free}` },
+  { question: `Does ${item.short} store my data?`, answer: `${item.dataStorage} SEO Skill fetches your Search Console and analytics rows on each request and never stores them.` },
+  { question: `Can ${item.short} change anything?`, answer: `${item.writeActions} SEO Skill signs in to Google with read-only access.` },
+  { question: `Can I use SEO Skill and ${item.short} together?`, answer: 'Yes. Your agent can have several MCP servers connected at once and uses whichever one fits the question.' },
+]
+---
+
+<BaseLayout title={`${item.short} alternative`} {description} canonicalPath={`/alternatives/${item.slug}`} {breadcrumbs} dateModified={item.checked} framed={false}>
+  <main data-agent-content>
+    <LandingHero
+      title={`SEO Skill vs ${item.short}`}
+      lead={`${item.summary} SEO Skill gives your agent your own Search Console, Google Analytics and keyword data for free, with nothing to install.`}
+      setupId="alternative-setup"
+    />
+
+    <div class="space-y-24 py-24 sm:space-y-32 sm:py-32">
+      <section class="site-frame" aria-labelledby="glance-heading">
+        <SectionHeading id="glance-heading" title="At a glance" text={`The four things most people compare first, from each product's own pages.`} />
+        <div class="grid grid-cols-1 gap-2 sm:grid-cols-2">
+          {
+            [
+              { name: 'SEO Skill', key: 'ours' as const },
+              { name: item.short, key: 'theirs' as const },
+            ].map((side) => (
+              <div class="rounded-lg bg-muted p-6">
+                <h3 class="text-base font-medium text-foreground">{side.name}</h3>
+                <dl class="mt-4 divide-y divide-border">
+                  {glance.map((row) => (
+                    <div class="py-3">
+                      <dt class="text-sm leading-6 text-foreground-muted">{row.label}</dt>
+                      <dd class="text-base leading-7 text-foreground">{row[side.key]}</dd>
+                    </div>
+                  ))}
+                </dl>
+              </div>
+            ))
+          }
+        </div>
+      </section>
+
+      <SplitList
+        id="pick-them"
+        title={`Pick ${item.short} if`}
+        text={`From ${item.short}'s own pages.`}
+        items={item.pickIf.map((reason) => ({ text: reason }))}
+      />
+
+      <SplitList
+        id="pick-us"
+        title="Pick SEO Skill if"
+        text="One hosted MCP server for your own search data."
+        items={reasonsFor(item).map((reason) => ({ text: reason }))}
+      />
+
+      <section class="site-frame" aria-labelledby="side-heading">
+        <SectionHeading id="side-heading" title="Side by side" text={`Every fact we compared, with ${item.short}'s taken from the sources at the end of this page.`} />
+        <div class="rounded-lg bg-muted px-6">
+          <div class="hidden gap-6 border-b border-border py-4 text-sm font-medium text-foreground sm:grid sm:grid-cols-[8rem_1fr_1fr]">
+            <span></span><span>SEO Skill</span><span>{item.short}</span>
+          </div>
+          {
+            compareRows.map(([label, ours, theirs]) => (
+              <div class="grid gap-2 border-b border-border py-4 last:border-b-0 sm:grid-cols-[8rem_1fr_1fr] sm:gap-6">
+                <span class="text-sm leading-6 font-medium text-foreground">{label}</span>
+                <p class="text-sm leading-6 text-foreground-muted">
+                  <span class="font-medium text-foreground sm:hidden">SEO Skill:</span>{' '}{seoSkill[ours]}
+                </p>
+                <p class="text-sm leading-6 text-foreground-muted">
+                  <span class="font-medium text-foreground sm:hidden">{item.short}:</span>{' '}{cell(item[theirs])}
+                </p>
+              </div>
+            ))
+          }
+          {
+            item.github ? (
+              <div class="grid gap-2 py-4 sm:grid-cols-[8rem_1fr_1fr] sm:gap-6">
+                <span class="text-sm leading-6 font-medium text-foreground">GitHub</span>
+                <p class="text-sm leading-6 text-foreground-muted">
+                  <span class="font-medium text-foreground sm:hidden">SEO Skill:</span>{' '}
+                  <a class="underline underline-offset-4" href="https://github.com/iannuttall/seo" target="_blank" rel="noreferrer">iannuttall/seo</a>
+                </p>
+                <p class="text-sm leading-6 text-foreground-muted">
+                  <span class="font-medium text-foreground sm:hidden">{item.short}:</span>{' '}
+                  <a class="underline underline-offset-4" href={`https://github.com/${item.github.repo}`} target="_blank" rel="noreferrer">{item.github.repo}</a>,{' '}
+                  {item.github.stars.toLocaleString('en-GB')} stars, last commit {item.github.lastCommit}
+                </p>
+              </div>
+            ) : null
+          }
+        </div>
+      </section>
+
+      <SplitList
+        id="switch-heading"
+        title={`Move from ${item.short} in a few minutes`}
+        text={`Nothing to migrate: SEO Skill reads your accounts live. When you are done, remove ${item.short} from your agent and revoke its access.`}
+        items={switchSteps}
+      />
+
+      <section class="site-frame" aria-labelledby="more-heading">
+        <SectionHeading id="more-heading" title="More comparisons" text="Other ways to give your agent search data, next to SEO Skill." />
+        <div class="grid grid-cols-1 gap-2 sm:grid-cols-2">
+          {
+            others.map((other) => (
+              <HomeCard
+                title={other.short}
+                text={`Free: ${other.freeShort}. Paid: ${other.priceFrom}.`}
+                icon={kindIcon(other.kind)}
+                href={`/alternatives/${other.slug}`}
+                link={`SEO Skill vs ${other.short}`}
+              />
+            ))
+          }
+        </div>
+      </section>
+
+      <section class="site-frame" aria-labelledby="alt-faq">
+        <div class="max-w-2xl">
+          <h2 id="alt-faq" class="text-pretty text-2xl font-medium -tracking-[0.4px] text-foreground xl:text-3xl xl:-tracking-[0.6px]">
+            Questions about {item.short}
+          </h2>
+        </div>
+        <div class="mt-10">
+          <FaqAccordion items={faq} id="alt-faq-list" />
+        </div>
+        <p class="mt-10 text-sm leading-6 text-foreground-muted">
+          Sources for {item.short}, read {readDate(item.checked)}:{' '}
+          {item.sources.map((source, index) => (
+            <>
+              {index ? ', ' : ''}
+              <a class="underline underline-offset-4" href={source.url} target="_blank" rel="noreferrer">{source.fact}</a>
+            </>
+          ))}
+          .
+        </p>
+      </section>
+    </div>
+  </main>
+</BaseLayout>

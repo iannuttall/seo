@@ -1,0 +1,73 @@
+{
+  "slug": "advanced-gsc",
+  "name": "Advanced GSC MCP",
+  "url": "https://www.advancedgsc.com/mcp",
+  "kind": "hosted",
+  "checked": "2026-11-02",
+  "summary": "Advanced GSC is a paid hosted MCP server from the author of the open source mcp-gsc. It puts Search Console and GA4 next to SERP, keyword and backlink tools.",
+  "signIn": "Sign in with the Google account that has Search Console access. Search Console permission (webmasters.readonly) is requested during sign-in. You then pick a plan and the GSC and GA4 properties the AI may use, and connect your AI client by one click or by pasting a config.",
+  "tools": "Not stated for the hosted server. Its blog says the open-source mcp-gsc has 20 tools.",
+  "dataSources": [
+    "Google Search Console",
+    "Google Analytics 4 (Pro and Max)",
+    "Google Ads (optional, Pro and Max)",
+    "Google and Bing SERP",
+    "Keyword research",
+    "Backlinks (DataForSEO)",
+    "Core Web Vitals",
+    "Schema validator",
+    "On-page and technical SEO crawl (Max)"
+  ],
+  "clients": [
+    "Claude",
+    "Claude Desktop",
+    "ChatGPT",
+    "Cursor",
+    "Windsurf",
+    "Zed",
+    "Codex"
+  ],
+  "webChat": "Yes",
+  "free": "A limited free version with no credit card, per its MCP page. The free limits are not stated.",
+  "price": "Starter $15 a month (up to 3 properties, 1 seat). Pro $40 a month (up to 10 GSC and 10 GA4 properties, 3 seats). Max $105 a month (unlimited properties under fair use, 5 seats, up to 3 Google accounts). Quarterly billing saves 15%. Prices exclude tax. The page says these are round two rates held while you stay subscribed.",
+  "freeShort": "Limited free version, limits not stated",
+  "priceFrom": "$15 a month",
+  "writeActions": "Read-only, per its privacy policy: it requests webmasters.readonly and analytics.readonly and says it cannot modify Search Console or Analytics. The optional Google Ads scope has write permission, but the policy says the service only reads Ads data.",
+  "dataStorage": "No, per its privacy policy. Search Console, GA4 and Google Ads results are fetched live and not stored beyond the request. It stores an encrypted OAuth refresh token, briefly caches Google Ads account details, and stores saved backlink sample datasets until you delete them.",
+  "history": "Not stated",
+  "licence": "Hosted service. The open-source mcp-gsc it is based on is MIT licensed.",
+  "github": {
+    "repo": "AminForou/mcp-gsc",
+    "stars": 2092,
+    "lastCommit": "2026-09-15",
+    "version": "0.4.1 (pyproject.toml; latest tag v0.3.1). This is the open-source self-hosted server, not the hosted product.",
+    "read": "2026-11-02"
+  },
+  "pickIf": [
+    "You want SERP lookups, keyword research and backlink data in the same subscription, without a separate provider key.",
+    "You want Google Ads data next to Search Console and GA4, on its Pro and Max plans.",
+    "You want team seats where teammates only see the properties you pin for them."
+  ],
+  "sources": [
+    {
+      "fact": "Features, plans, prices, clients, free version, setup",
+      "url": "https://www.advancedgsc.com/mcp"
+    },
+    {
+      "fact": "Scopes, read-only, no data storage, retention",
+      "url": "https://www.advancedgsc.com/mcp/privacy"
+    },
+    {
+      "fact": "Open-source mcp-gsc has 20 tools",
+      "url": "https://www.advancedgsc.com/blog/google-search-console-mcp"
+    },
+    {
+      "fact": "mcp-gsc stars, last commit, licence",
+      "url": "https://github.com/AminForou/mcp-gsc"
+    },
+    {
+      "fact": "mcp-gsc version",
+      "url": "https://github.com/AminForou/mcp-gsc/blob/main/pyproject.toml"
+    }
+  ]
+}

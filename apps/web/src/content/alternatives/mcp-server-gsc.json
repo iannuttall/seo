@@ -1,0 +1,44 @@
+{
+  "slug": "mcp-server-gsc",
+  "name": "mcp-server-gsc",
+  "url": "https://github.com/ahonn/mcp-server-gsc",
+  "kind": "self-hosted",
+  "checked": "2026-11-02",
+  "summary": "mcp-server-gsc is a free open source Node.js server by ahonn that reads Search Console through a Google service account.",
+  "signIn": "A Google Cloud service account JSON key, with the service account email added to the Search Console property.",
+  "tools": "The README documents 1 tool, search_analytics, under Available Tools.",
+  "dataSources": ["Google Search Console"],
+  "clients": ["Claude Desktop"],
+  "webChat": "Not stated",
+  "free": "Yes, open source under MIT per the README and package.json.",
+  "price": "Free and open source",
+  "freeShort": "Open source",
+  "priceFrom": "No paid plan",
+  "writeActions": "Not stated. The README documents only the search_analytics tool.",
+  "dataStorage": "Not stated. It runs locally through npx with a credentials file path.",
+  "history": "Google's 16 months",
+  "licence": "MIT (stated in README and package.json; GitHub does not detect a licence file)",
+  "github": {
+    "repo": "ahonn/mcp-server-gsc",
+    "stars": 282,
+    "lastCommit": "2026-09-04",
+    "version": "0.3.0 (package.json and npm; no GitHub release)",
+    "read": "2026-11-02"
+  },
+  "setup": "Install Node.js 18 or later, create or select a Google Cloud project, enable the Search Console API, create a service account and download its JSON key, add the service account email to Search Console, then edit the Claude Desktop JSON config with the key path.",
+  "pickIf": [
+    "You want up to 25,000 rows in a single request.",
+    "You want to tune your own quick wins thresholds for position, impressions and CTR.",
+    "You need image, video, news or Discover search types."
+  ],
+  "sources": [
+    {
+      "fact": "README, tools, setup, licence",
+      "url": "https://github.com/ahonn/mcp-server-gsc"
+    },
+    {
+      "fact": "Version 0.3.0",
+      "url": "https://www.npmjs.com/package/mcp-server-gsc"
+    }
+  ]
+}

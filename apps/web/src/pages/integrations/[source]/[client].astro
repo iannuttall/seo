@@ -1,0 +1,110 @@
+---
+// One landing page for each hosted data source in each AI client, such as
+// /integrations/google-search-console/claude-code.
+import ClientSteps from '@/components/ClientSteps.astro'
+import FaqAccordion from '@/components/FaqAccordion.astro'
+import HomeCard from '@/components/HomeCard.astro'
+import LandingHero from '@/components/LandingHero.astro'
+import SectionHeading from '@/components/SectionHeading.astro'
+import SplitList from '@/components/SplitList.astro'
+import { integrationIcon } from '@/content/integration-icons'
+import { type Client, type Source, clients, hostedSources } from '@/content/integrations'
+import BaseLayout from '@/layouts/BaseLayout.astro'
+import type { SchemaBreadcrumb } from '@/lib/schema'
+
+export function getStaticPaths() {
+  return hostedSources.flatMap((source) =>
+    clients.map((client) => ({
+      params: { source: source.id, client: client.id },
+      props: { source, client },
+    })),
+  )
+}
+
+type Props = { source: Source; client: Client }
+const { source, client } = Astro.props
+
+const path = `/integrations/${source.id}/${client.id}`
+const title = `${source.name} MCP for ${client.name}`
+const breadcrumbs: SchemaBreadcrumb[] = [
+  { label: 'Home', href: '/' },
+  { label: 'Integrations', href: '/integrations' },
+  { label: source.name, href: `/integrations/${source.id}` },
+  { label: client.name },
+]
+const description = `Connect ${source.name} to ${client.name} with the free SEO Skill MCP server. ${source.card} Setup steps and prompts to try.`
+const lead = `Ask ${client.name} about your ${source.name} data in plain words. Add one server, sign in with Google, and it reads your own numbers on each request.`
+
+// The key step goes after the client's own steps for research sources.
+const keyStep =
+  source.connect === 'key'
+    ? {
+        text: `Save your ${source.id === 'dataforseo' ? 'DataForSEO login and password' : 'Ahrefs API key'} under Keys on your account page at seoskill.dev/account. It works in every client you connect.`,
+      }
+    : source.connect === 'clicky'
+      ? { text: 'Add your Clicky account, or one site with its site ID and sitekey, under Keys on your account page at seoskill.dev/account.' }
+      : undefined
+const headerStep = source.headers && client.withHeader ? client.withHeader(source.headers) : undefined
+const steps = [...client.steps, ...(keyStep ? [keyStep] : []), ...(headerStep ? [headerStep] : [])]
+
+const faq = [
+  {
+    question: `Is the ${source.name} MCP free in ${client.name}?`,
+    answer:
+      source.connect === 'key'
+        ? `SEO Skill is free with no usage cap. ${source.name} bills your own account for the requests it serves.`
+        : 'Yes. Every tool your agent calls on demand is free with no usage cap. The only paid part is the weekly site audit, which runs in the background for $50 a month per site.',
+  },
+  { question: 'Does the server keep my data?', answer: 'No. It keeps your linked Google accounts and any keys you save, encrypted. The rows your agent asks for are fetched on each request and never stored.' },
+  ...(client.note ? [{ question: `Which ${client.name} plans can add it?`, answer: client.note }] : []),
+  ...source.faq.filter((item) => !/free|store|where do i put/i.test(item.question)).slice(0, 2),
+]
+const otherClients = clients.filter((item) => item.id !== client.id)
+const otherSources = hostedSources.filter((item) => item.id !== source.id)
+---
+
+<BaseLayout title={title} {description} canonicalPath={path} {breadcrumbs} framed={false}>
+  <main data-agent-content>
+    <LandingHero {title} {lead} setupId="pair-setup">
+      <ClientSteps {steps} note={client.signIn} />
+    </LandingHero>
+
+    <div class="space-y-24 py-24 sm:space-y-32 sm:py-32">
+      <SplitList
+        id="prompts-heading"
+        title={`Prompts to try in ${client.name}`}
+        text={`Ask in plain words and your agent picks the tool. ${source.limit}`}
+        items={source.asks.map((ask) => ({ title: ask.question, text: ask.answer }))}
+      />
+
+      <section class="site-frame" aria-labelledby="clients-heading">
+        <SectionHeading id="clients-heading" title={`${source.name} in other AI clients`} text="The same server and sign-in, with each client's own setup steps." />
+        <div class="grid grid-cols-1 gap-2 sm:grid-cols-2">
+          {otherClients.map((item) => (
+            <HomeCard title={item.name} text={item.card} icon={integrationIcon(item.id)} href={`/integrations/${source.id}/${item.id}`} link={`${source.name} in ${item.name}`} />
+          ))}
+        </div>
+      </section>
+
+      <section class="site-frame" aria-labelledby="sources-heading">
+        <SectionHeading id="sources-heading" title={`More data for ${client.name}`} text="One server reads all of these. Add a key or a site and your agent can use it." />
+        <div class="grid grid-cols-1 gap-2 sm:grid-cols-2">
+          {otherSources.map((item) => (
+            <HomeCard title={item.name} text={item.card} icon={integrationIcon(item.id)} href={`/integrations/${item.id}/${client.id}`} link={`${item.name} in ${client.name}`} />
+          ))}
+        </div>
+      </section>
+
+      <section class="site-frame" aria-labelledby="faq-heading">
+        <div class="max-w-2xl">
+          <h2 id="faq-heading" class="text-pretty text-2xl font-medium -tracking-[0.4px] text-foreground xl:text-3xl xl:-tracking-[0.6px]">
+            Questions about {source.name} in {client.name}
+          </h2>
+        </div>
+        <div class="mt-10">
+          <FaqAccordion items={faq} id="pair-faq" />
+        </div>
+      </section>
+    </div>
+  </main>
+</BaseLayout>

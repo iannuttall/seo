@@ -1,0 +1,130 @@
+---
+// The integrations hub, laid out like the home page: the same frame, hero,
+// setup box and section headings. Lists the data sources, the AI clients,
+// and an example agent run built from real tool calls.
+import { Tick02Icon } from '@hugeicons/core-free-icons'
+import HomeCard from '@/components/HomeCard.astro'
+import HugeIcon from '@/components/HugeIcon.astro'
+import SectionHeading from '@/components/SectionHeading.astro'
+import SetupCommands from '@/components/SetupCommands.astro'
+import { getButtonClasses } from '@/components/ui/button'
+import { integrationIcon } from '@/content/integration-icons'
+import { clients, sources } from '@/content/integrations'
+import BaseLayout from '@/layouts/BaseLayout.astro'
+
+const run = [
+  { tool: 'seo_report', text: 'find quick wins in Search Console' },
+  { tool: 'seo_index', text: 'check pages that lost their clicks' },
+  { tool: 'seo_research', text: "pull a competitor's ranked keywords" },
+  { tool: 'seo_data', text: 'match landing pages in Google Analytics' },
+]
+---
+
+<BaseLayout
+  title="SEO MCP integrations for AI agents"
+  description="Connect Google Search Console, Google Analytics, Clicky, DataForSEO and Ahrefs to Claude, ChatGPT, Codex, Cursor and other AI agents with one free MCP server."
+  canonicalPath="/integrations"
+  schemaType="CollectionPage"
+  framed={false}
+>
+  <main data-agent-content>
+    <section class="pt-4">
+      <div class="site-frame flex flex-col items-center pt-14 text-center sm:pt-20">
+        <h1 class="mt-4 max-w-3xl text-pretty text-4xl/tight font-medium -tracking-[0.8px] xl:text-5xl/tight xl:-tracking-[1px]">
+          Turn your AI agent into an SEO analyst
+        </h1>
+        <p class="mt-4 max-w-2xl text-pretty text-xl/8 font-medium -tracking-[0.2px] text-foreground-muted">
+          One free MCP server gives Claude Code, Codex, ChatGPT or Cursor your
+          real Search Console, Google Analytics and keyword data. Add it, sign
+          in with Google, and ask.
+        </p>
+        <a class:list={[getButtonClasses('default', 'lg'), 'mt-8']} href="/account">Get started free</a>
+      </div>
+
+      <div class="site-frame mt-10 sm:mt-12">
+        <SetupCommands id="hub-setup" />
+      </div>
+    </section>
+
+    <div class="space-y-24 py-24 sm:space-y-32 sm:py-32">
+      <section class="site-frame" aria-labelledby="hub-run">
+        <SectionHeading
+          id="hub-run"
+          title="What one question runs"
+          text="Ask why traffic dipped. Your agent picks the tools, reads your own accounts and drafts the findings with the numbers behind each one."
+        />
+        <div class="rounded-lg bg-muted p-6 font-mono text-sm leading-6">
+          <p class="text-foreground-muted">you: why did organic traffic dip last week?</p>
+          <ul class="mt-4 space-y-2">
+            {
+              run.map((step) => (
+                <li class="flex items-start gap-3">
+                  <HugeIcon icon={Tick02Icon} class="mt-1 size-4 shrink-0 text-primary" />
+                  <span>
+                    <span class="text-foreground">{step.tool}</span>{' '}
+                    <span class="text-foreground-muted">{step.text}</span>
+                  </span>
+                </li>
+              ))
+            }
+            <li class="flex items-start gap-3">
+              <HugeIcon icon={Tick02Icon} class="mt-1 size-4 shrink-0 text-primary" />
+              <span class="text-foreground">drafted the findings, with the numbers behind each one</span>
+            </li>
+          </ul>
+        </div>
+      </section>
+
+      <section class="site-frame" aria-labelledby="hub-sources">
+        <SectionHeading
+          id="hub-sources"
+          title="Data your agent can read"
+          text="Search Console and Google Analytics come with your Google sign-in. Research uses your own DataForSEO or Ahrefs key, so the provider bills you directly."
+        />
+        <div class="grid grid-cols-1 gap-2 sm:grid-cols-2">
+          {
+            sources.map((source) => (
+              <HomeCard
+                title={source.name}
+                text={source.card}
+                icon={integrationIcon(source.id)}
+                href={`/integrations/${source.id}`}
+                link={`${source.name} MCP`}
+              />
+            ))
+          }
+        </div>
+      </section>
+
+      <section class="site-frame" aria-labelledby="hub-clients">
+        <SectionHeading
+          id="hub-clients"
+          title="AI clients it works in"
+          text="Any client that can add a remote MCP server works. These have their own setup steps."
+        />
+        <div class="grid grid-cols-1 gap-2 sm:grid-cols-2">
+          {
+            clients.map((client) => (
+              <HomeCard
+                title={client.name}
+                text={client.card}
+                icon={integrationIcon(client.id)}
+                href={`/integrations/${client.id}`}
+                link={`Set up ${client.name}`}
+              />
+            ))
+          }
+        </div>
+      </section>
+
+      <section class="site-frame" aria-labelledby="hub-compare">
+        <SectionHeading
+          id="hub-compare"
+          title="Compare it with other options"
+          text="Setup, price and what each one keeps, next to other Search Console and SEO MCP servers, with a source for every fact."
+        />
+        <a class={getButtonClasses('secondary', 'lg')} href="/alternatives">Compare the alternatives</a>
+      </section>
+    </div>
+  </main>
+</BaseLayout>

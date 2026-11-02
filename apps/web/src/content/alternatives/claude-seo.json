@@ -1,0 +1,63 @@
+{
+  "slug": "claude-seo",
+  "name": "Claude SEO",
+  "url": "https://github.com/AgricIDaniel/claude-seo",
+  "kind": "skill",
+  "checked": "2026-11-02",
+  "summary": "Claude SEO is a free Claude Code plugin of SEO skills and agents that audits websites, and reads Google data when you connect it.",
+  "signIn": "Optional. Search Console and Google Analytics 4 use a Google Cloud service account JSON key added to the property (the skill also mentions an OAuth token), and PageSpeed and CrUX use a Google API key. Settings go in ~/.config/claude-seo/google-api.json.",
+  "tools": "README states 26 sub-skills, 19 specialist agents and 30 core and extension commands. It is not an MCP server, so it has no MCP tool count.",
+  "dataSources": [
+    "Google Search Console",
+    "Google Analytics 4",
+    "PageSpeed Insights",
+    "Chrome UX Report",
+    "Google Indexing API",
+    "Bing Webmaster Tools (extension)",
+    "SE Ranking (extension)",
+    "Profound (extension)",
+    "Moz",
+    "Common Crawl"
+  ],
+  "clients": ["Claude Code"],
+  "webChat": "Not stated",
+  "free": "Yes. The README says it is MIT licensed with no per-site pricing and no usage limits; you need Claude Code, and a full audit uses your Claude plan. Members of the AI Marketing Hub Pro community get a private version with early features.",
+  "price": "Free and open source",
+  "freeShort": "Open source",
+  "priceFrom": "No paid plan",
+  "writeActions": "Can submit URLs to Google's Indexing API (/seo google index, and batch up to 200 URLs). It writes report files on your machine and can generate sitemaps and Schema.org markup as files.",
+  "dataStorage": "Runs inside Claude Code on your machine. Pages and data it reads are sent to Claude, and reports are saved as files on your machine. Google keys stay on your machine.",
+  "history": "Google's 16 months",
+  "licence": "MIT",
+  "github": {
+    "repo": "AgriciDaniel/claude-seo",
+    "stars": 25872,
+    "lastCommit": "2026-10-22",
+    "version": "v2.5.0",
+    "read": "2026-11-02"
+  },
+  "setup": "Install Claude Code 1.0.33 or newer, add the plugin marketplace and install the plugin, then run /seo setup, which installs its own Python environment and a headless browser (Python 3.11 to 3.14). For Google data, create a Google Cloud project, enable the APIs, create an API key and a service account, add the service account to Search Console and Google Analytics, and write a JSON config file.",
+  "pickIf": [
+    "You work only in Claude Code and want full site audits covering technical SEO, content, schema, local and AI search.",
+    "You want audit reports saved as Markdown, PDF and JSON files.",
+    "You want to start without any Google sign-in or API keys."
+  ],
+  "sources": [
+    {
+      "fact": "README, pricing, privacy, install, counts",
+      "url": "https://github.com/AgriciDaniel/claude-seo"
+    },
+    {
+      "fact": "Google API sign-in setup",
+      "url": "https://github.com/AgriciDaniel/claude-seo/blob/main/skills/seo-google/references/auth-setup.md"
+    },
+    {
+      "fact": "Google commands and Indexing API",
+      "url": "https://github.com/AgriciDaniel/claude-seo/blob/main/skills/seo-google/SKILL.md"
+    },
+    {
+      "fact": "Latest release v2.5.0",
+      "url": "https://github.com/AgriciDaniel/claude-seo/releases/latest"
+    }
+  ]
+}

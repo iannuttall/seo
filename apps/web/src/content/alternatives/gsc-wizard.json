@@ -1,0 +1,62 @@
+{
+  "slug": "gsc-wizard",
+  "name": "GSC Wizard",
+  "url": "https://www.gscwizard.com/google-search-console-mcp.html",
+  "kind": "hosted",
+  "checked": "2026-11-02",
+  "summary": "GSC Wizard is a paid Search Console reporting app with a hosted MCP server that does the number crunching on its own servers and hands your AI the results.",
+  "signIn": "Create a GSC Wizard account, which connects to Google through OAuth. Then connect the MCP with OAuth 2.1 sign-in (ChatGPT, Claude web, app and Desktop connectors) or an API key sent as a bearer header (Claude Code, Cursor, VS Code, Windsurf). The MCP reads the properties already connected to the GSC Wizard account.",
+  "tools": "131 tools, per its MCP docs, 32 of them write tools. A smaller core set has 25 tools.",
+  "dataSources": [
+    "Google Search Console",
+    "Google Analytics 4",
+    "Bing Webmaster Tools",
+    "Yandex Webmaster",
+    "Google Merchant Center",
+    "Core Web Vitals (CrUX)",
+    "IndexNow (submission)"
+  ],
+  "clients": [
+    "Claude",
+    "Claude Code",
+    "Claude Desktop",
+    "ChatGPT",
+    "Grok",
+    "Gemini",
+    "Codex",
+    "Meta Muse",
+    "Cursor",
+    "VS Code (GitHub Copilot)",
+    "Windsurf"
+  ],
+  "webChat": "Yes",
+  "free": "No free plan. Every new account gets a 7-day free trial with full MCP access. API keys are free to create, but MCP tools stop answering when a trial ends without a subscription.",
+  "price": "Starter €17 a month (10 API properties plus 5 full storage properties, owner plus 1 seat). Pro €39 a month (50 plus 25, owner plus 3 seats). Business €249 a month (500 plus 150, owner plus 10 seats). Custom plans from €349 a month. Extra seats €9 a month each. Prices exclude VAT. The pricing page also offers USD, GBP and INR display.",
+  "freeShort": "7-day trial",
+  "priceFrom": "€17 a month",
+  "writeActions": "Its docs list 32 write tools that need a read and write API key or OAuth consent with changes allowed, including submitting sitemaps to Search Console, creating URL-prefix properties in Search Console, submitting URLs to IndexNow, bulk URL inspection, and managing tags, content groups, topic clusters, annotations, shared reports and migration redirects. Every mutation is audit-logged. A read-only key or connection refuses all write tools. Its product page describes the MCP as hosted and read-only.",
+  "dataStorage": "Yes. Full storage properties are stored in its ClickHouse data warehouse and collected daily. API properties are read live from Google's API. Its pricing FAQ says it never stores your GSC credentials and accesses data through Google's OAuth.",
+  "history": "16 months for API properties (Google's API limit). Up to 10 years for full storage properties: it backfills what Google has (typically 16 months) and keeps collecting daily, and can import history from BigQuery bulk export or other SEO tools.",
+  "licence": "Hosted service",
+  "github": null,
+  "pickIf": [
+    "You need more than Google's 16 months: it keeps up to 10 years of history on stored properties.",
+    "You want Bing, Yandex and Merchant Center data in the same connector as Search Console and GA4.",
+    "You want your agent to submit sitemaps and IndexNow pings, not just read data.",
+    "You want ready-made reports such as change point detection and content decay computed for you."
+  ],
+  "sources": [
+    {
+      "fact": "Product, clients, ClickHouse backend, trial requirement",
+      "url": "https://www.gscwizard.com/google-search-console-mcp.html"
+    },
+    {
+      "fact": "131 tools, 32 write tools, auth modes, scopes, rate limits",
+      "url": "https://mcp.gscwizard.com/"
+    },
+    {
+      "fact": "Plans, prices, 10-year history, 16-month API limit",
+      "url": "https://www.gscwizard.com/pricing.html"
+    }
+  ]
+}

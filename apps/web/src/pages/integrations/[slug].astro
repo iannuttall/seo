@@ -1,0 +1,173 @@
+---
+// One landing page per data source (/integrations/google-search-console) and
+// one per AI client (/integrations/claude-code).
+import ClientSteps from '@/components/ClientSteps.astro'
+import CodeBlock from '@/components/CodeBlock.astro'
+import FaqAccordion from '@/components/FaqAccordion.astro'
+import HomeCard from '@/components/HomeCard.astro'
+import LandingHero from '@/components/LandingHero.astro'
+import SectionHeading from '@/components/SectionHeading.astro'
+import SplitList from '@/components/SplitList.astro'
+import { getButtonClasses } from '@/components/ui/button'
+import { integrationIcon } from '@/content/integration-icons'
+import { type Client, type Source, clients, hostedSources, sources } from '@/content/integrations'
+import BaseLayout from '@/layouts/BaseLayout.astro'
+import type { SchemaBreadcrumb } from '@/lib/schema'
+
+export function getStaticPaths() {
+  return [
+    ...sources.map((source) => ({ params: { slug: source.id }, props: { source } })),
+    ...clients.map((client) => ({ params: { slug: client.id }, props: { client } })),
+  ]
+}
+
+type Props = { source?: Source; client?: Client }
+const { source, client } = Astro.props
+
+const id = source?.id ?? client?.id ?? ''
+const name = source?.name ?? client?.name ?? ''
+const breadcrumbs: SchemaBreadcrumb[] = [
+  { label: 'Home', href: '/' },
+  { label: 'Integrations', href: '/integrations' },
+  { label: name },
+]
+const title = source ? source.title : `SEO MCP server for ${name}`
+const metaTitle = source?.metaTitle ?? `SEO MCP for ${name}`
+const description = source
+  ? source.description
+  : `Add the free SEO Skill MCP server to ${name} and ask about your Search Console, Google Analytics, Clicky and keyword data. Setup takes a minute.`
+const lead = source
+  ? source.lead
+  : `Give ${name}, ${client?.where}, your real Search Console, Google Analytics and keyword data. Add one server, sign in with Google, and ask.`
+const hosted = source ? source.connect !== 'cli' : true
+
+// How the source's data reaches your agent, step by step.
+const connectSteps = source
+  ? [
+      { title: 'What you need', text: source.needs },
+      ...(source.connect === 'google'
+        ? [{ title: 'Connect', text: 'Add the server to your agent and sign in with Google when it asks. Access is read only. Add more Google accounts, such as a client\'s, on your account page.' }]
+        : []),
+      ...(source.connect === 'key'
+        ? [{ title: `Add your ${name} key`, text: `Sign in with Google first, then save your ${source.id === 'dataforseo' ? 'login and password' : 'API key'} under Keys on your account page. Clients that send headers can pass it with each request instead.` }]
+        : []),
+      ...(source.connect === 'clicky'
+        ? [{ title: 'Add your Clicky sites', text: 'Sign in with Google first, then add your whole Clicky account, or one site at a time, under Keys on your account page.' }]
+        : []),
+      ...(source.connect === 'cli'
+        ? [{ title: 'Connect Bing', text: 'Run seo start, choose Connect Bing on your account page and link the CLI with seo login. Or use a Bing Webmaster API key with seo providers bing connect.' }]
+        : []),
+      { title: 'Read it with its limits', text: source.limit },
+      ...(source.id === 'google-search-console'
+        ? [{ title: 'Free, with a paid weekly audit', text: 'Every tool is free with no usage cap. The weekly site audit is $50 a month per site: a weekly crawl, daily Google index checks, stored history, drop and return alerts, and a Monday email and webhook. Cancel any time.' }]
+        : []),
+    ]
+  : []
+
+const clientFaq = client
+  ? [
+      { question: `Is SEO Skill free in ${name}?`, answer: 'Yes. Every tool your agent calls on demand is free with no usage cap. The only paid part is the weekly site audit, which runs on our servers in the background for $50 a month per site.' },
+      { question: `Can ${name} change anything in my Search Console?`, answer: 'No. The Google sign-in asks for read-only access to Search Console and Google Analytics.' },
+      { question: 'Does the server keep my search data?', answer: 'No. It keeps your linked Google accounts and any keys you save, encrypted. Search Console and analytics rows are fetched when your agent asks and never stored.' },
+      ...(client.note ? [{ question: `Which ${name} plans can add it?`, answer: client.note }] : []),
+      { question: 'What about site crawls and Bing?', answer: client.localMcp ? `Those run on your own machine. Install the seo CLI and run seo mcp install to add the local MCP server to ${name} as well.` : 'Those run on your own machine with the seo CLI. The hosted server tells your agent when a request needs the CLI.' },
+    ]
+  : []
+---
+
+<BaseLayout title={metaTitle} {description} canonicalPath={`/integrations/${id}`} {breadcrumbs} framed={false}>
+  <main data-agent-content>
+    {
+      source ? (
+        hosted ? (
+          <LandingHero {title} {lead} setupId="integration-setup" />
+        ) : (
+          <LandingHero {title} {lead} setupId="integration-setup">
+            <CodeBlock label="Install the CLI, then add the local MCP server to your agents" value={'npm i -g seo && seo start\nseo mcp install'} />
+          </LandingHero>
+        )
+      ) : (
+        <LandingHero {title} {lead} setupId="integration-setup">
+          <ClientSteps steps={client?.steps ?? []} note={client?.signIn} />
+        </LandingHero>
+      )
+    }
+
+    <div class="space-y-24 py-24 sm:space-y-32 sm:py-32">
+      {
+        source ? (
+          <>
+            <SplitList
+              id="asks-heading"
+              title="Questions you can ask it"
+              text={`Ask the way you would ask a colleague. Your agent picks the tool and reads your ${name} data before it answers.`}
+              items={source.asks.map((ask) => ({ title: ask.question, text: ask.answer }))}
+            />
+            {source.tools.length ? (
+              <SplitList
+                id="tools-heading"
+                title="Tools your agent gets"
+                text={`The SEO Skill tools that read ${name}. Your agent calls them for you.`}
+                items={source.tools.map((tool) => ({ title: tool.text, code: tool.tool }))}
+              />
+            ) : null}
+            <SplitList id="connect-heading" title={`Connect ${name}`} text="What you need, and how to read what comes back." items={connectSteps}>
+              <a class:list={[getButtonClasses('secondary', 'lg'), 'mt-6']} href={source.docs.href}>{source.docs.label}</a>
+            </SplitList>
+          </>
+        ) : (
+          <SplitList
+            id="prompts-heading"
+            title={`Prompts to try in ${name}`}
+            text="Each one reads a different source. Open one for its setup in this client."
+            items={hostedSources.map((item) => ({
+              title: item.asks[0]?.question ?? item.name,
+              text: `Reads ${item.name}.`,
+              href: `/integrations/${item.id}/${id}`,
+            }))}
+          >
+            <a class:list={[getButtonClasses('secondary', 'lg'), 'mt-6']} href={client?.docsUrl} target="_blank" rel="noreferrer">
+              {name} MCP docs
+            </a>
+          </SplitList>
+        )
+      }
+
+      <section class="site-frame" aria-labelledby="links-heading">
+        <SectionHeading
+          id="links-heading"
+          title={source ? (hosted ? `${name} in your AI client` : 'Data your agent can read') : `Data ${name} can read`}
+          text={source && hosted ? `Setup steps for ${name} in each client.` : 'Search Console and Google Analytics come with your Google sign-in. Research uses your own key.'}
+        />
+        <div class="grid grid-cols-1 gap-2 sm:grid-cols-2">
+          {
+            source && hosted
+              ? clients.map((item) => (
+                  <HomeCard title={item.name} text={item.card} icon={integrationIcon(item.id)} href={`/integrations/${source.id}/${item.id}`} link={`${name} in ${item.name}`} />
+                ))
+              : hostedSources.map((item) => (
+                  <HomeCard
+                    title={item.name}
+                    text={item.card}
+                    icon={integrationIcon(item.id)}
+                    href={client ? `/integrations/${item.id}/${id}` : `/integrations/${item.id}`}
+                    link={client ? `${item.name} in ${name}` : `${item.name} MCP`}
+                  />
+                ))
+          }
+        </div>
+      </section>
+
+      <section class="site-frame" aria-labelledby="faq-heading">
+        <div class="max-w-2xl">
+          <h2 id="faq-heading" class="text-pretty text-2xl font-medium -tracking-[0.4px] text-foreground xl:text-3xl xl:-tracking-[0.6px]">
+            Questions about {source ? `the ${name} MCP` : `SEO Skill in ${name}`}
+          </h2>
+        </div>
+        <div class="mt-10">
+          <FaqAccordion items={source?.faq ?? clientFaq} id="integration-faq" />
+        </div>
+      </section>
+    </div>
+  </main>
+</BaseLayout>

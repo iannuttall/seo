@@ -1,0 +1,50 @@
+---
+// The home page's two-column section: a sticky heading and intro on the
+// left, a muted list on the right. Items may carry a code chip or a link.
+type Item = { title?: string; text?: string; code?: string; href?: string }
+type Props = { title: string; text: string; items: Item[]; id?: string }
+
+const { title, text, items, id } = Astro.props
+---
+
+<section class="site-frame grid gap-8 sm:grid-cols-[1fr_1.15fr] sm:items-start" aria-labelledby={id}>
+  <div class="sm:sticky sm:top-24">
+    <h2 id={id} class="text-pretty text-2xl font-medium -tracking-[0.4px] text-foreground xl:text-3xl xl:-tracking-[0.6px]">
+      {title}
+    </h2>
+    <p class="mt-4 text-base leading-7 text-foreground-muted">{text}</p>
+    <slot />
+  </div>
+  <ul class="divide-y divide-border rounded-lg bg-muted px-6">
+    {
+      items.map((item) =>
+        item.href ? (
+          <li>
+            <a
+              class="group block py-4 no-underline focus-visible:outline-none focus-visible:ring-[3px] focus-visible:ring-ring/20"
+              href={item.href}
+            >
+              <span class="flex items-center justify-between gap-4">
+                <span class="text-base leading-7 font-medium text-foreground group-hover:underline">{item.title}</span>
+                <span aria-hidden="true" class="text-foreground-soft group-hover:text-foreground">&rarr;</span>
+              </span>
+              {item.text ? <span class="block text-base leading-7 text-foreground-muted">{item.text}</span> : null}
+            </a>
+          </li>
+        ) : (
+          <li class="py-4">
+            {item.title ? (
+              <span class="flex items-center justify-between gap-4">
+                <h3 class="text-base leading-7 font-medium text-foreground">{item.title}</h3>
+                {item.code ? (
+                  <code class="truncate rounded-md bg-background px-2 py-0.5 font-mono text-xs text-foreground-muted">{item.code}</code>
+                ) : null}
+              </span>
+            ) : null}
+            {item.text ? <p class:list={['text-base leading-7', item.title ? 'text-foreground-muted' : 'text-foreground']}>{item.text}</p> : null}
+          </li>
+        ),
+      )
+    }
+  </ul>
+</section>

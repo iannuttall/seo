@@ -1,0 +1,56 @@
+{
+  "slug": "dataforseo-mcp",
+  "name": "DataForSEO MCP",
+  "url": "https://dataforseo.com/model-context-protocol",
+  "kind": "data provider",
+  "checked": "2026-11-02",
+  "summary": "DataForSEO's official MCP server gives your agent its paid SEO data APIs, as a hosted endpoint or a server you run yourself.",
+  "signIn": "OAuth on the hosted server, or a header with your DataForSEO API login and password. The local npx or Docker server takes the login and password as environment variables.",
+  "tools": "4 tools (docs_index, docs_list_sections, docs_search, api_request), listed in the GitHub README.",
+  "dataSources": [
+    "SERP API (Google, Bing, Yahoo)",
+    "AI Optimization API",
+    "Keyword Data API",
+    "On-Page API",
+    "DataForSEO Labs API",
+    "Backlinks API",
+    "Business Data API",
+    "Domain Analytics API"
+  ],
+  "clients": ["Claude", "Claude Code", "Cursor", "ChatGPT", "Gemini CLI"],
+  "webChat": "Yes",
+  "free": "$1 trial credit for new accounts, usable through MCP. A free Sandbox returns sample responses.",
+  "price": "Pay as you go with no subscription. $50 minimum top-up, and the balance never expires. Each API has its own rates. Prices in USD.",
+  "freeShort": "$1 trial credit",
+  "priceFrom": "Pay as you go, $50 top-up",
+  "writeActions": "No Google Search Console access or write actions stated. The api_request tool makes authenticated DataForSEO API requests, which are billed to the account balance.",
+  "dataStorage": "Not stated",
+  "history": "Not stated",
+  "licence": "Apache-2.0",
+  "github": {
+    "repo": "dataforseo/mcp-server-typescript",
+    "stars": 259,
+    "lastCommit": "2026-11-02",
+    "version": "3.1.3 (package.json)",
+    "read": "2026-11-02"
+  },
+  "pickIf": [
+    "You want the whole DataForSEO API in your agent, from SERPs and keywords to backlinks and on-page data.",
+    "You want to set spending limits per account, API or endpoint.",
+    "You want to run the server yourself from npx or Docker."
+  ],
+  "sources": [
+    {
+      "fact": "Hosted URL, sign in, clients, APIs covered",
+      "url": "https://dataforseo.com/model-context-protocol"
+    },
+    {
+      "fact": "Tool list, OAuth, licence, version",
+      "url": "https://github.com/dataforseo/mcp-server-typescript"
+    },
+    {
+      "fact": "Pay as you go, $50 minimum, $1 trial, spending limits",
+      "url": "https://dataforseo.com/pricing"
+    }
+  ]
+}

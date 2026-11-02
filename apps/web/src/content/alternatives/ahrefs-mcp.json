@@ -1,0 +1,68 @@
+{
+  "slug": "ahrefs-mcp",
+  "name": "Ahrefs MCP",
+  "url": "https://docs.ahrefs.com/en/mcp/docs/introduction",
+  "kind": "hosted",
+  "checked": "2026-11-02",
+  "summary": "Ahrefs MCP is Ahrefs' own hosted MCP server. It gives your agent the Ahrefs API, including a Search Console tool group, on paid Ahrefs plans.",
+  "signIn": "OAuth consent screen, which creates an API key with MCP scope in the Ahrefs account. A manually generated MCP key can be sent as a Bearer token. Enterprise customers can also use API keys.",
+  "tools": "No count stated. The Tool Categories page lists 20 tool groups, including a gsc group.",
+  "dataSources": [
+    "Google Search Console: keywords, pages, positions and performance history",
+    "Site Explorer",
+    "Keywords Explorer",
+    "SERP overview",
+    "Rank Tracker",
+    "Site Audit",
+    "Brand Radar",
+    "Ahrefs Web Analytics",
+    "Social media",
+    "Content Helper"
+  ],
+  "clients": [
+    "Claude Web",
+    "Claude Desktop",
+    "Claude Mobile",
+    "Claude Code",
+    "Copilot Studio",
+    "ChatGPT Web",
+    "Lovable",
+    "n8n",
+    "Manus",
+    "Mistral's Le Chat",
+    "OpenClaw"
+  ],
+  "webChat": "Yes",
+  "free": "No. MCP is on paid plans starting from Lite. Ahrefs Free and Starter do not appear in the MCP plan list.",
+  "price": "Lite $129 per month, Standard $249 per month, Advanced $449 per month, Enterprise $1,499 per month with an annual commitment. Paying annually saves up to 17%. Prices in USD. MCP calls use API units: 200,000 on Lite, 800,000 on Standard, 2M on Advanced, custom on Enterprise.",
+  "freeShort": "No",
+  "priceFrom": "$129 a month (Lite)",
+  "writeActions": "No Google Search Console write actions stated. A management tool group handles Ahrefs projects, keyword lists, locations and Brand Radar configuration.",
+  "dataStorage": "Not stated",
+  "history": "Search Console performance history is offered, length not stated. Ahrefs historical data is 6 months on Lite, 2 years on Standard, 5 years on Advanced and unlimited on Enterprise.",
+  "licence": "Hosted service",
+  "github": null,
+  "pickIf": [
+    "You already pay for Ahrefs and want its full backlink, keyword and rank tracking data in your agent.",
+    "You want to choose which Ahrefs tool groups your agent sees, for clients that limit how many tools they load.",
+    "You build in Copilot Studio or n8n, which Ahrefs has setup guides for."
+  ],
+  "sources": [
+    {
+      "fact": "Hosted server, Lite and up, sign in, clients, API units",
+      "url": "https://docs.ahrefs.com/en/mcp/docs/introduction"
+    },
+    {
+      "fact": "Tool groups including gsc and management",
+      "url": "https://docs.ahrefs.com/en/mcp/docs/tool-categories"
+    },
+    {
+      "fact": "Plan prices, API and MCP access, historical data",
+      "url": "https://ahrefs.com/pricing"
+    },
+    {
+      "fact": "API units per plan",
+      "url": "https://help.ahrefs.com/en/articles/13913559-getting-started-with-ahrefs-mcp"
+    }
+  ]
+}

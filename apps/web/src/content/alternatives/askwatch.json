@@ -1,0 +1,56 @@
+{
+  "slug": "askwatch",
+  "name": "AskWatch Google Search Console MCP",
+  "url": "https://askwatch.ai/free-tools/google-search-console-mcp",
+  "kind": "hosted",
+  "checked": "2026-11-02",
+  "summary": "AskWatch's Search Console MCP is a free hosted server from an AI visibility tracker. You connect it with a personal link instead of a sign-in.",
+  "signIn": "Sign up at AskWatch with an email and a six-digit code, approve one read-only Google consent screen, then paste your personal link into the AI client. Anyone with the link can read your data, so it works like a password.",
+  "tools": "11 tools, listed on its MCP page (7 question tools, 1 raw Search Analytics query, 3 account tools).",
+  "dataSources": ["Google Search Console"],
+  "clients": [
+    "Claude",
+    "ChatGPT",
+    "Claude Code",
+    "Codex",
+    "Cursor",
+    "VS Code",
+    "Windsurf",
+    "Gemini CLI"
+  ],
+  "webChat": "Yes",
+  "free": "Free with no card, no trial and no locked tools. The only hard limit is 20 calls a minute. Past 300 calls in a day, answers carry a notice and slow down slightly. URL inspection has a smaller daily budget.",
+  "price": "No paid plan for this server, per its page. AskWatch's separate AI visibility product starts with a Monitor plan from $50 a month.",
+  "freeShort": "Yes, 20 calls a minute",
+  "priceFrom": "No paid plan",
+  "writeActions": "Read-only, per its page. The webmasters.readonly grant cannot submit a sitemap, request indexing, remove a URL or change a property.",
+  "dataStorage": "Partly. It stores encrypted Google tokens, the list of readable properties, Google's answers cached for 30 minutes to 30 days depending on the age of the data, and daily call counts per tool. The link is stored as a hash. Disconnecting deletes the grant and the cache.",
+  "history": "Not stated",
+  "licence": "Hosted service. The GitHub repo holds documentation, the registry entry and the issue tracker only.",
+  "github": {
+    "repo": "askwatch/gsc-mcp",
+    "stars": 0,
+    "lastCommit": "2026-09-30",
+    "version": "Not stated",
+    "read": "2026-11-02"
+  },
+  "pickIf": [
+    "You only need Search Console and want a free server with no paid tier at all.",
+    "You want to add it from the ChatGPT plugins directory or the Cursor Directory.",
+    "You want every answer to state its date window and use only finalised Google data."
+  ],
+  "sources": [
+    {
+      "fact": "11 tools, sign-in, clients, read-only, storage, limits, free",
+      "url": "https://askwatch.ai/free-tools/google-search-console-mcp"
+    },
+    {
+      "fact": "Monitor plan from $50 a month",
+      "url": "https://askwatch.ai/pricing"
+    },
+    {
+      "fact": "Repo holds docs only",
+      "url": "https://github.com/askwatch/gsc-mcp"
+    }
+  ]
+}

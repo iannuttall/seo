@@ -1,0 +1,62 @@
+{
+  "slug": "search-console-mcp",
+  "name": "Search Console MCP",
+  "url": "https://github.com/saurabhsharma2u/search-console-mcp",
+  "kind": "self-hosted",
+  "checked": "2026-11-02",
+  "summary": "search-console-mcp is a free open source Node.js server and CLI by Saurabh Sharma for Search Console, Bing, GA4 and AdSense.",
+  "signIn": "Google OAuth browser sign-in through npx search-console-mcp setup (the docs do not describe creating your own OAuth client), or a Google Cloud service account key. Google Analytics 4 uses a service account, AdSense uses OAuth only, and Bing uses an API key.",
+  "tools": "README says v2.0 has '7 Fluent Domain Tools', but its tools table lists 18 tools plus 3 AdSense tools, and says 96+ legacy tool names still work. Source: GitHub README, Tools section.",
+  "dataSources": [
+    "Google Search Console",
+    "Bing Webmaster Tools",
+    "Google Analytics 4",
+    "Google AdSense",
+    "PageSpeed Insights"
+  ],
+  "clients": ["Claude Desktop", "Cursor", "Antigravity", "VS Code"],
+  "webChat": "Not stated",
+  "free": "Yes, MIT licensed open source.",
+  "price": "Free and open source",
+  "freeShort": "Open source",
+  "priceFrom": "No paid plan",
+  "writeActions": "Can add and remove site properties, submit and delete sitemaps, and submit or remove URLs through Google and Bing indexing APIs and IndexNow. The README says the server is read only by default at setup and write scope is opted into when a tool first needs it.",
+  "dataStorage": "Runs on your machine. Tokens are stored in the OS keychain, or in an AES-256-GCM encrypted file keyed to the machine ID. Only refresh_token and expiry_date are stored.",
+  "history": "Google's 16 months",
+  "licence": "MIT",
+  "github": {
+    "repo": "saurabhsharma2u/search-console-mcp",
+    "stars": 320,
+    "lastCommit": "2026-10-21",
+    "version": "v2.1.4",
+    "read": "2026-11-02"
+  },
+  "setup": "Install Node.js 18 or higher, run npx search-console-mcp setup to sign in with Google in the browser, then add the npx command to the MCP client config and restart. Alternatives are a .mcpb bundle for Claude Desktop or a service account key. Bing needs an API key and Google Analytics 4 needs a service account.",
+  "pickIf": [
+    "You want Bing and AdSense data next to Search Console on your own machine.",
+    "You want the same tools as CLI commands with JSON, CSV or table output.",
+    "You want Google and Bing performance compared side by side."
+  ],
+  "sources": [
+    {
+      "fact": "README, tools, data sources, security",
+      "url": "https://github.com/saurabhsharma2u/search-console-mcp"
+    },
+    {
+      "fact": "Authentication",
+      "url": "https://searchconsolemcp.saurabh.app/getting-started/authentication"
+    },
+    {
+      "fact": "Installation and clients",
+      "url": "https://searchconsolemcp.saurabh.app/getting-started/installation"
+    },
+    {
+      "fact": "Token storage",
+      "url": "https://searchconsolemcp.saurabh.app/concepts/trust-and-security"
+    },
+    {
+      "fact": "Latest release v2.1.4",
+      "url": "https://github.com/saurabhsharma2u/search-console-mcp/releases/latest"
+    }
+  ]
+}

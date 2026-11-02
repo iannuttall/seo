@@ -1,0 +1,29 @@
+---
+// One AI client's setup steps as a numbered muted panel, each step with its
+// copyable code. Sits where the setup box goes on the other landing pages.
+import CodeBlock from './CodeBlock.astro'
+import type { Step } from '@/content/integrations'
+
+type Props = { steps: Step[]; note?: string }
+
+const { steps, note } = Astro.props
+---
+
+<div class="text-left">
+  <ol class="divide-y divide-border rounded-lg bg-muted px-6">
+    {
+      steps.map((step, index) => (
+        <li class="flex gap-4 py-4">
+          <span class="flex size-7 shrink-0 items-center justify-center rounded-full bg-background text-sm font-medium text-foreground">
+            {index + 1}
+          </span>
+          <div class="min-w-0 flex-1">
+            <p class="text-base leading-7 text-foreground">{step.text}</p>
+            {step.code ? <CodeBlock value={step.code} wrap class="!mt-3 [&_pre]:bg-background" /> : null}
+          </div>
+        </li>
+      ))
+    }
+  </ol>
+  {note ? <p class="mt-3 text-sm/6 text-foreground-muted">{note}</p> : null}
+</div>

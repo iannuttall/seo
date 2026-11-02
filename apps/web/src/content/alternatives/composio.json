@@ -1,0 +1,57 @@
+{
+  "slug": "composio",
+  "name": "Composio",
+  "url": "https://composio.dev/toolkits/google_search_console",
+  "kind": "developer platform",
+  "checked": "2026-11-02",
+  "summary": "Composio is a developer platform that hosts MCP servers for over 1,500 toolkits. Google Search Console is one of them, with 9 tools.",
+  "signIn": "OAuth through a Composio-managed Google app, or your own OAuth app. Developers create a session with the Composio SDK and an API key, which returns an MCP URL and headers.",
+  "tools": "9 tools, stated on the toolkit page.",
+  "dataSources": [
+    "Google Search Console search analytics: clicks, impressions, CTR, position",
+    "Google Search Console URL inspection",
+    "Google Search Console sites and sitemaps",
+    "1500+ other toolkits"
+  ],
+  "clients": [
+    "Claude",
+    "ChatGPT",
+    "Cursor",
+    "Claude Code",
+    "Claude Cowork",
+    "Antigravity",
+    "Codex",
+    "Kimi Code",
+    "Grok Bot",
+    "Grok Build",
+    "VS Code",
+    "OpenCode",
+    "OpenClaw",
+    "Hermes"
+  ],
+  "webChat": "Yes",
+  "free": "Hobby plan at $0, no credit card: 100,000 tool calls a month, of which up to 20,000 can run through Composio-managed apps such as Google Search Console. Usage pauses at the cap.",
+  "price": "Hobby $0. Pro $29 per month with $29 usage credit, then $0.0003 per tool call ($0.0005 per tool call on Composio-managed apps). Enterprise custom. Prices in USD.",
+  "freeShort": "100,000 tool calls a month",
+  "priceFrom": "$29 a month",
+  "writeActions": "Yes. Add Site, Delete Site and Submit Sitemap.",
+  "dataStorage": "OAuth tokens and API keys are encrypted. Zero data retention of request and response payloads is a paid add-on on Pro for select features and included on Enterprise. Composio keeps execution logs.",
+  "history": "Not stated",
+  "licence": "Hosted service",
+  "github": null,
+  "pickIf": [
+    "You are building your own agent and want Search Console next to Slack, Gmail or your CRM on one platform.",
+    "You want your agent to add and delete Search Console sites and submit sitemaps.",
+    "You need SOC 2 Type II compliance from the platform."
+  ],
+  "sources": [
+    {
+      "fact": "9 tools, OAuth, clients, free tier wording, security",
+      "url": "https://composio.dev/toolkits/google_search_console"
+    },
+    {
+      "fact": "Plans, usage rates, ZDR add-on",
+      "url": "https://composio.dev/pricing"
+    }
+  ]
+}

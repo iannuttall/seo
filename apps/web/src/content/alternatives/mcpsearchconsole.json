@@ -1,0 +1,54 @@
+{
+  "slug": "mcpsearchconsole",
+  "name": "Search Console MCP",
+  "url": "https://mcpsearchconsole.com/",
+  "kind": "hosted",
+  "checked": "2026-11-02",
+  "summary": "Search Console MCP is a hosted Search Console server with a metered free plan and flat monthly paid plans.",
+  "signIn": "Add its server URL to the AI client and sign in with Google, with read-only Search Console access. Grok Bot uses a setup token instead.",
+  "tools": "16 tools, listed on its home page.",
+  "dataSources": [
+    "Google Search Console",
+    "PageSpeed and Core Web Vitals",
+    "Public DNS, redirect, robots.txt and TLS checks"
+  ],
+  "clients": [
+    "Claude",
+    "Claude Code",
+    "ChatGPT",
+    "Codex",
+    "Grok Bot",
+    "Mistral Vibe",
+    "Cursor",
+    "Windsurf"
+  ],
+  "webChat": "Yes",
+  "free": "Free plan with no card: 15 data pulls a day and 40 a month per person or per company domain, 3 Search Console properties at a time (3 swaps a week), all 16 tools, unlimited site checks. Listing sites, notes, sitemap writes and site checks never count.",
+  "price": "Solo 4.99 € a month excluding VAT (unlimited pulls and properties, one Google account). Team 29.99 € a month excluding VAT (everyone on a company domain, shared notes). Billed monthly in euros through Stripe.",
+  "freeShort": "15 data pulls a day, 40 a month",
+  "priceFrom": "€4.99 a month",
+  "writeActions": "Read-only by default. An opt-in, separate Google consent grants the full webmasters scope and unlocks only submit_sitemap and delete_sitemap. It can also save notes in its own service.",
+  "dataStorage": "No, per its privacy policy. Search Console data is fetched live and not stored. It stores your email, an encrypted refresh token and usage events that record the tool, time and property, never the returned data.",
+  "history": "Not stated",
+  "licence": "Hosted service",
+  "github": null,
+  "pickIf": [
+    "You want a performance chart drawn inside Claude.",
+    "You want one flat price for everyone on your company domain.",
+    "You only need Search Console, not Google Analytics or keyword research."
+  ],
+  "sources": [
+    {
+      "fact": "16 tools, clients, read-only scope, setup",
+      "url": "https://mcpsearchconsole.com/"
+    },
+    {
+      "fact": "Plans, prices, data pulls, property limit",
+      "url": "https://mcpsearchconsole.com/pricing"
+    },
+    {
+      "fact": "Data not stored, scopes, retention",
+      "url": "https://mcpsearchconsole.com/legal"
+    }
+  ]
+}

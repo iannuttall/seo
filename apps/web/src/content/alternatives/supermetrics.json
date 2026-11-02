@@ -1,0 +1,62 @@
+{
+  "slug": "supermetrics",
+  "name": "Supermetrics",
+  "url": "https://supermetrics.com/connect/google-search-console-to-claude",
+  "kind": "connector",
+  "checked": "2026-11-02",
+  "summary": "Supermetrics is a marketing data platform with AI connectors that read Search Console and over 170 other sources.",
+  "signIn": "OAuth 2.0 per user. In Claude, add the Supermetrics connector from the Claude directory, then authorize Google Search Console. API key (Bearer api_*) access is available for server to server workflows.",
+  "tools": "No count stated. Its MCP docs list 13 tools plus 6 beta tools.",
+  "dataSources": [
+    "Google Search Console search analytics: clicks, impressions, CTR, average position",
+    "Google Search Console sitemap data: submitted URLs, indexed URLs, sitemap warnings and errors",
+    "170+ other marketing platforms, such as Google Ads, Meta Ads, GA4, HubSpot and Salesforce"
+  ],
+  "clients": [
+    "Claude",
+    "ChatGPT",
+    "Microsoft Copilot",
+    "Gemini Enterprise",
+    "Cursor",
+    "Windsurf",
+    "Cline",
+    "GitHub Copilot extensions",
+    "n8n",
+    "Microsoft Power Automate",
+    "Azure Logic Apps",
+    "Power Apps"
+  ],
+  "webChat": "Yes",
+  "free": "14 day free trial, no credit card needed. No free plan stated.",
+  "price": "Starter from $55 per month billed monthly, or $44 per month billed yearly. Growth from $222 per month billed monthly, or $177 per month billed yearly. Enterprise by quote. Prices in USD. The MCP page says MCP access comes with any subscription, but its FAQ says MCP is included in plans with Data API access, and the pricing table lists Data API access under Enterprise.",
+  "freeShort": "14-day trial",
+  "priceFrom": "$44 a month, billed yearly",
+  "writeActions": "No Google Search Console write actions stated. Beta tools can create and update ad campaigns (Google, Meta, Microsoft, TikTok, LinkedIn, ChatGPT and Snapchat Ads), publish Supermetrics Studio dashboards and publish Instagram posts.",
+  "dataStorage": "Supermetrics says data is only processed as needed to serve queries, credentials are encrypted at rest and in transit, and customer data is never used to train public models. Regional hosting is available.",
+  "history": "Full 16 months of Search Console history.",
+  "licence": "Hosted service",
+  "github": null,
+  "pickIf": [
+    "Your marketing team already reports through Supermetrics.",
+    "You want Search Console next to over 170 marketing sources in one connection.",
+    "You need SOC 2 Type II, ISO 27001 and SSO."
+  ],
+  "sources": [
+    {
+      "fact": "GSC connector, metrics, 16 month history, no URL inspection",
+      "url": "https://supermetrics.com/connect/google-search-console-to-claude"
+    },
+    {
+      "fact": "MCP clients, OAuth and API key, plan wording",
+      "url": "https://supermetrics.com/products/supermetrics-mcp"
+    },
+    {
+      "fact": "Plans and prices, 14 day trial",
+      "url": "https://supermetrics.com/pricing"
+    },
+    {
+      "fact": "Tool list and compatible clients",
+      "url": "https://mcp.supermetrics.com/"
+    }
+  ]
+}

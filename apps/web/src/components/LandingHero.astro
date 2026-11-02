@@ -1,0 +1,28 @@
+---
+// The home page hero for the landing pages: centred title and lead, the
+// sign-up button, then the setup box in the full page frame. Pass a slot to
+// replace the setup box, such as one client's own steps.
+import SetupCommands from './SetupCommands.astro'
+import { getButtonClasses } from './ui/button'
+
+type Props = { title: string; lead: string; setupId: string }
+
+const { title, lead, setupId } = Astro.props
+const hasSetup = Astro.slots.has('default')
+---
+
+<section class="pt-4">
+  <div class="site-frame flex flex-col items-center pt-14 text-center sm:pt-20">
+    <h1 class="mt-4 max-w-3xl text-pretty text-4xl/tight font-medium -tracking-[0.8px] xl:text-5xl/tight xl:-tracking-[1px]">
+      {title}
+    </h1>
+    <p class="mt-4 max-w-2xl text-pretty text-xl/8 font-medium -tracking-[0.2px] text-foreground-muted">
+      {lead}
+    </p>
+    <a class:list={[getButtonClasses('default', 'lg'), 'mt-8']} href="/account">Get started free</a>
+  </div>
+
+  <div class="site-frame mt-10 sm:mt-12">
+    {hasSetup ? <slot /> : <SetupCommands id={setupId} />}
+  </div>
+</section>

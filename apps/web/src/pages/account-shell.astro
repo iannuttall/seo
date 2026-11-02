@@ -358,29 +358,6 @@ const keys: { name: string; label: string; type: 'text' | 'password' }[] = [
         class="mt-4 flex flex-col gap-4"
         hidden
       >
-        <div class={panel} id="plan" data-plan hidden>
-          <h2 class={heading}>Weekly site audit</h2>
-          <p class={note}>
-            Each site is crawled every week and Google checks its pages every
-            day. Every Monday you get an email and a webhook call with what
-            happened on each site, and an alert when a page drops out of
-            Google’s index or comes back.
-          </p>
-          <p class="mt-3 text-sm/6 text-foreground" data-plan-status></p>
-          <form method="post" data-action="/account/billing/checkout" class="mt-4 flex flex-wrap items-end gap-3" data-plan-buy hidden>
-            <input type="hidden" name="form" />
-            <label class="flex flex-col gap-1.5 text-sm font-medium text-foreground">
-              Sites
-              <FormInput type="number" name="sites" value="1" min="1" required class="w-24" data-plan-sites />
-            </label>
-            <button type="submit" class={primary}>Start the weekly audit</button>
-          </form>
-          <form method="post" data-action="/account/billing/manage" class="mt-4" data-plan-manage hidden>
-            <input type="hidden" name="form" />
-            <button type="submit" class={outline}>Manage billing</button>
-          </form>
-        </div>
-
         <div class="flex flex-col gap-4" data-sites-overview>
           <div class="flex items-center gap-3 rounded-lg bg-info-soft px-4 py-2.5 text-sm/6 text-foreground" data-sites-notice hidden>
             <p class="min-w-0 flex-1">
@@ -397,15 +374,22 @@ const keys: { name: string; label: string; type: 'text' | 'password' }[] = [
           </div>
 
           <div class={panel} id="sites">
-            <h2 class={heading}>Sites</h2>
-            <p class={note}>
+            <h2 class={heading} data-sites-title>Sites</h2>
+            <p class={note} data-sites-pitch>
               Each site is crawled once a week and Google checks its pages
               every day. Ask your agent for the report.
             </p>
+            <div class="mt-2 flex flex-wrap items-baseline gap-x-3" data-plan hidden>
+              <p class="text-sm/6 text-foreground-muted" data-plan-status></p>
+              <form method="post" data-action="/account/billing/manage" data-plan-manage hidden>
+                <input type="hidden" name="form" />
+                <button type="submit" class="text-sm/6 text-foreground underline underline-offset-2 hover:no-underline">Manage billing</button>
+              </form>
+            </div>
             <form method="post" data-action="/account/audit" class="mt-4" data-audit-add>
               <input type="hidden" name="form" />
               <input type="hidden" name="property" data-picker-value />
-              <label for="site-picker" class="text-sm font-medium text-foreground">Add a site</label>
+              <label for="site-picker" class="text-sm font-medium text-foreground" data-audit-label>Add a site</label>
               <div class="relative mt-1.5">
                 <FormInput
                   id="site-picker"
@@ -787,7 +771,6 @@ const keys: { name: string; label: string; type: 'text' | 'password' }[] = [
       }
       billing?: {
         price: number
-        max: number
         sites: number
         status: string | null
         manage: boolean
@@ -1111,11 +1094,16 @@ const keys: { name: string; label: string; type: 'text' | 'password' }[] = [
       }
 
       const form = root.querySelector<HTMLFormElement>('[data-audit-add]')
-      if (audit.sites.length >= audit.max) {
+      // A paid plan grows by a site, so only an unpaid limit is full.
+      const plan = state.account?.billing
+      if (plan && audit.sites.length >= audit.max) {
+        const label = root.querySelector('[data-audit-label]')
+        if (label && audit.max) label.textContent = `Add a site (+$${plan.price} a month)`
+      } else if (audit.sites.length >= audit.max) {
         form?.remove()
         const full = root.querySelector('[data-audit-full]')
         if (full) {
-          full.textContent = `Your weekly audit covers ${audit.max} ${audit.max === 1 ? 'site' : 'sites'}. Remove one to add another${state.account?.billing?.manage ? ', or add a site in Manage billing above' : ''}.`
+          full.textContent = `Your weekly audit covers ${audit.max} ${audit.max === 1 ? 'site' : 'sites'}. Remove one to add another.`
         }
         show(full)
       }
@@ -1153,7 +1141,7 @@ const keys: { name: string; label: string; type: 'text' | 'password' }[] = [
         value.value = choice.property
         picker.value = choice.property
         close()
-        if (status) status.textContent = `Adding ${choice.property}…`
+        if (status) status.textContent = `${state.account?.billing && !audit.max ? 'Opening Stripe Checkout for' : 'Adding'} ${choice.property}…`
         form.requestSubmit()
       }
       const render = async () => {
@@ -1313,35 +1301,40 @@ const keys: { name: string; label: string; type: 'text' | 'password' }[] = [
         if (id) id.value = machine.id
         machineList?.append(copy)
       }
-      // The paid weekly audit: buy it, or the plan with Manage billing.
+      // The weekly audit's plan, once billing is on: with no plan the Sites
+      // tab sells it, and picking a site opens Stripe Checkout for it.
       const billing = account.billing
       if (billing) {
-        show(root.querySelector('[data-plan]'))
-        const status = root.querySelector('[data-plan-status]')
         const paidNow = new URLSearchParams(window.location.search).has('paid')
-        if (status) {
-          status.textContent = billing.sites
-            ? `Your plan: ${billing.sites} ${billing.sites === 1 ? 'site' : 'sites'} at $${billing.price} a month each.${billing.status === 'past_due' ? ' Stripe could not take the last payment; update your card in Manage billing.' : ''}`
-            : paidNow
-              ? 'Payment received. Your plan starts in a moment: reload this page.'
-              : `$${billing.price} a month per site. Change the number of sites or cancel at any time.`
+        const set = (selector: string, text: string) => {
+          const element = root.querySelector(selector)
+          if (element) element.textContent = text
         }
-        const sitesInput = root.querySelector<HTMLInputElement>('[data-plan-sites]')
-        if (sitesInput) sitesInput.max = String(billing.max)
-        show(root.querySelector('[data-plan-buy]'), !billing.sites)
+        const price = `$${billing.price} a month`
+        if (!billing.sites && !account.audit?.max) {
+          set('[data-sites-title]', paidNow ? 'Payment received' : 'Add your first site')
+          set(
+            '[data-sites-pitch]',
+            paidNow
+              ? 'Your first crawl starts in a moment. Reload this page to see it.'
+              : `SEO Skill crawls the site every week and has Google check its pages every day. Every Monday you and your agent get what changed, by email and webhook, and an alert goes out the moment a page drops out of Google’s index. ${price} per site, cancel at any time.`,
+          )
+          set('[data-audit-label]', 'Pick a Search Console property')
+        } else if (billing.sites) {
+          show(root.querySelector('[data-plan]'))
+          set(
+            '[data-plan-status]',
+            billing.status === 'past_due'
+              ? 'Stripe could not take the last payment. Update your card to keep the audit running.'
+              : `Your plan: ${billing.sites} ${billing.sites === 1 ? 'site' : 'sites'} at ${price} each.`,
+          )
+        }
         show(root.querySelector('[data-plan-manage]'), billing.manage)
       }
-      // Without the weekly audit, the Sites tab only sells it, where it can
-      // be bought; otherwise it goes.
+      // Without the weekly audit or billing, the Sites tab goes.
       const noAudit = () => {
-        if (billing) {
-          root.querySelector('[data-sites-overview]')?.remove()
-          root.querySelector('[data-site-page]')?.remove()
-          root.querySelector('[data-coverage-dialog]')?.remove()
-        } else {
-          root.querySelector('[data-account-tab="sites"]')?.remove()
-          root.querySelector('[data-account-panel="sites"]')?.remove()
-        }
+        root.querySelector('[data-account-tab="sites"]')?.remove()
+        root.querySelector('[data-account-panel="sites"]')?.remove()
       }
       // The Beta tab exists only for an account with a beta feature.
       if (account.beta?.length) {
@@ -1356,12 +1349,6 @@ const keys: { name: string; label: string; type: 'text' | 'password' }[] = [
           const text = copy.querySelector('[data-beta-text]')
           if (text) text.textContent = feature.text
           betaList?.append(copy)
-        }
-        const audit = account.audit
-        if (audit) {
-          renderSites(audit, account.alerts, account.site)
-        } else {
-          noAudit()
         }
         const alerts = account.alerts
         if (alerts) {
@@ -1417,6 +1404,10 @@ const keys: { name: string; label: string; type: 'text' | 'password' }[] = [
       } else {
         root.querySelector('[data-account-tab="beta"]')?.remove()
         root.querySelector('[data-account-panel="beta"]')?.remove()
+      }
+      if (account.audit) {
+        renderSites(account.audit, account.alerts, account.site)
+      } else {
         noAudit()
       }
       if (account.login) {

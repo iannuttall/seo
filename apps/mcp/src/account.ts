@@ -38,9 +38,9 @@ import {
   billingOn,
   cancelBilling,
   checkoutUrl,
-  MAX_PAID_SITES,
   PRICE_PER_SITE_USD,
   portalUrl,
+  setPaidSites,
 } from './billing.ts'
 import { loginUrl, newToken } from './cli.ts'
 import { importClicky, removeClickyAccount } from './clicky.ts'
@@ -220,26 +220,6 @@ async function accountPage(
               title: BETA[id].title,
               text: BETA[id].text,
             })),
-            ...(beta.has('weekly-audit')
-              ? {
-                  audit: {
-                    max: limit,
-                    sites: audits.map((site) => ({
-                      id: site.id,
-                      property: site.property,
-                      lastFinishedAt: site.lastFinishedAt,
-                      lastStatus: site.lastStatus,
-                      pages: site.pagesFetched,
-                      open: site.openFindings,
-                      new: site.newFindings,
-                      error: site.lastError,
-                      coverage: site.coverage,
-                      nextRunAt: site.nextRunAt,
-                      monitor: site.monitor,
-                    })),
-                  },
-                }
-              : {}),
             ...(alerts.types.length
               ? {
                   alerts: {
@@ -260,12 +240,32 @@ async function accountPage(
               : {}),
           }
         : {}),
+      // The Sites tab: with the weekly audit, or where it can be bought.
+      ...(beta.has('weekly-audit') || billingOn(env)
+        ? {
+            audit: {
+              max: limit,
+              sites: audits.map((site) => ({
+                id: site.id,
+                property: site.property,
+                lastFinishedAt: site.lastFinishedAt,
+                lastStatus: site.lastStatus,
+                pages: site.pagesFetched,
+                open: site.openFindings,
+                new: site.newFindings,
+                error: site.lastError,
+                coverage: site.coverage,
+                nextRunAt: site.nextRunAt,
+                monitor: site.monitor,
+              })),
+            },
+          }
+        : {}),
       // The paid weekly audit, once billing is set up on this server.
       ...(billingOn(env)
         ? {
             billing: {
               price: PRICE_PER_SITE_USD,
-              max: MAX_PAID_SITES,
               sites: paid?.active ? paid.sites : 0,
               status: paid?.status ?? null,
               // Stripe's portal needs a customer, so manage needs a row.
@@ -302,7 +302,10 @@ export async function account(
   // read, fetched once when the picker opens.
   if (request.method === 'GET' && path === '/account/audit/choices') {
     const userId = await sessionUser(request, env)
-    if (!userId || !(await betaFlags(env, userId)).has('weekly-audit')) {
+    if (
+      !userId ||
+      !(billingOn(env) || (await betaFlags(env, userId)).has('weekly-audit'))
+    ) {
       return Response.json({ error: 'not_signed_in' }, { status: 403 })
     }
     const [found, audited] = await Promise.all([
@@ -516,7 +519,8 @@ export async function account(
       return redirect(`${home}#clicky`)
     }
     case '/account/audit': {
-      if (!(await betaFlags(env, userId)).has('weekly-audit')) break
+      const audits = (await betaFlags(env, userId)).has('weekly-audit')
+      if (!audits && !billingOn(env)) break
       // Only a property from the picker's list: one the person's Google
       // accounts can read, from the same short-lived cache.
       const wanted = field('property')
@@ -531,12 +535,34 @@ export async function account(
           { tab: 'sites' },
         )
       }
-      const added = await addAuditSite(env, userId, property)
+      // No plan yet: Stripe Checkout for this one site, which the webhook
+      // adds once it is paid.
+      if (!audits) return redirect(await checkoutUrl(env, userId, property))
+      let added = await addAuditSite(env, userId, property)
+      // A full plan grows by one site, charged now for the rest of the month.
+      if (added === 'full' && billingOn(env)) {
+        const paid = await billingOf(env, userId)
+        if (!paid?.active) {
+          return redirect(await checkoutUrl(env, userId, property))
+        }
+        try {
+          await setPaidSites(env, userId, paid.sites + 1)
+        } catch (error) {
+          console.error('billing: adding a site failed', error)
+          return accountPage(
+            env,
+            userId,
+            `Stripe could not take the payment for another site. Check your card in Manage billing, then add ${property} again.`,
+            { tab: 'sites' },
+          )
+        }
+        added = await addAuditSite(env, userId, property)
+      }
       return accountPage(
         env,
         userId,
         added === 'full'
-          ? `Your weekly audit covers ${await siteLimit(env, userId)} sites. Remove one first${billingOn(env) ? ', or add a site in Manage billing' : ''}.`
+          ? `Your weekly audit covers ${await siteLimit(env, userId)} sites. Remove one first.`
           : added === 'exists'
             ? `${property} is already audited.`
             : `Added ${property}. The first crawl has started.`,
@@ -599,9 +625,25 @@ export async function account(
         'Made a new signing secret. Update it where you check webhook signatures.',
         { tab: 'beta', ok: true },
       )
-    case '/account/audit/remove':
+    case '/account/audit/remove': {
       await removeAuditSite(env, userId, field('property'))
+      // The plan follows the sites: one fewer from the next bill, never
+      // below one site (cancel is in Manage billing).
+      const paid = billingOn(env) ? await billingOf(env, userId) : null
+      if (paid?.active) {
+        const [limit, left] = await Promise.all([
+          siteLimit(env, userId),
+          auditSites(env, userId),
+        ])
+        const needed = left.length - (limit - paid.sites)
+        if (needed < paid.sites) {
+          await setPaidSites(env, userId, needed).catch((error) =>
+            console.error('billing: lowering the plan failed', error),
+          )
+        }
+      }
       return redirect(`${home}#sites`)
+    }
     case '/account/delete': {
       // Stop charging first: a failure here keeps the account, so the
       // person can try again rather than pay for an account that is gone.
@@ -625,13 +667,6 @@ export async function account(
         },
         200,
         cookie(env, '', 0),
-      )
-    }
-    case '/account/billing/checkout': {
-      if (!billingOn(env)) break
-      const sites = Number.parseInt(field('sites'), 10)
-      return redirect(
-        await checkoutUrl(env, userId, Number.isFinite(sites) ? sites : 1),
       )
     }
     case '/account/billing/manage': {

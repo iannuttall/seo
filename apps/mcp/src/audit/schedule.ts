@@ -15,14 +15,12 @@ const STALE_MS = 6 * 3_600_000
 // Sites per account in the beta.
 export const MAX_SITES = 5
 
-// SQL for how many sites the account in column may audit: MAX_SITES with
-// the beta flag, the number paid for with an active subscription, the
-// larger of the two, or 0.
+// SQL for how many sites the account in column may audit: MAX_SITES free
+// with the beta flag, plus the sites an active plan pays for.
 const siteLimitSql = (column: string) =>
-  `MAX(
-    CASE WHEN EXISTS (SELECT 1 FROM beta_flags f WHERE f.user_id = ${column} AND f.flag = 'weekly-audit')
-      THEN ${MAX_SITES} ELSE 0 END,
-    COALESCE((SELECT b.sites FROM billing b WHERE b.user_id = ${column} AND b.status IN ${ACTIVE_SQL}), 0))`
+  `(CASE WHEN EXISTS (SELECT 1 FROM beta_flags f WHERE f.user_id = ${column} AND f.flag = 'weekly-audit')
+      THEN ${MAX_SITES} ELSE 0 END
+    + COALESCE((SELECT b.sites FROM billing b WHERE b.user_id = ${column} AND b.status IN ${ACTIVE_SQL}), 0))`
 
 // How many sites the account may audit.
 export async function siteLimit(env: Env, userId: string): Promise<number> {

@@ -1,4 +1,5 @@
 import { readJsonOrUndefined } from '@seo/core/hosted'
+import { addAuditSite } from './audit/schedule.ts'
 
 // The paid weekly audit: one Stripe price per site a month, bought as a
 // quantity. Stripe Checkout takes the first payment and Stripe's billing
@@ -84,13 +85,13 @@ async function stripe<T>(
   return json
 }
 
-// A Checkout page for the weekly audit on sites sites. The person can
-// change the number there. The subscription carries the person's id, so the
-// webhook knows whose it is.
+// A Checkout page for the weekly audit on one site, the property the person
+// picked. The subscription carries the person's id and the property, so the
+// webhook knows whose it is and adds the site once it is paid.
 export async function checkoutUrl(
   env: Env,
   userId: string,
-  sites: number,
+  property: string,
 ): Promise<string> {
   const existing = await billingOf(env, userId)
   const home = `${env.PUBLIC_URL}/account`
@@ -101,20 +102,53 @@ export async function checkoutUrl(
     {
       mode: 'subscription',
       'line_items[0][price]': env.STRIPE_PRICE_ID,
-      'line_items[0][quantity]': String(
-        Math.min(MAX_PAID_SITES, Math.max(1, sites)),
-      ),
-      'line_items[0][adjustable_quantity][enabled]': 'true',
-      'line_items[0][adjustable_quantity][minimum]': '1',
-      'line_items[0][adjustable_quantity][maximum]': String(MAX_PAID_SITES),
+      'line_items[0][quantity]': '1',
       client_reference_id: userId,
       'subscription_data[metadata][user_id]': userId,
+      'subscription_data[metadata][property]': property,
       success_url: `${home}?paid=1#sites`,
       cancel_url: `${home}#sites`,
       ...(existing ? { customer: existing.customer } : {}),
     },
   )
   return session.url
+}
+
+// Sets the number of sites an active plan pays for. More sites are charged
+// at once for the rest of the month, and a card that fails refuses the
+// change; fewer sites apply from the next bill. The row follows at once so
+// the new limit holds before Stripe's webhook arrives.
+export async function setPaidSites(
+  env: Env,
+  userId: string,
+  sites: number,
+): Promise<void> {
+  const row = await env.DB.prepare(
+    'SELECT subscription, sites FROM billing WHERE user_id = ?',
+  )
+    .bind(userId)
+    .first<{ subscription: string | null; sites: number }>()
+  if (!row?.subscription) throw new Error('No plan to change.')
+  const wanted = Math.min(MAX_PAID_SITES, Math.max(1, sites))
+  if (wanted === row.sites) return
+  const subscription = await stripe<{ items: { data: { id: string }[] } }>(
+    env,
+    'GET',
+    `subscriptions/${row.subscription}`,
+  )
+  const item = subscription.items.data[0]?.id
+  if (!item) throw new Error('The plan has no site item.')
+  await stripe(env, 'POST', `subscriptions/${row.subscription}`, {
+    'items[0][id]': item,
+    'items[0][quantity]': String(wanted),
+    proration_behavior: wanted > row.sites ? 'always_invoice' : 'none',
+    payment_behavior: 'error_if_incomplete',
+  })
+  await env.DB.prepare(
+    'UPDATE billing SET sites = ?, updated_at = ? WHERE user_id = ?',
+  )
+    .bind(wanted, Date.now(), userId)
+    .run()
 }
 
 // Stripe's billing portal, where the person changes the number of sites,
@@ -191,7 +225,7 @@ type Subscription = {
   id: string
   customer: string
   status: string
-  metadata?: { user_id?: string }
+  metadata?: { user_id?: string; property?: string }
   items?: { data?: { quantity?: number }[] }
 }
 
@@ -214,7 +248,10 @@ export async function stripeWebhook(
   }
   const event = JSON.parse(body) as {
     type?: string
-    data?: { object?: Subscription }
+    data?: {
+      object?: Subscription
+      previous_attributes?: { status?: string }
+    }
   }
   const subscription = event.data?.object
   if (!event.type?.startsWith('customer.subscription.') || !subscription) {
@@ -232,7 +269,7 @@ export async function stripeWebhook(
   )
   // Only for a person who still exists; a later event for an older
   // subscription of the same person does not overwrite a newer one.
-  await env.DB.prepare(
+  const saved = await env.DB.prepare(
     `INSERT INTO billing (user_id, customer, subscription, status, sites, updated_at)
      SELECT ?1, ?2, ?3, ?4, ?5, ?6 WHERE EXISTS (SELECT 1 FROM users WHERE id = ?1)
      ON CONFLICT (user_id) DO UPDATE SET customer = excluded.customer,
@@ -250,5 +287,16 @@ export async function stripeWebhook(
       Date.now(),
     )
     .run()
+  // The site picked at Checkout starts once the plan first becomes active:
+  // on creation, or when a payment that needed confirming goes through.
+  // Later events leave it alone, so a site removed since is not re-added.
+  const started =
+    (event.type === 'customer.subscription.created' ||
+      event.data?.previous_attributes?.status === 'incomplete') &&
+    (status === 'active' || status === 'trialing')
+  const property = subscription.metadata?.property
+  if (saved.meta.changes && started && property) {
+    await addAuditSite(env, userId, property)
+  }
   return new Response('ok')
 }

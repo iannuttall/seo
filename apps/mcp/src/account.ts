@@ -27,12 +27,21 @@ import {
 import {
   addAuditSite,
   auditSites,
-  MAX_SITES,
   removeAllAuditSites,
   removeAuditSite,
   siteId,
+  siteLimit,
 } from './audit/schedule.ts'
 import { BETA, betaFlags } from './beta.ts'
+import {
+  billingOf,
+  billingOn,
+  cancelBilling,
+  checkoutUrl,
+  MAX_PAID_SITES,
+  PRICE_PER_SITE_USD,
+  portalUrl,
+} from './billing.ts'
 import { loginUrl, newToken } from './cli.ts'
 import { importClicky, removeClickyAccount } from './clicky.ts'
 import { directory } from './google.ts'
@@ -135,13 +144,16 @@ async function accountPage(
     site?: string
   } = {},
 ): Promise<Response> {
-  const [accounts, keys, machines, login, beta] = await Promise.all([
-    accountsOf(env, userId),
-    keysOf(env, userId),
-    cliLinksOf(env, userId),
-    extra.link ? pendingLogin(env, extra.link) : null,
-    betaFlags(env, userId),
-  ])
+  const [accounts, keys, machines, login, beta, paid, limit] =
+    await Promise.all([
+      accountsOf(env, userId),
+      keysOf(env, userId),
+      cliLinksOf(env, userId),
+      extra.link ? pendingLogin(env, extra.link) : null,
+      betaFlags(env, userId),
+      billingOf(env, userId),
+      siteLimit(env, userId),
+    ])
   const audits = beta.has('weekly-audit')
     ? await Promise.all(
         (await auditSites(env, userId)).map(async (site) => ({
@@ -211,7 +223,7 @@ async function accountPage(
             ...(beta.has('weekly-audit')
               ? {
                   audit: {
-                    max: MAX_SITES,
+                    max: limit,
                     sites: audits.map((site) => ({
                       id: site.id,
                       property: site.property,
@@ -246,6 +258,19 @@ async function accountPage(
                   },
                 }
               : {}),
+          }
+        : {}),
+      // The paid weekly audit, once billing is set up on this server.
+      ...(billingOn(env)
+        ? {
+            billing: {
+              price: PRICE_PER_SITE_USD,
+              max: MAX_PAID_SITES,
+              sites: paid?.active ? paid.sites : 0,
+              status: paid?.status ?? null,
+              // Stripe's portal needs a customer, so manage needs a row.
+              manage: Boolean(paid),
+            },
           }
         : {}),
       ...(extra.token ? { token: extra.token } : {}),
@@ -511,7 +536,7 @@ export async function account(
         env,
         userId,
         added === 'full'
-          ? `The beta audits up to ${MAX_SITES} sites. Remove one first.`
+          ? `Your weekly audit covers ${await siteLimit(env, userId)} sites. Remove one first${billingOn(env) ? ', or add a site in Manage billing' : ''}.`
           : added === 'exists'
             ? `${property} is already audited.`
             : `Added ${property}. The first crawl has started.`,
@@ -578,6 +603,9 @@ export async function account(
       await removeAuditSite(env, userId, field('property'))
       return redirect(`${home}#sites`)
     case '/account/delete': {
+      // Stop charging first: a failure here keeps the account, so the
+      // person can try again rather than pay for an account that is gone.
+      if (billingOn(env)) await cancelBilling(env, userId)
       await removeAllAuditSites(env, userId)
       const accounts = await accountsOf(env, userId)
       await Promise.all(
@@ -598,6 +626,18 @@ export async function account(
         200,
         cookie(env, '', 0),
       )
+    }
+    case '/account/billing/checkout': {
+      if (!billingOn(env)) break
+      const sites = Number.parseInt(field('sites'), 10)
+      return redirect(
+        await checkoutUrl(env, userId, Number.isFinite(sites) ? sites : 1),
+      )
+    }
+    case '/account/billing/manage': {
+      const paid = billingOn(env) ? await billingOf(env, userId) : null
+      if (!paid) break
+      return redirect(await portalUrl(env, paid.customer))
     }
     case '/account/signout':
       return redirect(home, cookie(env, '', 0))

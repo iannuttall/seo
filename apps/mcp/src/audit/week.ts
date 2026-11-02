@@ -1,5 +1,6 @@
 import { previousWeek, type WeekData } from '@seo/core/commands'
 import { queueAlert } from '../alerts/deliver.ts'
+import { hasWeeklyAudit } from '../beta.ts'
 import { auditSites, siteId, siteObject } from './schedule.ts'
 
 // The weekly summary (seo report with no site, and the Monday email): the last full week,
@@ -50,8 +51,7 @@ export async function sendWeeklySummaries(env: Env, now = Date.now()) {
   const week = previousWeek(now).start
   const due = await env.DB.prepare(
     `SELECT DISTINCT s.user_id FROM audit_sites s
-     JOIN beta_flags f ON f.user_id = s.user_id AND f.flag = 'weekly-audit'
-     WHERE NOT EXISTS (SELECT 1 FROM weekly_summaries w WHERE w.user_id = s.user_id AND w.week = ?)
+     WHERE ${hasWeeklyAudit('s.user_id')} AND NOT EXISTS (SELECT 1 FROM weekly_summaries w WHERE w.user_id = s.user_id AND w.week = ?)
      ORDER BY s.user_id LIMIT ?`,
   )
     .bind(week, ACCOUNTS_PER_TICK)

@@ -125,6 +125,17 @@ export type View =
             monitor: AuditMonitor | null
           }[]
         }
+        // The paid weekly audit, when billing is set up: the price per site
+        // a month, the most sites one plan buys, the sites paid for now
+        // (0 without an active plan), Stripe's status, and whether Stripe's
+        // billing portal can open (the person has paid before).
+        billing?: {
+          price: number
+          max: number
+          sites: number
+          status: string | null
+          manage: boolean
+        }
         // Alert settings, for an account with a beta that has alerts.
         alerts?: {
           // Where alert email goes: the first linked Google account.

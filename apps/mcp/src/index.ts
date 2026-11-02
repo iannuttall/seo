@@ -8,6 +8,7 @@ import { sendDueAlerts } from './alerts/deliver.ts'
 import { startDue } from './audit/schedule.ts'
 import { sendWeeklySummaries } from './audit/week.ts'
 import { betaFlags } from './beta.ts'
+import { stripeWebhook } from './billing.ts'
 import { cliWeek, credentials, finishLogin, logout, startLogin } from './cli.ts'
 import { failureReport } from './failure-report.ts'
 import { directory } from './google.ts'
@@ -110,6 +111,10 @@ async function route(
   }
   if (pathname === '/account/cli/logout' && method === 'POST') {
     return logout(request, env)
+  }
+  // Stripe's signed subscription events, not a form on the account page.
+  if (pathname === '/account/billing/webhook' && method === 'POST') {
+    return stripeWebhook(request, env)
   }
   if (pathname === '/account' || pathname.startsWith('/account/')) {
     return account(request, env, pathname)

@@ -27,7 +27,8 @@ const tabs = [
   { id: 'accounts', label: 'Accounts' },
   { id: 'keys', label: 'Keys' },
   { id: 'machines', label: 'Machines' },
-  // Only for accounts in the weekly-audit beta; removed otherwise.
+  // For accounts with the weekly audit, or where it can be bought; removed
+  // otherwise.
   { id: 'sites', label: 'Sites' },
   // Only for accounts granted a beta feature; removed otherwise.
   { id: 'beta', label: 'Beta' },
@@ -357,6 +358,29 @@ const keys: { name: string; label: string; type: 'text' | 'password' }[] = [
         class="mt-4 flex flex-col gap-4"
         hidden
       >
+        <div class={panel} id="plan" data-plan hidden>
+          <h2 class={heading}>Weekly site audit</h2>
+          <p class={note}>
+            Each site is crawled every week and Google checks its pages every
+            day. Every Monday you get an email and a webhook call with what
+            happened on each site, and an alert when a page drops out of
+            Google’s index or comes back.
+          </p>
+          <p class="mt-3 text-sm/6 text-foreground" data-plan-status></p>
+          <form method="post" data-action="/account/billing/checkout" class="mt-4 flex flex-wrap items-end gap-3" data-plan-buy hidden>
+            <input type="hidden" name="form" />
+            <label class="flex flex-col gap-1.5 text-sm font-medium text-foreground">
+              Sites
+              <FormInput type="number" name="sites" value="1" min="1" required class="w-24" data-plan-sites />
+            </label>
+            <button type="submit" class={primary}>Start the weekly audit</button>
+          </form>
+          <form method="post" data-action="/account/billing/manage" class="mt-4" data-plan-manage hidden>
+            <input type="hidden" name="form" />
+            <button type="submit" class={outline}>Manage billing</button>
+          </form>
+        </div>
+
         <div class="flex flex-col gap-4" data-sites-overview>
           <div class="flex items-center gap-3 rounded-lg bg-info-soft px-4 py-2.5 text-sm/6 text-foreground" data-sites-notice hidden>
             <p class="min-w-0 flex-1">
@@ -761,6 +785,13 @@ const keys: { name: string; label: string; type: 'text' | 'password' }[] = [
           } | null
         }[]
       }
+      billing?: {
+        price: number
+        max: number
+        sites: number
+        status: string | null
+        manage: boolean
+      }
       alerts?: {
         email: string | null
         types: { id: string; title: string; text: string; email: boolean; webhook: boolean }[]
@@ -1083,7 +1114,9 @@ const keys: { name: string; label: string; type: 'text' | 'password' }[] = [
       if (audit.sites.length >= audit.max) {
         form?.remove()
         const full = root.querySelector('[data-audit-full]')
-        if (full) full.textContent = `The beta audits up to ${audit.max} sites. Remove one to add another.`
+        if (full) {
+          full.textContent = `Your weekly audit covers ${audit.max} ${audit.max === 1 ? 'site' : 'sites'}. Remove one to add another${state.account?.billing?.manage ? ', or add a site in Manage billing above' : ''}.`
+        }
         show(full)
       }
 
@@ -1280,6 +1313,36 @@ const keys: { name: string; label: string; type: 'text' | 'password' }[] = [
         if (id) id.value = machine.id
         machineList?.append(copy)
       }
+      // The paid weekly audit: buy it, or the plan with Manage billing.
+      const billing = account.billing
+      if (billing) {
+        show(root.querySelector('[data-plan]'))
+        const status = root.querySelector('[data-plan-status]')
+        const paidNow = new URLSearchParams(window.location.search).has('paid')
+        if (status) {
+          status.textContent = billing.sites
+            ? `Your plan: ${billing.sites} ${billing.sites === 1 ? 'site' : 'sites'} at $${billing.price} a month each.${billing.status === 'past_due' ? ' Stripe could not take the last payment; update your card in Manage billing.' : ''}`
+            : paidNow
+              ? 'Payment received. Your plan starts in a moment: reload this page.'
+              : `$${billing.price} a month per site. Change the number of sites or cancel at any time.`
+        }
+        const sitesInput = root.querySelector<HTMLInputElement>('[data-plan-sites]')
+        if (sitesInput) sitesInput.max = String(billing.max)
+        show(root.querySelector('[data-plan-buy]'), !billing.sites)
+        show(root.querySelector('[data-plan-manage]'), billing.manage)
+      }
+      // Without the weekly audit, the Sites tab only sells it, where it can
+      // be bought; otherwise it goes.
+      const noAudit = () => {
+        if (billing) {
+          root.querySelector('[data-sites-overview]')?.remove()
+          root.querySelector('[data-site-page]')?.remove()
+          root.querySelector('[data-coverage-dialog]')?.remove()
+        } else {
+          root.querySelector('[data-account-tab="sites"]')?.remove()
+          root.querySelector('[data-account-panel="sites"]')?.remove()
+        }
+      }
       // The Beta tab exists only for an account with a beta feature.
       if (account.beta?.length) {
         const betaRow = root.querySelector<HTMLTemplateElement>('[data-beta-row]')
@@ -1298,8 +1361,7 @@ const keys: { name: string; label: string; type: 'text' | 'password' }[] = [
         if (audit) {
           renderSites(audit, account.alerts, account.site)
         } else {
-          root.querySelector('[data-account-tab="sites"]')?.remove()
-          root.querySelector('[data-account-panel="sites"]')?.remove()
+          noAudit()
         }
         const alerts = account.alerts
         if (alerts) {
@@ -1355,8 +1417,7 @@ const keys: { name: string; label: string; type: 'text' | 'password' }[] = [
       } else {
         root.querySelector('[data-account-tab="beta"]')?.remove()
         root.querySelector('[data-account-panel="beta"]')?.remove()
-        root.querySelector('[data-account-tab="sites"]')?.remove()
-        root.querySelector('[data-account-panel="sites"]')?.remove()
+        noAudit()
       }
       if (account.login) {
         show(root.querySelector('[data-login]'))

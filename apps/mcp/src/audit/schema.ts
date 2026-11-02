@@ -51,12 +51,7 @@ CREATE TABLE IF NOT EXISTS run (
   render TEXT,
   render_probes INTEGER NOT NULL DEFAULT 0,
   render_errors INTEGER NOT NULL DEFAULT 0,
-  browser_ms INTEGER NOT NULL DEFAULT 0,
-  -- Pages sent to Browser Run, and how much of both the account's usage
-  -- in D1 already counts.
-  renders INTEGER NOT NULL DEFAULT 0,
-  metered_ms INTEGER NOT NULL DEFAULT 0,
-  metered_renders INTEGER NOT NULL DEFAULT 0
+  browser_ms INTEGER NOT NULL DEFAULT 0
 );
 
 CREATE TABLE IF NOT EXISTS runs (
@@ -131,6 +126,14 @@ CREATE TABLE IF NOT EXISTS checks (
 
 -- Checks used per property on the current Search Console day (Pacific
 -- time); other days' rows are removed once a day.
+-- Metered use not yet added to the account's usage in D1, by kind
+-- (src/usage.ts). Added to in the same transaction as the work it counts,
+-- and lowered by what each flush sent, so an eviction loses nothing.
+CREATE TABLE IF NOT EXISTS unmetered (
+  kind TEXT PRIMARY KEY,
+  amount INTEGER NOT NULL
+);
+
 CREATE TABLE IF NOT EXISTS quota (
   property TEXT NOT NULL,
   day TEXT NOT NULL,
@@ -212,9 +215,6 @@ export const RUN_ADDED: [string, string][] = [
   ['render_probes', 'INTEGER NOT NULL DEFAULT 0'],
   ['render_errors', 'INTEGER NOT NULL DEFAULT 0'],
   ['browser_ms', 'INTEGER NOT NULL DEFAULT 0'],
-  ['renders', 'INTEGER NOT NULL DEFAULT 0'],
-  ['metered_ms', 'INTEGER NOT NULL DEFAULT 0'],
-  ['metered_renders', 'INTEGER NOT NULL DEFAULT 0'],
 ]
 
 export const PAGES_ADDED: [string, string][] = [

@@ -1,5 +1,5 @@
 import { readJson } from '@seo/core/hosted'
-import { addUsage } from '../usage.ts'
+import { addUnmetered } from '../usage.ts'
 import { extractPage, type PageFacts } from './extract.ts'
 import type { Meter } from './meter.ts'
 
@@ -28,9 +28,6 @@ export type RenderState = {
   render_probes: number
   render_errors: number
   browser_ms: number
-  renders: number
-  metered_ms: number
-  metered_renders: number
 }
 
 export type Rendered =
@@ -198,7 +195,12 @@ export async function renderForRun(
   if (run.render !== null && run.render !== 'on') return null
   const rendered = await renderPage(browser, url, origin, userAgent)
   run.browser_ms += rendered.browserMs
-  if (browser) run.renders += 1
+  // Counted at once, before the page is written: a page rendered again
+  // after an eviction used the browser twice.
+  if (rendered.browserMs > 0) {
+    addUnmetered(meter, 'browser_run_ms', rendered.browserMs)
+  }
+  if (browser) addUnmetered(meter, 'browser_run_pages', 1)
   if (rendered.kind === 'busy') {
     // No page is written, so save the browser time here.
     saveRendering(meter, run)
@@ -235,41 +237,10 @@ export async function renderForRun(
 // Saves the run's rendering state that renderForRun changed in memory.
 export function saveRendering(meter: Meter, run: RenderState): void {
   meter.run(
-    'UPDATE run SET render = ?, render_probes = ?, render_errors = ?, browser_ms = ?, renders = ?',
+    'UPDATE run SET render = ?, render_probes = ?, render_errors = ?, browser_ms = ?',
     run.render,
     run.render_probes,
     run.render_errors,
     run.browser_ms,
-    run.renders,
-  )
-}
-
-// Adds the run's Browser Run use since the last call to the account's
-// usage in D1, then notes it as counted in the run row. Run at the end of
-// each wake; a wake cut short is counted by the next one. A D1 failure
-// leaves the use uncounted until a later wake, and never stops the crawl.
-export async function meterRendering(
-  env: Env,
-  meter: Meter,
-  run: RenderState,
-  userId: string,
-): Promise<void> {
-  const ms = run.browser_ms - run.metered_ms
-  const renders = run.renders - run.metered_renders
-  if (ms <= 0 && renders <= 0) return
-  try {
-    await addUsage(env, userId, {
-      browser_run_ms: ms,
-      browser_run_pages: renders,
-    })
-  } catch {
-    return
-  }
-  run.metered_ms = run.browser_ms
-  run.metered_renders = run.renders
-  meter.run(
-    'UPDATE run SET metered_ms = ?, metered_renders = ?',
-    run.metered_ms,
-    run.metered_renders,
   )
 }

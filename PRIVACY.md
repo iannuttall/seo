@@ -69,8 +69,10 @@ Cloudflare D1 with only these things:
   keys, and makes the Google and Bing requests itself. Nothing it fetches is
   sent back.
 - **How much metered work the server did for you.** One number a day per
-  kind of work, such as the browser time and pages the weekly audit
-  rendered with JavaScript. It holds no URLs or page content. It is kept to
+  kind of work: the browser time and pages the weekly audit rendered with
+  JavaScript, the Google URL Inspection checks made for you, and how many
+  research calls you made with each provider. It holds no URLs, page
+  content or research results. It is kept to
   see what the hosted features cost to run.
 - **Beta features turned on for you.** The name of each beta feature the
   maintainer turned on for your account, and when. Only the maintainer sets

@@ -9,6 +9,7 @@ import {
 import { auditAccess } from '../audit/schedule.ts'
 import { weekData } from '../audit/week.ts'
 import { accountUrl, signInHint } from '../google.ts'
+import { addUsage } from '../usage.ts'
 import type { ToolContext } from './registry.ts'
 
 // The core commands' functions for the hosted MCP: Search Console and Bing
@@ -25,7 +26,11 @@ export function deps({
   userId,
   directory,
   beta,
-}: Pick<ToolContext, 'env' | 'userId' | 'directory' | 'beta'>): CommandDeps {
+  waitUntil,
+}: Pick<
+  ToolContext,
+  'env' | 'userId' | 'directory' | 'beta' | 'waitUntil'
+>): CommandDeps {
   const audit = beta.has('weekly-audit') ? auditAccess(env, userId) : null
   return {
     searchAnalytics: directory.searchAnalytics(),
@@ -36,7 +41,14 @@ export function deps({
     // stops the run like Google's own quota does.
     inspect: async (site, url) => {
       const stored = audit ? await audit.inspect(site, url) : null
-      if (!stored) return indexStatusFrom(await directory.inspect(site, url))
+      if (!stored) {
+        const raw = await directory.inspect(site, url)
+        // The audited path counts its own checks in the site's object.
+        waitUntil(
+          addUsage(env, userId, { url_inspections: 1 }).catch(() => undefined),
+        )
+        return indexStatusFrom(raw)
+      }
       if (stored.result === null) {
         throw new CommandError(
           'RATE_LIMITED',

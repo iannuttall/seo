@@ -13,6 +13,7 @@ import { MAX_LISTED } from '../alerts/registry.ts'
 import { betaFlags } from '../beta.ts'
 import { directory } from '../google.ts'
 import { accountsOf } from '../store.ts'
+import { flushUnmetered } from '../usage.ts'
 import {
   addKnown,
   checksView,
@@ -30,12 +31,7 @@ import {
 } from './checks.ts'
 import { extractPage, resolveUrl } from './extract.ts'
 import { Meter } from './meter.ts'
-import {
-  meterRendering,
-  type RenderState,
-  renderForRun,
-  saveRendering,
-} from './render.ts'
+import { type RenderState, renderForRun, saveRendering } from './render.ts'
 import { analyse, type RunSummary } from './rules.ts'
 import { DISPOSABLE, migrate } from './schema.ts'
 import { readSitemap } from './sitemap.ts'
@@ -360,7 +356,7 @@ export class SiteAudit extends DurableObject<Env> {
       run.pause_until,
     )
     this.flush(wake, run, alarms)
-    await meterRendering(this.env, meter, run, site.user_id)
+    await flushUnmetered(this.env, meter, site.user_id)
     if (finished || failed) await this.finish(site, failed ? 'failed' : 'done')
     await this.checkWake()
   }
@@ -889,7 +885,9 @@ export class SiteAudit extends DurableObject<Env> {
     const meter = new Meter(this.ctx.storage)
     const site = meter.one<Site>('SELECT * FROM site')
     if (!site) return null
-    return inspectThrough(meter, site, await this.google(site), url)
+    return inspectThrough(meter, site, await this.google(site), url).finally(
+      () => flushUnmetered(this.env, meter, site.user_id),
+    )
   }
 
   // The weekly summary's part of this site for one week [start, end): the
@@ -1013,6 +1011,7 @@ export class SiteAudit extends DurableObject<Env> {
         ? await runChecks(meter, site, await this.google(site), Date.now())
         : null
       saveState(meter, { next_at: at })
+      await flushUnmetered(this.env, meter, site.user_id)
       await this.alertChanges(meter, site)
       await this.pushMonitor(meter, site)
       // A new day's plan goes to D1 for the account page.

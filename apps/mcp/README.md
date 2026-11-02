@@ -230,8 +230,10 @@ A small Cloudflare D1 database (`migrations/`) keeps only:
   every HTML page of that crawl is rendered, keeping the raw values that
   changed.
 - metered use (`usage`, `src/usage.ts`): one amount per account, UTC day
-  and kind, such as `browser_run_ms` and `browser_run_pages`. No URLs or
-  content. Metering only; nothing limits or charges an account from it.
+  and kind: Browser Run time and pages, URL Inspection checks and
+  `seo_research` calls by provider. No URLs or content. A site object
+  holds its share in its `unmetered` table until it reaches D1. Metering
+  only; nothing limits or charges an account from it.
 - for alerts (`src/alerts`): each alert type's email and webhook switches,
   the webhook URL and its sealed signing secret (`alert_settings`), each
   alert with its site, changed URLs and delivery state for 30 days

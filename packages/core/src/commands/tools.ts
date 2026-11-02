@@ -166,6 +166,8 @@ export const SHARED_TOOLS: SharedTool[] = [
       const texts: Record<StartAudit['status'], string> = {
         added: `Added ${property} to the weekly site audit. Its first crawl and index checks have started; ask ${surface.deps.call('report', { site: property, section: AUDIT_SECTION })} for the findings once the crawl is done.`,
         exists: `${property} is already in the weekly site audit.`,
+        pending:
+          'The payment went through and the plan is starting. Call seo_sites with add again in a minute.',
         checkout:
           result.status === 'checkout'
             ? `${property} needs a plan: $${result.price} a month per site, cancel at any time. Give the person this Stripe Checkout link to open and pay: ${result.url}\nThe audit of ${property} starts once they pay. Call seo_sites with add again afterwards to confirm.`

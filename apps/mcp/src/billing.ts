@@ -24,7 +24,7 @@ export const ACTIVE_SQL = `(${ACTIVE_STATUSES.map((status) => `'${status}'`).joi
 const TOLERANCE_S = 5 * 60
 
 export type Billing = {
-  customer: string
+  customer: string | null
   status: string | null
   sites: number
   active: boolean
@@ -45,7 +45,7 @@ export async function billingOf(
     'SELECT customer, status, sites FROM billing WHERE user_id = ?',
   )
     .bind(userId)
-    .first<{ customer: string; status: string | null; sites: number }>()
+    .first<{ customer: string | null; status: string | null; sites: number }>()
   if (!row) return null
   return {
     ...row,
@@ -87,33 +87,82 @@ async function stripe<T>(
   return json
 }
 
+type Session = { id: string; url: string | null; status: string }
+
+// The person's one Checkout session. Returns 'paid' when it was paid and
+// Stripe's webhook has not arrived yet; otherwise expires it if open, so
+// only the newest link can be paid.
+async function closeCheckout(
+  env: Env,
+  id: string | null | undefined,
+): Promise<'paid' | 'closed'> {
+  if (!id) return 'closed'
+  const session = await stripe<Session>(env, 'GET', `checkout/sessions/${id}`)
+  if (session.status === 'complete') return 'paid'
+  if (session.status !== 'open') return 'closed'
+  try {
+    await stripe(env, 'POST', `checkout/sessions/${id}/expire`)
+    return 'closed'
+  } catch (error) {
+    // It may have been paid or expired by another request a moment ago.
+    const again = await stripe<Session>(env, 'GET', `checkout/sessions/${id}`)
+    if (again.status === 'complete') return 'paid'
+    if (again.status === 'expired') return 'closed'
+    throw error
+  }
+}
+
 // A Checkout page for the weekly audit on one site, the property the person
-// picked. The subscription carries the person's id and the property, so the
-// webhook knows whose it is and adds the site once it is paid.
+// picked, or null when a paid Checkout is still waiting for Stripe's
+// webhook. The subscription carries the person's id and the property, so
+// the webhook knows whose it is and adds the site once it is paid. Only the
+// newest link can be paid: an older open one is expired first.
 export async function checkoutUrl(
   env: Env,
   userId: string,
   property: string,
-): Promise<string> {
-  const existing = await billingOf(env, userId)
-  const home = `${env.PUBLIC_URL}/account`
-  const session = await stripe<{ url: string }>(
-    env,
-    'POST',
-    'checkout/sessions',
-    {
-      mode: 'subscription',
-      'line_items[0][price]': env.STRIPE_PRICE_ID,
-      'line_items[0][quantity]': '1',
-      client_reference_id: userId,
-      'subscription_data[metadata][user_id]': userId,
-      'subscription_data[metadata][property]': property,
-      success_url: `${home}?paid=1#sites`,
-      cancel_url: `${home}#sites`,
-      ...(existing ? { customer: existing.customer } : {}),
-    },
+): Promise<string | null> {
+  const row = await env.DB.prepare(
+    'SELECT customer, checkout FROM billing WHERE user_id = ?',
   )
-  return session.url
+    .bind(userId)
+    .first<{ customer: string | null; checkout: string | null }>()
+  if ((await closeCheckout(env, row?.checkout)) === 'paid') return null
+  const home = `${env.PUBLIC_URL}/account`
+  const session = await stripe<Session>(env, 'POST', 'checkout/sessions', {
+    mode: 'subscription',
+    'line_items[0][price]': env.STRIPE_PRICE_ID,
+    'line_items[0][quantity]': '1',
+    client_reference_id: userId,
+    'subscription_data[metadata][user_id]': userId,
+    'subscription_data[metadata][property]': property,
+    success_url: `${home}?paid=1#sites`,
+    cancel_url: `${home}#sites`,
+    ...(row?.customer ? { customer: row.customer } : {}),
+  })
+  // Kept only if no other request stored a session since the read above;
+  // otherwise this one is expired and that one is used.
+  const saved = await env.DB.prepare(
+    `INSERT INTO billing (user_id, checkout, updated_at) VALUES (?1, ?2, ?3)
+     ON CONFLICT (user_id) DO UPDATE SET checkout = excluded.checkout,
+       updated_at = excluded.updated_at
+     WHERE billing.checkout IS ?4`,
+  )
+    .bind(userId, session.id, Date.now(), row?.checkout ?? null)
+    .run()
+  if (saved.meta.changes) return session.url
+  await stripe(env, 'POST', `checkout/sessions/${session.id}/expire`)
+  const winner = await env.DB.prepare(
+    'SELECT checkout FROM billing WHERE user_id = ?',
+  )
+    .bind(userId)
+    .first<{ checkout: string | null }>()
+  const other = winner?.checkout
+    ? await stripe<Session>(env, 'GET', `checkout/sessions/${winner.checkout}`)
+    : null
+  if (other?.status === 'complete') return null
+  if (!other?.url) throw new Error('No Checkout session to open.')
+  return other.url
 }
 
 // Sets the number of sites an active plan pays for. More sites are charged
@@ -162,11 +211,12 @@ export async function startAuditSite(
   property: string,
 ): Promise<StartAudit> {
   const audits = (await betaFlags(env, userId)).has('weekly-audit')
-  const checkout = async (): Promise<StartAudit> => ({
-    status: 'checkout',
-    url: await checkoutUrl(env, userId, property),
-    price: PRICE_PER_SITE_USD,
-  })
+  const checkout = async (): Promise<StartAudit> => {
+    const url = await checkoutUrl(env, userId, property)
+    return url
+      ? { status: 'checkout', url, price: PRICE_PER_SITE_USD }
+      : { status: 'pending' }
+  }
   if (!audits) {
     if (!billingOn(env)) return { status: 'full', limit: 0 }
     return checkout()
@@ -203,10 +253,16 @@ export async function portalUrl(env: Env, customer: string): Promise<string> {
 // Ends a deleted person's subscription at once, so Stripe stops charging.
 export async function cancelBilling(env: Env, userId: string): Promise<void> {
   const row = await env.DB.prepare(
-    'SELECT subscription, status FROM billing WHERE user_id = ?',
+    'SELECT subscription, status, checkout FROM billing WHERE user_id = ?',
   )
     .bind(userId)
-    .first<{ subscription: string | null; status: string | null }>()
+    .first<{
+      subscription: string | null
+      status: string | null
+      checkout: string | null
+    }>()
+  // An open Checkout could still be paid after the account is gone.
+  await closeCheckout(env, row?.checkout)
   if (!row?.subscription || row.status === 'canceled') return
   await stripe(env, 'DELETE', `subscriptions/${row.subscription}`)
 }
@@ -311,7 +367,7 @@ export async function stripeWebhook(
      SELECT ?1, ?2, ?3, ?4, ?5, ?6 WHERE EXISTS (SELECT 1 FROM users WHERE id = ?1)
      ON CONFLICT (user_id) DO UPDATE SET customer = excluded.customer,
        subscription = excluded.subscription, status = excluded.status,
-       sites = excluded.sites, updated_at = excluded.updated_at
+       sites = excluded.sites, checkout = NULL, updated_at = excluded.updated_at
      WHERE billing.subscription IS NULL OR billing.subscription = excluded.subscription
        OR billing.status NOT IN ${ACTIVE_SQL}`,
   )

@@ -268,8 +268,8 @@ async function accountPage(
               price: PRICE_PER_SITE_USD,
               sites: paid?.active ? paid.sites : 0,
               status: paid?.status ?? null,
-              // Stripe's portal needs a customer, so manage needs a row.
-              manage: Boolean(paid),
+              // Stripe's portal needs a customer, which a payment makes.
+              manage: Boolean(paid?.customer),
             },
           }
         : {}),
@@ -544,12 +544,14 @@ export async function account(
           ? `Stripe could not take the payment for another site. Check your card in Manage billing, then add ${property} again.`
           : started.status === 'full'
             ? `Your weekly audit covers ${started.limit} sites. Remove one first.`
-            : started.status === 'exists'
-              ? `${property} is already audited.`
-              : `Added ${property}. The first crawl has started.`,
+            : started.status === 'pending'
+              ? 'Your payment went through and the plan is starting. Reload this page in a minute.'
+              : started.status === 'exists'
+                ? `${property} is already audited.`
+                : `Added ${property}. The first crawl has started.`,
         {
           tab: 'sites',
-          ok: started.status === 'added' || started.status === 'exists',
+          ok: started.status !== 'full' && started.status !== 'payment_failed',
         },
       )
     }
@@ -655,7 +657,7 @@ export async function account(
     }
     case '/account/billing/manage': {
       const paid = billingOn(env) ? await billingOf(env, userId) : null
-      if (!paid) break
+      if (!paid?.customer) break
       return redirect(await portalUrl(env, paid.customer))
     }
     case '/account/signout':

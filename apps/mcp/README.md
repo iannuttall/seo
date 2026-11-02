@@ -70,7 +70,9 @@ grants `weekly-audit` like the beta flag; the site limit is the beta's 5
 free sites plus the sites paid for, and over the limit only the oldest
 sites keep running. Each account has one open Checkout session at a time: a new link expires
 the older one, and a paid one waiting for the webhook says the plan is
-starting, so nobody pays twice. Delete everything expires an open Checkout
+starting, so nobody pays twice. A maintainer's own account can get the `unlimited-sites` flag
+(`pnpm --filter @seo/hosted-mcp beta grant <google email> unlimited-sites`),
+which runs the audit on up to 100 sites with no plan. Delete everything expires an open Checkout
 and cancels the subscription first.
 Billing stays off until `STRIPE_PRICE_ID`, `STRIPE_SECRET_KEY` and
 `STRIPE_WEBHOOK_SECRET` are all set.

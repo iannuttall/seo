@@ -151,7 +151,7 @@ export const SHARED_TOOLS: SharedTool[] = [
     name: 'seo_report',
     command: 'report',
     title: 'Search Console report',
-    description: `Start here. Without site: a short summary of every site in the person's weekly site audit (beta) for last week, with what needs a look and the next step for each, ending with the site to ask about next; an account outside that beta gets its site list to pick from. With site: the main report for that Search Console property, the overview plus each section's row count and top rows. With site and section: that section's rows; page sections also check their top 20 URLs live. Sections:\n${Object.entries(
+    description: `Start here. Without site: a short summary of every site in the person's weekly site audit (beta) for last week, with each site's Google index, weekly crawl and search clicks, sites with changes first, ending with the site to ask about next; an account outside that beta gets its site list to pick from. With site: the main report for that Search Console property, the overview plus each section's row count and top rows. With site and section: that section's rows; page sections also check their top 20 URLs live. Sections:\n${Object.entries(
       SECTIONS,
     )
       .map(([id, text]) => `- ${id}: ${text}`)

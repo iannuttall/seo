@@ -232,13 +232,13 @@ function renderingText(rendering: AuditSummary['rendering']): string | null {
   if (!rendering) return null
   const pages = (n: number) => (n === 1 ? '1 page' : `${n} pages`)
   if (rendering.mode === 'on') {
-    return `JavaScript changed what the first pages show, so the crawl rendered every HTML page (${pages(rendering.rendered)} rendered${rendering.failed ? `; ${pages(rendering.failed)} could not be rendered, so ${rendering.failed === 1 ? 'it is' : 'they are'} left out of the tag and text checks` : ''}).`
+    return `JavaScript changed what some pages show, so the crawl rendered the parts of the site that need it (${pages(rendering.rendered)} rendered${rendering.failed ? `; ${pages(rendering.failed)} could not be rendered, so ${rendering.failed === 1 ? 'it is' : 'they are'} left out of the tag and text checks` : ''}).`
   }
   if (rendering.mode === 'off') {
-    return 'JavaScript did not change the first pages, so the crawl read raw HTML.'
+    return 'JavaScript did not change the pages checked, so the crawl read raw HTML.'
   }
   if (rendering.mode === 'unavailable') {
-    return 'JavaScript rendering failed on the first pages, so the crawl read raw HTML. If the site builds its pages with JavaScript, titles, canonicals and links may be missing here.'
+    return 'JavaScript rendering failed on the pages checked, so the crawl read raw HTML. If the site builds its pages with JavaScript, titles, canonicals and links may be missing here.'
   }
   return rendering.failed && !rendering.rendered
     ? 'JavaScript rendering failed, so the crawl read raw HTML.'

@@ -1,5 +1,18 @@
 # Changelog
 
+## 0.13.2
+
+### Fixed
+
+- `seo research` calls to DataForSEO and Ahrefs no longer wait forever. A
+  read gives up after 30 seconds and a DataForSEO task after 60. A read is
+  tried again once after a timeout, a network failure or a busy provider. A
+  DataForSEO task is tried again only when DataForSEO turned it away, so it
+  is never charged twice.
+- `seo research serp` keeps the results for keywords that answered when
+  another keyword fails, and names the keywords to ask for again.
+- A provider that is rate limiting is reported as rate limited.
+
 ## 0.13.1
 
 ### Fixed

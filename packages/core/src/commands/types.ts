@@ -153,8 +153,19 @@ export type CommandDeps = {
   // site: from the hosted server, or through it on a linked machine. null
   // when the account is not in that beta.
   week?: () => Promise<WeekData | null>
+  // Starts the weekly site audit of a property, paid where it needs a
+  // plan. Only the hosted server sets it.
+  startAudit?: (site: string) => Promise<StartAudit>
   now?: () => Date
 }
+
+// What starting the audit of a site did: started now, already running, a
+// Stripe Checkout link for the person to pay for the site, or refused.
+export type StartAudit =
+  | { status: 'added' | 'exists' }
+  | { status: 'checkout'; url: string; price: number }
+  | { status: 'full'; limit: number }
+  | { status: 'payment_failed' }
 
 export type CommandResult = { text: string; data: unknown }
 

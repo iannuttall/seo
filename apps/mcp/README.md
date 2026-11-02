@@ -60,7 +60,9 @@ webhook adds it once the plan is active. With a plan, adding a site past
 the limit raises the subscription by one site, charged at once for the
 rest of the month (a card that fails refuses it), and removing one lowers
 it from the next bill, never below one site. Manage billing opens Stripe's
-customer portal for the card, invoices and cancelling. Stripe posts
+customer portal for the card, invoices and cancelling. Agents get the same
+path from `seo_sites` with `add`: it starts the site, grows a paid plan by
+one site, or returns the Checkout link for the person to open. Stripe posts
 `customer.subscription.created`, `.updated` and `.deleted` to
 `POST /account/billing/webhook`, which checks the `Stripe-Signature` and
 keeps one `billing` row per account. An active, trialing or past-due plan

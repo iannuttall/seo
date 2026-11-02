@@ -8,6 +8,7 @@ import {
 } from '@seo/core/commands'
 import { auditAccess } from '../audit/schedule.ts'
 import { weekData } from '../audit/week.ts'
+import { billingOn, startAuditSite } from '../billing.ts'
 import { accountUrl, signInHint } from '../google.ts'
 import { addUsage } from '../usage.ts'
 import type { ToolContext } from './registry.ts'
@@ -63,6 +64,9 @@ export function deps({
       signIn: signInHint(env),
     },
     ...(audit ? { audit, week: () => weekData(env, userId) } : {}),
+    ...(audit || billingOn(env)
+      ? { startAudit: (site) => startAuditSite(env, userId, site) }
+      : {}),
     ...(HOSTED_BING
       ? {
           bing: async () => directory.bing,

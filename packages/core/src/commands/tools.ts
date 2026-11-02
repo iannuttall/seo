@@ -33,6 +33,7 @@ import {
   CommandError,
   type CommandId,
   type CommandResult,
+  type StartAudit,
 } from './types.js'
 import { runAllSites } from './week.js'
 
@@ -143,9 +144,40 @@ export const SHARED_TOOLS: SharedTool[] = [
     command: 'data',
     title: 'List sites',
     description:
-      'Lists the Search Console and Google Analytics properties the connected Google accounts can read, the Bing Webmaster site for each, and which research keys are set. Call it first.',
-    input: z.object({}),
-    run: listSites,
+      "Lists the Search Console and Google Analytics properties the connected Google accounts can read, the Bing Webmaster site for each, and which research keys are set. Call it first. With add: starts the weekly site audit of that site on the hosted server (a weekly crawl, daily Google index checks, a Monday email and webhook with what changed, and alerts when a page drops out of Google's index). A site that needs paying for returns a Stripe Checkout link: give it to the person to open, and the audit starts once they pay.",
+    input: z.object({
+      add: site
+        .optional()
+        .describe(
+          'Optional. A site to add to the weekly site audit. Only when the person asks for it: a site can cost money.',
+        ),
+    }),
+    run: async (surface, input) => {
+      if (!input.add) return listSites(surface)
+      const start = surface.deps.startAudit
+      if (!start) {
+        throw new CommandError(
+          'INVALID_INPUT',
+          'The weekly site audit runs on the hosted server only. Connect https://seoskill.dev/mcp and call seo_sites with add there.',
+        )
+      }
+      const property = await surface.resolveSite(input.add)
+      const result = await start(property)
+      const texts: Record<StartAudit['status'], string> = {
+        added: `Added ${property} to the weekly site audit. Its first crawl and index checks have started; ask ${surface.deps.call('report', { site: property, section: AUDIT_SECTION })} for the findings once the crawl is done.`,
+        exists: `${property} is already in the weekly site audit.`,
+        checkout:
+          result.status === 'checkout'
+            ? `${property} needs a plan: $${result.price} a month per site, cancel at any time. Give the person this Stripe Checkout link to open and pay: ${result.url}\nThe audit of ${property} starts once they pay. Call seo_sites with add again afterwards to confirm.`
+            : '',
+        full:
+          result.status === 'full'
+            ? `This account already audits ${result.limit} sites, the most it can. Remove one on the account page first.`
+            : '',
+        payment_failed: `Stripe could not take the payment for another site, so ${property} was not added. The person can check their card under Manage billing on the account page.`,
+      }
+      return { text: texts[result.status], data: { property, ...result } }
+    },
   }),
   tool({
     name: 'seo_report',

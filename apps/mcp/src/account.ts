@@ -37,10 +37,10 @@ import {
   billingOf,
   billingOn,
   cancelBilling,
-  checkoutUrl,
   PRICE_PER_SITE_USD,
   portalUrl,
   setPaidSites,
+  startAuditSite,
 } from './billing.ts'
 import { loginUrl, newToken } from './cli.ts'
 import { importClicky, removeClickyAccount } from './clicky.ts'
@@ -535,38 +535,22 @@ export async function account(
           { tab: 'sites' },
         )
       }
-      // No plan yet: Stripe Checkout for this one site, which the webhook
-      // adds once it is paid.
-      if (!audits) return redirect(await checkoutUrl(env, userId, property))
-      let added = await addAuditSite(env, userId, property)
-      // A full plan grows by one site, charged now for the rest of the month.
-      if (added === 'full' && billingOn(env)) {
-        const paid = await billingOf(env, userId)
-        if (!paid?.active) {
-          return redirect(await checkoutUrl(env, userId, property))
-        }
-        try {
-          await setPaidSites(env, userId, paid.sites + 1)
-        } catch (error) {
-          console.error('billing: adding a site failed', error)
-          return accountPage(
-            env,
-            userId,
-            `Stripe could not take the payment for another site. Check your card in Manage billing, then add ${property} again.`,
-            { tab: 'sites' },
-          )
-        }
-        added = await addAuditSite(env, userId, property)
-      }
+      const started = await startAuditSite(env, userId, property)
+      if (started.status === 'checkout') return redirect(started.url)
       return accountPage(
         env,
         userId,
-        added === 'full'
-          ? `Your weekly audit covers ${await siteLimit(env, userId)} sites. Remove one first.`
-          : added === 'exists'
-            ? `${property} is already audited.`
-            : `Added ${property}. The first crawl has started.`,
-        { tab: 'sites', ok: added !== 'full' },
+        started.status === 'payment_failed'
+          ? `Stripe could not take the payment for another site. Check your card in Manage billing, then add ${property} again.`
+          : started.status === 'full'
+            ? `Your weekly audit covers ${started.limit} sites. Remove one first.`
+            : started.status === 'exists'
+              ? `${property} is already audited.`
+              : `Added ${property}. The first crawl has started.`,
+        {
+          tab: 'sites',
+          ok: started.status === 'added' || started.status === 'exists',
+        },
       )
     }
     // Create the suggested folders as Search Console properties: ask for the

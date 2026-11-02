@@ -1,4 +1,5 @@
-import { inspectUrl, querySearchAnalytics } from '@seo/core'
+import { inspectUrl, localError, querySearchAnalytics } from '@seo/core'
+import { dateWindow } from '@seo/core/commands'
 import { defineCommand } from 'citty'
 import {
   booleanArg,
@@ -27,7 +28,11 @@ export const gscQueryCommand = defineCommand({
       description: 'Saved Google account email.',
     },
     'start-date': { type: 'string', description: 'Start date YYYY-MM-DD.' },
-    'end-date': { type: 'string', description: 'End date YYYY-MM-DD.' },
+    'end-date': {
+      type: 'string',
+      description:
+        'End date YYYY-MM-DD. Without dates: the last 28 days of final data.',
+    },
     dimensions: {
       type: 'string',
       description: 'Comma-separated GSC dimensions, for example query,page.',
@@ -64,6 +69,22 @@ export const gscQueryCommand = defineCommand({
         rowLimit: numberArg(args.limit),
         dataState: 'final',
       } as Record<string, unknown>)
+    // Missing dates default to the last 28 days of final data, as in seo
+    // report; a start date alone runs to the latest final day.
+    try {
+      Object.assign(
+        body,
+        dateWindow(
+          {
+            startDate: stringArg(body.startDate),
+            endDate: stringArg(body.endDate),
+          },
+          28,
+        ),
+      )
+    } catch (error) {
+      throw localError(error)
+    }
     const json = jsonFlag(args)
     const site = requireSite(stringArg(args.site) ?? stringArg(body.siteUrl))
     delete body.siteUrl

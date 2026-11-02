@@ -55,6 +55,21 @@ async function failure(
   const detail = (await response.text().catch(() => '')).slice(0, 300)
   const status = response.status
   const what = subject ? `${label} for ${subject}` : label
+  // A 400 is a request Google will refuse every time, such as a bad date or
+  // dimension, so it is an input error with Google's own reason.
+  if (status === 400) {
+    let reason = detail
+    try {
+      reason =
+        (JSON.parse(detail) as { error?: { message?: string } }).error
+          ?.message ?? detail
+    } catch {}
+    return new GoogleApiError(
+      'INVALID_INPUT',
+      `${label} rejected the request: ${reason}`.trim(),
+      status,
+    )
+  }
   if (status === 401) {
     return new GoogleApiError(
       'AUTH_EXPIRED',

@@ -117,7 +117,7 @@
     "jsonc-parser": "^3.3.1",
     "libsql": "^0.5.29",
     "lighthouse": "13.5.0",
-    "linkedom": "^0.18.13",
+    "linkedom": "^0.18.14",
     "open": "^11.0.4",
     "p-queue": "^9.3.5",
     "p-retry": "^8.0.1",
@@ -134,10 +134,10 @@
     "zod": "^4.6.7"
   },
   "devDependencies": {
-    "@biomejs/biome": "^2.5.15",
+    "@biomejs/biome": "^2.6.2",
     "@modelcontextprotocol/sdk": "^1.32.1",
-    "tsdown": "^0.23.1",
-    "turbo": "^2.11.8",
+    "tsdown": "^0.23.2",
+    "turbo": "^2.11.10",
     "typescript": "^6.0.3"
   }
 }

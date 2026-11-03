@@ -41,12 +41,12 @@ allowBuilds:
   workerd: true
 
 minimumReleaseAgeExclude:
-  - '@iannuttall/seo-graph-astro'
-  - '@iannuttall/seo-graph-core'
+  - "@iannuttall/seo-graph-astro"
+  - "@iannuttall/seo-graph-core"
   - miniflare@4.20260708.1
   - wrangler@4.110.0
-  - '@cloudflare/workers-types@5.20260716.1'
-  - '@hono/node-server@2.0.11'
+  - "@cloudflare/workers-types@5.20260716.1"
+  - "@hono/node-server@2.0.11"
   - postcss@8.5.23
   - undici@7.29.0 || 8.9.0
   - fast-uri@3.1.5

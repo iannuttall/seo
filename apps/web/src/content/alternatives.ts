@@ -201,7 +201,7 @@ export const seoSkill = {
   writeActions:
     'Read-only Google sign-in. Your agent can start the paid audit for a site, which returns a Stripe Checkout link for you to open.',
   dataStorage:
-    'Search Console and analytics rows are fetched on each request and never stored, except the fix list for sites in the weekly audit. Your linked accounts and saved keys are kept, encrypted.',
+    'Search Console and analytics rows are fetched on each request and never stored, except what the paid weekly audit keeps for its sites. Your linked accounts and saved keys are kept, encrypted.',
   history:
     "Google's 16 months, read live. With the weekly audit, crawl and index history for the sites you audit.",
   licence:
@@ -245,7 +245,7 @@ export const reasonsFor = (item: Competitor): string[] => {
       return [
         free,
         sources,
-        'You want your Search Console rows fetched on each request and never stored, except the fix list for sites in the weekly audit.',
+        'You want your Search Console rows fetched on each request and never stored, except what the paid weekly audit keeps for its sites.',
         'You want a weekly crawl, daily index checks and drop alerts done for you, for $50 a month per site.',
       ]
     case 'seo suite':

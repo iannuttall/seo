@@ -11,8 +11,8 @@ export type HostedTool =
   | 'seo_research'
   | 'seo_data'
 
-type Ask = { question: string; answer: string }
-type Faq = { question: string; answer: string }
+export type Ask = { question: string; answer: string }
+export type Faq = { question: string; answer: string }
 
 export type Source = {
   id: string

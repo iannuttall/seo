@@ -1,5 +1,6 @@
 import { readdirSync, writeFileSync } from 'node:fs'
 import { resolve } from 'node:path'
+import { cmsPaths } from '../src/content/cms.ts'
 import { docsPaths } from '../src/content/docs-nav.mjs'
 import { integrationPaths } from '../src/content/integrations.ts'
 import { toolPaths } from '../src/content/tools/manifest.mjs'
@@ -34,6 +35,7 @@ const paths = [
   ...toolPaths,
   ...docsPaths,
   ...integrationPaths,
+  ...cmsPaths,
   ...alternativePaths,
   '/pricing',
   '/stats',

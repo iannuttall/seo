@@ -1,0 +1,9 @@
+---
+import CmsGuide from '@/components/CmsGuide.astro'
+import { cmsList } from '@/content/cms'
+
+const cms = cmsList.find((item) => item.id === 'webflow')
+if (!cms) throw new Error('No webflow entry in cmsList')
+---
+
+<CmsGuide {cms} />

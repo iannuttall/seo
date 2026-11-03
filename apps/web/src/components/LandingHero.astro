@@ -2,7 +2,6 @@
 // The home page hero for the landing pages: centred title and lead, the
 // sign-up button, then the setup box in the full page frame. Pass a slot to
 // replace the setup box, such as one client's own steps.
-import FounderBadge from './FounderBadge.astro'
 import SetupCommands from './SetupCommands.astro'
 import { getButtonClasses } from './ui/button'
 
@@ -14,7 +13,6 @@ const hasSetup = Astro.slots.has('default')
 
 <section class="pt-4">
   <div class="site-frame flex flex-col items-center pt-14 text-center sm:pt-20">
-    <FounderBadge />
     <h1 class="mt-4 max-w-3xl text-pretty text-4xl/tight font-medium -tracking-[0.8px] xl:text-5xl/tight xl:-tracking-[1px]">
       {title}
     </h1>

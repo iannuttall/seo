@@ -1,0 +1,69 @@
+{
+  "slug": "mangools",
+  "name": "Mangools",
+  "url": "https://mangools.com/plans-and-pricing",
+  "kind": "seo suite",
+  "checked": "2026-11-03",
+  "summary": "Mangools is a hosted bundle of SEO tools (KWFinder, SERPChecker, SERPWatcher, LinkMiner and SiteProfiler) plus AI Search Watcher, sold together in one subscription.",
+  "signIn": "Create a free Mangools account. The Free plan needs no credit card and has no time limit. Mangools also has a Free+ plan, which its 2023 launch post describes as a 10-day plan with higher limits and no card. Paid plans are bought from the pricing page, monthly or yearly, and renew automatically.",
+  "tools": "KWFinder (keyword research, search volume history, keyword difficulty, competitor keywords), SERPChecker (SERP analysis), SERPWatcher (rank tracking, weekly updates, daily on Agency), LinkMiner (backlinks), SiteProfiler (domain metrics) and AI Search Watcher (AI visibility monitoring). The tools are not sold separately. API and MCP access are included on every paid plan. The Mangools MCP server is in beta, has about 35 tools and signs in with your Mangools account. Free and Free+ accounts get a one-time bonus of 100 keyword and 100 SERP lookups for API and MCP, then use the Free daily limits.",
+  "dataSources": [
+    "Mangools' own keyword data: 2.5 billion related keywords, per the KWFinder page",
+    "SERP results with SERP features and 49 metrics",
+    "Moz and Majestic URL metrics (in SERPChecker and LinkMiner)",
+    "AI search answers from ChatGPT, Google AI Overviews, Gemini, Claude and more (AI Search Watcher)",
+    "No Google Search Console or Google Analytics connection stated"
+  ],
+  "clients": [
+    "Web app",
+    "Claude (web, desktop and mobile)",
+    "ChatGPT (web and desktop)",
+    "Claude Code",
+    "Cursor",
+    "Copilot Studio",
+    "n8n",
+    "Open WebUI"
+  ],
+  "webChat": "Yes. Add it as a custom connector in claude.ai or ChatGPT. It works on the Free plan too, and the server is in beta.",
+  "free": "Free plan with no credit card and no time limit. The KWFinder page lists 5 lookups per 24 hours, with 15 related and 5 competitor keywords per lookup. Other free limits are not stated on its pages. Free and Free+ accounts get a one-time 100 keyword and 100 SERP lookups for API and MCP. Paid plans have a 48-hour money-back guarantee.",
+  "price": "Basic $61 a month, or $37.70 a month billed annually ($452.40 a year), 1 user, 100 keyword lookups a day, 200 tracked keywords, 100k backlink rows a month. Premium $81 a month, or $52.70 a month billed annually ($632.40 a year), 500 keyword lookups a day, 700 tracked keywords, 500k backlink rows, 3 extra seats available. Agency $141 a month, or $97.70 a month billed annually ($1,172.40 a year), 1.2k keyword lookups a day, 1.5k tracked keywords with daily updates, 1.2M backlink rows, 5 extra seats available. Every plan includes API, MCP and AI Search Watcher PRO (500 prompts). Annual billing saves about 35%. Prices in USD.",
+  "freeShort": "Free plan, 5 lookups a day",
+  "priceFrom": "$61 a month (Basic)",
+  "writeActions": "Not on your site or in Google. Through the MCP it can create keyword lists, SERPWatcher trackings and AI Search Watcher monitors inside Mangools. Some of these use paid quota and are marked as paid in the tool description.",
+  "dataStorage": "Not stated. No Search Console or Google Analytics connection is stated.",
+  "history": "KWFinder shows search volume history and SERPWatcher keeps ranking history, but how far back either goes is not stated.",
+  "licence": "Hosted service",
+  "github": null,
+  "pickIf": [
+    "You want simple keyword research with keyword difficulty, without a large suite to learn.",
+    "You want API and MCP access included on the cheapest paid plan.",
+    "You want an official MCP server you can add to claude.ai or ChatGPT, even on the Free plan.",
+    "You want AI search visibility monitoring bundled with your SEO tools at no extra cost."
+  ],
+  "sources": [
+    {
+      "fact": "Plans, prices, limits, seats, annual saving, API and MCP included, 48-hour money-back guarantee",
+      "url": "https://mangools.com/plans-and-pricing"
+    },
+    {
+      "fact": "Free plan with no card, tools not sold separately, monthly and annual plans",
+      "url": "https://mangools.com/faq"
+    },
+    {
+      "fact": "Free KWFinder limits, keyword database size, search volume history",
+      "url": "https://mangools.com/kwfinder"
+    },
+    {
+      "fact": "MCP server, clients, tools, beta status, quota, Free bonus lookups, paid actions",
+      "url": "https://mangools.com/mcp"
+    },
+    {
+      "fact": "API data and AI models covered",
+      "url": "https://mangools.com/api"
+    },
+    {
+      "fact": "Free and 10-day Free+ plans",
+      "url": "https://mangools.com/blog/mangools-is-free-again"
+    }
+  ]
+}

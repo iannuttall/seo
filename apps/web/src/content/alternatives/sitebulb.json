@@ -1,0 +1,61 @@
+{
+  "slug": "sitebulb",
+  "name": "Sitebulb",
+  "url": "https://sitebulb.com/subscriptions/pricing/index/",
+  "kind": "seo suite",
+  "checked": "2026-11-03",
+  "summary": "Sitebulb is a website auditing tool for SEO professionals that crawls your site to find technical issues and explains them with visuals and prioritized Hints, sold as a desktop app or as Sitebulb Cloud.",
+  "signIn": "Register for the free trial with your name and email, then download the desktop app. The 14-day trial is equal to Sitebulb Pro and needs no credit card. Paid plans are paid by credit card or PayPal, and invoice is possible on yearly plans. Cancel any time.",
+  "tools": "Technical SEO audits with prioritized Hints (100+ on Lite, 300+ on Pro), JavaScript crawling, duplicate content, crawl maps and Google Analytics, Search Console and Sheets integration on every plan. Pro adds advanced configuration, audit comparisons, scheduled audits, customized PDF reports, performance and mobile friendly, structured data, international and hreflang, spell checker, accessibility, AMP and auto-export to Google Sheets. Sitebulb Cloud adds cloud crawling with no project limits and recurring crawls. The Sitebulb MCP is on all Desktop and Cloud plans, including the free trial. It is read-only and comes with pre-built Skills.",
+  "dataSources": [
+    "Its own crawl of your site (desktop app or Sitebulb Cloud)",
+    "Google Analytics",
+    "Google Search Console",
+    "Google Sheets"
+  ],
+  "clients": [
+    "Desktop app for Windows",
+    "Desktop app for macOS",
+    "Sitebulb Cloud in the browser",
+    "Claude (custom connector)",
+    "ChatGPT (plugin)"
+  ],
+  "webChat": "Yes, as a custom connector in Claude or a plugin in ChatGPT, on every plan and the free trial. For desktop audits the Sitebulb app must be open, signed in and online.",
+  "free": "No free version stated. A 14-day free trial equal to Sitebulb Pro desktop, with no credit card and no up-front commitment. The MCP works during the trial.",
+  "price": "Lite £12.50 a month, or £125 a year (1 user, 10,000 URLs per audit). Pro £30 a month, or £305 a year for 1 user (500,000 URLs per audit, can be raised to 2 million), extra users £7.50 a month or £77.50 a year. Sitebulb Cloud from £95 a month, or from £1140 a year, for 2 or more users. Yearly plans save 15%. In US dollars: Lite $18 a month or $180 a year, Pro $42 a month or $425 a year, extra Pro users $11 a month or $115.60 a year, Cloud from $125 a month or $1500 a year. Prices are also shown in euros.",
+  "freeShort": "14-day free trial, no card",
+  "priceFrom": "£12.50 a month (Lite)",
+  "writeActions": "No. The MCP is read-only. It reads finished audits and cannot start crawls. No changes to your site or to Google are stated.",
+  "dataStorage": "Desktop crawl data lives on your own computer and is read only when a question needs it. Cloud data is held in your Cloud workspace. What it keeps from a connected Google Search Console or Google Analytics account is not stated.",
+  "history": "Not stated. Pro can compare your own audits over time.",
+  "licence": "Paid desktop subscription (Sitebulb Cloud is a hosted service)",
+  "github": null,
+  "pickIf": [
+    "you want technical audits explained in plain words, with prioritized Hints and visual crawl maps.",
+    "you want to try the full Pro app for 14 days with no credit card.",
+    "you want to ask Claude or ChatGPT on the web about your crawl data through a read-only MCP.",
+    "your team needs cloud crawling of very large sites with shared audit data."
+  ],
+  "sources": [
+    {
+      "fact": "Plans, prices in GBP and USD, URL limits, features by plan, free trial with no card, payment methods, Windows and Mac",
+      "url": "https://sitebulb.com/subscriptions/pricing/index/"
+    },
+    {
+      "fact": "Free trial sign up with name and email, then download",
+      "url": "https://sitebulb.com/free-trial/"
+    },
+    {
+      "fact": "MCP on all plans and the trial, read-only, Claude and ChatGPT, Skills",
+      "url": "https://sitebulb.com/mcp/"
+    },
+    {
+      "fact": "Claude custom connector for Sitebulb Desktop, app must be open",
+      "url": "https://support.sitebulb.com/en/articles/15799445-claude-add-sitebulb-desktop-mcp-individual-plan"
+    },
+    {
+      "fact": "Where Desktop and Cloud data lives",
+      "url": "https://support.sitebulb.com/en/articles/15984092-sitebulb-mcp-security-and-privacy-overview"
+    }
+  ]
+}

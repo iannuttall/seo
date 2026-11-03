@@ -1,0 +1,55 @@
+{
+  "slug": "screaming-frog",
+  "name": "Screaming Frog SEO Spider",
+  "url": "https://www.screamingfrog.co.uk/seo-spider/",
+  "kind": "seo suite",
+  "checked": "2026-11-03",
+  "summary": "The Screaming Frog SEO Spider is a desktop website crawler that you download, install and run on your own computer, free for up to 500 URLs a crawl with a paid licence for more.",
+  "signIn": "Download the app and start crawling. The free version needs no sign up and no email. To remove the limits, buy a licence key on the website and enter it in the app. No free trial of the paid version is stated.",
+  "tools": "Crawls a site to find broken links, errors and redirects, page titles and meta data, meta robots and directives, hreflang, exact and near duplicate pages, structured data, mobile usability, AMP, spelling and grammar, and accessibility. It also generates XML sitemaps, site visualisations, crawl comparisons, segments, custom extraction and custom source code search, a Looker Studio crawl report, scheduled crawls and a command line interface. It can send crawl data to OpenAI, Gemini, Anthropic or a local Ollama model with your own API key. It has an MCP server (since version 24.1) on the paid licence only: the AI client can run crawls, read and export crawl data, read and write files in one allowed folder, and run Node.js scripts if you turn that on. There is no API.",
+  "dataSources": [
+    "Its own crawl of your site, run from your computer",
+    "Google Analytics (GA4)",
+    "Google Search Console",
+    "PageSpeed Insights (Lighthouse and CrUX data through the API, or Lighthouse run locally)",
+    "Link metrics integration",
+    "OpenAI, Gemini, Anthropic or Ollama, with your own account"
+  ],
+  "clients": [
+    "Desktop app for Windows",
+    "Desktop app for macOS (Apple Silicon and Intel)",
+    "Desktop app for Linux (Ubuntu and Fedora)",
+    "Claude Desktop (MCP)",
+    "LM Studio (MCP)"
+  ],
+  "webChat": "No. The MCP server runs on your own computer, and the setup guides cover Claude Desktop and LM Studio only.",
+  "free": "Free version with no sign up: up to 500 URLs per crawl, with no limit on the number of sites. Crawls cannot be saved or opened, the configuration options are locked, and custom source code search, custom extraction, the Google Analytics and Search Console integrations, JavaScript rendering and the MCP server need a licence. Technical support is for licensed users. No free trial of the paid version is stated.",
+  "price": "£199 per licence a year for 1 to 4 licences. £189 per licence a year for 5 to 9, £179 for 10 to 19 and £169 for 20 or more. Licences are per user and last 1 year, then you renew. When a licence expires the app goes back to the free version. The pricing page also shows prices in US dollars and euros.",
+  "freeShort": "Free up to 500 URLs a crawl",
+  "priceFrom": "£199 a year",
+  "writeActions": "No changes to your site or to Google are stated. Through the MCP server the AI client can write files and run Node.js scripts on your own computer, inside the folder you allow.",
+  "dataStorage": "Its FAQ says data from Google Analytics and other Google APIs is only accessible locally on your machine. Crawls are stored on your computer in database storage mode. Crawl data you send to OpenAI or Gemini goes to those services.",
+  "history": "Not stated. You can keep your own saved crawls and compare them over time with a licence.",
+  "licence": "Paid desktop licence",
+  "github": null,
+  "pickIf": [
+    "you want a full technical crawl of your site from your own computer with no account at all.",
+    "your site is under 500 URLs, so the free version covers it.",
+    "you want one fixed yearly price per user, with no monthly subscription.",
+    "you want an AI client on your desktop to start crawls and work with the crawl data through its MCP server."
+  ],
+  "sources": [
+    {
+      "fact": "Features, free 500 URL limit, licence prices, bulk discounts, downloads for Windows, macOS and Linux",
+      "url": "https://www.screamingfrog.co.uk/seo-spider/pricing/"
+    },
+    {
+      "fact": "No sign up for the free version, licence features, expiry, per user licences, no API, local Google data, supported systems",
+      "url": "https://www.screamingfrog.co.uk/seo-spider/faq/"
+    },
+    {
+      "fact": "MCP server on the paid licence, tools, Claude Desktop and LM Studio setup, AI providers, PageSpeed Insights modes",
+      "url": "https://www.screamingfrog.co.uk/seo-spider/user-guide/configuration/"
+    }
+  ]
+}

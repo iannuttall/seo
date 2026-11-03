@@ -1,0 +1,63 @@
+{
+  "slug": "majestic",
+  "name": "Majestic",
+  "url": "https://majestic.com/plans-pricing",
+  "kind": "seo suite",
+  "checked": "2026-11-03",
+  "summary": "Majestic is a hosted backlink research tool that maps the web with its own crawler and scores links with its Trust Flow and Citation Flow metrics.",
+  "signIn": "Sign up for a free Majestic account with the Sign Up for FREE button. Paid plans are bought from the pricing page, monthly or every 12 months. Lite and Pro have a 7-day money-back guarantee for a first-ever subscription. No free trial is stated, and the site does not say whether the free account needs a card.",
+  "tools": "Site Explorer, Trust Flow and Topical Trust Flow, referring domains, IPs and subnets, Link Graph, Link Context, Related Sites, Bulk Backlink Checker, Keyword Checker, Backlink Campaigns and PDF reports on Lite. Pro adds the Historic Index, Compare, Backlink History, Flow Metric History, Clique Hunter, Search Explorer, raw exports, custom reports, email alerts, Author Explorer and a Rank Tracker that reads Google Search Console. No site audit. The full API is only on the API plan. OpenApps lets any paid plan connect to third-party apps. No MCP server or AI assistant integration is stated on its own pages.",
+  "dataSources": [
+    "Majestic's Fresh Index: backlinks seen in the last 120 days, 189 billion URLs crawled at the time of checking",
+    "Majestic's Historic Index: backlinks seen since 2006, 4.5 trillion URLs crawled",
+    "Google Search Console (Rank Tracker on Pro and up, and importing verified sites)"
+  ],
+  "clients": [
+    "Web app",
+    "Chrome and Firefox plugins",
+    "Google Sheets plugin",
+    "Third-party OpenApps"
+  ],
+  "webChat": "No. No MCP server or chat connector is stated.",
+  "free": "Free account. Majestic says free accounts are designed to give you a taste and regular users will hit usage limits. It offers a limited Site Explorer Preview and the Majestic Million list. Exact free limits are not stated. No free trial. Lite and Pro have a 7-day money-back guarantee for new customers.",
+  "price": "Lite $49.99 a month, or $499.99 every 12 months ($41.67 a month), 1 user, 1 million analysis units, no API. Pro $99.99 a month, or $999.99 every 12 months ($83.33 a month), 1 user, 20 million analysis units, no API. API $399.99 a month, or $3,999.90 every 12 months ($333.33 a month), 5 users, 100 million analysis units, with 300 million, 1,000 million and custom options. Prices in USD and exclude VAT. The page also shows prices in GBP and EUR.",
+  "freeShort": "Free account, limits not stated",
+  "priceFrom": "$49.99 a month (Lite)",
+  "writeActions": "None stated. It reads link data and Search Console data. Verifying a domain means you add a meta tag or a text file to your site yourself.",
+  "dataStorage": "Its Rank Tracker regularly imports your Google ranking data from Search Console into Majestic and combines it with Majestic data to build a long-term view. How long it keeps that data is not stated.",
+  "history": "The Historic Index holds backlinks seen since 2006, on Pro and API. Its pricing page shows the Historic Index date range as 06 Jun 2006 to 26 Mar 2024, last updated 03 May 2024. The Fresh Index covers the last 120 days.",
+  "licence": "Hosted service",
+  "github": null,
+  "pickIf": [
+    "You mainly need backlink data from a crawler the company runs itself.",
+    "You want Trust Flow, Citation Flow and Topical Trust Flow to judge link quality.",
+    "You want backlink history going back to 2006.",
+    "You want a monthly backlink tool for $49.99 with no annual commitment."
+  ],
+  "sources": [
+    {
+      "fact": "Plans, prices, users, analysis units, API, money-back guarantee, index sizes and date ranges",
+      "url": "https://majestic.com/plans-pricing"
+    },
+    {
+      "fact": "Free account, tools by plan, Rank Tracker, Google Sheets plugin",
+      "url": "https://majestic.com/help/tools"
+    },
+    {
+      "fact": "Search Console use for verification and Rank Tracker",
+      "url": "https://majestic.com/help/tools/verified-domains"
+    },
+    {
+      "fact": "Rank Tracker imports Search Console data and combines it with Majestic data",
+      "url": "https://blog.majestic.com/development/rank-tracker-changes"
+    },
+    {
+      "fact": "OpenApps on any paid plan",
+      "url": "https://majestic.com/account/applications/openapps"
+    },
+    {
+      "fact": "Product description, free sign-up",
+      "url": "https://majestic.com/"
+    }
+  ]
+}

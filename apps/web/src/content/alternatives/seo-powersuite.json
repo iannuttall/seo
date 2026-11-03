@@ -1,0 +1,64 @@
+{
+  "slug": "seo-powersuite",
+  "name": "SEO PowerSuite",
+  "url": "https://www.link-assistant.com/pricing.html",
+  "kind": "seo suite",
+  "checked": "2026-11-03",
+  "summary": "SEO PowerSuite is desktop SEO software from Link-Assistant made of four apps: Rank Tracker for keywords and rankings, WebSite Auditor for site audits, SEO SpyGlass for backlinks and LinkAssistant for link building.",
+  "signIn": "Download and install the free version for Windows, macOS or Linux. It needs no registration, no licence key and no card, and has no time limit. For paid features, order a licence and enter a key in each app. Support offers a 7-day trial of all paid features on request, and a 14-day Enterprise trial comes with a booked demo.",
+  "tools": "Rank Tracker (rank tracking in hundreds of search engines, local and mobile rankings, Google AI Overviews tracking, 20+ keyword research tools), WebSite Auditor (site crawl and audit, content audit, in-app content editor), SEO SpyGlass (backlink research, penalty risk audit, disavow file) and LinkAssistant (link prospecting, outreach email, link verification). A separate Backlink API is sold from $149 a month. No MCP server or AI assistant integration is stated.",
+  "dataSources": [
+    "SEO PowerSuite's own backlink index: 6.5T backlinks from its BLEXBot crawler",
+    "SEO PowerSuite's own keyword database: 216M keywords",
+    "Rank checks in 400+ search engines (Google, Yahoo, Bing and more)",
+    "Google Search Console (backlinks)",
+    "Google Analytics, including GA4 (organic keywords and traffic)"
+  ],
+  "clients": ["Desktop app for Windows, macOS and Linux"],
+  "webChat": "No. No MCP server or chat connector is stated.",
+  "free": "Free version with no time limit: 1 project with no saving, rank checks with no saving, crawl and audit 500 URLs, 1,100 backlinks per project, 1 competitor per project, 1,000 link prospects per project and Google AI Overviews tracking. A 7-day trial of paid features is available on request from support.",
+  "price": "Professional $349 a year ($29.10 a month), $558 every 2 years or $717 every 3 years. Enterprise $599 a year ($49.95 a month), $1,118 every 2 years or $1,377 every 3 years, adds white-label reports, saved and scheduled reports and data export. Max $899 a year ($74.95 a month), $1,498 every 2 years or $1,947 every 3 years. Billed upfront for the term, with no monthly plan. No refunds for partial use. Prices in USD. Single apps are also sold on their own, from $129 a year (SEO SpyGlass or LinkAssistant Professional). Backlink API $149, $349 or $899 a month.",
+  "freeShort": "Free version, no time limit",
+  "priceFrom": "$349 a year (Professional)",
+  "writeActions": "No direct changes stated. WebSite Auditor exports optimized pages for you to upload yourself, and LinkAssistant sends outreach email from its built-in email client. No Search Console write actions stated.",
+  "dataStorage": "The software stores projects and settings locally on your hard drive by default. Paid users can also save projects to SEO PowerSuite Cloud (20 projects on Professional, 400 on Enterprise). It does not say separately what it keeps from Search Console or Google Analytics.",
+  "history": "Professional lists 1-year historical data. The backlink index keeps new and lost backlink history for the previous 12 months. Paid plans save projects with their history. No limit on that saved history is stated.",
+  "licence": "Paid desktop licence, sold as a yearly subscription, with a free version",
+  "github": null,
+  "pickIf": [
+    "You want unlimited projects, tracked keywords and site crawls for a flat yearly price.",
+    "You prefer desktop software that keeps your projects on your own computer.",
+    "You want rank tracking, audits, backlinks and outreach in one licence.",
+    "You want a free version with no time limit to test it on a small site."
+  ],
+  "sources": [
+    {
+      "fact": "Editions, prices, terms, free limits, index and keyword database sizes, history, standalone apps, refunds",
+      "url": "https://www.link-assistant.com/pricing.html"
+    },
+    {
+      "fact": "Free version needs no registration and has no time limit, 7-day trial on request",
+      "url": "https://help.link-assistant.com/hc/en-us/articles/4489816478236-Where-do-I-enter-my-license-details"
+    },
+    {
+      "fact": "Four apps, Windows, macOS and Linux",
+      "url": "https://www.link-assistant.com/download.html"
+    },
+    {
+      "fact": "14-day Enterprise trial with a demo",
+      "url": "https://www.link-assistant.com/demo.html"
+    },
+    {
+      "fact": "Backlink API prices, BLEXBot crawler, 12 months of backlink history",
+      "url": "https://www.link-assistant.com/backlink-api.html"
+    },
+    {
+      "fact": "Projects stored locally, SEO PowerSuite Cloud",
+      "url": "https://help.link-assistant.com/hc/en-us/articles/14429815709852-Multiple-users-how-to-use-SEO-PowerSuite-in-a-team"
+    },
+    {
+      "fact": "Google Analytics 4 support",
+      "url": "https://help.link-assistant.com/hc/en-us/articles/5166497202972-Does-your-software-support-Google-Analytics-4-GA4"
+    }
+  ]
+}

@@ -297,7 +297,15 @@ export async function crawlOne(
       warning: `${url}: ${message}`,
     }
   }
+  return snapshotFetchedPage(url, fetched)
+}
 
+// The page record the crawler keeps for one response. `seo site check` passes
+// built files through here, so a local build gets the crawler's own checks.
+export async function snapshotFetchedPage(
+  url: string,
+  fetched: PageFetchResult,
+): Promise<CrawlOneResult> {
   const contentType = headerValue(fetched.headers, 'content-type')
   if (fetched.diagnostics.accessBlock) {
     const page = unextractedPage(fetched, contentType)

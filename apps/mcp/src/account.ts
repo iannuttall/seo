@@ -1,4 +1,5 @@
 import {
+  bareDomain,
   bingCall,
   CLICKY_KEY_PREFIX,
   ClickyError,
@@ -29,6 +30,7 @@ import {
   auditSites,
   removeAllAuditSites,
   removeAuditSite,
+  setCompetitors,
   siteId,
   siteLimit,
 } from './audit/schedule.ts'
@@ -78,6 +80,9 @@ const SESSION_TTL = 30 * 24 * 60 * 60_000
 const FORM_TTL = 60 * 60_000
 const STATE_TTL = 10 * 60_000
 const COOKIE = 'seo_session'
+// A bound on one form post, not a plan limit: the data budget decides how
+// many competitors each weekly check covers.
+const MAX_COMPETITORS = 100
 
 export const KEY_FIELDS: { header: string; label: string; secret: boolean }[] =
   [
@@ -245,6 +250,9 @@ async function accountPage(
         ? {
             audit: {
               max: limit,
+              // The weekly competitor check runs on paid sites only.
+              competitorCheck:
+                Boolean(paid?.active) || beta.has('unlimited-sites'),
               sites: audits.map((site) => ({
                 id: site.id,
                 property: site.property,
@@ -257,6 +265,8 @@ async function accountPage(
                 coverage: site.coverage,
                 nextRunAt: site.nextRunAt,
                 monitor: site.monitor,
+                competitors: site.competitors,
+                competitorsChosen: site.competitorsChosen,
               })),
             },
           }
@@ -611,6 +621,23 @@ export async function account(
         'Made a new signing secret. Update it where you check webhook signatures.',
         { tab: 'beta', ok: true },
       )
+    case '/account/audit/competitors': {
+      const property = field('property')
+      const own = bareDomain(property)
+      const domains = [
+        ...new Set(
+          field('competitors')
+            .split(/[\s,]+/)
+            .map(bareDomain)
+            .filter(
+              (name) =>
+                /^[a-z0-9-]+(\.[a-z0-9-]+)+$/.test(name) && name !== own,
+            ),
+        ),
+      ].slice(0, MAX_COMPETITORS)
+      await setCompetitors(env, userId, property, domains)
+      return redirect(`${home}/sites/${await siteId(userId, property)}`)
+    }
     case '/account/audit/remove': {
       await removeAuditSite(env, userId, field('property'))
       // The plan follows the sites: one fewer from the next bill, never

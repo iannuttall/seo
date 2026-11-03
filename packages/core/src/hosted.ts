@@ -98,6 +98,10 @@ export {
   resolveReportBrandTerms,
 } from './brand-evidence.js'
 export * from './commands/index.js'
+export {
+  type DecisionModel,
+  typesafeDecisionModel,
+} from './decision-model.js'
 export * from './google/api.js'
 export {
   exchangeGoogleCode,

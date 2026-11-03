@@ -42,6 +42,46 @@ export type WeekSite = {
     clicks: number
     previous: number
   } | null
+  // Competitor keywords first named this week that passed every gate, or
+  // null before the first check (or when the check is off on this server).
+  opportunities?: WeekOpportunities | null
+}
+
+export type WeekOpportunities = {
+  // The latest competitor check, and the competitors whose keywords count
+  // (fetched in the last 90 days), by name.
+  checked_at: number | null
+  competitors: string[]
+  // Why nothing could be judged this week, said as a sentence, or null.
+  blocked: string | null
+  // True when the check stopped (data budget, or the week's limit on
+  // keywords named) before every candidate was judged, so an empty list is
+  // not an all-clear.
+  partial: boolean
+  items: WeekOpportunity[]
+}
+
+export type WeekOpportunity = {
+  keyword: string
+  // 'tool' when the keyword or the competitor pages look like a free tool
+  // (a heuristic from the words), else 'page'.
+  kind: 'page' | 'tool'
+  // DataForSEO estimates.
+  search_volume: number
+  cpc: number
+  intent: string
+  // Tracked competitors in the top 10, best position first.
+  competitors: { domain: string; position: number; url: string }[]
+  // Ahrefs Domain Rating of the site, and of the live top 10 domains that
+  // sit at or below it plus 10.
+  site_dr: number
+  low_dr: number
+  top: number
+  // For a tool: the paying keywords the best competitor tool page ranks for.
+  cluster: number
+  // A decision model's yes probability that the keyword fits what the site
+  // does (a classification, not a fact).
+  relevance: number
 }
 
 export type WeekData = {
@@ -244,6 +284,40 @@ function siteLines(site: WeekSite, startMs: number, endMs: number): string[] {
   return lines
 }
 
+// The competitor opportunities line, and one line per keyword under it.
+// Only keywords that passed every gate are named, so a week with none says
+// so, and a week the budget cut short says more may follow.
+function opportunityLines(site: WeekSite): string[] {
+  const found = site.opportunities
+  if (!found) return []
+  const from = found.competitors.length
+    ? ` (${plural(found.competitors.length, 'competitor')} checked)`
+    : ''
+  if (found.blocked && !found.items.length) {
+    return [`- Competitor opportunities: ${sentence(found.blocked)}`]
+  }
+  const more = found.partial
+    ? ' Not every candidate keyword was judged yet, so more may follow next week.'
+    : ''
+  if (!found.items.length) {
+    return [
+      `- Competitor opportunities: none cleared every check this week${from}.${more}`,
+    ]
+  }
+  const money = (n: number) => `$${n.toFixed(2)}`
+  return [
+    `- Competitor opportunities: ${plural(found.items.length, 'keyword')} cleared every check${from}.${more}`,
+    ...found.items.map((item) => {
+      const ranked = list(
+        item.competitors.map((c) => `${c.domain} (#${c.position})`),
+      )
+      const tool = item.kind === 'tool'
+      return `  - "${item.keyword}"${tool ? ', a free tool' : ''}: ${count(item.search_volume)} searches a month, ${money(item.cpc)} CPC, ${item.intent} intent. Top 10 for ${ranked}.${tool ? ` The best tool page ranks for ${plural(item.cluster, 'paying keyword')}.` : ''} ${item.low_dr} of the top ${item.top} have Domain Rating at or below ${item.site_dr + 10} (yours is ${item.site_dr}).`
+    }),
+    '  - Searches, CPC and intent are DataForSEO estimates, Domain Rating is by Ahrefs, fit with the site is a model classification and "free tool" is a guess from the words.',
+  ]
+}
+
 // The week as Markdown.
 export function weekMarkdown(data: WeekData): string {
   const startMs = Date.parse(`${data.start}T00:00:00Z`)
@@ -288,6 +362,7 @@ export function weekMarkdown(data: WeekData): string {
       `## ${siteName(site.property)}${found.length ? `: ${list(found.map((item) => item.heading))}` : ''}`,
       '',
       ...siteLines(site, startMs, endMs).map((line) => `- ${line}`),
+      ...opportunityLines(site),
       ...(site.link ? [`- [View site](${site.link})`] : []),
     )
   }

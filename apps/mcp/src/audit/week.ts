@@ -35,6 +35,16 @@ export async function weekData(
           start_error: site.lastError,
           index: found?.index ?? null,
           clicks: found?.clicks ?? null,
+          opportunities: site.opportunities && {
+            ...site.opportunities,
+            items: site.opportunities.items
+              .filter(
+                (item) =>
+                  item.surfaced_at >= week.startMs &&
+                  item.surfaced_at < week.endMs,
+              )
+              .map(({ surfaced_at: _, ...item }) => item),
+          },
         }
       }),
     ),

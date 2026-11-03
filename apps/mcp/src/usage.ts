@@ -9,6 +9,7 @@ export type UsageKind =
   | 'url_inspections'
   | 'research_dataforseo_calls'
   | 'research_ahrefs_calls'
+  | 'included_dataforseo_microusd'
 
 // Adds amounts to the account's rows for today (UTC), all or none, in one
 // D1 batch. Zero and negative amounts are skipped.

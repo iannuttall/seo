@@ -21,3 +21,9 @@ POSTSHIBA_SANDBOX=
 # STRIPE_PRICE_ID var are set.
 STRIPE_SECRET_KEY=
 STRIPE_WEBHOOK_SECRET=
+# Optional. SEO Skill's own DataForSEO account, for the paid weekly audit's
+# competitor check (src/audit/competitors.ts), and the TypeSafe key for its
+# check that a keyword fits the site. The check stays off without DataForSEO.
+DATAFORSEO_LOGIN=
+DATAFORSEO_PASSWORD=
+TYPESAFE_API_KEY=

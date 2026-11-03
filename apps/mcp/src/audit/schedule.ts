@@ -2,6 +2,7 @@ import type { AuditAccess } from '@seo/core/commands'
 import { ACTIVE_SQL, MAX_PAID_SITES } from '../billing.ts'
 import { sha256Base64Url } from '../seal.ts'
 import type { AuditMonitor } from './checks.ts'
+import type { GapResult } from './competitors.ts'
 
 // The weekly-audit schedule in D1: add and remove a site, list an account's
 // sites without waking their objects, and the hourly cron that starts the
@@ -49,6 +50,12 @@ export type AuditSite = {
   coverage: AuditCoverage | null
   // Pushed by the site object after each run of its checks.
   monitor: AuditMonitor | null
+  // The competitors the weekly check compares the site with, and whether
+  // the person chose them (else DataForSEO suggested them).
+  competitors: string[]
+  competitorsChosen: boolean
+  // The latest competitor check, pushed by the site object.
+  opportunities: GapResult | null
 }
 
 export type AuditCoverage = {
@@ -82,6 +89,9 @@ type Row = {
   last_error: string | null
   coverage: string | null
   monitor: string | null
+  competitors: string | null
+  competitors_chosen: number
+  opportunities: string | null
 }
 
 // One object per person and property, so two people who audit the same
@@ -126,7 +136,35 @@ export async function auditSites(
     lastError: row.last_error,
     coverage: row.coverage ? (JSON.parse(row.coverage) as AuditCoverage) : null,
     monitor: row.monitor ? (JSON.parse(row.monitor) as AuditMonitor) : null,
+    competitors: row.competitors
+      ? (JSON.parse(row.competitors) as string[])
+      : [],
+    competitorsChosen: row.competitors_chosen === 1,
+    opportunities: row.opportunities
+      ? (JSON.parse(row.opportunities) as GapResult)
+      : null,
   }))
+}
+
+// Saves the person's own competitor list for a site. An empty list hands
+// the choice back to DataForSEO's suggestions at the next check.
+export async function setCompetitors(
+  env: Env,
+  userId: string,
+  property: string,
+  domains: string[],
+): Promise<void> {
+  await env.DB.prepare(
+    `UPDATE audit_sites SET competitors = ?, competitors_chosen = ?
+     WHERE user_id = ? AND property = ?`,
+  )
+    .bind(
+      domains.length ? JSON.stringify(domains) : null,
+      domains.length ? 1 : 0,
+      userId,
+      property,
+    )
+    .run()
 }
 
 // Adds a site and starts its first run now, up to the account's site

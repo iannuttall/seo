@@ -75,5 +75,7 @@
   // TELEGRAM_CHAT_ID for the weekly sign-up and failure counts, and
   // optionally POSTSHIBA_API_KEY for alert email and ALERT_REPLY_TO for its
   // Reply-To address, and optionally STRIPE_SECRET_KEY and
-  // STRIPE_WEBHOOK_SECRET for the paid weekly audit.
+  // STRIPE_WEBHOOK_SECRET for the paid weekly audit, and optionally
+  // DATAFORSEO_LOGIN, DATAFORSEO_PASSWORD and TYPESAFE_API_KEY for its
+  // competitor check on SEO Skill's own accounts.
 }

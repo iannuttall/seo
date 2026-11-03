@@ -1,0 +1,117 @@
+---
+import {
+  Alert02Icon,
+  Analytics01Icon,
+  FileSearchIcon,
+  McpServerIcon,
+} from '@hugeicons/core-free-icons'
+import FeaturePage from '@/components/FeaturePage.astro'
+
+const related = [
+  { title: 'seo index', text: 'Google indexing reasons for every known page, each checked live and labelled.', href: '/docs/indexing', icon: Alert02Icon },
+  { title: 'seo page', text: 'One URL: what it serves now, its Google index status and its queries.', href: '/docs/page', icon: FileSearchIcon },
+  { title: 'seo report', text: 'Search Console sections that show where clicks went.', href: '/docs/report', icon: Analytics01Icon },
+  { title: 'MCP server', text: 'Connect the hosted MCP or run it locally for your agent.', href: '/docs/mcp', icon: McpServerIcon },
+]
+---
+
+<FeaturePage
+  title="Google index checker for AI agents"
+  description="Check whether Google has indexed your pages, in bulk or one URL at a time, with Google's own reason from Search Console URL Inspection and a live check of each page."
+  path="/features/google-index-checker"
+  lead="See which of your pages Google has indexed, and Google's own reason for the ones it has not. Your agent checks them in bulk through Search Console, then loads each page to see whether the reason still holds."
+  {related}
+>
+  <h2>What you need to check indexing</h2>
+  <p>
+    The answers come from Google's URL Inspection, so the site has to be a
+    Search Console property your Google account can read. Connect the hosted
+    MCP and sign in with Google, or install the CLI and run <code>seo start</code>. Both are free. It checks your own sites, not a
+    list of pages on other people's sites.
+  </p>
+
+  <h2>Check every page Google knows about</h2>
+  <p>Ask your agent:</p>
+  <pre><code>Which pages on example.com are not indexed by Google, and which ones need fixing?</code></pre>
+  <p>Or run it in a terminal:</p>
+  <pre><code>seo index --site example.com</code></pre>
+  <p>
+    It finds the pages it knows from Search Console and your sitemap, and
+    checks them in a fixed order: pages that lost their clicks, then pages by
+    clicks and impressions, then sitemap pages, then the rest. Each run checks
+    100. The result says how many it checked out of how many it knows. A page
+    it did not reach has no result, so a short run is never an all-clear.
+  </p>
+
+  <h2>Check more pages in one run</h2>
+  <p>
+    Google allows 2,000 URL Inspection checks a day for each Search Console
+    property. In a terminal or the local MCP server you can use what is left
+    of today's quota in one go:
+  </p>
+  <pre><code>seo index --site example.com --max-urls 500</code></pre>
+  <p>
+    The hosted MCP checks 100 each run. On your machine, Google's answers are
+    saved for 7 days, so the next run reuses them instead of spending quota
+    again and says how old they are. Add <code>--refresh</code> to ask Google
+    again. The live check of each page runs every time either way.
+  </p>
+
+  <h2>What each result tells you</h2>
+  <p>
+    For each page you get Google's reason, word for word, such as "Page with
+    redirect" or "Alternate page with proper canonical tag". Next to it is what the
+    page does now: its status code, any redirect, the canonical it declares
+    and the one Google chose, whether your sitemap lists it, and when Google
+    last crawled it. Each page then gets a label:
+  </p>
+  <table>
+    <thead><tr><th>Label</th><th>What it means</th></tr></thead>
+    <tbody>
+      <tr><td>fix</td><td>The evidence shows a fault on the site, such as a temporary redirect or a missing page your sitemap still lists.</td></tr>
+      <tr><td>check</td><td>A person should look, such as a page Google crawled and chose not to index.</td></tr>
+      <tr><td>expected</td><td>The site works as built, such as an http page that redirects to https.</td></tr>
+      <tr><td>indexed</td><td>Google indexes it and nothing looks wrong.</td></tr>
+    </tbody>
+  </table>
+  <p>
+    The labels come from simple rules over this evidence, not from Google
+    (so treat a check as a question, not a verdict).
+  </p>
+
+  <h2>Check one URL</h2>
+  <p>
+    For a page you just changed, or one from a Search Console email, check
+    that URL on its own:
+  </p>
+  <pre><code>seo page --url https://example.com/pricing</code></pre>
+  <p>
+    You get the live page's status, redirect, title, canonical and robots
+    tags, Google's index status for the URL, and its Search Console queries
+    against the period before. URL Inspection reports Google's last known
+    state, so it can lag behind a change you made today.
+  </p>
+
+  <h2>The same data as Google's URL Inspection tool</h2>
+  <p>
+    The <a href="https://support.google.com/webmasters/answer/9012289" target="_blank" rel="noreferrer">URL
+    Inspection tool</a> in Search Console shows the same data for one URL at a
+    time, typed in by hand. Your agent reads it through Google's API for many
+    pages at once and adds the live check, so you can go straight to the
+    pages that need work.
+  </p>
+
+  <h2>Daily index checks with the weekly site audit</h2>
+  <p>
+    The weekly site audit ($50 a month per site) runs the checks for you on
+    the hosted server, using each property's full 2,000 checks a day. Your top
+    pages are checked daily and the rest as often as the quota allows. Your
+    agent then gets answers at once from those stored results, and you get an
+    alert when a page drops out of Google's index or comes back.
+  </p>
+  <p>
+    The index check tells you what Google did with your pages. To find
+    technical problems across the whole site, including pages Google has not
+    seen yet, run the <a href="/features/seo-crawler">SEO crawler</a>.
+  </p>
+</FeaturePage>

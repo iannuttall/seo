@@ -1,0 +1,41 @@
+---
+import type { CollectionEntry } from 'astro:content'
+import { getCollection, render } from 'astro:content'
+import Breadcrumbs from '@/components/Breadcrumbs.astro'
+import PageHeader from '@/components/PageHeader.astro'
+import { docsMdxComponents } from '@/components/docs/mdx'
+import BaseLayout from '@/layouts/BaseLayout.astro'
+import type { SchemaBreadcrumb } from '@/lib/schema'
+
+export async function getStaticPaths() {
+  const guides = await getCollection('guides')
+  return guides.map((entry) => ({ params: { slug: entry.id }, props: { entry } }))
+}
+
+type Props = { entry: CollectionEntry<'guides'> }
+
+const { entry } = Astro.props
+const { Content } = await render(entry)
+const breadcrumbs: SchemaBreadcrumb[] = [
+  { label: 'Home', href: '/' },
+  { label: 'Guides', href: '/guides' },
+  { label: entry.data.heading },
+]
+---
+
+<BaseLayout
+  title={entry.data.title}
+  description={entry.data.description}
+  canonicalPath={`/guides/${entry.id}`}
+  {breadcrumbs}
+  schemaType="TechArticle"
+  dateModified={entry.data.checked}
+>
+  <main data-agent-content>
+    <Breadcrumbs {breadcrumbs} />
+    <PageHeader title={entry.data.heading} description={entry.data.lead} />
+    <article class="docs-prose min-w-0">
+      <Content components={docsMdxComponents} />
+    </article>
+  </main>
+</BaseLayout>

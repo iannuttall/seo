@@ -31,6 +31,12 @@ const featurePaths = [
     .filter((file) => file.endsWith('.astro') && file !== 'index.astro')
     .map((file) => `/features/${file.replace(/\.astro$/, '')}`),
 ]
+const guidePaths = [
+  '/guides',
+  ...readdirSync(resolve(appRoot, 'src/content/guides'))
+    .filter((file) => file.endsWith('.mdx'))
+    .map((file) => `/guides/${file.replace(/\.mdx$/, '')}`),
+]
 const pagePath = (path) =>
   path === '/' ? 'index.html' : `${path.slice(1)}/index.html`
 const expectedPages = new Map([
@@ -44,9 +50,13 @@ const expectedPages = new Map([
     `${tool.path.slice(1)}/index.html`,
     `https://seoskill.dev${tool.path}`,
   ]),
-  ...[...docsPaths, ...integrationPaths, ...cmsPaths, ...alternativePaths].map(
-    (path) => [pagePath(path), `https://seoskill.dev${path}`],
-  ),
+  ...[
+    ...docsPaths,
+    ...guidePaths,
+    ...integrationPaths,
+    ...cmsPaths,
+    ...alternativePaths,
+  ].map((path) => [pagePath(path), `https://seoskill.dev${path}`]),
   ['pricing/index.html', 'https://seoskill.dev/pricing'],
   ['stats/index.html', 'https://seoskill.dev/stats'],
   ['telemetry/index.html', 'https://seoskill.dev/telemetry'],
@@ -256,8 +266,10 @@ test('every content page has one deterministic Markdown alternative', () => {
       page.markdownFile,
     )
     assert.equal(matches(markdown, /^#\s+.+$/gmu).length, 1, page.markdownFile)
+    // Code samples in the guides show these on purpose; leaked markup is
+    // never inside a code span or block.
     assert.doesNotMatch(
-      markdown,
+      markdown.replace(/```[\s\S]*?```/g, '').replace(/`[^`\n]+`/g, ''),
       /<(?:script|style|svg|canvas)\b|Runafter|data-agent-markdown/iu,
       page.markdownFile,
     )
@@ -296,6 +308,7 @@ test('sitemap is exact and contains only indexable canonical pages', () => {
         path === 'index.html' ||
         path.startsWith('docs/') ||
         path.startsWith('features/') ||
+        path.startsWith('guides/') ||
         path.startsWith('tools/') ||
         path.startsWith('integrations/') ||
         path.startsWith('alternatives/') ||

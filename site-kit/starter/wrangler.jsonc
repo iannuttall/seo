@@ -1,0 +1,16 @@
+{
+  "$schema": "node_modules/wrangler/config-schema.json",
+  // A static site on Workers static assets. No Worker code runs for pages,
+  // so bots cost nothing. Add "main" and run_worker_first: ["/api/*"] only
+  // when a route really needs the server, and never for Markdown copies:
+  // Cloudflare URL rewrite rules serve those (pnpm rewrites prints them).
+  "name": "example-site",
+  "compatibility_date": "2026-10-01",
+  "assets": {
+    "directory": "./dist",
+    "html_handling": "drop-trailing-slash",
+    "not_found_handling": "404-page"
+  },
+  "preview_urls": true,
+  "observability": { "enabled": false }
+}

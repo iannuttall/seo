@@ -8,6 +8,7 @@
       "!!**/dist-firefox",
       "!!**/.astro",
       "!!apps/web/**/*.astro",
+      "!!site-kit/**/*.astro",
       "!!**/public/assets",
       "!!**/.turbo",
       "!!**/.wrangler",

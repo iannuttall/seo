@@ -1,0 +1,30 @@
+---
+import '../styles/globals.css'
+import Button from '../components/Button.astro'
+import Footer from '../components/Footer.astro'
+import Header from '../components/Header.astro'
+import PageHeader from '../components/PageHeader.astro'
+import { site } from '../site'
+---
+
+<!doctype html>
+<html lang={site.language}>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Page not found | {site.name}</title>
+    <meta name="robots" content="noindex" />
+    <meta name="color-scheme" content="light dark" />
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+  </head>
+  <body class="min-h-screen bg-background text-foreground antialiased">
+    <div class="flex min-h-screen flex-col">
+      <Header />
+      <main id="main" class="site-frame flex-1 py-10">
+        <PageHeader title="Page not found" description="This page does not exist. Every park is listed on the home page." />
+        <Button href="/">Find a park</Button>
+      </main>
+      <Footer />
+    </div>
+  </body>
+</html>

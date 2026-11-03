@@ -1,0 +1,39 @@
+---
+// The methodology page. Say where each number comes from and how it is
+// worked out, so people can trust and cite the site.
+import sources from '../data/sources.json'
+import PageHeader from '../components/PageHeader.astro'
+import Base from '../layouts/Base.astro'
+import { formatDate } from '../lib/parks'
+import { site } from '../site'
+---
+
+<Base
+  title="Where the data comes from"
+  description={`The sources behind ${site.name}, when each one was last checked, and how the comparisons on every park page are worked out.`}
+  breadcrumbs={[{ name: 'About the data', path: '/about' }]}
+>
+  <PageHeader
+    title="Where the data comes from"
+    description={`Every fact on ${site.name} comes from a public register. Each page shows the source and the date it was last checked, and the site is rebuilt when a source changes.`}
+  />
+
+  <article class="site-prose">
+    <h2>Sources</h2>
+    <ul>
+      {
+        sources.map((source) => (
+          <li>
+            <a href={source.url} rel="noreferrer" target="_blank">{source.name}</a>, checked {formatDate(source.checked)}
+          </li>
+        ))
+      }
+    </ul>
+    <h2>How the comparisons are worked out</h2>
+    <p>
+      Sizes are compared with the other parks in the same region. A park is called larger or smaller only when the
+      difference is at least half again, and the page leaves the comparison out when the gap is smaller.
+    </p>
+    <p>When the register does not list a fact, such as parking, the page says so and never guesses a value.</p>
+  </article>
+</Base>

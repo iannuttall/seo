@@ -68,6 +68,7 @@ import { providersCommand } from './commands/providers/index.js'
 import { reportCatalogCommand } from './commands/report-catalog.js'
 import { explainCommand, rulesCommand } from './commands/rules.js'
 import { setupCommand, startCommand } from './commands/setup/index.js'
+import { siteCommand } from './commands/site.js'
 import { skillsCommand } from './commands/skills.js'
 import {
   privacyCommand,
@@ -126,6 +127,10 @@ const helpSections: HelpSection[] = [
       ['seo data', 'Raw Search Console, Bing or Clicky rows'],
       ['seo crawl', 'Crawl a site and list technical issues'],
       ['seo internal-links', 'Pages that could link to a target page'],
+      [
+        'seo site new <folder>',
+        'Start a data-driven site on Astro and Cloudflare',
+      ],
     ],
   },
   {
@@ -229,6 +234,7 @@ const main = defineCommand({
     skill: skillsCommand,
     start: startCommand,
     setup: setupCommand,
+    site: siteCommand,
     login: loginCommand,
     logout: logoutCommand,
     report: reportCommand,

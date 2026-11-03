@@ -1,0 +1,54 @@
+---
+// A muted panel with an optional icon, a title and text. A linked card
+// ends with a label that says where it goes, such as "Parks in Northfield",
+// and changes colour on hover. Each card spans its rows of the parent grid
+// as a subgrid, so titles and text line up across a row: put cards in
+// `grid grid-cols-1 gap-2 sm:grid-cols-2`.
+import { ArrowUpRight01Icon } from '@hugeicons/core-free-icons'
+import HugeIcon from './HugeIcon.astro'
+
+type Props = {
+  title: string
+  text: string
+  icon?: Parameters<typeof HugeIcon>[0]['icon']
+  href?: string
+  // Where the card goes. Replaces the corner arrow.
+  link?: string
+}
+
+const { title, text, icon, href, link } = Astro.props
+const Tag = href ? 'a' : 'div'
+---
+
+<Tag
+  href={href}
+  class:list={[
+    link ? 'row-span-4' : 'row-span-3',
+    'grid grid-rows-subgrid gap-y-0 rounded-lg bg-muted p-6',
+    href &&
+      'group no-underline transition-colors hover:bg-secondary-hover focus-visible:outline-none focus-visible:ring-[3px] focus-visible:ring-ring/20',
+  ]}
+>
+  <div class="flex min-h-6 items-start justify-between gap-4 text-foreground-muted">
+    {icon ? (
+      <HugeIcon
+        icon={icon}
+        class:list={[
+          'size-6',
+          href && 'transition-transform duration-200 group-hover:-translate-y-0.5 group-hover:text-primary',
+        ]}
+      />
+    ) : <span></span>}
+    {href && !link ? (
+      <HugeIcon icon={ArrowUpRight01Icon} class="size-5 text-foreground-soft transition-colors group-hover:text-foreground" />
+    ) : null}
+  </div>
+  <h3 class="mt-8 text-base font-medium text-foreground">{title}</h3>
+  <p class="mt-2 text-sm leading-6 text-foreground-muted">{text}</p>
+  {link ? (
+    <span class="mt-4 inline-flex items-center gap-1 self-end text-sm font-medium text-foreground">
+      {link}
+      <HugeIcon icon={ArrowUpRight01Icon} class="size-4 text-foreground-soft transition-colors group-hover:text-foreground" />
+    </span>
+  ) : null}
+</Tag>

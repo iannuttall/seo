@@ -15,6 +15,11 @@ export function evalsDirectory(): string {
   return resolvePackagedDirectory('evals', process.env.SEO_EVALS_DIR)
 }
 
+// The `seo site` starter and guide steps.
+export function siteKitDirectory(): string {
+  return resolvePackagedDirectory('site-kit')
+}
+
 function resolvePackagedDirectory(name: string, override?: string): string {
   if (override) return resolve(override)
 

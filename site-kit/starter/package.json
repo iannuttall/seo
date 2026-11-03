@@ -1,0 +1,31 @@
+{
+  "name": "example-site",
+  "private": true,
+  "type": "module",
+  "engines": {
+    "node": ">=22.12"
+  },
+  "scripts": {
+    "dev": "astro dev",
+    "build": "astro build && seo site check",
+    "preview": "astro preview",
+    "check": "seo site check",
+    "deploy": "node scripts/deploy.mjs",
+    "data:refresh": "node scripts/refresh-data.mjs",
+    "data:validate": "node scripts/validate-data.mjs",
+    "rewrites": "node scripts/markdown-rewrites.mjs"
+  },
+  "dependencies": {
+    "@hugeicons/core-free-icons": "^4.4.0",
+    "@iannuttall/seo-graph-astro": "0.0.12",
+    "@iannuttall/seo-graph-core": "0.0.5",
+    "@tailwindcss/vite": "^4.3.4",
+    "astro": "^7.4.5",
+    "tailwindcss": "^4.3.4"
+  },
+  "devDependencies": {
+    "seo": "latest",
+    "takumi-js": "2.19.0",
+    "wrangler": "^4.156.2"
+  }
+}

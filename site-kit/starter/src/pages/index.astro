@@ -1,0 +1,52 @@
+---
+import { Location01Icon, Tree02Icon } from '@hugeicons/core-free-icons'
+import Card from '../components/Card.astro'
+import PageHeader from '../components/PageHeader.astro'
+import SectionHeading from '../components/SectionHeading.astro'
+import Base from '../layouts/Base.astro'
+import { formatHectares, parks, regions } from '../lib/parks'
+import { site } from '../site'
+
+const largest = [...parks].sort((a, b) => b.areaHectares - a.areaHectares).slice(0, 4)
+---
+
+<Base title={site.name} description={site.description}>
+  <PageHeader
+    title="Parks in the example parks register"
+    description={`The register lists ${parks.length} parks across ${regions.length} regions. Each page gives the size, the year the park opened, its toilets, cafe and playground, the dog rules and the car park, with the source and the date it was checked.`}
+  />
+
+  <section class="mt-16" aria-labelledby="regions">
+    <SectionHeading id="regions" title="Find a park by region" text="Every region has its own page with all of its parks side by side." />
+    <div class="grid grid-cols-1 gap-2 sm:grid-cols-2">
+      {
+        regions.map((region) => (
+          <Card
+            icon={Location01Icon}
+            title={region.name}
+            text={`${region.parks.length} parks, ${formatHectares(region.parks.reduce((sum, park) => sum + park.areaHectares, 0))} in total.`}
+            href={`/regions/${region.slug}`}
+            link={`Parks in ${region.name}`}
+          />
+        ))
+      }
+    </div>
+  </section>
+
+  <section class="mt-16" aria-labelledby="largest">
+    <SectionHeading id="largest" title="The largest parks" text="The biggest parks in the register by area." />
+    <div class="grid grid-cols-1 gap-2 sm:grid-cols-2">
+      {
+        largest.map((park) => (
+          <Card
+            icon={Tree02Icon}
+            title={park.name}
+            text={`${formatHectares(park.areaHectares)} in ${park.region}, opened in ${park.opened}.`}
+            href={`/parks/${park.slug}`}
+            link={`${park.name} facts`}
+          />
+        ))
+      }
+    </div>
+  </section>
+</Base>

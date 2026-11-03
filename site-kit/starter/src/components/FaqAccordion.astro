@@ -1,0 +1,143 @@
+---
+// One muted panel with ruled rows. Opening a row closes the others. Arrow
+// keys, Home and End move between questions. The answers are in the HTML
+// even when closed, so search engines and AI answers can read them. Pass
+// the same list to the layout's faqs prop so the FAQ markup matches.
+type FaqItem = {
+  question: string
+  answer?: string
+  values?: string[]
+}
+
+type Props = {
+  items: FaqItem[]
+  id?: string
+}
+
+const { items, id = 'faq' } = Astro.props
+---
+
+<div class="w-full overflow-hidden rounded-lg bg-muted" data-faq-accordion>
+  {
+    items.map((item, index) => (
+      <div
+        class="border-t border-border px-6 first:border-t-0"
+        data-faq-item
+        data-state="closed"
+      >
+        <h3 class="flex">
+          <button
+            id={`${id}-trigger-${index + 1}`}
+            type="button"
+            aria-controls={`${id}-content-${index + 1}`}
+            aria-expanded="false"
+            class="group flex flex-1 items-center justify-between gap-4 rounded-md border border-transparent py-5 text-left text-base font-medium text-foreground outline-none transition-all focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/20"
+            data-faq-trigger
+          >
+            <span>{item.question}</span>
+            <svg
+              class="size-3.5 shrink-0 text-foreground transition-transform duration-200 group-aria-expanded:rotate-180"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              aria-hidden="true"
+            >
+              <path d="m6 9 6 6 6-6"></path>
+            </svg>
+          </button>
+        </h3>
+        <div
+          id={`${id}-content-${index + 1}`}
+          role="region"
+          aria-labelledby={`${id}-trigger-${index + 1}`}
+          aria-hidden="true"
+          class="faq-content grid text-sm"
+          data-faq-content
+          data-state="closed"
+        >
+          <div class="overflow-hidden">
+            <div class="pb-5 text-base leading-7 text-foreground-muted">
+              {item.answer ? <p>{item.answer}</p> : null}
+              {
+                item.values ? (
+                  <ul class="grid gap-x-4 gap-y-2 sm:grid-cols-2">
+                    {item.values.map((value) => (
+                      <li>
+                        <code class="block break-words rounded-md bg-background px-2 py-1 font-mono text-xs leading-5 text-foreground">
+                          {value}
+                        </code>
+                      </li>
+                    ))}
+                  </ul>
+                ) : null
+              }
+            </div>
+          </div>
+        </div>
+      </div>
+    ))
+  }
+</div>
+
+<script>
+  for (const root of document.querySelectorAll('[data-faq-accordion]')) {
+    if (!(root instanceof HTMLElement) || root.dataset.faqReady === 'true') continue
+    root.dataset.faqReady = 'true'
+
+    const items = Array.from(root.querySelectorAll('[data-faq-item]')).filter(
+      (item): item is HTMLElement => item instanceof HTMLElement,
+    )
+    const triggers = items
+      .map((item) => item.querySelector('[data-faq-trigger]'))
+      .filter((trigger): trigger is HTMLButtonElement => trigger instanceof HTMLButtonElement)
+
+    const setOpen = (item: HTMLElement, open: boolean) => {
+      const trigger = item.querySelector('[data-faq-trigger]')
+      const content = item.querySelector('[data-faq-content]')
+      if (!(trigger instanceof HTMLButtonElement) || !(content instanceof HTMLElement)) return
+
+      const state = open ? 'open' : 'closed'
+      item.dataset.state = state
+      content.dataset.state = state
+      trigger.setAttribute('aria-expanded', String(open))
+      content.setAttribute('aria-hidden', String(!open))
+    }
+
+    for (const item of items) {
+      const trigger = item.querySelector('[data-faq-trigger]')
+      if (!(trigger instanceof HTMLButtonElement)) continue
+
+      trigger.addEventListener('click', (event) => {
+        event.preventDefault()
+        const shouldOpen = item.dataset.state !== 'open'
+
+        if (shouldOpen) {
+          for (const other of items) {
+            if (other === item) continue
+            setOpen(other, false)
+          }
+        }
+
+        setOpen(item, shouldOpen)
+      })
+
+      trigger.addEventListener('keydown', (event) => {
+        const currentIndex = triggers.indexOf(trigger)
+        let nextIndex = currentIndex
+
+        if (event.key === 'ArrowDown') nextIndex = (currentIndex + 1) % triggers.length
+        else if (event.key === 'ArrowUp') {
+          nextIndex = (currentIndex - 1 + triggers.length) % triggers.length
+        } else if (event.key === 'Home') nextIndex = 0
+        else if (event.key === 'End') nextIndex = triggers.length - 1
+        else return
+
+        event.preventDefault()
+        triggers[nextIndex]?.focus()
+      })
+    }
+  }
+</script>

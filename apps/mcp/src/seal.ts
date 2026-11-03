@@ -17,8 +17,14 @@ export type Sealed =
       exp: number
     }
   // A Google sign-in from the account page: to sign in, or to link another
-  // account to a signed-in person.
-  | { k: 'web'; userId: string | null; link?: string; exp: number }
+  // account to a signed-in person. next is the site tool page to return to.
+  | {
+      k: 'web'
+      userId: string | null
+      link?: string
+      next?: string
+      exp: number
+    }
   // The write scope for one click of "Create these in Search Console".
   | { k: 'gsc-write'; userId: string; property: string; exp: number }
   // The "turn these emails off" link in an alert email. It does not expire,

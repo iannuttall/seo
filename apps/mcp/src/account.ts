@@ -70,6 +70,8 @@ import {
   setKey,
   userExists,
 } from './store.ts'
+import { forgetInternalLinks } from './tool-internal-links.ts'
+import { toolRoute } from './tool-pages.ts'
 
 // The account page: the person's linked Google accounts, Bing, research
 // keys, Clicky sites and machines linked with `seo login`, with add, remove
@@ -113,7 +115,10 @@ function redirect(location: string, setCookie?: string): Response {
   return new Response(null, { status: 303, headers })
 }
 
-async function sessionUser(request: Request, env: Env): Promise<string | null> {
+export async function sessionUser(
+  request: Request,
+  env: Env,
+): Promise<string | null> {
   const value = request.headers
     .get('cookie')
     ?.split(/;\s*/)
@@ -131,6 +136,10 @@ function signInPage(env: Env, message = '', link?: string): Promise<Response> {
     ...(link ? { link } : {}),
   })
 }
+
+// A site tool page to come back to after signing in there.
+const toolPage = (value: string | null) =>
+  value && /^\/tools\/[a-z0-9-]{1,80}$/.test(value) ? value : undefined
 
 // A `seo login` code from the link the CLI printed, if it looks like one.
 const linkCode = (value: string | null) =>
@@ -342,12 +351,17 @@ export async function account(
       ? accountPage(env, userId, '', { tab: 'sites', site: sitePage[1] })
       : signInPage(env)
   }
+  // JSON for the site's tool pages, read with the account page's cookie.
+  if (path.startsWith('/account/tools/')) {
+    return toolRoute(request, env, path, await sessionUser(request, env))
+  }
   if (request.method !== 'POST') {
     return new Response('Not found', { status: 404 })
   }
   const data = await request.formData().catch(() => null)
   if (path === '/account/signin') {
     const link = linkCode(String(data?.get('link') ?? ''))
+    const next = toolPage(String(data?.get('next') ?? ''))
     return redirect(
       googleSignInUrl(
         env,
@@ -355,6 +369,7 @@ export async function account(
           k: 'web',
           userId: null,
           ...(link ? { link } : {}),
+          ...(next ? { next } : {}),
           exp: Date.now() + STATE_TTL,
         }),
       ),
@@ -413,6 +428,11 @@ export async function account(
           env,
           userId,
           'You need one Google account. To remove it, delete everything.',
+        )
+      }
+      if (provider === 'google') {
+        await forgetInternalLinks(env, userId).catch((error) =>
+          console.error('internal links: forgetting results failed', error),
         )
       }
       await removeAccount(env, userId, provider, target.subject)
@@ -662,6 +682,7 @@ export async function account(
       // person can try again rather than pay for an account that is gone.
       if (billingOn(env)) await cancelBilling(env, userId)
       await removeAllAuditSites(env, userId)
+      await forgetInternalLinks(env, userId)
       const accounts = await accountsOf(env, userId)
       await Promise.all(
         accounts
@@ -700,7 +721,11 @@ export async function accountCallback(
   state: Extract<Sealed, { k: 'web' }>,
 ): Promise<Response> {
   const code = new URL(request.url).searchParams.get('code')
-  if (!code) return redirect(`${env.PUBLIC_URL}/account`)
+  const next = toolPage(state.next ?? null)
+  const back = next
+    ? `${new URL(env.PUBLIC_URL).origin}${next}`
+    : `${env.PUBLIC_URL}/account`
+  if (!code) return redirect(back)
   if (state.userId && !(await userExists(env, state.userId))) {
     return signInPage(env, 'Your session ended. Sign in again.')
   }
@@ -726,7 +751,7 @@ export async function accountCallback(
     exp: Date.now() + SESSION_TTL,
   })
   return redirect(
-    state.link ? loginUrl(env, state.link) : `${env.PUBLIC_URL}/account`,
+    state.link ? loginUrl(env, state.link) : back,
     cookie(env, session, SESSION_TTL / 1000),
   )
 }

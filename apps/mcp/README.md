@@ -102,6 +102,44 @@ goes to the weekly summary through `audit_sites.opportunities`. The check
 stays off until `DATAFORSEO_LOGIN` and `DATAFORSEO_PASSWORD` are set, and
 names nothing without `TYPESAFE_API_KEY`.
 
+## Internal linking tool page
+
+The site's `/tools/internal-linking-tool` page runs the internal links
+report (the same core code as `seo internal-links`) in the cloud for a
+signed-in account. The page's "Sign in with Google" form posts to
+`/account/signin` with `next`, which brings the person back with the
+account cookie. Then `GET /account/tools/internal-links?property=` returns
+the plan, runs left today, the latest run and its result, and
+`POST /account/tools/internal-links` with `{"property": ...}` starts a run.
+A POST needs a same-origin `Origin` or `Sec-Fetch-Site`, and both need a
+Search Console property one of the person's linked Google accounts can
+read (verified, not `siteUnverifiedUser`), so nobody can point the crawler
+at a site they do not control. The defaults sit in
+`INTERNAL_LINKS_LIMITS` (`src/tool-internal-links.ts`), mirrored for the
+page's copy in `apps/web/src/lib/internal-links-tool.ts`:
+
+- free, any account: up to 100 pages, 3 runs a day per account, counted
+  in D1 `usage` as `internal_links_free_runs` (UTC days),
+- a site in the account's weekly audit (within its site limit): up to
+  5,000 pages, 3 runs a day per site, counted in the site's object.
+
+Each run is one `InternalLinks` SQLite Durable Object per person and
+property (`src/internal-links/run.ts`). Alarm wakes of up to a minute
+crawl as SEOSkillBot with the weekly audit's user agent, honouring
+robots.txt and its crawl delay (as the CLI does, a delay cuts the crawl to
+about 15 minutes), at most 4 requests at once and 4 a second, from the
+sitemaps or by following links, inside the property's origin and path.
+No JavaScript rendering. Each page's links, top terms and linkable
+sentences are written to SQLite as it lands; then up to 150 linked URLs
+are followed to see where they redirect, and the report runs with Jev on
+SEO Skill's `TYPESAFE_API_KEY` (text matching without it) and up to 50,000
+Search Console query rows for shared searches. The crawl tables are
+dropped once the result is saved; the trimmed result (up to 300 links and
+200 orphan and weak pages, with full counts) is kept 24 hours, then the
+alarm deletes the object's storage. Pages crawled and the Jev spend go to
+`usage` as `internal_links_pages` and `included_typesafe_microusd`. The
+MCP tools still send agents to the CLI for internal links.
+
 ## Alerts
 
 An account in the weekly-audit beta gets alerts without asking: when a page

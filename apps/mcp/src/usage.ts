@@ -2,6 +2,10 @@ import type { Meter } from './audit/meter.ts'
 
 // Metered use by account (migrations/0010_usage.sql). Each kind names its
 // unit. Add a kind here, and to the migration's list, before recording it.
+// The internal linking tool's kinds (src/internal-links) need no migration:
+//   internal_links_free_runs    free runs started; read for the daily limit
+//   internal_links_pages        pages its crawls fetched
+//   included_typesafe_microusd  Jev spend on SEO Skill's own TypeSafe key
 
 export type UsageKind =
   | 'browser_run_ms'
@@ -10,6 +14,9 @@ export type UsageKind =
   | 'research_dataforseo_calls'
   | 'research_ahrefs_calls'
   | 'included_dataforseo_microusd'
+  | 'internal_links_free_runs'
+  | 'internal_links_pages'
+  | 'included_typesafe_microusd'
 
 // Adds amounts to the account's rows for today (UTC), all or none, in one
 // D1 batch. Zero and negative amounts are skipped.

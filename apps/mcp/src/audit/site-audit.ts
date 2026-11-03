@@ -47,7 +47,7 @@ import { readSitemap } from './sitemap.ts'
 
 export const USER_AGENT =
   'Mozilla/5.0 (compatible; SEOSkillBot/1.0; +https://seoskill.dev)'
-const PRODUCT_TOKEN = 'SEOSkillBot'
+export const PRODUCT_TOKEN = 'SEOSkillBot'
 const MAX_PAGES = 5000
 const MAX_CONCURRENCY = 4
 const MAX_RPS = 4

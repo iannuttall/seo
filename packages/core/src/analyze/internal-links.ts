@@ -9,12 +9,12 @@ import type { SearchAnalyticsRequest } from '../gsc/client/types.js'
 import type { ProgressReporter } from '../progress.js'
 import type { GscRow } from '../types.js'
 import {
-  crawlForLinks,
+  type CrawlInput,
   crawlUrl,
   DEFAULT_MAX_PAGES,
   MAX_MAX_PAGES,
   type SiteCrawl,
-} from './internal-links-crawl.js'
+} from './internal-links-graph.js'
 import {
   canBeSource,
   classifyRequest,
@@ -48,7 +48,7 @@ import type {
 } from './internal-links-types.js'
 import { normalizePageUrl } from './page-technical-signals.js'
 
-export { DEFAULT_MAX_PAGES, MAX_MAX_PAGES } from './internal-links-crawl.js'
+export { DEFAULT_MAX_PAGES, MAX_MAX_PAGES } from './internal-links-graph.js'
 export {
   LINK_ROLES,
   PAGE_TYPES,
@@ -62,6 +62,9 @@ export type * from './internal-links-types.js'
 // With a decision model it classifies every page and judges each link;
 // without one it uses the same text evidence and says so. Fixed floors in
 // code can overrule the model, and each target keeps at most eight links.
+// The crawl is passed in: internalLinksReport (internal-links-crawl.ts)
+// crawls from the person's machine, and the hosted server crawls in a
+// Durable Object. This file stays free of Node builtins.
 
 export interface InternalLinksInput {
   // The site (Search Console property, URL or domain).
@@ -76,11 +79,13 @@ export interface InternalLinksInput {
 }
 
 export interface InternalLinksDependencies {
-  crawl: typeof crawlForLinks
-  // Search Console rows for the site, or why there are none.
+  crawl: (input: CrawlInput) => Promise<SiteCrawl>
+  // Search Console rows for the site, or why there are none. maxRows lowers
+  // the 100,000 query rows read, for a caller with less memory.
   searchConsole:
     | {
         property: string
+        maxRows?: number
         query: (
           request: SearchAnalyticsRequest,
         ) => Promise<{ rows: GscRow[]; rowsFetched: number }>
@@ -143,13 +148,15 @@ function round(value: number, places = 3): number {
   return Math.round(value * factor) / factor
 }
 
-export async function internalLinksReport(
+export async function internalLinksReportWith(
   input: InternalLinksInput,
   dependencies: Partial<InternalLinksDependencies> &
-    Pick<InternalLinksDependencies, 'searchConsole' | 'decisionModel'>,
+    Pick<
+      InternalLinksDependencies,
+      'crawl' | 'searchConsole' | 'decisionModel'
+    >,
 ): Promise<InternalLinksReport> {
   const deps = {
-    crawl: crawlForLinks,
     now: () => new Date(),
     ...dependencies,
   }
@@ -282,6 +289,10 @@ async function analyse(
   }
   if ('property' in deps.searchConsole && count > 1) {
     const { startDate, endDate } = range
+    const maxRows = Math.min(
+      deps.searchConsole.maxRows ?? MAX_GSC_ROWS,
+      MAX_GSC_ROWS,
+    )
     try {
       deps.progress?.('Reading Search Console queries.')
       const result = await deps.searchConsole.query({
@@ -290,7 +301,7 @@ async function analyse(
         dimensions: ['query', 'page'],
         type: 'web',
         dataState: 'final',
-        maxRows: MAX_GSC_ROWS,
+        maxRows,
       })
       const brandTerms = deriveBrandTerms({ siteUrl: crawl.origin })
       const byQuery = new Map<string, Set<number>>()
@@ -332,7 +343,7 @@ async function analyse(
         property: deps.searchConsole.property,
         range: { startDate, endDate },
         rows: result.rowsFetched,
-        possiblyTruncated: result.rowsFetched >= MAX_GSC_ROWS,
+        possiblyTruncated: result.rowsFetched >= maxRows,
         pairsWithSharedQueries: sharedQueries.size,
         note: capped
           ? `Shared queries were counted for the first ${MAX_GSC_PAIRS.toLocaleString('en-US')} page pairs.`
@@ -850,7 +861,7 @@ function caveats(report: InternalLinksReport): string[] {
     `Crawl: ${crawl.pagesCrawled} page${crawl.pagesCrawled === 1 ? '' : 's'} from ${crawl.method === 'sitemap' ? 'the sitemap' : 'links from the start page'}, limit ${crawl.pageLimit}${crawl.capReached ? ' (reached, so pages beyond it were not checked and orphan and weak-link counts cover crawled pages only)' : ' (not reached)'}.${crawl.crawlDelaySeconds ? ` robots.txt crawl-delay of ${crawl.crawlDelaySeconds}s was honoured.` : ''}`,
     report.judge.note,
     report.searchConsole.status === 'used'
-      ? `Search Console: ${report.searchConsole.rows.toLocaleString('en-US')} query rows from ${report.searchConsole.range?.startDate} to ${report.searchConsole.range?.endDate}, brand queries left out; ${report.searchConsole.pairsWithSharedQueries} page pairs share a query.${report.searchConsole.possiblyTruncated ? ' The 100,000-row cap was reached.' : ''}`
+      ? `Search Console: ${report.searchConsole.rows.toLocaleString('en-US')} query rows from ${report.searchConsole.range?.startDate} to ${report.searchConsole.range?.endDate}, brand queries left out; ${report.searchConsole.pairsWithSharedQueries} page pairs share a query.${report.searchConsole.possiblyTruncated ? ` The cap of ${report.searchConsole.rows.toLocaleString('en-US')} rows was reached.` : ''}`
       : `Search Console was not used${report.searchConsole.note ? `: ${report.searchConsole.note}` : ''}. Candidates come from page text only.`,
     `Rules in code: a link needs a model probability of ${THRESHOLDS.possible} (${THRESHOLDS.strong} is strong), a sentence with at least ${FLOORS.minSentenceMatch * 100}% of the words that name the target or pages at least ${FLOORS.minSimilarityAlone} similar, and an anchor from the chosen sentence. At most ${MAX_PER_TARGET} links per target.`,
     'Similarity, sentence match and anchors are text heuristics, and a model probability is a judgement of reader value. None of them predicts rankings or traffic.',

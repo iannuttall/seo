@@ -6,6 +6,7 @@ import {
   searchUpdatesFromIncidents,
   withRankingHistory,
 } from '@seo/core/updates/browser'
+import { getButtonClasses } from '@/components/ui/button'
 import { describeUpdates, rolloutStatus } from '@/lib/google-updates'
 import { renderTimeline, timelineHeight } from '@/lib/update-timeline'
 
@@ -69,11 +70,32 @@ const toggle =
         <div data-tooltip hidden class="pointer-events-none absolute top-0 z-10 w-60 rounded-lg bg-card p-3 text-xs leading-5 shadow-md ring-1 ring-border"></div>
       </div>
 
+      <div data-gsc class="rounded-lg bg-muted p-5">
+        <div class="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+          <div class="min-w-0 space-y-1">
+            <p class="text-sm font-medium">Load your clicks from Search Console</p>
+            <p data-gsc-detail class="text-xs leading-5 text-foreground-muted">
+              Sign in with Google to draw up to 16 months of daily clicks, with
+              nothing to export. Nothing is saved, and you can remove the Google
+              account from your account page at any time.
+            </p>
+          </div>
+          <form data-gsc-signin method="post" action="/account/signin" class="shrink-0">
+            <input type="hidden" name="next" value="/tools/google-algorithm-update-checker" />
+            <button type="submit" class={getButtonClasses('default', 'default')}>Sign in with Google</button>
+          </form>
+          <div data-gsc-pick hidden class="flex min-w-0 shrink-0 flex-wrap gap-2">
+            <select data-gsc-property aria-label="Search Console property" class="h-10 min-w-0 max-w-full rounded-lg border border-border bg-card px-3 text-sm text-foreground sm:max-w-64"></select>
+            <button data-gsc-load type="button" class={getButtonClasses('default', 'default')}>Load clicks</button>
+          </div>
+        </div>
+      </div>
+
       <div data-file-drop class="rounded-lg bg-muted p-5">
         <input data-file-input class="hidden" type="file" multiple accept=".zip,.csv,text/csv,application/zip" />
         <div class="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
           <div class="min-w-0 space-y-1">
-            <p data-file-name class="text-sm font-medium">Add your Search Console clicks</p>
+            <p data-file-name class="text-sm font-medium">Or add a Search Console export</p>
             <p data-file-detail class="text-xs leading-5 text-foreground-muted">
               Drop the zip from the Performance report's Export button, or its
               Dates.csv. It stays in this tab.
@@ -380,6 +402,69 @@ const toggle =
     const dataRange = $<HTMLButtonElement>('[data-range="data"]')
     const finding = $<HTMLElement>('[data-finding]')
 
+    const apply = (loaded: typeof days, name: string) => {
+      days = loaded
+      if (fileName) fileName.textContent = name
+      if (fileDetail) fileDetail.textContent = `${days.length} days, ${formatDay(`${days[0]?.date}T12:00:00Z`)} to ${formatDay(`${days.at(-1)?.date}T12:00:00Z`)}.`
+      if (clear) clear.hidden = false
+      if (metrics) metrics.hidden = false
+      if (dataRange) dataRange.hidden = false
+      range = 'data'
+      setPressed('[data-ranges]', 'data-range', range)
+      explain()
+      draw()
+    }
+
+    // Search Console through the person's SEO Skill account. The account
+    // page's cookie goes with these same-origin calls; signed out, the
+    // sign-in form stays.
+    const signin = $<HTMLFormElement>('[data-gsc-signin]')
+    const pick = $<HTMLElement>('[data-gsc-pick]')
+    const property = $<HTMLSelectElement>('[data-gsc-property]')
+    const loadGsc = $<HTMLButtonElement>('[data-gsc-load]')
+    const gscDetail = $<HTMLElement>('[data-gsc-detail]')
+    fetch('/account/tools/session', { credentials: 'same-origin', signal: AbortSignal.timeout(15000) })
+      .then((response) => (response.ok ? response.json() : null))
+      .then((session: { signedIn?: boolean; properties?: string[] } | null) => {
+        if (!session?.signedIn || !signin || !pick || !property || !gscDetail) return
+        signin.hidden = true
+        const names = session.properties ?? []
+        if (!names.length) {
+          gscDetail.textContent = 'None of the Google accounts on your SEO Skill account can read a Search Console property. Add another one on your account page.'
+          return
+        }
+        property.replaceChildren(
+          ...names.map((name) => {
+            const option = document.createElement('option')
+            option.value = name
+            option.textContent = name.replace(/^sc-domain:/, '')
+            return option
+          }),
+        )
+        gscDetail.textContent = 'Pick a property to draw its daily clicks for the last 16 months. Nothing is saved. Remove the Google account from your account page at any time.'
+        pick.hidden = false
+      })
+      .catch(() => {})
+    loadGsc?.addEventListener('click', async () => {
+      if (!property?.value) return
+      error.hidden = true
+      loadGsc.disabled = true
+      loadGsc.textContent = 'Loading…'
+      try {
+        const response = await fetch(`/account/tools/search-console/daily?property=${encodeURIComponent(property.value)}`, { credentials: 'same-origin', signal: AbortSignal.timeout(30000) })
+        const body = (await response.json().catch(() => null)) as { days?: typeof days; error?: string } | null
+        if (!response.ok || !body?.days) throw new ExportError(body?.error ?? 'Search Console did not answer. Try again.')
+        if (body.days.length < 2) throw new ExportError('Search Console has no daily clicks for that property yet.')
+        apply(body.days, property.value.replace(/^sc-domain:/, ''))
+      } catch (caught) {
+        error.textContent = caught instanceof ExportError ? caught.message : 'Search Console did not answer. Try again.'
+        error.hidden = false
+      } finally {
+        loadGsc.disabled = false
+        loadGsc.textContent = 'Load clicks'
+      }
+    })
+
     const load = async (files: File[]) => {
       error.hidden = true
       if (!files.length) return
@@ -389,16 +474,7 @@ const toggle =
         if (loaded.length < 2) {
           throw new ExportError('No daily Dates table found. Use the zip from Export, or the Dates.csv inside it.')
         }
-        days = loaded
-        if (fileName) fileName.textContent = files.map((file) => file.name).join(', ')
-        if (fileDetail) fileDetail.textContent = `${days.length} days, ${formatDay(`${days[0]?.date}T12:00:00Z`)} to ${formatDay(`${days.at(-1)?.date}T12:00:00Z`)}.`
-        if (clear) clear.hidden = false
-        if (metrics) metrics.hidden = false
-        if (dataRange) dataRange.hidden = false
-        range = 'data'
-        setPressed('[data-ranges]', 'data-range', range)
-        explain()
-        draw()
+        apply(loaded, files.map((file) => file.name).join(', '))
       } catch (caught) {
         error.textContent = caught instanceof ExportError ? caught.message : 'That file could not be read as a Search Console export.'
         error.hidden = false
@@ -484,7 +560,7 @@ const toggle =
       days = []
       changeDate = null
       input.value = ''
-      if (fileName) fileName.textContent = 'Add your Search Console clicks'
+      if (fileName) fileName.textContent = 'Or add a Search Console export'
       if (fileDetail) fileDetail.textContent = "Drop the zip from the Performance report's Export button, or its Dates.csv. It stays in this tab."
       clear.hidden = true
       if (metrics) metrics.hidden = true

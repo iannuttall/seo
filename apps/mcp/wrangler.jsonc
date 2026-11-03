@@ -3,7 +3,8 @@
   // The hosted MCP. D1 keeps only linked Google and Bing sign-ins and
   // research keys, sealed with SEAL_KEY, and how each person signed up.
   // No report data and no logs, except the weekly-audit beta's crawl
-  // results for the sites a granted account adds (src/audit).
+  // results for the sites a granted account adds (src/audit), and the
+  // internal linking tool's latest result for 24 hours (src/internal-links).
   "name": "seo-mcp",
   "main": "./src/index.ts",
   "account_id": "ab5ec097e2579c5f3639612c755e6f15",
@@ -57,11 +58,19 @@
     }
   ],
   // The weekly-audit beta: one SQLite Durable Object per person and
-  // Search Console property (src/audit).
+  // Search Console property (src/audit). The internal linking tool page:
+  // one per person and property, holding its latest result for 24 hours
+  // (src/internal-links).
   "durable_objects": {
-    "bindings": [{ "name": "SITE_AUDIT", "class_name": "SiteAudit" }]
+    "bindings": [
+      { "name": "SITE_AUDIT", "class_name": "SiteAudit" },
+      { "name": "INTERNAL_LINKS", "class_name": "InternalLinks" }
+    ]
   },
-  "migrations": [{ "tag": "v1", "new_sqlite_classes": ["SiteAudit"] }],
+  "migrations": [
+    { "tag": "v1", "new_sqlite_classes": ["SiteAudit"] },
+    { "tag": "v2", "new_sqlite_classes": ["InternalLinks"] }
+  ],
   // Browser Run, for the weekly audit's pages that need JavaScript to show
   // their titles, canonicals and links (src/audit/render.ts).
   "browser": { "binding": "BROWSER" },
@@ -77,5 +86,6 @@
   // Reply-To address, and optionally STRIPE_SECRET_KEY and
   // STRIPE_WEBHOOK_SECRET for the paid weekly audit, and optionally
   // DATAFORSEO_LOGIN, DATAFORSEO_PASSWORD and TYPESAFE_API_KEY for its
-  // competitor check on SEO Skill's own accounts.
+  // competitor check on SEO Skill's own accounts. TYPESAFE_API_KEY also
+  // judges links for the internal linking tool page.
 }

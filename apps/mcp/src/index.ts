@@ -29,6 +29,7 @@ import { sendSignupReport, sendTelegram } from './signup-report.ts'
 import { accountsOf, keysOf } from './store.ts'
 
 export { SiteAudit } from './audit/site-audit.ts'
+export { InternalLinks } from './internal-links/run.ts'
 
 // seoskill.dev routes /mcp, /oauth/*, /account, /.well-known/oauth-* and
 // /.well-known/mcp/* to this Worker.

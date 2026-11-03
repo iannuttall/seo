@@ -18,6 +18,7 @@ const { docsPaths } = await import(resolve(appRoot, 'src/content/docs-nav.mjs'))
 const { integrationPaths } = await import(
   resolve(appRoot, 'src/content/integrations.ts')
 )
+const { cmsPaths } = await import(resolve(appRoot, 'src/content/cms.ts'))
 const alternativePaths = [
   '/alternatives',
   ...readdirSync(resolve(appRoot, 'src/content/alternatives'))
@@ -42,10 +43,9 @@ const expectedPages = new Map([
     `${tool.path.slice(1)}/index.html`,
     `https://seoskill.dev${tool.path}`,
   ]),
-  ...[...docsPaths, ...integrationPaths, ...alternativePaths].map((path) => [
-    pagePath(path),
-    `https://seoskill.dev${path}`,
-  ]),
+  ...[...docsPaths, ...integrationPaths, ...cmsPaths, ...alternativePaths].map(
+    (path) => [pagePath(path), `https://seoskill.dev${path}`],
+  ),
   ['pricing/index.html', 'https://seoskill.dev/pricing'],
   ['stats/index.html', 'https://seoskill.dev/stats'],
   ['telemetry/index.html', 'https://seoskill.dev/telemetry'],

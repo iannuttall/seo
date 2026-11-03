@@ -1,0 +1,117 @@
+---
+// One CMS publishing guide (/integrations/wordpress): SEO Skill finds the
+// fix in your own data, and the CMS's own MCP server makes the change.
+import { Analytics02Icon } from '@hugeicons/core-free-icons'
+import ClientSteps from './ClientSteps.astro'
+import FaqAccordion from './FaqAccordion.astro'
+import HomeCard from './HomeCard.astro'
+import LandingHero from './LandingHero.astro'
+import SectionHeading from './SectionHeading.astro'
+import SplitList from './SplitList.astro'
+import { integrationIcon } from '@/content/integration-icons'
+import { type Cms, cmsList } from '@/content/cms'
+import BaseLayout from '@/layouts/BaseLayout.astro'
+import type { SchemaBreadcrumb } from '@/lib/schema'
+
+type Props = { cms: Cms }
+const { cms } = Astro.props
+
+const breadcrumbs: SchemaBreadcrumb[] = [
+  { label: 'Home', href: '/' },
+  { label: 'Integrations', href: '/integrations' },
+  { label: cms.name },
+]
+const readDate = new Date(`${cms.checked}T00:00:00Z`).toLocaleDateString('en-GB', {
+  day: 'numeric',
+  month: 'long',
+  year: 'numeric',
+  timeZone: 'UTC',
+})
+
+const loop = [
+  { title: 'Find what to fix', text: 'Ask for the issues section of the report. It lists striking distance queries, low click-through rates and quick wins from your Search Console, each with an id.', code: 'seo_report' },
+  { title: 'Check the page first', text: 'Your agent reads the live page, its Google index status and the queries it gets clicks for, so it edits the right thing.', code: 'seo_page' },
+  { title: `Make the change in ${cms.name}`, text: `The ${cms.mcp} saves the new title, copy or description. Ask for a draft when you want to read it before it goes live.` },
+  { title: 'Mark it fixed', text: 'Tell your agent it is done. The issue is marked fixed, and if it shows up again later the report says so.', code: 'seo_report' },
+  { title: 'See what happened', text: 'A few weeks later, compare clicks and positions before and after the date you made the change.', code: 'seo_compare' },
+]
+
+const others = cmsList.filter((item) => item.id !== cms.id)
+---
+
+<BaseLayout title={cms.metaTitle} description={cms.description} canonicalPath={`/integrations/${cms.id}`} {breadcrumbs} dateModified={cms.checked} framed={false}>
+  <main data-agent-content>
+    <LandingHero title={cms.title} lead={cms.lead} setupId="cms-setup">
+      <ClientSteps steps={cms.steps} note={cms.needs} />
+    </LandingHero>
+
+    <div class="space-y-24 py-24 sm:space-y-32 sm:py-32">
+      <SplitList
+        id="loop-heading"
+        title="From finding to fixed"
+        text={`SEO Skill reads your data and never writes to your site. The ${cms.mcp} makes the edits, with the access you give it.`}
+        items={loop}
+      />
+
+      <SplitList
+        id="change-heading"
+        title={`What the ${cms.mcp} can change`}
+        text={cms.limit}
+        items={cms.canChange}
+      />
+
+      <SplitList
+        id="asks-heading"
+        title="Prompts to try"
+        text="Each one starts with your own numbers and ends with an edit you can check."
+        items={cms.asks.map((ask) => ({ title: ask.question, text: ask.answer }))}
+      />
+
+      <section class="site-frame" aria-labelledby="more-heading">
+        <SectionHeading id="more-heading" title="Data and other sites" text="Where the issues come from, and the same guide for other platforms." />
+        <div class="grid grid-cols-1 gap-2 sm:grid-cols-2">
+          <HomeCard
+            title="Google Search Console"
+            text="Clicks, impressions, CTR, positions, queries, pages and URL Inspection."
+            icon={integrationIcon('google-search-console')}
+            href="/integrations/google-search-console"
+            link="Google Search Console MCP"
+          />
+          {
+            others.map((item) => (
+              <HomeCard title={item.name} text={item.lead} icon={integrationIcon(item.id)} href={`/integrations/${item.id}`} link={`${item.name} MCP for SEO`} />
+            ))
+          }
+          <HomeCard
+            title="seo report"
+            text="The sections behind the fix list, and how to read them."
+            icon={Analytics02Icon}
+            href="/docs/report"
+            link="seo report docs"
+          />
+        </div>
+      </section>
+
+      <section class="site-frame" aria-labelledby="cms-faq">
+        <div class="max-w-2xl">
+          <h2 id="cms-faq" class="text-pretty text-2xl font-medium -tracking-[0.4px] text-foreground xl:text-3xl xl:-tracking-[0.6px]">
+            Questions about {cms.name} and SEO Skill
+          </h2>
+        </div>
+        <div class="mt-10">
+          <FaqAccordion items={cms.faq} id="cms-faq-list" />
+        </div>
+        <p class="mt-10 text-sm leading-6 text-foreground-muted">
+          Sources for {cms.name}, read {readDate}:{' '}
+          {cms.sources.map((source, index) => (
+            <>
+              {index ? ', ' : ''}
+              <a class="underline underline-offset-4" href={source.url} target="_blank" rel="noreferrer">{source.fact}</a>
+            </>
+          ))}
+          .
+        </p>
+      </section>
+    </div>
+  </main>
+</BaseLayout>

@@ -14,7 +14,10 @@ import {
   MouseLeftClick01Icon,
   Search01Icon,
   SearchList01Icon,
+  ShopifyIcon,
   SourceCodeIcon,
+  WebflowIcon,
+  WordpressIcon,
 } from '@hugeicons/core-free-icons'
 
 // One icon per integration page, keyed by the source or client id in
@@ -35,6 +38,9 @@ const integrationIcons = {
   'gemini-cli': GoogleGeminiIcon,
   windsurf: FastWindIcon,
   'le-chat': Message01Icon,
+  wordpress: WordpressIcon,
+  shopify: ShopifyIcon,
+  webflow: WebflowIcon,
 } as const
 
 export const integrationIcon = (id: string) =>

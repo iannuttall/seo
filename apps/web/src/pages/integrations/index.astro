@@ -9,6 +9,7 @@ import SectionHeading from '@/components/SectionHeading.astro'
 import SetupCommands from '@/components/SetupCommands.astro'
 import { getButtonClasses } from '@/components/ui/button'
 import { integrationIcon } from '@/content/integration-icons'
+import { cmsList } from '@/content/cms'
 import { clients, sources } from '@/content/integrations'
 import BaseLayout from '@/layouts/BaseLayout.astro'
 
@@ -114,6 +115,34 @@ const run = [
               />
             ))
           }
+        </div>
+      </section>
+
+      <section class="site-frame" aria-labelledby="hub-cms">
+        <SectionHeading
+          id="hub-cms"
+          title="Make the fixes in your CMS"
+          text="SEO Skill finds what to fix and never writes to your site. Add your CMS's own MCP server next to it and your agent can make the change."
+        />
+        <div class="grid grid-cols-1 gap-2 sm:grid-cols-2">
+          {
+            cmsList.map((cms) => (
+              <HomeCard
+                title={cms.name}
+                text={cms.lead}
+                icon={integrationIcon(cms.id)}
+                href={`/integrations/${cms.id}`}
+                link={`${cms.name} MCP for SEO`}
+              />
+            ))
+          }
+          <HomeCard
+            title="Another CMS"
+            text="If your platform has its own MCP server, it works the same way: add it next to SEO Skill in the same agent."
+            icon={integrationIcon('claude-code')}
+            href="/docs/mcp"
+            link="Hosted MCP docs"
+          />
         </div>
       </section>
 

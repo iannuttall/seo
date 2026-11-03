@@ -34,7 +34,7 @@ const faqs = [
 
 <BaseLayout
   title="Google Search Console MCP servers compared"
-  description={`Compare ${competitors.length} Google Search Console and SEO MCP servers, skills and connectors with SEO Skill: setup, AI clients, free use, price and data handling.`}
+  description={`Compare ${competitors.length} Google Search Console and SEO MCP servers, skills, connectors and SEO suites with SEO Skill: setup, AI clients, free use, price and data handling.`}
   canonicalPath="/alternatives"
   schemaType="CollectionPage"
   {breadcrumbs}
@@ -70,7 +70,7 @@ const faqs = [
                     text={`Free: ${item.freeShort}. Paid: ${item.priceFrom}.`}
                     icon={group.icon}
                     href={`/alternatives/${item.slug}`}
-                    link={`SEO Skill vs ${item.short}`}
+                    link={item.kind === 'seo suite' ? `Free ${item.short} alternative` : `SEO Skill vs ${item.short}`}
                   />
                 ))}
               </div>

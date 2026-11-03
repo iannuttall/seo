@@ -14,7 +14,10 @@ import {
   kindIcon,
   reasonsFor,
   seoSkill,
+  suiteTools,
 } from '@/content/alternatives'
+import { toolIcon } from '@/content/tool-icons'
+import { tools } from '@/content/tools/manifest.mjs'
 import BaseLayout from '@/layouts/BaseLayout.astro'
 import type { SchemaBreadcrumb } from '@/lib/schema'
 
@@ -37,7 +40,13 @@ const breadcrumbs: SchemaBreadcrumb[] = [
   { label: 'Alternatives', href: '/alternatives' },
   { label: item.short },
 ]
-const description = `${item.short} alternative: compare it with the free SEO Skill MCP server on setup, tools, AI clients, price and data handling.`
+// SEO suites are found by "free {name} alternative", so their pages lead
+// with that phrase and the free web tools that do the same everyday jobs.
+const suite = item.kind === 'seo suite'
+const freeTools = (suiteTools[item.slug] ?? []).flatMap((id) => tools.filter((tool) => tool.id === id))
+const description = suite
+  ? `Free ${item.short} alternative: free backlink, keyword and traffic tools, plus your own Search Console data in your AI agent. Compare features and price.`
+  : `${item.short} alternative: compare it with the free SEO Skill MCP server on setup, tools, AI clients, price and data handling.`
 const related = competitors.filter((other) => other.kind === item.kind && other.slug !== item.slug)
 const others = (related.length ? related : competitors.filter((other) => other.slug !== item.slug)).slice(0, 4)
 
@@ -45,29 +54,40 @@ const glance = [
   { label: 'Free use', ours: 'Every on-demand tool, no usage cap', theirs: item.freeShort },
   { label: 'Paid', ours: '$50 a month per site, for the weekly audit', theirs: item.priceFrom },
   { label: 'Works in web chat', ours: seoSkill.webChat, theirs: item.webChat },
-  { label: 'Connect', ours: 'One URL and a Google sign-in', theirs: item.kind === 'self-hosted' ? 'Run it on your own machine' : item.kind === 'skill' ? 'Install it in your agent' : 'Through its own account' },
+  { label: 'Connect', ours: 'One URL and a Google sign-in', theirs: item.kind === 'self-hosted' ? 'Run it on your own machine' : item.kind === 'skill' ? 'Install it in your agent' : suite ? 'Create an account' : 'Through its own account' },
 ]
 
 const switchSteps = [
   { title: 'Add SEO Skill to your agent', text: 'Use the setup box above, or the steps for your client on the integrations page.', href: '/integrations' },
   { title: 'Check your access', text: 'Ask "list my Search Console properties". Every Google account you link shows up.' },
   { title: 'Add your research key', text: 'Save a DataForSEO or Ahrefs key on your account page if you use keyword research.', href: '/account' },
-  { title: 'Carry your prompts over', text: `Prompts in plain words work as they are. Prompts that name ${item.short}'s own tools need rewording.` },
+  suite
+    ? { title: 'Keep what you still need', text: `Projects and history you built in ${item.short} stay there. SEO Skill reads Search Console live, so you can run both while you decide.` }
+    : { title: 'Carry your prompts over', text: `Prompts in plain words work as they are. Prompts that name ${item.short}'s own tools need rewording.` },
 ]
 
 const faq = [
   { question: `Is SEO Skill a free alternative to ${item.short}?`, answer: `Yes. Every SEO Skill tool your agent calls on demand is free with no usage cap. ${item.short}: ${item.free}` },
   { question: `Does ${item.short} store my data?`, answer: `${item.dataStorage} SEO Skill fetches your Search Console and analytics rows on each request and never stores them.` },
   { question: `Can ${item.short} change anything?`, answer: `${item.writeActions} SEO Skill signs in to Google with read-only access.` },
-  { question: `Can I use SEO Skill and ${item.short} together?`, answer: 'Yes. Your agent can have several MCP servers connected at once and uses whichever one fits the question.' },
+  {
+    question: `Can I use SEO Skill and ${item.short} together?`,
+    answer: suite
+      ? `Yes. SEO Skill reads your own Search Console and Google Analytics data, which sits fine next to ${item.short}'s index.`
+      : 'Yes. Your agent can have several MCP servers connected at once and uses whichever one fits the question.',
+  },
 ]
 ---
 
-<BaseLayout title={`${item.short} alternative`} {description} canonicalPath={`/alternatives/${item.slug}`} {breadcrumbs} dateModified={item.checked} framed={false}>
+<BaseLayout title={suite ? `Free ${item.short} alternative` : `${item.short} alternative`} {description} canonicalPath={`/alternatives/${item.slug}`} {breadcrumbs} dateModified={item.checked} framed={false}>
   <main data-agent-content>
     <LandingHero
-      title={`SEO Skill vs ${item.short}`}
-      lead={`${item.summary} SEO Skill gives your agent your own Search Console, Google Analytics and keyword data for free, with nothing to install.`}
+      title={suite ? `Free ${item.short} alternative` : `SEO Skill vs ${item.short}`}
+      lead={
+        suite
+          ? `${item.summary} SEO Skill is free: web tools for the everyday lookups, and your own Search Console, Google Analytics and keyword data in your AI agent.`
+          : `${item.summary} SEO Skill gives your agent your own Search Console, Google Analytics and keyword data for free, with nothing to install.`
+      }
       setupId="alternative-setup"
     />
 
@@ -95,6 +115,19 @@ const faq = [
           }
         </div>
       </section>
+
+      {
+        freeTools.length ? (
+          <section class="site-frame" aria-labelledby="free-tools-heading">
+            <SectionHeading id="free-tools-heading" title={`Free tools for the jobs you use ${item.short} for`} text="No account and no key. Each one opens in your browser." />
+            <div class="grid grid-cols-1 gap-2 sm:grid-cols-2">
+              {freeTools.map((tool) => (
+                <HomeCard title={tool.title} text={tool.description} icon={toolIcon(tool.id)} href={tool.path} link={tool.action} />
+              ))}
+            </div>
+          </section>
+        ) : null
+      }
 
       <SplitList
         id="pick-them"
@@ -165,7 +198,7 @@ const faq = [
                 text={`Free: ${other.freeShort}. Paid: ${other.priceFrom}.`}
                 icon={kindIcon(other.kind)}
                 href={`/alternatives/${other.slug}`}
-                link={`SEO Skill vs ${other.short}`}
+                link={other.kind === 'seo suite' ? `Free ${other.short} alternative` : `SEO Skill vs ${other.short}`}
               />
             ))
           }

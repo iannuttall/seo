@@ -1,0 +1,59 @@
+{
+  "slug": "chatseo",
+  "name": "ChatSEO",
+  "url": "https://chatseo.app/",
+  "kind": "hosted",
+  "checked": "2026-11-03",
+  "summary": "ChatSEO is a paid SEO chat app that runs its own AI agents on your Search Console data and DataForSEO market data, with a hosted MCP server on its Pro plan and above.",
+  "signIn": "Create a ChatSEO account, start a plan with a card and connect Search Console through Google sign-in with read-only access. The MCP server then signs in with OAuth 2.1, set up automatically by the MCP client.",
+  "tools": "38 tools, per its MCP page. They cover organizations, sites, a site action list, conversations, projects, integrations, artifacts and Shopify articles. Analysis runs through a send_message tool that asks ChatSEO's own agent and costs one credit per message.",
+  "dataSources": [
+    "Google Search Console",
+    "Google Analytics (Pro plan and above)",
+    "DataForSEO keyword volumes, SERPs, backlinks and competitor data",
+    "Google Business Profile",
+    "Live page reads",
+    "WordPress, Shopify and Webflow"
+  ],
+  "clients": [
+    "Claude Desktop",
+    "Claude Code",
+    "Cursor",
+    "VS Code (GitHub Copilot)",
+    "ChatGPT"
+  ],
+  "webChat": "Yes",
+  "free": "No free plan. A 7-day trial gives 30 credits on the plan you choose, with a card required. MCP and API access need the Pro plan or higher.",
+  "price": "Starter from €29 a month (1 site, 100 credits). Pro from €49 a month (3 sites, 3 members, 200 credits, Google Analytics, MCP and API). Ranker from €79 a month (10 sites, 5 members, 400 credits, white-label exports). Agency is custom. One credit is one message. Each plan has higher credit tiers at €10 a month per 50 credits. Annual billing saves 20%. Prices exclude VAT, in EUR with the same amounts in USD.",
+  "freeShort": "7-day trial with a card",
+  "priceFrom": "€49 a month for MCP (Pro)",
+  "writeActions": "Yes. Its MCP can publish, update and delete Shopify blog articles, and the app can publish to WordPress, Shopify and Webflow once connected. Its FAQ says it only changes your site when you ask. Search Console access is read-only.",
+  "dataStorage": "Its security page says Search Console data is fetched in real time and never stored or cached. It keeps your OAuth tokens until you disconnect, and conversations, projects and artifacts in its own app.",
+  "history": "Not stated.",
+  "licence": "Hosted service",
+  "github": null,
+  "pickIf": [
+    "You want a chat app that does the analysis for you, rather than giving the data to your own agent.",
+    "You want the AI to write articles and publish them to WordPress, Shopify or Webflow.",
+    "You want Google Business Profile and local pack tracking for a local business.",
+    "You work in French: the app and its guidance are available in English and French."
+  ],
+  "sources": [
+    {
+      "fact": "Product, data sources, CMS publishing, FAQ",
+      "url": "https://chatseo.app/"
+    },
+    {
+      "fact": "MCP endpoint, clients, OAuth, 38 tools, Pro plan requirement",
+      "url": "https://chatseo.app/mcp"
+    },
+    {
+      "fact": "Plans, credits, trial, prices",
+      "url": "https://chatseo.app/pricing"
+    },
+    {
+      "fact": "Search Console storage, OAuth scope",
+      "url": "https://chatseo.app/security"
+    }
+  ]
+}

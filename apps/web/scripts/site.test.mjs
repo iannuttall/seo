@@ -34,6 +34,8 @@ const expectedPages = new Map([
     '/features/search-console',
     '/features/keyword-research',
     '/features/seo-audit',
+    '/features/claude-seo',
+    '/features/chatgpt-seo',
   ].map((path) => [pagePath(path), `https://seoskill.dev${path}`]),
   ['tools/index.html', 'https://seoskill.dev/tools'],
   ...tools.map((tool) => [
@@ -44,6 +46,7 @@ const expectedPages = new Map([
     pagePath(path),
     `https://seoskill.dev${path}`,
   ]),
+  ['pricing/index.html', 'https://seoskill.dev/pricing'],
   ['stats/index.html', 'https://seoskill.dev/stats'],
   ['telemetry/index.html', 'https://seoskill.dev/telemetry'],
   ['privacy/index.html', 'https://seoskill.dev/privacy'],
@@ -295,6 +298,7 @@ test('sitemap is exact and contains only indexable canonical pages', () => {
         path.startsWith('tools/') ||
         path.startsWith('integrations/') ||
         path.startsWith('alternatives/') ||
+        path === 'pricing/index.html' ||
         path === 'stats/index.html' ||
         path === 'telemetry/index.html',
     )

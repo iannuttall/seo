@@ -46,6 +46,18 @@ export const features = [
     text: 'Crawl the site, check single pages, and find pages that lost their clicks.',
     icon: Route01Icon,
   },
+  {
+    path: '/features/claude-seo',
+    title: 'Claude SEO',
+    text: 'Add SEO Skill to Claude Code or claude.ai and ask about your own Search Console and keyword data.',
+    icon: McpServerIcon,
+  },
+  {
+    path: '/features/chatgpt-seo',
+    title: 'ChatGPT SEO',
+    text: 'Add SEO Skill to ChatGPT so its SEO answers start from your own clicks, queries and pages.',
+    icon: AiChat02Icon,
+  },
 ] as const
 
 export const featurePaths = ['/features', ...features.map((item) => item.path)]

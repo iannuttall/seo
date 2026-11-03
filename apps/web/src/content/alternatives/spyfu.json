@@ -1,0 +1,60 @@
+{
+  "slug": "spyfu",
+  "name": "SpyFu",
+  "url": "https://www.spyfu.com/",
+  "kind": "seo suite",
+  "checked": "2026-11-03",
+  "summary": "SpyFu is a hosted competitor research suite for Google Ads and SEO that shows the keywords your competitors buy and rank for, their ad history, backlinks and rankings.",
+  "signIn": "No account needed to start: type a keyword or competitor into the search bar to use the free version. Share an email address to keep searching with no time limit. Paid plans are bought from the pricing page and come with a 30-day money back guarantee. There is no free trial with an end date.",
+  "tools": "PPC competitor research and ad history, SEO competitor keywords, Kombat keyword gap, keyword research, backlinks by keyword, SERP analysis, ranking history, weekly rank tracking, an AI site audit, RivalFlow content suggestions, AI brand monitoring, sales leads and white-labeled reports. No MCP server stated. SpyFu GPT, a custom GPT in ChatGPT, reads SpyFu data through its API at no extra charge; the pricing table limits Basic to 3 chats and makes it unlimited on Pro + AI and Team/Agency. The REST API comes with Pro + AI ($40 monthly API credit) and Team/Agency ($100 monthly API credit), then pay as you go per 1,000 rows.",
+  "dataSources": [
+    "SpyFu's own index: 7.2 trillion search results, 13.1 billion keywords and 152 million websites, per its homepage",
+    "Competitors' Google Ads keywords and ad history",
+    "Organic ranking history",
+    "Keyword metrics from Google Keyword Planner",
+    "Google Search Console (GSC Integration on every plan, Performance Tracking with GSC on Pro + AI and up)"
+  ],
+  "clients": ["SpyFu web app", "ChatGPT (SpyFu Keyword Research GPT)"],
+  "webChat": "ChatGPT only, through a custom GPT. No MCP server or Claude connector stated.",
+  "free": "Free version with no time limit. Results are cut short, and full results, keyword tracking and a custom search database need a paid plan. Sharing an email address lets you search as often as you want. Exact free limits are not stated. No free trial. Paid plans have a 30-day money back guarantee.",
+  "price": "Basic $39 a month, or $29 a month billed annually (10k row results and exports, 5k weekly tracked keywords, 1 user, no API). Pro + AI $59 for the first month then $119 a month, or $89 a month billed annually (unlimited results and exports, 15k tracked keywords, API with $40 monthly credit, 1 user). Team/Agency $249 a month, or $187 a month billed annually (unlimited results and exports, 50k tracked keywords, API with $100 monthly credit, 5 users). Extra users $15 a month on Basic and $30 on the other plans. Paying annually saves 25%. Prices in USD.",
+  "freeShort": "Free version",
+  "priceFrom": "$39 a month (Basic)",
+  "writeActions": "Its Site Audit can change your live site. After you install a JavaScript snippet (directly or through Google Tag Manager), fixes you approve, such as titles, meta descriptions, H1s and social tags, are applied to your pages through that snippet and can be rolled back. Nothing is published without your approval. No Google Search Console write actions stated.",
+  "dataStorage": "Not stated. The pricing page lists a GSC Integration but does not say what Search Console data it stores.",
+  "history": "10+ years of historical data on every plan, per the pricing page. Organic ranking history and 10+ years of ad history are on Pro + AI and Team/Agency, not Basic. Its homepage says 18+ years of historical data.",
+  "licence": "Hosted service",
+  "github": null,
+  "pickIf": [
+    "You run Google Ads as well as SEO and want the keywords and ad tests your competitors have run for years.",
+    "You want unlimited searches and exports for a flat monthly price on Pro + AI and Team/Agency.",
+    "You want an AI site audit that publishes approved title and meta fixes to your site through a snippet, with rollback.",
+    "You want SpyFu data inside ChatGPT through its custom GPT at no extra charge."
+  ],
+  "sources": [
+    {
+      "fact": "Product, index size, 18+ years of history, ad history, Keyword Planner metrics",
+      "url": "https://www.spyfu.com/"
+    },
+    {
+      "fact": "Plans, prices, seats, GSC integration, API credits, 30-day money back guarantee",
+      "url": "https://www.spyfu.com/pricing"
+    },
+    {
+      "fact": "Free version with no time limit, no free trial",
+      "url": "https://help.spyfu.com/en/articles/3047918-is-there-a-free-trial-for-spyfu"
+    },
+    {
+      "fact": "SpyFu GPT in ChatGPT, no extra charge",
+      "url": "https://help.spyfu.com/en/articles/12195281-how-do-i-get-spyfu-data-in-chatgpt"
+    },
+    {
+      "fact": "API plans, monthly credits, per-row pricing",
+      "url": "https://developer.spyfu.com/docs/api-pricing"
+    },
+    {
+      "fact": "Site Audit Auto Fix through a JavaScript snippet, approval and rollback",
+      "url": "https://help.spyfu.com/en/articles/16112706-spyfu-site-audit-overview"
+    }
+  ]
+}

@@ -1,4 +1,5 @@
 import {
+  Analytics02Icon,
   CloudServerIcon,
   CodeFolderIcon,
   DatabaseIcon,
@@ -23,6 +24,7 @@ export type Competitor = {
     | 'developer platform'
     | 'data provider'
     | 'skill'
+    | 'seo suite'
   checked: string
   summary: string
   signIn: string
@@ -107,7 +109,62 @@ export const groups = [
     text: 'Keyword, ranking and backlink data from their own index, billed by use.',
     icon: DatabaseIcon,
   },
+  {
+    kind: 'seo suite',
+    title: 'SEO suites',
+    text: 'All-in-one SEO apps with their own keyword and backlink index. Our free tools cover the everyday lookups.',
+    icon: Analytics02Icon,
+  },
 ] as const
+
+/**
+ * The free web tools (ids in src/content/tools/manifest.mjs) that do the
+ * same everyday jobs as each SEO suite, for its comparison page.
+ */
+export const suiteTools: Record<string, string[]> = {
+  ahrefs: [
+    'backlink-checker',
+    'domain-rating-checker',
+    'competitor-keyword-research',
+    'website-traffic-checker',
+  ],
+  semrush: [
+    'competitor-keyword-research',
+    'serp-checker',
+    'website-traffic-checker',
+    'backlink-checker',
+  ],
+  moz: [
+    'domain-rating-checker',
+    'spam-score-checker',
+    'backlink-checker',
+    'competitor-keyword-research',
+  ],
+  similarweb: [
+    'website-traffic-checker',
+    'competitor-keyword-research',
+    'domain-rating-checker',
+    'domain-age-checker',
+  ],
+  spyfu: [
+    'competitor-keyword-research',
+    'serp-checker',
+    'website-traffic-checker',
+    'backlink-checker',
+  ],
+  accuranker: [
+    'serp-checker',
+    'google-algorithm-update-checker',
+    'monthly-seo-report',
+    'competitor-keyword-research',
+  ],
+  ubersuggest: [
+    'competitor-keyword-research',
+    'backlink-checker',
+    'website-traffic-checker',
+    'serp-checker',
+  ],
+}
 
 export const kindIcon = (kind: string) =>
   groups.find((group) => group.kind === kind)?.icon ?? CloudServerIcon
@@ -190,6 +247,13 @@ export const reasonsFor = (item: Competitor): string[] => {
         sources,
         'You want your Search Console rows fetched on each request and never stored.',
         'You want a weekly crawl, daily index checks and drop alerts done for you, for $50 a month per site.',
+      ]
+    case 'seo suite':
+      return [
+        'You want the everyday lookups for free: backlinks, Domain Rating, competitor keywords, SERPs and traffic estimates, with no account.',
+        'You want your AI agent to answer from your own Search Console and Google Analytics data, not only from an index estimate.',
+        'You already pay for keyword data: SEO Skill uses your own DataForSEO or Ahrefs key, so you pay that provider and nothing on top.',
+        'You want a weekly crawl, daily index checks and drop alerts for $50 a month per site, with no seats to buy.',
       ]
     default:
       return [

@@ -1,5 +1,16 @@
 import { Hono } from 'hono'
 import { reportIds } from '../src/content/telemetry/report-ids.mjs'
+import {
+  type NpmDay,
+  npmDownloads,
+  percentage,
+  recordSkills,
+  rowCount,
+  rowString,
+  type Signups,
+  type StatsRow,
+  signupSources,
+} from './discovery.ts'
 import { applyDailyToolQuota } from './tools/daily-tool-quota.ts'
 import { handleDomainAge } from './tools/domain-age.ts'
 import { handleFaviconCheck } from './tools/favicon-checker.ts'
@@ -185,8 +196,6 @@ export type TelemetryPayload = {
   report?: string
 }
 
-type StatsRow = Record<string, unknown>
-
 type TelemetryWriteStatement = {
   bind(...values: unknown[]): TelemetryWriteStatement
   run(): Promise<unknown>
@@ -210,13 +219,25 @@ export type Timeline = {
     hostedRuns: number
   }>
   monthly: Array<{ month: string; installs: number; runs: number }>
+  // npm's daily downloads of the package, or null when npm did not answer.
+  npm: NpmDay[] | null
   skills: {
     installs: Array<{ day: string; installs: number }>
+    // The place on each skills.sh leaderboard. checked is how many places
+    // were read, so a null rank means "below checked", not "not listed".
+    ranks: Array<{
+      day: string
+      board: 'all-time' | 'trending'
+      rank: number | null
+      checked: number
+      total: number | null
+    }>
     queries: Array<{
       query: string
       day: string
       position: number | null
       weekAgo: number | null
+      history: Array<{ day: string; position: number | null }>
     }>
   }
 }
@@ -473,20 +494,6 @@ export async function handleTelemetryIngest(
   })
 }
 
-function rowString(row: StatsRow, field: string): string {
-  return typeof row[field] === 'string' ? row[field] : ''
-}
-
-function rowCount(row: StatsRow): number {
-  const value = row.count
-  return typeof value === 'number' && Number.isFinite(value) ? value : 0
-}
-
-function percentage(numerator: number, denominator: number): number | null {
-  if (denominator <= 0) return null
-  return Math.round((numerator / denominator) * 1_000) / 10
-}
-
 function distribution(
   rows: StatsRow[],
   event: string,
@@ -558,7 +565,9 @@ export function timeline(input: {
   daily: StatsRow[]
   monthly: StatsRow[]
   skills: StatsRow[]
+  ranks?: StatsRow[]
   signups: StatsRow[]
+  npm?: Timeline['npm']
 }): Timeline {
   const days = new Map<string, Timeline['daily'][number]>()
   for (const row of input.daily) {
@@ -607,16 +616,23 @@ export function timeline(input: {
     )
     .map((row) => {
       const query = rowString(row, 'query')
-      const before = input.skills.find(
-        (item) =>
-          rowString(item, 'day') === weekBefore &&
-          rowString(item, 'query') === query,
+      const checks = input.skills.filter(
+        (item) => rowString(item, 'query') === query,
+      )
+      const before = checks.find(
+        (item) => rowString(item, 'day') === weekBefore,
       )
       return {
         query,
         day: latestDay ?? '',
         position: position(row.position),
         weekAgo: before ? position(before.position) : null,
+        history: checks
+          .map((item) => ({
+            day: rowString(item, 'day'),
+            position: position(item.position),
+          }))
+          .sort((a, b) => a.day.localeCompare(b.day)),
       }
     })
     .sort(
@@ -635,86 +651,35 @@ export function timeline(input: {
     monthly: [...months.values()].sort((a, b) =>
       a.month.localeCompare(b.month),
     ),
-    skills: { installs, queries },
+    npm: input.npm ?? null,
+    skills: {
+      installs,
+      ranks: (input.ranks ?? [])
+        .flatMap((row) => {
+          const board = rowString(row, 'board')
+          if (board !== 'all-time' && board !== 'trending') return []
+          return [
+            {
+              day: rowString(row, 'day'),
+              board,
+              rank: position(row.rank),
+              checked: typeof row.checked === 'number' ? row.checked : 0,
+              total: typeof row.total === 'number' ? row.total : null,
+            } as const,
+          ]
+        })
+        .sort(
+          (a, b) =>
+            a.day.localeCompare(b.day) || a.board.localeCompare(b.board),
+        ),
+      queries,
+    },
   }
 }
 
-// What people and agents type into `npx skills find`. The daily check
-// records where iannuttall/seo shows for each.
-export const SKILL_QUERIES = [
-  'seo',
-  'seo audit',
-  'seo mcp',
-  'search console',
-  'google search console',
-  'search console mcp',
-  'gsc',
-  'traffic drop',
-  'keyword research',
-  'google analytics',
-  'content decay',
-  'cannibalization',
-  'indexing',
-  'dataforseo',
-  'ahrefs',
-] as const
-
-const SKILL_SOURCE = 'iannuttall/seo'
-
-type SkillHit = { source?: unknown; installs?: unknown }
-
-async function searchSkills(
-  query: string,
-  owner?: string,
-): Promise<SkillHit[]> {
-  const params = new URLSearchParams({ q: query, limit: '50' })
-  if (owner) params.set('owner', owner)
-  const response = await fetch(`https://skills.sh/api/search?${params}`, {
-    signal: AbortSignal.timeout(10_000),
-  })
-  if (!response.ok) throw new Error(`skills.sh answered ${response.status}`)
-  const json = (await response.json()) as { skills?: SkillHit[] }
-  return Array.isArray(json.skills) ? json.skills : []
-}
-
-// Once a day: the install count, and the place `npx skills find` shows the
-// skill for each query (the CLI sorts matches by installs).
-export async function recordSkills(env: Env, now = new Date()): Promise<void> {
-  const day = now.toISOString().slice(0, 10)
-  const installs = (hits: SkillHit[]) => {
-    const value = hits.find((hit) => hit.source === SKILL_SOURCE)?.installs
-    return typeof value === 'number' ? value : null
-  }
-  const own = await searchSkills('seo', 'iannuttall').catch(() => [])
-  const rows: {
-    query: string
-    position: number | null
-    installs: number | null
-  }[] = [{ query: '', position: null, installs: installs(own) }]
-  for (const query of SKILL_QUERIES) {
-    const hits = await searchSkills(query).catch(() => null)
-    if (!hits) continue
-    const sorted = [...hits].sort(
-      (a, b) => Number(b.installs ?? 0) - Number(a.installs ?? 0),
-    )
-    const index = sorted.findIndex((hit) => hit.source === SKILL_SOURCE)
-    rows.push({
-      query,
-      position: index >= 0 ? index + 1 : null,
-      installs: installs(hits),
-    })
-  }
-  await env.TELEMETRY_DB.batch(
-    rows.map((row) =>
-      env.TELEMETRY_DB.prepare(
-        `INSERT OR REPLACE INTO skills_daily (day, query, position, installs)
-         VALUES (?1, ?2, ?3, ?4)`,
-      ).bind(day, row.query, row.position, row.installs),
-    ),
-  )
-}
-
-async function liveStats(env: Env): Promise<Stats & { timeline: Timeline }> {
+async function liveStats(
+  env: Env,
+): Promise<Stats & { timeline: Timeline; signups: Signups | null }> {
   const currentMonth = new Date().toISOString().slice(0, 7)
   const sinceDay = new Date(Date.now() - TIMELINE_DAYS * 86_400_000)
     .toISOString()
@@ -760,10 +725,15 @@ async function liveStats(env: Env): Promise<Stats & { timeline: Timeline }> {
        FROM skills_daily
        WHERE day >= ?1`,
     ).bind(sinceDay),
+    env.TELEMETRY_DB.prepare(
+      `SELECT day, board, rank, checked, total
+       FROM skills_ranks
+       WHERE day >= ?1`,
+    ).bind(sinceDay),
   ])
-  const [events, month, agents, reports, daily, monthly, skills] = results.map(
-    (result) => result.results,
-  )
+  const [events, month, agents, reports, daily, monthly, skills, ranks] =
+    results.map((result) => result.results)
+  const npm = npmDownloads(sinceDay)
   // Every account counts toward the total; the chart shows the last 90 days.
   const signups = await env.ACCOUNTS_DB.prepare(
     `SELECT date(created_at / 1000, 'unixepoch') AS day, COUNT(*) AS count
@@ -773,6 +743,18 @@ async function liveStats(env: Env): Promise<Stats & { timeline: Timeline }> {
     .all<StatsRow>()
     .then((result) => result.results)
     .catch(() => [] as StatsRow[])
+  // One row per distinct combination; there are a few hundred at most.
+  const sources = await env.ACCOUNTS_DB.prepare(
+    `SELECT entry, client, client_name, referrer_host, landing_path,
+            utm_source, COUNT(*) AS count,
+            MIN(date(created_at / 1000, 'unixepoch')) AS first_day
+     FROM signup_sources
+     GROUP BY 1, 2, 3, 4, 5, 6
+     LIMIT 5000`,
+  )
+    .all<StatsRow>()
+    .then((result) => signupSources(result.results))
+    .catch(() => null)
   return {
     ...aggregateStats({
       events,
@@ -780,7 +762,15 @@ async function liveStats(env: Env): Promise<Stats & { timeline: Timeline }> {
       agents,
       reports,
     }),
-    timeline: timeline({ daily, monthly, skills, signups }),
+    timeline: timeline({
+      daily,
+      monthly,
+      skills,
+      ranks,
+      signups,
+      npm: await npm,
+    }),
+    signups: sources,
   }
 }
 
@@ -792,7 +782,7 @@ async function handleStats(
   if (request.method !== 'GET') {
     return jsonResponse({ error: 'Method not allowed' }, 405)
   }
-  const cacheKey = new Request(new URL('/api/stats?v=2', request.url), {
+  const cacheKey = new Request(new URL('/api/stats?v=3', request.url), {
     method: 'GET',
   })
   const cached = await caches.default.match(cacheKey)

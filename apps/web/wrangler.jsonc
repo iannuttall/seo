@@ -56,7 +56,8 @@
       "DATAFORSEO_PASSWORD"
     ]
   },
-  // Records the daily skills.sh install count and search places.
+  // Records the daily skills.sh install count, leaderboard places and search
+  // places.
   "triggers": { "crons": ["17 6 * * *"] },
   "d1_databases": [
     {

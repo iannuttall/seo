@@ -9,6 +9,7 @@ import {
   TELEMETRY_OPERATIONS as CLIENT_OPERATIONS,
   TELEMETRY_SCHEMA_VERSION as CLIENT_SCHEMA_VERSION,
 } from '@seo/core'
+import { signupSources } from './discovery.ts'
 import {
   app,
   handleTelemetryIngest,
@@ -309,4 +310,53 @@ test('Hono preserves API method errors, API 404s, and static asset fallback', as
   assert.equal(missing.status, 404)
   assert.equal(await asset.text(), 'static asset')
   assert.deepEqual(assetRequests, ['https://seoskill.dev/tools'])
+})
+
+test('public sign-up sources fold any value under three sign-ups into Other', () => {
+  const row = (fields: Record<string, unknown>, count: number) => ({
+    entry: 'mcp',
+    client: null,
+    client_name: null,
+    referrer_host: null,
+    landing_path: '/',
+    utm_source: null,
+    first_day: '2026-10-20',
+    ...fields,
+    count,
+  })
+  const result = signupSources([
+    row({ referrer_host: 'www.google.com', client_name: 'Codex' }, 2),
+    row({ referrer_host: 'www.google.co.uk', client_name: 'Codex' }, 1),
+    row({ referrer_host: 'one.example', client_name: 'Rare Client' }, 2),
+    row({ utm_source: 'chatgpt.com', referrer_host: 'chatgpt.com' }, 3),
+    row({ landing_path: null, entry: 'web', first_day: '2026-10-19' }, 4),
+  ])
+
+  assert.equal(result.total, 12)
+  assert.equal(result.since, '2026-10-19')
+  assert.deepEqual(result.source, [
+    { name: 'No site visit recorded', count: 4, percent: 33.3 },
+    { name: 'ChatGPT', count: 3, percent: 25 },
+    { name: 'Google', count: 3, percent: 25 },
+    { name: 'Other', count: 2, percent: 16.7 },
+  ])
+  assert.deepEqual(
+    result.client.map((item) => [item.name, item.count]),
+    [
+      ['No agent (account page)', 4],
+      ['Codex', 3],
+      ['Not detected', 3],
+      ['Other', 2],
+    ],
+  )
+  for (const list of [
+    result.source,
+    result.entry,
+    result.client,
+    result.landing,
+  ]) {
+    for (const item of list) {
+      if (item.name !== 'Other') assert.ok(item.count >= 3, item.name)
+    }
+  }
 })

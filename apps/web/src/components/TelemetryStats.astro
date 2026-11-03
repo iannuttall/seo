@@ -563,6 +563,8 @@ const tabClass =
     description: string
   }
 
+  const BAR_WIDTH = 10
+  const BAR_STEP = 14
   const ns = 'http://www.w3.org/2000/svg'
   const svgNode = (tag: string, attributes: Record<string, string | number>) => {
     const node = document.createElementNS(ns, tag)
@@ -650,7 +652,8 @@ const tabClass =
   function renderChart(target: HTMLElement) {
     const chart = charts.get(target)
     if (!chart) return
-    const { points, options } = chart
+    const { options } = chart
+    let points = chart.points
     target.replaceChildren()
     const values = points.flatMap((point) =>
       point.values.filter((value): value is number => typeof value === 'number'),
@@ -662,6 +665,9 @@ const tabClass =
     const compact = options.compact === true
     const kind = options.kind ?? 'bar'
     const width = Math.max(compact ? 80 : 240, Math.round(target.clientWidth || 600))
+    // Every bar chart uses the same bar width. A chart with more days than
+    // fit shows the latest ones, not thinner bars.
+    if (kind === 'bar') points = points.slice(-Math.max(1, Math.floor(width / BAR_STEP)))
     const height = compact ? 24 : 168
     const top = compact ? 3 : 14
     const bottom = compact ? 3 : 22
@@ -757,7 +763,7 @@ const tabClass =
 
     const marker = svgNode('g', { visibility: 'hidden' })
     if (kind === 'bar') {
-      const barWidth = Math.max(1, Math.min(28, step * 0.7))
+      const barWidth = Math.min(BAR_WIDTH, step * 0.7)
       points.forEach((point, index) => {
         let base = scale(0)
         point.values.forEach((value, part) => {

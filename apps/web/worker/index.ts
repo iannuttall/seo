@@ -1,6 +1,8 @@
 import { Hono } from 'hono'
 import { reportIds } from '../src/content/telemetry/report-ids.mjs'
+import { site } from '../src/lib/site.ts'
 import {
+  clickyTraffic,
   type NpmDay,
   npmDownloads,
   percentage,
@@ -10,6 +12,7 @@ import {
   type Signups,
   type StatsRow,
   signupSources,
+  type Traffic,
 } from './discovery.ts'
 import { applyDailyToolQuota } from './tools/daily-tool-quota.ts'
 import { handleDomainAge } from './tools/domain-age.ts'
@@ -677,9 +680,13 @@ export function timeline(input: {
   }
 }
 
-async function liveStats(
-  env: Env,
-): Promise<Stats & { timeline: Timeline; signups: Signups | null }> {
+async function liveStats(env: Env): Promise<
+  Stats & {
+    timeline: Timeline
+    signups: Signups | null
+    traffic: Traffic | null
+  }
+> {
   const currentMonth = new Date().toISOString().slice(0, 7)
   const sinceDay = new Date(Date.now() - TIMELINE_DAYS * 86_400_000)
     .toISOString()
@@ -734,6 +741,7 @@ async function liveStats(
   const [events, month, agents, reports, daily, monthly, skills, ranks] =
     results.map((result) => result.results)
   const npm = npmDownloads(sinceDay)
+  const traffic = clickyTraffic(site.clickySiteId, env.CLICKY_SITEKEY)
   // Every account counts toward the total; the chart shows the last 90 days.
   const signups = await env.ACCOUNTS_DB.prepare(
     `SELECT date(created_at / 1000, 'unixepoch') AS day, COUNT(*) AS count
@@ -771,6 +779,7 @@ async function liveStats(
       npm: await npm,
     }),
     signups: sources,
+    traffic: await traffic,
   }
 }
 
@@ -782,7 +791,7 @@ async function handleStats(
   if (request.method !== 'GET') {
     return jsonResponse({ error: 'Method not allowed' }, 405)
   }
-  const cacheKey = new Request(new URL('/api/stats?v=3', request.url), {
+  const cacheKey = new Request(new URL('/api/stats?v=4', request.url), {
     method: 'GET',
   })
   const cached = await caches.default.match(cacheKey)

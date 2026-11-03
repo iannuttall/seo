@@ -25,19 +25,20 @@ const alternativePaths = [
     .filter((file) => file.endsWith('.json'))
     .map((file) => `/alternatives/${file.replace(/\.json$/, '')}`),
 ]
+const featurePaths = [
+  '/features',
+  ...readdirSync(resolve(appRoot, 'src/pages/features'))
+    .filter((file) => file.endsWith('.astro') && file !== 'index.astro')
+    .map((file) => `/features/${file.replace(/\.astro$/, '')}`),
+]
 const pagePath = (path) =>
   path === '/' ? 'index.html' : `${path.slice(1)}/index.html`
 const expectedPages = new Map([
   ['index.html', 'https://seoskill.dev'],
-  ...[
-    '/features',
-    '/features/mcp',
-    '/features/search-console',
-    '/features/keyword-research',
-    '/features/seo-audit',
-    '/features/claude-seo',
-    '/features/chatgpt-seo',
-  ].map((path) => [pagePath(path), `https://seoskill.dev${path}`]),
+  ...featurePaths.map((path) => [
+    pagePath(path),
+    `https://seoskill.dev${path}`,
+  ]),
   ['tools/index.html', 'https://seoskill.dev/tools'],
   ...tools.map((tool) => [
     `${tool.path.slice(1)}/index.html`,

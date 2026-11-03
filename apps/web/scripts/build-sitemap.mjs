@@ -17,16 +17,13 @@ const alternativePaths = [
     .sort()
     .map((file) => `/alternatives/${file.replace(/\.json$/, '')}`),
 ]
-// The feature pages target search phrases from the earlier site and keep
-// their URLs. src/content/features.ts lists the same pages.
+// One feature page for each file in src/pages/features.
 const featurePaths = [
   '/features',
-  '/features/mcp',
-  '/features/search-console',
-  '/features/keyword-research',
-  '/features/seo-audit',
-  '/features/claude-seo',
-  '/features/chatgpt-seo',
+  ...readdirSync(resolve(import.meta.dirname, '..', 'src', 'pages', 'features'))
+    .filter((file) => file.endsWith('.astro') && file !== 'index.astro')
+    .sort()
+    .map((file) => `/features/${file.replace(/\.astro$/, '')}`),
 ]
 const paths = [
   '/',

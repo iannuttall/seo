@@ -6,6 +6,8 @@
   <url><loc>https://seoskill.dev/features/search-console</loc></url>
   <url><loc>https://seoskill.dev/features/keyword-research</loc></url>
   <url><loc>https://seoskill.dev/features/seo-audit</loc></url>
+  <url><loc>https://seoskill.dev/features/claude-seo</loc></url>
+  <url><loc>https://seoskill.dev/features/chatgpt-seo</loc></url>
   <url><loc>https://seoskill.dev/tools</loc></url>
   <url><loc>https://seoskill.dev/tools/google-algorithm-update-checker</loc></url>
   <url><loc>https://seoskill.dev/tools/competitor-keyword-research</loc></url>
@@ -110,9 +112,12 @@
   <url><loc>https://seoskill.dev/integrations/clicky/windsurf</loc></url>
   <url><loc>https://seoskill.dev/integrations/clicky/le-chat</loc></url>
   <url><loc>https://seoskill.dev/alternatives</loc></url>
+  <url><loc>https://seoskill.dev/alternatives/accuranker</loc></url>
   <url><loc>https://seoskill.dev/alternatives/advanced-gsc</loc></url>
   <url><loc>https://seoskill.dev/alternatives/ahrefs-mcp</loc></url>
+  <url><loc>https://seoskill.dev/alternatives/ahrefs</loc></url>
   <url><loc>https://seoskill.dev/alternatives/askwatch</loc></url>
+  <url><loc>https://seoskill.dev/alternatives/chatseo</loc></url>
   <url><loc>https://seoskill.dev/alternatives/claude-seo</loc></url>
   <url><loc>https://seoskill.dev/alternatives/composio</loc></url>
   <url><loc>https://seoskill.dev/alternatives/coupler</loc></url>
@@ -122,12 +127,18 @@
   <url><loc>https://seoskill.dev/alternatives/mcp-gsc</loc></url>
   <url><loc>https://seoskill.dev/alternatives/mcp-server-gsc</loc></url>
   <url><loc>https://seoskill.dev/alternatives/mcpsearchconsole</loc></url>
+  <url><loc>https://seoskill.dev/alternatives/moz</loc></url>
   <url><loc>https://seoskill.dev/alternatives/pipedream</loc></url>
   <url><loc>https://seoskill.dev/alternatives/search-console-mcp</loc></url>
+  <url><loc>https://seoskill.dev/alternatives/semrush</loc></url>
+  <url><loc>https://seoskill.dev/alternatives/similarweb</loc></url>
+  <url><loc>https://seoskill.dev/alternatives/spyfu</loc></url>
   <url><loc>https://seoskill.dev/alternatives/suganthan-gsc-mcp</loc></url>
   <url><loc>https://seoskill.dev/alternatives/supermetrics</loc></url>
   <url><loc>https://seoskill.dev/alternatives/treg</loc></url>
+  <url><loc>https://seoskill.dev/alternatives/ubersuggest</loc></url>
   <url><loc>https://seoskill.dev/alternatives/windsor</loc></url>
+  <url><loc>https://seoskill.dev/pricing</loc></url>
   <url><loc>https://seoskill.dev/stats</loc></url>
   <url><loc>https://seoskill.dev/telemetry</loc></url>
 </urlset>

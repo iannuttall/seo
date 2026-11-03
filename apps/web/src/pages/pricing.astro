@@ -1,0 +1,79 @@
+---
+// What SEO Skill costs. Facts must match apps/mcp/README.md (Paid plan).
+import FaqAccordion from '@/components/FaqAccordion.astro'
+import LandingHero from '@/components/LandingHero.astro'
+import SplitList from '@/components/SplitList.astro'
+import BaseLayout from '@/layouts/BaseLayout.astro'
+import type { SchemaBreadcrumb } from '@/lib/schema'
+
+const breadcrumbs: SchemaBreadcrumb[] = [{ label: 'Home', href: '/' }, { label: 'Pricing' }]
+
+const free = [
+  { title: 'Every on-demand tool', text: 'Search Console reports, page checks, before and after comparisons, index checks and raw data. No usage cap, no trial and no time limit.' },
+  { title: 'Google Analytics and Clicky', text: 'Search sessions, landing pages and visits from AI assistants, with your own sign-in.' },
+  { title: 'Keyword research with your own key', text: 'DataForSEO or Ahrefs results through your agent. You pay the provider for what you use, and nothing to us on top.' },
+  { title: 'The CLI and local MCP server', text: 'The site crawl, internal links and Bing Webmaster Tools, open source under Apache 2.0.' },
+  { title: 'Free web tools', text: 'Backlinks, Domain Rating, competitor keywords, SERPs, traffic estimates and more in your browser, with no account.', href: '/tools' },
+]
+
+const paid = [
+  { title: 'Weekly crawl', text: 'Every audited site is crawled once a week, with what is new, back or resolved since the crawl before.' },
+  { title: 'Daily Google index checks', text: "Up to each property's full 2,000 URL Inspection checks a day, top pages first, so your agent answers index questions at once." },
+  { title: 'Drop and return alerts', text: 'An alert when a page drops out of Google or comes back, by email and signed webhook.' },
+  { title: 'Monday email', text: "Each site's week as facts: Google index, the weekly crawl and search clicks." },
+]
+
+const faqs = [
+  { question: 'Is SEO Skill really free?', answer: 'Yes. Every tool your agent calls on demand is free with no usage cap and no trial that ends. The weekly site audit is the only paid part, because it runs on our servers in the background.' },
+  { question: 'How much does the weekly site audit cost?', answer: '$50 a month per site. A site is one Search Console property. There are no seats and no plan sizes to choose: the plan is the sites you audit.' },
+  { question: 'What happens when I add or remove a site?', answer: 'Your first site opens Stripe Checkout. Each site after that raises the plan by one, charged for the rest of the month at once. Removing a site lowers the plan from the next bill.' },
+  { question: 'Do I pay for keyword data?', answer: 'You pay DataForSEO or Ahrefs directly, on your own key. SEO Skill adds nothing on top. Without a key, everything else still works.' },
+  { question: 'Can my agent start the paid audit?', answer: 'Yes. Ask it to audit a site and it returns a Stripe Checkout link for you to open. It cannot pay for you.' },
+  { question: 'How do I cancel?', answer: 'Choose Manage billing on your account page. It opens Stripe, where you can change the card, read invoices or cancel.' },
+]
+---
+
+<BaseLayout
+  title="Pricing for the free SEO MCP server"
+  description="SEO Skill is free for every tool your AI agent calls, with no usage cap. The weekly site audit is $50 a month per site: weekly crawl, daily index checks and alerts."
+  canonicalPath="/pricing"
+  {breadcrumbs}
+  framed={false}
+>
+  <main data-agent-content>
+    <LandingHero
+      title="Free, with a paid weekly audit"
+      lead="Every tool your agent calls is free with no usage cap. Pay $50 a month per site only if you want us to watch the site for you every week."
+      setupId="pricing-setup"
+    />
+
+    <div class="space-y-24 py-24 sm:space-y-32 sm:py-32">
+      <SplitList
+        id="free-heading"
+        title="Free, with no usage cap"
+        text="Everything your agent asks for on demand. No credit card and no message credits (ask as often as you like)."
+        items={free}
+      />
+
+      <SplitList
+        id="paid-heading"
+        title="Weekly site audit, $50 a month per site"
+        text="Runs on our servers in the background for the sites you pick. Add or remove a site any time, and cancel any time."
+        items={paid}
+      >
+        <a class="mt-6 inline-block text-base font-medium underline underline-offset-4" href="/account">Start from your account page</a>
+      </SplitList>
+
+      <section class="site-frame" aria-labelledby="pricing-faq">
+        <div class="max-w-2xl">
+          <h2 id="pricing-faq" class="text-pretty text-2xl font-medium -tracking-[0.4px] text-foreground xl:text-3xl xl:-tracking-[0.6px]">
+            Questions about pricing
+          </h2>
+        </div>
+        <div class="mt-10">
+          <FaqAccordion items={faqs} id="pricing-faq-list" />
+        </div>
+      </section>
+    </div>
+  </main>
+</BaseLayout>

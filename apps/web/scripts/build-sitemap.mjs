@@ -24,6 +24,8 @@ const featurePaths = [
   '/features/search-console',
   '/features/keyword-research',
   '/features/seo-audit',
+  '/features/claude-seo',
+  '/features/chatgpt-seo',
 ]
 const paths = [
   '/',
@@ -33,6 +35,7 @@ const paths = [
   ...docsPaths,
   ...integrationPaths,
   ...alternativePaths,
+  '/pricing',
   '/stats',
   '/telemetry',
 ]

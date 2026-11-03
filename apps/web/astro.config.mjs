@@ -22,6 +22,8 @@ export default defineConfig({
     ogImages(),
     agentMarkdown({
       llmsTxt,
+      // One file with every page's Markdown, for agents that read it whole.
+      llmsFullTxt: true,
       cloudflareHeaders: false,
       // Signed-in pages get no Markdown copy. The account page is drawn from
       // /account-shell, whose canonical is /account.

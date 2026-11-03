@@ -1,0 +1,81 @@
+{
+  "slug": "accuranker",
+  "name": "AccuRanker",
+  "url": "https://www.accuranker.com/",
+  "kind": "seo suite",
+  "checked": "2026-11-03",
+  "summary": "AccuRanker is a hosted rank tracker with daily keyword updates, plus tools to analyze, report on and forecast your keyword and AI prompt performance.",
+  "signIn": "Pick a plan on the pricing page and enter your email, and AccuRanker sends a link to finish the purchase. You can also request a demo. No free plan or free trial is offered on its pricing or sign-up pages. The MCP signs in with your AccuRanker login through an authorization screen.",
+  "tools": "Rank tracking, keyword research database, Organic Site Explorer, SERP analysis, tagging, reporting, forecasting, AI CTR and AccuRanker Search Volume, plus AccuLLM for AI visibility on a separate plan. The API is unlimited read on Expert and unlimited write on Enterprise. AccuRanker MCP is included in every AccuRanker or AccuLLM plan at no extra charge and is read-only. Its tool reference lists domain, keyword, history, AccuLLM and filter URL tools; no tool count stated.",
+  "dataSources": [
+    "AccuRanker's own daily rank tracking, from servers in every country it supports",
+    "Keyword research database",
+    "AccuRanker Search Volume (Expert and up)",
+    "Google Search Console (keyword import)",
+    "Google Analytics (estimated visitors and potential per keyword, with Search Console)",
+    "AccuLLM AI visibility data (separate plan)",
+    "Looker Studio, Google BigQuery (Enterprise), Google Sheets, Databox, Swydo and CSV import"
+  ],
+  "clients": [
+    "AccuRanker web app",
+    "ChatGPT (AccuRanker Search Intelligence app)",
+    "Claude (claude.ai custom connector)",
+    "Claude Code",
+    "Perplexity",
+    "Other MCP-capable assistants"
+  ],
+  "webChat": "Yes",
+  "free": "No free plan. No free trial is offered on its pricing or sign-up pages; the sign-up page now asks you to request a demo. A 14-day refund policy applies from the initial purchase.",
+  "price": "Professional, monthly: $249 a month for 2,000 keywords, $369 for 3,000, $609 for 5,000. Expert, monthly: $849 a month for 10,000 keywords, $1,089 for 15,000, $1,329 for 20,000, $1,569 for 25,000. Paying yearly gives 10% off: Professional $224, $332 or $548 a month, Expert $764, $980, $1,196 or $1,412 a month. Enterprise is for more than 25K keywords, contact sales for pricing. All current plans include unlimited users. Prices shown in $.",
+  "freeShort": "No",
+  "priceFrom": "$249 a month (Professional)",
+  "writeActions": "No changes to your site or to Google stated. The MCP is read-only and cannot create, edit or delete keywords, tags, domains or settings. The Enterprise write API changes data inside your AccuRanker account.",
+  "dataStorage": "Not stated for Search Console or Google Analytics data. Its terms say data you entered and your account's AccuRanker data are not kept beyond 30 days after your subscription is terminated and the period has ended. After a cancellation, data stays in the account but cannot be opened until you reactivate.",
+  "history": "Each tracked keyword keeps its entire ranking and landing page history in the app. Historical search volume goes back up to 3 years through the API and Looker Studio.",
+  "licence": "Hosted service",
+  "github": null,
+  "pickIf": [
+    "You mainly need rank tracking, with daily updates for thousands of keywords.",
+    "You want unlimited users on every plan, with no charge per seat.",
+    "You want your own ranking data in ChatGPT, claude.ai or Claude Code through an MCP that comes with your plan.",
+    "You want unlimited API reads on Expert, or BigQuery export on Enterprise, to build your own dashboards."
+  ],
+  "sources": [
+    {
+      "fact": "Plans, keyword tiers, prices, yearly discount, unlimited users, 14-day refund, plan features",
+      "url": "https://www.accuranker.com/pricing/"
+    },
+    {
+      "fact": "Feature list",
+      "url": "https://www.accuranker.com/features/"
+    },
+    {
+      "fact": "Sign-up page now a demo request",
+      "url": "https://www.accuranker.com/sign-up"
+    },
+    {
+      "fact": "MCP included in plan, read-only, OAuth login, ChatGPT, Claude, Claude Code and Perplexity setup",
+      "url": "https://www.accuranker.com/help/getting-started/connecting-to-accuranker-mcp"
+    },
+    {
+      "fact": "Unlimited API and integrations",
+      "url": "https://www.accuranker.com/features/api-integrations/"
+    },
+    {
+      "fact": "Search Console keyword import and Google Analytics estimates",
+      "url": "https://www.accuranker.com/help/integrations/connecting-to-google-search-console/"
+    },
+    {
+      "fact": "Data kept no more than 30 days after a subscription ends",
+      "url": "https://www.accuranker.com/terms/"
+    },
+    {
+      "fact": "Entire keyword ranking history",
+      "url": "https://www.accuranker.com/help/keywords/keyword-and-serp-history/"
+    },
+    {
+      "fact": "Historical search volume up to 3 years",
+      "url": "https://www.accuranker.com/changelog/newfunctionality"
+    }
+  ]
+}

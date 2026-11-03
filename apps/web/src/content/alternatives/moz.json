@@ -1,0 +1,66 @@
+{
+  "slug": "moz",
+  "name": "Moz Pro",
+  "url": "https://moz.com/products/pro/pricing",
+  "kind": "seo suite",
+  "checked": "2026-11-03",
+  "summary": "Moz Pro is Moz's paid suite of SEO tools, with its own link and keyword indexes and metrics such as Domain Authority.",
+  "signIn": "Create a Moz account. A free Moz Community account gives limited access to the free tools. The Moz Pro free trial is 7 days on the Medium plan and needs a valid credit card, which may see an authorisation charge of up to $1 that is voided. The trial turns into a paid subscription unless you cancel before it ends. One trial per customer.",
+  "tools": "Keyword Explorer, Link Explorer, Competitive Research, Domain Overview, Site Crawl, Rank Tracker and Campaigns, On-Page Grader, AI visibility dashboards with tracked prompts, AI content briefs and MozBar Premium. API access is not included in Moz Pro. The Moz MCP server (beta, account owners only) needs a separate Moz Data API subscription, or Moz Local for the Local endpoint.",
+  "dataSources": [
+    "Moz link index",
+    "Moz keyword index",
+    "Moz metrics (Domain Authority, Page Authority, Brand Authority)",
+    "Google Analytics 4 (connected to a Campaign)",
+    "AI model answers (GPT, Gemini, Google AI Mode) for prompt tracking"
+  ],
+  "clients": [
+    "Web app",
+    "MozBar (Chrome extension)",
+    "Claude Desktop",
+    "Claude Code",
+    "ChatGPT Desktop"
+  ],
+  "webChat": "Not stated. Its MCP docs name Claude Desktop, Claude Code and ChatGPT Desktop, and the MCP needs a Moz Data API plan, not Moz Pro.",
+  "free": "No free Moz Pro plan. A free Moz Community account gives limited access to MozBar, Keyword Explorer and Link Explorer. The Moz Pro trial is 7 days on Medium and needs a credit card. The Moz API has a free tier of 50 rows a month, one request every ten seconds.",
+  "price": "Moz Pro: Starter $49 a month for one website. Standard $99 USD a month, or $79 a month paid yearly ($950 for the first year). Medium $179 USD a month, or $143 a month paid yearly ($1,719 for the first year). Large $299 USD a month, or $239 a month paid yearly ($2,868 for the first year). Extra seats $49 a month each. Add-ons include $10 a month per extra Campaign and $20 a month per 200 extra keywords. Enterprise by contact. Moz Data API, needed for MCP: Starter $20 or $75 a month, Growth $125, $250 or $500 a month, Enterprise custom.",
+  "freeShort": "Free tools, 7-day trial",
+  "priceFrom": "$49 a month (Starter)",
+  "writeActions": "No site or Google write actions stated for Moz Pro. The Moz Local MCP endpoint manages business locations and listings, with a Moz Local subscription.",
+  "dataStorage": "Not stated directly. Each Moz Pro Campaign pulls traffic data from one connected Google Analytics 4 property and keeps historical traffic data in the Campaign. No Search Console connection is stated.",
+  "history": "Not stated for Moz Pro research data. The Moz API pages say 20 years of data. GA4 data for a new Campaign is backfilled up to 12 months (monthly view) and 12 weeks (weekly view), but not if GA4 is connected after the Campaign is created.",
+  "licence": "Hosted service",
+  "github": null,
+  "pickIf": [
+    "your team already reports on Domain Authority, Page Authority or Brand Authority.",
+    "you want a lower entry price: $49 a month for one site, or $79 a month on Standard paid yearly.",
+    "you want link and keyword data from Moz's own indexes plus a browser toolbar.",
+    "you want cheap API access for your agent: the Moz Data API with MCP starts at $20 a month."
+  ],
+  "sources": [
+    {
+      "fact": "Moz Pro plans, prices, add-ons, Starter plan, free Community account",
+      "url": "https://moz.com/products/pro/pricing"
+    },
+    {
+      "fact": "Trial on Medium, credit card, $1 authorisation, auto renewal",
+      "url": "https://moz.com/help/your-account/getting-started/free-trial"
+    },
+    {
+      "fact": "Trial length of 7 days",
+      "url": "https://moz.com/moz-pro-free-trial"
+    },
+    {
+      "fact": "MCP endpoints, beta, account owners, clients, auth",
+      "url": "https://moz.com/api/docs/guides/mcp-servers"
+    },
+    {
+      "fact": "Moz API plans, free tier, MCP beta, not in Moz Pro, 20 years of data",
+      "url": "https://moz.com/products/api/pricing"
+    },
+    {
+      "fact": "Google Analytics 4 connection in Campaigns",
+      "url": "https://moz.com/help/moz-pro/traffic-from-search/ga4"
+    }
+  ]
+}

@@ -1,0 +1,72 @@
+{
+  "slug": "semrush",
+  "name": "Semrush",
+  "url": "https://www.semrush.com/prices/",
+  "kind": "seo suite",
+  "checked": "2026-11-03",
+  "summary": "Semrush is a paid marketing suite that helps you build and measure brand visibility in search and AI search, sold as toolkits with a free plan.",
+  "signIn": "Create a Semrush account with an email and password. The Free plan needs no credit card. Paid plans start with a 7-day free trial that needs card details and turns into the paid plan unless you cancel. Each toolkit trial is available once per account. The Advanced plan is by demo request.",
+  "tools": "Keyword research, competitor analysis, backlinks, Site Audit, Position Tracking (rank tracking), AI search visibility and prompt tracking, plus separate toolkits for traffic and market data, local, content, social and advertising. The Semrush MCP server is listed on Starter and Pro+ (also SEO Classic Pro and Guru), with 50,000 API units a month. Advanced and SEO Classic Business need an API units package. MCP reads the SEO API, Trends API and read-only Projects API methods.",
+  "dataSources": [
+    "Semrush's own keyword, ranking and backlink databases",
+    "Semrush traffic and market estimates (Traffic & Market toolkit)",
+    "AI search visibility data (Google Search, ChatGPT, Perplexity, Gemini and more)",
+    "Google Search Console (SEO Dashboard and other tools)",
+    "Google Analytics (SEO Dashboard and other tools)"
+  ],
+  "clients": [
+    "Web app",
+    "ChatGPT",
+    "Claude",
+    "Claude Code",
+    "Microsoft Copilot",
+    "Cursor",
+    "VS Code",
+    "Perplexity",
+    "Lovable",
+    "Notion",
+    "Antigravity"
+  ],
+  "webChat": "Yes, on Starter, Pro+ or plans with API units",
+  "free": "Free plan at $0 a month with no credit card: 1 demo project and 10 reports a day across the main tools. Its free account guide lists 10 queries a day each for Domain Overview, keyword research, competitor research and backlinks, a 100-page Site Audit and 10 tracked keywords. No MCP. Paid plans also have a 7-day free trial that needs a card.",
+  "price": "SEO $139 a month, or $117.33 a month billed annually. Starter (SEO + AI Search) $199 a month, or $165.17 a month billed annually. Pro+ $299 a month, or $248.17 a month billed annually. Advanced is custom, by demo. Annual billing saves up to 17%. Prices in USD. Add-ons include extra users from $45 a month, Base Report $10 a month and Pro Report $20 a month. Enterprise is custom pricing.",
+  "freeShort": "Free plan, 10 reports a day",
+  "priceFrom": "$139 a month (SEO)",
+  "writeActions": "Not through the MCP: it only uses read-only Projects API methods, so it cannot create projects or change settings. No changes to your site or to Google are stated.",
+  "dataStorage": "No. Its SEO Dashboard help says Semrush will never store data from a connected Google Analytics or Google Search Console account.",
+  "history": "SEO data goes back to January 2012 for select databases, on Pro+ (or SEO Classic Guru) and higher. Traffic & Market data goes back to January 2017 with that toolkit.",
+  "licence": "Hosted service",
+  "github": null,
+  "pickIf": [
+    "you want keyword, backlink and traffic research for competitor domains, not only your own site.",
+    "you want monthly SEO history back to 2012 for the main databases.",
+    "you want one account to also cover local, social, content and advertising toolkits.",
+    "you want its MCP server in ChatGPT, Claude or Perplexity on a plan you already pay for."
+  ],
+  "sources": [
+    {
+      "fact": "Plans, prices, Free plan, MCP access on Starter, add-ons",
+      "url": "https://www.semrush.com/prices/"
+    },
+    {
+      "fact": "Free account limits, no card for Free, card for trial",
+      "url": "https://www.semrush.com/blog/what-can-i-do-with-a-free-account-from-semrush/"
+    },
+    {
+      "fact": "7-day trial, once per toolkit per account, charge after trial",
+      "url": "https://www.semrush.com/partner"
+    },
+    {
+      "fact": "MCP plans, API units, clients, read-only Projects API",
+      "url": "https://developer.semrush.com/api/v4/introduction/semrush-mcp"
+    },
+    {
+      "fact": "Google Analytics and Search Console connection, no storage",
+      "url": "https://www.semrush.com/kb/946-seo-dashboard-integrations"
+    },
+    {
+      "fact": "Historical data range and plans",
+      "url": "https://www.semrush.com/kb/64-historical-data"
+    }
+  ]
+}

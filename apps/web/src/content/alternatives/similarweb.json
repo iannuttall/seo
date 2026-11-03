@@ -1,0 +1,78 @@
+{
+  "slug": "similarweb",
+  "name": "Similarweb",
+  "url": "https://www.similarweb.com/packages/web/?type=Individuals",
+  "kind": "seo suite",
+  "checked": "2026-11-03",
+  "summary": "Similarweb is a paid web intelligence platform that estimates traffic, audience, keyword and SEO data for any website, with self-service plans and custom business packages.",
+  "signIn": "Register with a business email or a Google account and start a 7-day free trial. The trial is tied to a subscription package: the card used at sign-up is charged automatically when the trial ends unless you cancel first. Business and Enterprise packages are bought through sales.",
+  "tools": "Competitive intelligence (website performance, traffic and engagement, demographics, marketing channels), SEO intelligence (organic search overview, keyword research, rank tracker, site audit and backlinks), AI brand visibility with tracked prompts, and ad intelligence on the top self-service plan. Business packages add AI Studio, AI agents, data feeds and APIs. The Similarweb MCP server needs an API-only, Business or Enterprise plan.",
+  "dataSources": [
+    "Similarweb traffic and audience estimates",
+    "Similarweb keyword and SEO data",
+    "AI brand visibility and AI traffic data",
+    "Ad intelligence data",
+    "Google Analytics 4 (connect your own site, public or private)"
+  ],
+  "clients": [
+    "Web app",
+    "Claude",
+    "ChatGPT",
+    "Cursor",
+    "Microsoft Copilot",
+    "Perplexity",
+    "Manus",
+    "Zapier",
+    "n8n"
+  ],
+  "webChat": "Yes, in Claude.ai and ChatGPT, but only on API-only, Business or Enterprise plans",
+  "free": "No free plan. A 7-day free trial charges the card on file when it ends unless you cancel. Free data on similarweb.com is a high-level sample with no deeper drill-downs. Anyone can connect Google Analytics 4 to publicly verify their own site for free.",
+  "price": "Self-service (Entrepreneurs), 1 user each: Competitive Intelligence $99 a month, or $65 a month billed annually (3 months of history). Competitive Intel & SEO & AEO $199 a month, or $165 a month billed annually (6 months of history, 150 tracked prompts). Competitive Intel, SEO & AEO & Ads $325 a month, or $270 a month billed annually (6 months of history). Prices in USD. Business and Enterprise packages, the standalone API and MCP access are priced by sales.",
+  "freeShort": "7-day trial, card needed",
+  "priceFrom": "$99 a month (Competitive Intelligence)",
+  "writeActions": "None stated. Similarweb reads and estimates data about websites.",
+  "dataStorage": "Not stated how long. Connecting GA4 lets Similarweb show your visits, pages per visit, visit duration, bounce rate and unique visitors, either publicly to all users or privately to your account. It does not change Similarweb's own estimates for your site.",
+  "history": "3 months on Competitive Intelligence and 6 months on the other self-service plans. Business packages can add up to 37 months. Its about page cites 10 years of historical data.",
+  "licence": "Hosted service",
+  "github": null,
+  "pickIf": [
+    "you need traffic, audience and channel estimates for competitor sites you cannot see in your own analytics.",
+    "you want market research and competitive benchmarking, not only SEO.",
+    "you want AI brand visibility and ad intelligence in the same tool.",
+    "you are on a Business or Enterprise package and want that data in Claude or ChatGPT through its connector."
+  ],
+  "sources": [
+    {
+      "fact": "Self-service plans, prices, history per plan",
+      "url": "https://www.similarweb.com/packages/web/?type=Individuals"
+    },
+    {
+      "fact": "Business packages, 37 months of history, API and MCP by sales, free data on similarweb.com",
+      "url": "https://www.similarweb.com/corp/pricing/"
+    },
+    {
+      "fact": "7-day trial, card charged after trial, sign-up options",
+      "url": "https://support.similarweb.com/hc/en-us/articles/10311028720925-How-to-register-for-a-Similarweb-free-trial"
+    },
+    {
+      "fact": "MCP plans required and clients",
+      "url": "https://docs.similarweb.com/api-v5/similarweb-mcp/mcp-setup"
+    },
+    {
+      "fact": "Claude connector on Claude.ai, API key, Business and Enterprise access",
+      "url": "https://developers.similarweb.com/docs/claude-mcp-integration"
+    },
+    {
+      "fact": "MCP with ChatGPT, Claude, Copilot, Zapier, n8n",
+      "url": "https://www.similarweb.com/corp/ai/mcp/"
+    },
+    {
+      "fact": "GA4 connection, public or private, fields shown",
+      "url": "https://support.similarweb.com/hc/en-us/articles/11550839331613-Connecting-GA4-to-Similarweb"
+    },
+    {
+      "fact": "10 years of historical data",
+      "url": "https://www.similarweb.com/corp/about/"
+    }
+  ]
+}

@@ -1,0 +1,87 @@
+{
+  "slug": "ubersuggest",
+  "name": "Ubersuggest",
+  "url": "https://app.neilpatel.com/en/pricing",
+  "kind": "seo suite",
+  "checked": "2026-11-03",
+  "summary": "Ubersuggest is Neil Patel's hosted SEO tool for keyword research, site audits, rank tracking, competitor and backlink research, and AI search visibility.",
+  "signIn": "Register with an email to get a free account, with no activation needed. Paid monthly plans start with a one-time 7-day free trial that needs payment details (card, debit card, Google Pay, Apple Pay or PayPal) and bills automatically unless you cancel. Lifetime plans are charged at once. The MCP, ChatGPT app and Claude plugin sign in with your Ubersuggest account through OAuth.",
+  "tools": "Keyword research, AI prompt ideas, domain and traffic analysis, competitor keyword gap and top pages, backlinks, site audit, weekly rank tracking, local SEO, AI search visibility in ChatGPT, Gemini and Google AI Overviews, an AI writer and AI Chat. The Ubersuggest MCP server has 42 tools in 8 groups (domain analysis, keyword research, backlinks, site audit, AI brand visibility, content, projects, utilities). Its Claude page says a free account is enough for the Claude plugin and its 9 skills; the MCP page does not state a plan. No API access plans, per the pricing FAQ.",
+  "dataSources": [
+    "Ubersuggest's own keyword, SERP and traffic estimates, built from Google's API with monthly updates",
+    "Backlink data from the Moz API",
+    "Google Search Console",
+    "Google Analytics (organic traffic for connected projects comes straight from Google Analytics)",
+    "AI answers from ChatGPT, Gemini and Google AI Overviews"
+  ],
+  "clients": [
+    "Ubersuggest web app",
+    "Chrome extension",
+    "WordPress plugin",
+    "ChatGPT (web, mobile and desktop)",
+    "Claude (web and desktop)",
+    "Claude Code",
+    "Cursor",
+    "Codex",
+    "Windsurf",
+    "Other MCP-compatible clients"
+  ],
+  "webChat": "Yes",
+  "free": "Free account with no time limit: 3 searches or reports a day, 1 project, 25 tracked keywords with weekly desktop-only updates in 1 location, 2 competitors per project, a site audit of 150 pages a week with no recrawling, 100 backlinks per site, 3 keyword lists of up to 30 keywords, no historical traffic data, AI Writer up to 2,000 words and 5 searches a day, and 40 Chrome extension searches a day. Paid monthly plans also have a one-time 7-day free trial that needs payment details.",
+  "price": "Monthly: Individual $29 a month, Business $49 a month, Enterprise $99 a month. Yearly: Individual $16 a month ($192 billed annually), Business $27.17 a month ($326 billed annually), Enterprise $54.75 a month ($657 billed annually). Lifetime, shown as a limited offer: Individual $290, Business $490, Enterprise $990, one-time and non-refundable, with an optional AI add-on at $108, $348 or $828 a year (shown discounted to $81, $261 or $621, with 3 months free). Custom plans by quote. Add-ons such as extra projects, users, keywords and credits cost $5 a month each. Prices in US$.",
+  "freeShort": "Free account, 3 searches a day",
+  "priceFrom": "$29 a month (Individual)",
+  "writeActions": "Its WordPress plugin can change your site: it applies AI fixes for meta descriptions, titles and missing H1s in one click after a before and after preview. Its Claude project-setup skill creates a project, competitors and tracked keywords inside Ubersuggest. No Google Search Console write actions stated.",
+  "dataStorage": "Not stated for Search Console or Google Analytics data. Its help center says customer data is processed and stored in the United States, on AWS us-east-1, with no choice of region.",
+  "history": "Length not stated for keyword and traffic data. Paid plans include historical data and free accounts get no historical traffic data. Backlink link history goes back 3 years on paid plans, and new and lost links cover 30 days.",
+  "licence": "Hosted service",
+  "github": null,
+  "pickIf": [
+    "You want a free account with no time limit for a few keyword, backlink and audit checks each day.",
+    "You would rather pay once: it sells one-time lifetime plans as well as monthly and yearly ones.",
+    "You want the same 42 tools in ChatGPT, Claude, Claude Code and Cursor, and a free account is enough to try them in Claude.",
+    "You run WordPress and want to apply audit fixes for titles, meta descriptions and H1s from wp-admin."
+  ],
+  "sources": [
+    {
+      "fact": "Plans, monthly, yearly and lifetime prices, AI add-on, add-ons, 7-day trial, no API plans, link history",
+      "url": "https://app.neilpatel.com/en/pricing"
+    },
+    {
+      "fact": "Free account limits and no time limit",
+      "url": "https://ubersuggest.zendesk.com/hc/en-us/articles/9704437892635-Free-Account-Key-Features-and-Limits"
+    },
+    {
+      "fact": "Trial needs payment details, once per account, monthly plans only",
+      "url": "https://ubersuggest.zendesk.com/hc/en-us/articles/31873263454363-How-to-Start-a-Free-Trial-with-Ubersuggest"
+    },
+    {
+      "fact": "MCP server, 42 tools in 8 groups, OAuth, supported clients",
+      "url": "https://ubersuggest.com/en/mcp"
+    },
+    {
+      "fact": "ChatGPT app on web, mobile and desktop",
+      "url": "https://ubersuggest.com/en/chatgpt-app"
+    },
+    {
+      "fact": "Claude plugin, 9 skills, free account is enough",
+      "url": "https://ubersuggest.com/en/claude-plugins"
+    },
+    {
+      "fact": "WordPress plugin one-click AI fixes",
+      "url": "https://ubersuggest.com/en/wordpress-plugin"
+    },
+    {
+      "fact": "Google API data, monthly updates, Moz backlinks, Search Console and Google Analytics",
+      "url": "https://ubersuggest.zendesk.com/hc/en-us/articles/11508692072091-How-Does-Ubersuggest-Gather-Data"
+    },
+    {
+      "fact": "Data stored in the United States on AWS us-east-1",
+      "url": "https://ubersuggest.zendesk.com/hc/en-us/articles/47936839276315-Data-Privacy-Security-at-Ubersuggest"
+    },
+    {
+      "fact": "Organic traffic for Google Analytics connected projects comes from Google Analytics",
+      "url": "https://ubersuggest.zendesk.com/hc/en-us/articles/4405451545499-Ubersuggest-Traffic-Estimations"
+    }
+  ]
+}

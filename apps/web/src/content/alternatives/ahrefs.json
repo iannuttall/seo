@@ -1,0 +1,67 @@
+{
+  "slug": "ahrefs",
+  "name": "Ahrefs",
+  "url": "https://ahrefs.com/pricing",
+  "kind": "seo suite",
+  "checked": "2026-11-03",
+  "summary": "Ahrefs is a paid SEO and marketing suite built on its own web crawler and 10+ years of web data, with a free account for verified sites.",
+  "signIn": "Create an Ahrefs account. Ahrefs Free needs no credit card and has no trial period, but Site Explorer, Site Audit and Web Analytics only work on websites you verify. Paid plans are bought by card (Visa, Mastercard, American Express, UnionPay). Ahrefs says it does not run discounts or free trials. Enterprise needs a talk with sales and an annual commitment.",
+  "tools": "Site Explorer (backlinks and organic keywords), Keywords Explorer, Site Audit, Rank Tracker, Competitive Analysis, SERP history, Brand Radar for AI prompts, Web Analytics, Report Builder, Social Media Manager (beta) and more on higher plans. API and MCP access come with Lite and up. The hosted MCP server uses API units from the plan: 200,000 on Lite, 800,000 on Standard, 2M on Advanced.",
+  "dataSources": [
+    "Ahrefs' own crawler and web index",
+    "Ahrefs keyword database",
+    "Google Search Console (verified projects)",
+    "Ahrefs Web Analytics (its own analytics script)",
+    "Brand Radar AI prompt data",
+    "Social media channels (Social Media Manager)"
+  ],
+  "clients": [
+    "Web app",
+    "SEO Toolbar (browser extension)",
+    "Claude Web",
+    "Claude Desktop",
+    "Claude Mobile",
+    "Claude Code",
+    "Copilot Studio",
+    "ChatGPT Web",
+    "Lovable",
+    "n8n",
+    "Manus",
+    "Mistral's Le Chat",
+    "OpenClaw"
+  ],
+  "webChat": "Yes, on Lite and higher plans",
+  "free": "Ahrefs Free is a permanent free account with no credit card. It gives limited Site Explorer and Site Audit access for verified websites (unlimited verified sites, 5K crawl credits a month per project, 1K backlinks and keywords visible at once), Web Analytics up to 1M events per project, Social Media Manager (unlimited in beta), 1 free AI Content Helper doc a month and the SEO Toolbar. No API or MCP access.",
+  "price": "Starter $29 a month. Lite $129 a month (1 user, 6 months of history, 750 tracked keywords). Standard $249 a month (2 years of history, 2,000 tracked keywords). Advanced $449 a month (5 years of history, 5,000 tracked keywords). Enterprise $1,499 a month with an annual commitment. Extra users cost $40, $60, $80 or $100 a month each by plan. Paying annually saves up to 17%. Prices in USD. Add-ons include Content Kit from $99 a month, Report Builder $99 a month, Traffic Analytics $99 a month and Project Boosts from $20 a month per project.",
+  "freeShort": "Free account, verified sites",
+  "priceFrom": "$29 a month (Starter)",
+  "writeActions": "Some. Social Media Manager can publish and schedule social posts. The Project Boost Pro and Max add-ons can auto-submit URLs to IndexNow, and Max adds Patches. No Google Search Console write actions are stated.",
+  "dataStorage": "Yes for Search Console. Ahrefs imports up to the last 16 months of GSC data and keeps storing it for as long as the account stays connected. Its help page says GSC data is only shown to you and people you give access, and that it is used, without identifying your site, to improve Ahrefs' search volume estimates. Google Analytics storage not stated.",
+  "history": "Ahrefs data history depends on plan: 6 months on Lite, 2 years on Standard, 5 years on Advanced, unlimited on Enterprise. Search Console history grows past 16 months while connected.",
+  "licence": "Hosted service",
+  "github": null,
+  "pickIf": [
+    "you need a large backlink index from a crawler the company runs itself.",
+    "you want a free account for your own verified sites with no trial clock and no card.",
+    "you want Search Console history kept past Google's 16 months next to Ahrefs' own data.",
+    "you want its MCP server in Claude or ChatGPT on the web, and already pay for Lite or above."
+  ],
+  "sources": [
+    {
+      "fact": "Plans, prices, limits, add-ons, API and MCP from Lite, no trials, payment methods",
+      "url": "https://ahrefs.com/pricing"
+    },
+    {
+      "fact": "Ahrefs Free tools, limits, no credit card",
+      "url": "https://ahrefs.com/free"
+    },
+    {
+      "fact": "MCP clients, Lite and up, API units, OAuth keys",
+      "url": "https://docs.ahrefs.com/en/mcp/docs/introduction"
+    },
+    {
+      "fact": "Search Console import, storage beyond 16 months, data use",
+      "url": "https://help.ahrefs.com/en/articles/5311821-how-do-i-see-my-google-search-console-performance-in-ahrefs"
+    }
+  ]
+}

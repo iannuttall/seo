@@ -58,6 +58,7 @@ const expectedPages = new Map([
     ...alternativePaths,
   ].map((path) => [pagePath(path), `https://seoskill.dev${path}`]),
   ['pricing/index.html', 'https://seoskill.dev/pricing'],
+  ['about/index.html', 'https://seoskill.dev/about'],
   ['stats/index.html', 'https://seoskill.dev/stats'],
   ['telemetry/index.html', 'https://seoskill.dev/telemetry'],
   ['privacy/index.html', 'https://seoskill.dev/privacy'],
@@ -313,6 +314,7 @@ test('sitemap is exact and contains only indexable canonical pages', () => {
         path.startsWith('integrations/') ||
         path.startsWith('alternatives/') ||
         path === 'pricing/index.html' ||
+        path === 'about/index.html' ||
         path === 'stats/index.html' ||
         path === 'telemetry/index.html',
     )

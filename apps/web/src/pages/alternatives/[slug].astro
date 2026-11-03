@@ -10,6 +10,8 @@ import {
   type CompetitorEntry,
   cell,
   compareRows,
+  seoSkillAsTool,
+  suiteRows,
   competitors,
   kindIcon,
   reasonsFor,
@@ -54,7 +56,7 @@ const glance = [
   { label: 'Free use', ours: 'Every on-demand tool, no usage cap', theirs: item.freeShort },
   { label: 'Paid', ours: '$50 a month per site, for the weekly audit', theirs: item.priceFrom },
   { label: 'Works in web chat', ours: seoSkill.webChat, theirs: item.webChat },
-  { label: 'Connect', ours: 'One URL and a Google sign-in', theirs: item.kind === 'self-hosted' ? 'Run it on your own machine' : item.kind === 'skill' ? 'Install it in your agent' : suite ? 'Create an account' : 'Through its own account' },
+  { label: suite ? 'Get started' : 'Connect', ours: suite ? 'Free web tools with no account, or one URL in your AI agent' : 'One URL and a Google sign-in', theirs: item.kind === 'self-hosted' ? 'Run it on your own machine' : item.kind === 'skill' ? 'Install it in your agent' : suite ? 'Create an account' : 'Through its own account' },
 ]
 
 const switchSteps = [
@@ -139,7 +141,7 @@ const faq = [
       <SplitList
         id="pick-us"
         title="Pick SEO Skill if"
-        text="One hosted MCP server for your own search data."
+        text={suite ? 'Free SEO tools in your browser, and your own search data in your AI agent.' : 'One hosted MCP server for your own search data.'}
         items={reasonsFor(item).map((reason) => ({ text: reason }))}
       />
 
@@ -150,11 +152,11 @@ const faq = [
             <span></span><span>SEO Skill</span><span>{item.short}</span>
           </div>
           {
-            compareRows.map(([label, ours, theirs]) => (
+            (suite ? suiteRows : compareRows).map(([label, ours, theirs]) => (
               <div class="grid gap-2 border-b border-border py-4 last:border-b-0 sm:grid-cols-[8rem_1fr_1fr] sm:gap-6">
                 <span class="text-sm leading-6 font-medium text-foreground">{label}</span>
                 <p class="text-sm leading-6 text-foreground-muted">
-                  <span class="font-medium text-foreground sm:hidden">SEO Skill:</span>{' '}{seoSkill[ours]}
+                  <span class="font-medium text-foreground sm:hidden">SEO Skill:</span>{' '}{(suite ? seoSkillAsTool : seoSkill)[ours]}
                 </p>
                 <p class="text-sm leading-6 text-foreground-muted">
                   <span class="font-medium text-foreground sm:hidden">{item.short}:</span>{' '}{cell(item[theirs])}

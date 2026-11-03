@@ -1,0 +1,77 @@
+{
+  "slug": "surfer-seo",
+  "name": "Surfer",
+  "url": "https://surfer.ai/pricing/",
+  "kind": "seo suite",
+  "checked": "2026-11-03",
+  "summary": "Surfer is a hosted platform for creating content that ranks on Google and gets cited by AI search engines, with a content editor, AI visibility tracking and an SEO audit.",
+  "signIn": "Create a Surfer account, choose a plan and enter card details at checkout. New accounts get a 7-day free trial of the Pro plan. The trial does not cancel itself: after 7 days it turns into the plan you chose and your card is charged. The trial is for new accounts only.",
+  "tools": "Content Editor with a Content Score and live AI SEO guidelines, Surfy AI writing assistant, AI detector and humanizer, plagiarism check, 1-click content optimization and internal linking, Content Audit with ranking drop alerts, keyword research, Topical Map, cannibalization report, SERP Analyzer and AI Tracker for ChatGPT, Perplexity, Google AI Mode, AI Overviews and Gemini. Integrations with WordPress, Google Docs, Contentful and Zapier. The Surfer MCP server is on AI Search Analytics, Pro, Peace of Mind and Enterprise, and in the trial. It can create and update Content Editors, generate articles, read recommendations and AI Tracker reports, and read Search Console data. API access is on Peace of Mind.",
+  "dataSources": [
+    "Surfer's own analysis of the search results for your keyword",
+    "AI answers from ChatGPT, Perplexity, Google AI Mode, Google AI Overviews and Gemini (AI Tracker)",
+    "Google Search Console (Content Audit, dashboard, Topical Map and MCP)"
+  ],
+  "clients": [
+    "Web app",
+    "WordPress plugin",
+    "Google Docs",
+    "Contentful",
+    "Claude",
+    "Claude Code",
+    "ChatGPT (web or desktop)",
+    "Codex",
+    "Cursor",
+    "VS Code"
+  ],
+  "webChat": "Yes, on AI Search Analytics, Pro, Peace of Mind or Enterprise. In ChatGPT it needs developer mode, which works on Plus, Pro, Business, Enterprise and Edu.",
+  "free": "No free plan stated. A 7-day free trial of the Pro plan for new accounts, with card details at checkout. It turns into the paid plan you chose unless you cancel before the 7 days end. If you cancel, the account expires and you lose access to stored data.",
+  "price": "Discovery $59 a month, or $49 a month billed yearly. Standard $119 a month, or $99 a month billed yearly. Pro $219 a month, or $182 a month billed yearly. Peace of Mind $359 a month, or $299 a month billed yearly. AI Search Analytics $95 a month, or $82 a month billed yearly. Enterprise is custom. Yearly plans are paid up front for the whole year and save up to 17%. Prices in USD, and billing in EUR is also supported. Monthly plans include fewer documents: 10 on Discovery and 30 on Standard and Pro, against 120 and 360 on yearly plans.",
+  "freeShort": "7-day Pro trial, card required",
+  "priceFrom": "$59 a month (Discovery)",
+  "writeActions": "Yes, on WordPress. The plugin can export a Content Editor to a new draft or update an existing post or page, and an update to a published post shows live right away. The MCP can create and change content inside Surfer. No changes in Google are stated.",
+  "dataStorage": "Not stated. Its help says Surfer needs view-only access to Search Console and uses the data only to improve your Surfer experience. The MCP reads Search Console from Google on every call.",
+  "history": "Not stated. Content Audit needs at least 30 days of Search Console data.",
+  "licence": "Hosted service",
+  "github": null,
+  "pickIf": [
+    "you write a lot of articles and want live guidelines and a Content Score while you write.",
+    "you want to track how often ChatGPT, Perplexity, Gemini and Google AI answers mention your brand.",
+    "you publish on WordPress and want to send optimized content straight to a draft or post.",
+    "you want an MCP server that can draft and optimize articles from Claude or ChatGPT."
+  ],
+  "sources": [
+    {
+      "fact": "Plans, monthly and yearly prices, features by plan, MCP and API by plan, up-front annual billing",
+      "url": "https://surfer.ai/pricing/"
+    },
+    {
+      "fact": "7-day Pro trial, card at checkout, automatic charge, new accounts only",
+      "url": "https://docs.surferseo.com/en/articles/12944181-how-does-the-surfer-trial-work"
+    },
+    {
+      "fact": "MCP plans and setup in Claude, Claude Code, ChatGPT and Cursor",
+      "url": "https://surfer.ai/mcp/"
+    },
+    {
+      "fact": "MCP clients and requirements",
+      "url": "https://devs.surferseo.com/mcp/overview"
+    },
+    {
+      "fact": "What the MCP can read and change, Search Console read live from Google",
+      "url": "https://devs.surferseo.com/mcp/tools/index.md"
+    },
+    {
+      "fact": "Search Console connection, view-only access, daily monitoring",
+      "url": "https://docs.surferseo.com/en/articles/8985467-why-you-should-connect-your-gsc-to-surfer"
+    },
+    {
+      "fact": "Content Audit needs 30 days of Search Console data",
+      "url": "https://docs.surferseo.com/en/articles/11394435-step-2-how-to-setup-sites-and-audit-your-website"
+    },
+    {
+      "fact": "WordPress export to a draft or an existing post",
+      "url": "https://docs.surferseo.com/en/articles/9071075-how-to-export-content-between-surfer-and-wordpress"
+    }
+  ]
+}

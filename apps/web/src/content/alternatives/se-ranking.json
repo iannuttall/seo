@@ -1,0 +1,82 @@
+{
+  "slug": "se-ranking",
+  "name": "SE Ranking",
+  "url": "https://seranking.com/subscription.html",
+  "kind": "seo suite",
+  "checked": "2026-11-03",
+  "summary": "SE Ranking is a hosted SEO platform that brings keyword research, rank tracking, website audits, backlink analysis, competitor research, content tools, local SEO and reporting into one workspace.",
+  "signIn": "Create an SE Ranking account and start a free 14-day trial. No credit card is needed. There is no permanent free plan. When the trial ends you buy a plan from the Billing page.",
+  "tools": "Rank Tracker (Google desktop and mobile, Bing, Yahoo and YouTube), Keyword Research, Competitive Research, Website Audit, On-Page SEO Checker, Backlink Checker and Backlink Monitoring, Content Editor with an AI Writer, Local Marketing and a Report Builder. Core and Growth also include AI Visibility tracking (25 prompts a day across 5 AI engines). The SE Ranking MCP server is included on every plan and in the trial. It runs on your plan's API credits (25K a month on Core, 100K on Growth, 100K in the trial) and exposes 180+ tools for research, audits, AI search data and project management. SE Ranking also publishes open-source Claude SEO skills (seranking/seo-skills) built on the MCP. The API is included on every plan and is also sold on its own.",
+  "dataSources": [
+    "SE Ranking's own databases: 5.5B keywords, 188 country databases and 2.2B domain profiles, per its MCP page",
+    "Live search engine checks for tracked rankings, with a cached copy of each result",
+    "Search volume built from Google Keyword Planner and Google Trends, refined by SE Ranking",
+    "AI search visibility data (ChatGPT, Gemini, Perplexity, AI Overviews, AI Mode and more)",
+    "Google Search Console (keyword data and backlink import)",
+    "Google Analytics 4",
+    "Google Ads, Matomo and Google Business Profile"
+  ],
+  "clients": [
+    "Web app",
+    "Claude (web and desktop)",
+    "Claude Code",
+    "ChatGPT",
+    "Codex",
+    "Cursor",
+    "VS Code",
+    "v0",
+    "Windsurf",
+    "Zed",
+    "Gemini CLI"
+  ],
+  "webChat": "Yes. Official connectors in the Claude and ChatGPT directories, on every plan and in the trial.",
+  "free": "Free 14-day trial with no credit card. The pricing page lists up to 10 projects, 750 tracked keywords a day, 20 AI prompts a day and AI competitive research for up to 3 domains. Its FAQ adds 3 manager seats, 10 reports a day each for competitive, keyword and backlink research, and full API and MCP access with 100,000 credits. No permanent free plan. Some free tools work without an account.",
+  "price": "Core $129 a month, or $103.20 a month billed annually (10 projects, 1 manager seat, 2k keywords tracked daily, 250k audit pages a month, 25K API credits and MCP). Growth $279 a month, or $223.20 a month billed annually (30 projects, 3 manager seats, 5k keywords daily, 2M audit pages, 100K API credits and MCP, full historical data). Enterprise is custom, through sales. Annual billing saves 20% and is paid upfront. Prices in USD. Add-ons include extra manager seats from $16, extra keywords from $22.40, Agency Pack from $69 a month (annual only), AI visibility from $71 a month and an API add-on from $45 a month. The standalone API starts at $179 a month (annual only), or $50 per 250K credits pay as you go.",
+  "freeShort": "14-day trial, no card",
+  "priceFrom": "$129 a month (Core)",
+  "writeActions": "Not on your site. Its FAQ says SE Ranking does not implement changes on your site. Through the API and MCP it can create and manage projects inside SE Ranking, such as rank tracking keywords and competitors. Local Marketing can schedule Google Business Profile posts, reply to reviews and sync listings. No Search Console write actions stated.",
+  "dataStorage": "Its Google Analytics help says SE Ranking does not store data transferred from Google Analytics through public OAuth. It does not say what it keeps from Search Console. Backlinks imported from Search Console are kept in Backlink Monitoring.",
+  "history": "Keyword Research and Competitive Research history goes back to February 2020. Core gets up to 6 months of it, Growth and Enterprise get full access. Rank tracking history builds from when a project starts and is kept while the project exists.",
+  "licence": "Hosted service",
+  "github": null,
+  "pickIf": [
+    "You want rank tracking, audits, research and client reporting from one provider at a lower price than the largest suites.",
+    "You want an official MCP server in claude.ai and ChatGPT on every plan, including the free trial.",
+    "You want ready-made Claude SEO skills that turn its data into briefs, audits and reports.",
+    "You run local SEO and want map rank tracking, listings and Google Business Profile posts in the same account."
+  ],
+  "sources": [
+    {
+      "fact": "Plans, prices, limits, add-ons, annual billing, trial limits",
+      "url": "https://seranking.com/subscription.html"
+    },
+    {
+      "fact": "Product, tools, trial with no card, no free plan, data sources, integrations, no site changes",
+      "url": "https://seranking.com/faq.html"
+    },
+    {
+      "fact": "MCP on every plan, API credits, clients, ChatGPT connector, database sizes, Claude skills, pay-as-you-go API",
+      "url": "https://seranking.com/mcp.html"
+    },
+    {
+      "fact": "MCP setup, Claude connector, project management tools",
+      "url": "https://seranking.com/api/integrations/mcp"
+    },
+    {
+      "fact": "Claude and ChatGPT connector directories, Claude SEO skills",
+      "url": "https://help.seranking.com/hc/en-us/articles/29433510970140-Setup"
+    },
+    {
+      "fact": "Google Analytics data not stored",
+      "url": "https://help.seranking.com/en/project-tools/analytics-traffic/google-analytics-integration"
+    },
+    {
+      "fact": "Search Console data and backlink import",
+      "url": "https://help.seranking.com/hc/en-us/articles/16332615132700-Google-Search-Console-integration"
+    },
+    {
+      "fact": "Historical data back to February 2020 and plan access",
+      "url": "https://help.seranking.com/hc/en-us/articles/16332558113692-Historical-data-in-Competitive-Research"
+    }
+  ]
+}

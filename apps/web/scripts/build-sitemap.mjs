@@ -44,6 +44,7 @@ const paths = [
   ...cmsPaths,
   ...alternativePaths,
   '/pricing',
+  '/about',
   '/stats',
   '/telemetry',
 ]

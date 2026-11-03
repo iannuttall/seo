@@ -69,14 +69,21 @@ const shortNames: Record<string, string> = {
   'google-analytics-mcp': 'Google Analytics MCP',
   'search-console-mcp': 'search-console-mcp',
   mcpsearchconsole: 'mcpsearchconsole',
+  'screaming-frog': 'Screaming Frog',
 }
 
-/** The groups on the hub, closest alternatives first, each with its icon. */
+/** The groups on the hub, most searched first, each with its icon. */
 export const groups = [
   {
+    kind: 'seo suite',
+    title: 'SEO tools and suites',
+    text: 'Keyword research, backlinks, rank tracking, crawling and traffic estimates. Free tools for the everyday jobs, and your own Search Console data in your AI agent.',
+    icon: Analytics02Icon,
+  },
+  {
     kind: 'hosted',
-    title: 'Hosted Search Console MCP servers',
-    text: 'Add a URL to your agent and sign in. The closest match to SEO Skill.',
+    title: 'Hosted SEO MCP servers',
+    text: 'Add a URL to your agent and sign in. The closest match to the SEO Skill MCP server.',
     icon: CloudServerIcon,
   },
   {
@@ -108,12 +115,6 @@ export const groups = [
     title: 'SEO data providers',
     text: 'Keyword, ranking and backlink data from their own index, billed by use.',
     icon: DatabaseIcon,
-  },
-  {
-    kind: 'seo suite',
-    title: 'SEO suites',
-    text: 'All-in-one SEO apps with their own keyword and backlink index. Our free tools cover the everyday lookups.',
-    icon: Analytics02Icon,
   },
 ] as const
 
@@ -164,6 +165,54 @@ export const suiteTools: Record<string, string[]> = {
     'website-traffic-checker',
     'serp-checker',
   ],
+  'screaming-frog': [
+    'robots-txt-validator',
+    'sitemap-validator',
+    'canonical-checker',
+    'internal-linking-tool',
+  ],
+  sitebulb: [
+    'robots-txt-validator',
+    'sitemap-validator',
+    'canonical-checker',
+    'schema-markup-validator',
+  ],
+  'surfer-seo': [
+    'serp-checker',
+    'competitor-keyword-research',
+    'serp-preview',
+    'schema-markup-generator',
+  ],
+  answerthepublic: [
+    'word-combiner',
+    'competitor-keyword-research',
+    'serp-checker',
+    'serp-preview',
+  ],
+  'se-ranking': [
+    'competitor-keyword-research',
+    'backlink-checker',
+    'serp-checker',
+    'website-traffic-checker',
+  ],
+  majestic: [
+    'backlink-checker',
+    'domain-rating-checker',
+    'spam-score-checker',
+    'domain-age-checker',
+  ],
+  mangools: [
+    'competitor-keyword-research',
+    'serp-checker',
+    'backlink-checker',
+    'domain-rating-checker',
+  ],
+  'seo-powersuite': [
+    'serp-checker',
+    'backlink-checker',
+    'internal-linking-tool',
+    'robots-txt-validator',
+  ],
 }
 
 export const kindIcon = (kind: string) =>
@@ -208,6 +257,20 @@ export const seoSkill = {
     'Hosted service, with the CLI and local MCP server open source (Apache 2.0)',
 } as const
 
+/**
+ * SEO Skill's column next to an SEO tool or suite, where the reader is
+ * comparing features and price rather than MCP setup.
+ */
+export const seoSkillAsTool = {
+  ...seoSkill,
+  signIn:
+    'Use the free web tools with no account. For your own data, add https://seoskill.dev/mcp to your AI agent and sign in with Google (read only).',
+  tools:
+    'Free web tools: backlink checker, Domain Rating, competitor keywords, SERP checker, traffic estimates, robots.txt, sitemap, schema and more. In your AI agent: Search Console reports (quick wins, low CTR, striking distance, content decay, cannibalization, traffic drops), page checks, index checks, before and after comparisons, and keyword research with your own key. A site crawler and internal links in the CLI.',
+  clients:
+    'Your browser for the web tools. Claude Code, Claude, ChatGPT, Codex, Cursor, VS Code, Gemini CLI, Windsurf, Le Chat and any remote MCP client for your own data.',
+} as const
+
 /** Rows of the side by side table: label, SEO Skill, competitor field. */
 export const compareRows = [
   ['Connect', 'signIn', 'signIn'],
@@ -218,6 +281,21 @@ export const compareRows = [
   ['Free', 'free', 'free'],
   ['Paid plans', 'price', 'price'],
   ['Can it change anything', 'writeActions', 'writeActions'],
+  ['Your data', 'dataStorage', 'dataStorage'],
+  ['History', 'history', 'history'],
+  ['Licence', 'licence', 'licence'],
+] as const
+
+/** The side by side rows for an SEO tool or suite. */
+export const suiteRows = [
+  ['Get started', 'signIn', 'signIn'],
+  ['What it does', 'tools', 'tools'],
+  ['Data', 'dataSources', 'dataSources'],
+  ['Where you use it', 'clients', 'clients'],
+  ['In Claude or ChatGPT on the web', 'webChat', 'webChat'],
+  ['Free', 'free', 'free'],
+  ['Paid plans', 'price', 'price'],
+  ['Can it change your site', 'writeActions', 'writeActions'],
   ['Your data', 'dataStorage', 'dataStorage'],
   ['History', 'history', 'history'],
   ['Licence', 'licence', 'licence'],

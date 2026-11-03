@@ -12,6 +12,31 @@ export const site = {
   clickySiteId: '101508763',
 } as const
 
+/**
+ * The founder card and About page. Audience numbers were read from each
+ * profile on `asOf` (X through api.fxtwitter.com, YouTube from the channel
+ * page, LinkedIn from Ian); update them all together.
+// Career facts on the About page come from ian.is/about.
+ */
+export const founder = {
+  name: 'Ian Nuttall',
+  anchor: 'ian-nuttall',
+  /** Approximate. Copy says "20+ years", never an exact count. */
+  seoSince: 2005,
+  asOf: '2026-11-03',
+  url: 'https://ian.is',
+  x: { url: 'https://x.com/iannuttall', followers: 81_824 },
+  youtube: { url: 'https://www.youtube.com/@inuttall', subscribers: 16_900 },
+  linkedin: { url: 'https://www.linkedin.com/in/iannuttall', followers: 4_471 },
+  github: 'https://github.com/iannuttall',
+} as const
+
+/** 81824 reads as 81.8k, 16900 as 16.9k. */
+export const shortCount = (value: number) =>
+  value >= 1000
+    ? `${(value / 1000).toFixed(1).replace(/\.0$/, '')}k`
+    : `${value}`
+
 /** The commands people copy to connect or install. */
 export const setupCommands = {
   claude: 'claude mcp add --transport http seoskill https://seoskill.dev/mcp',

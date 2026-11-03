@@ -14,17 +14,21 @@ const breadcrumbs: SchemaBreadcrumb[] = [{ label: 'Home', href: '/' }, { label: 
 const latest = competitors.map((item) => item.checked).sort().at(-1)
 
 const why = [
-  { title: 'Free, with no usage cap', text: 'Every tool your agent calls on demand costs nothing, with no trial and no daily limit.' },
+  { title: 'Free SEO tools, no account', text: 'Backlinks, Domain Rating, competitor keywords, SERPs, traffic estimates and site checks in your browser.', href: '/tools' },
+  { title: 'Free in your AI agent, with no usage cap', text: 'Every tool your agent calls on demand costs nothing, with no trial and no daily limit.' },
   { title: 'One Google sign-in', text: 'Search Console, Google Analytics and URL Inspection with read-only access. No Google Cloud project, no API key.' },
   { title: 'Works in every client', text: 'Claude, ChatGPT and Le Chat on the web, plus Claude Code, Codex, Cursor, VS Code and Gemini CLI.' },
   { title: 'Your data is not stored', text: 'Rows are fetched when your agent asks and returned, never stored, except the fix list for sites in the weekly audit. Your sign-ins and saved keys are kept, encrypted.' },
   { title: 'Keyword research with your own key', text: 'DataForSEO or Ahrefs results next to your own numbers, kept clearly apart from them.' },
 ]
 
+const suites = competitors.filter((item) => item.kind === 'seo suite')
 const names = (list: typeof competitors) => list.map((item) => item.short).join(', ')
 const webChat = competitors.filter((item) => item.webChat === 'Yes')
 const openSource = competitors.filter((item) => item.kind === 'self-hosted')
 const faqs = [
+  { question: 'What is the best free alternative to Ahrefs or Semrush?', answer: 'For the everyday lookups, SEO Skill\'s free web tools check backlinks, Domain Rating, competitor keywords, SERPs and traffic estimates with no account. For your own site, its free MCP server gives your AI agent your real Search Console and Google Analytics data, which no index estimate can match.' },
+  { question: 'Which SEO tools are compared here?', answer: `${names(suites)}, plus ${competitors.length - suites.length} MCP servers, skills and connectors that give an AI agent SEO data.` },
   { question: 'What is the best free Google Search Console MCP server?', answer: `SEO Skill is free for every on-demand tool with no usage cap, and it runs hosted, so there is nothing to install. The free open source servers (${names(openSource)}) run on your own machine with your own Google Cloud project.` },
   { question: 'Which Search Console MCP servers work in claude.ai and ChatGPT?', answer: `SEO Skill does, and so do ${names(webChat)}, according to their own pages.` },
   { question: 'Do I need a Google Cloud project?', answer: 'Not for SEO Skill. You add one URL and sign in with Google. Most open source servers ask you to create a Google Cloud project and an OAuth client first.' },
@@ -33,8 +37,8 @@ const faqs = [
 ---
 
 <BaseLayout
-  title="Google Search Console MCP servers compared"
-  description={`Compare ${competitors.length} Google Search Console and SEO MCP servers, skills, connectors and SEO suites with SEO Skill: setup, AI clients, free use, price and data handling.`}
+  title="Free alternatives to Ahrefs, Semrush and SEO tools"
+  description={`Free alternatives to Ahrefs, Semrush, Moz, Similarweb, SpyFu and ${competitors.length - 5} more SEO tools and MCP servers, compared with SEO Skill on features, price and data.`}
   canonicalPath="/alternatives"
   schemaType="CollectionPage"
   {breadcrumbs}
@@ -43,8 +47,8 @@ const faqs = [
 >
   <main data-agent-content>
     <LandingHero
-      title="Search Console MCP servers compared"
-      lead="Every way to give an AI agent your Search Console and SEO data, next to SEO Skill: how you connect, what it costs and what it keeps."
+      title="SEO tool alternatives compared"
+      lead="Free alternatives to Ahrefs, Semrush, Moz, Similarweb and the rest of the SEO stack, plus every other way to give an AI agent your search data. What each one does, what it costs and what it keeps, next to SEO Skill."
       setupId="alternatives-setup"
     />
 
@@ -52,7 +56,7 @@ const faqs = [
       <SplitList
         id="why-heading"
         title="Why teams pick SEO Skill"
-        text="One hosted MCP server for your own search data. Add the URL, sign in with Google and ask."
+        text="Free SEO tools in your browser, and your own search data in your AI agent. Add the URL, sign in with Google and ask."
         items={why}
       />
 
@@ -73,6 +77,15 @@ const faqs = [
                     link={item.kind === 'seo suite' ? `Free ${item.short} alternative` : `SEO Skill vs ${item.short}`}
                   />
                 ))}
+                {group.kind === 'seo suite' && items.length % 2 ? (
+                  <HomeCard
+                    title="All free SEO tools"
+                    text="Every free tool on SEO Skill in one place, with no account and no key."
+                    icon={group.icon}
+                    href="/tools"
+                    link="Browse the free tools"
+                  />
+                ) : null}
               </div>
             </section>
           )

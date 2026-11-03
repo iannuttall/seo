@@ -1,6 +1,10 @@
-import { site } from './site'
+import { founder, site } from './site'
 
-export type PageSchemaType = 'CollectionPage' | 'TechArticle' | 'WebPage'
+export type PageSchemaType =
+  | 'AboutPage'
+  | 'CollectionPage'
+  | 'TechArticle'
+  | 'WebPage'
 
 export interface SchemaBreadcrumb {
   href?: string
@@ -55,9 +59,17 @@ export function pageSchema(input: PageSchemaInput) {
     {
       '@id': ids.creator,
       '@type': 'Person',
-      name: 'Ian Nuttall',
-      url: 'https://ian.is',
-      sameAs: ['https://github.com/iannuttall'],
+      name: founder.name,
+      url: founder.url,
+      description:
+        'Builder of SEO Skill and Index My Site, founder of Practical Programmatic, Keyword Metrics and URL Monitor, working in SEO for more than 20 years.',
+      sameAs: [
+        founder.github,
+        founder.x.url,
+        founder.youtube.url,
+        founder.linkedin.url,
+        `${site.url}/about`,
+      ],
     },
     {
       '@id': ids.website,

@@ -1,0 +1,66 @@
+{
+  "slug": "answerthepublic",
+  "name": "AnswerThePublic",
+  "url": "https://answerthepublic.com/pricing",
+  "kind": "seo suite",
+  "checked": "2026-11-03",
+  "summary": "AnswerThePublic is a hosted keyword research tool from NP Digital that pulls autocomplete suggestions from search engines, social media, Amazon and AI tools to show the questions people ask, with Content Studio for writing articles.",
+  "signIn": "Register for a free account to get 3 searches a day. To try a paid plan, switch the pricing page to monthly and start the one-time 7-day free trial. You verify your email and add a payment method, and the trial turns into a paid monthly plan unless you cancel. Yearly plans are charged right away with no trial.",
+  "tools": "Keyword reports with a keyword wheel, Organic Searches (Google and Bing), Search Modifiers (questions, prepositions, comparisons, alphabeticals, numbers), People Also Ask, Trending Keywords, Social Media, Shopping and an AI Models report with ChatGPT and Gemini prompts, intent, sentiment and brand mentions. Also keyword lists, search listening alerts, keyword tracking, compare over time (Growth and Business), exports and Content Studio for AI articles. A public API in Alpha is on active paid plans only, not on the free plan, the trial or Lifetime plans. No MCP yet: its help says MCP support is launching soon for recurring-plan customers.",
+  "dataSources": [
+    "Autocomplete suggestions from Google, Bing, YouTube, TikTok, Instagram and Amazon",
+    "AI prompt suggestions and answers from ChatGPT and Gemini",
+    "Google search volume, updated monthly, and Google Ads CPC",
+    "Google People Also Ask",
+    "Google Trends for the last 30 days (Trending Keywords)",
+    "Google Shopping top products",
+    "Your site's sitemap and published pages (Content Studio Keyword Coverage)"
+  ],
+  "clients": ["Web app"],
+  "webChat": "No. MCP support is announced as coming soon for recurring-plan customers.",
+  "free": "Free account with 3 searches a day, reset daily. Some suggestions are locked, search volume and CPC show for only two branches per report, XLSX exports are capped at 30 keywords, and images download at lower resolution. Free AI Models access includes 30 AI prompt responses a month and 10 prompts per search. No Content Studio credits and no API. Monthly plans also have a one-time 7-day free trial with 36 Content Studio credits and no API.",
+  "price": "Starter US$20 a month (1 user, 100 searches a month). Growth US$99 a month (up to 3 users, 200 searches). Business US$199 a month (up to 10 users, 300 searches). Yearly, with a limited-time 50% off offer that ends Nov 8, 2026: Starter US$120 a year (regular US$160), Growth US$594 a year (regular US$792), Business US$1,194 a year (regular US$1,592). Fees are generally non-refundable once paid billing starts. Custom plans by quote.",
+  "freeShort": "Free, 3 searches a day",
+  "priceFrom": "US$20 a month (Starter)",
+  "writeActions": "Yes, through Content Studio. It can publish articles to WordPress or Webflow, save them as drafts or auto-publish after an article is generated. The API cannot publish. No changes in Google are stated.",
+  "dataStorage": "Not stated. No Google Search Console or Google Analytics connection is stated.",
+  "history": "Not stated. Search volume reflects the previous month, Trending Keywords covers the last 30 days, and Compare shows changes between your own saved reports on Growth and Business.",
+  "licence": "Hosted service",
+  "github": null,
+  "pickIf": [
+    "you want the questions and phrases people type into Google, YouTube, TikTok and Amazon in one visual report.",
+    "you want to see which prompts people use in ChatGPT and Gemini and which brands those answers mention.",
+    "you only need a few searches a day and the free account covers it.",
+    "you want to turn keyword research into AI articles and publish them to WordPress or Webflow."
+  ],
+  "sources": [
+    {
+      "fact": "Plans, monthly and yearly prices, 50% off offer, limits by plan, free account searches",
+      "url": "https://answerthepublic.com/pricing"
+    },
+    {
+      "fact": "Free plan limits, 7-day trial, 36 trial credits",
+      "url": "https://answerthepublic.zendesk.com/hc/en-us/articles/22617503900187-Is-There-a-Free-Version-of-AnswerThePublic"
+    },
+    {
+      "fact": "Trial sign up, payment method, automatic conversion",
+      "url": "https://answerthepublic.zendesk.com/hc/en-us/articles/7414292189595-Payments-Billing-and-Free-Trials-in-AnswerThePublic"
+    },
+    {
+      "fact": "No trial on yearly plans, refund policy",
+      "url": "https://answerthepublic.zendesk.com/hc/en-us/articles/26990597327259-AnswerThePublic-Refund-Policy"
+    },
+    {
+      "fact": "API in Alpha on paid plans, MCP coming soon",
+      "url": "https://answerthepublic.zendesk.com/hc/en-us/articles/15219088022555-Does-AnswerThePublic-Have-an-API"
+    },
+    {
+      "fact": "Data sources, reports, tracking and compare",
+      "url": "https://answerthepublic.zendesk.com/hc/en-us/articles/13932754469275-AnswerThePublic-Starter-Guide"
+    },
+    {
+      "fact": "Content Studio publishing to WordPress and Webflow, Keyword Coverage sources",
+      "url": "https://answerthepublic.zendesk.com/hc/en-us/articles/48030408830747-Content-Studio-Create-SEO-Content-in-Minutes"
+    }
+  ]
+}

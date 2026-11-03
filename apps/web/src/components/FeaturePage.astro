@@ -17,6 +17,8 @@ type Related = {
 
 type Props = {
   title: string
+  // The title tag, when it should differ from the H1.
+  metaTitle?: string
   description: string
   path: string
   lead: string
@@ -24,7 +26,15 @@ type Props = {
   relatedHeading?: string
 }
 
-const { title, description, path, lead, related, relatedHeading = 'Read the docs' } = Astro.props
+const {
+  title,
+  metaTitle,
+  description,
+  path,
+  lead,
+  related,
+  relatedHeading = 'Read the docs',
+} = Astro.props
 const breadcrumbs: SchemaBreadcrumb[] = [
   { label: 'Home', href: '/' },
   { label: 'Features', href: '/features' },
@@ -33,7 +43,7 @@ const breadcrumbs: SchemaBreadcrumb[] = [
 ---
 
 <BaseLayout
-  {title}
+  title={metaTitle ?? title}
   {description}
   canonicalPath={path}
   {breadcrumbs}

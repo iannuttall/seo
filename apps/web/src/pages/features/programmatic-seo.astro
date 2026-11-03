@@ -1,0 +1,138 @@
+---
+import {
+  Analytics01Icon,
+  Key01Icon,
+  Route01Icon,
+  SearchList01Icon,
+} from '@hugeicons/core-free-icons'
+import FeaturePage from '@/components/FeaturePage.astro'
+
+const related = [
+  { title: 'seo research', text: 'Search volumes, search result pages and competitor keywords for the market step.', href: '/docs/research', icon: SearchList01Icon },
+  { title: 'API keys', text: 'Save a DataForSEO or Ahrefs key on your account page.', href: '/docs/keys', icon: Key01Icon },
+  { title: 'seo crawl', text: 'Crawl the live site after launch and list technical issues.', href: '/docs/crawl', icon: Route01Icon },
+  { title: 'seo report', text: 'The weekly Search Console report once the site gets impressions.', href: '/docs/report', icon: Analytics01Icon },
+]
+---
+
+<FeaturePage
+  title="Programmatic SEO with AI agents"
+  metaTitle="Programmatic SEO tool for AI agents"
+  description="A free programmatic SEO tool for AI agents. Your agent builds a data-driven Astro site on Cloudflare, step by step, and a build check stops thin or broken pages."
+  path="/features/programmatic-seo"
+  lead="Tell your agent what the site is about. It builds a site from real data on Astro and Cloudflare, one step at a time, and every build is checked before it can go live."
+  {related}
+>
+  <h2>What your agent builds</h2>
+  <p>
+    Say you want a site about classic football shirts. Your agent finds the
+    searches people make, collects the data, plans one page for each thing
+    people look for, and builds the pages from that data. You judge the pages
+    as a reader and approve the plan, and the agent does the rest.
+  </p>
+  <p>
+    The result is a static site on Cloudflare. Every page has its own title and
+    description, a canonical URL (the one address search engines should list
+    it under), structured data (hidden labels that tell search engines what the
+    page is about), a sharing image drawn from its heading, and a Markdown copy
+    for AI agents. The site also gets an <code>llms.txt</code>,
+    a sitemap index and a <code>robots.txt</code> that
+    lets search engines and AI answers read it. Each fact on a page shows its
+    source and the date it was checked.
+  </p>
+
+  <h2>Start a site with two commands</h2>
+  <p>
+    You need Node.js 22 or newer on your computer. Install the <code>seo</code> CLI, then create
+    the site in a new folder:
+  </p>
+  <pre><code>npm i -g seo
+seo site new my-site --name "My Site"</code></pre>
+  <p>
+    This copies the starter, installs its packages and prints the first step.
+    The starter is a small working site about parks, so you can see every part
+    before the agent replaces it with your data. Then ask your agent to run <code>seo site guide setup</code> and follow
+    it. Any coding agent that can
+    run commands works, such as Claude Code, Codex, Cursor or Amp.
+  </p>
+
+  <h2>The ten steps your agent follows</h2>
+  <p>
+    <code>seo site guide &lt;step&gt;</code> prints the instructions for one step,
+    so the agent reads only what it needs now. Each step ends with the next
+    one.
+  </p>
+  <table>
+    <thead><tr><th>Step</th><th>What happens</th><th>What you decide</th></tr></thead>
+    <tbody>
+      <tr><td>setup</td><td>Signs you in to GitHub, Cloudflare and SEO Skill, one account at a time.</td><td>Free or paid keyword data</td></tr>
+      <tr><td>market</td><td>Finds the main searches, who ranks for them and how strong they are.</td><td>Go or no go</td></tr>
+      <tr><td>data</td><td>Collects, cleans and joins the data, with a source and date for every fact.</td><td>How often it refreshes</td></tr>
+      <tr><td>plan</td><td>Maps each search to one page type and URL, with a page count.</td><td>The page list and the domain</td></tr>
+      <tr><td>build</td><td>Starts the site and deploys a private preview behind Cloudflare Access.</td><td>Nothing at this step</td></tr>
+      <tr><td>golden page</td><td>Builds one page with real data and shows you screenshots.</td><td>Whether it is good enough</td></tr>
+      <tr><td>writing</td><td>Writes page text from the facts, so pages read differently.</td><td>The sections of a page</td></tr>
+      <tr><td>scale</td><td>Turns the golden page into every page and reviews a sample.</td><td>A sample of each page type</td></tr>
+      <tr><td>launch</td><td>Puts the site on your domain and sends each deploy's changed pages to IndexNow, a service that tells Bing and other search engines to crawl them again.</td><td>Adding Search Console and Bing</td></tr>
+      <tr><td>grow</td><td>Reads your Search Console every week and keeps the data current.</td><td>What to act on</td></tr>
+    </tbody>
+  </table>
+
+  <h2>What seo site check stops</h2>
+  <p>
+    The starter's build ends with <code>seo site check</code>. It runs the <a href="/docs/crawl">site crawl</a>'s
+    page checks on every built page,
+    plus rules for copy, design and data. When a rule fails, the build
+    fails, and Cloudflare does not deploy it.
+  </p>
+  <table>
+    <thead><tr><th>Area</th><th>What fails the build</th></tr></thead>
+    <tbody>
+      <tr><td>Pages</td><td>A missing, duplicate or overlong title or description, more or fewer than one H1, a wrong canonical URL, broken links, a page left out of the sitemap, a noindex tag (which tells search engines to leave the page out of their results), FAQ markup (the structured data for questions and answers) that does not match the questions on the page, and a missing sharing image or Markdown copy.</td></tr>
+      <tr><td>Copy</td><td>Dashes and semicolons, hype words such as seamless and robust, "it's not X, it's Y" lines, openings such as "in this guide", talk about the tools or search terms, and "coming soon".</td></tr>
+      <tr><td>Design</td><td>Uppercase or letter-spaced labels, gradients, shadows, coloured left borders and card grids wider than two columns.</td></tr>
+      <tr><td>Data</td><td>A fact block without a link to its source or without the date it was checked.</td></tr>
+    </tbody>
+  </table>
+  <p>
+    The point is to make thin pages hard to ship. Google's <a
+      href="https://developers.google.com/search/docs/essentials/spam-policies#scaled-content"
+      target="_blank"
+      rel="noreferrer">spam policies</a> describe scaled content abuse as many pages made mainly to manipulate
+    search rankings that do little for readers. The guide and the check hold
+    your agent to what makes a page worth having: real data, one page for each
+    search and a source on every fact.
+  </p>
+
+  <h2>The accounts you need and what they cost</h2>
+  <table>
+    <thead><tr><th>Account</th><th>What it is for</th><th>Cost</th></tr></thead>
+    <tbody>
+      <tr><td>GitHub</td><td>Holds the site's code and the data refresh job</td><td>Free</td></tr>
+      <tr><td>Cloudflare</td><td>Hosts the site and runs the build</td><td>The free plan is enough for a static site</td></tr>
+      <tr><td>A domain</td><td>The site's address, bought on Cloudflare Registrar</td><td>About $10 a year</td></tr>
+      <tr><td>Google Search Console and Bing Webmaster Tools</td><td>Indexing and the searches that find the site</td><td>Free</td></tr>
+      <tr><td>SEO Skill</td><td>Search Console reports for your agent</td><td>Free</td></tr>
+      <tr><td>DataForSEO or Ahrefs</td><td>Search volumes and competitor keywords, if you want them</td><td>Optional, the provider bills you</td></tr>
+    </tbody>
+  </table>
+
+  <h2>Keyword data, free or with your own key</h2>
+  <p>
+    Without a key, your agent plans the site from the live search results and
+    then from your own Search Console once the site is live. With a DataForSEO
+    or Ahrefs key, <code>seo research</code> adds search volumes, difficulty,
+    the pages that rank and the keywords competitors get traffic from. Save the
+    key on your <a href="/docs/keys">account page</a> and the provider bills
+    you directly for what you use. The <a href="/features/keyword-research">keyword
+    research tool</a> page explains what each provider returns.
+  </p>
+
+  <h2>What it costs</h2>
+  <p>
+    The <code>seo</code> CLI, the starter, the guide and the check are free and
+    open source. You pay for the domain, and for keyword data only if you
+    choose a key. The site runs on Cloudflare's free plan until it outgrows it
+    (and a static site takes a long time to do that).
+  </p>
+</FeaturePage>

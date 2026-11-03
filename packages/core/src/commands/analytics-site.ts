@@ -80,7 +80,31 @@ function best(site: string, matches: Ga4WebStreamMatch[]): Ga4WebStreamMatch[] {
   )
 }
 
-async function findProperty(
+// One lookup per surface and site for a few minutes, so the overview line
+// and the page sections' key events in one report share it, and a long
+// running local server still sees a property added later.
+const LOOKUP_MS = 5 * 60_000
+const lookups = new WeakMap<
+  AnalyticsAccess,
+  Map<string, { at: number; found: Promise<Found[] | string> }>
+>()
+
+function findProperty(
+  access: AnalyticsAccess,
+  site: string,
+): Promise<Found[] | string> {
+  const bySite = lookups.get(access) ?? new Map()
+  lookups.set(access, bySite)
+  const kept = bySite.get(site)
+  if (kept && Date.now() - kept.at < LOOKUP_MS) return kept.found
+  const found = lookProperty(access, site)
+  bySite.set(site, { at: Date.now(), found })
+  // A failure is not kept, so the next call tries again.
+  found.catch(() => bySite.delete(site))
+  return found
+}
+
+async function lookProperty(
   access: AnalyticsAccess,
   site: string,
 ): Promise<Found[] | string> {
@@ -450,6 +474,157 @@ function aiText(ai: {
       ? `Top landing pages from AI assistants: ${list(ai.topLandingPages, 'page')}.`
       : '',
     'Only visits that pass a referrer or utm_source count; AI apps that send none show as Direct.',
+  ]
+    .filter(Boolean)
+    .join(' ')
+}
+
+// Landing pages read for weighting page sections, most sessions first.
+const LANDING_PAGES = 10_000
+
+export type OrganicPages = {
+  property: string
+  propertyName: string
+  // The web stream's host, without www: only URLs on it are matched.
+  host: string
+  // Organic Search sessions and key events by landing page path.
+  pages: Map<string, { sessions: number; keyEvents: number }>
+  // More landing pages exist than were read, or thresholding hid small
+  // rows, so a page that is missing is unknown, not zero.
+  capped: boolean
+}
+
+// Organic Search sessions and key events by landing page, for the same
+// dates, from the property whose web stream matches the site (the one with
+// the most sessions when several match). Null on a surface without Google
+// Analytics; a sentence when it cannot be read.
+export async function organicPages(
+  access: AnalyticsAccess | undefined,
+  site: string,
+  range: DateRange,
+): Promise<OrganicPages | string | null> {
+  if (!access) return null
+  try {
+    const found = await findProperty(access, site)
+    if (typeof found === 'string') return `Google Analytics: ${found}`
+    const read = await Promise.all(
+      found.map(async (item) => {
+        const data = await runAnalyticsReport<
+          ReportRows & { rowCount?: number }
+        >(
+          item.google,
+          item.property,
+          {
+            dateRanges: [range],
+            dimensions: [{ name: 'landingPage' }],
+            metrics: [{ name: 'sessions' }, { name: 'keyEvents' }],
+            dimensionFilter: filter(
+              'sessionDefaultChannelGroup',
+              'Organic Search',
+            ),
+            orderBys: [{ metric: { metricName: 'sessions' }, desc: true }],
+            limit: LANDING_PAGES,
+          },
+          { signIn: access.signIn },
+        )
+        const pages = new Map<string, { sessions: number; keyEvents: number }>()
+        let total = 0
+        for (const row of data.rows ?? []) {
+          const path = row.dimensionValues?.[0]?.value ?? ''
+          const sessions = Number(row.metricValues?.[0]?.value ?? 0)
+          const keyEvents = Number(row.metricValues?.[1]?.value ?? 0)
+          total += sessions
+          const entry = pages.get(path) ?? { sessions: 0, keyEvents: 0 }
+          entry.sessions += sessions
+          entry.keyEvents += keyEvents
+          pages.set(path, entry)
+        }
+        return {
+          item,
+          pages,
+          total,
+          // Thresholding can hide small rows too.
+          capped:
+            (data.rowCount ?? 0) > (data.rows?.length ?? 0) ||
+            Boolean(data.metadata?.subjectToThresholding),
+        }
+      }),
+    )
+    const best = [...read].sort((a, b) => b.total - a.total)[0]
+    if (!best) return 'Google Analytics: no matching property.'
+    return {
+      property: best.item.property,
+      propertyName: best.item.name,
+      host: hostOf(best.item.stream).replace(/^www\./, ''),
+      pages: best.pages,
+      capped: best.capped,
+    }
+  } catch (error) {
+    return `Google Analytics: could not be read. ${error instanceof Error ? error.message : String(error)}`
+  }
+}
+
+// Adds each row's landing page keyEvents and organicSessions (Google
+// Analytics, Organic Search, same dates) to a page section's items, then
+// puts the pages that converted first, most key events first, keeping the
+// section's own order otherwise. A page Google Analytics did not list is 0
+// when every landing page was read, else null (unknown). Returns the note
+// that says so.
+export function weighByKeyEvents(
+  report: Record<string, unknown>,
+  ga: OrganicPages | string,
+): string {
+  if (typeof ga === 'string') return `Not ranked by key events. ${ga}`
+  const items = report.items
+  if (!Array.isArray(items) || !items.length) return ''
+  const lookup = (url: unknown) => {
+    if (typeof url !== 'string') return undefined
+    let parsed: URL
+    try {
+      parsed = new URL(url)
+    } catch {
+      return undefined
+    }
+    if (parsed.hostname.replace(/^www\./, '') !== ga.host) return undefined
+    const path = parsed.pathname
+    const other = path.endsWith('/') ? path.slice(0, -1) || '/' : `${path}/`
+    return ga.pages.get(path) ?? ga.pages.get(other) ?? null
+  }
+  const weighed = (items as Record<string, unknown>[]).map((item, index) => {
+    const found = lookup(item.url ?? item.page)
+    // undefined: another host, so Google Analytics cannot say.
+    const known =
+      found === undefined || (found === null && ga.capped)
+        ? undefined
+        : (found ?? { sessions: 0, keyEvents: 0 })
+    const keyEvents = known?.keyEvents ?? null
+    return {
+      index,
+      item: {
+        ...item,
+        keyEvents,
+        organicSessions: known?.sessions ?? null,
+      } as Record<string, unknown> & { keyEvents: number | null },
+    }
+  })
+  weighed.sort(
+    (a, b) =>
+      (b.item.keyEvents ?? 0) - (a.item.keyEvents ?? 0) || a.index - b.index,
+  )
+  report.items = weighed.map((entry) => entry.item)
+  const pages = new Set(
+    weighed
+      .filter((entry) => entry.item.keyEvents)
+      .map((entry) => entry.item.url ?? entry.item.page),
+  ).size
+  return [
+    pages
+      ? `Pages that converted come first: ${pages} ${pages === 1 ? 'page' : 'pages'} here had Google Analytics key events from Organic Search in the same dates (property ${ga.propertyName}, ${ga.property}); the rest keep this section's order.`
+      : `${ga.capped ? 'None of these pages that Google Analytics listed' : 'None of these pages'} had Google Analytics key events from Organic Search in the same dates (property ${ga.propertyName}, ${ga.property}), so the section keeps its own order.`,
+    'keyEvents and organicSessions are Google Analytics counts for the whole landing page, not for one query, and sessions are not Search Console clicks.',
+    ga.capped
+      ? 'Google Analytics did not list every landing page (row limit or thresholding), so a blank keyEvents is unknown, not zero.'
+      : '',
   ]
     .filter(Boolean)
     .join(' ')

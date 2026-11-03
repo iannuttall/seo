@@ -538,11 +538,11 @@
     padding-inline: 1.5rem;
   }
 
+  /* Tool forms sit on the same soft muted panel as results, with no border
+     or shadow. */
   .tool-form-panel {
-    border: 1px solid var(--border);
-    border-radius: var(--radius-xl);
-    background: var(--card);
-    box-shadow: 0 8px 44px -12px rgb(0 0 0 / 0.1);
+    border-radius: var(--radius-lg);
+    background: var(--muted);
   }
 
   @media (width >= 64rem) {
@@ -550,4 +550,12 @@
       padding-inline: 2.5rem;
     }
   }
+}
+
+/* Muted blocks inside a tool form (drop zones, fieldsets, code, badges)
+   would vanish on the muted panel, so they turn white like result rows.
+   Segmented controls (role="group" or "tablist") keep their muted track.
+   Unlayered so it wins over the bg-muted utility. */
+.tool-form-panel .bg-muted:not([role]) {
+  background-color: var(--card);
 }

@@ -83,6 +83,25 @@ and cancels the subscription first.
 Billing stays off until `STRIPE_PRICE_ID`, `STRIPE_SECRET_KEY` and
 `STRIPE_WEBHOOK_SECRET` are all set.
 
+## Competitor check
+
+Paid sites (and `unlimited-sites` accounts) get a weekly competitor check
+(`src/audit/competitors.ts`) on SEO Skill's own DataForSEO account, never
+the person's saved keys. The site page lists the competitors: DataForSEO's
+suggestions until the person saves their own, with no count limit. Each
+week it refreshes the competitors whose keywords are older than 28 days,
+stalest first, then names at most 3 keywords that pass every gate: two
+competitors in the top 10, commercial or transactional intent with a CPC
+(a free tool needs a competitor tool page ranking for three paying
+keywords), no Search Console impressions on the site, a fit with the site
+from a TypeSafe classification, and at least 3 of the live top 10 at or
+below the site's Domain Rating plus 10. A keyword is named once unless it
+grows 50% stronger. Spend is capped before each call at $1.50 a run and $5
+a site a month, and metered as `included_dataforseo_microusd`. The result
+goes to the weekly summary through `audit_sites.opportunities`. The check
+stays off until `DATAFORSEO_LOGIN` and `DATAFORSEO_PASSWORD` are set, and
+names nothing without `TYPESAFE_API_KEY`.
+
 ## Alerts
 
 An account in the weekly-audit beta gets alerts without asking: when a page

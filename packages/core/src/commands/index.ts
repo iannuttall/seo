@@ -23,6 +23,11 @@ export * from './page-facts.js'
 export * from './present.js'
 export * from './report.js'
 export * from './research.js'
+export {
+  dataForSeoLanguage,
+  dataForSeoMarket,
+  dataForSeoTask,
+} from './research-providers.js'
 export * from './rows.js'
 export * from './shared.js'
 export * from './site.js'

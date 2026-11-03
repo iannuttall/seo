@@ -109,6 +109,8 @@ export type View =
         // The weekly-audit beta's sites, from D1 only.
         audit?: {
           max: number
+          // Whether the weekly competitor check runs (paid sites only).
+          competitorCheck: boolean
           sites: {
             // The opaque id in the site's page link, /account/sites/<id>.
             id: string
@@ -123,6 +125,10 @@ export type View =
             // The index checks now (audit/checks.ts monitorOf), or null
             // before their first run.
             monitor: AuditMonitor | null
+            // The weekly competitor check's competitors, and whether the
+            // person chose them (else they were suggested).
+            competitors: string[]
+            competitorsChosen: boolean
           }[]
         }
         // The paid weekly audit, when billing is set up: the price per site

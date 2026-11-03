@@ -1,3 +1,5 @@
+import { TABLES as GAP_TABLES } from './competitors.ts'
+
 // The site object's tables. Two kinds:
 //
 // Kept between runs, small and capped: the site, the current run, run
@@ -247,6 +249,7 @@ export const PAGES_ADDED: [string, string][] = [
 // object starts, before anything reads them.
 export function migrate(sql: SqlStorage): void {
   sql.exec(KEPT)
+  sql.exec(GAP_TABLES)
   sql.exec(DISPOSABLE)
   const columns = (table: string) =>
     new Set(

@@ -29,6 +29,7 @@ import {
   syncKnown,
   unalertedChanges,
 } from './checks.ts'
+import { gapWake } from './competitors.ts'
 import { extractPage, resolveUrl } from './extract.ts'
 import { Meter } from './meter.ts'
 import { type RenderState, renderForRun, saveRendering } from './render.ts'
@@ -998,11 +999,11 @@ export class SiteAudit extends DurableObject<Env> {
   }
 
   // The background Google checks, when due, while the owner is still in the
-  // beta. They share the one alarm with the crawl: this sets it to the
-  // checks' next wake only when that is sooner than the crawl's.
+  // beta, after the competitor check (competitors.ts). They share the one
+  // alarm with the crawl: each sets it to its next wake only when sooner.
   private async checkWake(): Promise<void> {
     const meter = new Meter(this.ctx.storage)
-    const site = meter.one<Site>('SELECT * FROM site')
+    const site = await gapWake<Site>(this.env, meter, this.ctx.storage)
     if (!site) return
     const saved = state(meter)
     // A new site's checks start at once.

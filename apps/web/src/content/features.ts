@@ -3,6 +3,7 @@ import {
   Analytics01Icon,
   ChartLineData01Icon,
   ComputerTerminal01Icon,
+  DatabaseIcon,
   FileSearchIcon,
   Globe02Icon,
   McpServerIcon,
@@ -99,6 +100,12 @@ export const features = [
     title: 'SEO for developers',
     text: 'Crawl local and staging builds, fail CI on real problems, and give your coding agent your Search Console.',
     icon: ComputerTerminal01Icon,
+  },
+  {
+    path: '/features/programmatic-seo',
+    title: 'Programmatic SEO',
+    text: 'Your agent builds a site from real data on Astro and Cloudflare, one step at a time, and a build check stops thin or broken pages.',
+    icon: DatabaseIcon,
   },
 ] as const
 

@@ -1,0 +1,357 @@
+---
+title: Next.js SEO guide for the App Router
+description: Next.js SEO with the App Router in Next.js 16. Prerender pages, set metadata and canonicals, add JSON-LD, split sitemaps, return real 404s and 301s, and serve Markdown copies to AI agents.
+heading: Next.js SEO
+lead: Prerender the pages you want found, set every head tag through the Metadata API, and check the build before it ships. Tested on Next.js 16.4 with the App Router.
+checked: '2026-11-03'
+---
+
+Next.js gives you most of what search needs, but several defaults are easy to get wrong: a canonical set in a layout, a sitemap split with no index, a `notFound()` that answers 200 because the page had already started streaming. This guide covers each one, with code that was built and tested with `next build` and `next start`.
+
+The examples use one content module so they fit together. Replace it with your CMS or database:
+
+```ts
+// lib/guides.ts
+export const site = process.env.SITE_URL ?? 'https://example.com'
+
+export const guides = [
+  {
+    slug: 'first-guide',
+    title: 'First guide',
+    description: 'The first guide on Example.',
+    body: 'Some useful words about the first topic, written for people and agents.',
+  },
+]
+
+export const getGuide = (slug: string) => guides.find((guide) => guide.slug === slug)
+```
+
+The `@/` imports below need `"paths": { "@/*": ["./*"] }` in `tsconfig.json`, which `create-next-app` sets for you.
+
+## Prerender every page you want found
+
+A prerendered page is HTML before anyone asks for it, so crawlers never wait on data or a failed render. For dynamic routes, list every page in `generateStaticParams` and turn off `dynamicParams`, so a slug you did not list gets a 404 instead of being rendered on request:
+
+```tsx
+export const dynamicParams = false
+
+export function generateStaticParams() {
+  return guides.map((guide) => ({ slug: guide.slug }))
+}
+```
+
+Both exports go in the page file, shown in full in the next section. `next build` prints each route with its mode. A `○` or `●` next to a page means it was prerendered. Anything else is rendered on request, and worth a second look if it is a page you want in search. The <a href="https://nextjs.org/docs/app/api-reference/functions/generate-static-params" target="_blank" rel="noreferrer">generateStaticParams reference</a> covers routes with more than one segment.
+
+## Set titles, descriptions and canonicals with the Metadata API
+
+Put the site-wide parts in the root layout: `metadataBase`, so every other URL can be a path, and a title template:
+
+```tsx
+// app/layout.tsx
+import type { Metadata } from 'next'
+import { site } from '@/lib/guides'
+
+export const metadata: Metadata = {
+  metadataBase: new URL(site),
+  title: { default: 'Example', template: '%s | Example' },
+  description: 'Short guides from Example.',
+}
+
+export default function RootLayout({ children }: { children: React.ReactNode }) {
+  return (
+    <html lang="en">
+      <body>{children}</body>
+    </html>
+  )
+}
+```
+
+Then each page sets its own title, description and canonical with `generateMetadata`. This is the whole page file, with the prerender exports from above and the JSON-LD from the next section:
+
+```tsx
+// app/guides/[slug]/page.tsx
+import { assembleGraph, buildWebPage, buildWebSite, makeIds } from '@iannuttall/seo-graph-core'
+import type { Metadata } from 'next'
+import { notFound } from 'next/navigation'
+import { getGuide, guides, site } from '@/lib/guides'
+
+type Props = { params: Promise<{ slug: string }> }
+
+export const dynamicParams = false
+
+export function generateStaticParams() {
+  return guides.map((guide) => ({ slug: guide.slug }))
+}
+
+export async function generateMetadata({ params }: Props): Promise<Metadata> {
+  const guide = getGuide((await params).slug)
+  if (!guide) notFound()
+  const path = `/guides/${guide.slug}`
+  return {
+    title: guide.title,
+    description: guide.description,
+    alternates: { canonical: path, types: { 'text/markdown': `${path}.md` } },
+    openGraph: { title: guide.title, description: guide.description, url: path, type: 'article' },
+  }
+}
+
+export default async function Page({ params }: Props) {
+  const guide = getGuide((await params).slug)
+  if (!guide) notFound()
+  const url = `${site}/guides/${guide.slug}`
+  const ids = makeIds({ siteUrl: site })
+  const graph = assembleGraph([
+    buildWebSite({ url: `${site}/`, name: 'Example', publisher: { '@id': ids.organization('example') } }, ids),
+    buildWebPage({ url, name: guide.title, description: guide.description, isPartOf: { '@id': ids.website } }, ids),
+  ])
+  return (
+    <main>
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(graph).replace(/</g, '\\u003c') }}
+      />
+      <h1>{guide.title}</h1>
+      <p>{guide.body}</p>
+    </main>
+  )
+}
+```
+
+Two rules from the <a href="https://nextjs.org/docs/app/api-reference/functions/generate-metadata" target="_blank" rel="noreferrer">generateMetadata reference</a> catch people out:
+
+- Never put `alternates.canonical` in a layout. Every page below it inherits the same canonical, which tells Google they are all one page. Set it in each page, including the home page.
+- A page that sets `openGraph` replaces the layout's whole `openGraph` object, not just the fields it names. Set every Open Graph field you want in the page, or share them from a module.
+
+The `types` entry adds `<link rel="alternate" type="text/markdown">` to the page, which tells agents where its Markdown copy lives. The copy itself is further down.
+
+## Add one JSON-LD graph per page
+
+Next.js recommends a plain `<script>` tag in the page, with `<` escaped so a value in your data can't close the tag. A connected graph (site, publisher and page pointing at each other by `@id`) is easier to build with <a href="https://www.npmjs.com/package/@iannuttall/seo-graph-core" target="_blank" rel="noreferrer">@iannuttall/seo-graph-core</a>, which has no framework dependency and runs in Next.js:
+
+```sh
+npm i @iannuttall/seo-graph-core
+```
+
+In the page file above, `makeIds` gives each piece a stable `@id`, and `assembleGraph` wraps the pieces in one `@graph` and drops duplicates. The `replace` turns every `<` into `\u003c`, which JSON readers decode back to the same character.
+
+Add a piece only for what the page shows. The <a href="https://nextjs.org/docs/app/guides/json-ld" target="_blank" rel="noreferrer">Next.js JSON-LD guide</a> explains the escaping, and you can test the output in Google's Rich Results Test.
+
+## Draw an Open Graph image for each page
+
+An `opengraph-image.tsx` file next to the page draws its sharing image with `ImageResponse`. With `generateStaticParams` the images are drawn during the build, one per page:
+
+```tsx
+// app/guides/[slug]/opengraph-image.tsx
+import { ImageResponse } from 'next/og'
+import { getGuide, guides } from '@/lib/guides'
+
+export const size = { width: 1200, height: 630 }
+export const contentType = 'image/png'
+
+export function generateStaticParams() {
+  return guides.map((guide) => ({ slug: guide.slug }))
+}
+
+export default async function Image({ params }: { params: Promise<{ slug: string }> }) {
+  const guide = getGuide((await params).slug)
+  return new ImageResponse(
+    (
+      <div style={{ width: '100%', height: '100%', display: 'flex', alignItems: 'center', padding: 80, background: '#fafafa', color: '#171717', fontSize: 72, fontWeight: 600 }}>
+        {guide?.title ?? 'Example'}
+      </div>
+    ),
+    size,
+  )
+}
+```
+
+Next.js adds the `og:image` tag for you, so leave `images` out of the page's `openGraph`. `ImageResponse` supports flexbox and a subset of CSS; the <a href="https://nextjs.org/docs/app/getting-started/metadata-and-og-images" target="_blank" rel="noreferrer">metadata and OG images guide</a> lists what works.
+
+## Split sitemaps and write the index yourself
+
+`generateSitemaps` splits a sitemap into numbered files, but it does not write a sitemap index that lists them. Without one, you have to submit every file to Search Console by hand. Put the split sitemap in its own folder and write the index as a route:
+
+```ts
+// app/sitemaps/sitemap.ts
+import type { MetadataRoute } from 'next'
+import { guides, site } from '@/lib/guides'
+
+const LIMIT = 5000
+export const urls = [`${site}/`, ...guides.map((guide) => `${site}/guides/${guide.slug}`)]
+
+export async function generateSitemaps() {
+  return Array.from({ length: Math.ceil(urls.length / LIMIT) }, (_, id) => ({ id }))
+}
+
+export default async function sitemap(props: { id: Promise<string> }): Promise<MetadataRoute.Sitemap> {
+  const start = Number(await props.id) * LIMIT
+  return urls.slice(start, start + LIMIT).map((url) => ({ url }))
+}
+```
+
+```ts
+// app/sitemap.xml/route.ts
+import { site } from '@/lib/guides'
+import { generateSitemaps } from '../sitemaps/sitemap'
+
+export const dynamic = 'force-static'
+
+export async function GET() {
+  const files = await generateSitemaps()
+  const entries = files.map(({ id }) => `  <sitemap><loc>${site}/sitemaps/sitemap/${id}.xml</loc></sitemap>`)
+  return new Response(
+    `<?xml version="1.0" encoding="UTF-8"?>\n<sitemapindex xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n${entries.join('\n')}\n</sitemapindex>\n`,
+    { headers: { 'Content-Type': 'application/xml' } },
+  )
+}
+```
+
+`/sitemap.xml` now lists `/sitemaps/sitemap/0.xml` and the rest. Files of 5,000 sit well under Google's 50,000 limit and let Search Console report each section separately. Since Next.js 16, the `id` passed to the sitemap function is a promise of a string, hence the `await` and `Number`.
+
+The examples in the Next.js docs set `lastModified: new Date()`. Leave it out unless you have the real date each page changed. Google uses `lastmod` only when it is consistently accurate, and the build time is not when a page changed.
+
+## Keep robots open and add Content-Signal
+
+`app/robots.ts` writes `robots.txt`. Since Next.js 16.3, the `other` field passes extra lines through, which is how you add <a href="https://contentsignals.org/" target="_blank" rel="noreferrer">Content-Signal</a>:
+
+```ts
+// app/robots.ts
+import type { MetadataRoute } from 'next'
+
+export default function robots(): MetadataRoute.Robots {
+  return {
+    rules: {
+      userAgent: '*',
+      allow: '/',
+      other: { 'Content-Signal': 'search=yes, ai-input=yes, ai-train=yes' },
+    },
+    sitemap: 'https://example.com/sitemap.xml',
+  }
+}
+```
+
+Don't disallow paths to keep pages out of search, and don't use `robots: { index: false }` in metadata. A blocked page can still be indexed from links, and a `noindex` left on by mistake takes a long time to recover from. Don't build pages you don't want found, and put staging behind a sign-in.
+
+## Return real 404s
+
+With `dynamicParams = false`, an unknown slug returns a 404 status. When you check for a missing record inside the page, call `notFound()` before the response starts streaming, which means before any `Suspense` boundary or `loading.tsx` in that route renders. After streaming starts, the status is already sent as 200, and Next.js can only add a `noindex` tag, which Google may report as a soft 404. The <a href="https://nextjs.org/docs/app/api-reference/file-conventions/loading" target="_blank" rel="noreferrer">loading.js reference</a> explains when streaming begins.
+
+Add `app/not-found.tsx` so a lost visitor still sees your navigation:
+
+```tsx
+// app/not-found.tsx
+export default function NotFound() {
+  return (
+    <main>
+      <h1>Page not found</h1>
+      <a href="/">Go to the home page</a>
+    </main>
+  )
+}
+```
+
+## Redirect moved URLs
+
+Add redirects in `next.config.ts`. `permanent: true` answers with 308, which Google treats the same as 301. If something else in your stack expects a 301, set `statusCode` instead (one or the other, not both):
+
+```ts
+// next.config.ts
+import type { NextConfig } from 'next'
+
+const config: NextConfig = {
+  async redirects() {
+    return [
+      { source: '/old-guide', destination: '/guides/first-guide', statusCode: 301 },
+      { source: '/blog/:slug', destination: '/guides/:slug', permanent: true },
+    ]
+  },
+}
+
+export default config
+```
+
+Redirects, rewrites and headers need the Next.js server, so they do nothing with `output: 'export'`. On a static export, add them to your host's redirect file instead.
+
+## Serve Markdown copies to AI agents
+
+Agents read Markdown more cheaply than HTML. Serve a copy of each page at the same path with `.md` on the end, from the same content as the page. A route handler renders it, and a rewrite maps the `.md` address to it:
+
+```ts
+// app/md/[...slug]/route.ts
+import { renderMarkdownAlternate } from '@iannuttall/seo-graph-core'
+import { getGuide, guides, site } from '@/lib/guides'
+
+export const dynamicParams = false
+
+export function generateStaticParams() {
+  return guides.map((guide) => ({ slug: ['guides', guide.slug] }))
+}
+
+export async function GET(_request: Request, { params }: { params: Promise<{ slug: string[] }> }) {
+  const [section, slug] = (await params).slug
+  const guide = section === 'guides' ? getGuide(slug) : undefined
+  if (!guide) return new Response('Not found', { status: 404 })
+  const { markdown } = renderMarkdownAlternate({
+    frontmatter: { title: guide.title, description: guide.description, canonical: `${site}/guides/${guide.slug}` },
+    body: `# ${guide.title}\n\n${guide.body}`,
+  })
+  return new Response(markdown, {
+    headers: { 'Content-Type': 'text/markdown; charset=utf-8' },
+  })
+}
+```
+
+```ts
+// next.config.ts, next to redirects
+async rewrites() {
+  return { beforeFiles: [{ source: '/:path+.md', destination: '/md/:path+' }] }
+},
+```
+
+`/guides/first-guide.md` now returns the page as Markdown, with its canonical in the front matter, and the `alternates.types` entry from earlier links to it. Add an `llms.txt` that lists the copies, as a static route:
+
+```ts
+// app/llms.txt/route.ts
+import { guides, site } from '@/lib/guides'
+
+export const dynamic = 'force-static'
+
+export function GET() {
+  const links = guides.map((guide) => `- [${guide.title}](${site}/guides/${guide.slug}.md): ${guide.description}`)
+  return new Response(`# Example\n\n> Short guides from Example.\n\n## Guides\n\n${links.join('\n')}\n`, {
+    headers: { 'Content-Type': 'text/plain; charset=utf-8' },
+  })
+}
+```
+
+Some agents ask for Markdown at the normal page URL with `Accept: text/markdown`. You could answer them with a rewrite that matches the header, but in our test `next start` replaced the `Vary` header on the HTML page, so a shared cache could hand Markdown to a browser. Do that check in front of the cache instead, such as with the Cloudflare URL Rewrite Rules in the [Astro SEO guide](/guides/astro-seo), or rely on the `.md` links.
+
+## Crawl the build before it ships
+
+Build with your local address as the site URL, so canonicals and Markdown links point at the copy you are crawling, and start it:
+
+```sh
+SITE_URL=http://localhost:3000 npm run build && npm run start
+```
+
+In a second terminal, crawl it with the [seo CLI](/docs/crawl):
+
+```sh
+npx -y seo crawl http://localhost:3000 --fail-on medium
+```
+
+It reports missing titles, canonicals, Open Graph tags and structured data page by page, plus pages that have no link to a Markdown copy and whether `llms.txt` links load. In testing, it caught a home page that had no canonical because only the guide pages set one. [SEO for developers](/features/seo-for-developers) covers staging and CI.
+
+## Sources
+
+Read and tested on 3 November 2026 with Next.js 16.4.4:
+
+- <a href="https://nextjs.org/docs/app/api-reference/functions/generate-metadata" target="_blank" rel="noreferrer">generateMetadata and the Metadata object</a>
+- <a href="https://nextjs.org/docs/app/api-reference/functions/generate-static-params" target="_blank" rel="noreferrer">generateStaticParams</a>
+- <a href="https://nextjs.org/docs/app/guides/json-ld" target="_blank" rel="noreferrer">JSON-LD in Next.js</a>
+- <a href="https://nextjs.org/docs/app/api-reference/file-conventions/metadata/sitemap" target="_blank" rel="noreferrer">sitemap.xml</a> and <a href="https://nextjs.org/docs/app/api-reference/functions/generate-sitemaps" target="_blank" rel="noreferrer">generateSitemaps</a>
+- <a href="https://nextjs.org/docs/app/api-reference/file-conventions/metadata/robots" target="_blank" rel="noreferrer">robots.txt</a>
+- <a href="https://nextjs.org/docs/app/api-reference/functions/not-found" target="_blank" rel="noreferrer">notFound</a> and <a href="https://nextjs.org/docs/app/api-reference/file-conventions/loading" target="_blank" rel="noreferrer">streaming status codes</a>
+- <a href="https://nextjs.org/docs/app/api-reference/config/next-config-js/redirects" target="_blank" rel="noreferrer">redirects</a> and <a href="https://nextjs.org/docs/app/api-reference/config/next-config-js/rewrites" target="_blank" rel="noreferrer">rewrites</a>
+- <a href="https://nextjs.org/docs/app/guides/static-exports" target="_blank" rel="noreferrer">Static exports</a>
+- <a href="https://developers.google.com/search/docs/crawling-indexing/301-redirects" target="_blank" rel="noreferrer">Google on redirects</a> and <a href="https://developers.google.com/search/docs/crawling-indexing/sitemaps/build-sitemap" target="_blank" rel="noreferrer">sitemaps</a>

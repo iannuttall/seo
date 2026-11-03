@@ -11,6 +11,8 @@ type Related = {
   text: string
   href: string
   icon: Parameters<typeof HomeCard>[0]['icon']
+  // Where the card goes. Defaults to "<title> docs".
+  link?: string
 }
 
 type Props = {
@@ -19,9 +21,10 @@ type Props = {
   path: string
   lead: string
   related: Related[]
+  relatedHeading?: string
 }
 
-const { title, description, path, lead, related } = Astro.props
+const { title, description, path, lead, related, relatedHeading = 'Read the docs' } = Astro.props
 const breadcrumbs: SchemaBreadcrumb[] = [
   { label: 'Home', href: '/' },
   { label: 'Features', href: '/features' },
@@ -47,9 +50,9 @@ const breadcrumbs: SchemaBreadcrumb[] = [
     </article>
 
     <section class="mt-16" aria-labelledby="related-docs">
-      <h2 id="related-docs" class="text-2xl/8 font-medium tracking-normal">Read the docs</h2>
+      <h2 id="related-docs" class="text-2xl/8 font-medium tracking-normal">{relatedHeading}</h2>
       <div class="mt-6 grid grid-cols-1 gap-2 sm:grid-cols-2">
-        {related.map((item) => <HomeCard {...item} link={`${item.title} docs`} />)}
+        {related.map((item) => <HomeCard {...item} link={item.link ?? `${item.title} docs`} />)}
       </div>
     </section>
   </main>

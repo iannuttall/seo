@@ -22,6 +22,15 @@ export const llmsTxt = {
       ],
     },
     {
+      heading: 'Developer guides',
+      items: [
+        { path: '/features/seo-for-developers' },
+        { path: '/guides' },
+        { path: '/guides/astro-seo' },
+        { path: '/guides/nextjs-seo' },
+      ],
+    },
+    {
       heading: 'Commands',
       items: docsSection('Commands'),
     },

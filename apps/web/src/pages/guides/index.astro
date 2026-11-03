@@ -1,0 +1,44 @@
+---
+import { ComputerTerminal01Icon, SourceCodeIcon } from '@hugeicons/core-free-icons'
+import { getCollection } from 'astro:content'
+import HomeCard from '@/components/HomeCard.astro'
+import PageHeader from '@/components/PageHeader.astro'
+import BaseLayout from '@/layouts/BaseLayout.astro'
+
+const guides = (await getCollection('guides')).sort((a, b) => a.id.localeCompare(b.id))
+---
+
+<BaseLayout
+  title="SEO guides for Astro and Next.js"
+  description="Set up an Astro or Next.js site so search engines and AI agents can read every page: metadata, JSON-LD, sitemaps, Markdown copies, redirects and build checks."
+  canonicalPath="/guides"
+  schemaType="CollectionPage"
+>
+  <main data-agent-content>
+    <PageHeader
+      title="Framework SEO guides"
+      description="How to build a site that search engines and AI agents can read, with the code to copy for each framework."
+    />
+
+    <div class="grid grid-cols-1 gap-2 sm:grid-cols-2">
+      {
+        guides.map((guide) => (
+          <HomeCard
+            title={guide.data.heading}
+            text={guide.data.lead}
+            icon={SourceCodeIcon}
+            href={`/guides/${guide.id}`}
+            link={`${guide.data.heading} guide`}
+          />
+        ))
+      }
+      <HomeCard
+        title="SEO for developers"
+        text="Crawl local and staging builds, give your agent your Search Console, and call the same checks from TypeScript."
+        icon={ComputerTerminal01Icon}
+        href="/features/seo-for-developers"
+        link="SEO for developers"
+      />
+    </div>
+  </main>
+</BaseLayout>

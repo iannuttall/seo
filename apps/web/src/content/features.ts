@@ -2,6 +2,7 @@ import {
   AiChat02Icon,
   Analytics01Icon,
   ChartLineData01Icon,
+  ComputerTerminal01Icon,
   FileSearchIcon,
   Globe02Icon,
   McpServerIcon,
@@ -92,6 +93,12 @@ export const features = [
     title: 'SEO monitoring',
     text: 'Free index and traffic checks your agent runs, and a weekly site audit in beta with alerts when a page drops out of Google.',
     icon: Notification01Icon,
+  },
+  {
+    path: '/features/seo-for-developers',
+    title: 'SEO for developers',
+    text: 'Crawl local and staging builds, fail CI on real problems, and give your coding agent your Search Console.',
+    icon: ComputerTerminal01Icon,
   },
 ] as const
 

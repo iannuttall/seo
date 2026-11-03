@@ -25,9 +25,18 @@ const featurePaths = [
     .sort()
     .map((file) => `/features/${file.replace(/\.astro$/, '')}`),
 ]
+// One guide page for each MDX file in src/content/guides.
+const guidePaths = [
+  '/guides',
+  ...readdirSync(resolve(import.meta.dirname, '..', 'src', 'content', 'guides'))
+    .filter((file) => file.endsWith('.mdx'))
+    .sort()
+    .map((file) => `/guides/${file.replace(/\.mdx$/, '')}`),
+]
 const paths = [
   '/',
   ...featurePaths,
+  ...guidePaths,
   '/tools',
   ...toolPaths,
   ...docsPaths,

@@ -27,6 +27,15 @@ export const tools = [
     kind: 'browser',
   },
   {
+    id: 'keyword-cannibalization-checker',
+    path: '/tools/keyword-cannibalization-checker',
+    title: 'Keyword cannibalization checker',
+    action: 'Open the keyword cannibalization checker',
+    description:
+      'Find the searches where two or more of your pages share impressions, from a Search Console export.',
+    kind: 'browser',
+  },
+  {
     id: 'serp-checker',
     path: '/tools/serp-checker',
     title: 'SERP checker',

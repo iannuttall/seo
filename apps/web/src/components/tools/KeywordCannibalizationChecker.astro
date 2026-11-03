@@ -1,0 +1,344 @@
+---
+import Button from '@/components/Button.astro'
+import Card from '@/components/Card.astro'
+import FormInput from '@/components/FormInput.astro'
+---
+
+<section data-cannibal-checker class="space-y-6">
+  <Card>
+    <div class="space-y-5 p-5 sm:p-6">
+      <div class="space-y-1">
+        <h2 class="text-lg font-medium">Check your export</h2>
+        <p class="text-sm leading-6 text-foreground-muted">
+          Add a Search Console export with a query and a page on each row.
+          It is read in this tab and not uploaded.
+        </p>
+      </div>
+
+      <label class="block space-y-2 text-sm font-medium">
+        <span>Your site <span class="font-normal text-foreground-muted">(optional, used to leave out searches for your brand)</span></span>
+        <FormInput data-site type="text" maxlength="200" placeholder="example.com" autocapitalize="off" spellcheck="false" />
+      </label>
+
+      <div data-file-drop class="rounded-lg bg-muted p-5">
+        <input data-file-input class="hidden" type="file" multiple accept=".zip,.csv,text/csv,application/zip" />
+        <div class="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+          <div class="min-w-0 space-y-1">
+            <p data-file-name class="text-sm font-medium break-all">No export added</p>
+            <p data-file-detail class="text-xs leading-5 text-foreground-muted">
+              Drop the query and page CSV. Add the zip from the Search Console
+              Export button too, for each query's own impressions.
+            </p>
+          </div>
+          <button data-choose-file type="button" class="shrink-0 rounded-lg border border-border bg-card px-4 py-2.5 text-xs font-medium text-foreground transition-colors hover:border-border-strong">Choose files</button>
+        </div>
+        <p data-error hidden class="mt-3 text-sm leading-6 text-red-700 dark:text-red-400" role="alert"></p>
+      </div>
+    </div>
+  </Card>
+
+  <Card inverted>
+    <div class="space-y-5 p-5 sm:p-6" aria-live="polite">
+      <div class="flex flex-wrap items-center justify-between gap-3">
+        <p data-badge class="rounded-md bg-card px-2.5 py-1 text-xs font-medium text-foreground-muted">Sample with made-up numbers</p>
+        <Button data-download type="button" class="min-h-9 px-3 text-xs">Download CSV</Button>
+      </div>
+      <div class="space-y-1">
+        <h2 data-title class="text-xl font-medium text-foreground"></h2>
+        <p data-subtitle class="text-sm leading-6 text-foreground-muted"></p>
+      </div>
+      <ul data-notes hidden class="list-disc space-y-1 pl-5 text-sm leading-6 text-foreground-muted"></ul>
+      <div data-items class="space-y-3"></div>
+      <Button data-more hidden type="button" class="min-h-9 px-3 text-xs"></Button>
+      <details data-left-out class="rounded-lg bg-card p-4 text-sm">
+        <summary class="cursor-pointer font-medium">What the check left out</summary>
+        <ul data-left-out-list class="mt-3 space-y-1 leading-6 text-foreground-muted"></ul>
+      </details>
+    </div>
+  </Card>
+</section>
+
+<script>
+  import {
+    CANNIBAL_MAXIMUM_DOMINANT_SHARE,
+    CANNIBAL_MINIMUM_PAGE_IMPRESSIONS,
+    CANNIBAL_MINIMUM_PAGE_SHARE,
+    type CannibalItem,
+  } from '@seo/core/cannibal/browser'
+  import {
+    type CannibalCheck,
+    cannibalCsv,
+    checkCannibalization,
+    type LoadedExport,
+    readCannibalExport,
+  } from '@/lib/keyword-cannibalization'
+  import { ExportError } from '@/lib/search-console-export'
+
+  const SHOWN = 20
+
+  // A made-up running shop, so the page shows a whole result before anyone
+  // adds an export: four shared queries, plus one of each kind left out.
+  function sample(): LoadedExport {
+    const page = (path: string) => `https://www.example.com${path}`
+    const pair = (query: string, path: string, clicks: number, impressions: number, position: number) => ({
+      keys: [query, page(path)],
+      clicks,
+      impressions,
+      ctr: clicks / impressions,
+      position,
+    })
+    const rows = [
+      pair('trail running shoes', '/trail-running-shoes', 118, 4210, 6.2),
+      pair('trail running shoes', '/blog/best-trail-running-shoes', 41, 2870, 8.9),
+      pair('trail running shoes', '/sale/trail', 2, 64, 22.4),
+      pair('marathon training plan', '/guides/marathon-plan', 61, 1840, 7.1),
+      pair('marathon training plan', '/blog/16-week-marathon-plan', 48, 1510, 7.8),
+      pair('running shoes for flat feet', '/guides/flat-feet', 82, 2090, 5.1),
+      pair('running shoes for flat feet', '/running-shoes/stability', 12, 710, 12.3),
+      pair('running shoes for flat feet', '/blog/flat-feet-running', 3, 240, 18.6),
+      pair('waterproof running jacket', '/jackets/waterproof', 29, 1120, 9.1),
+      pair('waterproof running jacket', '/blog/waterproof-jacket-guide', 24, 960, 10.4),
+      pair('running socks', '/socks', 44, 910, 4.2),
+      pair('running socks', '/blog/running-socks', 1, 52, 31.0),
+      pair('running shoe size guide', '/size-guide', 150, 3300, 2.4),
+      pair('example.com returns', '/returns', 90, 300, 1.2),
+      pair('example.com returns', '/help/returns', 20, 120, 2.1),
+      pair('trail shoes wide fit women', '/trail-running-shoes', 1, 22, 14.0),
+      pair('trail shoes wide fit women', '/womens/wide-fit', 0, 17, 19.2),
+    ]
+    const demand = (label: string, clicks: number, impressions: number, position: number) => ({
+      label,
+      current: { clicks, impressions, ctr: clicks / impressions, position },
+      previous: null,
+    })
+    return {
+      pairs: { name: 'sample', rows, capped: false },
+      queriesName: 'Queries.csv',
+      queries: {
+        kind: 'queries',
+        periods: ['Current'],
+        capped: false,
+        rows: [
+          demand('trail running shoes', 159, 5380, 6.4),
+          demand('marathon training plan', 109, 2950, 7.3),
+          demand('running shoes for flat feet', 97, 2620, 6.0),
+          demand('waterproof running jacket', 53, 1730, 9.4),
+          demand('running socks', 45, 930, 4.3),
+          demand('running shoe size guide', 150, 3300, 2.4),
+          demand('example.com returns', 110, 360, 1.3),
+          demand('trail shoes wide fit women', 1, 31, 15.1),
+        ],
+      },
+    }
+  }
+
+  const escape = (value: string) =>
+    value.replace(/[&<>"']/g, (character) => `&#${character.charCodeAt(0)};`)
+  const count = (value: number) => Math.round(value).toLocaleString('en-GB')
+  const plural = (value: number, one: string, many = `${one}s`) => `${count(value)} ${value === 1 ? one : many}`
+  const percent = (value: number) => `${Math.round(value * 100)}%`
+
+  const CONTEXT: Record<CannibalItem['reviewContext'][number], string> = {
+    'quoted-query': 'The search was in quotes, so the person wanted that exact phrase.',
+    'same-template-family': 'The URLs look like the same kind of page. A guess from the URLs, not from the pages.',
+    'local-or-entity-intent': 'The search names a place, a date or a thing. Pages of the same kind can each answer a different version of it.',
+  }
+
+  function itemHtml(item: CannibalItem, host: string, hasQueries: boolean): string {
+    const label = (url: string) => {
+      try {
+        const parsed = new URL(url)
+        const bare = (value: string) => value.replace(/^www\./, '')
+        return bare(parsed.host) === bare(host) ? `${parsed.pathname}${parsed.search}` : url
+      } catch {
+        return url
+      }
+    }
+    const demand =
+      item.propertyImpressions !== undefined
+        ? `${plural(item.propertyImpressions, 'impression')} for the query`
+        : hasQueries
+          ? `${plural(item.pageExposureImpressions, 'page impression')} (not in the Queries table)`
+          : `${plural(item.pageExposureImpressions, 'page impression')} added up`
+    const rows = item.pages
+      .map(
+        (page) => `<tr class="border-t border-panel-foreground/15">
+          <td class="py-2 pr-3 align-top [overflow-wrap:anywhere]">${escape(label(page.url))}${
+            page.url === item.suggestedOwnerUrl
+              ? ' <span class="ml-1 whitespace-nowrap rounded bg-muted px-1.5 py-0.5 text-[11px] text-foreground-muted">most clicks</span>'
+              : ''
+          }</td>
+          <td class="py-2 pr-3 text-right align-top tabular-nums">${count(page.impressions)}</td>
+          <td class="py-2 pr-3 text-right align-top tabular-nums">${percent(page.impressionShare)}</td>
+          <td class="py-2 pr-3 text-right align-top tabular-nums">${count(page.clicks)}</td>
+          <td class="py-2 text-right align-top tabular-nums">${page.position.toFixed(1)}</td>
+        </tr>`,
+      )
+      .join('')
+    const notes = item.reviewContext.map((context) => `<li>${escape(CONTEXT[context])}</li>`).join('')
+    return `<article class="rounded-lg bg-card p-4 sm:p-5">
+      <div class="flex flex-col gap-1 sm:flex-row sm:items-baseline sm:justify-between sm:gap-4">
+        <h3 class="text-base font-medium break-words">${escape(item.query)}</h3>
+        <p class="shrink-0 text-xs text-foreground-muted">${demand} · ${plural(item.pages.length, 'page')}</p>
+      </div>
+      <div class="mt-3 overflow-x-auto">
+        <table class="w-full border-collapse text-left text-xs">
+          <thead class="text-foreground-muted">
+            <tr>
+              <th class="pb-2 pr-3 font-normal">Page</th>
+              <th class="pb-2 pr-3 text-right font-normal"><span class="sm:hidden">Impr.</span><span class="hidden sm:inline">Impressions</span></th>
+              <th class="pb-2 pr-3 text-right font-normal">Share</th>
+              <th class="pb-2 pr-3 text-right font-normal">Clicks</th>
+              <th class="pb-2 text-right font-normal"><span class="sm:hidden">Pos.</span><span class="hidden sm:inline">Position</span></th>
+            </tr>
+          </thead>
+          <tbody>${rows}</tbody>
+        </table>
+      </div>
+      ${notes ? `<ul class="mt-3 list-disc space-y-1 pl-5 text-xs leading-5 text-foreground-muted">${notes}</ul>` : ''}
+    </article>`
+  }
+
+  function initialise(root: HTMLElement): void {
+    if (root.dataset.initialised === 'true') return
+    root.dataset.initialised = 'true'
+    const $ = <T extends HTMLElement>(selector: string) => root.querySelector<T>(selector)
+    const site = $<HTMLInputElement>('[data-site]')
+    const input = $<HTMLInputElement>('[data-file-input]')
+    const drop = $<HTMLElement>('[data-file-drop]')
+    const error = $<HTMLElement>('[data-error]')
+    const badge = $<HTMLElement>('[data-badge]')
+    const title = $<HTMLElement>('[data-title]')
+    const subtitle = $<HTMLElement>('[data-subtitle]')
+    const notes = $<HTMLElement>('[data-notes]')
+    const items = $<HTMLElement>('[data-items]')
+    const more = $<HTMLButtonElement>('[data-more]')
+    const leftOut = $<HTMLElement>('[data-left-out-list]')
+    const download = $<HTMLButtonElement>('[data-download]')
+    const leftOutPanel = $<HTMLElement>('[data-left-out]')
+    if (!site || !input || !drop || !error || !badge || !title || !subtitle || !notes || !items || !more || !leftOut || !download || !leftOutPanel) return
+
+    let loaded = sample()
+    let isSample = true
+    let check: CannibalCheck | undefined
+    let showAll = false
+
+    const render = () => {
+      check = checkCannibalization({ site: site.value || (isSample ? 'example.com' : ''), ...loaded })
+      const { analysis, status } = check
+      const s = analysis.selection
+      const host = (() => {
+        try {
+          return new URL(check.site).host
+        } catch {
+          return ''
+        }
+      })()
+      const found = s.eligibleClusters
+
+      if (status === 'empty') {
+        title.textContent = 'The export has no rows'
+        subtitle.textContent = 'The file has the right columns but nothing under them. Export again with a date range that has data.'
+      } else if (found) {
+        title.textContent = `${plural(found, 'query', 'queries')} where two or more of your pages share impressions`
+        subtitle.textContent = `Checked ${plural(s.queryGroups, 'query', 'queries')} from ${plural(s.validRows, 'row')}${check.site ? ` for ${host || check.site}` : ''}. The most impressions and the most even split come first.${s.limitedClusters ? ` Showing the top ${count(s.returnedClusters)}.` : ''}`
+      } else if (status === 'partial') {
+        title.textContent = 'No shared queries in the rows read'
+        subtitle.textContent = 'Part of the export could not be used (see below), so this is not an all-clear. Fix the export and check again.'
+      } else {
+        title.textContent = 'No query has two or more of your pages sharing impressions'
+        subtitle.textContent = `Checked ${plural(s.queryGroups, 'query', 'queries')} from ${plural(s.validRows, 'row')}. Each one showed a single page, or one page took most of the impressions. See what was left out below.`
+      }
+
+      const warnings: string[] = []
+      if (check.pairs.capped) warnings.push('The query and page file has more than 50,000 rows. Only the first 50,000 were read.')
+      if (check.queries?.capped) warnings.push('The Queries table has more than 50,000 rows. Only the first 50,000 were read.')
+      if (s.invalidRows) warnings.push(`${plural(s.invalidRows, 'row')} could not be read (no query, no full URL, no impressions, or numbers that do not add up) and ${s.invalidRows === 1 ? 'was' : 'were'} left out.`)
+      if (s.propertyInvalidRows) warnings.push(`${plural(s.propertyInvalidRows, 'row')} in the Queries table could not be read and ${s.propertyInvalidRows === 1 ? 'was' : 'were'} left out.`)
+      if (!check.queries) {
+        warnings.push('No Queries table was added, so each query’s impressions are its pages’ impressions added up. One search that showed two of your pages counts twice. Add the zip from the Export button for the query’s own number.')
+      } else if (s.missingPropertyQueries) {
+        warnings.push(`${plural(s.missingPropertyQueries, 'shared query', 'shared queries')} ${s.missingPropertyQueries === 1 ? 'is' : 'are'} not in the Queries table (it keeps the top 1,000), so ${s.missingPropertyQueries === 1 ? 'its' : 'their'} impressions are page impressions added up.`)
+      }
+      notes.innerHTML = warnings.map((warning) => `<li>${escape(warning)}</li>`).join('')
+      notes.hidden = warnings.length === 0 || status === 'empty'
+      leftOutPanel.hidden = status === 'empty'
+
+      const shown = showAll ? analysis.items : analysis.items.slice(0, SHOWN)
+      items.innerHTML = shown.map((item) => itemHtml(item, host, Boolean(check?.queries))).join('')
+      more.hidden = analysis.items.length <= SHOWN || showAll
+      more.textContent = `Show all ${count(analysis.items.length)}`
+      download.disabled = analysis.items.length === 0
+
+      const lines: [number, string][] = [
+        [s.singlePageQueries, 'showed only one of your pages'],
+        [s.dominantQueries, `had one page with more than ${percent(CANNIBAL_MAXIMUM_DOMINANT_SHARE)} of the impressions, or no second page with ${count(CANNIBAL_MINIMUM_PAGE_IMPRESSIONS)} impressions and ${percent(CANNIBAL_MINIMUM_PAGE_SHARE)} of them`],
+        [s.belowMinimumQueries, `had fewer than ${count(analysis.filters.minImpressions)} impressions`],
+        [s.brandQueries, 'searched for your brand'],
+        [s.lowActionabilityQueries, 'were search operators, web addresses or other searches with nothing to change'],
+      ]
+      const pageLine = s.incidentalPages
+        ? [`<li>${plural(s.incidentalPages, 'page')} with a sliver of a shared query’s impressions ${s.incidentalPages === 1 ? 'was' : 'were'} not counted as competing.</li>`]
+        : []
+      leftOut.innerHTML = [
+        ...lines.filter(([value]) => value > 0).map(([value, text]) => `<li>${plural(value, 'query', 'queries')} ${escape(text)}.</li>`),
+        ...pageLine,
+      ].join('') || '<li>Nothing. Every query in the export was checked.</li>'
+    }
+
+    const load = async (files: File[]) => {
+      if (!files.length) return
+      error.hidden = true
+      try {
+        loaded = await readCannibalExport(files)
+        isSample = false
+        showAll = false
+        const name = $<HTMLElement>('[data-file-name]')
+        const detail = $<HTMLElement>('[data-file-detail]')
+        if (name) name.textContent = files.map((file) => file.name).join(', ')
+        if (detail) {
+          detail.textContent = `Read ${plural(loaded.pairs.rows.length, 'query and page row')}${loaded.queries ? ` and ${plural(loaded.queries.rows.length, 'row')} from the Queries table` : ''}.`
+        }
+        badge.textContent = 'Your export'
+        render()
+      } catch (caught) {
+        error.textContent = caught instanceof ExportError ? caught.message : 'That file could not be read as a Search Console export.'
+        error.hidden = false
+      }
+    }
+
+    download.addEventListener('click', () => {
+      if (!check?.analysis.items.length) return
+      const url = URL.createObjectURL(new Blob([cannibalCsv(check)], { type: 'text/csv' }))
+      const link = document.createElement('a')
+      link.href = url
+      link.download = 'keyword-cannibalization.csv'
+      link.click()
+      setTimeout(() => URL.revokeObjectURL(url), 1000)
+    })
+    more.addEventListener('click', () => {
+      showAll = true
+      render()
+    })
+    root.querySelector('[data-choose-file]')?.addEventListener('click', () => input.click())
+    input.addEventListener('change', () => void load([...(input.files ?? [])]))
+    drop.addEventListener('dragover', (event) => {
+      event.preventDefault()
+      drop.classList.add('ring-2', 'ring-primary/40')
+    })
+    drop.addEventListener('dragleave', () => drop.classList.remove('ring-2', 'ring-primary/40'))
+    drop.addEventListener('drop', (event) => {
+      event.preventDefault()
+      drop.classList.remove('ring-2', 'ring-primary/40')
+      void load([...(event.dataTransfer?.files ?? [])])
+    })
+    site.addEventListener('input', render)
+    render()
+  }
+
+  const initialiseAll = () => {
+    for (const root of document.querySelectorAll<HTMLElement>('[data-cannibal-checker]')) initialise(root)
+  }
+  initialiseAll()
+  document.addEventListener('astro:page-load', initialiseAll)
+</script>

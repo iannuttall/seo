@@ -23,6 +23,8 @@ import type {
   CannibalAnalysis,
   CannibalItem,
   CannibalPage,
+  CannibalReport,
+  CannibalSelection,
   CannibalSuppression,
 } from './cannibal-types.js'
 
@@ -240,5 +242,26 @@ export function analyzeCannibalRows(
   }
 }
 
+/**
+ * Empty, partial, filtered or complete. Partial evidence (a possibly capped
+ * source, invalid rows, or a candidate with no query-level demand row) never
+ * becomes filtered, so it cannot read as an all-clear.
+ */
+export function cannibalDataStatus(
+  selection: CannibalSelection,
+  possiblyTruncated: boolean,
+): CannibalReport['dataStatus'] {
+  if (selection.sourceRows === 0) return 'empty'
+  if (
+    possiblyTruncated ||
+    selection.invalidRows + selection.propertyInvalidRows > 0 ||
+    selection.missingPropertyQueries > 0
+  ) {
+    return 'partial'
+  }
+  return selection.eligibleClusters === 0 ? 'filtered' : 'complete'
+}
+
+export const CANNIBAL_MINIMUM_PAGE_IMPRESSIONS = MINIMUM_PAGE_IMPRESSIONS
 export const CANNIBAL_MINIMUM_PAGE_SHARE = MINIMUM_PAGE_SHARE
 export const CANNIBAL_MAXIMUM_DOMINANT_SHARE = MAXIMUM_DOMINANT_SHARE

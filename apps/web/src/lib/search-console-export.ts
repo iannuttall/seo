@@ -64,14 +64,9 @@ export async function readSearchConsoleExport(
   files: File[],
 ): Promise<ExportTables> {
   const tables: ExportTables = {}
-  for (const file of files) {
-    const entries = file.name.toLowerCase().endsWith('.zip')
-      ? await unzipCsv(file)
-      : [{ name: file.name, text: await readText(file) }]
-    for (const entry of entries) {
-      const table = parseTable(entry.name, entry.text)
-      if (table && !tables[table.kind]) tables[table.kind] = table
-    }
+  for (const entry of await readExportFiles(files)) {
+    const table = parseTable(entry.name, entry.text)
+    if (table && !tables[table.kind]) tables[table.kind] = table
   }
   if (Object.keys(tables).length === 0) {
     throw new ExportError(
@@ -79,6 +74,21 @@ export async function readSearchConsoleExport(
     )
   }
   return tables
+}
+
+/** The CSV text of each file, with the CSV files inside any zip. */
+export async function readExportFiles(
+  files: File[],
+): Promise<{ name: string; text: string }[]> {
+  const entries: { name: string; text: string }[] = []
+  for (const file of files) {
+    if (file.name.toLowerCase().endsWith('.zip')) {
+      entries.push(...(await unzipCsv(file)))
+    } else {
+      entries.push({ name: file.name, text: await readText(file) })
+    }
+  }
+  return entries
 }
 
 async function readText(file: File): Promise<string> {
@@ -187,7 +197,9 @@ export function parseCsv(text: string): string[][] {
       if (row.some((value) => value !== '')) rows.push(row)
       row = []
       cell = ''
-      if (rows.length > EXPORT_LIMITS.rows) break
+      // The header plus one row past the limit, so callers can tell the
+      // file was cut short.
+      if (rows.length > EXPORT_LIMITS.rows + 1) break
     } else {
       cell += character
     }
@@ -197,7 +209,7 @@ export function parseCsv(text: string): string[][] {
   return rows
 }
 
-function number(value: string | undefined): number | null {
+export function parseNumber(value: string | undefined): number | null {
   if (value === undefined) return null
   let text = value.trim().replace(/%$/, '').replace(/\s/g, '')
   if (!text) return null
@@ -252,16 +264,16 @@ export function parseTable(name: string, text: string): ExportTable | null {
   ): Metrics | null => {
     if (slot?.clicks === undefined || slot.impressions === undefined)
       return null
-    const clicks = number(cells[slot.clicks])
-    const impressions = number(cells[slot.impressions])
+    const clicks = parseNumber(cells[slot.clicks])
+    const impressions = parseNumber(cells[slot.impressions])
     if (clicks === null || impressions === null) return null
-    const ctr = slot.ctr === undefined ? null : number(cells[slot.ctr])
+    const ctr = slot.ctr === undefined ? null : parseNumber(cells[slot.ctr])
     return {
       clicks,
       impressions,
       ctr: ctr === null ? null : ctr / 100,
       position:
-        slot.position === undefined ? null : number(cells[slot.position]),
+        slot.position === undefined ? null : parseNumber(cells[slot.position]),
     }
   }
 

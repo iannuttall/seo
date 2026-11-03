@@ -1,6 +1,6 @@
 import type { SearchAnalyticsQuery } from '../../gsc/client/types.js'
 import { SessionLedger } from '../../storage/ledger.js'
-import { analyzeCannibalRows } from './cannibal-analysis.js'
+import { analyzeCannibalRows, cannibalDataStatus } from './cannibal-analysis.js'
 import type { CannibalReport } from './cannibal-types.js'
 import {
   defaultDateRange,
@@ -131,16 +131,7 @@ export async function cannibalReportWith(
         : partialValidation
           ? 'partial'
           : 'complete'
-  const dataStatus: CannibalReport['dataStatus'] =
-    analysis.selection.sourceRows === 0
-      ? 'empty'
-      : possiblyTruncated ||
-          partialValidation ||
-          analysis.selection.missingPropertyQueries > 0
-        ? 'partial'
-        : analysis.selection.eligibleClusters === 0
-          ? 'filtered'
-          : 'complete'
+  const dataStatus = cannibalDataStatus(analysis.selection, possiblyTruncated)
 
   return {
     schemaVersion: 1,

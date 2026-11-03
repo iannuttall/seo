@@ -26,6 +26,11 @@
       "workerd": "./src/commands/index.ts",
       "import": "./dist/commands/index.js"
     },
+    "./cannibal/browser": {
+      "types": "./src/analyze/site-diagnostics/cannibal-browser.ts",
+      "browser": "./src/analyze/site-diagnostics/cannibal-browser.ts",
+      "import": "./dist/analyze/site-diagnostics/cannibal-browser.js"
+    },
     "./updates/browser": {
       "types": "./src/updates/browser.ts",
       "browser": "./src/updates/browser.ts",

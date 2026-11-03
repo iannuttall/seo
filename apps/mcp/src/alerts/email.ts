@@ -75,7 +75,9 @@ export function markdownToHtml(markdown: string): string {
     }
     if (list.length) {
       out.push(
-        `<ul>${list.map((item) => `<li>${inline(item)}</li>`).join('')}</ul>`,
+        // Inline, as inboxes ignore head styles here: no default 40px
+        // indent, so bullets sit at the text edge in a narrow column.
+        `<ul style="margin:14px 0;padding:0 0 0 18px">${list.map((item) => `<li style="margin:0 0 4px">${inline(item)}</li>`).join('')}</ul>`,
       )
     }
     paragraph = []

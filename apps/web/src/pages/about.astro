@@ -1,0 +1,175 @@
+---
+// Who builds SEO Skill and the key facts about it. Founder facts come from
+// `founder` in src/lib/site.ts; product facts must match apps/mcp/README.md.
+import FaqAccordion from '@/components/FaqAccordion.astro'
+import LandingHero from '@/components/LandingHero.astro'
+import SectionHeading from '@/components/SectionHeading.astro'
+import { Building03Icon, Mortarboard01Icon, Rocket01Icon, Search01Icon } from '@hugeicons/core-free-icons'
+import HomeCard from '@/components/HomeCard.astro'
+import HugeIcon from '@/components/HugeIcon.astro'
+import SplitList from '@/components/SplitList.astro'
+import { founderSocials } from '@/lib/founder-socials'
+import BaseLayout from '@/layouts/BaseLayout.astro'
+import type { SchemaBreadcrumb } from '@/lib/schema'
+import { founder, site } from '@/lib/site'
+
+const breadcrumbs: SchemaBreadcrumb[] = [{ label: 'Home', href: '/' }, { label: 'About' }]
+
+const does = [
+  { title: 'Reads your own search data', text: 'Search Console, Google Analytics, URL Inspection and Clicky through one read-only Google sign-in, plus Bing in the CLI.', href: '/integrations' },
+  { title: 'Answers SEO questions in your AI agent', text: 'Quick wins, low click-through rates, traffic drops, index problems and Google updates, in Claude, ChatGPT, Codex, Cursor and other agents.', href: '/features' },
+  { title: 'Adds market data with your own key', text: 'Keyword volumes, SERPs, competitors and backlinks from DataForSEO or Ahrefs, kept apart from your own numbers.', href: '/features/keyword-research' },
+  { title: 'Free web tools', text: 'Backlinks, Domain Rating, competitor keywords, SERPs and traffic estimates in your browser, with no account.', href: '/tools' },
+]
+
+// Career facts as Ian states them on ian.is/about. Newest first.
+const record = [
+  { icon: Search01Icon, title: 'I built this idea once before', text: 'Keyword Metrics found the keywords a site already ranked for in Search Console and emailed a weekly report of what to change, years before AI agents could do it. It passed $2,000 a month in revenue and was acquired.' },
+  { icon: Rocket01Icon, title: 'I built and sold an indexing tool', text: 'URL Monitor got more pages indexed in Google, grew to $8,000 a month and was acquired for $250,000. I have since rebuilt the idea as Index My Site.' },
+  { icon: Mortarboard01Icon, title: 'I taught over 1,000 students', text: 'My programmatic SEO course, Practical Programmatic. I bought two rival courses along the way and sold it in 2025 to Joshua Hardwick, former head of content at Ahrefs.' },
+  { icon: Building03Icon, title: 'I grew and sold SEO businesses', text: 'I bought a content site for $2,000 and sold it for $500,000 two years later, and ran the tech at Clever Bytes, which sold in two seven-figure exits.' },
+]
+
+const career = [
+  { name: 'SEO Skill and Index My Site', role: 'Founder, now', href: 'https://indexmysite.app', text: 'I build SEO Skill for AI agents, and rebuilt my indexing tool as Index My Site, which gets your most important pages indexed by Google. I also run a portfolio of small tools, apps and websites built with AI agents and marketed with programmatic SEO.' },
+  { name: 'Practical Programmatic', role: 'Founder', href: 'https://practicalprogrammatic.com', text: 'A programmatic SEO course with over 1,000 students and more than $200,000 in sales. I grew it by buying pSEO OS for $20,000 and programmaticseocourse.com, and sold it in 2025 to Joshua Hardwick, former head of content at Ahrefs.' },
+  { name: 'URL Monitor', role: 'Solo founder', text: 'An SEO product that got more pages indexed in Google. Acquired for $250,000, and now rebranded as Cromojo.' },
+  { name: 'Keyword Metrics', role: 'Founder', text: 'My first version of the SEO Skill idea, before AI agents. It scanned Search Console for keywords a site already ranked for and emailed a weekly report of what to improve. It passed $2,000 a month in revenue and was acquired.' },
+  { name: 'Programmatic SEO content sites', role: 'Owner', text: 'A large portfolio of programmatic SEO sites. I bought the biggest for $2,000 and sold it for $500,000 two years later.' },
+  { name: 'Clever Bytes', role: 'Co-founder', text: 'An education startup where I ran the tech behind Kids Konnect, A-Level Biology, Teach Computer Science and other sites. Acquired in two 7-figure exits in 2021.' },
+]
+
+const audience = founderSocials.map((item) => `${item.value} ${item.unit} on ${item.name}`)
+const audienceText = `${audience.slice(0, -1).join(', ')} and ${audience.at(-1)}`
+
+const facts: [string, string][] = [
+  ['Product', 'SEO Skill: a hosted MCP server, an open source CLI and local MCP server, and one skill for AI agents'],
+  ['Built by', `${founder.name}, founder of Practical Programmatic and URL Monitor`],
+  ['Hosted MCP server', site.mcpUrl],
+  ['Price', 'Every on-demand tool is free with no usage cap. The weekly site audit is $50 a month per site.'],
+  ['Data it reads', 'Google Search Console, Google Analytics, URL Inspection, Clicky, Bing Webmaster Tools (CLI), and DataForSEO or Ahrefs with your own key'],
+  ['AI clients', 'Claude Code, Claude, ChatGPT, Codex, Cursor, VS Code, Gemini CLI, Windsurf, Le Chat and any remote MCP client'],
+  ['Licence', 'Apache 2.0 for the CLI, both MCP servers and this site'],
+  ['Source code', site.repository],
+  ['npm package', 'seo'],
+  ['Support', 'GitHub Issues'],
+]
+
+const faqs = [
+  { question: 'Who built SEO Skill?', answer: `I did. I'm ${founder.name}, and I've worked in SEO for more than 20 years. I founded Practical Programmatic, a programmatic SEO course with over 1,000 students, and built and sold two SEO tools, Keyword Metrics and URL Monitor, the second for $250,000. I share what works in SEO and AI with ${audienceText}.` },
+  { question: 'Have you built SEO tools before?', answer: 'Yes. My Keyword Metrics found keywords in Search Console and emailed a weekly report of what to change, the same job SEO Skill now does inside your AI agent. I was also the solo founder of URL Monitor, which got more pages indexed in Google and was acquired for $250,000, and I have since rebuilt that idea as Index My Site. Before that I ran a portfolio of programmatic SEO sites and the tech at Clever Bytes, which sold in two seven-figure exits in 2021.' },
+  { question: 'Is SEO Skill free?', answer: 'Yes. Every tool your agent calls on demand is free with no usage cap. The only paid part is the weekly site audit, $50 a month per site, which runs on our servers in the background.' },
+  { question: 'How is it different from asking ChatGPT or Claude about SEO?', answer: 'On their own, they answer from memory and have never seen your site. With SEO Skill connected, they read your clicks, queries, pages and index status first, so the answer is about your site.' },
+  { question: 'How is it different from Ahrefs or Semrush?', answer: 'Ahrefs and Semrush estimate traffic from their own crawl of the web. SEO Skill reads your real numbers from Search Console and Google Analytics, and can add Ahrefs or DataForSEO data with your own key, labelled as estimates.' },
+]
+---
+
+<BaseLayout
+  title="About SEO Skill and Ian Nuttall"
+  description={`SEO Skill gives AI agents your real Search Console, Google Analytics and keyword data. Built by ${founder.name}, in SEO for more than 20 years.`}
+  canonicalPath="/about"
+  schemaType="AboutPage"
+  {breadcrumbs}
+  dateModified={founder.asOf}
+  framed={false}
+>
+  <main data-agent-content>
+    <LandingHero
+      title="About SEO Skill"
+      lead="SEO Skill gives your AI agent facts from your own Search Console, Google Analytics and keyword data, so its SEO answers are about your site instead of an average one."
+      setupId="about-setup"
+    />
+
+    <div class="space-y-24 py-24 sm:space-y-32 sm:py-32">
+      <SplitList id="does-heading" title="What SEO Skill does" text="One hosted MCP server and an open source CLI that your agent uses to answer questions about search." items={does} />
+
+      <section id={founder.anchor} class="site-frame scroll-mt-24" aria-labelledby="founder-heading">
+        <SectionHeading id="founder-heading" title={`Built by ${founder.name}`} text="I've spent more than 20 years building, growing and selling SEO businesses. Now I build with AI." />
+        <div class="grid gap-8 sm:grid-cols-[1fr_1.15fr] sm:items-start">
+          <div class="space-y-4 text-base leading-7 text-foreground-muted">
+            <p>
+              I'm a British marketer, software engineer and founder, and I've
+              worked in SEO for more than 20 years. I've built and sold SEO
+              tools, a portfolio of programmatic SEO sites and an education
+              startup, and taught programmatic SEO to over 1,000 students.
+            </p>
+            <p>
+              I write about SEO and shipping software with AI agents on <a class="underline underline-offset-4" href={founder.url} target="_blank" rel="noreferrer">ian.is</a>,
+              and share what works with a large audience on X, YouTube and
+              LinkedIn.
+            </p>
+            <p>
+              I build SEO Skill so your AI agent starts from your real Search
+              Console numbers instead of guessing. My plan is for this site to
+              prove it works the only way that counts in SEO: by ranking.
+            </p>
+          </div>
+          <ul class="grid grid-cols-1 gap-2">
+            {
+              founderSocials.map((item) => (
+                <li>
+                  <a class="flex items-center gap-4 rounded-lg bg-muted p-5 no-underline hover:underline" href={item.url} target="_blank" rel="noreferrer">
+                    <span class="flex size-11 shrink-0 items-center justify-center rounded-full bg-background">
+                      <HugeIcon icon={item.icon} class="size-5 text-foreground" />
+                    </span>
+                    <span>
+                      <span class="block text-2xl font-medium text-foreground">{item.value}</span>
+                      <span class="block text-sm/6 text-foreground-muted">{item.unit} on {item.name}</span>
+                    </span>
+                  </a>
+                </li>
+              ))
+            }
+          </ul>
+        </div>
+      </section>
+
+      <section class="site-frame" aria-labelledby="record-heading">
+        <SectionHeading id="record-heading" title="Track record" text="SEO Skill comes from two decades of ranking my own sites and selling the businesses behind them." />
+        <div class="grid grid-cols-1 gap-2 sm:grid-cols-2">
+          {record.map((item) => <HomeCard title={item.title} text={item.text} icon={item.icon} />)}
+        </div>
+        <ol class="mt-10 divide-y divide-border border-y border-border">
+          {
+            career.map((item) => (
+              <li class="grid gap-2 py-6 sm:grid-cols-[16rem_1fr] sm:gap-8">
+                <div>
+                  <h3 class="text-base/6 font-medium text-foreground">
+                    {item.href ? <a class="underline underline-offset-4" href={item.href} target="_blank" rel="noreferrer">{item.name}</a> : item.name}
+                  </h3>
+                  <p class="text-sm/6 text-foreground-muted">{item.role}</p>
+                </div>
+                <p class="text-base/7 text-foreground-muted">{item.text}</p>
+              </li>
+            ))
+          }
+        </ol>
+      </section>
+
+      <section class="site-frame" aria-labelledby="facts-heading">
+        <SectionHeading id="facts-heading" title="Key facts" text="The short version, for people and for AI answers." />
+        <dl class="rounded-lg bg-muted px-6">
+          {
+            facts.map(([label, value]) => (
+              <div class="grid gap-1 border-b border-border py-4 last:border-b-0 sm:grid-cols-[12rem_1fr] sm:gap-6">
+                <dt class="text-sm leading-6 font-medium text-foreground">{label}</dt>
+                <dd class="text-sm leading-6 break-words text-foreground-muted">{value}</dd>
+              </div>
+            ))
+          }
+        </dl>
+      </section>
+
+      <section class="site-frame" aria-labelledby="about-faq">
+        <div class="max-w-2xl">
+          <h2 id="about-faq" class="text-pretty text-2xl font-medium -tracking-[0.4px] text-foreground xl:text-3xl xl:-tracking-[0.6px]">
+            Questions about SEO Skill
+          </h2>
+        </div>
+        <div class="mt-10">
+          <FaqAccordion items={faqs} id="about-faq-list" />
+        </div>
+      </section>
+    </div>
+  </main>
+</BaseLayout>

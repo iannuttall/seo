@@ -18,6 +18,7 @@ export const llmsTxt = {
         { path: '/', label: 'SEO Skill' },
         { path: '/features' },
         { path: '/pricing' },
+        { path: '/about' },
         ...docsSection('Start'),
       ],
     },

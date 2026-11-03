@@ -1,0 +1,67 @@
+---
+import {
+  AiChat02Icon,
+  Analytics01Icon,
+  McpServerIcon,
+  SearchList01Icon,
+} from '@hugeicons/core-free-icons'
+import FeaturePage from '@/components/FeaturePage.astro'
+
+const related = [
+  { title: 'ChatGPT', text: 'Add SEO Skill to ChatGPT as a custom MCP server.', href: '/integrations/chatgpt', icon: McpServerIcon },
+  { title: 'seo report', text: 'The Search Console report ChatGPT reads first.', href: '/docs/report', icon: Analytics01Icon },
+  { title: 'seo research', text: 'Keyword data, and whether ChatGPT search cites your site.', href: '/docs/research', icon: SearchList01Icon },
+  { title: 'AI search tracking', text: 'The questions people ask AI that show in your Search Console.', href: '/features/ai-search', icon: AiChat02Icon },
+]
+---
+
+<FeaturePage
+  title="ChatGPT SEO with your own search data"
+  description="Use ChatGPT for SEO with your real Search Console, Google Analytics and keyword data through a free MCP server. Setup steps, prompts and what it can check."
+  path="/features/chatgpt-seo"
+  lead="ChatGPT can write a decent SEO plan from memory. Connect your Search Console and it writes one for your site, from your own clicks, queries and pages."
+  {related}
+>
+  <h2>Why ChatGPT needs your data for SEO</h2>
+  <p>
+    Prompt lists for ChatGPT SEO work on the text you paste in. They can't see
+    which queries you rank on page two for, which pages lost their clicks, or
+    whether Google still has a page in its index. SEO Skill gives ChatGPT
+    those facts from your own Search Console, Google Analytics and URL
+    Inspection, so its answer starts from your numbers.
+  </p>
+
+  <h2>Add SEO Skill to ChatGPT</h2>
+  <ol>
+    <li>Open Plugins, choose +, then Add custom MCP server.</li>
+    <li>Name it seoskill and enter <code>https://seoskill.dev/mcp</code> under Connection.</li>
+    <li>Choose OAuth for authentication, confirm, and choose Create as a plugin. Sign in with Google when ChatGPT asks. Access is read only.</li>
+    <li>In a chat, type @ and pick seoskill.</li>
+  </ol>
+  <p>
+    Custom MCP servers depend on your ChatGPT plan. OpenAI lists Business,
+    Enterprise and Edu workspaces, where an admin may need to create the
+    plugin, and Pro accounts for read-only servers like this one. The <a href="/integrations/chatgpt">ChatGPT setup page</a> has the current
+    steps.
+  </p>
+
+  <h2>Prompts to try in ChatGPT</h2>
+  <table>
+    <thead><tr><th>Ask</th><th>What ChatGPT reads</th></tr></thead>
+    <tbody>
+      <tr><td>Give me three quick wins for my site.</td><td>Queries close to page one and pages with a low click-through rate for their position.</td></tr>
+      <tr><td>Which pages are losing traffic?</td><td>Content decay and traffic drops from Search Console, page by page.</td></tr>
+      <tr><td>Is this page indexed?</td><td>Google's URL Inspection result and the live page facts.</td></tr>
+      <tr><td>How much traffic do AI assistants send us?</td><td>Visits from ChatGPT, Perplexity and others in Google Analytics or Clicky.</td></tr>
+      <tr><td>Does ChatGPT search cite us for our top questions?</td><td>Your top AI-style questions from Search Console, asked on ChatGPT search with your DataForSEO key.</td></tr>
+    </tbody>
+  </table>
+
+  <h2>What it costs</h2>
+  <p>
+    Every tool ChatGPT calls is free with no usage cap. Keyword research and
+    the AI answer check use your own DataForSEO or Ahrefs key, so you pay that
+    provider directly (a full AI answer check is about 12 cents of DataForSEO
+    credit). The weekly site audit is $50 a month per site.
+  </p>
+</FeaturePage>

@@ -68,7 +68,7 @@ const clientFaq = client
   ? [
       { question: `Is SEO Skill free in ${name}?`, answer: 'Yes. Every tool your agent calls on demand is free with no usage cap. The only paid part is the weekly site audit, which runs on our servers in the background for $50 a month per site.' },
       { question: `Can ${name} change anything in my Search Console?`, answer: 'No. The Google sign-in asks for read-only access to Search Console and Google Analytics.' },
-      { question: 'Does the server keep my search data?', answer: 'It keeps your linked Google accounts and any keys you save, encrypted. Search Console and analytics rows are fetched when your agent asks and never stored, except the fix list for sites in the weekly audit.' },
+      { question: 'Does the server keep my search data?', answer: 'It keeps your linked Google accounts and any keys you save, encrypted. Search Console and analytics rows are fetched when your agent asks and not kept, except for sites in the paid weekly audit, where it keeps the crawls, index checks with each page\'s clicks and impressions, and the issues list.' },
       ...(client.note ? [{ question: `Which ${name} plans can add it?`, answer: client.note }] : []),
       { question: 'What about site crawls and Bing?', answer: client.localMcp ? `Those run on your own machine. Install the seo CLI and run seo mcp install to add the local MCP server to ${name} as well.` : 'Those run on your own machine with the seo CLI. The hosted server tells your agent when a request needs the CLI.' },
     ]

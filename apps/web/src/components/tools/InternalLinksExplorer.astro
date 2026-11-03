@@ -2,9 +2,15 @@
 import Card from '@/components/Card.astro'
 import CodeBlock from '@/components/CodeBlock.astro'
 import FormInput from '@/components/FormInput.astro'
+import FormSelect from '@/components/FormSelect.astro'
+import { getButtonClasses } from '@/components/ui/button'
+import { ONLINE_LIMITS } from '@/lib/internal-links-tool'
 
-// A made-up result on example.com, shaped like the real output of
-// seo internal-links, so people can see what comes back before they install.
+// A signed-in person runs the tool on one of their Search Console sites:
+// the hosted server crawls it and the browser polls for the result through
+// /account/tools/internal-links (apps/mcp/src/tool-internal-links.ts).
+// Until a real result loads, the panel shows a made-up result on
+// example.com, shaped like the real output of seo internal-links.
 const links = [
   {
     source: '/guides/raised-beds',
@@ -64,38 +70,32 @@ const tabButton =
   <Card>
     <div class="space-y-5 p-5 sm:p-6">
       <div class="space-y-1">
-        <h2 class="text-lg font-medium">Build the command</h2>
-        <p class="text-sm leading-6 text-foreground-muted">
-          The crawl runs on your machine, so it starts from a command. Pick what to check and copy it.
+        <h2 class="text-lg font-medium">Find links on your site</h2>
+        <p data-run-detail class="text-sm leading-6 text-foreground-muted">
+          Sign in with Google and pick a site from your Search Console. We crawl up to {ONLINE_LIMITS.freePages} pages and Jev judges every link, free, {ONLINE_LIMITS.freeRunsPerDay} times a day. Sites in your weekly site audit get up to {ONLINE_LIMITS.auditPages.toLocaleString('en-US')} pages.
         </p>
       </div>
-      <div role="group" aria-label="What to check" class="inline-flex h-9 w-fit items-center gap-1 rounded-lg bg-muted p-0.5 text-xs">
-        <button type="button" data-mode="site" aria-pressed="true" class={tabButton}>Whole site</button>
-        <button type="button" data-mode="url" aria-pressed="false" class={tabButton}>One page</button>
+      <form data-signin method="post" action="/account/signin">
+        <input type="hidden" name="next" value="/tools/internal-linking-tool" />
+        <button type="submit" class={getButtonClasses('default', 'default')}>Sign in with Google</button>
+      </form>
+      <div data-pick hidden class="flex flex-col gap-2 sm:flex-row">
+        <FormSelect data-property aria-label="Search Console property" class="sm:min-w-0" />
+        <button data-start type="button" class={getButtonClasses('default', 'lg')}>Find links</button>
       </div>
-      <label class="block space-y-2 text-sm font-medium">
-        <span data-target-label>Site</span>
-        <FormInput data-target type="text" inputmode="url" autocapitalize="off" spellcheck="false" maxlength="2048" value="example.com" />
-      </label>
-      <label data-pages-row class="block space-y-2 text-sm font-medium">
-        <span class="flex justify-between gap-3"><span>Pages to crawl</span><span data-pages-value class="font-mono"></span></span>
-        <input data-pages type="range" min="100" max="5000" step="100" value="500" class="w-full accent-primary" />
-      </label>
-      <div data-command class="min-w-0">
-        <CodeBlock value="seo internal-links --site example.com" wrap />
-      </div>
-      <p data-command-note class="text-xs leading-5 text-foreground-muted"></p>
+      <p data-run-status hidden role="status" class="text-sm leading-6 text-foreground-muted"></p>
+      <p data-run-error hidden role="alert" class="text-sm leading-6 text-destructive"></p>
     </div>
   </Card>
 
   <Card inverted>
     <div class="space-y-5 p-5 sm:p-6">
       <div class="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
-        <div class="space-y-1">
-          <h2 class="text-lg font-medium">What comes back</h2>
-          <p class="text-sm leading-6 text-foreground-muted">An example result for a made-up gardening site. Switch Jev off to see the result without a key.</p>
+        <div class="min-w-0 space-y-1">
+          <h2 data-result-title class="text-lg font-medium [overflow-wrap:anywhere]">What comes back</h2>
+          <p data-result-detail class="text-sm leading-6 text-foreground-muted">An example result for a made-up gardening site. Switch Jev off to see the result without a key.</p>
         </div>
-        <div role="group" aria-label="Jev" class="inline-flex h-9 w-fit shrink-0 items-center gap-1 rounded-lg bg-background p-0.5 text-xs">
+        <div data-jev-group role="group" aria-label="Jev" class="inline-flex h-9 w-fit shrink-0 items-center gap-1 rounded-lg bg-background p-0.5 text-xs">
           <button type="button" data-jev="on" aria-pressed="true" class={tabButton.replace('aria-pressed:bg-background', 'aria-pressed:bg-muted')}>With Jev</button>
           <button type="button" data-jev="off" aria-pressed="false" class={tabButton.replace('aria-pressed:bg-background', 'aria-pressed:bg-muted')}>Without Jev</button>
         </div>
@@ -108,7 +108,7 @@ const tabButton =
         <button type="button" role="tab" data-section="fixes" aria-selected="false" class="h-8 rounded-md px-3 text-foreground-muted aria-selected:bg-background aria-selected:text-foreground">Links to fix</button>
       </div>
 
-      <ol data-panel="links" role="tabpanel" class="space-y-3">
+      <ol data-panel="links" role="tabpanel" class="max-h-[40rem] space-y-3 overflow-y-auto">
         {
           links.map((link) => (
             <li class="space-y-2 rounded-lg bg-background p-4" data-tier={link.tier}>
@@ -134,23 +134,50 @@ const tabButton =
 
       <div data-panel="orphans" role="tabpanel" hidden class="space-y-2 text-sm">
         <p class="text-foreground-muted">Crawled pages that no other crawled page links to, from anywhere on the page.</p>
-        <ul class="space-y-1 font-mono text-xs">{orphans.map((page) => <li class="rounded-md bg-background px-3 py-2">{page}</li>)}</ul>
+        <ul data-list="orphans" class="max-h-[32rem] space-y-1 overflow-y-auto font-mono text-xs">{orphans.map((page) => <li class="rounded-md bg-background px-3 py-2">{page}</li>)}</ul>
       </div>
 
       <div data-panel="weak" role="tabpanel" hidden class="space-y-2 text-sm">
         <p class="text-foreground-muted">Pages with fewer than three links from other pages' main content.</p>
-        <ul class="space-y-1 text-xs">
+        <ul data-list="weak" class="max-h-[32rem] space-y-1 overflow-y-auto text-xs">
           {weak.map((row) => <li class="flex justify-between gap-3 rounded-md bg-background px-3 py-2"><span class="font-mono [overflow-wrap:anywhere]">{row.page}</span><span class="shrink-0">{row.links} {row.links === 1 ? 'link' : 'links'} in</span></li>)}
         </ul>
       </div>
 
       <div data-panel="fixes" role="tabpanel" hidden class="space-y-3 text-sm">
         <p class="text-foreground-muted">Links that still go through a redirect, and links with text that says nothing about the page.</p>
-        <ul class="space-y-1 text-xs">
+        <ul data-list="fixes" class="max-h-[32rem] space-y-1 overflow-y-auto text-xs">
           {redirects.map((row) => <li class="rounded-md bg-background px-3 py-2 font-mono [overflow-wrap:anywhere]">{row.source}: {row.via} redirects to {row.target}</li>)}
           {generic.map((row) => <li class="rounded-md bg-background px-3 py-2 [overflow-wrap:anywhere]"><span class="font-mono">{row.source}</span>: “{row.text}” to <span class="font-mono">{row.href}</span></li>)}
         </ul>
       </div>
+    </div>
+  </Card>
+
+  <Card>
+    <div class="space-y-5 p-5 sm:p-6">
+      <div class="space-y-1">
+        <h2 class="text-lg font-medium">Or run it from your machine</h2>
+        <p class="text-sm leading-6 text-foreground-muted">
+          The command needs no account, crawls up to 5,000 pages on any site, and can find links to one page. Pick what to check and copy it.
+        </p>
+      </div>
+      <div role="group" aria-label="What to check" class="inline-flex h-9 w-fit items-center gap-1 rounded-lg bg-muted p-0.5 text-xs">
+        <button type="button" data-mode="site" aria-pressed="true" class={tabButton}>Whole site</button>
+        <button type="button" data-mode="url" aria-pressed="false" class={tabButton}>One page</button>
+      </div>
+      <label class="block space-y-2 text-sm font-medium">
+        <span data-target-label>Site</span>
+        <FormInput data-target type="text" inputmode="url" autocapitalize="off" spellcheck="false" maxlength="2048" value="example.com" />
+      </label>
+      <label data-pages-row class="block space-y-2 text-sm font-medium">
+        <span class="flex justify-between gap-3"><span>Pages to crawl</span><span data-pages-value class="font-mono"></span></span>
+        <input data-pages type="range" min="100" max="5000" step="100" value="500" class="w-full accent-primary" />
+      </label>
+      <div data-command class="min-w-0">
+        <CodeBlock value="seo internal-links --site example.com" wrap />
+      </div>
+      <p data-command-note class="text-xs leading-5 text-foreground-muted"></p>
     </div>
   </Card>
 </section>
@@ -168,6 +195,8 @@ const tabButton =
     let mode: 'site' | 'url' = 'site'
     let jev = true
     let section = 'links'
+    // The verdict line of a real result, once one has loaded.
+    let real: string | null = null
 
     function updateCommand(): void {
       const value = targetEl.value.trim() || (mode === 'site' ? 'example.com' : 'https://example.com/guides/composting')
@@ -195,9 +224,9 @@ const tabButton =
       for (const node of root.querySelectorAll<HTMLElement>('[data-heuristic-only]')) node.hidden = jev
       const verdict = $<HTMLElement>('[data-verdict]')
       if (verdict) {
-        verdict.textContent = jev
+        verdict.textContent = real ?? (jev
           ? 'Crawl: 214 pages (limit 500, not reached). Jev used: 46 requests, $0.04. 4 links to add: 2 strong, 2 possible.'
-          : 'Crawl: 214 pages (limit 500, not reached). Jev not used: no TypeSafe key, so these are text matches. 4 links to add.'
+          : 'Crawl: 214 pages (limit 500, not reached). Jev not used: no TypeSafe key, so these are text matches. 4 links to add.')
       }
       for (const button of root.querySelectorAll<HTMLButtonElement>('[data-jev]')) {
         button.setAttribute('aria-pressed', String((button.dataset.jev === 'on') === jev))
@@ -238,6 +267,274 @@ const tabButton =
     pagesEl.addEventListener('input', updateCommand)
     updateCommand()
     updateResult()
+    runOnline(root, (verdict) => {
+      real = verdict
+      updateResult()
+    })
+  }
+
+  type Tier = 'strong' | 'possible' | 'heuristic'
+  type Result = {
+    property: string
+    generatedAt: string
+    dataStatus: string
+    verdict: string
+    crawl: { pageLimit: number; pagesCrawled: number; capReached: boolean }
+    judge: { status: string; requests: number }
+    summary: { suggestions: number; strong: number; possible: number; heuristic: number }
+    links: Array<{
+      source: string
+      target: string
+      tier: Tier
+      probability: number | null
+      role: string | null
+      anchor: string | null
+      sentence: string | null
+      sharedQueries: number
+    }>
+    orphans: { shown: string[]; total: number }
+    weak: { shown: Array<{ url: string; links: number }>; total: number }
+    redirects: Array<{ source: string; via: string; target: string }>
+    generic: Array<{ source: string; href: string; text: string }>
+    warnings: string[]
+  }
+  type State = {
+    plan: 'free' | 'audit'
+    pages: number
+    runsPerDay: number
+    runsLeft: number
+    run: {
+      status: 'crawling' | 'checking' | 'analysing' | 'done' | 'failed'
+      pageLimit: number
+      pagesCrawled: number
+      keepUntil: number | null
+      error: string | null
+    } | null
+    result: Result | null
+  }
+
+  const ROLES: Record<string, string> = {
+    explains_concept: 'Explains an idea',
+    deeper_detail: 'Goes deeper',
+    broader_guide: 'Broader guide',
+    next_step: 'Next step',
+    product_or_service: 'Product or service',
+    comparison_or_alternative: 'Comparison',
+  }
+  const KEY = 'seo-internal-links-property'
+  const chip = 'rounded-md bg-muted px-1.5 py-0.5 text-foreground-muted'
+
+  function el<K extends keyof HTMLElementTagNameMap>(tag: K, className = '', text = ''): HTMLElementTagNameMap[K] {
+    const node = document.createElement(tag)
+    if (className) node.className = className
+    if (text) node.textContent = text
+    return node
+  }
+
+  // A crawled URL as its path, the way the example shows them.
+  function path(url: string): string {
+    try {
+      const parsed = new URL(url)
+      return `${parsed.pathname}${parsed.search}`
+    } catch {
+      return url
+    }
+  }
+
+  // A Search Console property as a person reads it: example.com for both
+  // sc-domain:example.com and https://example.com/.
+  const siteName = (property: string) => property.replace(/^sc-domain:/, '').replace(/^https?:\/\//, '').replace(/\/$/, '')
+
+  const plural = (count: number, word: string) => `${count.toLocaleString('en-US')} ${word}${count === 1 ? '' : 's'}`
+
+  function verdictOf(result: Result): string {
+    if (result.dataStatus === 'blocked' || result.dataStatus === 'empty') return result.verdict
+    const crawl = `Crawl: ${plural(result.crawl.pagesCrawled, 'page')} (limit ${result.crawl.pageLimit.toLocaleString('en-US')}, ${result.crawl.capReached ? 'reached' : 'not reached'}).`
+    const judge =
+      result.judge.status === 'used' || result.judge.status === 'partial'
+        ? `Jev used: ${plural(result.judge.requests, 'request')}.`
+        : 'Jev not used, so these are text matches.'
+    const s = result.summary
+    const counts = `${plural(s.suggestions, 'link')} to add${s.suggestions ? `: ${[s.strong && `${s.strong} strong`, s.possible && `${s.possible} possible`, s.heuristic && `${s.heuristic} text ${s.heuristic === 1 ? 'match' : 'matches'}`].filter(Boolean).join(', ')}` : ''}.`
+    return [crawl, judge, counts, ...result.warnings].join(' ')
+  }
+
+  function linkItem(link: Result['links'][number]): HTMLLIElement {
+    const item = el('li', 'space-y-2 rounded-lg bg-background p-4')
+    const pair = el('div', 'flex flex-wrap items-center gap-x-2 gap-y-1 font-mono text-xs [overflow-wrap:anywhere]')
+    const arrow = el('span', 'text-foreground-muted', '→')
+    arrow.setAttribute('aria-hidden', 'true')
+    pair.append(el('span', '', path(link.source)), arrow, el('span', 'sr-only', 'links to'), el('span', '', path(link.target)))
+    const sentence = el('p', 'text-sm leading-6 text-foreground-muted')
+    const text = link.sentence ?? 'No sentence on this page fits yet, so the link needs new text.'
+    const at = link.anchor && link.sentence ? text.indexOf(link.anchor) : -1
+    if (link.anchor && at >= 0) {
+      sentence.append(text.slice(0, at), el('mark', 'rounded-sm bg-primary-soft px-0.5 text-foreground', link.anchor), text.slice(at + link.anchor.length))
+    } else sentence.textContent = text
+    const chips = el('div', 'flex flex-wrap gap-1.5 text-[0.7rem]')
+    if (link.tier === 'heuristic' || link.probability === null) chips.append(el('span', chip, 'Text match'))
+    else {
+      chips.append(el('span', 'rounded-md bg-primary-soft px-1.5 py-0.5 text-foreground', `${link.tier === 'strong' ? 'Strong' : 'Possible'} · ${Math.round(link.probability * 100)}%`))
+      const role = link.role ? ROLES[link.role] : undefined
+      if (role) chips.append(el('span', chip, role))
+    }
+    if (link.sharedQueries > 0) chips.append(el('span', chip, `${link.sharedQueries} shared searches`))
+    item.append(pair, sentence, chips)
+    return item
+  }
+
+  const row = (text: string, className = 'rounded-md bg-background px-3 py-2 [overflow-wrap:anywhere]') => el('li', className, text)
+  const more = (shown: number, total: number) => (total > shown ? [row(`Showing ${shown.toLocaleString('en-US')} of ${total.toLocaleString('en-US')}.`, 'px-3 py-2 font-sans text-foreground-muted')] : [])
+
+  function showResult(root: HTMLElement, result: Result, keepUntil: number | null): void {
+    const $ = <T extends HTMLElement>(selector: string) => root.querySelector<T>(selector)
+    const site = siteName(result.property)
+    const title = $<HTMLElement>('[data-result-title]')
+    if (title) title.textContent = `Links for ${site}`
+    const detail = $<HTMLElement>('[data-result-detail]')
+    if (detail) {
+      const when = new Date(result.generatedAt).toLocaleString(undefined, { dateStyle: 'medium', timeStyle: 'short' })
+      const gone = keepUntil ? new Date(keepUntil).toLocaleString(undefined, { dateStyle: 'medium', timeStyle: 'short' }) : null
+      detail.textContent = `Crawled ${when}.${gone ? ` We delete this result at ${gone}.` : ''}`
+    }
+    const jevGroup = $<HTMLElement>('[data-jev-group]')
+    if (jevGroup) jevGroup.hidden = true
+    const links = $<HTMLElement>('[data-panel="links"]')
+    links?.replaceChildren(
+      ...(result.links.length ? result.links.map(linkItem) : [row('No links passed the rules on this crawl.', 'rounded-lg bg-background p-4 text-sm text-foreground-muted')]),
+      ...more(result.links.length, result.summary.suggestions),
+    )
+    $<HTMLElement>('[data-list="orphans"]')?.replaceChildren(
+      ...(result.orphans.shown.length ? result.orphans.shown.map((url) => row(path(url))) : [row('No orphan pages among the crawled pages.', 'px-3 py-2 font-sans text-foreground-muted')]),
+      ...more(result.orphans.shown.length, result.orphans.total),
+    )
+    $<HTMLElement>('[data-list="weak"]')?.replaceChildren(
+      ...(result.weak.shown.length
+        ? result.weak.shown.map((page) => {
+            const item = el('li', 'flex justify-between gap-3 rounded-md bg-background px-3 py-2')
+            item.append(el('span', 'font-mono [overflow-wrap:anywhere]', path(page.url)), el('span', 'shrink-0', `${page.links} ${page.links === 1 ? 'link' : 'links'} in`))
+            return item
+          })
+        : [row('Every crawled page has at least three links from other pages.', 'px-3 py-2 text-foreground-muted')]),
+      ...more(result.weak.shown.length, result.weak.total),
+    )
+    const fixes = [
+      ...result.redirects.map((link) => row(`${path(link.source)}: ${path(link.via)} redirects to ${path(link.target)}`, 'rounded-md bg-background px-3 py-2 font-mono [overflow-wrap:anywhere]')),
+      ...result.generic.map((link) => {
+        const item = el('li', 'rounded-md bg-background px-3 py-2 [overflow-wrap:anywhere]')
+        item.append(el('span', 'font-mono', path(link.source)), `: “${link.text}” to `, el('span', 'font-mono', path(link.href)))
+        return item
+      }),
+    ]
+    $<HTMLElement>('[data-list="fixes"]')?.replaceChildren(...(fixes.length ? fixes : [row('No links through redirects and no vague link text found.', 'px-3 py-2 text-foreground-muted')]))
+  }
+
+  // Signed in, pick a property and start a run; the page polls until the
+  // result is ready. Signed out, the sign-in form stays.
+  function runOnline(root: HTMLElement, onResult: (verdict: string) => void): void {
+    const $ = <T extends HTMLElement>(selector: string) => root.querySelector<T>(selector)
+    const signinEl = $<HTMLFormElement>('[data-signin]')
+    const pickEl = $<HTMLElement>('[data-pick]')
+    const selectEl = $<HTMLSelectElement>('[data-property]')
+    const startEl = $<HTMLButtonElement>('[data-start]')
+    const detailEl = $<HTMLElement>('[data-run-detail]')
+    const statusEl = $<HTMLElement>('[data-run-status]')
+    const errorEl = $<HTMLElement>('[data-run-error]')
+    if (!signinEl || !pickEl || !selectEl || !startEl || !detailEl || !statusEl || !errorEl) return
+    const [signin, pick, select, start, detail, status, error] = [signinEl, pickEl, selectEl, startEl, detailEl, statusEl, errorEl]
+    let token = 0
+    let timer: ReturnType<typeof setTimeout> | undefined
+
+    const fail = (text: string) => {
+      error.textContent = text
+      error.hidden = false
+    }
+    const signedOut = () => {
+      signin.hidden = false
+      pick.hidden = true
+      status.hidden = true
+    }
+
+    function show(state: State): void {
+      const running = state.run?.status === 'crawling' || state.run?.status === 'checking' || state.run?.status === 'analysing'
+      detail.textContent =
+        state.plan === 'audit'
+          ? `This site is in your weekly site audit, so we crawl up to ${state.pages.toLocaleString('en-US')} pages. ${plural(state.runsLeft, 'run')} left today for this site.`
+          : `We crawl up to ${state.pages.toLocaleString('en-US')} pages and Jev judges every link. ${plural(state.runsLeft, 'free run')} left today. Sites in your weekly site audit get more pages.`
+      start.disabled = running || state.runsLeft === 0
+      const run = state.run
+      status.hidden = !run || run.status === 'done'
+      if (run?.status === 'crawling') status.textContent = `Crawling: ${run.pagesCrawled.toLocaleString('en-US')} of up to ${run.pageLimit.toLocaleString('en-US')} pages.`
+      else if (run?.status === 'checking') status.textContent = 'Checking where linked pages redirect.'
+      else if (run?.status === 'analysing') status.textContent = 'Finding and judging links. On a large site this takes a few minutes.'
+      else if (run?.status === 'failed') status.textContent = `The last run stopped: ${run.error ?? 'the crawl failed'}`
+      if (state.result) {
+        showResult(root, state.result, run?.keepUntil ?? null)
+        onResult(verdictOf(state.result))
+      }
+      if (running) {
+        const mine = token
+        timer = setTimeout(() => {
+          if (mine === token) void load('GET')
+        }, 4000)
+      }
+    }
+
+    async function load(method: 'GET' | 'POST'): Promise<void> {
+      const property = select.value
+      if (!property) return
+      clearTimeout(timer)
+      const mine = ++token
+      error.hidden = true
+      try {
+        const response = await fetch(method === 'GET' ? `/account/tools/internal-links?property=${encodeURIComponent(property)}` : '/account/tools/internal-links', {
+          method,
+          credentials: 'same-origin',
+          headers: method === 'POST' ? { 'content-type': 'application/json' } : undefined,
+          body: method === 'POST' ? JSON.stringify({ property }) : undefined,
+          signal: AbortSignal.timeout(30000),
+        })
+        const body = (await response.json().catch(() => null)) as (State & { error?: string }) | null
+        if (mine !== token) return
+        if (response.status === 401) return signedOut()
+        if (!response.ok || !body || body.error) return fail(body?.error ?? 'The server did not answer. Try again.')
+        show(body)
+      } catch {
+        if (mine === token) fail('The server did not answer. Try again.')
+      }
+    }
+
+    fetch('/account/tools/session', { credentials: 'same-origin', signal: AbortSignal.timeout(15000) })
+      .then((response) => (response.ok ? response.json() : null))
+      .then((session: { signedIn?: boolean; properties?: string[] } | null) => {
+        if (!session?.signedIn) return
+        signin.hidden = true
+        const names = session.properties ?? []
+        if (!names.length) {
+          detail.textContent = 'None of the Google accounts on your SEO Skill account can read a Search Console property. Add one on your account page, then come back.'
+          return
+        }
+        select.replaceChildren(
+          ...names.map((name) => {
+            const option = el('option', '', name.replace(/^sc-domain:/, ''))
+            option.value = name
+            return option
+          }),
+        )
+        const saved = localStorage.getItem(KEY)
+        if (saved && names.includes(saved)) select.value = saved
+        pick.hidden = false
+        void load('GET')
+      })
+      .catch(() => {})
+    select.addEventListener('change', () => {
+      localStorage.setItem(KEY, select.value)
+      void load('GET')
+    })
+    start.addEventListener('click', () => {
+      start.disabled = true
+      void load('POST')
+    })
   }
 
   function initialiseAll(): void {

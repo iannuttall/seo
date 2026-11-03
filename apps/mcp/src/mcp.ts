@@ -99,7 +99,7 @@ function savedKeys(env: Env, headers: Headers): string {
 
 const instructions = (env: Env, headers: Headers) => `${MCP_INSTRUCTIONS}
 ${savedKeys(env, headers)}
-Crawls, internal links and Bing run on a machine with the open-source CLI, not on this server. ${CLI_LINK} Then run, for example, \`npx -y seo crawl https://example.com --json\`, \`npx -y seo internal-links --url https://example.com/page --json\` or \`npx -y seo report --site <site> --section bing --json\`. When a site or key is missing, open ${accountUrl(env)} in the person's browser (with \`open <url>\` on macOS, \`xdg-open\` on Linux or \`start\` on Windows when you have a shell, otherwise show the link), let them add the Google account or key there, then run the same call again. This server keeps only those sign-ins and keys, encrypted, and no report data.`
+Crawls, internal links and Bing run on a machine with the open-source CLI, not on this server. ${CLI_LINK} Then run, for example, \`npx -y seo crawl https://example.com --json\`, \`npx -y seo internal-links --url https://example.com/page --json\` or \`npx -y seo report --site <site> --section bing --json\`. When a site or key is missing, open ${accountUrl(env)} in the person's browser (with \`open <url>\` on macOS, \`xdg-open\` on Linux or \`start\` on Windows when you have a shell, otherwise show the link), let them add the Google account or key there, then run the same call again. This server keeps those sign-ins and keys, encrypted, and report data only for sites in the weekly site audit.`
 
 const SERVER_INFO = { ...MCP_SERVER_INFO, version: '1.0.0' }
 

@@ -23,11 +23,34 @@ export {
   ctrUnderperformersReportWith,
 } from './analyze/ctr-underperformers-report.js'
 export {
+  type InternalLinksDependencies,
+  internalLinksReportWith,
+} from './analyze/internal-links.js'
+export {
+  type CrawledPage,
+  type CrawlSkipReason,
+  crawlUrl,
+  excerptOf,
+  resolveAliases,
+  type SentenceSource,
+  type SiteCrawl,
+} from './analyze/internal-links-graph.js'
+export { SiteIndex } from './analyze/internal-links-index.js'
+export {
+  GENERIC_ANCHORS,
+  type LinkSentence,
+  linkableSentences,
+  placementPage,
+  termCounts,
+} from './analyze/internal-links-placement.js'
+export type { InternalLinksReport } from './analyze/internal-links-types.js'
+export {
   collapseFragmentPageRows,
   type FragmentCollapseProvenance,
   type FragmentCollapseResult,
   stripPageFragment,
 } from './analyze/page-fragments.js'
+export { normalizePageUrl } from './analyze/page-technical-signals.js'
 export { analyzeQueryClustersFromRows } from './analyze/query-cluster-analysis.js'
 export {
   isLikelyAutomatedQuery,
@@ -121,6 +144,10 @@ export {
   shiftIsoDate,
 } from './gsc/dates.js'
 export { readJson, readJsonOrUndefined } from './http/read-json.js'
+export {
+  hasMetaRobotsDirective,
+  hasXRobotsDirective,
+} from './robots-directives.js'
 export {
   agentFromClientName,
   isoWeek,

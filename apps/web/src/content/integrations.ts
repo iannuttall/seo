@@ -143,12 +143,12 @@ export const sources: Source[] = [
       {
         question: 'Does it store my Search Console data?',
         answer:
-          'No. The server fetches what your agent asks for and returns it. It keeps your linked Google accounts and any keys you save, encrypted, and never the rows or reports.',
+          "Not for on-demand requests. The server fetches what your agent asks for and returns it, and keeps only your linked Google accounts and any keys you save, encrypted. For sites in the paid weekly audit it keeps what the audit needs: index check results with each page's clicks and impressions, the last two crawls and the issues list.",
       },
       {
         question: 'Can it change anything in Search Console?',
         answer:
-          'The Google sign-in asks for read-only access. Your agent can read performance data and inspect URLs, and nothing it does changes your Search Console settings.',
+          'The Google sign-in asks for read-only access. Your agent can read performance data and inspect URLs, and nothing it does changes your Search Console settings. The one exception is a button on your account page for weekly audit sites that adds folder properties to Search Console. It asks for write access only when you click it, and drops that access straight after.',
       },
       {
         question: 'Do I need a Google Cloud project or API key?',

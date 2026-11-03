@@ -1,100 +1,85 @@
 # Terms of use
 
-Last updated: 23 July 2026
+Last updated: 3 November 2026
 
-These terms cover the official `seo` command-line tool, library, MCP server,
-documentation, and seoskill.dev website.
+These terms cover SEO Skill: the `seo` command-line tool and library, the
+local and hosted MCP servers, your account at seoskill.dev, the paid weekly
+site audit, and the seoskill.dev website and its free tools.
 
-## Open source licence
+## The code
 
-The software is licensed under the [Apache License
-2.0](https://github.com/iannuttall/seo/blob/main/LICENSE). That licence controls
-your right to use, copy, modify, and distribute the code. Third-party packages
-keep their own licences.
+The code is open source under the [Apache License
+2.0](https://github.com/iannuttall/seo/blob/main/LICENSE). That licence decides
+what you can do with the code. These terms cover the services we run.
 
-These terms do not take away rights granted by an applicable open source
-licence. They cover use of the official website, documentation, name, Google
-integration, and distributed project services that sit outside the source-code
-licence.
+## Use it fairly
 
-## Use the tool responsibly
+- Only check sites and use accounts and keys you are allowed to.
+- Follow the law and the terms of Google, Bing and any provider you use.
+- Do not use SEO Skill to break into, overload or harm a site or service.
+- Do not get around the daily limits on the free tools, or run the free
+  tools or the hosted server in bulk by script.
 
-You are responsible for the commands you run and the sites, accounts, and data
-you use with them. Only crawl, inspect, or analyse a site when you are allowed
-to do so. Follow applicable laws, access controls, robots policies, provider
-terms, and reasonable rate limits.
+We can limit or close access for anyone who breaks these terms or puts the
+service at risk.
 
-Do not use the project to gain unauthorised access, disrupt a service, evade a
-technical restriction, expose another person's data, or carry out unlawful
-activity.
+## Your account
 
-## Google and other third-party services
+The hosted server and your account are free. You sign in with Google, and
+that first Google account is your account. You are responsible for what
+your agents and linked machines do with it. Keep your keys and tokens
+private.
 
-Google Search Console, Google Analytics, and Clicky access is optional and read-only.
-Your use of Google APIs is also subject to Google's terms and policies. Google
-can change API behaviour, quotas, scopes, or availability without notice to
-this project.
+You can delete your account at any time with **Delete everything** on the
+[account page](https://seoskill.dev/account).
 
-Optional research providers and Chrome UX Report are
-also controlled by their respective operators. A provider can charge for a
-request, retain task data, change its prices or limits, or withdraw a feature.
-Review the provider's current terms, privacy policy, and report cost evidence
-before sending sensitive inputs or starting broad paid work.
+## The weekly site audit
 
-The software can request public websites, run browser tooling, and use package
-registries or operating system services. Those products are controlled by
-their respective operators. The project is not responsible for their content,
-availability, security, or data practices.
+The weekly site audit is a paid plan, billed monthly per site through
+Stripe, at the price shown before you pay.
 
-## Reports are evidence, not a guarantee
+- It is month to month. Cancel at any time from **Manage billing** on the
+  account page, and you are not charged again.
+- There are no refunds for a month already started.
+- Adding a site charges for the rest of the current month straight away.
+  Removing a site lowers the next bill.
+- Delete everything cancels the plan at once.
 
-SEO reports can be incomplete because websites change, providers retain or cap
-data, crawls stop, and search systems do not publish every ranking signal. The
-software is designed to show those limits, but bugs and incorrect findings are
-still possible.
+You can only add a site that one of your Google accounts can read in
+Search Console. The audit crawls it each week as `SEOSkillBot` and follows
+its `robots.txt`.
 
-Reports are general technical information. They do not promise rankings,
-traffic, revenue, indexing, rich results, AI citations, or any other outcome.
-Check important findings against the live site and the relevant provider before
-making a consequential change.
+## Reports are evidence, not promises
 
-## Your local data
+Reports, alerts and keyword suggestions can be wrong or incomplete. Data
+from Google and other providers can be late, capped or missing. Nothing we
+show promises rankings, traffic, indexing or revenue. Check what matters
+before you act on it, and do not rely on alerts as your only warning.
 
-You are responsible for protecting local tokens, configuration, caches,
-reports, exports, backups, and environment variables. Keep secrets out of
-public issues, logs, screenshots, repositories, and shared report files.
+## Other services
 
-The [privacy policy](https://seoskill.dev/privacy) explains what the software
-stores and how to remove it.
+Google, Bing, Clicky, DataForSEO, Ahrefs, TypeSafe, Stripe, Cloudflare and
+your AI agent are run by other companies under their own terms. They can
+change or withdraw what they offer, and we are not responsible for them.
 
-## Availability and changes
+## Changes and availability
 
-The project may change commands, reports, integrations, or documentation in a
-future release. A feature can be fixed, replaced, or removed when needed for
-security, correctness, provider policy, or maintainability.
+We can change, add or remove features. We do not promise that any part of
+SEO Skill will always be available. If the weekly site audit stops, its
+billing stops too.
 
-There is no promise that the website, package registry, Google integration, or
-project support will always be available.
+## Liability
 
-## Warranty and liability
-
-The software and website are provided without warranties or guarantees. The
-Apache License 2.0 contains the warranty and liability terms for the licensed
-software.
-
-To the fullest extent allowed by applicable law, the project maintainer is not
-liable for indirect, incidental, special, consequential, or business losses
-arising from use of the software, website, reports, or third-party services.
-Nothing in these terms excludes liability that cannot legally be excluded.
+SEO Skill is provided as is, without warranties. As far as the law allows,
+we are not liable for indirect or business losses from using it. Nothing
+here limits liability that the law does not allow us to limit.
 
 ## Changes to these terms
 
-The date at the top will be updated when these terms change. Earlier versions
-remain available in the public Git history. Continued use after a change means
-the new terms apply to later use.
+When these terms change, the date at the top changes. Earlier versions are
+in the public Git history.
 
-## Questions about these terms
+## Questions
 
-Open an issue in the [public GitHub repository](https://github.com/iannuttall/seo/issues).
-Do not include OAuth tokens, private reports, personal data, or other secrets in
-a public issue.
+Open an issue on [GitHub](https://github.com/iannuttall/seo/issues). Do not
+put tokens, keys or private data in a public issue.

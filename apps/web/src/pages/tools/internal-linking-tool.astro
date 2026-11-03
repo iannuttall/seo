@@ -6,7 +6,12 @@ import PageHeader from '@/components/PageHeader.astro'
 import SetupCommands from '@/components/SetupCommands.astro'
 import InternalLinksExplorer from '@/components/tools/InternalLinksExplorer.astro'
 import BaseLayout from '@/layouts/BaseLayout.astro'
+import { ONLINE_LIMITS } from '@/lib/internal-links-tool'
 import type { SchemaBreadcrumb } from '@/lib/schema'
+
+const { freePages, freeRunsPerDay, auditPages, auditRunsPerDay } = ONLINE_LIMITS
+const words = ['no', 'one', 'two', 'three', 'four', 'five']
+const times = (count: number) => (count < words.length ? `${words[count]} times` : `${count} times`)
 
 const breadcrumbs: SchemaBreadcrumb[] = [
   { label: 'Home', href: '/' },
@@ -17,13 +22,12 @@ const breadcrumbs: SchemaBreadcrumb[] = [
 const faq = [
   {
     question: 'Is the internal linking tool free?',
-    answer:
-      'Yes. The command is free and open source. Jev is optional: with your own TypeSafe key it judges each link, and a 500-page site costs about 10 to 20 cents in requests. Without a key it uses text matching and says so.',
+    answer: `Yes. On this page, sign in with Google and it crawls up to ${freePages} pages of a site in your Search Console, with Jev judging every link at no cost to you, ${times(freeRunsPerDay)} a day. A site in your weekly site audit, which is a paid plan, gets up to ${auditPages.toLocaleString('en-US')} pages, ${times(auditRunsPerDay)} a day. The command is free and open source too. There Jev needs your own TypeSafe key, and a 500-page site costs about 10 to 20 cents in requests. Without a key it uses text matching and says so.`,
   },
   {
     question: 'What is Jev, and do I need it?',
     answer:
-      'Jev is an AI model from TypeSafe AI that answers fixed questions with a choice and a probability instead of writing text. The tool uses it to judge whether each suggested link would help a reader. You do not need it: without a TypeSafe key the tool still finds links by text matching and says so.',
+      'Jev is an AI model from TypeSafe AI that answers fixed questions with a choice and a probability instead of writing text. The tool uses it to judge whether each suggested link would help a reader. On this page it runs on our key. From your machine you do not need it: without a TypeSafe key the command still finds links by text matching and says so.',
   },
   {
     question: 'Does it add the links for me?',
@@ -42,13 +46,17 @@ const faq = [
   },
   {
     question: 'Can it crawl a large site?',
-    answer:
-      'It crawls 500 pages by default. Add --max-pages with any number up to 5,000. The result always says how many pages it crawled and whether it hit the limit, because orphan and weak link counts only cover the pages it reached.',
+    answer: `On this page it crawls up to ${freePages} pages, or up to ${auditPages.toLocaleString('en-US')} for a site in your weekly site audit. The command crawls 500 pages by default; add --max-pages with any number up to 5,000. The result always says how many pages it crawled and whether it hit the limit, because orphan and weak link counts only cover the pages it reached.`,
   },
   {
     question: 'Does it work from the hosted MCP server?',
     answer:
-      'No. The crawl runs on your own machine, from the CLI or the local MCP server, so it reads your site the way a visitor would and nothing is sent to us. The hosted server points your agent to the CLI for it.',
+      'Not as an agent tool. The hosted server points your agent to the CLI, which crawls from your own machine and sends your pages nowhere but TypeSafe when you add a key. This page is the exception: sign in with the same Google account and the crawl runs on our servers for a site in your Search Console.',
+  },
+  {
+    question: 'What happens to my site when I run it on this page?',
+    answer:
+      'Our crawler, SEOSkillBot, reads your pages and follows your robots.txt rules and crawl delay. Page titles, descriptions, headings, a short opening and the sentences that could hold a link go to TypeSafe so Jev can judge them. Your Search Console queries are read to count shared searches and not kept. The crawl is deleted once the result is ready, and we keep the latest result for each site for 24 hours, then delete it too. We also count your runs for the daily limit and the pages crawled.',
   },
   {
     question: 'What is the difference between internal and external links?',
@@ -60,7 +68,7 @@ const faq = [
 
 <BaseLayout
   title="Free internal linking tool for SEO"
-  description="Find the internal links your site is missing, placed in sentences you already wrote. Audit a whole site or one page, find orphan pages, and fix weak links from your own machine."
+  description="Find the internal links your site is missing, placed in sentences you already wrote. Run it here on a site in your Search Console, or audit a whole site or one page from your own machine."
   canonicalPath="/tools/internal-linking-tool"
   {breadcrumbs}
 >
@@ -68,7 +76,7 @@ const faq = [
     <Breadcrumbs {breadcrumbs} />
     <PageHeader
       title="Internal linking tool"
-      description="Find the internal links your site is missing, placed in sentences you already wrote. Audit the whole site or find links to one page, from your own machine."
+      description="Find the internal links your site is missing, placed in sentences you already wrote. Run it here on a site in your Search Console, or from your own machine."
     />
 
     <InternalLinksExplorer />
@@ -76,11 +84,20 @@ const faq = [
     <div class="docs-prose mt-16">
       <h2>What the internal linking tool does</h2>
       <p>
-        <a href="/docs/internal-links">seo internal-links</a> crawls your
-        site from your machine, honouring robots.txt and any crawl delay. It
-        reads each page's main content, finds pages about the same things,
-        and checks which of them do not link to each other yet. It works in
-        two ways.
+        The tool crawls your site, honouring robots.txt and any crawl delay.
+        It reads each page's main content, finds pages about the same things,
+        and checks which of them do not link to each other yet.
+      </p>
+      <p>
+        On this page it runs on our servers for a site in your Search
+        Console. Sign in with Google, pick the site and wait a minute or two
+        (longer for a big site). It reads the HTML your server sends and does
+        not run JavaScript, so a site that only shows its text after
+        JavaScript runs is better checked from your machine.
+      </p>
+      <p>
+        From your machine, <a href="/docs/internal-links">seo internal-links</a> works
+        on any site, with no account. It works in two ways.
       </p>
       <table>
         <thead>
@@ -114,7 +131,9 @@ const faq = [
 
       <h2>Text matching or Jev</h2>
       <p>
-        Without a key, links come from text matching: pages that use the
+        On this page Jev always judges the links, on our key. From your
+        machine it needs your own key. Without one, links come from text
+        matching: pages that use the
         same words, and sentences that name the target page. That finds good
         candidates, but it cannot tell a helpful link from a forced one, so
         the result says Jev was not used.
@@ -132,7 +151,7 @@ const faq = [
         model is not.
       </p>
       <p>
-        To use it, get an API key from <a href="https://typesafe.ai" target="_blank" rel="noreferrer">TypeSafe AI</a> and add it on the <a href="/account#keys">Keys tab of your account</a>,
+        To use it with the command, get an API key from <a href="https://typesafe.ai" target="_blank" rel="noreferrer">TypeSafe AI</a> and add it on the <a href="/account#keys">Keys tab of your account</a>,
         then run <code>seo login</code>.
         You can also set <code>TYPESAFE_API_KEY</code> on your machine to keep the key there.
         You pay TypeSafe for the requests directly.
@@ -198,7 +217,7 @@ const faq = [
         crawl. A person approves every change. Ask:
       </p>
       <CodeBlock value="Run seo internal-links on example.com, open the strong suggestions, and add each link to the source page in the sentence it names. Show me the diff before you save." wrap />
-      <p>Install the CLI and run setup. The crawl runs from the CLI or the local MCP server:</p>
+      <p>Install the CLI and run setup. The command runs from the CLI or the local MCP server:</p>
       <CodeBlock value="npm i -g seo && seo start" wrap />
       <p>Or add the hosted MCP server for the rest of your data and sign in with Google:</p>
     </div>

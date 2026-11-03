@@ -55,7 +55,7 @@ const faq = [
         ? `SEO Skill is free with no usage cap. ${source.name} bills your own account for the requests it serves.`
         : 'Yes. Every tool your agent calls on demand is free with no usage cap. The only paid part is the weekly site audit, which runs in the background for $50 a month per site.',
   },
-  { question: 'Does the server keep my data?', answer: 'It keeps your linked Google accounts and any keys you save, encrypted. The rows your agent asks for are fetched on each request and never stored, except the fix list for sites in the weekly audit.' },
+  { question: 'Does the server keep my data?', answer: 'It keeps your linked Google accounts and any keys you save, encrypted. The rows your agent asks for are fetched on each request and not kept, except for sites in the paid weekly audit, where it keeps the crawls, index checks with each page\'s clicks and impressions, and the issues list.' },
   ...(client.note ? [{ question: `Which ${client.name} plans can add it?`, answer: client.note }] : []),
   ...source.faq.filter((item) => !/free|store|where do i put/i.test(item.question)).slice(0, 2),
 ]

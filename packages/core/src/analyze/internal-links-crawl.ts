@@ -6,13 +6,27 @@ import { load } from 'cheerio'
 import { createRobotsSession } from '../fetch/page-fetcher/robots.js'
 import type { FetchRateControls } from '../fetch/page-fetcher/types.js'
 import { createPageRenderer, fetchPage } from '../fetch/page-fetcher.js'
-import type { ProgressReporter } from '../progress.js'
 import {
   hasMetaRobotsDirective,
   hasXRobotsDirective,
 } from '../robots-directives.js'
 import type { PageFetchResult } from '../types.js'
 import { sitemapSeeds } from './crawler/sitemap-discovery.js'
+import {
+  type InternalLinksDependencies,
+  type InternalLinksInput,
+  internalLinksReportWith,
+} from './internal-links.js'
+import {
+  type CrawledPage,
+  type CrawlInput,
+  type CrawlSkipReason,
+  crawlUrl,
+  excerptOf,
+  resolveAliases,
+  type SentenceSource,
+  type SiteCrawl,
+} from './internal-links-graph.js'
 import { SiteIndex } from './internal-links-index.js'
 import {
   GENERIC_ANCHORS,
@@ -21,6 +35,7 @@ import {
   placementPage,
   termCounts,
 } from './internal-links-placement.js'
+import type { InternalLinksReport } from './internal-links-types.js'
 import { fetchSitemapUrls } from './monitoring/sitemaps.js'
 import { normalizePageUrl } from './page-technical-signals.js'
 
@@ -29,8 +44,15 @@ import { normalizePageUrl } from './page-technical-signals.js'
 // and writes each page's linkable sentences to a temporary file, so memory
 // follows the pages being worked on, not the size of the site.
 
-export const DEFAULT_MAX_PAGES = 500
-export const MAX_MAX_PAGES = 5_000
+export {
+  type CrawledPage,
+  type CrawlInput,
+  type CrawlSkipReason,
+  crawlUrl,
+  DEFAULT_MAX_PAGES,
+  MAX_MAX_PAGES,
+  type SiteCrawl,
+} from './internal-links-graph.js'
 
 const FETCH_CONCURRENCY = 6
 // robots.txt crawl-delay is honoured up to this many seconds, and a site that
@@ -40,64 +62,11 @@ const CRAWL_DELAY_BUDGET_SECONDS = 900
 // Linked URLs outside the crawl that are followed to see where they redirect.
 const REDIRECT_CHECKS = 150
 const GENERIC_ANCHOR_LIMIT = 100
-const EXCERPT_CHARS = 500
 const ASSET =
   /\.(avif|bmp|css|csv|dmg|docx?|eot|gif|gz|ico|jpe?g|js|json|map|mov|mp3|mp4|ogg|otf|pdf|png|pptx?|rss|svg|tar|ttf|txt|wav|webm|webp|woff2?|xlsx?|xml|zip)$/i
-const TRACKING = /^(utm_[a-z]+|gclid|fbclid|msclkid|mc_cid|mc_eid|ref)$/i
-
-export type CrawlSkipReason =
-  | 'robots'
-  | 'not-html'
-  | 'http-error'
-  | 'fetch-failed'
-  | 'canonicalised'
-  | 'duplicate'
-  | 'off-site'
-
-export interface CrawledPage {
-  url: string
-  title: string
-  h1: string
-  description: string
-  headings: string[]
-  excerpt: string
-  words: number
-  lang: string | null
-  noindex: boolean
-  // Internal links found in the main content, and anywhere else, as URL ids.
-  contextual: number[]
-  other: number[]
-  // Where the page's linkable sentences sit in the sentence file.
-  text: { offset: number; length: number }
-}
-
-export interface SiteCrawl {
-  origin: string
-  method: 'sitemap' | 'links'
-  pages: CrawledPage[]
-  // URL id to URL, and URL id to the page it ends on (after redirects and
-  // canonicals), when that page was crawled.
-  urls: string[]
-  pageOfUrl: Map<number, number>
-  index: SiteIndex
-  sentences: SentenceStore
-  genericAnchors: Array<{ source: number; href: string; text: string }>
-  stats: {
-    maxPages: number
-    pageLimit: number
-    urlsFound: number
-    pagesCrawled: number
-    capReached: boolean
-    skipped: Partial<Record<CrawlSkipReason, number>>
-    crawlDelaySeconds: number | null
-    blockedByRobots: boolean
-    redirectsChecked: number
-  }
-  warnings: string[]
-}
 
 // Linkable sentences on disk: one JSON line per page, read back by position.
-export class SentenceStore {
+export class SentenceStore implements SentenceSource {
   private size = 0
 
   private constructor(
@@ -138,31 +107,6 @@ export class SentenceStore {
 }
 
 const bareHost = (host: string) => host.toLowerCase().replace(/^www\./, '')
-
-// One form per page URL: no fragment, no tracking parameters.
-export function crawlUrl(value: string, base?: string): string | undefined {
-  try {
-    const url = base ? new URL(value, base) : new URL(value)
-    if (url.protocol !== 'http:' && url.protocol !== 'https:') return undefined
-    url.hash = ''
-    for (const key of [...url.searchParams.keys()]) {
-      if (TRACKING.test(key)) url.searchParams.delete(key)
-    }
-    return url.toString()
-  } catch {
-    return undefined
-  }
-}
-
-function excerptOf(sentences: LinkSentence[]): string {
-  let out = ''
-  for (const sentence of sentences) {
-    const next = out ? `${out} ${sentence.text}` : sentence.text
-    if (next.length > EXCERPT_CHARS) break
-    out = next
-  }
-  return out || (sentences[0]?.text.slice(0, EXCERPT_CHARS) ?? '')
-}
 
 // What the crawl needs from a page's HTML, read in one light pass: the full
 // page extractor also pulls main content, structured data and images, at ten
@@ -212,14 +156,16 @@ function readPage(fetched: PageFetchResult, finalUrl: string) {
   }
 }
 
-export interface CrawlInput {
-  // The page to start from, which sets the site.
-  startUrl: string
-  maxPages: number
-  // Crawled first, so a target page is always included.
-  firstUrl?: string
-  refresh?: boolean
-  progress?: ProgressReporter
+// The internal links report with this crawl from the person's machine.
+export function internalLinksReport(
+  input: InternalLinksInput,
+  dependencies: Partial<InternalLinksDependencies> &
+    Pick<InternalLinksDependencies, 'searchConsole' | 'decisionModel'>,
+): Promise<InternalLinksReport> {
+  return internalLinksReportWith(input, {
+    crawl: crawlForLinks,
+    ...dependencies,
+  })
 }
 
 export async function crawlForLinks(input: CrawlInput): Promise<SiteCrawl> {
@@ -542,21 +488,7 @@ async function crawl(
     }),
   )
 
-  // Every URL id that leads to a crawled page, through any chain of aliases.
-  for (let id = 0; id < urls.length; id += 1) {
-    if (pageOfUrl.has(id)) continue
-    const seen = new Set<number>()
-    let current: number | undefined = id
-    while (current !== undefined && !seen.has(current)) {
-      seen.add(current)
-      const page = pageOfUrl.get(current)
-      if (page !== undefined) {
-        pageOfUrl.set(id, page)
-        break
-      }
-      current = aliases.get(current)
-    }
-  }
+  resolveAliases(urls.length, pageOfUrl, aliases)
   index.finish()
   return {
     origin,

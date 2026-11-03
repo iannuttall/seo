@@ -315,11 +315,31 @@ async function wake(env: Env, row: Row, now: number): Promise<boolean> {
 // The hourly cron. Only sites within their owner's site limit run, oldest
 // first, so revoking the flag, a cancelled plan or fewer paid sites stops
 // new runs at the next tick.
-export async function startDue(env: Env, now = Date.now(), userId?: string) {
-  const owner = userId ? 'AND s.user_id = ?' : ''
-  const flagged = `(SELECT count(*) FROM audit_sites o WHERE o.user_id = s.user_id
+// SQL that is true when the audit_sites row s is within its owner's site
+// limit, oldest sites first, so only those run. A function, since
+// billing.ts and this file import each other.
+const withinLimit =
+  () => `(SELECT count(*) FROM audit_sites o WHERE o.user_id = s.user_id
       AND (o.added_at < s.added_at OR (o.added_at = s.added_at AND o.property <= s.property)))
     <= ${siteLimitSql('s.user_id')}`
+
+// Whether the account's weekly audit runs on this property now.
+export async function inWeeklyAudit(
+  env: Env,
+  userId: string,
+  property: string,
+): Promise<boolean> {
+  const row = await env.DB.prepare(
+    `SELECT 1 AS n FROM audit_sites s WHERE s.user_id = ? AND s.property = ? AND ${withinLimit()}`,
+  )
+    .bind(userId, property)
+    .first()
+  return Boolean(row)
+}
+
+export async function startDue(env: Env, now = Date.now(), userId?: string) {
+  const owner = userId ? 'AND s.user_id = ?' : ''
+  const flagged = withinLimit()
   const binds = (...values: unknown[]) =>
     userId ? [...values, userId] : values
   const due = await env.DB.prepare(

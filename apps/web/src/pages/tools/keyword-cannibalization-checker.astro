@@ -1,0 +1,177 @@
+---
+import CodeBlock from '@/components/CodeBlock.astro'
+import FaqAccordion from '@/components/FaqAccordion.astro'
+import Breadcrumbs from '@/components/Breadcrumbs.astro'
+import PageHeader from '@/components/PageHeader.astro'
+import SetupCommands from '@/components/SetupCommands.astro'
+import KeywordCannibalizationChecker from '@/components/tools/KeywordCannibalizationChecker.astro'
+import BaseLayout from '@/layouts/BaseLayout.astro'
+import type { SchemaBreadcrumb } from '@/lib/schema'
+
+const breadcrumbs: SchemaBreadcrumb[] = [
+  { label: 'Home', href: '/' },
+  { label: 'Tools', href: '/tools' },
+  { label: 'Keyword cannibalization checker' },
+]
+
+const faq = [
+  {
+    question: 'What is keyword cannibalization?',
+    answer:
+      'Two or more pages on one site showing in Google for the same search, so they split the impressions and clicks between them. It is only a problem when the pages answer the same need. A product page and a buying guide can both deserve to show.',
+  },
+  {
+    question: 'Is this keyword cannibalization checker free?',
+    answer:
+      'Yes. It reads your own Search Console export in the browser, with no account, and the file is not uploaded.',
+  },
+  {
+    question: 'Why can’t I use the zip from the Search Console Export button on its own?',
+    answer:
+      'That zip has a Queries table and a Pages table, but nothing that says which pages showed for which query. Cannibalization lives in that pairing, so the checker needs a query and page export from Search Analytics for Sheets or Looker Studio. The zip is still useful next to it, for each query’s own impressions.',
+  },
+  {
+    question: 'Should I merge every page this lists?',
+    answer:
+      'No. The list shows where two pages share a query in Search Console. It cannot see what each page is for. Read both pages first, then merge, redirect or relink only when they answer the same question.',
+  },
+  {
+    question: 'How is this different from the SEO Skill report?',
+    answer:
+      'The rules are the same. The report reads Search Console for you, so there is no export to make, and it checks the competing URLs live before you change anything.',
+  },
+]
+---
+
+<BaseLayout
+  title="Free keyword cannibalization checker for Search Console"
+  description="Find the searches where two or more of your pages share Google impressions. Ask your agent to read Search Console directly, or check a query and page export in your browser."
+  canonicalPath="/tools/keyword-cannibalization-checker"
+  {breadcrumbs}
+>
+  <main data-agent-content>
+    <Breadcrumbs {breadcrumbs} />
+    <PageHeader
+      title="Keyword cannibalization checker"
+      description="See which searches show more than one of your pages in Google, and how each page splits the impressions, from your own Search Console data."
+    />
+
+    <div class="docs-prose">
+      <h2>Check with your agent, no export needed</h2>
+      <p>
+        The easiest way is to let SEO Skill read Search Console for you. It
+        pulls which pages showed for each query straight from Search
+        Console, up to 100,000 rows from the last 28 days of final data, so
+        there is nothing to export. It also checks the top competing URLs
+        live: a page that now errors shows before you spend time on it, and
+        a page that now redirects counts as the page it points to.
+      </p>
+      <p>Add the hosted MCP server to your agent and sign in with Google:</p>
+    </div>
+
+    <SetupCommands id="cannibalization-setup" class="mt-6" />
+
+    <div class="docs-prose mt-8">
+      <p>Then ask:</p>
+      <CodeBlock value="Which queries is example.com cannibalizing, and which page should own each one?" wrap />
+      <p>
+        In a terminal, install the CLI with <code>npm i -g seo</code>, run{' '}
+        <code>seo start</code> to connect Search Console, then run the
+        cannibalization section of the report:
+      </p>
+      <CodeBlock value="seo report --site example.com --section cannibalization" />
+    </div>
+
+    <div class="docs-prose mt-16">
+      <h2>No account? Check an export in your browser</h2>
+      <p>
+        The checker below uses the same rules on a file instead. It needs a
+        CSV with a query and a page on each row, made in the steps under it.
+      </p>
+    </div>
+
+    <div class="mt-6">
+      <KeywordCannibalizationChecker />
+    </div>
+
+    <div class="docs-prose mt-16">
+      <h2>Export queries and pages for the checker</h2>
+      <p>
+        The Export button in Search Console keeps queries and pages in
+        separate tables, so it cannot show two pages sharing one search. Get
+        the pairs from the Search Console API with one of these free tools.
+      </p>
+      <ul>
+        <li>
+          <strong>Search Analytics for Sheets.</strong> Install the{' '}
+          <a href="https://searchanalyticsforsheets.com/" target="_blank" rel="noreferrer">Google Sheets add-on</a>,
+          pick your site and the last 28 days, group by Query and Page, and
+          request the data. Then choose File, Download, CSV.
+        </li>
+        <li>
+          <strong>Looker Studio.</strong> Add the{' '}
+          <a href="https://docs.cloud.google.com/looker/docs/studio/connect-to-search-console" target="_blank" rel="noreferrer">Search Console connector</a>{' '}
+          with the URL Impression table. Make a table with Query and Landing
+          Page, plus Url Clicks, Impressions and Average Position, then
+          export it as CSV.
+        </li>
+      </ul>
+      <p>
+        For each query’s own impressions, also export the same dates from
+        Performance in Search Console and add that zip (or its Queries file)
+        with the CSV. Without it, the checker adds up the page impressions,
+        and one search that showed two of your pages counts twice.
+      </p>
+
+      <h2>How the checker decides two pages compete</h2>
+      <p>
+        It uses the same rules as the cannibalization section of the{' '}
+        <a href="/docs/report">SEO report</a>, so the same rows give the same
+        list of queries.
+      </p>
+      <ul>
+        <li>A query needs at least 50 impressions over the export.</li>
+        <li>
+          A page counts as competing when it has at least 10 of the query’s
+          impressions and at least a tenth of them. Below that it is a
+          stray result, not a rival.
+        </li>
+        <li>
+          When one page takes more than 80% of the competing impressions,
+          Google has already picked it, and the query is left out.
+        </li>
+        <li>
+          Searches for your own brand are left out, along with search
+          operators and bare web addresses.
+        </li>
+      </ul>
+      <p>
+        Queries with the most impressions and the most even split between
+        pages come first. The page with the most clicks is marked as the
+        first one to read, not as the one to keep.
+      </p>
+
+      <h2>Decide what to do with each query</h2>
+      <p>
+        Open every page in a row and ask whether a searcher would be happy
+        landing on either. If yes, they compete: choose one, point your
+        internal links at it, and merge or redirect the weaker page when it
+        adds nothing. If they answer different needs (a category page and a
+        how-to guide, say), keep both and make each page’s focus clearer in
+        its title and headings.
+      </p>
+      <p>
+        Two pages sharing impressions is evidence of overlap, not proof of
+        lost traffic. Check again a few weeks after a change, with the same
+        date range, and compare.
+      </p>
+    </div>
+
+    <div class="docs-prose mt-16">
+      <h2>Keyword cannibalization questions</h2>
+    </div>
+    <div class="mt-6">
+      <FaqAccordion id="keyword-cannibalization-faq" items={faq} />
+    </div>
+  </main>
+</BaseLayout>

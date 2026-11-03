@@ -48,7 +48,7 @@
     "htmlparser2": "10.1.0",
     "libsql": "^0.5.29",
     "lighthouse": "13.5.0",
-    "linkedom": "^0.18.13",
+    "linkedom": "^0.18.14",
     "open": "^11.0.4",
     "p-queue": "^9.3.5",
     "p-retry": "^8.0.1",

@@ -51,6 +51,12 @@ is not audited yet is added, which starts its crawl and checks. `seo_page`
 uses a stored result while it is current. Every other account sees the tools
 unchanged.
 
+For an audited site, `seo_report` with section `issues` also keeps the
+issues list (`packages/core/src/commands/issues.ts`) in D1's `site_issues`,
+one row per account and property, deleted with the site or the account.
+For any other site the section stores nothing and returns the list as JSON
+for the agent to save and pass back as `saved`.
+
 ## Paid plan
 
 The weekly site audit is $50 a month per site (`src/billing.ts`), with

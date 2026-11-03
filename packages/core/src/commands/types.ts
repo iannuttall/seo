@@ -3,6 +3,7 @@ import { SeoError, type SeoErrorCode } from '../errors.js'
 import type { SearchAnalyticsQuery } from '../gsc/client/types.js'
 import type { AnalyticsAccess } from './analytics-site.js'
 import type { AuditAccess } from './audit.js'
+import type { IssueStore } from './issues.js'
 import type { LiveCheck } from './page-facts.js'
 import type { WeekData } from './week.js'
 
@@ -156,6 +157,9 @@ export type CommandDeps = {
   // Starts the weekly site audit of a property, paid where it needs a
   // plan. Only the hosted server sets it.
   startAudit?: (site: string) => Promise<StartAudit>
+  // Each site's list of issues and what the person marked them: a file on
+  // this machine, or the hosted account.
+  issues?: IssueStore
   now?: () => Date
 }
 

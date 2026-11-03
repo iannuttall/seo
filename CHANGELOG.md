@@ -1,5 +1,23 @@
 # Changelog
 
+## Unreleased
+
+### Added
+
+- `seo report --site <site> --section issues` keeps a list of the issues
+  found for a site between sessions: striking distance, low CTR and quick
+  wins from Search Console, and the weekly crawl's findings and pages that
+  dropped out of Google's index for a site in the weekly site audit. Each
+  issue has an id, what the latest check saw (found, not found, or not
+  checked when a check failed, was partial or capped) and a mark.
+  `--mark fixed`, `ignored` or `open` with `--issues <ids>` and an optional
+  `--note` records what the person decided. `seo_report` takes the same
+  `section`, `mark`, `issues` and `note`. The CLI and local MCP keep the
+  list in `issues.json` in the config folder; the hosted server keeps it
+  only for sites in the weekly site audit, and deletes it with the site.
+  For any other hosted site it says so and returns the list as JSON in
+  the `issues.json` shape for the agent to save, and takes it back as
+  `saved` so marks carry over.
 ## 0.13.3
 
 ### Fixed

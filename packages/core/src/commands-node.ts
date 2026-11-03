@@ -45,6 +45,7 @@ import { listSites } from './gsc/client/sites.js'
 import { readAhrefsApiKey } from './providers/ahrefs/credentials.js'
 import { readBingApiKey } from './providers/bing/credentials.js'
 import { readDataForSeoCredentials } from './providers/dataforseo/credentials.js'
+import { localIssues } from './storage/issues.js'
 
 // The core commands' functions for the CLI and the local MCP: Search Console
 // with the local Google sign-in and cache, and live page checks from this
@@ -85,6 +86,7 @@ export function nodeCommandDeps(options: {
     bing: localBing,
     bingConnect: LOCAL_BING_CONNECT,
     analytics: { accounts: localAccounts, signIn: LOCAL_SIGN_IN.signIn },
+    issues: localIssues,
     ...(cloudLinked() ? { week: cloudWeek } : {}),
   }
 }

@@ -10,6 +10,13 @@ import {
 import { runBingRows } from './bing.js'
 import { clickyLabel, clickySites, runClickyRows } from './clicky.js'
 import { INSPECT_LIMIT, MAX_INSPECT_LIMIT } from './indexing.js'
+import {
+  ISSUE_MARKS,
+  ISSUES_SECTION,
+  ISSUES_SECTION_TEXT,
+  NOTE_MAX,
+  SAVED_MAX,
+} from './issues.js'
 import type { Detail } from './present.js'
 import { runBingReport, runReport, SECTION_IDS, SECTIONS } from './report.js'
 import {
@@ -95,6 +102,33 @@ const detail = {
     .min(0)
     .default(0)
     .describe('rows only: the first row to return.'),
+}
+
+// The issues section's list: what the person decided about issues.
+const marks = {
+  mark: z
+    .enum(ISSUE_MARKS)
+    .optional()
+    .describe(
+      'Optional, with site and issues: fixed, ignored, or open to undo. Only when the person says so.',
+    ),
+  issues: z
+    .string()
+    .min(1)
+    .optional()
+    .describe('With mark: issue ids from the issues section, comma-separated.'),
+  note: z
+    .string()
+    .max(NOTE_MAX)
+    .optional()
+    .describe('Optional, with mark: why, in the person’s words.'),
+  saved: z
+    .string()
+    .max(SAVED_MAX)
+    .optional()
+    .describe(
+      'Optional, with section issues or mark, only where this server is not storing the list: the JSON the issues section returned last time, as the agent saved it.',
+    ),
 }
 
 export const DATA_SOURCES = [
@@ -189,7 +223,9 @@ export const SHARED_TOOLS: SharedTool[] = [
       SECTIONS,
     )
       .map(([id, text]) => `- ${id}: ${text}`)
-      .join('\n')}`,
+      .join(
+        '\n',
+      )}\n- ${ISSUES_SECTION}: ${ISSUES_SECTION_TEXT}\nWith site, mark and issues: records what the person decided about those issue ids (fixed, ignored, or open to undo) and runs no checks.`,
     input: z.object({
       site: site
         .optional()
@@ -197,13 +233,14 @@ export const SHARED_TOOLS: SharedTool[] = [
           'Leave it out for the summary of every audited site (weekly site audit beta). Otherwise a Search Console property or site, such as sc-domain:example.com, https://example.com/ or example.com.',
         ),
       section: z
-        .enum(SECTION_IDS)
+        .enum([...SECTION_IDS, ISSUES_SECTION])
         .optional()
         .describe(
           'Optional, needs site. Leave it out first; then ask for one section.',
         ),
       ...dates,
       ...detail,
+      ...marks,
     }),
     run: async (surface, input) => {
       if (!input.site) {
@@ -213,9 +250,28 @@ export const SHARED_TOOLS: SharedTool[] = [
             `section needs a site: ${surface.deps.call('report', { site: '<site>', section: input.section })}.`,
           )
         }
+        if (input.mark || input.issues) {
+          throw new CommandError(
+            'INVALID_INPUT',
+            `mark needs a site: ${surface.deps.call('report', { site: '<site>', mark: input.mark ?? 'fixed', issues: input.issues ?? '<id>' })}.`,
+          )
+        }
         return runAllSites(surface.deps, () => listSites(surface))
       }
       const target = input.site
+      if (input.mark || input.issues) {
+        return runReport(
+          {
+            site: await surface.resolveSite(target),
+            section: input.section,
+            mark: input.mark,
+            issues: input.issues?.split(','),
+            note: input.note,
+            saved: input.saved,
+          },
+          surface.deps,
+        )
+      }
       // A site with no Search Console property can still have Bing, on a
       // surface that reads Bing.
       const resolved = await surface
@@ -246,6 +302,7 @@ export const SHARED_TOOLS: SharedTool[] = [
           endDate: input.end_date,
           detail: input.detail,
           offset: input.offset,
+          saved: input.saved,
         },
         surface.deps,
       )
@@ -549,7 +606,7 @@ export const AUDIT_TOOLS: SharedTool[] = SHARED_TOOLS.map((shared) =>
           description: `${shared.description}\n- ${AUDIT_SECTION}: ${AUDIT_SECTION_TEXT}`,
           input: shared.input.extend({
             section: z
-              .enum([...SECTION_IDS, AUDIT_SECTION])
+              .enum([...SECTION_IDS, ISSUES_SECTION, AUDIT_SECTION])
               .optional()
               .describe(
                 'Optional. Leave it out first; then ask for one section.',
@@ -615,7 +672,7 @@ export const MCP_SERVER_INFO = {
 
 export const MCP_INSTRUCTIONS = `SEO Skill reads the person's own Search Console, Google Analytics, Bing Webmaster Tools, Clicky and optional keyword accounts, and returns facts with their dates and limits. It gives no advice.
 1. seo_sites: the properties the connected accounts can read.
-2. seo_report: start here. Without site it summarises last week across every site in the weekly site audit (beta) and names the site to ask about next. With site it shows that property's overview and every section's count and top rows; then ask for the one section you need.
+2. seo_report: start here. Without site it summarises last week across every site in the weekly site audit (beta) and names the site to ask about next. With site it shows that property's overview and every section's count and top rows; then ask for the one section you need. Section issues keeps a list of what it found for the site between sessions; mark records which the person fixed or wants ignored.
 3. seo_page for one URL, seo_compare for before and after a date, seo_index for Google's indexing reasons and pages that lost their clicks, seo_research for keyword, competitor and backlink data, and whether AI answers cite the site, from the DataForSEO or Ahrefs key the person saved, seo_data for raw rows, including Google Analytics, Bing and Clicky.`
 
 // How an MCP surface writes "run this next": the tool name and its inputs.

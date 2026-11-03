@@ -20,6 +20,13 @@ import {
   enginesText,
   NO_BING_HERE,
 } from './bing.js'
+import {
+  ISSUES_SECTION,
+  type IssueMark,
+  issuesPreview,
+  markIssues,
+  runIssues,
+} from './issues.js'
 import { temporaryRedirectNote } from './page-facts.js'
 import { type Detail, presentReport, preview, table } from './present.js'
 import {
@@ -497,9 +504,15 @@ export function pageFactsTable(
 
 export type ReportInput = DateInput & {
   site: string
-  section?: SectionId | typeof AUDIT_SECTION
+  section?: SectionId | typeof AUDIT_SECTION | typeof ISSUES_SECTION
   detail?: Detail
   offset?: number
+  // Marks these issue ids instead of running a report.
+  mark?: IssueMark
+  issues?: string[]
+  note?: string
+  // The issues list the agent saved, where the server keeps none.
+  saved?: string
 }
 
 const PAGE_SIZE = 50
@@ -583,7 +596,13 @@ async function allSections(
     )
     sections[AUDIT_SECTION] = { line: audit }
   }
-  const names = deps.audit ? [...ids, AUDIT_SECTION] : ids
+  // null: this surface keeps no list for the site.
+  const kept = deps.issues ? await deps.issues.read(input.site) : null
+  parts.push(
+    `## ${ISSUES_SECTION}\n${issuesPreview(kept, deps.call, input.site)}`,
+  )
+  sections[ISSUES_SECTION] = { total: kept?.length ?? null, stored: !!kept }
+  const names = [...ids, ...(deps.audit ? [AUDIT_SECTION] : []), ISSUES_SECTION]
   parts.push(
     `More: ${deps.call('report', { site: input.site, section: '<section>' })} for its rows (${names.join(', ')}). Page sections also check their top 20 URLs live and merge same-site redirects.`,
   )
@@ -728,6 +747,38 @@ export function runReport(
   input: ReportInput,
   deps: CommandDeps,
 ): Promise<CommandResult> {
+  if (input.mark || input.issues?.length) {
+    if (!input.mark || !input.issues?.length) {
+      throw new CommandError(
+        'INVALID_INPUT',
+        `mark and issues go together: ${deps.call('report', { site: input.site, mark: 'fixed', issues: '<id>,<id>' })}.`,
+      )
+    }
+    if (input.section && input.section !== ISSUES_SECTION) {
+      throw new CommandError(
+        'INVALID_INPUT',
+        'mark takes no section other than issues.',
+      )
+    }
+    return markIssues(
+      {
+        site: input.site,
+        mark: input.mark,
+        ids: input.issues,
+        note: input.note,
+        saved: input.saved,
+      },
+      deps,
+    )
+  }
+  if (input.section === ISSUES_SECTION) {
+    const now = deps.now ?? (() => new Date())
+    const read = sharedReader(deps.searchAnalytics)
+    const bing = once(() => bingFor(deps, input.site))
+    return runIssues(input, deps, (section, range) =>
+      build(read, input.site, section, range, now, bing),
+    )
+  }
   if (input.section === AUDIT_SECTION) {
     const audit = deps.audit
     if (!audit) {

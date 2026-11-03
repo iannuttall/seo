@@ -136,6 +136,12 @@ follows the site's `robots.txt`. It keeps, per site:
   read and add to the same results;
 - for each of those Search Console pages, its clicks and impressions in the
   last 28 days and its clicks in the 28 days before, replaced each day;
+- the issues list, only when you or your agent ask for it (`seo_report`
+  section `issues`): the striking distance, low CTR and quick win queries
+  and pages it found from Search Console (with their position, impressions,
+  clicks and CTR when last found), the crawl findings and index drops it
+  found, when each was found and checked, and what you marked each one,
+  with any note you gave; at most 500 issues per site;
 - how many URL Inspection checks each property used today;
 - how many pages a day Google can check for the site, and the folders worth
   adding as their own Search Console properties, with which of them you
@@ -251,7 +257,9 @@ The hosted MCP server itself does not read Bing data.
 ## How Google data is protected
 
 The software stores settings, OAuth tokens, cached API responses, and logs in
-local user directories. It does not save reports or crawls. It does not
+local user directories. It does not save reports or crawls, except the
+issues list you ask for with `seo report --section issues`, which it keeps
+in `issues.json` in its config folder. It does not
 upload Google API responses to a hosted SEO account or project database.
 Google API requests go directly from your machine to Google over HTTPS. The
 software does not send Search Console data to a research provider. `seo

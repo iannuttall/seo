@@ -176,11 +176,14 @@ export async function removeAuditSite(
     .first()
   if (!row) return
   await siteObject(env, userId, property).destroy()
-  await env.DB.prepare(
-    'DELETE FROM audit_sites WHERE user_id = ? AND property = ?',
-  )
-    .bind(userId, property)
-    .run()
+  await env.DB.batch([
+    env.DB.prepare(
+      'DELETE FROM audit_sites WHERE user_id = ? AND property = ?',
+    ).bind(userId, property),
+    env.DB.prepare(
+      'DELETE FROM site_issues WHERE user_id = ? AND property = ?',
+    ).bind(userId, property),
+  ])
 }
 
 // Every site of an account, for Delete everything.

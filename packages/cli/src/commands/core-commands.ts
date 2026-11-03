@@ -12,6 +12,9 @@ import {
   DIMENSIONS,
   type Dimension,
   INSPECT_LIMIT,
+  ISSUE_MARKS,
+  ISSUES_SECTION,
+  type IssueMark,
   MAX_INSPECT_LIMIT,
   RESEARCH_ACTIONS,
   RESEARCH_PROVIDERS,
@@ -50,6 +53,9 @@ const FLAGS: Record<string, string> = {
   detail: '--detail',
   offset: '--offset',
   max_urls: '--max-urls',
+  mark: '--mark',
+  issues: '--issues',
+  note: '--note',
 }
 
 const quote = (value: string | number) =>
@@ -143,21 +149,56 @@ export const reportCommand = defineCommand({
     },
     section: {
       type: 'string',
-      description: `Optional, needs --site. One of ${SECTION_IDS.join(', ')}.`,
+      description: `Optional, needs --site. One of ${[...SECTION_IDS, ISSUES_SECTION].join(', ')}. issues keeps a list of what was found for the site, on this machine.`,
     },
+    mark: {
+      type: 'string',
+      description: `With --site and --issues: ${ISSUE_MARKS.join(', ')}. Records what the person decided; runs no checks.`,
+    },
+    issues: {
+      type: 'string',
+      description:
+        'With --mark: issue ids from --section issues, comma-separated.',
+    },
+    note: { type: 'string', description: 'Optional, with --mark: why.' },
     ...dates,
     ...detail,
     ...common,
   },
   run: async ({ args }) => {
     const section = stringArg(args.section)
-    if (section && !SECTION_IDS.includes(section as SectionId)) {
+    const sections = [...SECTION_IDS, ISSUES_SECTION]
+    if (section && !sections.includes(section)) {
       throw new SeoError(
         'INVALID_INPUT',
-        `--section is one of ${SECTION_IDS.join(', ')}.`,
+        `--section is one of ${sections.join(', ')}.`,
       )
     }
     const target = stringArg(args.site)
+    const mark = stringArg(args.mark)
+    const issues = stringArg(args.issues)
+    if (mark || issues) {
+      if (mark && !ISSUE_MARKS.includes(mark as IssueMark)) {
+        throw new SeoError(
+          'INVALID_INPUT',
+          `--mark is one of ${ISSUE_MARKS.join(', ')}.`,
+        )
+      }
+      const site = await property(args, requireSite(target))
+      await run(args, (deps) =>
+        runReport(
+          {
+            site,
+            section: section as SectionId | undefined,
+            mark: mark as IssueMark | undefined,
+            issues: issues?.split(','),
+            note: stringArg(args.note),
+          },
+          deps,
+        ),
+      )
+      return
+    }
     // No site on a machine linked to a seoskill.dev account: the summary of
     // every audited site. Unlinked, the "no site given" error stays.
     if (!target && !section && cloudLinked()) {

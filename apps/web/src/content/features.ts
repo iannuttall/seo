@@ -3,8 +3,11 @@ import {
   Analytics01Icon,
   ChartLineData01Icon,
   McpServerIcon,
+  Notification01Icon,
+  RoboticIcon,
   Route01Icon,
   SearchList01Icon,
+  TaskDone01Icon,
 } from '@hugeicons/core-free-icons'
 
 // The feature pages. Each targets one search phrase and links to the
@@ -57,6 +60,24 @@ export const features = [
     title: 'ChatGPT SEO',
     text: 'Add SEO Skill to ChatGPT so its SEO answers start from your own clicks, queries and pages.',
     icon: AiChat02Icon,
+  },
+  {
+    path: '/features/seo-agent',
+    title: 'AI SEO agent',
+    text: 'Let the coding agent you already use read your search data and check its own SEO changes.',
+    icon: RoboticIcon,
+  },
+  {
+    path: '/features/seo-reporting',
+    title: 'SEO reporting tool',
+    text: 'Weekly and client SEO reports your agent writes from Search Console and Google Analytics.',
+    icon: TaskDone01Icon,
+  },
+  {
+    path: '/features/seo-monitoring',
+    title: 'SEO monitoring',
+    text: 'Free index and traffic checks your agent runs, and a weekly site audit in beta with alerts when a page drops out of Google.',
+    icon: Notification01Icon,
   },
 ] as const
 

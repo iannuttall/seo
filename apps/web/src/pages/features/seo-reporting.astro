@@ -1,0 +1,95 @@
+---
+import {
+  Analytics01Icon,
+  ChartLineData01Icon,
+  CloudIcon,
+  Calendar03Icon,
+} from '@hugeicons/core-free-icons'
+import FeaturePage from '@/components/FeaturePage.astro'
+
+const related = [
+  { title: 'seo report', text: 'Every section of the Search Console report and how to read it.', href: '/docs/report', icon: Analytics01Icon },
+  { title: 'seo compare', text: 'Equal periods before and after a release or a Google update.', href: '/docs/compare', icon: Calendar03Icon },
+  { title: 'Google Analytics', text: 'Connect Google Analytics so reports show search sessions too.', href: '/docs/analytics', icon: ChartLineData01Icon },
+  { title: 'Run in cloud agents', text: 'Run reports from an agent that works on a schedule.', href: '/docs/cloud-agents', icon: CloudIcon },
+]
+---
+
+<FeaturePage
+  title="SEO reporting tool for AI agents"
+  description="Automated SEO reports from your own Search Console and Google Analytics data. Ask your agent for a weekly or client SEO report built from real clicks, queries and sessions."
+  path="/features/seo-reporting"
+  lead="Ask your agent for an SEO report and it pulls the numbers from Search Console and Google Analytics first, then writes the summary you would otherwise put together by hand."
+  {related}
+>
+  <h2>What goes into the SEO report</h2>
+  <table>
+    <thead><tr><th>Part</th><th>What it shows</th></tr></thead>
+    <tbody>
+      <tr><td>Search totals</td><td>Clicks, impressions, click-through rate and average position against the previous period, by device, with the top pages and queries and how they changed.</td></tr>
+      <tr><td>Google Analytics</td><td>Organic Search sessions from Google and from every search engine, sessions from all channels, and visits from AI assistants, for the same dates.</td></tr>
+      <tr><td>Opportunities</td><td>Quick wins, titles with a low click-through rate, queries just off page one and pages on page two.</td></tr>
+      <tr><td>Problems</td><td>Content that lost clicks, queries where your own pages compete, and sudden traffic drops with the Google updates near them.</td></tr>
+      <tr><td>Before and after</td><td>Equal periods either side of a release or an update, for the whole site or a set of pages.</td></tr>
+    </tbody>
+  </table>
+  <p>
+    The report returns text and structured data. Your agent turns it into
+    the document you want, whether that is a short update for your team
+    or a monthly report for a client.
+  </p>
+
+  <h2>Run a report for one site</h2>
+  <p>Ask your agent:</p>
+  <pre><code>Run the SEO report for example.com</code></pre>
+  <p>In a terminal, with the CLI installed:</p>
+  <pre><code>seo report --site example.com</code></pre>
+  <p>
+    It covers the last 28 days of final Search Console data unless you give
+    other dates. Add <code>--section content-decay</code> (or any other
+    section) to open one part, and <code>--json</code> when a script or
+    agent reads the result.
+  </p>
+
+  <h2>Write a client SEO report</h2>
+  <p>
+    Link each Google account that can read a client's Search Console
+    property on your <a href="/account">account page</a>.
+    Every request uses the linked account that can read that site, so one
+    agent can report on all of your clients. Then give it the month:
+  </p>
+  <pre><code>Write the September 2026 SEO report for example.com. Use seo report
+for 2026-09-01 to 2026-09-30, then the content-decay and quick-wins
+sections. Keep every number as reported and say where data is missing.</code></pre>
+  <p>
+    SEO Skill gives your agent the facts. The layout, the branding and the
+    advice come from you and your agent, in whatever document you already
+    send. Keep Search Console clicks and Google Analytics sessions under
+    their own names, because they are different counts and a client will
+    ask why they do not match.
+  </p>
+
+  <h2>Automated SEO reports each week</h2>
+  <p>
+    A scheduled agent task can run the report every Monday and send you a
+    summary. Keep the same length of date window each time, so this week
+    compares fairly with the last. The <a href="/docs/cloud-agents">cloud
+    agents guide</a> shows how to give a scheduled agent your account.
+  </p>
+  <p>
+    Sites in the weekly site audit (a beta, $50 a month per site) also get a
+    Monday email and webhook with each site's week: Google index checks,
+    what the weekly crawl found and search clicks against the week before.
+    Running <code>seo report</code> with no site returns the same summary
+    across all of your audited sites.
+  </p>
+
+  <h2>Check the numbers before you send them</h2>
+  <p>
+    The click-through rate curve comes from your own site's data, so it is a
+    useful yardstick and not a Google rule. When a traffic drop lines up
+    with a Google update, the report shows that the dates overlap. It does
+    not prove the update caused the drop, so the client report should not
+    say so either.
+  </p>
+</FeaturePage>

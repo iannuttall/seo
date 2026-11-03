@@ -1,0 +1,105 @@
+---
+import {
+  Alert02Icon,
+  Analytics01Icon,
+  McpServerIcon,
+  Route01Icon,
+} from '@hugeicons/core-free-icons'
+import FeaturePage from '@/components/FeaturePage.astro'
+
+const related = [
+  { title: 'seo index', text: "Google's indexing reasons and pages that lost their clicks.", href: '/docs/indexing', icon: Alert02Icon },
+  { title: 'seo crawl', text: 'Crawl the site from your machine before and after a release.', href: '/docs/crawl', icon: Route01Icon },
+  { title: 'seo report', text: 'Search Console sections, including sudden traffic drops.', href: '/docs/report', icon: Analytics01Icon },
+  { title: 'Hosted MCP', text: 'Connect seoskill.dev/mcp and sign in with Google.', href: '/docs/mcp', icon: McpServerIcon },
+]
+---
+
+<FeaturePage
+  title="SEO monitoring for AI agents"
+  description="SEO monitoring for your own site: a weekly crawl, daily Google index checks and alerts when a page drops out of the index, plus free checks your agent runs when you ask."
+  path="/features/seo-monitoring"
+  lead="Find out when a page drops out of Google, a release breaks titles or links, or clicks fall away, from what Google and your own site report."
+  {related}
+>
+  <h2>Two ways to monitor a site</h2>
+  <table>
+    <thead><tr><th>What</th><th>Free tools</th><th>Weekly site audit</th></tr></thead>
+    <tbody>
+      <tr><td>Who runs it</td><td>Your agent, when you ask or on a schedule you set.</td><td>Our servers, in the background.</td></tr>
+      <tr><td>Site crawl</td><td>On your machine with the CLI.</td><td>Every week, with what is new, back or resolved since the crawl before.</td></tr>
+      <tr><td>Google index</td><td>100 known URLs a run on the hosted MCP, more from the CLI, each checked live.</td><td>Up to the property's full 2,000 URL Inspection checks a day, top pages first.</td></tr>
+      <tr><td>Alerts</td><td>None. Your agent reports what it finds.</td><td>Email and webhook when a page drops out of the index or comes back.</td></tr>
+      <tr><td>History</td><td>Your agent keeps each result.</td><td>Kept on the server for each audited site.</td></tr>
+      <tr><td>Cost</td><td>Free, with no usage cap.</td><td>$50 a month per site. In beta.</td></tr>
+    </tbody>
+  </table>
+
+  <h2>SEO alerts when a page leaves Google's index</h2>
+  <p>
+    Sites in the weekly site audit get alerts without asking. You get one
+    when a page drops out of Google's index or comes back. A top page's drop
+    is sent only after a second check agrees, so one odd answer from Google
+    does not wake you up. Each run of a site's background checks that finds
+    changes sends one alert for that site.
+  </p>
+  <p>
+    Each alert type has its own email and webhook switch, under Alerts on
+    the Beta tab of your <a href="/account">account
+    page</a>. Both are on by default, and the webhook starts once you save a
+    URL. Email goes to your first linked Google account, and every email
+    has a link that turns that type of email off.
+    Webhooks are signed the <a href="https://www.standardwebhooks.com/" target="_blank" rel="noreferrer">Standard Webhooks</a> way.
+    After a timeout or a server error, a webhook is tried again up to 6
+    times over about a day.
+  </p>
+  <p>
+    On Monday morning a weekly summary covers every audited site: Google
+    index checks, what the weekly crawl found and search clicks against the
+    week before.
+  </p>
+
+  <h2>What the weekly crawl watches</h2>
+  <ul>
+    <li>Internal links to errors, redirects and pages that could not be fetched.</li>
+    <li>Missing or duplicate titles, missing descriptions and missing H1s.</li>
+    <li>Pages that ask not to be indexed, and canonicals that point to another URL.</li>
+    <li>Sitemap URLs that do not return 200.</li>
+    <li>Thin pages under 100 words (a heuristic, not a Google rule).</li>
+    <li>Pages where JavaScript changes the title, canonical or robots tag.</li>
+  </ul>
+  <p>
+    Each finding says whether it is new, back or resolved since the crawl
+    before, so a release that broke something stands out from the problems
+    you already knew about.
+  </p>
+
+  <h2>Start the weekly site audit</h2>
+  <p>
+    Pick a Search Console property on the Sites tab of your account page,
+    or ask your agent:
+  </p>
+  <pre><code>Add example.com to the weekly site audit</code></pre>
+  <p>
+    Your first site opens Stripe Checkout. Your agent can give you that link,
+    but it cannot pay for you. The first crawl and index checks start once
+    the plan is active, and you can cancel any time.
+  </p>
+
+  <h2>Monitor with the free tools instead</h2>
+  <p>
+    Run the index check once for a baseline and keep the full result. Run it
+    again each week with the same number of pages and compare the two by
+    page and reason. A new reason is the thing to look at.
+    The <code>seo</code> command keeps no history here, so a scheduled agent task that
+    saves each week's result works well.
+  </p>
+  <pre><code>seo index --site example.com --detail full</code></pre>
+  <p>
+    After a release, crawl the site and compare it with the crawl from
+    before, and run <a href="/docs/compare">seo compare</a> on the release
+    date once a week or two of Search Console data has come in. The report's
+    traffic drop section looks for a sudden change in daily clicks that
+    lasted, with the date it started.
+  </p>
+</FeaturePage>

@@ -4,7 +4,8 @@
     "TOOL_QUOTA_HASH_KEY",
     "AHREFS_API_KEY",
     "DATAFORSEO_LOGIN",
-    "DATAFORSEO_PASSWORD"
+    "DATAFORSEO_PASSWORD",
+    "CLICKY_SITEKEY"
   ],
   "optionalRemote": []
 }

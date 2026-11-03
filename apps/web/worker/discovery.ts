@@ -306,3 +306,123 @@ export async function npmDownloads(sinceDay: string): Promise<NpmDay[] | null> {
     return null
   }
 }
+
+// Visits to seoskill.dev as Clicky counts them, in the Clicky site's time
+// zone: one row per day for 90 days, and the last 30 days by traffic source,
+// referring site, search engine and landing page. Values held by fewer than
+// three visits count as Other. Null without a sitekey or when Clicky fails,
+// so a failed call never reads as zero visits.
+export type Traffic = {
+  days: Array<{ day: string; visits: number }>
+  total: number
+  sources: Signups['source']
+  referrers: Signups['source']
+  engines: Signups['source']
+  landing: Signups['source']
+  // Clicky returned its row limit for a list, so rows past it are missing.
+  capped: boolean
+}
+
+type ClickyGroup = {
+  type?: string
+  error?: string
+  dates?: Array<{ date?: string; items?: Array<Record<string, unknown>> }>
+}
+
+const CLICKY_LIMIT = 1000
+
+async function clicky(
+  siteId: string,
+  sitekey: string,
+  params: Record<string, string>,
+): Promise<ClickyGroup[]> {
+  const url = new URL('https://api.clicky.com/api/stats/4')
+  url.search = new URLSearchParams({
+    site_id: siteId,
+    sitekey,
+    output: 'json',
+    app: 'seo',
+    limit: String(CLICKY_LIMIT),
+    ...params,
+  }).toString()
+  const response = await fetch(url, { signal: AbortSignal.timeout(5_000) })
+  if (!response.ok) throw new Error(`Clicky answered ${response.status}`)
+  const groups = await readJson<ClickyGroup[]>(response, 'Clicky', {
+    maxBytes: 2_000_000,
+  })
+  if (!Array.isArray(groups) || groups.some((group) => group?.error)) {
+    throw new Error('Clicky returned an error')
+  }
+  return groups
+}
+
+const visits = (item: Record<string, unknown>) => {
+  const value = Number(item.value)
+  return Number.isFinite(value) && value >= 0 ? value : 0
+}
+
+export async function clickyTraffic(
+  siteId: string,
+  sitekey: string | undefined,
+): Promise<Traffic | null> {
+  if (!sitekey) return null
+  try {
+    const [daily, lists] = await Promise.all([
+      clicky(siteId, sitekey, {
+        type: 'visitors',
+        daily: '1',
+        date: 'last-90-days',
+      }),
+      clicky(siteId, sitekey, {
+        type: 'traffic-sources,links-domains,searches-engines,pages-entrance',
+        date: 'last-30-days',
+      }),
+    ])
+    const items = (type: string) =>
+      lists.find((group) => group.type === type)?.dates?.[0]?.items ?? []
+    let capped = false
+    const list = (
+      type: string,
+      name: (item: Record<string, unknown>) => string,
+    ) => {
+      const rows = items(type)
+      if (rows.length >= CLICKY_LIMIT) capped = true
+      const pairs = rows.map(
+        (item) => [name(item) || 'Unknown', visits(item)] as [string, number],
+      )
+      return shares(
+        pairs,
+        pairs.reduce((sum, [, count]) => sum + count, 0),
+      )
+    }
+    const title = (item: Record<string, unknown>) =>
+      typeof item.title === 'string' ? item.title.replace(/^www\./, '') : ''
+    const days = (daily[0]?.dates ?? [])
+      .flatMap((date) =>
+        typeof date.date === 'string'
+          ? [{ day: date.date, visits: visits(date.items?.[0] ?? {}) }]
+          : [],
+      )
+      .sort((a, b) => a.day.localeCompare(b.day))
+    const sources = list('traffic-sources', title)
+    return {
+      days,
+      total: sources.reduce((sum, item) => sum + item.count, 0),
+      sources,
+      referrers: list('links-domains', title),
+      engines: list('searches-engines', (item) =>
+        siteName(typeof item.title === 'string' ? item.title : ''),
+      ),
+      landing: list('pages-entrance', (item) => {
+        try {
+          return new URL(String(item.url)).pathname
+        } catch {
+          return ''
+        }
+      }),
+      capped,
+    }
+  } catch {
+    return null
+  }
+}

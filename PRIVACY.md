@@ -443,6 +443,9 @@ The seoskill.dev website uses [Clicky](https://clicky.com/terms/privacy) to
 count visits and see which pages people use. Tracking cookies are disabled in
 the website code. Clicky receives normal browser and request information such
 as the page, referrer, device, and IP address.
+The public [usage stats page](https://seoskill.dev/stats) shows Clicky's
+visit totals per day and by traffic source, referring site, search engine and
+landing page, with any value under three visits counted as Other.
 
 On your first visit, the website sets one first-party cookie, `seo_first`,
 for 30 days. It holds the host name of the site that sent you (never the full

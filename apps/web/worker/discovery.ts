@@ -283,14 +283,16 @@ export async function recordSkills(env: Env, now = new Date()): Promise<void> {
 
 // npm's public download counts for the package, one row per day. Null when
 // npm does not answer, so a failed call never reads as zero downloads.
+// npm's figures change once a day, and its API sometimes refuses Cloudflare's
+// network, so a good answer is kept for six hours in each Cloudflare location
+// and a failed call is tried once more.
+const NPM_CACHE_SECONDS = 6 * 60 * 60
+
 export async function npmDownloads(sinceDay: string): Promise<NpmDay[] | null> {
   const today = new Date().toISOString().slice(0, 10)
-  try {
-    const response = await fetch(
-      `https://api.npmjs.org/downloads/range/${sinceDay}:${today}/seo`,
-      { signal: AbortSignal.timeout(5_000) },
-    )
-    if (!response.ok) return null
+  const url = `https://api.npmjs.org/downloads/range/${sinceDay}:${today}/seo`
+  const cache = typeof caches === 'undefined' ? null : caches.default
+  const read = async (response: Response) => {
     const json = await readJson<{ downloads?: unknown }>(response, 'npm', {
       maxBytes: 200_000,
     })
@@ -302,9 +304,37 @@ export async function npmDownloads(sinceDay: string): Promise<NpmDay[] | null> {
           : [],
       )
       .sort((a, b) => a.day.localeCompare(b.day))
-  } catch {
-    return null
   }
+  try {
+    const cached = await cache?.match(url)
+    if (cached) return await read(cached)
+  } catch {
+    // A broken cache entry falls through to npm.
+  }
+  for (let attempt = 0; attempt < 2; attempt += 1) {
+    try {
+      const response = await fetch(url, { signal: AbortSignal.timeout(4_000) })
+      if (!response.ok) continue
+      const body = await response.text()
+      const days = await read(new Response(body))
+      if (!days) continue
+      await cache
+        ?.put(
+          url,
+          new Response(body, {
+            headers: {
+              'content-type': 'application/json',
+              'cache-control': `max-age=${NPM_CACHE_SECONDS}`,
+            },
+          }),
+        )
+        .catch(() => {})
+      return days
+    } catch {
+      // Try once more, then report npm as unavailable.
+    }
+  }
+  return null
 }
 
 // Visits to seoskill.dev as Clicky counts them, in the Clicky site's time

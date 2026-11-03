@@ -1,0 +1,45 @@
+---
+// A fact block: one muted panel with a ruled row per fact, and the source
+// and checked date under it. `seo site check` fails the build when a block
+// has no source link (data-source) or no checked date (<time data-checked>).
+import { formatDate, type Source } from '../lib/parks'
+
+type Props = {
+  heading: string
+  rows: Array<{ label: string; value: string }>
+  source: Source
+}
+
+const { heading, rows, source } = Astro.props
+---
+
+<section class="mt-12" data-facts={heading}>
+  <h2 class="text-xl/7 font-medium text-foreground">{heading}</h2>
+  <div class="mt-4 overflow-hidden rounded-lg bg-muted">
+    <table class="w-full border-collapse text-left text-base">
+      <tbody>
+        {
+          rows.map((row) => (
+            <tr class="border-t border-border first:border-t-0">
+              <th scope="row" class="w-2/5 px-6 py-3.5 align-top font-normal text-foreground-muted">
+                {row.label}
+              </th>
+              <td class="px-6 py-3.5 align-top font-medium text-foreground">{row.value}</td>
+            </tr>
+          ))
+        }
+      </tbody>
+    </table>
+  </div>
+  <p class="mt-3 text-sm/6 text-foreground-soft">
+    Source:{' '}
+    <a
+      data-source
+      href={source.url}
+      rel="noreferrer"
+      target="_blank"
+      class="text-foreground-muted underline decoration-border underline-offset-4 hover:text-foreground hover:decoration-foreground"
+      >{source.name}</a
+    >, checked <time data-checked datetime={source.checked}>{formatDate(source.checked)}</time>.
+  </p>
+</section>

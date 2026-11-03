@@ -1,0 +1,58 @@
+---
+// A hub page: a real page with its own data, linking to every child.
+import PageHeader from '../../components/PageHeader.astro'
+import Base from '../../layouts/Base.astro'
+import { facilities, formatHectares, listText, type Region, regions } from '../../lib/parks'
+
+export function getStaticPaths() {
+  return regions.map((region) => ({ params: { region: region.slug }, props: { region } }))
+}
+
+const { region } = Astro.props as { region: Region }
+const total = region.parks.reduce((sum, park) => sum + park.areaHectares, 0)
+const largest = [...region.parks].sort((a, b) => b.areaHectares - a.areaHectares)[0]
+const withToilets = region.parks.filter((park) => park.toilets).length
+const title = `Parks in ${region.name}`
+const description = `The ${region.parks.length} parks in ${region.name}, with their size, opening year, facilities and dog rules, from the parks register.`
+const lead = [
+  `${region.name} has ${region.parks.length} parks covering ${formatHectares(total)} in total.`,
+  largest ? `The largest is ${largest.name} at ${formatHectares(largest.areaHectares)}.` : '',
+  `${withToilets} of them ${withToilets === 1 ? 'has' : 'have'} public toilets.`,
+]
+  .filter(Boolean)
+  .join(' ')
+---
+
+<Base title={title} description={description} breadcrumbs={[{ name: region.name, path: `/regions/${region.slug}` }]}>
+  <PageHeader title={title} description={lead} />
+
+  <article class="site-prose">
+    <h2>Every park in {region.name}</h2>
+    <div class="table-frame">
+      <table>
+        <thead>
+          <tr>
+            <th scope="col">Park</th>
+            <th scope="col">Size</th>
+            <th scope="col">Opened</th>
+            <th scope="col">Facilities</th>
+          </tr>
+        </thead>
+        <tbody>
+          {
+            region.parks.map((park) => (
+              <tr>
+                <td>
+                  <a href={`/parks/${park.slug}`}>{park.name}</a>
+                </td>
+                <td>{formatHectares(park.areaHectares)}</td>
+                <td>{park.opened}</td>
+                <td>{listText(facilities(park)) || 'None listed'}</td>
+              </tr>
+            ))
+          }
+        </tbody>
+      </table>
+    </div>
+  </article>
+</Base>

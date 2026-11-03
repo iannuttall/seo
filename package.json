@@ -57,6 +57,7 @@
   "files": [
     "dist",
     "skills",
+    "site-kit",
     "evals",
     "PRIVACY.md",
     "SECURITY.md",

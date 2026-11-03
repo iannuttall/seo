@@ -1,0 +1,88 @@
+name: Refresh data
+
+# Checks the data sources once a month and opens a pull request when one
+# changed. Nothing reaches the live site until a person reviews and merges
+# it, so a bad source can never rewrite a price, a rate or a health number
+# on its own. Set the schedule to how often your sources really change.
+on:
+  schedule:
+    - cron: "23 4 1 * *"
+  workflow_dispatch:
+
+concurrency:
+  group: refresh-data
+  cancel-in-progress: false
+
+permissions:
+  contents: write
+  pull-requests: write
+
+jobs:
+  refresh:
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    env:
+      BRANCH: automation/refresh-data-${{ github.run_id }}
+    steps:
+      - uses: actions/checkout@v6
+
+      - name: Stop when a refresh pull request is already open
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          open=$(gh pr list --state open --json headRefName --jq '[.[] | select(.headRefName | startswith("automation/refresh-data-"))] | length')
+          if [ "$open" -gt 0 ]; then
+            echo "A data refresh pull request is already open. Review it first."
+            exit 0
+          fi
+
+      - uses: pnpm/action-setup@v4
+
+      - uses: actions/setup-node@v6
+        with:
+          node-version-file: .node-version
+          cache: pnpm
+
+      - run: pnpm install --frozen-lockfile
+
+      - name: Fetch changed sources
+        run: pnpm data:refresh
+
+      - name: Validate the data
+        run: pnpm data:validate
+
+      - name: Check what changed
+        id: changes
+        run: |
+          changed=$( { git diff --name-only; git ls-files --others --exclude-standard; } | sort -u)
+          if [ -z "$changed" ]; then
+            echo "No source changed."
+            echo "changed=false" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+          unexpected=$(echo "$changed" | grep -Ev '^(src/data/|data/raw/)' || true)
+          if [ -n "$unexpected" ]; then
+            echo "The refresh changed files outside src/data and data/raw:"
+            echo "$unexpected"
+            exit 1
+          fi
+          echo "changed=true" >> "$GITHUB_OUTPUT"
+
+      - name: Build and check the site
+        if: steps.changes.outputs.changed == 'true'
+        run: pnpm build
+
+      - name: Open a pull request
+        if: steps.changes.outputs.changed == 'true'
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git switch -c "$BRANCH"
+          git add -A -- src/data data/raw
+          git commit -m "chore(data): refresh data sources"
+          git push origin "$BRANCH"
+          gh pr create --base "${{ github.event.repository.default_branch }}" --head "$BRANCH" \
+            --title "Refresh data sources" \
+            --body "A data source changed. Check the changed numbers against the source before you merge. \`seo site check\` passed on this build."

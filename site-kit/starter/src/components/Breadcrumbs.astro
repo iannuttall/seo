@@ -1,0 +1,27 @@
+---
+// The visible path. The layout builds the BreadcrumbList from the same list.
+type Props = {
+  items: Array<{ name: string; path: string }>
+}
+
+const { items } = Astro.props
+---
+
+<nav aria-label="Breadcrumb" class="mb-6 text-sm text-foreground-muted">
+  <ol class="flex flex-wrap items-center gap-1.5">
+    {
+      items.map((item, index) => (
+        <li class="flex items-center gap-1.5">
+          {index < items.length - 1 ? (
+            <a class="underline decoration-border underline-offset-4 hover:decoration-foreground" href={item.path}>
+              {item.name}
+            </a>
+          ) : (
+            <span class="text-foreground" aria-current="page">{item.name}</span>
+          )}
+          {index < items.length - 1 ? <span aria-hidden="true" class="text-border">/</span> : null}
+        </li>
+      ))
+    }
+  </ol>
+</nav>

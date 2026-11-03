@@ -1,0 +1,9 @@
+{
+  "name": "Example Parks",
+  "domain": "example.com",
+  "description": "Size, opening year and facilities for every park in the example parks register, with the source and the date each fact was checked.",
+  "language": "en-GB",
+  "aiTraining": false,
+  "indexNowKey": "",
+  "allowWords": []
+}

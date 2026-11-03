@@ -1,0 +1,5 @@
+# Packages whose install scripts may run: the bundler Astro uses and the
+# local Cloudflare runtime that wrangler uses.
+allowBuilds:
+  esbuild: true
+  workerd: true

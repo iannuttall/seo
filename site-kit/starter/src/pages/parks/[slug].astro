@@ -1,0 +1,95 @@
+---
+// The golden page. Every park page comes from this one template, and each
+// block shows only when the data has something to say.
+import { Tree02Icon } from '@hugeicons/core-free-icons'
+import Card from '../../components/Card.astro'
+import FactTable from '../../components/FactTable.astro'
+import FaqAccordion from '../../components/FaqAccordion.astro'
+import PageHeader from '../../components/PageHeader.astro'
+import Base from '../../layouts/Base.astro'
+import { answer, faqs, story } from '../../lib/narrative'
+import { formatHectares, type Park, parks, regionFor, sourceFor } from '../../lib/parks'
+
+export function getStaticPaths() {
+  return parks.map((park) => ({ params: { slug: park.slug }, props: { park } }))
+}
+
+const { park } = Astro.props as { park: Park }
+const region = regionFor(park)
+const source = sourceFor(park)
+const questions = faqs(park)
+const nearby = region.parks.filter((entry) => entry.slug !== park.slug).slice(0, 4)
+const yesNo = (value: boolean) => (value ? 'Yes' : 'No')
+const rows = [
+  { label: 'Size', value: formatHectares(park.areaHectares) },
+  { label: 'Opened', value: String(park.opened) },
+  { label: 'Toilets', value: yesNo(park.toilets) },
+  { label: 'Cafe', value: yesNo(park.cafe) },
+  { label: 'Playground', value: yesNo(park.playground) },
+  {
+    label: 'Dogs',
+    value: park.dogs === 'yes' ? 'Allowed' : park.dogs === 'on leads' ? 'On leads' : 'Not allowed',
+  },
+  {
+    label: 'Car park',
+    value:
+      park.parkingSpaces === null
+        ? 'Not listed'
+        : park.parkingSpaces === 0
+          ? 'None'
+          : `${park.parkingSpaces} spaces`,
+  },
+]
+const title = `${park.name}, ${park.region}`
+const description = `Size, opening year, toilets, parking and dog rules for ${park.name} in ${park.region}, from the parks register with the date it was checked.`
+---
+
+<Base
+  title={title}
+  description={description}
+  breadcrumbs={[
+    { name: region.name, path: `/regions/${region.slug}` },
+    { name: park.name, path: `/parks/${park.slug}` },
+  ]}
+  faqs={questions}
+>
+  <PageHeader title={park.name} description={answer(park)} />
+
+  <FactTable heading={`${park.name} at a glance`} rows={rows} source={source} />
+
+  <article class="site-prose mt-12">
+    <h2>How {park.name} compares</h2>
+    {story(park).map((sentence) => <p>{sentence}</p>)}
+  </article>
+
+  <section class="mt-12" aria-labelledby="visiting">
+    <h2 id="visiting" class="mb-4 text-xl/7 font-medium text-foreground">Visiting {park.name}</h2>
+    <FaqAccordion items={questions} />
+  </section>
+
+  {
+    nearby.length > 0 && (
+      <section class="mt-12" aria-labelledby="nearby">
+        <h2 id="nearby" class="mb-4 text-xl/7 font-medium text-foreground">Other parks in {region.name}</h2>
+        <div class="grid grid-cols-1 gap-2 sm:grid-cols-2">
+          {nearby.map((entry) => (
+            <Card
+              icon={Tree02Icon}
+              title={entry.name}
+              text={`${formatHectares(entry.areaHectares)}, opened in ${entry.opened}.`}
+              href={`/parks/${entry.slug}`}
+              link={`${entry.name} facts`}
+            />
+          ))}
+        </div>
+        <p class="mt-4 text-base text-foreground-muted">
+          See{' '}
+          <a class="text-primary underline underline-offset-4 hover:text-primary-hover" href={`/regions/${region.slug}`}>
+            every park in {region.name}
+          </a>
+          .
+        </p>
+      </section>
+    )
+  }
+</Base>

@@ -1,0 +1,18 @@
+---
+type Props = {
+  title: string
+  text: string
+  id?: string
+}
+
+const { title, text, id } = Astro.props
+---
+
+<div class="mb-10 flex max-w-2xl flex-col gap-3">
+  <h2 id={id} class="text-pretty text-2xl font-medium -tracking-[0.4px] text-foreground xl:text-3xl xl:-tracking-[0.6px]">
+    {title}
+  </h2>
+  <p class="text-pretty text-xl/7 font-medium -tracking-[0.15px] text-foreground-muted xl:text-2xl/8 xl:-tracking-[0.3px]">
+    {text}
+  </p>
+</div>

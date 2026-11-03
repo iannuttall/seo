@@ -1,0 +1,46 @@
+---
+import type { HTMLAttributes } from 'astro/types'
+import {
+  type ButtonSize,
+  type ButtonVariant,
+  getButtonClasses,
+} from './ui/button'
+
+type Shared = { variant?: ButtonVariant; size?: ButtonSize }
+type Props =
+  | (HTMLAttributes<'button'> & Shared & { href?: undefined })
+  | (HTMLAttributes<'a'> & Shared & { href: string })
+
+const {
+  class: className,
+  variant: requestedVariant,
+  size = 'default',
+  ...props
+} = Astro.props as Props
+// The main action is primary and side actions are quieter.
+// Links and submit buttons are primary unless a page asks otherwise. Side
+// actions use the outline button so they show on white and muted panels.
+const variant: ButtonVariant =
+  requestedVariant ??
+  (typeof props.href === 'string' || props.type === 'submit'
+    ? 'default'
+    : 'outline')
+const anchorProps =
+  typeof props.href === 'string' ? (props as HTMLAttributes<'a'>) : undefined
+const buttonProps = anchorProps
+  ? undefined
+  : (props as HTMLAttributes<'button'>)
+const classes = [getButtonClasses(variant, size), className]
+---
+
+{
+  anchorProps ? (
+    <a {...anchorProps} class:list={classes}>
+      <slot />
+    </a>
+  ) : (
+    <button {...buttonProps} class:list={classes}>
+      <slot />
+    </button>
+  )
+}

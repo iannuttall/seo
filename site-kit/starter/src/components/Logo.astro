@@ -1,0 +1,21 @@
+---
+// The site mark, drawn in one colour from currentColor, so it is dark in
+// light mode and light in dark mode. Replace the path with the site's own
+// mark, and the same path in public/favicon.svg and src/lib/og/card.ts.
+type Props = { class?: string; title?: string }
+
+const { class: className = 'size-8', title } = Astro.props
+---
+
+<svg
+  xmlns="http://www.w3.org/2000/svg"
+  viewBox="0 0 32 32"
+  fill="currentColor"
+  class={className}
+  role={title ? 'img' : undefined}
+  aria-label={title}
+  aria-hidden={title ? undefined : 'true'}
+>
+  {title ? <title>{title}</title> : null}
+  <path d="M16 3c-4 5-7 9-7 13a7 7 0 0 0 6 6.9V29h2v-6.1A7 7 0 0 0 23 16c0-4-3-8-7-13z"></path>
+</svg>

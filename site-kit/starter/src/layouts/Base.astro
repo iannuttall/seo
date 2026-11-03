@@ -1,0 +1,69 @@
+---
+// The one root layout. It owns the title, description, canonical, sharing
+// tags and JSON-LD for every page, so no page can forget one.
+import '../styles/globals.css'
+import Breadcrumbs from '../components/Breadcrumbs.astro'
+import Footer from '../components/Footer.astro'
+import Header from '../components/Header.astro'
+import { ogImagePath } from '../lib/og/path'
+import { type Breadcrumb, type Faq, pageGraph, serializeGraph } from '../lib/seo'
+import { absoluteUrl, pageTitle, site } from '../site'
+
+interface Props {
+  title: string
+  description: string
+  breadcrumbs?: Breadcrumb[]
+  faqs?: Faq[]
+}
+
+const { title, description, breadcrumbs = [], faqs } = Astro.props
+// One URL form: `/`, `/about`, `/parks/alder-common`.
+const path = Astro.url.pathname.replace(/(?:\/index)?(?:\.html)?\/?$/, '') || '/'
+const canonical = absoluteUrl(path)
+const ogImage = absoluteUrl(ogImagePath(path))
+const crumbs = [{ name: 'Home', path: '/' }, ...breadcrumbs]
+const graph = pageGraph({ name: title, description, path, breadcrumbs: crumbs, faqs })
+const fullTitle = pageTitle(title)
+---
+
+<!doctype html>
+<html lang={site.language}>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>{fullTitle}</title>
+    <meta name="description" content={description} />
+    <link rel="canonical" href={canonical} />
+    <meta name="color-scheme" content="light dark" />
+    {/* Start both font downloads before the stylesheet is parsed. */}
+    <link rel="preload" href="/fonts/InterLatinVF.woff2" as="font" type="font/woff2" crossorigin="anonymous" />
+    <link rel="preload" href="/fonts/JetBrainsMonoLatinVF.woff2" as="font" type="font/woff2" crossorigin="anonymous" />
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <link rel="sitemap" href="/sitemap.xml" />
+    <meta property="og:site_name" content={site.name} />
+    <meta property="og:type" content="website" />
+    <meta property="og:title" content={title} />
+    <meta property="og:description" content={description} />
+    <meta property="og:url" content={canonical} />
+    <meta property="og:image" content={ogImage} />
+    <meta property="og:image:width" content="1200" />
+    <meta property="og:image:height" content="630" />
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:image" content={ogImage} />
+    <script type="application/ld+json" set:html={serializeGraph(graph)} />
+  </head>
+  <body class="min-h-screen bg-background text-foreground antialiased">
+    <a
+      class="sr-only focus:not-sr-only focus:absolute focus:left-4 focus:top-4 focus:rounded-lg focus:bg-muted focus:px-3 focus:py-2"
+      href="#main">Skip to content</a
+    >
+    <div class="flex min-h-screen flex-col">
+      <Header />
+      <main id="main" class="site-frame flex-1 py-10">
+        {breadcrumbs.length > 0 && <Breadcrumbs items={crumbs} />}
+        <slot />
+      </main>
+      <Footer />
+    </div>
+  </body>
+</html>

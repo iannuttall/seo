@@ -1,0 +1,11 @@
+[
+  {
+    "id": "parks-register",
+    "name": "Example parks register",
+    "url": "https://example.org/data/parks.csv",
+    "checked": "2026-10-01",
+    "etag": null,
+    "lastModified": null,
+    "sha256": null
+  }
+]

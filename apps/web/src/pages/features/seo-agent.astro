@@ -1,0 +1,98 @@
+---
+import {
+  Analytics01Icon,
+  CloudIcon,
+  ComputerTerminal01Icon,
+  McpServerIcon,
+} from '@hugeicons/core-free-icons'
+import FeaturePage from '@/components/FeaturePage.astro'
+
+const related = [
+  { title: 'Hosted MCP', text: 'Connect seoskill.dev/mcp to Claude Code, Codex, Cursor or any remote MCP client.', href: '/docs/mcp', icon: McpServerIcon },
+  { title: 'CLI and local MCP', text: 'Install seo for the site crawl, internal links and Bing.', href: '/docs/cli', icon: ComputerTerminal01Icon },
+  { title: 'Run in cloud agents', text: 'Set up the same tools for a cloud agent or CI job that starts on a fresh machine each run.', href: '/docs/cloud-agents', icon: CloudIcon },
+  { title: 'seo report', text: 'The Search Console report your agent reads first.', href: '/docs/report', icon: Analytics01Icon },
+]
+---
+
+<FeaturePage
+  title="AI SEO agent with your own search data"
+  description="Turn Claude Code, Codex or Cursor into an AI SEO agent that reads your Search Console, Google Analytics and keyword data. Free MCP server, CLI and skill for SEO automation."
+  path="/features/seo-agent"
+  lead="The coding agent you already use can be your SEO agent. Connect SEO Skill and it reads your clicks, queries, index status and crawl before it suggests a change."
+  {related}
+>
+  <h2>What your SEO agent can do with SEO Skill</h2>
+  <p>
+    SEO Skill fetches your data and returns facts with their dates and
+    limits. It gives no advice. Your agent reads those facts, explains what
+    changed, and points to the pages and queries behind it. If the agent
+    also works in your site's code, it can make the change you agree on and
+    then check the page again.
+  </p>
+  <p>
+    You still decide what ships. The agent shows its evidence first, so you
+    can see why it wants to touch a page before anything changes.
+  </p>
+
+  <h2>Connect the hosted MCP or install the CLI</h2>
+  <p>
+    The hosted MCP needs nothing installed. Add it to your agent and sign in
+    with Google when it asks. For Claude Code:
+  </p>
+  <pre><code>claude mcp add --transport http --scope user seoskill https://seoskill.dev/mcp</code></pre>
+  <p>For Codex:</p>
+  <pre><code>codex mcp add seoskill --url https://seoskill.dev/mcp</code></pre>
+  <p>
+    The site crawl, internal links and Bing Webmaster Tools run on your own
+    machine. For those, install the CLI with <code>npm i -g seo</code> and
+    run <code>seo start</code>. Setup can add the skill to your agents (and
+    if you skip that, <code>seo skill install</code> adds it later).
+  </p>
+
+  <h2>Jobs to give your SEO agent</h2>
+  <table>
+    <thead><tr><th>Ask</th><th>What the agent reads</th></tr></thead>
+    <tbody>
+      <tr><td>What changed in search last week?</td><td>Clicks, impressions, click-through rate and position against the period before, with the pages and queries that moved.</td></tr>
+      <tr><td>Which titles should I rewrite?</td><td>Queries in positions 1 to 4 with a click-through rate below your site's own curve, and the page that ranks for each.</td></tr>
+      <tr><td>Why did this page stop getting clicks?</td><td>The live page, its Google index status and its queries against the period before.</td></tr>
+      <tr><td>Which pages are not indexed, and why?</td><td>Google's own indexing reasons for up to 100 known URLs a run, each checked live.</td></tr>
+      <tr><td>Did last week's release hurt search?</td><td>Equal periods before and after the release date, with any Google updates in the window.</td></tr>
+      <tr><td>What do competitors rank for that we don't?</td><td>Ranked keywords and SERPs from your own DataForSEO or Ahrefs key.</td></tr>
+    </tbody>
+  </table>
+
+  <h2>Automate SEO checks with a scheduled agent</h2>
+  <p>
+    SEO automation here means your agent runs the same checks on a schedule
+    and tells you what moved. A weekly task that runs the Search Console
+    report, opens the section that changed most and lists the pages to look
+    at is a good start. The <a href="/docs/cloud-agents">cloud agents
+    guide</a> shows how to give an agent that starts fresh each time access
+    to your account.
+  </p>
+  <p>
+    The report can also keep a list of the issues it found for a site, so
+    the next session starts where the last one stopped. Your agent marks
+    each issue fixed or ignored as you decide. The hosted server keeps that
+    list for sites in the weekly site audit. For any other site, your agent
+    saves the list and passes it back next time.
+  </p>
+  <p>
+    If you would rather we watch the site for you, the weekly site audit
+    crawls it every week and checks Google's index every day on our
+    servers, with alerts when a page drops out. It is in beta and costs $50
+    a month per site. The <a href="/features/seo-monitoring">SEO monitoring</a> page
+    explains what it covers.
+  </p>
+
+  <h2>Keep the agent honest about cause</h2>
+  <p>
+    A Google update in the same week as a drop shows that the timing
+    matched. It does not prove the update caused it.
+    A <code>noindex</code> tag is reported as what the page says, and it is only a problem if you
+    did not mean it. Ask your agent to show the evidence for a claim before
+    it rewrites twenty title tags on a hunch.
+  </p>
+</FeaturePage>

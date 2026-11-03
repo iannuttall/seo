@@ -316,7 +316,9 @@ analytics rows, site lists or request logs. Workers Logs are off. Read sign-ups 
 site, landing page and `utm_*`). A weekly cron sends the same kind of
 totals for the last 7 days to the maintainer's Telegram chat when
 `TELEGRAM_BOT_TOKEN` and `TELEGRAM_CHAT_ID` are set (`src/signup-report.ts`);
-it never sends a row for one person. The same cron reads the site's
+it never sends a row for one person. The site's public `/api/stats` shows
+the same groupings for every sign-up so far, with any value held by fewer
+than three sign-ups counted as Other (`apps/web/worker/discovery.ts`). The same cron reads the site's
 anonymous usage events (the `seo-telemetry` D1, SELECT only) and sends the
 week's failed runs as totals by version, split into expected states, network
 or provider trouble and errors, plus the week's installs and first audits

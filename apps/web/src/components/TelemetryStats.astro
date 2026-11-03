@@ -35,6 +35,24 @@ const metrics = [
   ['auditsThisMonth', 'Audits run this month'],
   ['hostedAccounts', 'Hosted MCP accounts'],
 ] as const
+
+// Smaller charts, two to a row. Each one has a summary line the script fills.
+const pairedCharts = [
+  ['daily-signups', 'Hosted MCP sign-ups per day'],
+  ['daily-installs', 'New installs per day'],
+  ['npm-downloads', 'npm downloads per day'],
+  ['monthly-runs', 'Commands run per month'],
+] as const
+
+const signupTabs = [
+  ['source', 'Source'],
+  ['entry', 'Path'],
+  ['client', 'Agent'],
+  ['landing', 'First page'],
+] as const
+
+const tabClass =
+  'inline-flex h-8 items-center justify-center rounded-md border border-transparent px-3 text-sm font-medium outline-none transition-colors hover:text-foreground focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/20 aria-selected:bg-card aria-selected:text-foreground aria-selected:shadow-xs'
 ---
 
 <div data-stats-root data-report-map={reportMapJson} aria-busy="true">
@@ -82,35 +100,40 @@ const metrics = [
         Use over time
       </h2>
       <p class="text-[0.9375rem] leading-7">
-        Commands run each day through the CLI and the hosted MCP, and new
-        installs. Days are recorded from 15 October 2026; the months before
-        that are below.
+        Commands run each day through the CLI and the hosted MCP, new installs,
+        sign-ups and npm downloads. Days are recorded from 15 October 2026; the
+        months before that are in the monthly chart. Hover or tap a bar for its
+        numbers.
       </p>
     </div>
     <Card inverted>
-      <div class="space-y-6 p-6">
-        <div>
-          <h3 class="text-sm font-medium">Commands run per day</h3>
-          <div class="mt-3" data-chart="daily-runs"></div>
-          <p class="mt-2 flex gap-4 text-xs text-foreground-muted">
-            <span><span class="mr-1 inline-block size-2 rounded-full bg-primary"></span> CLI and local MCP</span>
-            <span><span class="mr-1 inline-block size-2 rounded-full bg-foreground-muted"></span> Hosted MCP</span>
-          </p>
+      <div class="p-6">
+        <div class="space-y-1">
+          <h3 class="text-sm text-foreground-muted">Commands run per day</h3>
+          <p class="min-h-7 text-lg font-medium tabular-nums" data-chart-summary="daily-runs"></p>
         </div>
-        <div>
-          <h3 class="text-sm font-medium">Hosted MCP sign-ups per day</h3>
-          <div class="mt-3" data-chart="daily-signups"></div>
-        </div>
-        <div>
-          <h3 class="text-sm font-medium">New installs per day</h3>
-          <div class="mt-3" data-chart="daily-installs"></div>
-        </div>
-        <div>
-          <h3 class="text-sm font-medium">Commands run per month</h3>
-          <div class="mt-3" data-chart="monthly-runs"></div>
-        </div>
+        <div class="mt-4" data-chart="daily-runs"></div>
+        <p class="mt-3 flex gap-4 text-xs text-foreground-muted">
+          <span><span class="mr-1 inline-block size-2 rounded-full bg-primary"></span> CLI and local MCP</span>
+          <span><span class="mr-1 inline-block size-2 rounded-full bg-foreground-soft"></span> Hosted MCP</span>
+        </p>
       </div>
     </Card>
+    <div class="grid gap-2 lg:grid-cols-2">
+      {
+        pairedCharts.map(([key, title]) => (
+          <Card inverted>
+            <div class="p-6">
+              <div class="space-y-1">
+                <h3 class="text-sm text-foreground-muted">{title}</h3>
+                <p class="min-h-7 text-lg font-medium tabular-nums" data-chart-summary={key}></p>
+              </div>
+              <div class="mt-4" data-chart={key}></div>
+            </div>
+          </Card>
+        ))
+      }
+    </div>
   </section>
 
   <section class="mb-14 space-y-5" aria-labelledby="skills-heading" data-agent-markdown="exclude">
@@ -119,24 +142,58 @@ const metrics = [
         Discovery on skills.sh
       </h2>
       <p class="text-[0.9375rem] leading-7">
-        Checked once a day: the skill's install count on skills.sh, and where it
-        shows when an agent runs <code>npx skills find</code> with each search.
-        1 is first. A dash means it is not in the list.
+        Checked once a day: the skill's install count on skills.sh, its place on
+        the all-time and trending leaderboards, and where it shows when an agent
+        runs <code>npx skills find</code> with each search. 1 is first.
       </p>
     </div>
-    <Card inverted>
-      <div class="p-6">
-        <h3 class="text-sm font-medium">skills.sh installs</h3>
-        <div class="mt-3" data-chart="skills-installs"></div>
-      </div>
-    </Card>
+    <div class="grid gap-2 lg:grid-cols-2">
+      <Card inverted>
+        <div class="p-6">
+          <div class="space-y-1">
+            <h3 class="text-sm text-foreground-muted">New skills.sh installs per day</h3>
+            <p class="min-h-7 text-lg font-medium tabular-nums" data-chart-summary="skills-installs"></p>
+          </div>
+          <div class="mt-4" data-chart="skills-installs"></div>
+        </div>
+      </Card>
+      <Card inverted>
+        <div class="p-6">
+          <div class="space-y-1">
+            <h3 class="text-sm text-foreground-muted">Leaderboard place</h3>
+            <p class="min-h-7 text-lg font-medium tabular-nums" data-chart-summary="skills-ranks"></p>
+          </div>
+          <div class="mt-4" data-chart="skills-ranks"></div>
+          <div
+            role="tablist"
+            aria-label="Leaderboard"
+            class="mt-3 inline-flex h-9 items-center gap-1 rounded-lg bg-foreground/[0.06] p-0.5 text-foreground-muted"
+          >
+            <button type="button" role="tab" aria-selected="true" data-rank-tab="all-time" class={tabClass}>All time</button>
+            <button type="button" role="tab" aria-selected="false" tabindex="-1" data-rank-tab="trending" class={tabClass}>Trending</button>
+          </div>
+        </div>
+      </Card>
+    </div>
     <div class="docs-prose">
       <div class="table-frame">
-        <table class="min-w-0">
-          <thead><tr><th>Search</th><th class="text-right">Place</th><th class="text-right">A week ago</th></tr></thead>
-          <tbody class="animate-pulse" data-skills-table data-stats-loading><tr><td colspan="3">No checks yet</td></tr></tbody>
+        <table class="min-w-0 [&_td]:min-w-0 [&_th]:min-w-0">
+          <thead>
+            <tr>
+              <th>Search</th>
+              <th class="text-right">Place</th>
+              <th class="text-right">Change</th>
+              <th class="whitespace-nowrap text-right">Each day</th>
+            </tr>
+          </thead>
+          <tbody class="animate-pulse" data-skills-table data-stats-loading><tr><td colspan="4">No checks yet</td></tr></tbody>
         </table>
       </div>
+      <p class="mt-3 text-sm text-foreground-muted">
+        A dash means the skill is not in the list for that search. Change
+        compares today's place with a week ago, and New marks a search where it
+        started showing in the last two weeks.
+      </p>
     </div>
   </section>
 
@@ -147,7 +204,7 @@ const metrics = [
       </h2>
       <div class="docs-prose">
         <div class="table-frame">
-          <table class="min-w-0">
+          <table class="min-w-0 [&_td]:min-w-0 [&_th]:min-w-0">
             <thead><tr><th>Agent</th><th class="text-right">Installs</th><th class="text-right">Share</th></tr></thead>
             <tbody class="animate-pulse" data-agent-table="installs" data-stats-loading><tr><td colspan="3">No recorded events</td></tr></tbody>
           </table>
@@ -160,7 +217,7 @@ const metrics = [
       </h2>
       <div class="docs-prose">
         <div class="table-frame">
-          <table class="min-w-0">
+          <table class="min-w-0 [&_td]:min-w-0 [&_th]:min-w-0">
             <thead><tr><th>Agent</th><th class="text-right">Audits</th><th class="text-right">Share</th></tr></thead>
             <tbody class="animate-pulse" data-agent-table="audits" data-stats-loading><tr><td colspan="3">No recorded events</td></tr></tbody>
           </table>
@@ -181,9 +238,50 @@ const metrics = [
       </div>
       <div class="docs-prose">
         <div class="table-frame">
-          <table class="min-w-0">
-            <thead><tr><th>Command</th><th class="text-right">Runs</th></tr></thead>
-            <tbody class="animate-pulse" data-command-table data-stats-loading><tr><td colspan="2">No recorded events</td></tr></tbody>
+          <table class="min-w-0 [&_td]:min-w-0 [&_th]:min-w-0">
+            <thead><tr><th>Command</th><th class="text-right">Runs</th><th class="text-right">Share</th></tr></thead>
+            <tbody class="animate-pulse" data-command-table data-stats-loading><tr><td colspan="3">No recorded events</td></tr></tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+    <section class="min-w-0 space-y-5" aria-labelledby="signup-sources-heading" data-signups>
+      <div class="space-y-2">
+        <h2 id="signup-sources-heading" class="text-xl font-medium leading-tight">
+          Where sign-ups come from
+        </h2>
+        <p class="text-base leading-7 text-foreground-muted" data-signups-note>
+          Hosted MCP sign-ups by the site that sent them, how they signed up,
+          their agent and the first page they opened. Any value with fewer than
+          three sign-ups counts as Other.
+        </p>
+      </div>
+      <div
+        role="tablist"
+        aria-label="Group sign-ups by"
+        class="inline-flex h-9 max-w-full items-center gap-1 overflow-x-auto rounded-lg bg-muted p-0.5 text-foreground-muted"
+      >
+        {
+          signupTabs.map(([key, label], index) => (
+            <button
+              type="button"
+              role="tab"
+              aria-controls="signup-sources-table"
+              aria-selected={index === 0 ? 'true' : 'false'}
+              tabindex={index === 0 ? undefined : -1}
+              data-signup-tab={key}
+              class={tabClass}
+            >
+              {label}
+            </button>
+          ))
+        }
+      </div>
+      <div class="docs-prose !mt-0">
+        <div class="table-frame">
+          <table class="min-w-0 [&_td]:min-w-0 [&_th]:min-w-0" id="signup-sources-table" role="tabpanel">
+            <thead><tr><th data-signup-column>Source</th><th class="whitespace-nowrap text-right">Sign-ups</th><th class="text-right">Share</th></tr></thead>
+            <tbody class="animate-pulse" data-signup-table data-stats-loading><tr><td colspan="3">No recorded sign-ups</td></tr></tbody>
           </table>
         </div>
       </div>
@@ -203,6 +301,11 @@ const metrics = [
             appear. Runs through the hosted MCP count as audits with no install behind them.
           </p>
           <p>
+            npm downloads count every install, update and CI run, so they run well
+            ahead of recorded installs. skills.sh counts installs of the skill
+            through its own CLI. Neither is a count of people.
+          </p>
+          <p>
             The totals cover events recorded since anonymous collection began. Read
             the <a class="text-primary underline underline-offset-4 hover:text-primary-hover" href="/telemetry">full telemetry specification</a>
             {' '}or inspect the{' '}
@@ -212,6 +315,13 @@ const metrics = [
       </div>
     </Card>
   </section>
+
+  <div
+    role="tooltip"
+    hidden
+    data-chart-tooltip
+    class="pointer-events-none fixed left-0 top-0 z-50 min-w-36 max-w-64 rounded-md bg-foreground px-3 py-2 text-xs leading-5 text-background"
+  ></div>
 </div>
 
 <script>
@@ -233,10 +343,43 @@ const metrics = [
       ? `${value.toFixed(1).replace('.0', '')}%`
       : '0%'
 
-  const cell = (value: string, align = 'left') => {
-    const element = document.createElement('td')
-    element.className = align === 'right' ? 'text-right' : 'text-left'
-    element.textContent = value
+  const dayDate = (day: string) => new Date(`${day}T00:00:00Z`)
+  const shortDay = (day: string) =>
+    dayDate(day).toLocaleDateString('en-GB', {
+      day: 'numeric',
+      month: 'short',
+      timeZone: 'UTC',
+    })
+  const longDay = (day: string) =>
+    dayDate(day).toLocaleDateString('en-GB', {
+      weekday: 'short',
+      day: 'numeric',
+      month: 'short',
+      year: 'numeric',
+      timeZone: 'UTC',
+    })
+  const monthName = (month: string) =>
+    dayDate(`${month}-01`).toLocaleDateString('en-GB', {
+      month: 'short',
+      year: 'numeric',
+      timeZone: 'UTC',
+    })
+
+  const el = <K extends keyof HTMLElementTagNameMap>(
+    tag: K,
+    className = '',
+    content = '',
+  ) => {
+    const node = document.createElement(tag)
+    if (className) node.className = className
+    if (content) node.textContent = content
+    return node
+  }
+
+  const cell = (value: string | Node, align = 'left') => {
+    const element = el('td', align === 'right' ? 'text-right tabular-nums' : 'text-left')
+    if (typeof value === 'string') element.textContent = value
+    else element.append(value)
     return element
   }
 
@@ -248,22 +391,45 @@ const metrics = [
     return row
   }
 
-  const renderAgents = (
+  // A share cell: a small bar scaled to the largest row, then the percent.
+  const shareCell = (value: number, largest: number) => {
+    const wrap = el('span', 'inline-flex items-center justify-end gap-2')
+    const track = el('span', 'hidden h-1.5 w-16 overflow-hidden rounded-full bg-foreground/10 sm:inline-block')
+    const fill = el('span', 'block h-full rounded-full bg-primary')
+    fill.style.width = `${largest > 0 ? Math.max(2, (value / largest) * 100) : 0}%`
+    track.append(fill)
+    wrap.append(track, el('span', 'w-12 text-right', percent(value)))
+    return cell(wrap, 'right')
+  }
+
+  const agentLabels: Record<string, string> = {
+    'claude-code': 'Claude Code',
+    codex: 'Codex',
+    cursor: 'Cursor',
+    cli: 'CLI',
+    unknown: 'Unknown',
+  }
+
+  type ShareRow = { name: string; count: number; percent: number }
+
+  const renderShares = (
     table: Element | null,
-    rows: Array<{ agent: string; count: number; percent: number }>,
+    rows: ShareRow[],
+    empty = 'No recorded events',
   ) => {
     if (!(table instanceof HTMLElement)) return
     table.replaceChildren()
     if (rows.length === 0) {
-      table.append(emptyRow(3))
+      table.append(emptyRow(3, empty))
       return
     }
+    const largest = Math.max(...rows.map((item) => item.percent))
     for (const item of rows) {
-      const row = document.createElement('tr')
+      const row = el('tr', 'transition-colors hover:bg-foreground/[0.03]')
       row.append(
-        cell(item.agent),
+        cell(item.name),
         cell(count(item.count), 'right'),
-        cell(percent(item.percent), 'right'),
+        shareCell(item.percent, largest),
       )
       table.append(row)
     }
@@ -285,12 +451,7 @@ const metrics = [
   const reportCommand = (report: string) =>
     reportMap[report]?.command ?? 'Removed reports'
 
-  const renderCommands = (
-    table: Element | null,
-    rows: Array<{ report: string; count: number }>,
-  ) => {
-    if (!(table instanceof HTMLElement)) return
-    table.replaceChildren()
+  const renderCommands = (rows: Array<{ report: string; count: number }>) => {
     const totals = new Map<string, number>()
     for (const item of rows) {
       if (!(item.count > 0)) continue
@@ -298,94 +459,447 @@ const metrics = [
       if (command === 'Removed reports') continue
       totals.set(command, (totals.get(command) ?? 0) + item.count)
     }
-    const sorted = [...totals.entries()].sort(
-      (a, b) => b[1] - a[1] || a[0].localeCompare(b[0]),
+    const total = [...totals.values()].reduce((a, b) => a + b, 0)
+    renderShares(
+      document.querySelector('[data-command-table]'),
+      [...totals.entries()]
+        .sort((a, b) => b[1] - a[1] || a[0].localeCompare(b[0]))
+        .map(([name, value]) => ({
+          name,
+          count: value,
+          percent: total > 0 ? Math.round((value / total) * 1000) / 10 : 0,
+        })),
     )
-    if (sorted.length === 0) {
-      table.append(emptyRow(2))
-      return
-    }
-    for (const [command, total] of sorted) {
-      const row = document.createElement('tr')
-      row.append(cell(command), cell(count(total), 'right'))
-      table.append(row)
-    }
   }
 
-  type Bar = { label: string; values: number[] }
+  // Charts: plain SVG drawn at the container's real width, so text stays
+  // crisp. Hover, tap or arrow keys show a tooltip for one day or month.
+  type Series = { name: string; color: string }
+  type Point = {
+    label: string
+    values: Array<number | null>
+    notes?: string[]
+  }
+  type ChartOptions = {
+    series: Series[]
+    kind?: 'bar' | 'line'
+    // Lower is better (a place in a list): 1 sits at the top.
+    invert?: boolean
+    compact?: boolean
+    format?: (value: number) => string
+    missing?: string
+    empty?: string
+    title?: (label: string) => string
+    axisLabel?: (label: string) => string
+    description: string
+  }
 
-  // A small bar chart in plain SVG: one bar per item, stacked values, the
-  // largest total on the scale. Each bar has a title with its numbers.
-  const barChart = (target: Element | null, bars: Bar[], names: string[]) => {
-    if (!(target instanceof HTMLElement)) return
-    target.replaceChildren()
-    if (bars.length === 0) {
-      const empty = document.createElement('p')
-      empty.className = 'text-sm text-foreground-muted'
-      empty.textContent = 'No data yet.'
-      target.append(empty)
-      return
+  const ns = 'http://www.w3.org/2000/svg'
+  const svgNode = (tag: string, attributes: Record<string, string | number>) => {
+    const node = document.createElementNS(ns, tag)
+    for (const [key, value] of Object.entries(attributes)) {
+      node.setAttribute(key, String(value))
     }
-    const ns = 'http://www.w3.org/2000/svg'
-    const width = 600
-    const height = 140
-    const max = Math.max(1, ...bars.map((bar) => bar.values.reduce((a, b) => a + b, 0)))
-    const step = width / bars.length
-    const svg = document.createElementNS(ns, 'svg')
-    svg.setAttribute('viewBox', `0 0 ${width} ${height + 18}`)
-    svg.setAttribute('class', 'w-full')
-    svg.setAttribute('role', 'img')
-    const fills = ['var(--color-primary)', 'var(--color-foreground-muted)']
-    bars.forEach((bar, index) => {
-      let top = height
-      bar.values.forEach((value, part) => {
-        const size = (value / max) * (height - 4)
-        top -= size
-        const rect = document.createElementNS(ns, 'rect')
-        rect.setAttribute('x', String(index * step + step * 0.15))
-        rect.setAttribute('y', String(top))
-        rect.setAttribute('width', String(Math.max(1, step * 0.7)))
-        rect.setAttribute('height', String(size))
-        rect.setAttribute('rx', '1.5')
-        rect.setAttribute('fill', fills[part] ?? fills[0] ?? '')
-        const title = document.createElementNS(ns, 'title')
-        title.textContent = `${bar.label}: ${bar.values.map((item, i) => `${names[i] ?? ''} ${count(item)}`).join(', ')}`
-        rect.append(title)
-        svg.append(rect)
-      })
+    return node
+  }
+
+  const tooltip = document.querySelector('[data-chart-tooltip]')
+
+  const showTooltip = (
+    point: Point,
+    options: ChartOptions,
+    x: number,
+    y: number,
+  ) => {
+    if (!(tooltip instanceof HTMLElement)) return
+    tooltip.replaceChildren()
+    tooltip.append(
+      el('p', 'font-medium', options.title ? options.title(point.label) : point.label),
+    )
+    const format = options.format ?? count
+    options.series.forEach((series, index) => {
+      const value = point.values[index]
+      const line = el('p', 'flex items-center justify-between gap-4')
+      const name = el('span', 'inline-flex items-center gap-1.5')
+      const dot = el('span', 'inline-block size-2 rounded-full')
+      dot.style.background = series.color
+      name.append(dot, document.createTextNode(series.name))
+      line.append(
+        name,
+        el(
+          'span',
+          'tabular-nums',
+          value === null || value === undefined
+            ? (options.missing ?? 'No data')
+            : format(value),
+        ),
+      )
+      tooltip.append(line)
     })
-    const label = (text: string, x: number, anchor: string) => {
-      const node = document.createElementNS(ns, 'text')
-      node.setAttribute('x', String(x))
-      node.setAttribute('y', String(height + 14))
-      node.setAttribute('text-anchor', anchor)
-      node.setAttribute('font-size', '11')
-      node.setAttribute('fill', 'var(--color-foreground-muted)')
-      node.textContent = text
-      svg.append(node)
+    for (const note of point.notes ?? []) {
+      tooltip.append(el('p', 'opacity-70', note))
     }
-    label(bars[0]?.label ?? '', 0, 'start')
-    label(bars.at(-1)?.label ?? '', width, 'end')
-    const peak = document.createElementNS(ns, 'text')
-    peak.setAttribute('x', '0')
-    peak.setAttribute('y', '10')
-    peak.setAttribute('font-size', '11')
-    peak.setAttribute('fill', 'var(--color-foreground-muted)')
-    peak.textContent = `max ${count(max)}`
-    svg.append(peak)
-    target.append(svg)
+    tooltip.hidden = false
+    const box = tooltip.getBoundingClientRect()
+    const left =
+      x + 14 + box.width > window.innerWidth ? x - 14 - box.width : x + 14
+    const top = Math.max(8, Math.min(y - box.height - 10, window.innerHeight - box.height - 8))
+    tooltip.style.transform = `translate(${Math.max(8, left)}px, ${top}px)`
   }
 
+  const hideTooltip = () => {
+    if (tooltip instanceof HTMLElement) tooltip.hidden = true
+  }
+
+  const niceMax = (value: number) => {
+    if (value <= 1) return 1
+    const power = 10 ** Math.floor(Math.log10(value))
+    const scaled = value / power
+    const step = scaled <= 1 ? 1 : scaled <= 2 ? 2 : scaled <= 2.5 ? 2.5 : scaled <= 5 ? 5 : 10
+    return step * power
+  }
+
+  const charts = new Map<HTMLElement, { points: Point[]; options: ChartOptions }>()
+  const resize = new ResizeObserver((entries) => {
+    for (const entry of entries) {
+      if (entry.target instanceof HTMLElement) renderChart(entry.target)
+    }
+  })
+
+  const drawChart = (
+    target: Element | null,
+    points: Point[],
+    options: ChartOptions,
+  ) => {
+    if (!(target instanceof HTMLElement)) return
+    const known = charts.has(target)
+    charts.set(target, { points, options })
+    if (!known) resize.observe(target)
+    renderChart(target)
+  }
+
+  function renderChart(target: HTMLElement) {
+    const chart = charts.get(target)
+    if (!chart) return
+    const { points, options } = chart
+    target.replaceChildren()
+    const values = points.flatMap((point) =>
+      point.values.filter((value): value is number => typeof value === 'number'),
+    )
+    if (points.length === 0 || values.length === 0) {
+      target.append(el('p', 'text-sm text-foreground-muted', options.empty ?? 'No data yet.'))
+      return
+    }
+    const compact = options.compact === true
+    const kind = options.kind ?? 'bar'
+    const width = Math.max(compact ? 80 : 240, Math.round(target.clientWidth || 600))
+    const height = compact ? 24 : 168
+    const top = compact ? 3 : 14
+    const bottom = compact ? 3 : 22
+    const plot = height - top - bottom
+    const format = options.format ?? count
+
+    // Bars stack from zero. Lines span their own range, flipped when lower
+    // is better.
+    const stacked = points.map((point) =>
+      point.values.reduce<number>((sum, value) => sum + (value ?? 0), 0),
+    )
+    let low = 0
+    let high = kind === 'bar' ? niceMax(Math.max(...stacked)) : Math.max(...values)
+    if (kind === 'line') {
+      low = Math.min(...values)
+      if (low === high) {
+        low = Math.max(options.invert ? 1 : 0, low - 1)
+        high += 1
+      }
+    }
+    const scale = (value: number) => {
+      const share = (value - low) / (high - low || 1)
+      return options.invert ? top + share * plot : top + plot - share * plot
+    }
+    const step = width / points.length
+    const svg = svgNode('svg', {
+      width,
+      height,
+      viewBox: `0 0 ${width} ${height}`,
+      class: 'block overflow-visible',
+      role: 'img',
+      'aria-label': options.description,
+    })
+
+    if (!compact) {
+      const ticks = kind === 'bar' ? [0, high / 2, high] : [low, high]
+      for (const tick of ticks) {
+        const y = Math.round(scale(tick)) + 0.5
+        svg.append(
+          svgNode('line', {
+            x1: 0,
+            x2: width,
+            y1: y,
+            y2: y,
+            stroke: 'var(--color-foreground)',
+            'stroke-opacity': tick === 0 ? 0.15 : 0.07,
+          }),
+        )
+        // A halo in the panel colour keeps the label readable over a line.
+        const label = svgNode('text', {
+          x: 0,
+          y: y - 4,
+          'font-size': 11,
+          fill: 'var(--color-foreground-muted)',
+          stroke: 'var(--color-muted)',
+          'stroke-width': 3,
+          'paint-order': 'stroke',
+        })
+        // The zero line needs no label, and one would sit on the first bar.
+        if (kind === 'bar' && tick === 0) continue
+        label.textContent = format(tick)
+        svg.append(label)
+      }
+      const axis = options.axisLabel ?? ((label: string) => label)
+      const marks =
+        points.length > 2
+          ? [0, Math.floor((points.length - 1) / 2), points.length - 1]
+          : points.map((_, index) => index)
+      for (const index of marks) {
+        const label = svgNode('text', {
+          x: index === 0 ? 0 : index === points.length - 1 ? width : index * step + step / 2,
+          y: height - 4,
+          'text-anchor': index === 0 ? 'start' : index === points.length - 1 ? 'end' : 'middle',
+          'font-size': 11,
+          fill: 'var(--color-foreground-muted)',
+        })
+        label.textContent = axis(points[index]?.label ?? '')
+        svg.append(label)
+      }
+    }
+
+    const highlight = svgNode('rect', {
+      x: 0,
+      y: top,
+      width: step,
+      height: plot,
+      rx: 3,
+      fill: 'var(--color-foreground)',
+      'fill-opacity': 0.06,
+      visibility: 'hidden',
+    })
+    svg.append(highlight)
+
+    const marker = svgNode('g', { visibility: 'hidden' })
+    if (kind === 'bar') {
+      const barWidth = Math.max(1, Math.min(28, step * 0.7))
+      points.forEach((point, index) => {
+        let base = scale(0)
+        point.values.forEach((value, part) => {
+          if (!value) return
+          const size = (value / high) * plot
+          base -= size
+          svg.append(
+            svgNode('rect', {
+              x: index * step + (step - barWidth) / 2,
+              y: base,
+              width: barWidth,
+              height: Math.max(0.5, size),
+              rx: Math.min(2, barWidth / 3),
+              fill: options.series[part]?.color ?? 'var(--color-primary)',
+            }),
+          )
+        })
+      })
+    } else {
+      options.series.forEach((series, part) => {
+        let path = ''
+        let open = false
+        points.forEach((point, index) => {
+          const value = point.values[part]
+          if (typeof value !== 'number') {
+            open = false
+            return
+          }
+          const x = index * step + step / 2
+          path += `${open ? 'L' : 'M'}${x.toFixed(1)} ${scale(value).toFixed(1)}`
+          open = true
+        })
+        if (path) {
+          svg.append(
+            svgNode('path', {
+              d: path,
+              fill: 'none',
+              stroke: series.color,
+              'stroke-width': compact ? 1.5 : 2,
+              'stroke-linejoin': 'round',
+              'stroke-linecap': 'round',
+            }),
+          )
+        }
+        // A lone point has no line, so it gets a dot.
+        points.forEach((point, index) => {
+          const value = point.values[part]
+          const before = points[index - 1]?.values[part]
+          const after = points[index + 1]?.values[part]
+          const lone = typeof before !== 'number' && typeof after !== 'number'
+          const last = compact && index === points.length - 1
+          if (typeof value !== 'number' || !(lone || last)) return
+          svg.append(
+            svgNode('circle', {
+              cx: index * step + step / 2,
+              cy: scale(value),
+              r: compact ? 1.75 : 3,
+              fill: series.color,
+            }),
+          )
+        })
+        marker.append(
+          svgNode('circle', {
+            r: 4,
+            fill: series.color,
+            stroke: 'var(--color-muted)',
+            'stroke-width': 2,
+            'data-part': part,
+          }),
+        )
+      })
+      svg.append(marker)
+    }
+
+    const frame = el(
+      'div',
+      'relative cursor-crosshair rounded-sm outline-none focus-visible:ring-[3px] focus-visible:ring-ring/30',
+    )
+    frame.tabIndex = 0
+    frame.append(svg)
+    target.append(frame)
+
+    let active = -1
+    const activate = (index: number, clientX?: number, clientY?: number) => {
+      const point = points[index]
+      if (!point) return
+      active = index
+      highlight.setAttribute('x', String(index * step))
+      highlight.setAttribute('visibility', compact ? 'hidden' : 'visible')
+      if (kind === 'line') {
+        let shown = false
+        marker.querySelectorAll('circle').forEach((circle) => {
+          const value = point.values[Number(circle.getAttribute('data-part'))]
+          if (typeof value === 'number') {
+            circle.setAttribute('cx', String(index * step + step / 2))
+            circle.setAttribute('cy', String(scale(value)))
+            circle.setAttribute('visibility', 'visible')
+            shown = true
+          } else circle.setAttribute('visibility', 'hidden')
+        })
+        marker.setAttribute('visibility', shown ? 'visible' : 'hidden')
+      }
+      const box = frame.getBoundingClientRect()
+      showTooltip(
+        point,
+        options,
+        clientX ?? box.left + index * step + step / 2,
+        clientY ?? box.top + top,
+      )
+    }
+    const clear = () => {
+      active = -1
+      highlight.setAttribute('visibility', 'hidden')
+      marker.setAttribute('visibility', 'hidden')
+      hideTooltip()
+    }
+    frame.addEventListener('pointermove', (event) => {
+      const box = frame.getBoundingClientRect()
+      const index = Math.min(
+        points.length - 1,
+        Math.max(0, Math.floor(((event.clientX - box.left) / box.width) * points.length)),
+      )
+      activate(index, event.clientX, event.clientY)
+    })
+    frame.addEventListener('pointerleave', clear)
+    frame.addEventListener('blur', clear)
+    frame.addEventListener('focus', () => activate(points.length - 1))
+    frame.addEventListener('keydown', (event) => {
+      if (event.key === 'ArrowLeft' || event.key === 'ArrowRight') {
+        event.preventDefault()
+        const next = (active < 0 ? points.length - 1 : active) + (event.key === 'ArrowLeft' ? -1 : 1)
+        activate(Math.min(points.length - 1, Math.max(0, next)))
+      } else if (event.key === 'Escape') clear()
+    })
+  }
+
+  window.addEventListener('scroll', hideTooltip, { passive: true })
+
+  const primary = 'var(--color-primary)'
+  const soft = 'var(--color-foreground-soft)'
+
+  const summary = (key: string, value: string) =>
+    text(document.querySelector(`[data-chart-summary="${key}"]`), value)
+
+  const sum = (values: number[]) => values.reduce((a, b) => a + b, 0)
+
+  type Board = 'all-time' | 'trending'
   type Timeline = {
     hostedAccounts: number
     hostedSignups: Array<{ day: string; count: number }>
     daily: Array<{ day: string; installs: number; cliRuns: number; hostedRuns: number }>
     monthly: Array<{ month: string; installs: number; runs: number }>
+    npm?: Array<{ day: string; downloads: number }> | null
     skills: {
       installs: Array<{ day: string; installs: number }>
-      queries: Array<{ query: string; position: number | null; weekAgo: number | null }>
+      ranks?: Array<{ day: string; board: Board; rank: number | null; checked: number; total: number | null }>
+      queries: Array<{
+        query: string
+        position: number | null
+        weekAgo: number | null
+        history?: Array<{ day: string; position: number | null }>
+      }>
     }
   }
+
+  // Every day between the first and last, so gaps show as gaps.
+  const everyDay = (first: string, last: string) => {
+    const days: string[] = []
+    for (let time = dayDate(first).getTime(); time <= dayDate(last).getTime(); time += 86_400_000) {
+      days.push(new Date(time).toISOString().slice(0, 10))
+    }
+    return days
+  }
+
+  const dayChart = {
+    title: longDay,
+    axisLabel: shortDay,
+  }
+
+  // A row of tab buttons: click or arrow keys select one.
+  const tabs = (selector: string, onSelect: (tab: HTMLButtonElement) => void) => {
+    const buttons = [...document.querySelectorAll<HTMLButtonElement>(selector)]
+    const select = (tab: HTMLButtonElement) => {
+      for (const other of buttons) {
+        const selected = other === tab
+        other.setAttribute('aria-selected', String(selected))
+        if (selected) other.removeAttribute('tabindex')
+        else other.tabIndex = -1
+      }
+      onSelect(tab)
+    }
+    buttons.forEach((tab, index) => {
+      tab.addEventListener('click', () => select(tab))
+      tab.addEventListener('keydown', (event) => {
+        if (event.key !== 'ArrowLeft' && event.key !== 'ArrowRight') return
+        event.preventDefault()
+        const step = event.key === 'ArrowLeft' ? -1 : 1
+        const next = buttons[(index + step + buttons.length) % buttons.length]
+        if (!next) return
+        next.focus()
+        select(next)
+      })
+    })
+  }
+
+  let rankBoard: Board = 'all-time'
+  let drawRanks = () => {}
+  tabs('[data-rank-tab]', (tab) => {
+    rankBoard = tab.dataset.rankTab === 'trending' ? 'trending' : 'all-time'
+    drawRanks()
+  })
 
   const renderTimeline = (value: Timeline | undefined) => {
     const daily = value?.daily ?? []
@@ -393,55 +907,270 @@ const metrics = [
       document.querySelector('[data-stat="hostedAccounts"]'),
       count(value?.hostedAccounts ?? 0),
     )
-    const since = new Date(Date.now() - 90 * 86_400_000).toISOString().slice(0, 10)
-    barChart(
-      document.querySelector('[data-chart="daily-signups"]'),
-      (value?.hostedSignups ?? [])
-        .filter((day) => day.day >= since)
-        .map((day) => ({ label: day.day, values: [day.count] })),
-      ['sign-ups'],
+
+    const runs = daily.map((day) => day.cliRuns + day.hostedRuns)
+    summary(
+      'daily-runs',
+      daily.length ? `${count(sum(runs))} in ${daily.length} days` : '',
     )
-    barChart(
+    drawChart(
       document.querySelector('[data-chart="daily-runs"]'),
-      daily.map((day) => ({ label: day.day, values: [day.cliRuns, day.hostedRuns] })),
-      ['CLI', 'hosted'],
+      daily.map((day) => ({
+        label: day.day,
+        values: [day.cliRuns, day.hostedRuns],
+        notes: [`Total ${count(day.cliRuns + day.hostedRuns)}`],
+      })),
+      {
+        ...dayChart,
+        series: [
+          { name: 'CLI and local MCP', color: primary },
+          { name: 'Hosted MCP', color: soft },
+        ],
+        description: 'Commands run per day, CLI and hosted MCP stacked.',
+      },
     )
-    barChart(
+
+    const since = new Date(Date.now() - 90 * 86_400_000).toISOString().slice(0, 10)
+    const signups = (value?.hostedSignups ?? []).filter((day) => day.day >= since)
+    const signupCounts = new Map(signups.map((day) => [day.day, day.count]))
+    const signupDays = signups.length
+      ? everyDay(signups[0]?.day ?? since, new Date().toISOString().slice(0, 10))
+      : []
+    summary(
+      'daily-signups',
+      signups.length ? `${count(sum(signups.map((day) => day.count)))} in ${signupDays.length} days` : '',
+    )
+    drawChart(
+      document.querySelector('[data-chart="daily-signups"]'),
+      signupDays.map((day) => ({ label: day, values: [signupCounts.get(day) ?? 0] })),
+      {
+        ...dayChart,
+        series: [{ name: 'Sign-ups', color: primary }],
+        description: 'Hosted MCP sign-ups per day.',
+      },
+    )
+
+    summary(
+      'daily-installs',
+      daily.length ? `${count(sum(daily.map((day) => day.installs)))} in ${daily.length} days` : '',
+    )
+    drawChart(
       document.querySelector('[data-chart="daily-installs"]'),
       daily.map((day) => ({ label: day.day, values: [day.installs] })),
-      ['installs'],
+      {
+        ...dayChart,
+        series: [{ name: 'New installs', color: primary }],
+        description: 'New installs per day.',
+      },
     )
-    barChart(
+
+    const npm = value?.npm
+    const npmRecent = (npm ?? []).slice(-30)
+    summary(
+      'npm-downloads',
+      npm === null ? '' : npmRecent.length ? `${count(sum(npmRecent.map((day) => day.downloads)))} in 30 days` : '',
+    )
+    drawChart(
+      document.querySelector('[data-chart="npm-downloads"]'),
+      (npm ?? []).map((day) => ({ label: day.day, values: [day.downloads] })),
+      {
+        ...dayChart,
+        series: [{ name: 'Downloads', color: primary }],
+        empty: npm === null ? 'npm did not answer. Try again in a minute.' : 'No data yet.',
+        description: 'npm downloads of the seo package per day.',
+      },
+    )
+
+    const monthly = value?.monthly ?? []
+    summary(
+      'monthly-runs',
+      monthly.length ? `${count(sum(monthly.map((month) => month.runs)))} since ${monthName(monthly[0]?.month ?? '')}` : '',
+    )
+    drawChart(
       document.querySelector('[data-chart="monthly-runs"]'),
-      (value?.monthly ?? []).map((month) => ({
+      monthly.map((month) => ({
         label: month.month,
         values: [month.runs],
+        notes: [`New installs ${count(month.installs)}`],
       })),
-      ['commands'],
+      {
+        series: [{ name: 'Commands', color: primary }],
+        title: monthName,
+        axisLabel: monthName,
+        description: 'Commands run per month.',
+      },
     )
-    barChart(
-      document.querySelector('[data-chart="skills-installs"]'),
-      (value?.skills.installs ?? []).map((day) => ({
+
+    // skills.sh gives a running total; each bar is the change since the
+    // check before it.
+    const skillTotals = value?.skills.installs ?? []
+    const gains = skillTotals.slice(1).map((day, index) => {
+      const before = skillTotals[index]
+      const gap = before ? Math.round((dayDate(day.day).getTime() - dayDate(before.day).getTime()) / 86_400_000) : 1
+      return {
         label: day.day,
-        values: [day.installs],
-      })),
-      ['installs'],
+        values: [before ? Math.max(0, day.installs - before.installs) : null],
+        notes: [
+          `Total ${count(day.installs)}`,
+          ...(gap > 1 ? [`Over ${gap} days, a check was missed`] : []),
+        ],
+      }
+    })
+    const latestTotal = skillTotals.at(-1)?.installs
+    const weekBefore = skillTotals.at(-8)?.installs
+    summary(
+      'skills-installs',
+      latestTotal === undefined
+        ? ''
+        : `${count(latestTotal)} total${weekBefore !== undefined ? `, +${count(latestTotal - weekBefore)} in 7 days` : ''}`,
     )
+    drawChart(document.querySelector('[data-chart="skills-installs"]'), gains, {
+      ...dayChart,
+      series: [{ name: 'New installs', color: primary }],
+      description: 'New skills.sh installs per day.',
+    })
+
+    const ranks = value?.skills.ranks ?? []
+    const rankDays = [...new Set(ranks.map((row) => row.day))].sort()
+    const rankFor = (day: string, board: Board) =>
+      ranks.find((row) => row.day === day && row.board === board)
+    const latestRank = (board: Board) => {
+      const row = [...ranks].reverse().find((item) => item.board === board)
+      if (!row) return ''
+      const name = board === 'all-time' ? 'all time' : 'trending'
+      return row.rank ? `#${count(row.rank)} ${name}` : `below #${count(row.checked)} ${name}`
+    }
+    summary('skills-ranks', [latestRank('all-time'), latestRank('trending')].filter(Boolean).join(', '))
+    drawRanks = () =>
+      drawChart(
+        document.querySelector('[data-chart="skills-ranks"]'),
+        rankDays.map((day) => {
+          const row = rankFor(day, rankBoard)
+          return {
+            label: day,
+            values: [row?.rank ?? null],
+            notes: row
+              ? row.rank
+                ? row.total
+                  ? [`Of ${count(row.total)} skills`]
+                  : []
+                : [`Below the top ${count(row.checked)}`]
+              : ['Not checked that day'],
+          }
+        }),
+        {
+          ...dayChart,
+          kind: 'line',
+          invert: true,
+          series: [{ name: rankBoard === 'all-time' ? 'All time' : 'Trending', color: primary }],
+          format: (rank) => `#${count(Math.round(rank))}`,
+          missing: 'Not in the pages checked',
+          empty: 'Checked once a day. The first check is still to come.',
+          description: `Place on the skills.sh ${rankBoard} leaderboard per day. 1 is first.`,
+        },
+      )
+    drawRanks()
+
     const table = document.querySelector('[data-skills-table]')
     if (table instanceof HTMLElement) {
       table.replaceChildren()
       const rows = value?.skills.queries ?? []
-      if (rows.length === 0) table.append(emptyRow(3, 'No checks yet'))
+      if (rows.length === 0) table.append(emptyRow(4, 'No checks yet'))
+      const fortnight = new Date(Date.now() - 14 * 86_400_000).toISOString().slice(0, 10)
       for (const item of rows) {
-        const row = document.createElement('tr')
+        const history = item.history ?? []
+        const firstShown = history.find((day) => day.position)?.day
+        const shownBefore = history.some((day) => day.day < (firstShown ?? '') && !day.position)
+        const isNew = Boolean(item.position && firstShown && firstShown >= fortnight && shownBefore)
+        const name = el('span', 'inline-flex flex-wrap items-center gap-2')
+        name.append(document.createTextNode(item.query))
+        if (isNew) name.append(el('span', 'rounded-sm bg-success-soft px-1.5 text-xs font-medium text-success', 'New'))
+
+        let change = '-'
+        let tone = ''
+        if (item.position && item.weekAgo) {
+          const moved = item.weekAgo - item.position
+          change = moved > 0 ? `Up ${moved}` : moved < 0 ? `Down ${-moved}` : 'Same'
+          tone = moved > 0 ? 'text-success' : moved < 0 ? 'text-destructive' : ''
+        } else if (item.position && !item.weekAgo) change = 'Now listed'
+        else if (!item.position && item.weekAgo) {
+          change = 'Dropped out'
+          tone = 'text-destructive'
+        }
+        const changeCell = cell(change, 'right')
+        if (tone) changeCell.classList.add(tone)
+
+        const spark = el('div', 'ml-auto w-28')
+        const sparkCell = cell(spark, 'right')
+        const row = el('tr', 'transition-colors hover:bg-foreground/[0.03]')
         row.append(
-          cell(item.query),
+          cell(name),
           cell(item.position ? String(item.position) : '-', 'right'),
-          cell(item.weekAgo ? String(item.weekAgo) : '-', 'right'),
+          changeCell,
+          sparkCell,
         )
         table.append(row)
+        drawChart(
+          spark,
+          history.map((day) => ({ label: day.day, values: [day.position] })),
+          {
+            kind: 'line',
+            invert: true,
+            compact: true,
+            title: longDay,
+            series: [{ name: 'Place', color: primary }],
+            format: (place) => String(place),
+            missing: 'Not listed',
+            empty: '-',
+            description: `Place for "${item.query}" each day. 1 is first.`,
+          },
+        )
       }
     }
+  }
+
+  type Signups = {
+    total: number
+    since: string | null
+    source: ShareRow[]
+    entry: ShareRow[]
+    client: ShareRow[]
+    landing: ShareRow[]
+  }
+  type SignupKey = 'source' | 'entry' | 'client' | 'landing'
+  let signupData: Signups | null = null
+  let signupKey: SignupKey = 'source'
+  const signupColumns: Record<SignupKey, string> = {
+    source: 'Source',
+    entry: 'Sign-up path',
+    client: 'Agent',
+    landing: 'First page',
+  }
+
+  const drawSignups = () => {
+    text(document.querySelector('[data-signup-column]'), signupColumns[signupKey])
+    renderShares(
+      document.querySelector('[data-signup-table]'),
+      signupData?.[signupKey] ?? [],
+      signupData ? 'No recorded sign-ups' : 'Sign-up sources are unavailable right now',
+    )
+  }
+
+  tabs('[data-signup-tab]', (tab) => {
+    signupKey = (tab.dataset.signupTab as SignupKey) ?? 'source'
+    drawSignups()
+  })
+
+  const renderSignups = (value: Signups | null | undefined) => {
+    signupData = value ?? null
+    const note = document.querySelector('[data-signups-note]')
+    if (value?.since) {
+      text(
+        note,
+        `${count(value.total)} hosted MCP sign-ups since ${dayDate(value.since).toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric', timeZone: 'UTC' })}, by the site that sent them, how they signed up, their agent and the first page they opened. Any value with fewer than three sign-ups counts as Other.`,
+      )
+    }
+    drawSignups()
   }
 
   const loadStats = async () => {
@@ -461,20 +1190,21 @@ const metrics = [
       ]) {
         text(document.querySelector(`[data-stat="${key}"]`), count(totals[key]))
       }
-      renderAgents(
-        document.querySelector('[data-agent-table="installs"]'),
-        stats.agents?.installs ?? [],
-      )
-      renderAgents(
-        document.querySelector('[data-agent-table="audits"]'),
-        stats.agents?.audits ?? [],
-      )
-      const reports = Array.isArray(stats.reports) ? stats.reports : []
+      for (const key of ['installs', 'audits'] as const) {
+        renderShares(
+          document.querySelector(`[data-agent-table="${key}"]`),
+          (stats.agents?.[key] ?? []).map(
+            (item: { agent: string; count: number; percent: number }) => ({
+              name: agentLabels[item.agent] ?? item.agent,
+              count: item.count,
+              percent: item.percent,
+            }),
+          ),
+        )
+      }
       renderTimeline(stats.timeline)
-      renderCommands(
-        document.querySelector('[data-command-table]'),
-        reports,
-      )
+      renderCommands(Array.isArray(stats.reports) ? stats.reports : [])
+      renderSignups(stats.signups)
       const generated = new Date(stats.generatedAt)
       text(
         status,

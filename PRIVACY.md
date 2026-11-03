@@ -1,6 +1,6 @@
 # Privacy policy
 
-Last updated: 22 October 2026
+Last updated: 3 November 2026
 
 This policy covers the official `seo` command-line tool, library, MCP server,
 the hosted MCP server at seoskill.dev/mcp with its account page, and the
@@ -94,7 +94,10 @@ Cloudflare D1 with only these things:
   bring people to SEO Skill, and it is counted only in totals. Once a week
   the server sends the maintainer those totals for the last seven days, such
   as sign-ups per path, agent, referring site and `utm_*` tag, through a
-  Telegram message. The message never holds a row for one person.
+  Telegram message. The message never holds a row for one person. The
+  public [usage stats page](https://seoskill.dev/stats) shows the same kind
+  of totals for every sign-up so far, and counts any value shared by fewer
+  than three sign-ups as Other.
 
 Every token and key is encrypted with a server key before it is written. The
 tokens are used only to fetch your own data when you or your agent ask for

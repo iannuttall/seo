@@ -1,0 +1,108 @@
+---
+import {
+  ComputerTerminal01Icon,
+  FileSearchIcon,
+  Link01Icon,
+  Route01Icon,
+} from '@hugeicons/core-free-icons'
+import FeaturePage from '@/components/FeaturePage.astro'
+
+const related = [
+  { title: 'seo crawl', text: 'Every crawl option: modes, page limits, output formats and the AI agent checks.', href: '/docs/crawl', icon: Route01Icon },
+  { title: 'seo internal-links', text: 'Pages that need more internal links, and where to add them.', href: '/docs/internal-links', icon: Link01Icon },
+  { title: 'seo page', text: 'One URL: what it serves now, its Google index status and its queries.', href: '/docs/page', icon: FileSearchIcon },
+  { title: 'CLI', text: 'Install the CLI and run any command from your terminal.', href: '/docs/cli', icon: ComputerTerminal01Icon },
+]
+---
+
+<FeaturePage
+  title="Free SEO crawler for any site"
+  description="A free SEO crawler that runs on your machine with no sign-in. Crawl any site, including localhost and staging, for broken links, redirects, titles, canonicals and noindex tags."
+  path="/features/seo-crawler"
+  lead="Crawl a site from your own machine and get a ranked list of broken pages, redirects, missing titles and stray noindex tags. It is free, needs no account, and works on a local or staging build before you ship."
+  {related}
+>
+  <h2>Crawl a site with one command</h2>
+  <p>
+    The crawler is part of the <code>seo</code> CLI. You do not need to
+    connect Google or save a key to crawl, so once the package is installed
+    you can point it at any site:
+  </p>
+  <pre><code>npm i -g seo
+seo crawl https://example.com</code></pre>
+  <p>
+    Or ask your agent to crawl the site and tell you what to fix first. The
+    crawl fetches a lot of pages, so it always runs on your machine. If your
+    agent is connected to the hosted MCP, it is told to use the CLI for the
+    crawl.
+  </p>
+
+  <h2>Crawl a local or staging build</h2>
+  <p>
+    Anything your machine can reach can be crawled, including a dev server.
+    Start your site locally and crawl it before the release goes out:
+  </p>
+  <pre><code>seo crawl http://localhost:4321</code></pre>
+  <p>
+    Staging sites often block every crawler in robots.txt. The crawler
+    respects robots.txt by default, so it finds almost nothing there. Add <code>--no-robots</code> to crawl it anyway. The
+    crawler sends no password or cookie, so a staging site behind a login
+    only shows it the login page.
+  </p>
+  <p>
+    To stop a release when the crawl finds serious problems, add <code>--fail-on high</code>. The command then exits with an error when
+    there is a high severity issue, which a CI step or a deploy script can
+    check.
+  </p>
+
+  <h2>What the crawler checks</h2>
+  <table>
+    <thead><tr><th>Area</th><th>What it reports</th></tr></thead>
+    <tbody>
+      <tr><td>Status codes</td><td>Pages that return errors, and pages that redirect.</td></tr>
+      <tr><td>Internal links</td><td>Links on your pages that land on a broken URL.</td></tr>
+      <tr><td>Titles and headings</td><td>Missing or duplicate titles and meta descriptions, and pages with no H1.</td></tr>
+      <tr><td>Indexing tags</td><td>Canonical tags, robots meta tags and noindex, as each page serves them.</td></tr>
+      <tr><td>Page basics</td><td>The viewport tag, the page language and Open Graph tags for link previews.</td></tr>
+      <tr><td>AI agents</td><td>Which AI bots your robots.txt allows, whether <code>/llms.txt</code> works, and whether pages have a Markdown copy.</td></tr>
+    </tbody>
+  </table>
+
+  <h2>Read the results</h2>
+  <p>
+    Fixes come first, ranked by severity, each with the URLs that show the
+    problem. Below them is a list to review before changing anything. A
+    noindex tag or a canonical pointing elsewhere is reported as what the
+    page says, because it is only a problem if you did not mean it.
+  </p>
+  <p>
+    The crawl stops at 500 pages unless you raise <code>--max-pages</code> (up to 10,000). For a big site, start with a quick pass over the sitemap
+    that checks status codes and redirects without reading every page:
+  </p>
+  <pre><code>seo crawl --sitemap-url https://example.com/sitemap.xml --health</code></pre>
+
+  <h2>Keep or share a crawl</h2>
+  <p>
+    Nothing is saved for you. Write the result to a file when you want to
+    keep it or hand it to someone: an HTML report, a CSV of issues or pages,
+    Markdown tickets, or JSON for your agent.
+  </p>
+  <pre><code>seo crawl https://example.com --format html --output crawl.html</code></pre>
+  <p>
+    Pages are cached on your machine between crawls. After a deploy, add <code>--refresh</code> so every page is fetched again.
+  </p>
+
+  <h2>From a crawl to an SEO audit</h2>
+  <p>
+    A crawl shows what your pages say. It cannot tell you what Google did
+    with them, or which issues cost you clicks. The <a href="/features/seo-audit">SEO audit tool</a> puts the crawl next to
+    Google's index status and your Search Console data, and the <a href="/features/google-index-checker">Google index checker</a> asks
+    Google about each page directly.
+  </p>
+  <p>
+    The crawl on your machine is free, as often as you like. If you would
+    rather not run it yourself, the weekly site audit ($50 a month per site)
+    crawls the site every week on the hosted server and emails you what
+    changed.
+  </p>
+</FeaturePage>

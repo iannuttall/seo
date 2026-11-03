@@ -2,6 +2,8 @@ import {
   AiChat02Icon,
   Analytics01Icon,
   ChartLineData01Icon,
+  FileSearchIcon,
+  Globe02Icon,
   McpServerIcon,
   Notification01Icon,
   RoboticIcon,
@@ -48,6 +50,18 @@ export const features = [
     title: 'SEO audit tool',
     text: 'Crawl the site, check single pages, and find pages that lost their clicks.',
     icon: Route01Icon,
+  },
+  {
+    path: '/features/seo-crawler',
+    title: 'SEO crawler',
+    text: 'Crawl any site from your machine, including localhost and staging, for broken links, redirects and tag problems.',
+    icon: Globe02Icon,
+  },
+  {
+    path: '/features/google-index-checker',
+    title: 'Google index checker',
+    text: "Check which of your pages Google has indexed, with Google's own reason for the rest.",
+    icon: FileSearchIcon,
   },
   {
     path: '/features/claude-seo',

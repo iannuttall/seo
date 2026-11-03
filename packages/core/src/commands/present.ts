@@ -64,6 +64,8 @@ const METRIC_COLUMNS = [
   'impressions',
   'ctr',
   'position',
+  'keyEvents',
+  'organicSessions',
   'previousClicks',
   'clicksChange',
   'searchVolume',

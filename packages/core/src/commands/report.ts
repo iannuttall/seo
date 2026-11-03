@@ -8,7 +8,11 @@ import { strikingDistanceWith } from '../analyze/striking-distance-report.js'
 import { changeWindow } from '../analyze/traffic-anomaly-analysis.js'
 import { trafficAnomalyWith } from '../analyze/traffic-anomaly-report.js'
 import type { SearchAnalyticsQuery } from '../gsc/client/types.js'
-import { analyticsBeside } from './analytics-site.js'
+import {
+  analyticsBeside,
+  organicPages,
+  weighByKeyEvents,
+} from './analytics-site.js'
 import { AUDIT_SECTION, auditPreview, runAuditReport } from './audit.js'
 import {
   type BingSource,
@@ -89,6 +93,15 @@ const PAGE_CHECKS = new Set<SectionId>([
   'second-page',
   'content-decay',
   'cannibalization',
+])
+
+// Page sections whose rows put the pages that convert first, from Google
+// Analytics key events for the same dates.
+const MONEY = new Set<SectionId>([
+  'quick-wins',
+  'low-ctr',
+  'striking-distance',
+  'second-page',
 ])
 
 const DEFAULT_DAYS: Record<SectionId, number> = {
@@ -534,6 +547,12 @@ async function allSections(
     range,
     earlierRange(range),
   )
+  // Every money section uses the same default dates.
+  const landing = organicPages(
+    deps.analytics,
+    input.site,
+    dateWindow(input, DEFAULT_DAYS['quick-wins']),
+  )
   const runs = await Promise.all(
     ids.map((id) =>
       build(
@@ -567,8 +586,17 @@ async function allSections(
   )
   if (brand) parts.push(brandNote(brand) as string)
   const sections: Record<string, unknown> = {}
+  const pages = await landing
+  if (pages && typeof pages !== 'string') {
+    parts.push(
+      `Page sections (${[...MONEY].join(', ')}) put pages with Google Analytics key events from Organic Search first.`,
+    )
+  }
   ids.slice(1).forEach((id, index) => {
     const run = rest[index]
+    if (pages && MONEY.has(id) && run && !(run instanceof Error)) {
+      weighByKeyEvents(run, pages)
+    }
     if (!run || run instanceof Error) {
       const message = run?.message ?? 'did not run'
       parts.push(`## ${id}\nNot available: ${message}`)
@@ -628,6 +656,9 @@ async function oneSection(
   const range = dateWindow(input, DEFAULT_DAYS[section])
   const origin = originOf(site)
   const bing = once(() => bingFor(deps, site))
+  const ga = MONEY.has(section)
+    ? organicPages(deps.analytics, site, range)
+    : null
   let report = await build(
     sharedReader(deps.searchAnalytics),
     site,
@@ -636,6 +667,12 @@ async function oneSection(
     now,
     bing,
   )
+  let money = ''
+  const weigh = async () => {
+    const found = await ga
+    if (found) money = weighByKeyEvents(report, found)
+  }
+  await weigh()
   const next = nextFor(section, deps.call)
   if (section === 'overview') {
     const ga = await analyticsBeside(
@@ -691,10 +728,11 @@ async function oneSection(
         now,
         bing,
       )
+      await weigh()
     }
     report.pageChecks = checked
   }
-  const notes: string[] = []
+  const notes: string[] = money ? [money] : []
   const brand = brandNote(report)
   if (brand) notes.push(brand)
   const updates = listOfUpdates(report.googleUpdates, report.updateWindow)

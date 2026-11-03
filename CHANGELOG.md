@@ -1,9 +1,17 @@
 # Changelog
 
-## Unreleased
+## 0.14.0
 
 ### Added
 
+- `seo site` builds a data-driven site on Astro and Cloudflare with your
+  agent. `seo site new <folder>` copies a starter that already has titles,
+  canonicals, JSON-LD, sharing images drawn from each H1, Markdown copies,
+  `llms.txt` and sitemaps of up to 5,000 URLs. `seo site guide <step>`
+  prints one step at a time: setup, market, data, plan, build, golden-page,
+  writing, scale, launch and grow. `seo site check` runs the crawler's page
+  checks on the built site, plus copy, design and data rules, and fails the
+  build when a rule breaks.
 - `seo report --site <site> --section issues` keeps a list of the issues
   found for a site between sessions: striking distance, low CTR and quick
   wins from Search Console, and the weekly crawl's findings and pages that
@@ -18,6 +26,7 @@
   For any other hosted site it says so and returns the list as JSON in
   the `issues.json` shape for the agent to save, and takes it back as
   `saved` so marks carry over.
+
 ## 0.13.3
 
 ### Fixed

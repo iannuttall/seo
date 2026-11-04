@@ -49,7 +49,7 @@ const breadcrumbs: SchemaBreadcrumb[] = [
       <FounderBadge prefix="Written by AI and" align="start" ai />
       <span>
         <time datetime={date}>{formatPostDate(date)}</time>
-        {updated ? <span>, updated <time datetime={updated}>{formatPostDate(updated)}</time></span> : null}
+        {updated && updated !== date ? <span>, updated <time datetime={updated}>{formatPostDate(updated)}</time></span> : null}
       </span>
     </div>
     {

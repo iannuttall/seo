@@ -2,8 +2,9 @@
 title: How I'd grow Every with SEO, a full teardown
 description: An SEO teardown of Every, the AI media company behind Monologue and Cora. Where its Google traffic lands, what makes money and the fixes I'd ship.
 heading: How I'd grow Every
-lead: Every has one of the strongest sites in AI media, but most of its search traffic lands on pages that don't sell anything. This is how I'd send more of it to consulting, courses and the apps.
+lead: Every's site has a Domain Rating of 77, level with its rivals in AI media, but most of its search traffic lands on pages that don't sell anything. This is how I'd send more of it to consulting, courses and the apps, and the new pages I'd build to win the searches its rivals get.
 date: '2026-11-04'
+updated: '2026-11-04'
 company: Every
 x:
   company: every
@@ -11,6 +12,22 @@ draft: false
 cover:
   alt: "Crowds admire three shop windows showing a microphone, envelopes and a book, while every shop door stays shut and the doormats are untouched."
 ---
+
+export const beforeVerdict = `<pre>…the full Vibe Check includes our Reach Test ratings,
+benchmark results, screenshots, pricing analysis, and
+exact guidance on which model should get which job.
+
+[Start your free trial to read the full Vibe Check]
+  → /vibe-check/gpt-5-6
+  → 308 to /vibe-check/gpt-5-6-sol (this page)</pre>`
+
+export const afterVerdict = `<pre>&lt;h2&gt;Our verdict&lt;/h2&gt;
+&lt;p&gt;Use GPT-5.6 Sol for [the jobs it won].
+Use Fable for [the jobs it won]. Checked [date].&lt;/p&gt;
+
+…the full Vibe Check includes our Reach Test ratings…
+
+[Start your free trial to read the full Vibe Check]</pre>`
 
 export const before6 = `<pre>&lt;head&gt;
   &lt;title&gt;…&lt;/title&gt;
@@ -50,25 +67,25 @@ So Every makes money five ways from one audience. It also has a site with a Doma
 
 ## Most of Every's search traffic isn't buying anything
 
-Ahrefs estimates every.to gets about 17,100 visits from Google this month. This map shows where they land.
+Ahrefs estimates every.to gets about 7,300 visits from Google a month. This map shows where they land.
 
 <TrafficMap
-  caption="Estimated Google visits to every.to by kind of page, November 2026 (Ahrefs top pages). Blue pages sell something. Course pages get no measurable search traffic."
+  caption="Estimated Google visits to every.to by kind of page, 4 November 2026 (Ahrefs top pages, all countries). Blue pages sell something. Course pages get no measurable search traffic."
   items={[
-    { label: "Searches for Every by name", value: 10033, tone: "brand", note: "The homepage and author pages" },
-    { label: "Typos and off-topic searches", value: 4703, tone: "waste", note: "Mostly \"hatgpt\", a typo of ChatGPT, and one essay ranking for adult chatbot searches" },
-    { label: "Essays, guides and podcasts", value: 1090, tone: "other" },
-    { label: "Consulting and newsletter sign-up", value: 907, tone: "sells", note: "870 of these land on the consulting page" },
-    { label: "Vibe Check model reviews", value: 305, tone: "other" },
-    { label: "App launch posts", value: 52, tone: "sells", note: "Posts introducing Spiral, Cora and Proof" },
+    { label: "Typos and off-topic searches", value: 3445, tone: "waste", note: "Mostly \"hatgpt\", a typo of ChatGPT, and one essay ranking for adult chatbot searches" },
+    { label: "Searches for Every by name", value: 1858, tone: "brand", note: "The homepage and author pages" },
+    { label: "Essays, guides and podcasts", value: 964, tone: "other" },
+    { label: "Consulting and newsletter sign-up", value: 573, tone: "sells", note: "532 of these land on the consulting page" },
+    { label: "Vibe Check model reviews", value: 301, tone: "other" },
+    { label: "App launch posts", value: 115, tone: "sells", note: "Posts introducing Proof, Spiral and Cora" },
   ]}
 />
 
-About 6% of those visits reach a page that sells something. Most of the rest come from people searching for Every by name, who would find it anyway, or from typos and off-topic searches.
+About 9% of those visits reach a page that sells something. Most of the rest come from typos and off-topic searches, or from people searching for Every by name, who would find it anyway.
 
-Every has had between about 8,600 and 45,000 visits a month from Google over the last year, depending on the month (Ahrefs estimates). The homepage is the steady part, at about 9,700 visits, nearly all from people searching for Every by name.
+Every has had between about 7,800 and 45,000 visits a month from Google over the last year, depending on the month (Ahrefs estimates). Most of the swing is in two places. The first is the homepage, which Ahrefs put at about 9,700 visits a month on 2 November and about 1,500 two days later. Every still ranks first for "every", so Ahrefs changed its estimate, not Every's ranking, and those visits were never buyers.
 
-The rest swings on a handful of pages. The clearest example is a podcast page called "Introducing How Do You Use ChatGPT?". In September it was the biggest page on the site after the homepage, at about 10,800 visits a month. Most of them came from people typing "hatgpt", a typo of ChatGPT.
+The second is a handful of pages. The clearest example is a podcast page called "Introducing How Do You Use ChatGPT?". In September it was the biggest page on the site after the homepage, at about 10,800 visits a month. Most of them came from people typing "hatgpt", a typo of ChatGPT.
 
 <VerticalBars
   caption="Estimated monthly visits to one podcast page (Ahrefs). Typo traffic arrives quickly and leaves the same way."
@@ -79,31 +96,33 @@ The rest swings on a handful of pages. The clearest example is a podcast page ca
 
 It's now down to about 2,300. Every lost very little, because someone who mistyped ChatGPT wasn't going to hire its consultants. For each part of the site below, I check whether its search traffic reaches a page that sells something.
 
-## AI consulting: one page ranks first, and the rest of the market is open
+## AI consulting: Google's AI answer cites Every, and the results below it don't
 
 Every Consulting helps companies adopt AI. It's the part of Every where one new client is worth more than thousands of subscribers, so it's where search traffic matters most.
 
-These are the biggest consulting searches in the US, with monthly volumes from Ahrefs.
+These are the biggest consulting searches in the US, with monthly volumes and Every's positions from Ahrefs.
 
 <KeywordTable
-  caption="Every ranks first for the biggest search and two others. It has no page for more than 10,000 other searches a month."
+  caption="Ahrefs, US, November 2026. Every has no page for more than 10,000 other searches a month."
   sortBy="volume"
   columns={[{ key: 'keyword', label: 'Search', format: 'text' }, { key: 'volume', label: 'US searches', format: 'number' }, { key: 'difficulty', label: 'Difficulty', format: 'number', short: 'KD' }, { key: 'every', label: 'Every today', format: 'text' }]}
   rows={[
-    { keyword: 'ai consulting', volume: 8500, difficulty: 38, every: '#1' },
+    { keyword: 'ai consulting', volume: 8500, difficulty: 38, every: '#11' },
     { keyword: 'ai consulting services', volume: 5800, difficulty: 28, every: 'Not in top 100' },
     { keyword: 'ai strategy consulting', volume: 3600, difficulty: 5, every: 'Not in top 100' },
-    { keyword: 'ai consulting company', volume: 2300, difficulty: 46, every: '#7' },
-    { keyword: 'ai consultants', volume: 1500, difficulty: 31, every: '#11' },
+    { keyword: 'ai consulting company', volume: 2300, difficulty: 46, every: 'AI Overview, #8' },
+    { keyword: 'ai consultants', volume: 1500, difficulty: 31, every: 'Not in top 20' },
     { keyword: 'ai consulting agency', volume: 1400, difficulty: 51, every: '#11' },
     { keyword: 'generative ai consulting', volume: 1200, difficulty: 18, every: 'Not in top 100' },
-    { keyword: 'artificial intelligence consulting company', volume: 1100, difficulty: 50, every: '#1' },
+    { keyword: 'artificial intelligence consulting company', volume: 1100, difficulty: 50, every: 'AI Overview, #11' },
     { keyword: 'ai transformation consulting', volume: 800, difficulty: 17, every: '#10' },
-    { keyword: 'ai consulting firm', volume: 700, difficulty: 46, every: '#1' },
+    { keyword: 'ai consulting firm', volume: 700, difficulty: 46, every: 'AI Overview, #9' },
   ]}
 />
 
-Every's only consulting page has about 760 words and ranks first in the US for "ai consulting", the biggest search in the table. If one short page can do that, Every can also rank for the searches it has no page for yet.
+Every's only consulting page has about 760 words. For "ai consulting company", "ai consulting firm" and "artificial intelligence consulting company", Google's AI Overview cites it next to McKinsey, BCG and IBM. In the ordinary results under that answer, it ranks between eighth and eleventh. For "ai consulting", the biggest search, it's 11th, at the top of page two.
+
+So Google already uses the page as a source for its answer. It needs more depth and more links to rank with it, and Every needs pages for the searches it has nothing for yet.
 
 The biggest of those is "ai strategy consulting", with 3,600 searches a month and a difficulty of 5. These are the pages Google shows for it now.
 
@@ -126,9 +145,9 @@ The biggest of those is "ai strategy consulting", with 3,600 searches a month an
 
 A forum thread and a Medium post on page one usually means no firm with real authority has written a good page for the search. Every has the authority, the client stories and the consultants to write one.
 
-"ai consulting services" (5,800) is harder: EY, BCG and IBM hold the top spots, with "top 10 AI consulting companies" lists in between. AI answers often quote those lists too. Every already appears in Google's AI Overview for "ai consulting company", next to McKinsey, BCG and IBM. To stay there, it needs to be named in the lists that rank.
+"ai consulting services" (5,800) is harder: EY, BCG and IBM hold the top spots, with "top 10 AI consulting companies" lists in between. AI answers quote those lists too (the AI search section below shows which ones). To stay in Google's AI Overview, Every needs to be named in the lists that rank.
 
-I'd turn consulting into a small hub: a page each for strategy, implementation and team training, each with a client story, linked from the main page. I'd leave the main page as it is, since it already ranks first.
+I'd turn consulting into a small hub: a page each for strategy, implementation and team training, each with a client story, linked from the main page. I'd keep the main page's address and copy, since Google already cites it, and add the client stories and a short "how an engagement works" section that the hub pages link back to.
 
 ## Courses: compete where a small free site already ranks
 
@@ -177,9 +196,9 @@ The same page can answer "claude code tutorial" (2,800 searches, difficulty 17) 
 
 ## The model reviews are close to ranking
 
-Every's Vibe Check reviews of new AI models are one of its best-known series, and what someone searching for a new model wants to read. Their titles are written for the brand. They start with "Vibe Check:", and the GPT-5 review's title is just "GPT-5".
+Every reviews each new AI model in its Vibe Check series, which is what someone searching for a new model wants to read. Their titles are written for the brand. They start with "Vibe Check:", and the GPT-5 review's title is just "GPT-5".
 
-People search for the model name. "gpt 5.6 sol" gets about 4,400 US searches a month, and Every's review already ranks seventh for "gpt sol". "claude vs chatgpt" gets 49,500.
+People search for the model name. "gpt 5.6 sol" gets about 2,500 US searches a month, and Every's review already ranks seventh for "gpt sol". "claude vs chatgpt" gets 35,000 (Ahrefs, November 2026), and Every has no page for it. The new content section below covers those comparisons.
 
 <SearchResult
   caption="The GPT-5.6 Sol review in Google today, and with a title and description written for someone searching for the model. The page headline keeps the Vibe Check name."
@@ -217,6 +236,215 @@ I crawled 600 every.to pages and pulled out every link to Every's own apps. Ther
 Nearly all of these 1,300 links go to four homepages that already rank for their own names, and the link text is just the product name. Monologue has comparison pages against Wispr Flow and Superwhisper that get no links at all. Four posts also link to monologue.co, a parked domain, which looks like a typo for monologue.to. The [Monologue teardown](/blog/how-id-grow-monologue) lists them.
 
 Most of these links come from the newsletter template, so changing the template fixes them in every post at once. I'd point each product mention at the page that sells to that reader, with link text that says what's there ("dictation app for Mac", "AI email assistant").
+
+## New content: the searches Every's rivals win
+
+Every has the authority to rank for much more than it does. Its Domain Rating is level with the sites it competes with for readers. Maven, Simon Willison and Lenny get two to four times its search traffic, and The Rundown gets 21 times.
+
+<CompareBars
+  caption="Estimated monthly Google visits, all countries, 4 November 2026 (Ahrefs). The Rundown AI gets most of its visits from a directory with one page per AI tool."
+  unit="visits"
+  highlight={["every.to"]}
+  rows={[{"label": "therundown.ai", "value": 151648, "note": "Domain Rating 72. One page per AI tool"}, {"label": "maven.com", "value": 25908, "note": "Domain Rating 79. Cohort courses, like Every's camps"}, {"label": "simonwillison.net", "value": 17021, "note": "Domain Rating 85. A post per model and small free tools"}, {"label": "lennysnewsletter.com", "value": 15722, "note": "Domain Rating 79. Its biggest page is a hands-on review of Claude Design"}, {"label": "every.to", "value": 7267, "note": "Domain Rating 77"}, {"label": "oneusefulthing.org", "value": 7158, "note": "Domain Rating 78. Ranks first for \"how to use ai\""}]}
+/>
+
+The US searches these sites rank for, where Every has no page in the top 100, fall into three groups, and each one leads to something Every sells.
+
+What the winning pages have in common is that they're specific. Lenny's biggest page is "What Claude Design is actually good for", which ranks fifth for "claude design" (43,000 US searches a month). Ethan Mollick's "Using AI Right Now: A Quick Guide" ranks second for "how to use ai" and Google's AI Overview cites it. Simon Willison writes a post for each new model, and ranks for the model's name. Every does that kind of work in its Vibe Checks and camps, but on pages written for people who already subscribe.
+
+### 1. Model comparisons: about 89,000 searches, and Every already does the testing
+
+People choosing between AI models search for the pair. Every ranks for none of these, even though it has published 57 Vibe Checks and two head-to-head reviews (Codex against Opus, and GPT-6 Sol against Opus 5.5).
+
+<KeywordTable
+  caption="Ahrefs, US, November 2026. Below the forum threads, the results are blog posts and small review sites, several with a lower Domain Rating than Every's 77."
+  sortBy="volume"
+  columns={[{ key: 'keyword', label: 'Search', format: 'text' }, { key: 'volume', label: 'US searches', format: 'number' }, { key: 'difficulty', label: 'Difficulty', format: 'number', short: 'KD' }, { key: 'who', label: 'Who ranks', format: 'text' }]}
+  rows={[
+    { keyword: 'claude vs chatgpt', volume: 35000, difficulty: 8, who: 'Reddit, HackerNoon' },
+    { keyword: 'is claude better than chatgpt', volume: 12000, difficulty: 1, who: 'Reddit, Zapier' },
+    { keyword: 'gemini vs chatgpt', volume: 11000, difficulty: 15, who: 'Reddit, PCMag' },
+    { keyword: 'codex vs claude code', volume: 11000, difficulty: 11, who: 'Towards AI, Duet' },
+    { keyword: 'chatgpt vs claude', volume: 9000, difficulty: 4, who: 'Reddit, HackerNoon' },
+    { keyword: 'claude code vs cursor', volume: 5000, difficulty: 8, who: 'Reddit, blogs' },
+    { keyword: 'claude vs gemini', volume: 3600, difficulty: 12, who: 'Reddit, Gurusup' },
+    { keyword: 'ai model comparison', volume: 1400, difficulty: 12, who: 'Artificial Analysis' },
+    { keyword: 'best llm for coding', volume: 1200, difficulty: 15, who: 'Vellum, Reddit' },
+  ]}
+/>
+
+It's the same pattern as "ai strategy consulting", and Every has a team that uses these models all day and its own scores (the Vibe Checks report Reach Test ratings and a Senior Engineer score).
+
+I'd start with one page that stays at one address and gets updated each time a model ships: "Claude vs ChatGPT: which one we use for each job", at a comparison address in the Vibe Check section, such as `/vibe-check/claude-vs-chatgpt`. Each section answers one search:
+
+<KeywordTable
+  caption="The sections of the Claude vs ChatGPT page and the search each one answers (Ahrefs, US, November 2026)."
+  sortBy="volume"
+  columns={[{ key: 'section', label: 'Section', format: 'text' }, { key: 'keyword', label: 'Search it answers', format: 'text' }, { key: 'volume', label: 'US searches', format: 'number' }, { key: 'difficulty', label: 'Difficulty', format: 'number', short: 'KD' }]}
+  rows={[
+    { section: 'Our verdict, by job', keyword: 'claude vs chatgpt', volume: 35000, difficulty: 8 },
+    { section: 'Is Claude better?', keyword: 'is claude better than chatgpt', volume: 12000, difficulty: 1 },
+    { section: 'Writing', keyword: 'claude vs chatgpt for writing', volume: 600, difficulty: 2 },
+    { section: 'Coding', keyword: 'claude vs chatgpt for coding', volume: 600, difficulty: 22 },
+    { section: 'What each costs', keyword: 'claude vs chatgpt pricing', volume: 250, difficulty: null },
+  ]}
+/>
+
+The verdict goes at the top, in two or three sentences, with the date it was last checked. Then the same template covers Gemini against ChatGPT, Codex against Claude Code and Claude Code against Cursor, each linking to the full Vibe Checks behind it.
+
+### 2. Claude Code: about 39,000 searches that lead to the camp
+
+The course section above covers people looking for a Claude Code course. Far more people search for help with Claude Code itself, and Anthropic's docs, Reddit and individual blogs answer them.
+
+<KeywordTable
+  caption="Ahrefs, US, November 2026. Every teaches this in its camps and has written about how its six engineers work, but it ranks for none of these."
+  sortBy="volume"
+  columns={[{ key: 'keyword', label: 'Search', format: 'text' }, { key: 'volume', label: 'US searches', format: 'number' }, { key: 'difficulty', label: 'Difficulty', format: 'number', short: 'KD' }, { key: 'who', label: 'Who ranks', format: 'text' }]}
+  rows={[
+    { keyword: 'claude code pricing', volume: 20000, difficulty: 11, who: 'Reddit, Anthropic' },
+    { keyword: 'how to use claude code', volume: 6000, difficulty: 47, who: 'Anthropic, Builder.io' },
+    { keyword: 'claude code cost', volume: 3400, difficulty: 5, who: 'Reddit, Anthropic' },
+    { keyword: 'claude code hooks', volume: 2900, difficulty: 15, who: 'Anthropic, Reddit' },
+    { keyword: 'claude code tutorial', volume: 2800, difficulty: 17, who: 'Anthropic, YouTube' },
+    { keyword: 'claude code best practices', volume: 1800, difficulty: 0, who: 'Hacker News' },
+    { keyword: 'claude md', volume: 1700, difficulty: 18, who: 'Anthropic, HumanLayer' },
+    { keyword: 'claude code tips', volume: 700, difficulty: 26, who: 'GitHub, Anthropic' },
+  ]}
+/>
+
+For "claude code pricing", the first ordinary result is a Reddit post titled "Claude Pro at $20 is a trap for dev work". First-hand numbers are what's missing, and Every has them. I'd write one guide, "How Every's engineers use Claude Code", with these sections:
+
+<KeywordTable
+  caption="The sections of the Claude Code guide and the search each one answers (Ahrefs, US, November 2026). The last section links to the permanent course page proposed above, with the next start date."
+  sortBy="volume"
+  columns={[{ key: 'section', label: 'Section', format: 'text' }, { key: 'keyword', label: 'Search it answers', format: 'text' }, { key: 'volume', label: 'US searches', format: 'number' }, { key: 'difficulty', label: 'Difficulty', format: 'number', short: 'KD' }]}
+  rows={[
+    { section: 'What it costs us each month', keyword: 'claude code pricing', volume: 20000, difficulty: 11 },
+    { section: 'What it costs us each month', keyword: 'claude code cost', volume: 3400, difficulty: 5 },
+    { section: 'The hooks and subagents we run', keyword: 'claude code hooks', volume: 2900, difficulty: 15 },
+    { section: 'Best practices from six engineers', keyword: 'claude code best practices', volume: 1800, difficulty: 0 },
+    { section: 'Our CLAUDE.md, line by line', keyword: 'claude md', volume: 1700, difficulty: 18 },
+    { section: 'Best practices from six engineers', keyword: 'claude code tips', volume: 700, difficulty: 26 },
+    { section: 'Learn it live', keyword: 'claude code course', volume: 1000, difficulty: 59 },
+  ]}
+/>
+
+The compound engineering guide already shows this works: it ranks second for its own term and Google's AI answers cite it.
+
+### 3. AI at work: the searches a consulting client makes first
+
+Before a company hires consultants, someone there searches for how to start. These searches have low difficulty, and the pages that rank are vendor glossaries and research notes.
+
+<KeywordTable
+  caption="Ahrefs, US, November 2026. Every's guide &quot;The eight levels of AI adoption&quot; covers this ground but gets about 18 visits a month, for &quot;ai levels&quot;."
+  sortBy="volume"
+  columns={[{ key: 'keyword', label: 'Search', format: 'text' }, { key: 'volume', label: 'US searches', format: 'number' }, { key: 'difficulty', label: 'Difficulty', format: 'number', short: 'KD' }, { key: 'who', label: 'Who ranks', format: 'text' }]}
+  rows={[
+    { keyword: 'how to use ai', volume: 5500, difficulty: 8, who: 'Ethan Mollick, Google' },
+    { keyword: 'ai agents for business', volume: 3000, difficulty: 15, who: 'BCG, Lindy' },
+    { keyword: 'ai adoption', volume: 2800, difficulty: 19, who: 'Fortinet, the Fed' },
+    { keyword: 'ai transformation', volume: 2400, difficulty: 24, who: 'CGI, IBM' },
+    { keyword: 'ai readiness assessment', volume: 1800, difficulty: 12, who: 'Microsoft, Cisco' },
+    { keyword: 'ai adoption framework', volume: 1100, difficulty: 0, who: 'deepset, Xebia' },
+    { keyword: 'ai maturity model', volume: 800, difficulty: 28, who: 'Gartner, CMU' },
+    { keyword: 'ai policy template', volume: 600, difficulty: 11, who: 'NTEN, Responsible AI' },
+  ]}
+/>
+
+I'd turn the eight levels guide into the page for "ai adoption framework" and "ai maturity model": the same framework, with a title that names the search, a short definition at the top, and one client story per level. Every's "executive's guide to implementing AI" can answer "ai transformation" the same way. Both should end on the consulting page.
+
+### Free tools and pages built from a pattern
+
+Searches with a tool in them ("assessment", "template", "generator") come from someone who wants to do a job now, and a tool page can end at the product that does the rest. These are the ones Every can build from what it already has:
+
+<KeywordTable
+  caption="Ahrefs, US, November 2026. Each tool is built from something Every already owns. The readiness assessment would also target &quot;ai readiness&quot; (1,300, difficulty 17), and the policy template &quot;ai acceptable use policy template&quot; (200, difficulty 3)."
+  sortBy="volume"
+  columns={[{ key: 'keyword', label: 'Search', format: 'text' }, { key: 'volume', label: 'US searches', format: 'number' }, { key: 'difficulty', label: 'Difficulty', format: 'number', short: 'KD' }, { key: 'who', label: 'Who ranks', format: 'text' }, { key: 'built', label: 'Built from', format: 'text' }]}
+  rows={[
+    { keyword: 'ai readiness assessment', volume: 1800, difficulty: 12, who: 'Microsoft, Cisco', built: 'The eight levels guide' },
+    { keyword: 'ai policy template', volume: 600, difficulty: 11, who: 'NTEN, Responsible AI', built: 'The consulting team' },
+    { keyword: 'linkedin post generator', volume: 500, difficulty: 12, who: 'Hootsuite, Postiv', built: 'Spiral' },
+  ]}
+/>
+
+The AI readiness assessment would be ten questions that place a company on Every's eight levels, then a results page that explains the level and what to do next, with a link to book a consulting call. Microsoft, Cisco and PwC rank with their own versions.
+
+The AI policy template is the policy a company needs before its staff use AI at work, as a page and a download. It's an easy first step toward the consulting team.
+
+The LinkedIn post generator would be a free, limited version of Spiral that writes one post from a pasted idea, with a link to the full app. Hootsuite and Grammarly rank with free tools like this.
+
+The bigger pattern is one page per model. The Rundown's AI tool directory has a page for each tool, and its Claude page alone gets an estimated 88,800 of its 151,600 visits. Every can do the same with models: one page per model that holds Every's verdict, the jobs it's best at and links to each Vibe Check. Model names get real searches: "claude opus 5.5" has 2,600 US searches a month, "gemini 4 argon" 1,400 and "claude sonnet 5.5" 900 (Ahrefs). These pages are the model family hubs from the model review section, one level down.
+
+## AI search: the answers rarely cite Every
+
+AI answers cite Every for one of 10 questions a buyer of its products might ask. Crawler access isn't the reason, so most of the fix is in what the pages say.
+
+### What AI crawlers get
+
+GPTBot, OAI-SearchBot, ClaudeBot and PerplexityBot user agents get the same pages a browser gets, and llms.txt and Markdown copies of the posts exist. The gaps are the Vibe Check verdicts and the consulting page.
+
+<UrlMap
+  caption="What every.to serves to AI crawlers, 4 November 2026."
+  rows={[
+    { url: "/vibe-check/gpt-5-6-sol", action: "Fix", tone: "change", note: "Every user agent gets the 376-word intro, then \"Start your free trial to read the full Vibe Check\". That link redirects back to the same page." },
+    { url: "/consulting.md", action: "Add", tone: "change", note: "Returns the HTML page, not Markdown." },
+    { url: "/consulting", action: "Fix", tone: "change", note: "Has only the site's Organization and WebSite markup, with no structured data that says Every offers consulting." },
+    { url: "/llms.txt", action: "Fix", tone: "change", note: "About 22 KB of plain text. Lists the consulting page in one line, near the end." },
+    { url: "/robots.txt", action: "Keep", tone: "keep", note: "Allows GPTBot, OAI-SearchBot, ChatGPT-User, ClaudeBot, Claude-User, PerplexityBot and Google-Extended, with Content-Signal search=yes, ai-input=yes, ai-train=yes." },
+    { url: "/llms-full.txt", action: "Keep", tone: "keep", note: "The 47 latest posts as Markdown." },
+    { url: "/guides/compound-engineering.md", action: "Keep", tone: "keep", note: "The full guide as Markdown, about 9,500 words." },
+  ]}
+/>
+
+The Vibe Checks matter most. The verdict an AI answer would quote, "which model gets which job", is behind the trial. That's a fair business choice for the full review. But the verdict alone is the part that gets cited, and it's what brings a reader to the trial.
+
+<BeforeAfter
+  caption="What a crawler, or a reader without a subscription, gets at the end of the free part of a Vibe Check, today and with a free verdict."
+  before={{ label: "Today", html: beforeVerdict }}
+  after={{ label: "With a free verdict", html: afterVerdict }}
+/>
+
+The consulting page needs a Markdown copy, service markup and a better place in llms.txt. The guides have no Article markup either, unlike the posts.
+
+### Who AI answers cite
+
+<KeywordTable
+  caption="AI answers on 4 November 2026 from ChatGPT search, Google AI Mode and Google's AI Overviews (DataForSEO, US), for every.to, The Rundown AI and Every's app sites. Cited means the answer links to the site; named means it names it without a link. The last column lists sites ChatGPT and AI Mode cited instead."
+  sortBy="keyword"
+  columns={[{ key: 'keyword', label: 'Question', format: 'text' }, { key: 'every', label: 'Every', format: 'text' }, { key: 'rundown', label: 'The Rundown', format: 'text', short: 'Rundown' }, { key: 'cited', label: 'Cited instead', format: 'text', short: 'Cited' }]}
+  rows={[
+    { keyword: 'Best AI consulting firms for companies adopting AI', every: 'Named in AI Mode', rundown: 'No', cited: 'McKinsey, Accenture' },
+    { keyword: 'Best course to learn Claude Code', every: 'No', rundown: 'No', cited: 'Anthropic, DataCamp' },
+    { keyword: 'What is compound engineering', every: 'Cited by 2 of 3', rundown: 'No', cited: 'every.to' },
+    { keyword: 'Claude vs ChatGPT: which is better for writing', every: 'No', rundown: 'No', cited: 'Zapier, Engadget' },
+    { keyword: 'Which AI model is best for coding right now', every: 'No', rundown: 'No', cited: 'BenchLM, Builtin' },
+    { keyword: 'Best AI newsletter to keep up with AI', every: 'No', rundown: 'Cited by 3 of 3', cited: 'therundown.ai' },
+    { keyword: 'How do I train my employees to use AI', every: 'No', rundown: 'No', cited: 'No links' },
+    { keyword: 'Best AI email assistant', every: 'Cora: no', rundown: 'No', cited: 'Not checked' },
+    { keyword: 'Best dictation app for Mac', every: 'Monologue named in AI Mode', rundown: 'No', cited: 'Not checked' },
+    { keyword: 'Best AI writing tool for social media posts', every: 'Spiral: no', rundown: 'No', cited: 'Not checked' },
+  ]}
+/>
+
+The one question that cites Every is the one where it owns the term. The Rundown is also cited for one: "best AI newsletter", by all three engines, where Every isn't even mentioned. The cited pages for the other questions have something Every's pages don't:
+
+For consulting, the answers cite lists of AI consulting firms (TechRadar, Forrester and several small list sites) and the big firms' own pages. Every is named once, in AI Mode, without a link. Getting into those lists is the same job as in the consulting section.
+
+For courses, they cite course pages with a syllabus: Anthropic's academy, DataCamp, Coursera, Scrimba and DeepLearning.AI. Every has no permanent course page, and its courses address redirects to the events page.
+
+For the model questions, they cite comparison pages and leaderboards with a date and a verdict near the top. Every's verdicts are behind the trial, and it has no comparison pages.
+
+For the newsletter question, The Rundown's homepage is also the first ordinary result for "ai newsletter" (2,100 US searches a month). Every's newsletter page ranks seventh for "ai newsletters".
+
+Most of the fixes below are pages from the new content section, written so the answer an AI would quote sits in the first lines.
+
+**The fix:**
+
+- Put a free verdict block above the trial on every Vibe Check: two or three sentences on which model to use for which job, and the date.
+- Publish the comparison pages, the Claude Code guide and the permanent course page, each with the direct answer in its first paragraph.
+- Give the consulting page a Markdown copy like the posts have, and add structured data for the consulting service (a `ProfessionalService` with the services it offers).
+- Rewrite the top of the newsletter page to say what Every sends, how often and who reads it, and pitch Every to the "best AI newsletters" lists that rank, such as Zapier's.
 
 ## Three technical fixes, closest to revenue first
 
@@ -268,18 +496,18 @@ Each of these posts has a twin: the same address with a long ID on the end. Both
 
 Teardowns like this usually end with a four-week plan, with the links in week one, the consulting pages in week two and so on. With coding agents, I'd start all of it on the same day.
 
-Each fix above is a separate job with a clear end, so six agents can work on them at once:
+Each fix above is a separate job with a clear end, so ten agents can work on them at once:
 
 <PlanSteps
-  steps={[{"title": "Product links", "body": "Change the newsletter template so each product mention links to the page that sells it, with descriptive link text. Fix the monologue.co links."}, {"title": "Guide canonicals", "body": "Make guides send the canonical in the head, like posts already do."}, {"title": "Consulting hub", "body": "Draft strategy, implementation and team training pages from the existing consulting page and client stories, for the team to edit."}, {"title": "Course page", "body": "One permanent Claude Code course page that past and future cohorts point to, plus a courses hub."}, {"title": "Model reviews", "body": "Model-first title tags on Vibe Checks, and a hub page per model family."}, {"title": "Duplicates", "body": "Redirect the ID-suffixed copies and merge the Compound Engineering versions."}]}
+  steps={[{"title": "Product links", "body": "Change the newsletter template so each product mention links to the page that sells it, with descriptive link text. Fix the monologue.co links."}, {"title": "Guide canonicals", "body": "Make guides send the canonical in the head, like posts already do."}, {"title": "Consulting hub", "body": "Draft strategy, implementation and team training pages from the existing consulting page and client stories, for the team to edit."}, {"title": "Course page", "body": "One permanent Claude Code course page that past and future cohorts point to, plus a courses hub."}, {"title": "Model reviews", "body": "Model-first title tags on Vibe Checks, and a hub page per model family."}, {"title": "Duplicates", "body": "Redirect the ID-suffixed copies and merge the Compound Engineering versions."}, {"title": "Comparison pages", "body": "Draft Claude vs ChatGPT from the existing Vibe Checks, with the verdict on top, then the same template for Gemini, Codex and Cursor."}, {"title": "Claude Code guide", "body": "Draft the guide from the engineers' own CLAUDE.md files, hooks and monthly spend, linking to the course page."}, {"title": "Free tools", "body": "Build the AI readiness assessment from the eight levels guide, and publish the AI policy template."}, {"title": "AI search", "body": "Add a free verdict block to each Vibe Check, a Markdown copy and service markup for the consulting page, and a clearer top to the newsletter page."}]}
 />
 
-Someone at Every still needs to review the consulting copy, the course page and the client stories, because they know the business. The link, canonical, title and redirect changes need only a quick check.
+Someone at Every still needs to review the consulting copy, the course page, the client stories and each verdict, because they know the business and the models. The link, canonical, title and redirect changes need only a quick check.
 
 Then I'd spend 30 days checking the results:
 
 <PlanSteps
-  steps={[{"marker": "Day 0", "title": "Ask Google to recrawl", "body": "Submit every new and changed URL to Index My Site, so Google recrawls them now instead of on its own schedule."}, {"marker": "Day 3", "title": "Check indexing", "body": "Confirm the new pages are indexed and the guides now send the canonical in the head."}, {"marker": "Day 7", "title": "First impressions", "body": "Look for impressions on \"ai strategy consulting\" and \"claude code course\" in Search Console."}, {"marker": "Day 14", "title": "Product clicks", "body": "Check clicks from every.to links to the product pages in analytics. Those clicks are the first sign of new revenue."}, {"marker": "Day 30", "title": "Enquiries and sign-ups", "body": "Compare consulting enquiries and course sign-ups from search with the month before."}]}
+  steps={[{"marker": "Day 0", "title": "Ask Google to recrawl", "body": "Submit every new and changed URL to Index My Site, so Google recrawls them now instead of on its own schedule."}, {"marker": "Day 3", "title": "Check indexing", "body": "Confirm the new pages are indexed and the guides now send the canonical in the head."}, {"marker": "Day 7", "title": "First impressions", "body": "Look for impressions on \"ai strategy consulting\", \"claude code course\" and \"claude vs chatgpt\" in Search Console."}, {"marker": "Day 14", "title": "Product clicks", "body": "Check clicks from every.to links to the product pages in analytics. Those clicks are the first sign of new revenue."}, {"marker": "Day 30", "title": "Enquiries, sign-ups and AI answers", "body": "Compare consulting enquiries and course sign-ups from search with the month before, and ask the AI answers the same 10 questions again to see which ones now cite Every."}]}
 />
 
 ## Get the changes seen quickly
@@ -298,7 +526,7 @@ claude mcp add --transport http seoskill https://seoskill.dev/mcp
 
 Codex, Cursor and Claude on the web work too. The [MCP guide](/docs/mcp) has the steps for each one.
 
-**2. Add a research key.** On your [account page](/account), save an Ahrefs or DataForSEO key. The key gives your agent search volumes, rankings and results pages, like the tables above.
+**2. Add a research key.** On your [account page](/account), save an Ahrefs or DataForSEO key. The key gives your agent search volumes, rankings and results pages, like the tables above. With DataForSEO it can also ask ChatGPT and Google's AI answers your questions and check who they cite.
 
 **3. Install the CLI for crawling.** The crawl runs on your machine, so it can read any site:
 
@@ -315,6 +543,10 @@ Crawl each one with seo crawl. Find where our sites
 link to each other and which pages those links hit.
 Use seo_research to find the searches our buyers
 make, who ranks for them and whether we can compete.
+Find the searches our competitors rank for and we
+don't, and group them into pages we should write.
+Ask ai_answers 10 buyer questions for us and our
+top competitor, and say who gets cited.
 Rank every fix by how close it sits to revenue.
 ```
 

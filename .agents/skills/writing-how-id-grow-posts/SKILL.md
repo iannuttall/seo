@@ -90,6 +90,10 @@ Series rules:
 
 - **One domain beats subdomains; less is more.** Recommend folding subdomains and side sites into subfolders on the main domain, or into the platform's post path when it can't serve folders, with a 301 from every old address. Make an exception only with evidence against it, and say what the evidence is. The referring domain counts from step 8 show what each move gains.
 - **Turn the best social posts into lasting pages.** When step 9 finds them, propose the playbook: the long version on the web, a short post that links to it, and the link in a reply under the original post.
+- **Only findings go in the post.** The research steps are a checklist for you, not a list of sections. When a step finds nothing to act on, leave it out: no heading, no "I checked X and found nothing". Keep an absence only when the absence is the finding ("Amp was in none of 28 AI answers").
+- **Lead with the finding, not the method.** Open a section with what's true, not "I requested..." or "I pulled...". The method goes in a short clause or the exhibit caption.
+- **No judgment words.** "Unusually", "remarkably", "impressively", "well set up", "strong" and the like say nothing a reader can check. State the fact instead.
+- **Real tables, not code blocks.** Never line up columns with spaces in a code block. Use `UrlMap`, `KeywordTable` or a Markdown table, and check it at 390px.
 
 Sections, in this order, adjusted to the company:
 

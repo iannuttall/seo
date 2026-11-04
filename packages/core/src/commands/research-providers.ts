@@ -302,6 +302,75 @@ export async function dataForSeoTask(
 const NO_RESULTS = 40102
 const PARTIAL = 40106
 
+// One DataForSEO task in the queue: what task_post or task_get said about it.
+export type DataForSeoQueued = {
+  id: string
+  status_code: number
+  status_message: string
+  cost: number
+  data: Record<string, unknown>
+  result: Record<string, unknown> | null
+}
+
+const queued = (task: Record<string, unknown>): DataForSeoQueued => ({
+  id: String(task.id ?? ''),
+  status_code: Number(task.status_code ?? 0),
+  status_message: String(task.status_message ?? ''),
+  cost: Number(task.cost ?? 0),
+  data: (task.data ?? {}) as Record<string, unknown>,
+  result: (task.result as Record<string, unknown>[] | null)?.[0] ?? null,
+})
+
+// Up to 100 tasks queued in one request (DataForSEO's Standard method).
+// Each task is charged when it is queued; its result is read later with
+// dataForSeoGet, for free, for 30 days.
+export async function dataForSeoPost(
+  [login, password]: string[],
+  path: string,
+  tasks: Record<string, unknown>[],
+): Promise<DataForSeoQueued[]> {
+  const response = await call(
+    'dataforseo',
+    new Request(`https://api.dataforseo.com/${path}`, {
+      method: 'POST',
+      headers: {
+        authorization: `Basic ${btoa(`${login}:${password}`)}`,
+        'content-type': 'application/json',
+      },
+      body: JSON.stringify(tasks),
+    }),
+  )
+  const data = (await readJson(response, 'DataForSEO')) as {
+    tasks?: Record<string, unknown>[]
+  }
+  return (data.tasks ?? []).map(queued)
+}
+
+// Task in queue (40601 handed, 40602 in queue): not ready yet.
+export const DATAFORSEO_NOT_READY = new Set([40601, 40602])
+export const DATAFORSEO_NO_RESULTS = NO_RESULTS
+
+// A queued task's state and, once it is done, its first result.
+export async function dataForSeoGet(
+  [login, password]: string[],
+  path: string,
+): Promise<DataForSeoQueued> {
+  const response = await call(
+    'dataforseo',
+    new Request(`https://api.dataforseo.com/${path}`, {
+      headers: { authorization: `Basic ${btoa(`${login}:${password}`)}` },
+    }),
+  )
+  const data = (await readJson(response, 'DataForSEO')) as {
+    tasks?: Record<string, unknown>[]
+  }
+  const task = data.tasks?.[0]
+  if (!task) {
+    throw new CommandError('PROVIDER_ERROR', `dataforseo: no task at ${path}`)
+  }
+  return queued(task)
+}
+
 async function dataForSeo(
   keys: string[],
   input: ResearchInput,

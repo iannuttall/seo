@@ -1,6 +1,6 @@
 import { z } from 'zod'
 import { LINT_FORMATS, LINT_MAX_CHARS, LINT_PRESETS } from '../lint/types.js'
-import { runAiAnswers } from './ai-answers.js'
+import { AI_ANSWER_TASK_PATTERN, runAiAnswers } from './ai-answers.js'
 import { analyticsSignIn, runAnalyticsRows } from './analytics.js'
 import { AUDIT_SECTION, AUDIT_SECTION_TEXT } from './audit.js'
 import {
@@ -438,6 +438,13 @@ export const SHARED_TOOLS: SharedTool[] = [
       action: z.enum(RESEARCH_ACTIONS),
       keywords: z.array(z.string().min(1)).max(100).default([]),
       target: z.string().default('').describe('Domain or URL.'),
+      tasks: z
+        .array(z.string().regex(AI_ANSWER_TASK_PATTERN))
+        .max(30)
+        .default([])
+        .describe(
+          'ai_answers only: the tasks an earlier run returned as not ready, to read back at no cost.',
+        ),
       country: z
         .string()
         .regex(/^[a-z]{2}$/)
@@ -454,13 +461,15 @@ export const SHARED_TOOLS: SharedTool[] = [
         }
         return runAiAnswers(
           {
-            site: input.keywords.length
-              ? input.target
-              : await surface.resolveSite(input.target),
+            site:
+              input.keywords.length || input.tasks.length
+                ? input.target
+                : await surface.resolveSite(input.target),
             country: input.country,
             detail: input.detail,
             offset: input.offset,
             questions: input.keywords,
+            tasks: input.tasks,
           },
           await surface.keys(),
           surface.deps,

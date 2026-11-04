@@ -5,21 +5,22 @@
 // `align="start"` opens the card from the badge's left edge on phones, where
 // a centred card would run off a left-aligned byline. Clicking outside the
 // card or pressing Escape closes it. The counts are built in from site.ts
-// and updated after load from the Worker's daily refresh.
+// and updated after load from the Worker's daily refresh. `ai` adds "written
+// by AI" to the byline and says in the card how the post was written.
 import { ArrowDown01Icon } from '@hugeicons/core-free-icons'
 import HugeIcon from './HugeIcon.astro'
 import { founderSocials } from '@/lib/founder-socials'
 import { founder } from '@/lib/site'
 
-type Props = { prefix?: string; align?: 'center' | 'start' }
+type Props = { prefix?: string; align?: 'center' | 'start'; ai?: boolean }
 
-const { prefix = 'Built by', align = 'center' } = Astro.props
+const { prefix = 'Built by', align = 'center', ai = false } = Astro.props
 ---
 
 <details class="founder-badge group relative inline-block text-left">
   <summary class="flex cursor-pointer list-none items-center gap-2.5 rounded-full bg-background py-0.5 pr-2.5 pl-0.5 text-[0.8125rem]/6 text-foreground shadow-sm ring-1 ring-border-strong hover:ring-foreground/30 focus-visible:outline-none focus-visible:ring-[3px] focus-visible:ring-ring/20 [&::-webkit-details-marker]:hidden">
     <span aria-hidden="true" class="flex size-6 items-center justify-center rounded-full bg-primary text-[0.625rem] font-medium text-primary-foreground">IN</span>
-    <span>{prefix} <span class="font-medium">{founder.name}</span></span>
+    <span>{prefix} <span class="font-medium">{founder.name}</span>{ai ? <span class="text-foreground-muted"> · written by AI</span> : null}</span>
     <span aria-hidden="true" class="hidden h-3.5 w-px bg-border sm:block"></span>
     <span class="hidden items-center gap-2.5 text-foreground-muted sm:flex">
       {
@@ -53,6 +54,14 @@ const { prefix = 'Built by', align = 'center' } = Astro.props
         ))
       }
     </ul>
+    {
+      ai ? (
+        <p class="mt-4 text-sm/6 text-foreground-muted">
+          AI writes these posts. I plan each one, gather the data from real
+          sources and review the draft before it goes live.
+        </p>
+      ) : null
+    }
     <a class="mt-4 inline-block text-sm/6 font-medium text-foreground underline underline-offset-4" href={`/about#${founder.anchor}`}>See my background</a>
   </div>
 </details>

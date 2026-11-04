@@ -46,12 +46,11 @@ const breadcrumbs: SchemaBreadcrumb[] = [
     }
     <PageHeader title={entry.data.heading} description={entry.data.lead} class="!mb-4" />
     <div class="mb-10 flex flex-wrap items-center gap-x-3 gap-y-2 text-sm text-foreground-muted">
-      <FounderBadge prefix="Written by" align="start" />
+      <FounderBadge prefix="Planned by" align="start" ai />
       <span>
         <time datetime={date}>{formatPostDate(date)}</time>
         {updated ? <span>, updated <time datetime={updated}>{formatPostDate(updated)}</time></span> : null}
       </span>
-      <p class="w-full">Written with AI and edited by me. Every number comes from a real source.</p>
     </div>
     {
       cover ? (

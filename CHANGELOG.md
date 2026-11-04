@@ -1,5 +1,22 @@
 # Changelog
 
+## 0.15.2
+
+### Fixed
+
+- `seo_research` `ai_answers` on the hosted server no longer times out and
+  charges for answers it never returns. Questions now go through
+  DataForSEO's queue, which also costs less: about $0.07 for 10 questions
+  instead of $0.12. Answers not ready after about 40 seconds come back as
+  tasks that are already paid for. Pass them back in `tasks` (`--tasks` in
+  the CLI) with the same target to read them at no cost. The CLI waits up
+  to four minutes before handing tasks back.
+
+### Added
+
+- Each `ai_answers` row lists the other sites the answer cites, and the
+  notes rank the sites cited most across all answers.
+
 ## 0.15.1
 
 ### Changed

@@ -2,13 +2,11 @@ import {
   type CommandDeps,
   CommandError,
   checkPages,
-  type IssueStore,
   indexStatusFrom,
   liveCheck,
   mcpCall,
-  type StoredIssue,
 } from '@seo/core/commands'
-import { auditAccess } from '../audit/schedule.ts'
+import { auditAccess, siteIssues } from '../audit/schedule.ts'
 import { weekData } from '../audit/week.ts'
 import { billingOn, startAuditSite } from '../billing.ts'
 import { accountUrl, signInHint } from '../google.ts'
@@ -83,45 +81,5 @@ export function deps({
           bingConnect: `Connect Bing at ${accountUrl(env)}.`,
         }
       : {}),
-  }
-}
-
-// The account's issues list for each audited site, one JSON row per
-// property in D1 (migrations/0012_site_issues.sql). The hosted server keeps
-// it only for sites in the weekly site audit, with the rest of their data,
-// and deletes it when the site is removed. For any other site read gives
-// null, and the agent saves the list itself.
-function siteIssues(env: Env, userId: string): IssueStore {
-  const audited = async (property: string) =>
-    Boolean(
-      await env.DB.prepare(
-        'SELECT 1 AS n FROM audit_sites WHERE user_id = ? AND property = ?',
-      )
-        .bind(userId, property)
-        .first(),
-    )
-  return {
-    read: async (property) => {
-      if (!(await audited(property))) return null
-      const row = await env.DB.prepare(
-        'SELECT issues FROM site_issues WHERE user_id = ? AND property = ?',
-      )
-        .bind(userId, property)
-        .first<{ issues: string }>()
-      return row ? (JSON.parse(row.issues) as StoredIssue[]) : []
-    },
-    write: async (property, issues) => {
-      if (!(await audited(property))) {
-        throw new Error(`${property} is not in the weekly site audit.`)
-      }
-      await env.DB.prepare(
-        `INSERT INTO site_issues (user_id, property, issues, updated_at)
-         VALUES (?, ?, ?, ?)
-         ON CONFLICT (user_id, property) DO UPDATE SET
-           issues = excluded.issues, updated_at = excluded.updated_at`,
-      )
-        .bind(userId, property, JSON.stringify(issues), Date.now())
-        .run()
-    },
   }
 }

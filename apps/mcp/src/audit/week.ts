@@ -1,12 +1,17 @@
 import {
+  MEASURES_PER_RUN,
+  measureFixed,
   previousWeek,
   searchConsoleDay,
   type WeekData,
+  weekMeasured,
 } from '@seo/core/commands'
 import { queueAlert } from '../alerts/deliver.ts'
 import { hasWeeklyAudit } from '../beta.ts'
+import { directory } from '../google.ts'
+import { accountsOf } from '../store.ts'
 import { isMonday, unsentIndexChanges } from './index-roundup.ts'
-import { auditSites, siteId, siteObject } from './schedule.ts'
+import { auditSites, siteId, siteIssues, siteObject } from './schedule.ts'
 
 // The weekly summary (seo report with no site, and the Monday email): the last full week,
 // Monday to Sunday in UTC, of every site a person audits. Each site's
@@ -21,6 +26,7 @@ export async function weekData(
 ): Promise<WeekData> {
   const week = previousWeek(now)
   const sites = await auditSites(env, userId)
+  const issues = siteIssues(env, userId)
   return {
     start: week.start,
     end: week.end,
@@ -34,6 +40,10 @@ export async function weekData(
           property: site.property,
           link: `${env.PUBLIC_URL}/account/sites/${await siteId(userId, site.property)}`,
           added_at: site.addedAt,
+          measured: weekMeasured(
+            (await issues.read(site.property).catch(() => null)) ?? [],
+            now,
+          ),
           crawl: found?.crawl ?? null,
           start_error: site.lastError,
           index: found?.index ?? null,
@@ -51,6 +61,32 @@ export async function weekData(
         }
       }),
     ),
+  }
+}
+
+// Measures each audited site's fixed issues that are due, before the
+// summary reads them: at most MEASURES_PER_RUN Search Console calls for
+// the whole account, sites in order. A call that fails, or a fix past the
+// cap, waits for the next run (the issues section, or next week).
+async function measureSites(env: Env, userId: string, now: number) {
+  const store = siteIssues(env, userId)
+  const read = directory(env, await accountsOf(env, userId)).searchAnalytics()
+  let left = MEASURES_PER_RUN
+  for (const site of await auditSites(env, userId)) {
+    if (left <= 0) return
+    const issues = await store.read(site.property)
+    if (!issues?.some((issue) => issue.mark === 'fixed')) continue
+    const measured = await measureFixed(
+      issues,
+      site.property,
+      read,
+      new Date(now),
+      left,
+    )
+    left -= measured.calls
+    if (JSON.stringify(measured.issues) !== JSON.stringify(issues)) {
+      await store.write(site.property, measured.issues)
+    }
   }
 }
 
@@ -73,6 +109,7 @@ export async function sendWeeklySummaries(env: Env, now = Date.now()) {
     .bind(week, ACCOUNTS_PER_TICK)
     .all<{ user_id: string }>()
   for (const { user_id: userId } of due.results) {
+    await measureSites(env, userId, now).catch(() => undefined)
     const [summary, unsent] = await Promise.all([
       weekData(env, userId, now).catch(() => null),
       unsentIndexChanges(env, userId).catch(() => null),

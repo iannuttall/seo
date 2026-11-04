@@ -230,6 +230,17 @@ of final Search Console data against the 7 before). Each is `null` when it
 is not known yet. `index_changes` is Monday's daily roundup, the same
 list as `index-changes` `data.sites`, empty when nothing changed.
 
+`google-update` goes out within the hour of Google's
+[Search Status Dashboard](https://status.search.google.com/) posting that a
+ranking update (a core, spam or similar update) started rolling out, and
+again when it says the update finished: once per phase and account,
+covering every audited site, so `site` is `null`. Only updates that started,
+or finished, in the last 7 days are sent; an account first alerted after an
+update finished gets only `finished`. `data.update` has Google's `id` and
+`name`, `phase` (`started` or `finished`), `start`, `end` (`null` while it
+rolls out) and `url` (Google's notice); `data.sites` lists the account's
+audited properties.
+
 More types may come; ignore one you do not know.
 
 Each tool call uses the linked Google account that can read the site, the one

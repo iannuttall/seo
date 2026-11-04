@@ -5,6 +5,7 @@ import {
   propertiesCallback,
 } from './account.ts'
 import { sendDueAlerts } from './alerts/deliver.ts'
+import { sendGoogleUpdateAlerts } from './audit/google-updates.ts'
 import { sendIndexRoundups } from './audit/index-roundup.ts'
 import { startDue } from './audit/schedule.ts'
 import { sendWeeklySummaries } from './audit/week.ts'
@@ -204,6 +205,7 @@ export default {
       ctx.waitUntil(sendDueAlerts(env, controller.scheduledTime))
       ctx.waitUntil(sendWeeklySummaries(env, controller.scheduledTime))
       ctx.waitUntil(sendIndexRoundups(env, controller.scheduledTime))
+      ctx.waitUntil(sendGoogleUpdateAlerts(env, controller.scheduledTime))
       return
     }
     const now = new Date(controller.scheduledTime)

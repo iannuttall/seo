@@ -1,0 +1,420 @@
+---
+title: How I'd grow Ben's Bites with SEO
+description: An SEO teardown of Ben's Bites, Ben Tossell's AI newsletter. Where its Google traffic went, the closed catalog, the old domains and the fixes I'd ship.
+heading: How I'd grow Ben's Bites
+lead: Ben's Bites has more than 118,000 subscribers and about 890 visits a month from Google. Most of those visits land on a catalog that now returns a 404. This is how I'd turn search back into a steady source of new readers.
+date: '2026-11-04'
+company: Ben's Bites
+x:
+  company: bentossell
+draft: false
+---
+
+export const beforeOld = `<pre>bensbites.co/p/no-claude-for-claws
+  301 → bensbites.com/
+  301 → www.bensbites.com/   (the homepage)
+
+news.bensbites.com/users/www7800betcom
+  301 → bensbites.com/
+  301 → www.bensbites.com/   (the homepage)</pre>`
+
+export const afterOld = `<pre>bensbites.co/p/no-claude-for-claws
+  301 → www.bensbites.com/p/no-claude-for-claws
+
+news.bensbites.com/users/www7800betcom
+  410 Gone</pre>`
+
+export const beforeLink = `<pre>www.bensbites.com/p/prophecies-of-the-flood
+  302 → /prophecies-of-the-flood
+  404 Not Found</pre>`
+
+export const afterLink = `<pre>www.oneusefulthing.org/p/prophecies-of-the-flood
+  200 OK
+  (the post the issue meant to link to)</pre>`
+
+export const beforeCookbook = `<pre>cookbook.bensbites.com/cookbook/become-technical-in-1-day/
+  200 OK, no canonical tag
+
+cookbook.bensbites.com/sitemap.xml
+  &lt;loc&gt;http://localhost:8000/cookbook/become-technical-in-1-day/&lt;/loc&gt;
+
+cookbook.bensbites.com/any-made-up-address
+  200 OK, the homepage HTML</pre>`
+
+export const afterCookbook = `<pre>cookbook.bensbites.com/cookbook/become-technical-in-1-day/
+  301 → www.bensbites.com/p/become-technical-in-1-day
+
+www.bensbites.com/sitemap.xml
+  lists the guide with every other post
+
+cookbook.bensbites.com/any-made-up-address
+  301 → www.bensbites.com/</pre>`
+
+
+[Ben's Bites](https://www.bensbites.com/) is Ben Tossell's AI newsletter. It goes out on Tuesdays and Thursdays to more than 118,000 subscribers, and it makes money from sponsors: one main ad and one tool placement in each send. Its sponsor page prices the main ad at about a $48 CPM, so each new subscriber adds revenue to every send for as long as they stay.
+
+For a newsletter, that's the job search has to do: bring in readers who haven't heard of it yet. Ben is also changing the newsletter right now. In [Finding my thing](https://www.bensbites.com/p/if-you-feel-behind-right-now-dont) he says the format, topics and posting days will all vary until the end of the year ("I'm in experimental mode"). Search is the channel that keeps bringing in new readers whatever the format, as long as the pages they land on still exist.
+
+## Most of Ben's Bites' search traffic lands on pages that no longer exist
+
+Ahrefs estimates Ben's Bites gets about 885 visits a month from Google across all its domains. This map shows where they land.
+
+<TrafficMap
+  caption="Estimated Google visits to bensbites.com and its subdomains by kind of page, November 2026 (Ahrefs top pages). Blue pages bring in readers who weren't searching for Ben's Bites. Red pages now return a 404."
+  items={[
+    { label: "Catalog tutorials", value: 363, tone: "waste", note: "Led by a ChatGPT getting started tutorial, about 186 visits" },
+    { label: "Searches for Ben's Bites by name", value: 200, tone: "brand", note: "The homepage, about page and archive" },
+    { label: "Newsletter posts found by topic", value: 133, tone: "sells", note: "Led by \"Buy credits in ChatGPT\", second for \"chatgpt credits\"" },
+    { label: "Catalog tool pages", value: 88, tone: "waste", note: "One page, for Chatbot Arena" },
+    { label: "Catalog pages found by name", value: 73, tone: "waste", note: "The top result for \"ben's bites newsletter\" is a catalog page that now 404s" },
+    { label: "Catalog articles", value: 28, tone: "waste" },
+  ]}
+/>
+
+About 62% of those visits land on catalog.bensbites.com, the tutorials and tools library behind the old Pro membership. Every page I tried there now returns a "Page not found" error. Only about 15% reach a newsletter post from someone who wasn't already looking for Ben's Bites.
+
+The catalog wasn't a side project in search terms. Over the last year it was the part that grew, while the newsletter posts fell.
+
+<TrafficCurve
+  caption="Estimated monthly Google visits to the catalog and to the newsletter on www.bensbites.com (Ahrefs). The catalog now returns a 404 on every page."
+  unit="visits"
+  series={[
+    { name: "Catalog", data: [{"label": "May 25", "value": 111}, {"label": "Jun 25", "value": 114}, {"label": "Jul 25", "value": 131}, {"label": "Aug 25", "value": 126}, {"label": "Sep 25", "value": 103}, {"label": "Oct 25", "value": 74}, {"label": "Nov 25", "value": 84}, {"label": "Dec 25", "value": 107}, {"label": "Jan 26", "value": 78}, {"label": "Feb 26", "value": 142}, {"label": "Mar 26", "value": 155}, {"label": "Apr 26", "value": 324}, {"label": "May 26", "value": 948}, {"label": "Jun 26", "value": 521}, {"label": "Jul 26", "value": 328}, {"label": "Aug 26", "value": 469}, {"label": "Sep 26", "value": 620}, {"label": "Oct 26", "value": 805}] },
+    { name: "Newsletter", data: [{"label": "May 25", "value": 314}, {"label": "Jun 25", "value": 896}, {"label": "Jul 25", "value": 1449}, {"label": "Aug 25", "value": 1508}, {"label": "Sep 25", "value": 1454}, {"label": "Oct 25", "value": 1191}, {"label": "Nov 25", "value": 864}, {"label": "Dec 25", "value": 785}, {"label": "Jan 26", "value": 899}, {"label": "Feb 26", "value": 1027}, {"label": "Mar 26", "value": 1084}, {"label": "Apr 26", "value": 852}, {"label": "May 26", "value": 802}, {"label": "Jun 26", "value": 754}, {"label": "Jul 26", "value": 683}, {"label": "Aug 26", "value": 449}, {"label": "Sep 26", "value": 274}, {"label": "Oct 26", "value": 294}] },
+  ]}
+  notes={[{ at: "May 26", text: "The catalog's best month, about 950 visits" }]}
+/>
+
+Ahrefs still credited the catalog with about 805 visits in October. Those estimates come from where the pages ranked, so they lag behind a shutdown. Ahrefs' 1 November data still has the ChatGPT tutorial first for "chatgpt interface", but its latest results page for that search no longer shows it. The traffic is going, and it goes with the pages.
+
+I checked all 1,020 catalog addresses the Wayback Machine has saved with SEO Skill. 1,016 return a 404, and the four that don't are robots.txt and other system files. That includes 433 tutorials, 201 articles and 122 tool pages.
+
+## New readers: the bigger AI newsletters get them from evergreen pages
+
+These are Ahrefs' estimates of this month's Google traffic for the AI newsletters people compare with Ben's Bites.
+
+<CompareBars
+  caption="Estimated monthly organic visits, November 2026 (Ahrefs, all subdomains). 148,197 of The Rundown's visits land on its AI tools directory."
+  unit="visits/month"
+  highlight="bensbites.com"
+  rows={[{"label": "therundown.ai", "value": 159650, "note": "About 93% on its AI tools directory"}, {"label": "tldr.tech", "value": 39585, "note": "Mostly people searching for \"tldr\""}, {"label": "latent.space", "value": 5453}, {"label": "superhuman.ai", "value": 3985}, {"label": "bensbites.com", "value": 885}, {"label": "alphasignal.ai", "value": 866}, {"label": "theneurondaily.com", "value": 816}]}
+/>
+
+The Rundown's lead isn't its daily issue. About 148,000 of its 160,000 visits land on its AI tools directory, one page per tool. Ben's Bites had the same kind of asset: 122 tool pages in the catalog, one of which ranked second for "chatbot arena". They all return a 404 now.
+
+I wouldn't copy The Rundown's directory. Most of its traffic is people typing "claude ai" into Google, who wanted Claude, not a newsletter. The part worth copying is that each evergreen page brings in readers every day without an issue going out.
+
+The searches for the category itself are small, and Ben's Bites isn't in them. "ai newsletter" gets about 2,100 US searches a month (Ahrefs), and these are the pages Google shows.
+
+<SerpLadder
+  keyword="ai newsletter"
+  volume={2100}
+  target="bensbites.com"
+  targetPosition={null}
+  caption="Organic results for &quot;ai newsletter&quot; (Ahrefs, US). Above them, Google's AI Overview cites The Rundown, TLDR, Superhuman and five list posts. None of them is Ben's Bites."
+  rows={[
+    { position: 2, domain: 'therundown.ai', dr: 72, tag: 'Newsletter homepage' },
+    { position: 3, domain: 'tldr.tech', dr: 72, tag: 'Newsletter page' },
+    { position: 4, domain: 'reddit.com', dr: 95, tag: 'Forum thread' },
+    { position: 5, domain: 'medium.com', dr: 94, tag: 'List post' },
+    { position: 6, domain: 'github.com', dr: 97, tag: 'List of newsletters' },
+    { position: 7, domain: 'ibm.com', dr: 93, tag: 'Newsletter sign-up' },
+    { position: 9, domain: 'venngage.com', dr: 84, tag: 'Newsletter generator' },
+    { position: 10, domain: 'zapier.com', dr: 91, tag: 'List post' },
+  ]}
+/>
+
+Most of this results page is lists, so the way in is the lists. Ben's Bites is already in Zapier's (tenth here and fifth for "best ai newsletter"), Leland's and Clickittech's. daily.dev's list still links to bensbites.co. It's missing from the GitHub list in sixth place, the DLabs and Lymlyt lists the AI Overview cites, and a Substack post ranking the 100 best AI newsletters on Substack. Each one is an email to the author.
+
+Those lists and AI answers send people to the homepage, and the homepage's search result doesn't say what Ben's Bites is. Its title is Substack's default, "Ben's Bites | Substack", and the description ends in Substack's stock line.
+
+<SearchResult
+  caption="The homepage as it shows in Google today, and with a title and description written for someone who hasn't heard of Ben's Bites. Both are set in Substack's SEO settings."
+  before={{
+    url: "https://www.bensbites.com/",
+    site: "Ben's Bites",
+    title: "Ben's Bites | Substack",
+    description: "What I'm learning building with agents (plus tools worth trying). Click to read Ben's Bites, a Substack publication with hundreds of thousands of subscribers.",
+  }}
+  after={{
+    url: "https://www.bensbites.com/",
+    site: "Ben's Bites",
+    title: "Ben's Bites: an AI newsletter for builders",
+    description: "Ben Tossell on what he's learning building with AI agents, plus the tools he's using. Free, read by more than 118,000 subscribers.",
+  }}
+/>
+
+The new title names the topic and who it's for, so it can match "ai newsletter" searches, not only searches for the name.
+
+## Tutorials: the pages that brought in readers, and where they could live now
+
+The catalog's tutorials taught ChatGPT, Claude and other tools to people at work. Ben's writing has moved on to building with agents ("I can't code. I build with agents", says his cookbook). The searches have moved the same way.
+
+<KeywordTable
+  caption="Ahrefs, US. Ben's Bites has no page that ranks for any search containing &quot;claude code&quot; or &quot;vibe&quot;. Two of these results pages have another newsletter's Substack post on page one."
+  sortBy="volume"
+  columns={[{ key: 'keyword', label: 'Search', format: 'text' }, { key: 'volume', label: 'US searches', format: 'number' }, { key: 'difficulty', label: 'Difficulty', format: 'number', short: 'KD' }, { key: 'who', label: 'Who ranks', format: 'text' }]}
+  rows={[
+    { keyword: 'how to use claude code', volume: 6000, difficulty: 47, who: 'Anthropic, Builder.io, Reddit, Product Talk' },
+    { keyword: 'claude code tutorial', volume: 2800, difficulty: 17, who: 'Anthropic, YouTube, a Substack guide, a free course site' },
+    { keyword: 'how to use claude cowork', volume: 2100, difficulty: 1, who: 'A Substack newsletter, YouTube, Reddit' },
+    { keyword: 'how to vibe code', volume: 900, difficulty: 12, who: 'Reddit, Microsoft, Wikipedia, roadmap.sh' },
+    { keyword: 'how to build an app with ai', volume: 600, difficulty: 31, who: 'Reddit, app builders, Zapier' },
+    { keyword: 'how to code with ai', volume: 150, difficulty: 9, who: 'Reddit, a personal blog, Medium' },
+  ]}
+/>
+
+"how to use claude cowork" is the clearest one. It gets 2,100 searches a month at a difficulty of 1, and the second result is a post on another newsletter's Substack.
+
+<SerpLadder
+  keyword="how to use claude cowork"
+  volume={2100}
+  target="bensbites.com"
+  targetPosition={null}
+  caption="Organic results for &quot;how to use claude cowork&quot; (Ahrefs, US). Two of them are posts on newsletters' own Substacks."
+  rows={[
+    { position: 2, domain: 'thesignal.substack.com', dr: 94, tag: 'Newsletter post' },
+    { position: 4, domain: 'youtube.com', dr: 99, tag: 'Video' },
+    { position: 6, domain: 'reddit.com', dr: 95, tag: 'Forum thread' },
+    { position: 7, domain: 'youtube.com', dr: 99, tag: 'Video' },
+    { position: 9, domain: 'claudecowork.im', dr: 18, tag: 'Unofficial guide' },
+    { position: 10, domain: 'productmarketer.substack.com', dr: 94, tag: 'Newsletter post' },
+  ]}
+/>
+
+Ben's Bites has written about Cowork, in a news issue called "New home for Cowork". A news issue answers "what happened this week". The searcher wants "how do I set it up", and that needs its own page with a title that says so.
+
+Ben already has the start of that page type. His cookbook has a 4,700-word "Become Technical in 1 Day" guide and "How I Code with Agents, Without Being 'Technical'". The cookbook gets no measurable search traffic yet (Ahrefs), and six sites link to it.
+
+I'd put these guides where the authority already is: on bensbites.com, as posts next to the newsletter. That's the domain 4,000 sites link to (Ahrefs). The cookbook is a separate subdomain with six. Each guide answers one search, has a title that uses the words people search, and gets a link from the issue that announces it. The issues keep their inbox titles.
+
+## Ben's best X posts could be his best search pages
+
+Ben has more than 200,000 followers on X, and his best posts there are guides on the subjects people search for. They live on x.com, where they bring in a spike of readers and then stop.
+
+His X Article "How I code with agents, without being 'technical'" got 3.9 million views on New Year's Eve 2025, and 28 sites link to it on x.com (Ahrefs). A week later he republished it on the newsletter, where 12 sites link to it, and there's a third copy on the cookbook. None of the three gets measurable search traffic.
+
+His follow-up, "What you need to know to build with coding agents, if you're not technical", got about 580,000 views in January. That's the "Become Technical in 1 Day" guide on the cookbook. Each of its sections answers a search beginners make, and the cookbook also has four short glossary pages that its homepage doesn't link to.
+
+<KeywordTable
+  caption="Sections of Become Technical in 1 Day and the cookbook's glossary pages, with the search each one could answer (Ahrefs, US). None of these pages ranks for its search today."
+  sortBy="volume"
+  columns={[{ key: 'keyword', label: 'Search', format: 'text' }, { key: 'volume', label: 'US searches', format: 'number' }, { key: 'difficulty', label: 'Difficulty', format: 'number', short: 'KD' }, { key: 'page', label: 'Ben has it as', format: 'text' }]}
+  rows={[
+    { keyword: 'claude skills', volume: 21000, difficulty: 70, page: 'The "Skills" section of the guide' },
+    { keyword: 'what is docker', volume: 14000, difficulty: 73, page: 'A 237-word glossary page' },
+    { keyword: 'what is a vps', volume: 3500, difficulty: 39, page: 'A 238-word glossary page' },
+    { keyword: 'what is bash', volume: 2800, difficulty: 7, page: 'Part of the "Commands" section' },
+    { keyword: 'agents.md', volume: 1400, difficulty: 53, page: 'The "Markdown Files & agents.md" section' },
+    { keyword: 'what is a terminal', volume: 1100, difficulty: 5, page: 'The "Terminals" section' },
+    { keyword: 'coding agents', volume: 1100, difficulty: 25, page: 'The "What Coding Agents Are" section' },
+    { keyword: 'system prompt', volume: 700, difficulty: 9, page: 'The "System Prompts" section' },
+    { keyword: 'what is an api token', volume: 350, difficulty: 0, page: 'A 149-word glossary page' },
+  ]}
+/>
+
+"what is a terminal" and "what is bash" have difficulties of 5 and 7. Reddit threads, Wikipedia, Apple's manual and programming tutorials rank for them now, all written for people who already code. Ben writes for people who don't code but work with agents every day, and nobody on page one writes for them.
+
+I'd split the guide into one post per question, each with a title that uses the words people search, and keep the full guide as the hub that links to them. Then I'd use the same pattern for every post that does well on X:
+
+1. Post on X as now. That's where the spike comes from.
+2. Within a week, publish the long version on bensbites.com, one post per question it answers. Substack can publish a post to the web without emailing it.
+3. Send a short newsletter issue that links to the guide, instead of another full copy, so Google has one page to rank.
+4. Reply to the X post with a link to the guide, so people who find the post later end up on Ben's own site.
+
+The views on an X post come in the first few days. A page that ranks for "what is a terminal" is in front of about 1,100 searchers a month (Ahrefs, US), every month, and they're the people Ben writes for.
+
+## One domain instead of seven
+
+Ben's Bites is spread across a lot of addresses: the newsletter on www.bensbites.com, the catalog, the cookbook, a sessions site, a partner page, and the old bensbites.co and news.bensbites.com. Search engines treat each subdomain as its own site, so every one starts from zero, needs its own Search Console property and has to earn its own links.
+
+The newsletter has the authority. Ahrefs counts about 4,000 sites linking to www.bensbites.com, against six for the cookbook. Everything new should go there, and every old address should end up there.
+
+<UrlMap
+  caption="Every Ben's Bites address I found, and what I'd do with each, so everything ends up on one site."
+  rows={[
+    { url: "www.bensbites.com", action: "Keep", tone: "keep", note: "The one site. Newsletter issues, guides and restored tutorials all live here, in one sitemap and one Search Console property." },
+    { url: "cookbook.bensbites.com", action: "301", to: "www.bensbites.com/p/…", note: "Republish each guide as a post, and redirect each page to its copy." },
+    { url: "catalog.bensbites.com", action: "301", to: "www.bensbites.com/p/…", note: "95 articles already have copies. Restore the tutorials that ranked as posts, and return 410 for the rest." },
+    { url: "sessions.bensbites.com", action: "301", to: "www.bensbites.com/p/…", note: "The newsletter already has \"Ben's session\" posts. Put the session write-ups there." },
+    { url: "bensbites.co and news.bensbites.com", action: "301", to: "the matching post, or 410", note: "Fix 2 below." },
+    { url: "partner.bensbites.com", action: "Leave", note: "A sponsor page nobody needs to find in search." },
+  ]}
+/>
+
+Substack decides how far this can go. It needs www.bensbites.com pointed straight at its servers, with Cloudflare's proxy off ([Substack's setup guide](https://support.substack.com/hc/en-us/articles/360051222571-How-do-I-set-up-my-custom-domain-on-Substack)), so Ben can't serve a folder like /guides from anything else on that domain. That's probably why the cookbook and sessions sites ended up on subdomains. Inside Substack, the guides go where the posts go, under /p/.
+
+For search and AI answers, that's fine. Every post's full text is in the HTML, and the AI crawlers I tested (GPTBot, OAI-SearchBot, ClaudeBot and PerplexityBot) get the same page as a browser. robots.txt blocks none of them, and each post has a canonical tag and NewsArticle structured data. What Substack doesn't offer is an llms.txt, a Markdown copy of each post, or control over templates and redirects.
+
+Those gaps are much smaller than splitting the guides across another domain, so I'd keep everything on Substack. If Ben later wants that control, the move is a site he runs himself on www.bensbites.com, with the same /p/ addresses, rather than another subdomain.
+
+## Ben's old issues link to 566 dead addresses
+
+Ben's Bites has used a lot of addresses over four years: bensbites.co, a news site on news.bensbites.com, a catalog that lived at bensbites.com before it moved to its own subdomain, a beehiiv newsletter, and now Substack, the cookbook, Ben's sessions site and a sponsor page. Old issues still link to all of them.
+
+I pulled every link out of the body of all 270 posts on the newsletter and checked where each one ends up today.
+
+<CompareBars
+  caption="Links from the 270 newsletter posts to Ben's other addresses, by destination (each address checked on 4 November 2026). 566 of the 738 links end on a 404, and 127 land on the newsletter homepage."
+  unit="links"
+  keepOrder
+  highlight={["Catalog tutorials", "Workshop recordings", "Topic pages", "Pro sign-up and pricing", "Courses and tool pages"]}
+  rows={[{"label": "Catalog tutorials", "value": 185, "note": "All 185 return a 404"}, {"label": "Catalog articles", "value": 126, "note": "85 return a 404. 41 reach the newsletter copy"}, {"label": "Workshop recordings", "value": 72, "note": "All return a 404"}, {"label": "Topic pages", "value": 66, "note": "All return a 404"}, {"label": "Become a member links", "value": 65, "note": "Land on the newsletter homepage"}, {"label": "Pro sign-up and pricing", "value": 62, "note": "All return a 404"}, {"label": "news.bensbites.com tool lists", "value": 62, "note": "Redirect to the newsletter homepage"}, {"label": "Courses and tool pages", "value": 41, "note": "All return a 404"}, {"label": "Everything else", "value": 59, "note": "Polls, forms, the cookbook, Design Words and a few more"}]}
+/>
+
+These links point at bensbites.com addresses from when the catalog lived there. bensbites.com now forwards every address to the newsletter with the path kept, and Substack has no page at that path, so a reader who clicks "Build your own ChatGPT in Slack" in an old issue gets a 404.
+
+The newer sites get almost nothing. Across all 270 posts I found one link to the cookbook and three to Ben's sessions site, which is another reason to put those pages on the newsletter's own domain.
+
+**The fix:** add the old bensbites.com catalog addresses to the same redirect list as the catalog subdomain in fix 1 below. bensbites.com already runs through Cloudflare, so one rule there catches the 566 dead links in every old issue at once, without editing a post. Then link each new issue that teaches something to the matching guide, with link text that names it.
+
+## Technical fixes, closest to revenue first
+
+The crawls found five problems. I've put them in order of how close each one sits to new subscribers, so the first one isn't the one that affects the most pages.
+
+### 1. The catalog returns a 404 on every page
+
+When a page returns a 404, Google drops it from its results after a few recrawls, and the links pointing at it stop counting for anything. That's happening to every catalog page at once, including the tutorials that brought in most of Ben's Bites' search traffic.
+
+Some of the work is already done. 95 of the catalog's 201 articles were republished on the newsletter under the same address ending, such as "ChatGPT vs OpenAI API: Differences explained". The old catalog addresses just don't point at them.
+
+<UrlMap
+  caption="Six catalog addresses and what I'd do with each. All six return a 404 today."
+  rows={[
+    { url: "/tutorial/getting-started-accessing-chatgpt-and-setting-up-your-environments", action: "Restore", tone: "keep", note: "About 186 visits a month from searches for the ChatGPT interface. Rebuild it as a post and redirect it there." },
+    { url: "/tool/chatbot-arena", action: "Restore", tone: "keep", note: "Ranked second for \"chatbot arena\" (2,500 US searches a month)." },
+    { url: "/blog/chatgpt-vs-openai-api-differences-explained", action: "301", to: "www.bensbites.com/p/chatgpt-vs-openai-api-differences-explained", note: "One of 95 articles that already live on the newsletter." },
+    { url: "/role/executive", action: "301", to: "www.bensbites.com/", note: "The top result for \"ben's bites newsletter\". Those searchers want the homepage." },
+    { url: "/pricing", action: "410", tone: "remove", note: "The Pro membership it sold has closed." },
+    { url: "/tutorial/… (about 400 more)", action: "410", tone: "remove", note: "Tutorials with no traffic and no links. A 410 tells Google they're gone on purpose." },
+  ]}
+/>
+
+**The fix:** one list of old and new addresses, applied as a Cloudflare bulk redirect, since the catalog's hostname already runs through Cloudflare. Each old address gets a permanent (301) redirect to the page that replaces it, or a 410 when nothing does. I'd restore the 32 catalog pages that still had search traffic in Ahrefs' November data as posts on bensbites.com, starting with the ChatGPT getting started tutorial and Chatbot Arena. Then crawl the old list again with `seo crawl --mode list`: every address should answer in one hop.
+
+### 2. The old domains send every address to the homepage
+
+Ben's Bites has lived on other domains before. bensbites.co was the newsletter's home, and news.bensbites.com was a community news site. Ahrefs counts 797 sites still linking to bensbites.co and 205 to news.bensbites.com. Both now redirect every address to the homepage, in two hops.
+
+<BeforeAfter
+  caption="Two old addresses that other sites link to, today and after the fix."
+  before={{ label: "Today", html: beforeOld }}
+  after={{ label: "After the fix", html: afterOld }}
+/>
+
+[Google's site move guide](https://developers.google.com/search/docs/crawling-indexing/site-move-with-url-changes) warns that redirecting many old addresses to the homepage "might be treated as a soft 404", so the links to old posts may count for nothing. Three of the 77 bensbites.co post addresses that Ahrefs shows links to have an exact copy on the newsletter today, such as "No Claude for Claws", and they still go to the homepage.
+
+news.bensbites.com has a different problem. 12 of its 15 most linked addresses are user profiles named after betting sites, each linked from about 230 sites (Ahrefs). They look like spam accounts with links built to them, and the redirect now points all of those links at Ben's homepage.
+
+**The fix:** redirect each old address that has a real replacement straight to it in one hop, and return a 410 for the spam profiles (everything under news.bensbites.com's users path). The 2023 issues with the most links, such as the ones on ChatGPT plugins and the wave of ChatGPT apps, are worth restoring if the old export still has them. Everything else can keep its homepage redirect.
+
+### 3. The cookbook is a separate site, and Google can't read its sitemap
+
+The cookbook holds Ben's best guide, and it's set up worse than the newsletter. Its sitemap lists every page at localhost:8000, the address of the machine it was built on, so Google can't use it. Its robots.txt and llms.txt return the homepage, and so does any made-up address. No page names a canonical. Its four glossary pages aren't linked from its homepage.
+
+<BrowserFrame
+  url="https://cookbook.bensbites.com/any-made-up-address"
+  tab="Ben's Bites Cookbook - Ben's Bites"
+  status="200 OK"
+  bad
+  caption="An address that doesn't exist on the cookbook. It answers 200 OK with the homepage, so Google sees one more copy of the homepage instead of a missing page."
+>
+  <p class="text-lg font-medium">I can't code. I build with agents.</p>
+  <p class="text-foreground-muted">The cookbook homepage, served for any address.</p>
+</BrowserFrame>
+
+<BeforeAfter
+  caption="The cookbook's main guide today, and after folding the cookbook into bensbites.com."
+  before={{ label: "Today", html: beforeCookbook }}
+  after={{ label: "After the fix", html: afterCookbook }}
+/>
+
+**The fix:** I wouldn't repair the cookbook as its own site. I'd republish its guides and glossary pages as posts on bensbites.com, starting with "Become Technical in 1 Day" and the questions in the table above. Then I'd redirect each cookbook page to its copy with a permanent (301) redirect, and send any other cookbook address to the homepage. "How I code with agents" already has a copy on the newsletter, so it only needs the redirect. After that, crawl the old cookbook addresses with `seo crawl --mode list`: each should answer with one 301 to a post.
+
+### 4. Most posts get no links from other posts
+
+A post with no links from other pages depends on the sitemap to be found, and gets none of the authority the rest of the site has built up. I checked every link in the body of all 270 posts in Ben's Bites' sitemap.
+
+<PageGrid
+  caption="Every post in the newsletter's sitemap, newest first. Lit tiles get at least one link from another post. Hover a tile for its title."
+  litLabel="Linked from another post"
+  otherLabel="No link from any other post"
+  groups={[{"label": "October to December 2026", "pages": [{"name": "Finding my thing"}, {"name": "AI is overwhelming and I’m doing it wrong"}, {"name": "Is Anthropic the best business in the world?"}, {"name": "Claude’s personal agent"}, {"name": "How I built my ‘everything’ app"}, {"name": "Prompt tips from Anthropic"}, {"name": "Zuck’s wonder...full"}, {"name": "Text is so 2023"}, {"name": "Thoughts from San Francisco"}, {"name": "OpenAI DevDay 2026"}]}, {"label": "July to September 2026", "pages": [{"name": "Sonnet 5.5 is worth a try"}, {"name": "50 years of tech devices"}, {"name": "Back to Claude"}, {"name": "What can you build with Jev"}, {"name": "New home for Cowork", "lit": true, "note": "Linked from 1 other post"}, {"name": "Good luck slowing this down"}, {"name": "Telling AI to design is hard"}, {"name": "Everyone needs a Muse"}, {"name": "The first GPT-6 model", "lit": true, "note": "Linked from 1 other post"}, {"name": "Scraping 107M rows of data to build this"}, {"name": "Fable 5.1"}, {"name": "Build your ideas"}, {"name": "How I built this"}, {"name": "Who let the agents in"}, {"name": "Agents on your mobile"}, {"name": "How I built this", "lit": true, "note": "Linked from 1 other post"}, {"name": "Simple agents"}, {"name": "Do you use a personal agent?"}, {"name": "Ben's session #2", "lit": true, "note": "Linked from 1 other post"}, {"name": "Grok Bot is not what you think"}, {"name": "Make it readable"}, {"name": "Ben's session", "lit": true, "note": "Linked from 2 other posts"}, {"name": "I'm using a new agent app"}, {"name": "What my agent knows about me"}, {"name": "1 Billion ChatGPT users"}, {"name": "Opus 5 &gt;&gt; Fable 5"}, {"name": "Caught cheating"}, {"name": "Better design than Fable"}, {"name": "I've got an Inkling"}, {"name": "How to use GPT-5.6"}, {"name": "Grok x Cursor"}, {"name": "My thoughts on Fable"}, {"name": "Fable is back"}]}, {"label": "April to June 2026", "pages": [{"name": "GPT-5.6 is here*"}, {"name": "Claude Code in Slack"}, {"name": "Record a skill"}, {"name": "The first big exit in AI"}, {"name": "Bye bye Fable"}, {"name": "New Claude model - Fable"}, {"name": "Hey Siri, meet AI"}, {"name": "Build tools, to build more"}, {"name": "Opus 4.8"}, {"name": "I signed up for another SaaS"}, {"name": "Is SaaS dead?"}, {"name": "Google's take on openclaw"}, {"name": "Can I get my agents on the phone?"}, {"name": "Agents feedback tip"}, {"name": "Learn the system"}, {"name": "Ben's Builds #3 - an email app"}, {"name": "Elon doubled limits"}, {"name": "Codex is gaining steam"}, {"name": "Building gets easier"}, {"name": "Builders"}, {"name": "ChatGPT's Nano Banana"}, {"name": "That's my designer - Claude"}, {"name": "My cheatsheet for a clean context"}, {"name": "Big lab leaks"}, {"name": "Anthropic built a model too risky to release"}, {"name": "No Claude for Claws"}, {"name": "Inside the leaked Claude Code files"}]}, {"label": "January to March 2026", "pages": [{"name": "One breach after another"}, {"name": "A peek inside CLI tools"}, {"name": "Agents should interview you"}, {"name": "Ben's Builds: #2"}, {"name": "What makes a good AGENTS.md?"}, {"name": "Nvidia loves OpenClaw", "lit": true, "note": "Linked from 1 other post"}, {"name": "this is a new format i'd like to try"}, {"name": "How (and what) I'm building this week"}, {"name": "Make any media searchable"}, {"name": "Just use GPT-5.4 xhigh"}, {"name": "Google apps in the terminal"}, {"name": "Models on the march"}, {"name": "Claude has some conflicts"}, {"name": "Gemini tops benchmarks, again"}, {"name": "Big upgrade for Sonnet"}, {"name": "Dreaming up personal agents"}, {"name": "Something big is happening"}, {"name": "Who owns the Frontier?"}, {"name": "Vibe coding is old now"}, {"name": "You don't need to be an engineer to build things", "lit": true, "note": "Linked from 10 other posts"}, {"name": "What's next for coding agents?"}, {"name": "Writing research made easy"}, {"name": "Skills are taking over"}, {"name": "Using coding agents, if you're not technical"}, {"name": "Ads in your chats"}, {"name": "Agents that keep running"}, {"name": "Claude Code for everybody"}, {"name": "Dr. ChatGPT will see you now"}, {"name": "How I code with agents, without being 'technical'"}]}, {"label": "October to December 2025", "pages": [{"name": "A great time to be a builder"}, {"name": "Cheap intelligence, expensive AI"}, {"name": "GPT-5 doesn't suck anymore"}, {"name": "Google's secret kitchen"}, {"name": "Harness is the new app"}, {"name": "Anthropic makes its first acquisition"}, {"name": "Is OpenAI really in trouble?"}, {"name": "Always post bad news on a holiday"}, {"name": "New Opus is Bananas"}, {"name": "Gemini 3 is worth the hype"}, {"name": "How a global company lets its employees build with 30+ LLMs", "lit": true, "note": "Linked from 2 other posts"}, {"name": "Group chats with AI"}, {"name": "When AI is smart enough"}, {"name": "Models with more mileage"}, {"name": "Profits matter, even for AI labs"}, {"name": "Buy credits in ChatGPT"}, {"name": "Not a wrapper anymore", "lit": true, "note": "Linked from 1 other post"}, {"name": "Grok vs Wikipedia"}, {"name": "OpenAI's new product"}, {"name": "My name is Claudius Maximus Promptus"}, {"name": "3x cheaper in 5 months"}, {"name": "Recipes for Claude-maxxing"}, {"name": "How to see through AI marketing"}, {"name": "Thoughts from OpenAI DevDay"}, {"name": "SOcial RAnger 2.0"}]}, {"label": "July to September 2025", "pages": [{"name": "Half a Sonnet makes me sing"}, {"name": "A new #1 coding agent"}, {"name": "Grok has a chance"}, {"name": "My announcement"}, {"name": "CLIs are everywhere"}, {"name": "200 mins of autonomy"}, {"name": "Any model in your CLI"}, {"name": "It's company shopping season"}, {"name": "Tools I actually use daily"}, {"name": "Make like a banana"}, {"name": "Backend in a box"}, {"name": "Let AI point it out"}, {"name": "The future looks like this"}, {"name": "Claude joins the marathon"}, {"name": "Mambo number GPT-5"}, {"name": "open, world models"}, {"name": "A real example of building with AI in 2025", "lit": true, "note": "Linked from 2 other posts"}, {"name": "why is it so calm?"}, {"name": "Changing how they'll learn"}, {"name": "Claude closed"}, {"name": "want another ai app builder?", "lit": true, "note": "Linked from 1 other post"}, {"name": "Do agents work in the browser?"}, {"name": "AI talent wars are pure drama"}, {"name": "DeepSeek's doppelganger"}, {"name": "Grok 4 is here, but 4 who?"}, {"name": "Perplexity Comet vs Dia", "lit": true, "note": "Linked from 1 other post"}, {"name": "I'm investing in AI devtools"}, {"name": "how to steamroll agi 101"}]}, {"label": "April to June 2025", "pages": [{"name": "Ingredients for a great AI meetup"}, {"name": "why I experiment with AI", "lit": true, "note": "Linked from 1 other post"}, {"name": "I'm on the claude code train"}, {"name": "agents need context engineers"}, {"name": "o3 is now 5x cheaper"}, {"name": "Liquid Glass blurs Apple Intelligence", "lit": true, "note": "Linked from 1 other post"}, {"name": "Meetings and MCP in ChatGPT"}, {"name": "ai media goes mainstream"}, {"name": "really good ai software"}, {"name": "King Claude is back"}, {"name": "Google IO vs OpenAI io"}, {"name": "codex for non-technical users"}, {"name": "simplifying for llms", "lit": true, "note": "Linked from 1 other post"}, {"name": "Why more companies should be running funds", "lit": true, "note": "Linked from 1 other post"}, {"name": "Deep Research on your data"}, {"name": "Make an app everywhere"}, {"name": "thoughts on a week in sf", "lit": true, "note": "Linked from 1 other post"}, {"name": "Meta makes AI social"}, {"name": "ChatGPT is becoming the everything app"}, {"name": "Gamma’s rise to 50 million users", "lit": true, "note": "Linked from 1 other post"}, {"name": "i'm fed up of bad AI software", "lit": true, "note": "Linked from 1 other post"}, {"name": "BB Digest: Guess where I am?"}, {"name": "The rise of the one-person product team"}, {"name": "BB Digest: Rise of agentic models"}, {"name": "BB Digest: Disappointing memories"}, {"name": "Dear Ben… What is MCP (Model Context Protocol)?"}, {"name": "Why everyone’s talking about AI agents"}, {"name": "BB Digest: Make an app with Gemini"}, {"name": "A quick demo of Subframe"}, {"name": "BB Digest: Llama 4 sucks"}, {"name": "Reflexive AI use isn’t optional anymore"}, {"name": "BB Digest: Professor Claude"}, {"name": "BB Digest: Is OpenAI open again?"}]}, {"label": "January to March 2025", "pages": [{"name": "AI coding tools: Head-to-head"}, {"name": "BB Digest: When prompting killed Photoshop"}, {"name": "BB Digest: I built a Bolt extension"}, {"name": "Getting started with Lovable: A beginner's guide"}, {"name": "Supercharging Bolt with \"Cursor Rules\""}, {"name": "Getting started with Create: A beginner's guide"}, {"name": "GitHub & Git: for non-technical founders"}, {"name": "BB Digest: GitHub simplified"}, {"name": "First Look: Manus - The new AI agent"}, {"name": "BB Digest: Gemini & your search history"}, {"name": "A non-technical guide for how code works"}, {"name": "BB Digest: I'm back"}, {"name": "BB Digest: Viral browser agent"}, {"name": "What's new with Replit Agent v2"}, {"name": "BB Digest: New AI mode for Google Search"}, {"name": "BB Digest: GPT-4.5 is confusing"}, {"name": "Uncovering hidden revenue with pricing simulations"}, {"name": "5 Claude features you might not know about"}, {"name": "BB Digest: Alexa + Claude"}, {"name": "BB Digest: Claude 3.7 thinks differently"}, {"name": "BB Digest: Claude tops new coding test"}, {"name": "SWE-Lancer: Can AI make it as a freelance software engineer?"}, {"name": "What is ‘vibe coding’?"}, {"name": "BB Digest: Elon comes clean"}, {"name": "What AI coding tool should you use?"}, {"name": "Get started with Bolt: A beginner's guide"}, {"name": "ChatGPT vs OpenAI API: Differences explained"}, {"name": "Getting started with Cursor: a beginner's guide"}, {"name": "BB Digest: OpenAI's plan for 2025"}, {"name": "Getting Started with Replit: a beginner's guide"}, {"name": "Is AI making us lazy thinkers?"}, {"name": "ChatGPT prompts for sales teams"}, {"name": "BB Digest: AI's fast cat"}, {"name": "Coding with AI: A community member’s workflow"}, {"name": "Master the AI middle ground and unlock crazy ROI"}, {"name": "BB Digest: Gemini 2.0 thinks for free"}, {"name": "BB Digest: ChatGPT vs Consultants"}, {"name": "BB Digest: Build apps with AI"}, {"name": "4 clever ways to use AI with Slack (and get more done)"}, {"name": "BB Digest: First agent of 2025"}, {"name": "5 growth hacks made easier with AI"}, {"name": "BB Digest: Floods from a Stargate"}, {"name": "Using LLMs to search"}, {"name": "BB Digest: Secrets of o1 revealed"}, {"name": "Build better landing pages in minutes with AI"}, {"name": "BB Digest: ChatGPT has an alarm now"}, {"name": "5 different ways to create a chatbot using AI tools"}, {"name": "BB Digest: Is Copilot under attack?"}, {"name": "AI tools that improve every meeting you have (automatically)"}, {"name": "BB Digest: $3k PC for local AI"}, {"name": "How to bring your product to market with AI"}, {"name": "BB Digest: A peaceful start to 2025"}]}, {"label": "October to December 2024", "pages": [{"name": "BB Digest: Our last digest of 2024"}, {"name": "BB Digest: Veo 2 vs Sora"}, {"name": "BB Digest: Google's new agents"}, {"name": "BB Digest: $200 is still cheap"}, {"name": "BB Digest: Ship-mas begins"}, {"name": "BB Digest: AI video on your laptop"}, {"name": "BB Digest: Boring writing solved"}, {"name": "BB Digest: AI's all-access pass"}, {"name": "BB Digest: Remember Me?"}, {"name": "BB Digest: Free ChatGPT alternative"}, {"name": "BB Digest: Will you let AI operate your computer?"}, {"name": "BB Digest: Is AI really slowing down?"}, {"name": "BB Digest: Who owns chat.com?"}, {"name": "BB Digest: SearchGPT arrives"}, {"name": "BB Digest: Finally! ChatGPT adds chat search"}, {"name": "BB Digest: Who's using AI at work?"}, {"name": "BB Digest: Claude learns to click & type"}, {"name": "BB Digest: 5 AI apps got new powers"}, {"name": "BB Digest: Find your files faster"}, {"name": "BB Digest: Practical Upsides of AI"}, {"name": "BB Digest: Two years of Ben's Bites"}, {"name": "BB Digest: Writing with AI just got easier"}, {"name": "BB Digest: OpenAI treats developers"}, {"name": "BB Digest: Google's secret AI app"}]}, {"label": "July to September 2024", "pages": [{"name": "BB Digest: New Gemini and Llamas"}, {"name": "BB Digest: Teaching Superintelligence"}, {"name": "BB Digest: Social media loves AI video"}, {"name": "How AI startup Wayfaster is changing the way we hire"}, {"name": "BB Digest: &lt;Thinking&gt;"}, {"name": "BB Digest: Almost human podcasts"}, {"name": "BB Digest: Make apps with Replit Agent"}, {"name": "BB Digest: $1B for Safe Super AI"}, {"name": "BB Digest: Alexa hooks up with Claude"}]}]}
+/>
+
+251 of the 270 posts get no link from any other post. The homepage and archive load their lists with JavaScript, and when they run, the homepage links to the newest 17 posts and the archive to the newest 24. Everything older is behind infinite scroll, and [Google doesn't scroll](https://developers.google.com/search/docs/crawling-indexing/javascript/lazy-loading) to load more.
+
+For a daily news issue, that's fine. It matters for the posts that answer a question someone will still search next year, such as "ChatGPT vs OpenAI API: Differences explained", which ranks second for "chatgpt api vs chatgpt plus" without a single link from another post.
+
+**The fix:** Substack doesn't let you change its templates, so the links have to go in the posts. I'd tag the evergreen posts (Substack already has a reviews tag page), write one "start here" post that links to the best of them, and link each new issue to one or two older posts on the same subject. Then rerun the check: the evergreen posts should all have at least one link.
+
+### 5. Old issues link to addresses that don't exist
+
+The crawl found 26 addresses on www.bensbites.com, linked from older issues, that return a 404. Some are Ben's own posts from before the move to Substack that never came across. Others are posts on other newsletters, such as Ethan Mollick's One Useful Thing, whose links now point at Ben's own domain. They have the same address ending, so they look like links rewritten during the import.
+
+<BeforeAfter
+  caption="A link in &quot;BB Digest: ChatGPT has an alarm now&quot;, and the post it meant to reach."
+  before={{ label: "Today", html: beforeLink }}
+  after={{ label: "Fixed", html: afterLink }}
+/>
+
+**The fix:** point each link to those 26 addresses at the original post, or remove it when the original has gone. It's a small job, and it stops readers who click through from an old issue hitting a 404.
+
+## Ship it all today, then let it settle
+
+None of this needs a sprint plan. Each fix is a separate job with a clear end, so coding agents can work on all of them at once:
+
+<PlanSteps
+  steps={[{"title": "Catalog redirects", "body": "Export every catalog URL from Webflow or the Wayback Machine, on both catalog.bensbites.com and the old bensbites.com paths. Point the 95 articles at their newsletter copies, the name searches at the homepage, and return 410 for the rest. One Cloudflare bulk redirect list does it."}, {"title": "Restore the tutorials that ranked", "body": "Rebuild the 32 catalog pages that still had search traffic as posts on bensbites.com, and redirect each old address to its new one."}, {"title": "Old domains", "body": "Map bensbites.co and news.bensbites.com addresses to their exact new pages in one hop, and return 410 for the spam profiles."}, {"title": "Broken links in old issues", "body": "Find every link in the archive that points at a bensbites.com address that 404s, and point it at the original source."}, {"title": "Fold in the cookbook", "body": "Republish the cookbook guides and glossary pages as posts on bensbites.com, and redirect each cookbook page to its copy. Do the same for the sessions site."}, {"title": "Guides from X", "body": "Split Become Technical in 1 Day into one post per question, starting with what a terminal and Bash are, and keep the full guide as the hub that links to them."}, {"title": "List outreach", "body": "Draft a short, accurate pitch for each best AI newsletter list that ranks and leaves Ben's Bites out."}]}
+/>
+
+Someone at Ben's Bites still needs to pick which tutorials to restore and write the guides in Ben's voice, because that's the part readers subscribe for. The redirects and link fixes need only a quick check.
+
+Then I'd spend 30 days checking the results:
+
+<PlanSteps
+  steps={[{"marker": "Day 0", "title": "Ask Google to recrawl", "body": "Submit every redirected, restored and new URL to Index My Site, so Google sees the changes now instead of on its own schedule."}, {"marker": "Day 3", "title": "Check the redirects", "body": "Crawl the old catalog, cookbook, bensbites.co and news.bensbites.com addresses again. Each should answer in one hop with a 301 to a real page, or a 410."}, {"marker": "Day 7", "title": "First impressions", "body": "Look for the restored guides in Search Console, and impressions on \"how to use claude cowork\" and \"claude code tutorial\"."}, {"marker": "Day 14", "title": "Sign-ups from search", "body": "Check Substack's subscriber sources for sign-ups from Google."}, {"marker": "Day 30", "title": "New readers", "body": "Compare free sign-ups from search with the month before. Those readers are what sponsors pay for."}]}
+/>
+
+## Get the changes seen quickly
+
+The catalog pages are still in Google's index, and Google takes its time to recheck a page that has been fine for years. I'd submit every redirected and restored URL to [Index My Site](https://indexmysite.app/) as it ships. That matters most for the catalog tutorials, where the next recrawl decides whether Google keeps the ranking or drops the page for good.
+
+## How I ran this
+
+Everything in this teardown came from SEO Skill, run by an agent. You can run the same audit on your own site.
+
+**1. Connect the hosted MCP server.** It's free. You sign in with Google, and there's no password and nothing to install. In Claude Code:
+
+```sh
+claude mcp add --transport http seoskill https://seoskill.dev/mcp
+```
+
+Codex, Cursor and Claude on the web work too. The [MCP guide](/docs/mcp) has the steps for each one.
+
+**2. Add a research key.** On your [account page](/account), save an Ahrefs or DataForSEO key. The key gives your agent search volumes, rankings and results pages, like the tables above.
+
+**3. Install the CLI for crawling.** The crawl runs on your machine, so it can read any site:
+
+```sh
+npm i -g seo
+seo login
+```
+
+**4. Ask your agent.** This is close to the prompt I used:
+
+```text
+Audit example.com and every domain we have used.
+Crawl each one with seo crawl, including old domains
+and subdomains. Check where each old address redirects.
+Crawl the old URLs the Wayback Machine has saved.
+Use seo_research to find the searches new readers
+make and who ranks for them.
+Rank every fix by how close it sits to revenue.
+```
+
+On your own site, the hosted server adds the part I couldn't see from the outside: your real Search Console clicks and queries. With those, you get measured numbers where this post has estimates.
+
+If your newsletter has moved platform or domain, crawl the old addresses too. In this teardown, that's where the traffic went.
+
+If you're on the Ben's Bites team, I'm happy to go through any of this. And if you'd like the same teardown for your newsletter, [SEO Skill](/) will run it for you.

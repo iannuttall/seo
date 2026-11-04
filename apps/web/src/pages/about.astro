@@ -113,7 +113,7 @@ const faqs = [
                       <HugeIcon icon={item.icon} class="size-5 text-foreground" />
                     </span>
                     <span>
-                      <span class="block text-2xl font-medium text-foreground">{item.value}</span>
+                      <span class="block text-2xl font-medium text-foreground" data-founder-count={item.key}>{item.value}</span>
                       <span class="block text-sm/6 text-foreground-muted">{item.unit} on {item.name}</span>
                     </span>
                   </a>
@@ -173,3 +173,7 @@ const faqs = [
     </div>
   </main>
 </BaseLayout>
+
+<script>
+  import '@/lib/founder-counts'
+</script>

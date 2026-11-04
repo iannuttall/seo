@@ -1,0 +1,215 @@
+---
+// A table of searches a reader can sort by clicking a column heading.
+// Volumes are monthly searches; difficulty is the provider's 0 to 100 score.
+// Without `columns` the table shows keyword, volume and, when the rows have
+// them, global volume and difficulty. With `columns` the rows are records
+// and each column reads its `key`; the first column is the one ties sort by.
+// A `difficulty` key keeps its coloured band in either shape.
+import Exhibit from './Exhibit.astro'
+
+type Value = string | number | null | undefined
+type Row = Record<string, Value>
+type Format = 'number' | 'currency' | 'text'
+type Column = { key: string; label: string; format?: Format; short?: string }
+
+type Props = {
+  rows: Row[]
+  columns?: Column[]
+  // The country the volume column covers, such as "US".
+  market?: string
+  sortBy?: string
+  title?: string
+  caption?: string
+}
+
+const { rows, columns: given, market = 'US', sortBy = 'volume', title, caption } = Astro.props
+
+const has = (key: string) => rows.some((row) => row[key] !== undefined && row[key] !== null)
+// Phones get the short label so four columns fit without scrolling.
+const columns: Column[] = given ?? [
+  { key: 'keyword', label: 'Keyword', format: 'text' },
+  { key: 'volume', label: market, format: 'number' },
+  ...(has('global') ? [{ key: 'global', label: 'Global', format: 'number' as const }] : []),
+  ...(has('difficulty') ? [{ key: 'difficulty', label: 'Difficulty', short: 'KD', format: 'number' as const }] : []),
+]
+const first = columns[0]?.key ?? 'keyword'
+const numeric = (column: Column) => column.format === 'number' || column.format === 'currency'
+const sortColumn = columns.find((column) => column.key === sortBy) ?? columns[0]
+const missing = (value: Value) => value === undefined || value === null || value === ''
+// Sort data: numbers as numbers (missing sorts last), words as they are.
+const sortValue = (row: Row, column: Column) => {
+  const value = row[column.key]
+  if (numeric(column)) return typeof value === 'number' ? value : -1
+  return missing(value) ? '' : String(value)
+}
+const tie = (row: Row) => String(row[first] ?? '')
+// Numbers sort largest first, words A to Z, ties by the first column.
+const sorted = [...rows].sort((a, b) => {
+  if (!sortColumn) return 0
+  const left = sortValue(a, sortColumn)
+  const right = sortValue(b, sortColumn)
+  const order =
+    typeof left === 'number' && typeof right === 'number' ? right - left : String(left).localeCompare(String(right))
+  return order || tie(a).localeCompare(tie(b))
+})
+const format = (value: Value, kind: Format = 'text') => {
+  if (missing(value)) return 'n/a'
+  if (typeof value !== 'number') return String(value)
+  return kind === 'currency'
+    ? value.toLocaleString('en-US', { style: 'currency', currency: 'USD' })
+    : value.toLocaleString('en-US')
+}
+const compact = (value: Value, kind: Format = 'text') =>
+  typeof value === 'number' && kind === 'number' && value >= 10_000
+    ? new Intl.NumberFormat('en-US', { notation: 'compact' }).format(value)
+    : format(value, kind)
+const band = (score: number) => (score < 30 ? 'bg-success-soft' : score < 60 ? 'bg-warning-soft' : 'bg-destructive-soft')
+const sortName = (column: Column) => (column.key === 'volume' && !given ? `${market} searches` : column.label.toLowerCase())
+---
+
+<Exhibit title={title} caption={caption}>
+  <div class="kw-frame -mx-1 overflow-x-auto px-1" data-keyword-table data-tie={first}>
+    <table class="kw-table !mt-0 w-full text-sm">
+      <thead>
+        <tr>
+          {
+            columns.map((column) => (
+              <th
+                class:list={['relative whitespace-nowrap', numeric(column) && 'text-right']}
+                aria-sort={column.key === sortColumn?.key ? (numeric(column) ? 'descending' : 'ascending') : undefined}
+              >
+                {/* The arrow sits on the inside edge so labels line up with their column. */}
+                <span class:list={['inline-flex items-baseline gap-0.5', numeric(column) && 'flex-row-reverse']}>
+                  {column.short ? (
+                    <span>
+                      <span class="hidden sm:inline">{column.label}</span>
+                      <abbr class="no-underline sm:hidden" title={column.label} data-agent-markdown="exclude">{column.short}</abbr>
+                    </span>
+                  ) : (
+                    <span>{column.label}</span>
+                  )}
+                  <span class="inline-block w-3 text-center text-foreground-soft" aria-hidden="true" data-arrow>
+                    {column.key === sortColumn?.key ? (numeric(column) ? '↓' : '↑') : ''}
+                  </span>
+                </span>
+                <button
+                  type="button"
+                  class="absolute inset-0 rounded-md focus-visible:outline-none focus-visible:ring-[3px] focus-visible:ring-ring/20"
+                  aria-label={`Sort by ${sortName(column)}`}
+                  data-sort={column.key}
+                  data-numeric={numeric(column) ? 'true' : undefined}
+                />
+              </th>
+            ))
+          }
+        </tr>
+      </thead>
+      <tbody>
+        {
+          sorted.map((row) => (
+            <tr class="transition-colors" data-sort-values={JSON.stringify(Object.fromEntries(columns.map((column) => [column.key, sortValue(row, column)])))}>
+              {columns.map((column, index) => {
+                const value = row[column.key]
+                if (index === 0) return <td class="text-foreground">{format(value)}</td>
+                if (column.key === 'difficulty' && typeof value === 'number') {
+                  return (
+                    <td class="text-right tabular-nums">
+                      <span class:list={['inline-block min-w-8 rounded-md px-1.5 text-center text-foreground', band(value)]}>{value}</span>
+                    </td>
+                  )
+                }
+                const full = format(value, column.format)
+                const short = compact(value, column.format)
+                return (
+                  <td class:list={[numeric(column) ? 'text-right tabular-nums' : 'text-left']}>
+                    {short === full ? (
+                      full
+                    ) : (
+                      <>
+                        <span class="hidden sm:inline">{full}</span>
+                        <span class="sm:hidden" data-agent-markdown="exclude">{short}</span>
+                      </>
+                    )}
+                  </td>
+                )
+              })}
+            </tr>
+          ))
+        }
+      </tbody>
+    </table>
+  </div>
+</Exhibit>
+
+<style>
+  .kw-table th,
+  .kw-table td {
+    min-width: 0;
+    border-bottom-color: var(--background);
+    padding: 0.5rem 0.5rem;
+  }
+
+  .kw-table th:first-child,
+  .kw-table td:first-child {
+    padding-left: 0;
+  }
+
+  .kw-table th:last-child,
+  .kw-table td:last-child {
+    padding-right: 0;
+  }
+
+  .kw-table tbody tr:last-child td {
+    border-bottom-color: transparent;
+  }
+
+  .kw-table th:hover {
+    color: var(--primary);
+  }
+
+  .kw-table tbody tr:hover td {
+    color: var(--foreground);
+  }
+</style>
+
+<script>
+  for (const frame of document.querySelectorAll<HTMLElement>('[data-keyword-table]')) {
+    const body = frame.querySelector('tbody')
+    if (!body) continue
+    const tie = frame.dataset.tie ?? 'keyword'
+    const values = new Map(
+      [...body.querySelectorAll<HTMLTableRowElement>('tr')].map((row) => [
+        row,
+        JSON.parse(row.dataset.sortValues ?? '{}') as Record<string, string | number>,
+      ]),
+    )
+    for (const button of frame.querySelectorAll<HTMLButtonElement>('[data-sort]')) {
+      button.addEventListener('click', () => {
+        const key = button.dataset.sort ?? 'volume'
+        const numeric = button.dataset.numeric === 'true'
+        const heading = button.closest('th')
+        const current = heading?.getAttribute('aria-sort')
+        // First click: numbers largest first, words A to Z. Again flips it.
+        const ascending = current ? current === 'descending' : !numeric
+        const rows = [...values.keys()]
+        rows.sort((a, b) => {
+          const left = values.get(a)?.[key] ?? ''
+          const right = values.get(b)?.[key] ?? ''
+          const order = numeric ? Number(left) - Number(right) : String(left).localeCompare(String(right))
+          return (
+            (ascending ? order : -order) ||
+            String(values.get(a)?.[tie] ?? '').localeCompare(String(values.get(b)?.[tie] ?? ''))
+          )
+        })
+        body.append(...rows)
+        for (const th of frame.querySelectorAll('th')) {
+          const active = th === heading
+          if (active) th.setAttribute('aria-sort', ascending ? 'ascending' : 'descending')
+          else th.removeAttribute('aria-sort')
+          const arrow = th.querySelector('[data-arrow]')
+          if (arrow) arrow.textContent = active ? (ascending ? '↑' : '↓') : ''
+        }
+      })
+    }
+  }
+</script>

@@ -1,12 +1,16 @@
 ---
 import Logo from './Logo.astro'
+import { getBlogPosts } from '@/lib/blog'
 import { site } from '@/lib/site'
 
+// The blog link appears once a post is published.
+const hasBlogPosts = (await getBlogPosts()).length > 0
 const links = [
   { label: 'About', href: '/about' },
   { label: 'Features', href: '/features' },
   { label: 'Docs', href: '/docs' },
   { label: 'Guides', href: '/guides' },
+  ...(hasBlogPosts ? [{ label: 'Blog', href: '/blog' }] : []),
   { label: 'Tools', href: '/tools' },
   { label: 'Pricing', href: '/pricing' },
   { label: 'Integrations', href: '/integrations' },

@@ -1,0 +1,28 @@
+---
+// A short aside in a blog post: the takeaway, a caveat about the data, or
+// the one thing to do first. Write the body as normal MDX inside it.
+type Props = {
+  title?: string
+}
+
+const { title } = Astro.props
+---
+
+<aside class="callout mt-8 mb-8 rounded-lg bg-primary-soft px-5 py-4">
+  {title ? <p class="text-sm font-medium text-foreground">{title}</p> : null}
+  <div class:list={['text-[0.9375rem]/6 text-foreground', title && 'mt-1']}>
+    <slot />
+  </div>
+</aside>
+
+<style>
+  .callout :global(p + p) {
+    margin-top: 0.5rem;
+  }
+
+  .callout :global(a) {
+    color: var(--foreground);
+    text-decoration-line: underline;
+    text-underline-offset: 4px;
+  }
+</style>

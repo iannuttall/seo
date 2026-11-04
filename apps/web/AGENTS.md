@@ -1,8 +1,8 @@
 # Site agent notes
 
 The Astro site for `https://seoskill.dev`. Pages are static. A small Hono
-Worker serves the assets and only `/api/t`, `/api/stats` and bounded
-`/api/tools/*` jobs. Read the root `CONTENT.md` in the same task before you
+Worker serves the assets and only `/api/t`, `/api/stats`, `/api/founder`
+and bounded `/api/tools/*` jobs. Read the root `CONTENT.md` in the same task before you
 write any site copy, metadata included.
 
 ## Rules

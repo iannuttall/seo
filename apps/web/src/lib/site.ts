@@ -15,7 +15,9 @@ export const site = {
 /**
  * The founder card and About page. Audience numbers were read from each
  * profile on `asOf` (X through api.fxtwitter.com, YouTube from the channel
- * page, LinkedIn from Ian); update them all together.
+ * page, LinkedIn from Ian); update them all together. They are what pages
+ * show with no JavaScript. The site Worker refreshes X and YouTube daily
+ * (worker/founder.ts) and pages swap in its numbers from /api/founder.
 // Career facts on the About page come from ian.is/about.
  */
 export const founder = {
@@ -26,7 +28,11 @@ export const founder = {
   asOf: '2026-11-03',
   url: 'https://ian.is',
   x: { url: 'https://x.com/iannuttall', followers: 81_824 },
-  youtube: { url: 'https://www.youtube.com/@inuttall', subscribers: 16_900 },
+  youtube: {
+    url: 'https://www.youtube.com/@inuttall',
+    channelId: 'UC0z38FxOnJjJIN83E7OHZjQ',
+    subscribers: 16_900,
+  },
   linkedin: { url: 'https://www.linkedin.com/in/iannuttall', followers: 4_471 },
   github: 'https://github.com/iannuttall',
 } as const

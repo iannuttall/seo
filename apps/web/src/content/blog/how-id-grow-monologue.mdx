@@ -1,0 +1,192 @@
+---
+title: How I'd grow Monologue with SEO
+description: An SEO teardown of Monologue, Every's dictation app. Why its comparison pages don't rank, what buyers search for and the fixes I'd ship first.
+heading: How I'd grow Monologue
+lead: Monologue gets about 230 visits a month from Google, against about 135,000 for Wispr Flow. This post covers why, and what I'd change first.
+date: '2026-11-04'
+company: Monologue
+x:
+  company: usemonologue
+draft: false
+---
+
+export const before5 = `<ul><li><strong>278 links</strong> to the bare monologue.to homepage, almost all with the anchor "Monologue"</li><li><strong>5 links</strong> to monologue.co, a parked domain that shows a parking page</li><li><strong>0 links</strong> to a comparison, dictation or use-case page</li></ul>`
+
+export const after5 = `<ul><li>Essays about coding agents link to the developers use-case page</li><li>Model reviews that mention dictation link to the Wispr Flow alternative page</li><li>The newsletter footer links to the dictation page with a descriptive anchor</li><li>The five monologue.co links point at the real site</li></ul>`
+
+export const beforeTypo = `<pre>&lt;a href="https://monologue.co/"&gt;monologue.to&lt;/a&gt;</pre>`
+
+export const afterTypo = `<pre>&lt;a href="https://www.monologue.to/"&gt;monologue.to&lt;/a&gt;</pre>`
+
+[Monologue](https://www.monologue.to/) is a dictation app for Mac, iPhone, iPad and Apple Watch, built by [Every](https://every.to/). You hold a key, talk, and polished text lands in whatever app you're using. It costs $15 a month, or it comes free with an Every subscription.
+
+Monologue also has a parent company with one of the strongest sites in AI media, which few startups get. Its product and its own site are in good shape. The search traffic is low because its pages target the wrong searches, and because Every's links all go to the homepage.
+
+## Monologue gets 0.2% of Wispr Flow's search traffic
+
+These are Ahrefs' estimates of this month's Google traffic for the main dictation apps.
+
+<CompareBars
+  caption="Estimated monthly organic visits, November 2026 (Ahrefs). Monologue is the bottom bar, at 232 visits."
+  unit="visits/month"
+  highlight="monologue.to"
+  rows={[{"label": "wisprflow.ai", "value": 135587}, {"label": "typeless.com", "value": 22105}, {"label": "macwhisper.com", "value": 16334}, {"label": "superwhisper.com", "value": 8238}, {"label": "willowvoice.com", "value": 5351}, {"label": "aquavoice.com", "value": 3528}, {"label": "spokenly.app", "value": 2544}, {"label": "monologue.to", "value": 232}]}
+/>
+
+Some of that gap is brand. About 80% of Wispr Flow's traffic is people typing "wispr flow" (39,000 US searches a month, and another 23,000 who spell it "whisper flow"). You can't SEO your way into someone else's brand demand.
+
+Smaller apps like Willow Voice and Spokenly pull in thousands of visits from people who have never heard of them, searching for things like "dictation software" and "speech to text mac". Visitors like these are the ones most likely to start a trial.
+
+## Every visit Monologue gets comes from one word
+
+Every keyword Monologue ranks for in Ahrefs is the word "monologue", in one country or another. All of it lands on the homepage. DataForSEO agrees: 49 of the 50 searches it has Monologue ranking for go to the homepage.
+
+That word is mostly searched by people looking for theatre monologues. So when Google tested Monologue for it, traffic rose. When Google decided those searchers wanted drama school, it fell.
+
+<VerticalBars
+  caption="Estimated monthly organic visits to monologue.to (Ahrefs). Nearly all of it came from searches for the word &quot;monologue&quot;."
+  unit="visits"
+  data={[{"label": "Sep 25", "value": 0}, {"label": "Oct 25", "value": 187}, {"label": "Nov 25", "value": 870}, {"label": "Dec 25", "value": 1135}, {"label": "Jan 26", "value": 1422}, {"label": "Feb 26", "value": 2385}, {"label": "Mar 26", "value": 2307}, {"label": "Apr 26", "value": 2093}, {"label": "May 26", "value": 2283}, {"label": "Jun 26", "value": 3108}, {"label": "Jul 26", "value": 1741}, {"label": "Aug 26", "value": 553}, {"label": "Sep 26", "value": 207}, {"label": "Oct 26", "value": 154}, {"label": "Nov 26", "value": 260}]}
+  markers={[{"at": "Jun 26", "text": "Peak"}, {"at": "Oct 26", "text": "Comparison pages launch"}]}
+/>
+
+That chart is from third-party estimates, not Monologue's Search Console, so the trend is more reliable than the exact numbers. Either way, a peak of 3,000 visits from people who wanted a Shakespeare speech was never going to sell many subscriptions.
+
+## The right pages exist, and they're good
+
+I didn't expect this. Monologue's sitemap has 80 pages, and many of them are the pages I'd tell a dictation app to build:
+
+- six comparison pages (Wispr Flow, Superwhisper, Aqua Voice, Willow Voice, Granola and Otter)
+- five use-case pages (developers, writers, product managers, founders and support)
+- a dictation page, a notes page, pricing, docs and a changelog
+
+<PageGrid
+  caption="All 137 pages my crawl found on monologue.to, by kind of page. The 17 pages built to win searches get none yet. Hover a tile for its address. The dotted tiles have searches waiting for them."
+  litLabel="Gets search traffic"
+  targetLabel="Built to win searches, no traffic yet"
+  otherLabel="Support and other pages"
+  groups={[{"label": "Homepage", "pages": [{"name": "/", "lit": true, "note": "All of its search traffic, for the word \"monologue\""}]}, {"label": "Comparison pages", "tone": "target", "pages": [{"name": "/compare"}, {"name": "/compare/aqua-voice", "note": "Could rank for \"aqua voice vs wispr flow\": 140 a month"}, {"name": "/compare/granola"}, {"name": "/compare/otter"}, {"name": "/compare/superwhisper", "note": "Could rank for \"superwhisper alternative\": 90 a month"}, {"name": "/compare/willow-voice"}, {"name": "/compare/wispr-flow", "note": "Could rank for \"wispr flow alternative\": about 1,300 US searches a month"}]}, {"label": "Use-case pages", "tone": "target", "pages": [{"name": "/use-cases"}, {"name": "/use-cases/customer-support"}, {"name": "/use-cases/developers", "note": "Could rank for \"voice coding\": 480 a month"}, {"name": "/use-cases/founders-and-leaders"}, {"name": "/use-cases/product-managers"}, {"name": "/use-cases/writers"}]}, {"label": "Product pages", "tone": "target", "pages": [{"name": "/dictation"}, {"name": "/mcp-api"}, {"name": "/notes"}, {"name": "/pricing"}]}, {"label": "Docs", "pages": [{"name": "/docs"}, {"name": "/docs/account-and-privacy/account-and-billing"}, {"name": "/docs/account-and-privacy/permissions-and-privacy"}, {"name": "/docs/account-and-privacy/sales-tax"}, {"name": "/docs/account-and-privacy/sign-in-and-account-recovery"}, {"name": "/docs/dictation/history"}, {"name": "/docs/dictation/languages-and-models"}, {"name": "/docs/dictation/mac-preferences"}, {"name": "/docs/dictation/microphones-and-audio"}, {"name": "/docs/dictation/shortcuts"}, {"name": "/docs/enterprise-api"}, {"name": "/docs/enterprise-api/authentication"}, {"name": "/docs/enterprise-api/batch-dictation"}, {"name": "/docs/enterprise-api/data-handling"}, {"name": "/docs/enterprise-api/feedback"}, {"name": "/docs/enterprise-api/limits-and-errors"}, {"name": "/docs/enterprise-api/quickstart"}, {"name": "/docs/enterprise-api/realtime-streaming"}, {"name": "/docs/enterprise-api/reference"}, {"name": "/docs/enterprise-api/reference/authentication/createclienttoken"}, {"name": "/docs/enterprise-api/reference/dictation/dictate"}, {"name": "/docs/enterprise-api/reference/feedback/submitenterprisefeedback"}, {"name": "/docs/enterprise-api/reference/languages/listlanguages"}, {"name": "/docs/getting-started/first-dictation"}, {"name": "/docs/getting-started/iphone-and-ipad"}, {"name": "/docs/getting-started/mac"}, {"name": "/docs/getting-started/platform-availability"}, {"name": "/docs/integrations/choose-a-connection"}, {"name": "/docs/integrations/cli"}, {"name": "/docs/integrations/mcp"}, {"name": "/docs/iphone-and-ipad/action-button-and-shortcuts"}, {"name": "/docs/iphone-and-ipad/keyboard-and-full-access"}, {"name": "/docs/iphone-and-ipad/preferences-and-modes"}, {"name": "/docs/personalize/australian-or-british-english"}, {"name": "/docs/personalize/dictionary"}, {"name": "/docs/personalize/modes-and-instructions"}, {"name": "/docs/public-api"}, {"name": "/docs/public-api/authentication"}, {"name": "/docs/public-api/errors-and-pagination"}, {"name": "/docs/public-api/notes"}, {"name": "/docs/public-api/quickstart"}, {"name": "/docs/public-api/reference"}, {"name": "/docs/public-api/reference/notes/getnote"}, {"name": "/docs/public-api/reference/notes/getnoteaudiourl"}, {"name": "/docs/public-api/reference/notes/listnotes"}, {"name": "/docs/public-api/webhooks"}, {"name": "/docs/support/contact-support"}, {"name": "/docs/troubleshooting/connection-and-diagnostics"}, {"name": "/docs/troubleshooting/dictation-and-pasting"}, {"name": "/docs/troubleshooting/iphone-and-ipad"}, {"name": "/docs/troubleshooting/language-and-unexpected-words"}, {"name": "/docs/troubleshooting/performance-and-crashes"}, {"name": "/docs/voice-notes/automatic-note-tagging"}, {"name": "/docs/voice-notes/organize-edit-and-share"}, {"name": "/docs/voice-notes/processing-and-recovery"}, {"name": "/docs/voice-notes/record-a-note"}, {"name": "/docs/web-app/edit-organize-and-share"}, {"name": "/docs/web-app/notes"}, {"name": "/docs/web-app/settings-and-connections"}]}, {"label": "Changelog", "pages": [{"name": "/changelog"}, {"name": "/changelog/2025-08-11-dictation-from-anywhere"}, {"name": "/changelog/2025-08-19-a-new-onboarding-experience"}, {"name": "/changelog/2025-09-03-dramatically-lower-latency"}, {"name": "/changelog/2025-09-08-paste-the-last-transcript-instantly"}, {"name": "/changelog/2025-09-15-clearer-billing-guided-onboarding"}, {"name": "/changelog/2025-10-24-faster-local-models-stronger-privacy-controls"}, {"name": "/changelog/2025-12-02-easier-sign-in-and-smarter-spacing"}, {"name": "/changelog/2026-02-06-settings-sync-and-sign-in-with-apple"}, {"name": "/changelog/2026-02-09-transcription-stability-hotfix"}, {"name": "/changelog/2026-02-10-sync-crash-and-notarization-hotfix"}, {"name": "/changelog/2026-02-12-more-dependable-sync"}, {"name": "/changelog/2026-02-16-macos-26-2-crash-hotfix"}, {"name": "/changelog/2026-02-16-monologue-comes-to-iphone"}, {"name": "/changelog/2026-02-16-performance-and-bug-fixes"}, {"name": "/changelog/2026-03-03-more-reliable-fullscreen-capture"}, {"name": "/changelog/2026-03-05-more-dependable-dictation-everywhere"}, {"name": "/changelog/2026-03-06-faster-starts-and-a-quicker-mode-picker"}, {"name": "/changelog/2026-03-16-more-account-and-privacy-control"}, {"name": "/changelog/2026-03-24-performance-and-reliability"}, {"name": "/changelog/2026-03-27-blazing-fast-mode"}, {"name": "/changelog/2026-03-27-more-resilient-recording-and-keyboard-controls"}, {"name": "/changelog/2026-04-06-a-redesigned-mac-app"}, {"name": "/changelog/2026-04-07-menu-bar-stability-hotfix"}, {"name": "/changelog/2026-04-11-better-silence-detection"}, {"name": "/changelog/2026-04-11-intel-mac-crash-hotfix"}, {"name": "/changelog/2026-04-18-introducing-monologue-notes"}, {"name": "/changelog/2026-04-20-a-better-notes-experience-on-apple-watch"}, {"name": "/changelog/2026-04-21-record-notes-from-the-keyboard"}, {"name": "/changelog/2026-04-22-faster-menu-bar-access"}, {"name": "/changelog/2026-04-26-notes-processing-gets-smoother"}, {"name": "/changelog/2026-04-30-clearer-notes-cleaner-settings"}, {"name": "/changelog/2026-05-01-a-redesigned-notes-experience"}, {"name": "/changelog/2026-05-07-notes-reliability-and-polish"}, {"name": "/changelog/2026-05-10-safer-recordings-across-iphone-and-watch"}, {"name": "/changelog/2026-05-14-keyboard-audio-hotfix"}, {"name": "/changelog/2026-05-25-monologue-stays-close-to-your-cursor"}, {"name": "/changelog/2026-06-03-dictate-with-the-action-button"}, {"name": "/changelog/2026-06-22-following-cursor-mode"}, {"name": "/changelog/2026-07-02-better-notes-from-capture-to-summary"}, {"name": "/changelog/2026-07-10-notes-reworked"}, {"name": "/changelog/2026-07-13-more-powerful-notes-and-multilingual-dictation"}, {"name": "/changelog/2026-07-22-a-better-keyboard-and-more-reliable-notes"}, {"name": "/changelog/2026-07-22-faster-more-flexible-notes"}, {"name": "/changelog/2026-08-07-a-smaller-indicator-smarter-audio-controls"}, {"name": "/changelog/2026-08-15-faster-dictation-and-more-reliable-notes"}, {"name": "/changelog/2026-08-24-meet-the-dot"}, {"name": "/changelog/2026-09-28-faster-dictation-and-more-reliable-notes"}, {"name": "/changelog/2026-10-02-find-your-notes-with-siri-ai-on-ios-27"}, {"name": "/changelog/2026-10-28-google-meet-detection-is-back"}]}, {"label": "Everything else", "pages": [{"name": "/about"}, {"name": "/blog"}, {"name": "/blog/introducing-mono-1"}, {"name": "/contact"}, {"name": "/data-privacy"}, {"name": "/privacy"}, {"name": "/talk-fast"}, {"name": "/talk-fast/leaderboard"}, {"name": "/terms"}, {"name": "/waitlist"}]}]}
+/>
+
+I crawled the site with SEO Skill to see if something technical was holding these pages back, and found nothing. The pages are indexable, have self canonicals, sit in the sitemap and are linked from the main navigation. The Wispr Flow comparison is about 2,500 words with Article, FAQ and breadcrumb structured data. The others are about 1,100 words each.
+
+It's also very ready for AI agents. It has an llms.txt with prices and key facts, an AI catalog file with an MCP server card, a robots.txt that says search and AI answers are welcome, and a Markdown copy of each page. The only gap is that the HTML pages don't point to their Markdown copies, which is a five-minute fix.
+
+The comparison pages are also new. The Wayback Machine first saw them on 19 October, so some of the gap is just time. The titles explain the rest.
+
+## The pages answer a question buyers don't ask
+
+The comparison pages are titled "Monologue vs Wispr Flow", "Monologue vs Superwhisper" and so on. It's a natural way to write them, but almost nobody searches for those titles, because you can only search "Monologue vs Wispr Flow" if you already know Monologue exists.
+
+These are the searches people make when they want to switch dictation apps (DataForSEO, US monthly searches).
+
+<KeywordTable
+  caption="Searches from people shopping for a dictation app. Monologue has a page for the one at the bottom."
+  columns={[{"key": "keyword", "label": "Search"}, {"key": "volume", "label": "US searches", "format": "number"}, {"key": "difficulty", "label": "Difficulty", "short": "KD", "format": "number"}, {"key": "page", "label": "Monologue page"}]}
+  rows={[{"keyword": "wispr flow pricing", "volume": 1600, "difficulty": 11, "page": "None"}, {"keyword": "wispr flow alternative", "volume": 720, "difficulty": 0, "page": "None"}, {"keyword": "wispr flow alternatives", "volume": 590, "difficulty": 0, "page": "None"}, {"keyword": "superwhisper vs wispr flow", "volume": 590, "difficulty": 0, "page": "None"}, {"keyword": "voice coding", "volume": 480, "difficulty": 13, "page": "None"}, {"keyword": "wispr flow vs superwhisper", "volume": 390, "difficulty": 0, "page": "None"}, {"keyword": "aqua voice vs wispr flow", "volume": 140, "difficulty": 0, "page": "None"}, {"keyword": "superwhisper alternative", "volume": 90, "difficulty": 0, "page": "None"}, {"keyword": "granola vs wispr flow", "volume": 90, "difficulty": 0, "page": "Ranks #13 by accident"}, {"keyword": "monologue vs wispr flow", "volume": 50, "difficulty": 0, "page": "Yes"}]}
+/>
+
+About 1,300 people a month search for a Wispr Flow alternative, at a difficulty of zero. Another 1,000 compare Superwhisper and Wispr Flow directly. Those people are about to pay for a dictation app, or already are and want a better one. They're the most valuable visitors in the category, and right now Medium posts and YouTube videos get them.
+
+The existing pages can stay mostly as they are. I'd keep the vs pages. Then I'd add alternatives pages that answer "what should I use instead of Wispr Flow", and a page comparing the two leaders that's honest about both (and makes the case for a third option).
+
+## Every links to Monologue 278 times, and always to the homepage
+
+This is the biggest finding, and I only found it because I crawled Every's site as well as Monologue's.
+
+Every.to has a Domain Rating of 77 and about 7,800 sites linking to it. Monologue has 50 and 780. Every is the strongest asset Monologue has. So I crawled 600 every.to pages and pulled out every link to a Monologue URL.
+
+<BeforeAfter
+  caption="Links from 600 crawled every.to pages to Monologue, by destination."
+  before={{ label: "Where Every links today", html: before5 }}
+  after={{ label: "Where those links could go", html: after5 }}
+/>
+
+218 of the 600 pages link to Monologue. Nearly all of those links point at the homepage, which already ranks for the brand. The comparison and use-case pages get no links. The same pattern repeats for Every's other apps: about 450 links to the Cora homepage, 440 to Sparkle and 180 to Spiral, all with the product name as the anchor.
+
+Four posts also link to monologue.co, a parked domain, five times in all. Readers who click those links to try the app get a parking page. It looks like a typo for monologue.to: in one post the link text even says "monologue.to".
+
+<UrlMap
+  caption="The every.to posts that link to monologue.co. Each link should point at https://www.monologue.to/ instead."
+  rows={[
+    { url: "/context-window/openai-s-atlas-shrug-or-no-shrug", action: "2 links", tone: "remove", note: "One of them has the link text \"monologue.to\"" },
+    { url: "/context-window/checking-in-on-gpt-5-1", action: "1 link", tone: "remove" },
+    { url: "/context-window/playing-games-with-ai", action: "1 link", tone: "remove" },
+    { url: "/context-window/your-claw-yourself", action: "1 link", tone: "remove" },
+  ]}
+/>
+
+<BeforeAfter
+  caption="The link in the Atlas post, and the same link pointed at the real site."
+  before={{ label: "Today", html: beforeTypo }}
+  after={{ label: "Fixed", html: afterTypo }}
+/>
+
+
+None of this needs new content. A find-and-replace across Every's CMS fixes it and puts the strongest site in the portfolio behind the pages that sell.
+
+## Where I'd point the content next
+
+Once the comparison pages are fixed, there are three gaps I'd fill, in this order.
+
+1. "speech to text mac" and "mac dictation" are small searches with buying intent, and the people searching them use the Mac, where Monologue works best. The dictation page can be the answer, with a short guide next to it.
+2. "voice coding" has 480 searches a month at difficulty 13, and Every already writes a lot about coding agents. Monologue already has a developers page. It needs a guide showing how to prompt Claude Code, Codex and Cursor by voice, linked from every Every essay about coding agents.
+3. "best dictation software" pages from Willow Voice and others rank on page one, and AI answers pull from them. Getting Monologue into those lists, with an accurate one-line description, would do more for AI search than an llms.txt file.
+
+## Ship it all today, then let it settle
+
+None of this needs a four-week sprint. Each fix is a separate job, so coding agents can work on all of them at once:
+
+<PlanSteps
+  steps={[{"title": "Portfolio links", "body": "Point Every links at the dictation, comparison and developers pages with descriptive anchors. Fix the five monologue.co links, and link to www.monologue.to directly."}, {"title": "Markdown alternate links", "body": "One head tag per page so agents find the Markdown copies that already exist."}, {"title": "Alternatives pages", "body": "Wispr Flow alternative and Superwhisper alternative pages, plus Superwhisper vs Wispr Flow."}, {"title": "Voice coding guide", "body": "Prompting Claude Code, Codex and Cursor by voice, linked from the developers page and Every essays."}, {"title": "Roundup list", "body": "Find the best dictation software posts that rank, and draft a short, accurate pitch for each."}]}
+/>
+
+Someone on the team still needs to review the new pages and do the roundup outreach. The link and head tag changes need only a quick check.
+
+Then I'd spend 30 days checking the results:
+
+<PlanSteps
+  steps={[{"marker": "Day 0", "title": "Ask Google to recrawl", "body": "Submit every new and changed URL to Index My Site, so Google recrawls them now instead of on its own schedule."}, {"marker": "Day 3", "title": "Check indexing", "body": "Confirm the new alternatives pages and the retitled comparison pages are indexed."}, {"marker": "Day 7", "title": "First impressions", "body": "Look for impressions on \"wispr flow alternative\" and \"superwhisper vs wispr flow\" in Search Console."}, {"marker": "Day 14", "title": "Clicks from Every", "body": "Check clicks from every.to links to the comparison and dictation pages."}, {"marker": "Day 30", "title": "Trials", "body": "Compare trial sign-ups from search with the month before."}]}
+/>
+
+## Get the changes seen quickly
+
+Every step above either changes existing pages or adds new ones, and Google doesn't recrawl a two-week-old comparison page on your schedule. I'd submit each new and changed URL to [Index My Site](https://indexmysite.app/) the day it ships, so Google is asked to recrawl it straight away instead of finding it on its own schedule. That matters most for the retitled comparison pages, where the old title is what Google currently has.
+
+## How I ran this
+
+Everything in this teardown came from SEO Skill, run by an agent. You can run the same audit on your own site.
+
+**1. Connect the hosted MCP server.** It's free. You sign in with Google, and there's no password and nothing to install. In Claude Code:
+
+```sh
+claude mcp add --transport http seoskill https://seoskill.dev/mcp
+```
+
+Codex, Cursor and Claude on the web work too. The [MCP guide](/docs/mcp) has the steps for each one.
+
+**2. Add a research key.** On your [account page](/account), save an Ahrefs or DataForSEO key. The key gives your agent search volumes, rankings and results pages, like the tables above.
+
+**3. Install the CLI for crawling.** The crawl runs on your machine, so it can read any site:
+
+```sh
+npm i -g seo
+seo login
+```
+
+**4. Ask your agent.** This is close to the prompt I used:
+
+```text
+Audit example.com and every site we own.
+Crawl each one with seo crawl. Find where our sites
+link to each other and which pages those links hit.
+Use seo_research to find the searches our buyers
+make, who ranks for them and whether we can compete.
+Rank every fix by how close it sits to revenue.
+```
+
+On your own site, the hosted server adds the part I couldn't see from the outside: your real Search Console clicks and queries. With those, you get measured numbers where this post has estimates.
+
+Then crawl your parent or sister sites and look at where they link to you. Most audits skip that step.
+
+If you're on the Monologue team, I'm happy to go through any of this. And if you'd like the same teardown for your site, [SEO Skill](/) will run it for you.

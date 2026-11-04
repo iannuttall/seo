@@ -1,0 +1,271 @@
+---
+// Columns for months or categories. A reader can hover, tap or use the arrow
+// keys to read each one. `highlight` draws the named columns in the accent
+// colour and quietens the rest. `markers` pin an event to a column, such as
+// a Google update, drawn as a band like the update checker's. Columns grow
+// in when the exhibit scrolls into view.
+import { compactNumber, formatNumber, niceTop } from './chart'
+import Exhibit from './Exhibit.astro'
+
+type Column = { label: string; value: number; note?: string }
+type Marker = { at: string; text: string }
+
+type Props = {
+  data: Column[]
+  // Labels of the columns to pick out.
+  highlight?: string[]
+  markers?: Marker[]
+  // Unit after each value, such as "visits".
+  unit?: string
+  title?: string
+  caption?: string
+}
+
+const { data, highlight = [], markers = [], unit = '', title, caption } = Astro.props
+
+const top = niceTop(Math.max(1, ...data.map((column) => column.value)))
+const withUnit = (value: number) => (unit ? `${formatNumber(value)} ${unit}` : formatNumber(value))
+const picked = new Set(highlight)
+// With few columns each gets its value printed on top, and the axis goes.
+const labelled = data.length <= 8
+// About twelve labels on wide screens and six on phones. The last column is
+// always labelled, so a stepped label too close to it is dropped instead of
+// overlapping it.
+const last = data.length - 1
+const wideStep = Math.ceil(data.length / 12)
+const phoneStep = Math.ceil(data.length / 6)
+const ticks = (index: number, step: number) => index === last || (index % step === 0 && last - index >= step)
+// Columns never get narrower than this; below it the chart scrolls sideways
+// in its panel instead of squeezing bars and labels together.
+const minColumn = labelled ? 4.5 : 1.25
+const columns = data.map((column, index) => {
+  const notes = markers.filter((marker) => marker.at === column.label).map((marker) => marker.text)
+  return {
+    ...column,
+    index,
+    share: (column.value / top) * 100,
+    marked: notes.length > 0,
+    tip: {
+      title: column.label,
+      lines: [{ value: withUnit(column.value) }],
+      notes: [...(column.note ? [column.note] : []), ...notes],
+    },
+    tone: picked.size === 0 || picked.has(column.label) ? 'bg-primary' : 'bg-primary/35',
+    // Phones and wide screens each show only their own steps, so the two
+    // sets never mix into neighbouring labels.
+    tick: labelled
+      ? ''
+      : ticks(index, phoneStep)
+        ? ticks(index, wideStep)
+          ? ''
+          : 'sm:invisible'
+        : ticks(index, wideStep)
+          ? 'invisible sm:visible'
+          : 'invisible',
+  }
+})
+const summary = `${title ?? 'Column chart'}. Use the left and right arrow keys to read each column.`
+---
+
+<Exhibit title={title} caption={caption}>
+  <div class="vertical-bars" data-vertical-bars data-agent-markdown="exclude">
+    <div class="-mx-1 overflow-x-auto px-1" data-vb-scroll>
+    <div style={`min-width: ${data.length * minColumn}rem`}>
+    <div class:list={['h-56 sm:h-64', labelled && 'pt-6']}>
+      <div
+        class="vb-plot relative h-full touch-pan-x touch-pan-y outline-none"
+        tabindex="0"
+        role="img"
+        aria-label={summary}
+        data-plot
+      >
+        {
+          [1, 0.5, 0].map((share) => (
+            <div
+              class:list={['absolute inset-x-0 h-px', share === 0 ? 'bg-foreground/15' : 'bg-foreground/[0.07]']}
+              style={`top: ${(1 - share) * 100}%`}
+              aria-hidden="true"
+            >
+              {share > 0 && !labelled ? (
+                <span class="vb-axis absolute top-1 left-0 rounded-sm px-0.5 text-xs text-foreground-soft">{compactNumber(top * share)}</span>
+              ) : null}
+            </div>
+          ))
+        }
+        <div class="absolute inset-0 flex gap-1 sm:gap-2" aria-hidden="true">
+          {
+            columns.map((column) => (
+              <div class="relative flex h-full min-w-0 flex-1 items-end justify-center" data-column data-tip={JSON.stringify(column.tip)}>
+                {column.marked ? (
+                  <>
+                    <span class="absolute inset-x-0 top-0 bottom-0 rounded-t-sm bg-warning/15" />
+                    <span class="absolute inset-x-0 top-0 h-1.5 rounded-t-sm bg-warning" />
+                  </>
+                ) : null}
+                <span class="vb-hover absolute inset-x-0 top-0 bottom-0 rounded-md bg-foreground/[0.06] opacity-0 transition-opacity" />
+                <span
+                  class:list={['vb-bar relative w-full max-w-20 rounded-t-[5px] transition-colors', column.tone]}
+                  style={`height: ${column.share}%; --delay: ${Math.min(column.index * 45, 700)}ms`}
+                  data-bar
+                >
+                  {labelled ? (
+                    <span class="absolute bottom-full left-1/2 mb-1 -translate-x-1/2 text-xs whitespace-nowrap text-foreground tabular-nums">
+                      {compactNumber(column.value)}
+                    </span>
+                  ) : null}
+                </span>
+              </div>
+            ))
+          }
+        </div>
+      </div>
+    </div>
+    <div class="mt-2 flex gap-1 text-xs text-foreground-soft sm:gap-2" aria-hidden="true">
+      {
+        columns.map((column) => (
+          <span class:list={['relative h-4 min-w-0 flex-1', column.tick]}>
+            <span
+              class:list={[
+                'absolute top-0 whitespace-nowrap',
+                !labelled && column.index === 0
+                  ? 'left-0'
+                  : !labelled && column.index === columns.length - 1
+                    ? 'right-0'
+                    : 'left-1/2 -translate-x-1/2',
+              ]}
+            >
+              {column.label}
+            </span>
+          </span>
+        ))
+      }
+    </div>
+    </div>
+    </div>
+    {
+      markers.length > 0 ? (
+        <ul class="mt-4 flex flex-col gap-1.5 text-sm text-foreground-muted">
+          {markers.map((marker) => (
+            <li class="flex items-baseline gap-2">
+              <span class="size-2.5 shrink-0 translate-y-px rounded-sm bg-warning" />
+              <span>
+                <span class="text-foreground">{marker.at}</span>: {marker.text}
+              </span>
+            </li>
+          ))}
+        </ul>
+      ) : null
+    }
+  </div>
+  {/* Tables ignore a 1px width, so the wrapper does the hiding. */}
+  <div class="sr-only">
+    <table>
+      <thead>
+        <tr><th>Label</th><th>{unit ? `Value (${unit})` : 'Value'}</th><th>Note</th></tr>
+      </thead>
+      <tbody>
+        {
+          columns.map((column) => (
+            <tr>
+              <td>{column.label}</td>
+              <td>{formatNumber(column.value)}</td>
+              <td>{column.tip.notes.join('. ')}</td>
+            </tr>
+          ))
+        }
+      </tbody>
+    </table>
+  </div>
+</Exhibit>
+
+<style>
+  .vb-bar {
+    transition:
+      height 900ms cubic-bezier(0.22, 1, 0.36, 1) var(--delay),
+      background-color 150ms;
+  }
+
+  :global(:root.motion) [data-vertical-bars]:not([data-reveal='shown']) .vb-bar {
+    height: 0 !important;
+  }
+
+  [data-active] .vb-hover {
+    opacity: 1;
+  }
+
+  [data-active] .vb-bar {
+    background-color: var(--primary);
+  }
+
+  /* A halo in the panel colour keeps axis labels readable over a column. */
+  .vb-axis {
+    background: color-mix(in oklch, var(--muted) 85%, transparent);
+  }
+
+  [data-plot]:focus-visible {
+    border-radius: 0.375rem;
+    box-shadow: 0 0 0 3px color-mix(in oklch, var(--ring) 30%, transparent);
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .vb-bar {
+      transition: none;
+    }
+  }
+</style>
+
+<script>
+  import { reveal } from './reveal'
+  import { hideTip, showTip, showTipAt, type Tip } from './tooltip'
+
+  for (const chart of document.querySelectorAll<HTMLElement>('[data-vertical-bars]')) {
+    const plot = chart.querySelector<HTMLElement>('[data-plot]')
+    const columns = [...chart.querySelectorAll<HTMLElement>('[data-column]')]
+    if (!plot || columns.length === 0) continue
+    const tips = columns.map((column) => JSON.parse(column.dataset.tip ?? '{}') as Tip)
+    let active = -1
+
+    const show = (index: number, event?: PointerEvent) => {
+      active = Math.min(columns.length - 1, Math.max(0, index))
+      columns.forEach((column, position) => column.toggleAttribute('data-active', position === active))
+      const bar = columns[active].querySelector('[data-bar]') ?? columns[active]
+      if (event && event.pointerType === 'mouse') showTip(tips[active], event.clientX, event.clientY)
+      else showTipAt(tips[active], bar)
+    }
+    const hide = () => {
+      active = -1
+      for (const column of columns) column.removeAttribute('data-active')
+      hideTip()
+    }
+    const fromPointer = (event: PointerEvent) => {
+      const box = plot.getBoundingClientRect()
+      show(Math.floor(((event.clientX - box.left) / box.width) * columns.length), event)
+    }
+
+    plot.addEventListener('pointermove', fromPointer)
+    plot.addEventListener('pointerdown', fromPointer)
+    plot.addEventListener('pointerleave', (event) => {
+      if (event.pointerType === 'mouse') hide()
+    })
+    // A tap elsewhere puts away a tapped tooltip.
+    document.addEventListener('pointerdown', (event) => {
+      if (active >= 0 && !plot.contains(event.target as Node)) hide()
+    })
+    plot.addEventListener('focus', () => show(active < 0 ? columns.length - 1 : active))
+    plot.addEventListener('blur', hide)
+    plot.addEventListener('keydown', (event) => {
+      const moves: Record<string, number> = {
+        ArrowLeft: active - 1,
+        ArrowRight: active + 1,
+        Home: 0,
+        End: columns.length - 1,
+      }
+      if (event.key === 'Escape') return hide()
+      if (!(event.key in moves)) return
+      event.preventDefault()
+      show(moves[event.key])
+    })
+  }
+
+  reveal('[data-vertical-bars]')
+</script>

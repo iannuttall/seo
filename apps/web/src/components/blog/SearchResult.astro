@@ -1,0 +1,150 @@
+---
+// A Google search result as a searcher sees it, for title and description
+// findings. Give `before` alone to show one result, or `before` and `after`
+// to toggle between today and the fix. The title is cut where Google cuts
+// it on desktop (about 600px of 20px Arial) and wraps to two lines on
+// phones; the description shows two lines. The character counts under each
+// side are worked out here, so the post never states them by hand.
+import BeforeAfter from './BeforeAfter.astro'
+import Exhibit from './Exhibit.astro'
+
+type Result = {
+  label?: string
+  // The page address; shown as Google's breadcrumb.
+  url: string
+  // The site name Google shows above the address.
+  site: string
+  title: string
+  description: string
+  note?: string
+}
+
+type Props = {
+  before: Result
+  after?: Result
+  title?: string
+  caption?: string
+}
+
+const { before, after, title, caption } = Astro.props
+
+const escape = (value: string) =>
+  value
+    .replaceAll('&', '&amp;')
+    .replaceAll('<', '&lt;')
+    .replaceAll('>', '&gt;')
+    .replaceAll('"', '&quot;')
+
+function crumb(url: string) {
+  const parsed = new URL(url)
+  const path = parsed.pathname.split('/').filter(Boolean)
+  return [`${parsed.protocol}//${parsed.host}`, ...path].join(' › ')
+}
+
+function html(result: Result) {
+  const counts = `Title ${result.title.length} characters. Description ${result.description.length} characters.`
+  return `<div class="serp-result">
+  <div class="serp-site">
+    <span class="serp-icon" aria-hidden="true">${escape(result.site.slice(0, 1))}</span>
+    <span><span class="serp-name">${escape(result.site)}</span><span class="serp-crumb">${escape(crumb(result.url))}</span></span>
+  </div>
+  <p class="serp-title">${escape(result.title)}</p>
+  <p class="serp-description">${escape(result.description)}</p>
+</div>
+<p class="serp-counts">${escape(result.note ? `${counts} ${result.note}` : counts)}</p>`
+}
+---
+
+{
+  after ? (
+    <BeforeAfter
+      title={title}
+      caption={caption}
+      before={{ label: before.label ?? 'Today', html: html(before) }}
+      after={{ label: after.label ?? 'After the fix', html: html(after) }}
+    />
+  ) : (
+    <Exhibit title={title} caption={caption}>
+      <div class="rounded-lg bg-background p-4" set:html={html(before)} />
+    </Exhibit>
+  )
+}
+
+<style is:global>
+  .serp-result {
+    max-width: 600px;
+    font-family: Arial, sans-serif;
+    text-align: left;
+  }
+  .serp-site {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    margin-bottom: 0.25rem;
+  }
+  .serp-icon {
+    display: grid;
+    flex: none;
+    place-items: center;
+    width: 1.75rem;
+    height: 1.75rem;
+    border-radius: 9999px;
+    background: var(--color-muted, #f1f3f4);
+    color: var(--color-foreground);
+    font-size: 0.875rem;
+  }
+  .serp-name,
+  .serp-crumb {
+    display: block;
+    line-height: 1.25rem;
+  }
+  .serp-name {
+    color: var(--color-foreground);
+    font-size: 0.875rem;
+  }
+  .serp-crumb {
+    color: var(--color-foreground-muted);
+    font-size: 0.75rem;
+    overflow-wrap: anywhere;
+  }
+  .serp-result .serp-title {
+    margin: 0;
+    color: #1a0dab;
+    font-size: 1.25rem;
+    line-height: 1.625rem;
+    display: -webkit-box;
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: 2;
+    overflow: hidden;
+  }
+  @media (min-width: 640px) {
+    .serp-result .serp-title {
+      display: block;
+      white-space: nowrap;
+      text-overflow: ellipsis;
+    }
+  }
+  .serp-result .serp-description {
+    margin: 0.25rem 0 0;
+    color: var(--color-foreground-muted);
+    font-size: 0.875rem;
+    line-height: 1.375rem;
+    display: -webkit-box;
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: 2;
+    overflow: hidden;
+  }
+  .serp-counts {
+    margin: 0.75rem 0 0;
+    color: var(--color-foreground-muted);
+    font-size: 0.8125rem;
+  }
+  :root[data-theme='dark'] .serp-result .serp-title {
+    color: #99c3ff;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme='light']) .serp-result .serp-title {
+      color: #99c3ff;
+    }
+  }
+</style>

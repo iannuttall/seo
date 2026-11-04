@@ -1,0 +1,312 @@
+---
+// Turns a post into a before and after demo of seo lint. Put it once, at
+// the top of the post, and wrap each edit in <Fix>. The page's HTML and
+// DOM text are always the clean post: the draft's words live only in
+// data-slop attributes and are drawn by CSS, which search engines and the
+// Markdown copy do not read as page text.
+//
+// With motion allowed and no #fragment in the URL, the post first paints
+// as the draft (data-slop="draft" on <html>, set below before the post
+// parses). "Remove the slop" switches to the diff: as each edit comes into
+// view it is struck out in red, the fix fades in green and the rule's name
+// appears. Readers who prefer reduced motion start on the clean post and
+// can show the whole diff at once. Without JavaScript only the clean post
+// shows.
+import Button from '@/components/Button.astro'
+---
+
+<script is:inline>
+  {
+    const html = document.documentElement
+    const draft = html.classList.contains('motion') && !location.hash
+    if (draft) html.dataset.slop = 'draft'
+    html.dataset.slopDemo = draft ? 'draft' : 'start'
+  }
+</script>
+
+<div class="slop-panel mt-0 mb-10 rounded-lg bg-muted p-4 sm:p-6" data-slop-panel data-nosnippet data-agent-markdown="exclude">
+  <div data-when="draft">
+    <p class="text-sm font-medium text-foreground">You're reading the AI draft</p>
+    <p class="mt-1 text-[0.9375rem]/6 text-foreground-muted">
+      This post loaded as a sloppy first draft from a chatbot. Remove the slop to watch seo lint take it out, one fix at a time, with the rule behind each one.
+    </p>
+  </div>
+  <div data-when="start">
+    <p class="text-sm font-medium text-foreground">This post started as an AI draft</p>
+    <p class="mt-1 text-[0.9375rem]/6 text-foreground-muted">
+      Show the changes to see each AI pattern seo lint found in the draft, what replaced it and the rule that caught it.
+    </p>
+  </div>
+  <div data-when="live">
+    <p class="text-sm font-medium text-foreground" data-slop-title></p>
+    <p class="mt-1 text-[0.9375rem]/6 text-foreground-muted" data-slop-text aria-live="polite"></p>
+  </div>
+  <div class="mt-4 flex flex-wrap gap-2">
+    <Button type="button" variant="default" size="sm" data-slop-action>Remove the slop</Button>
+  </div>
+</div>
+
+<style is:global>
+  .slop-panel,
+  .slop-bar {
+    display: none;
+  }
+
+  html[data-slop-demo] .slop-panel {
+    display: block;
+  }
+
+  .slop-panel [data-when] {
+    display: none;
+  }
+
+  html[data-slop-demo='draft'] .slop-panel [data-when='draft'],
+  html[data-slop-demo='start'] .slop-panel [data-when='start'],
+  html[data-slop-demo='live'] .slop-panel [data-when='live'] {
+    display: block;
+  }
+
+  /* The bottom bar keeps the next action in reach while the draft or the
+     diff shows. It sticks inside the post, so it stops at the post's end. */
+  html[data-slop] .slop-bar {
+    position: sticky;
+    bottom: 1rem;
+    z-index: 10;
+    display: flex;
+    margin-top: 2.5rem;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.75rem;
+    border-radius: 0.75rem;
+    background: var(--muted);
+    padding: 0.5rem 0.5rem 0.5rem 1rem;
+    color: var(--foreground-muted);
+    font-size: 0.875rem;
+    line-height: 1.25rem;
+    transition: opacity 200ms, visibility 200ms;
+  }
+
+  /* Hidden while the panel at the top is on screen, since it repeats it. */
+  html[data-slop] .slop-bar[data-panel-visible] {
+    visibility: hidden;
+    opacity: 0;
+  }
+
+  /* The draft: the slop shows as ordinary text and the fix is hidden. */
+  html[data-slop] .slop-fix:not([data-state])::before {
+    content: attr(data-slop);
+  }
+
+  html[data-slop] .slop-fix:not([data-state]) .slop-new {
+    display: none;
+  }
+
+  /* The diff. Flagged: every line seo lint found shows in red with its
+     rule. Struck: the line is crossed out. Fixed: the fix follows in green. */
+  html[data-slop='diff'] .slop-fix[data-state]::before {
+    content: attr(data-slop);
+    border-radius: 0.25rem;
+    background:
+      linear-gradient(var(--destructive), var(--destructive)) no-repeat 0 55% / 100% 1.5px,
+      var(--destructive-soft);
+    color: var(--destructive);
+    animation: slop-strike 420ms ease-out both;
+    -webkit-box-decoration-break: clone;
+    box-decoration-break: clone;
+  }
+
+  html[data-slop='diff'] .slop-fix[data-state='flagged']::before {
+    background:
+      linear-gradient(var(--destructive), var(--destructive)) no-repeat 0 55% / 0% 1.5px,
+      var(--destructive-soft);
+    animation: slop-insert 240ms ease-out both;
+  }
+
+  html[data-slop='diff'] .slop-fix[data-state='flagged'] .slop-new,
+  html[data-slop='diff'] .slop-fix[data-state='struck'] .slop-new {
+    display: none;
+  }
+
+  html[data-slop='diff'] .slop-fix[data-state] .slop-new {
+    border-radius: 0.25rem;
+    background: var(--success-soft);
+    color: var(--foreground);
+    animation: slop-insert 320ms ease-out both;
+    -webkit-box-decoration-break: clone;
+    box-decoration-break: clone;
+  }
+
+  html[data-slop='diff'] .slop-fix[data-state]::after {
+    content: attr(data-rule);
+    margin-left: 0.25rem;
+    border-radius: 0.375rem;
+    background: var(--muted);
+    padding: 0.0625rem 0.375rem;
+    color: var(--foreground-muted);
+    font-family: var(--font-mono);
+    font-size: 0.75rem;
+    font-weight: 400;
+    white-space: nowrap;
+    vertical-align: 0.0625rem;
+    animation: slop-insert 240ms ease-out both;
+  }
+
+  html.slop-instant .slop-fix::before,
+  html.slop-instant .slop-fix::after,
+  html.slop-instant .slop-fix .slop-new {
+    animation: none !important;
+  }
+
+  @keyframes slop-strike {
+    from {
+      background-size: 0% 1.5px, auto;
+      color: inherit;
+    }
+  }
+
+  @keyframes slop-insert {
+    from {
+      opacity: 0;
+    }
+  }
+</style>
+
+<script>
+  const html = document.documentElement
+  const panel = document.querySelector<HTMLElement>('[data-slop-panel]')
+  const article = panel?.closest('article')
+  const fixes = [...document.querySelectorAll<HTMLElement>('.slop-fix')]
+
+  if (panel && article && fixes.length > 0) {
+    const total = fixes.length
+    const rules = new Set(fixes.map((fix) => fix.dataset.rule)).size
+    const title = panel.querySelector<HTMLElement>('[data-slop-title]')
+    const text = panel.querySelector<HTMLElement>('[data-slop-text]')
+    const action = panel.querySelector<HTMLButtonElement>('[data-slop-action]')
+
+    // The bar repeats the panel's action at the bottom of the screen.
+    const bar = document.createElement('div')
+    bar.className = 'slop-bar'
+    bar.setAttribute('data-nosnippet', '')
+    bar.setAttribute('data-agent-markdown', 'exclude')
+    const barText = document.createElement('span')
+    const barAction = action?.cloneNode(true) as HTMLButtonElement
+    bar.append(barText, barAction)
+    article.append(bar)
+    new IntersectionObserver(([entry]) => {
+      bar.toggleAttribute('data-panel-visible', entry.isIntersecting)
+    }).observe(panel)
+
+    type State = 'draft' | 'start' | 'fixing' | 'diff' | 'clean'
+    let state: State = html.dataset.slop === 'draft' ? 'draft' : 'start'
+    let fixed = 0
+    let queue: HTMLElement[] = []
+    let timer = 0
+
+    const render = () => {
+      if (state === 'fixing' && fixed === total) state = 'diff'
+      if (state !== 'draft' && state !== 'start') html.dataset.slopDemo = 'live'
+      const counts = `${total} fixes from ${rules} seo lint rules.`
+      const [heading, body, label, short] =
+        state === 'draft'
+          ? ['', '', 'Remove the slop', 'You are reading the AI draft.']
+          : state === 'start'
+            ? ['', '', 'Show the changes', '']
+            : state === 'fixing'
+              ? [
+                  'Removing the slop',
+                  `seo lint found ${total} AI patterns, marked in red. ${fixed} fixed so far, and the rest are fixed as you scroll to them.`,
+                  'Fix the rest now',
+                  `${fixed} of ${total} fixed`,
+                ]
+              : state === 'diff'
+                ? [
+                    'Slop removed',
+                    `${counts} Red is the AI draft, green is what replaced it.`,
+                    'Hide the changes',
+                    `${total} of ${total} fixed`,
+                  ]
+                : ['Slop removed', counts, 'Show the changes', '']
+      if (title) title.textContent = heading
+      if (text) text.textContent = body
+      barText.textContent = short
+      for (const button of [action, barAction]) {
+        if (button) button.textContent = label
+      }
+    }
+
+    // Cross out one flagged line, then show its fix.
+    const mark = (fix: HTMLElement, instant = false) => {
+      if (fix.dataset.state === 'struck' || fix.dataset.state === 'fixed') {
+        if (instant) fix.dataset.state = 'fixed'
+        return
+      }
+      fixed += 1
+      fix.dataset.state = instant ? 'fixed' : 'struck'
+      if (!instant) {
+        window.setTimeout(() => {
+          fix.dataset.state = 'fixed'
+        }, 420)
+      }
+    }
+
+    // Mark queued edits one at a time, in page order.
+    const pump = () => {
+      timer = 0
+      queue.sort((a, b) =>
+        a.compareDocumentPosition(b) & Node.DOCUMENT_POSITION_FOLLOWING ? -1 : 1,
+      )
+      const next = queue.shift()
+      if (!next || state !== 'fixing') return
+      mark(next)
+      render()
+      if (queue.length > 0) timer = window.setTimeout(pump, 600)
+    }
+
+    const observer = new IntersectionObserver(
+      (entries) => {
+        for (const entry of entries) {
+          if (!entry.isIntersecting) continue
+          const fix = entry.target as HTMLElement
+          observer.unobserve(fix)
+          if (fix.dataset.state === 'flagged') queue.push(fix)
+        }
+        if (!timer && queue.length > 0) timer = window.setTimeout(pump, 150)
+      },
+      { rootMargin: '0px 0px -10% 0px' },
+    )
+
+    // Every edit at once, with no animation.
+    const showAll = () => {
+      observer.disconnect()
+      window.clearTimeout(timer)
+      timer = 0
+      queue = []
+      html.classList.add('slop-instant')
+      for (const fix of fixes) mark(fix, true)
+      html.dataset.slop = 'diff'
+      state = 'diff'
+    }
+
+    const onAction = () => {
+      if (state === 'draft') {
+        // seo lint flags every line at once; fixes then land in page order
+        // as each line comes into view.
+        state = 'fixing'
+        for (const fix of fixes) fix.dataset.state = 'flagged'
+        html.dataset.slop = 'diff'
+        for (const fix of fixes) observer.observe(fix)
+      } else if (state === 'fixing' || state === 'start' || state === 'clean') {
+        showAll()
+      } else {
+        delete html.dataset.slop
+        state = 'clean'
+      }
+      render()
+    }
+
+    action?.addEventListener('click', onAction)
+    barAction.addEventListener('click', onAction)
+    render()
+  }
+</script>

@@ -14,7 +14,6 @@ const publicDirectory = resolve(import.meta.dirname, '..', 'public')
 
 /** Pages from the earlier site that now live elsewhere. */
 export const pageRedirects = {
-  '/blog': '/docs',
   '/blog/seo-agent': '/docs/getting-started',
   '/blog/seo-mcp-servers': '/docs/mcp',
   '/docs/start': '/docs/getting-started',
@@ -108,7 +107,6 @@ export function redirectRules() {
   // Anything else under the old report and feature paths.
   lines.push('/docs/reports/* /docs 301')
   lines.push('/docs/commands/* /docs 301')
-  lines.push('/blog/* /docs 301')
   return lines
 }
 

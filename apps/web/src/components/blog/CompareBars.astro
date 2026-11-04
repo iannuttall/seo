@@ -1,0 +1,139 @@
+---
+// Horizontal bars comparing rows on one metric, largest first unless
+// `keepOrder` is set. Rows named in `highlight` are drawn in the accent
+// colour. A row's `note` sits under its label and in the tooltip a reader
+// gets by hovering, tapping or tabbing to the row. Bars grow in when the
+// exhibit scrolls into view.
+import { formatNumber } from './chart'
+import Exhibit from './Exhibit.astro'
+
+type Row = { label: string; value: number; note?: string }
+
+type Props = {
+  rows: Row[]
+  // Label of the row or rows to pick out, such as "example.com".
+  highlight?: string | string[]
+  // Unit after each value, such as "visits a month".
+  unit?: string
+  // Keep the rows in the order given instead of largest first.
+  keepOrder?: boolean
+  title?: string
+  caption?: string
+}
+
+const { rows, highlight = [], unit = '', keepOrder = false, title, caption } = Astro.props
+
+const picked = new Set(Array.isArray(highlight) ? highlight : [highlight])
+const ordered = keepOrder ? rows : [...rows].sort((a, b) => b.value - a.value || a.label.localeCompare(b.label))
+const largest = Math.max(1, ...ordered.map((row) => row.value))
+const withUnit = (value: number) => (unit ? `${formatNumber(value)} ${unit}` : formatNumber(value))
+---
+
+<Exhibit title={title} caption={caption}>
+  <ol class="cb-list -mx-2 flex flex-col gap-1" data-compare-bars>
+    {
+      ordered.map((row, index) => {
+        const on = picked.has(row.label)
+        const tip = { title: row.label, lines: [{ value: withUnit(row.value) }], notes: row.note ? [row.note] : [] }
+        return (
+          <li
+            class="cb-row min-w-0 rounded-md px-2 py-2 outline-none transition-[background-color,opacity] duration-150 focus-visible:ring-[3px] focus-visible:ring-ring/20"
+            tabindex="0"
+            data-row
+            data-tip={JSON.stringify(tip)}
+          >
+            <div class="flex items-baseline justify-between gap-4 text-sm">
+              <span class="min-w-0">
+                <span class:list={['block truncate', on ? 'font-medium text-foreground' : 'text-foreground-muted']}>{row.label}</span>
+                {row.note ? <span class="mt-0.5 block text-xs/4 text-foreground-soft">{row.note}</span> : null}
+              </span>
+              <span class="sr-only">: </span>
+              <span class:list={['shrink-0 tabular-nums', on ? 'font-medium text-foreground' : 'text-foreground-muted']}>
+                {formatNumber(row.value)}{unit ? ' ' : null}
+                {unit ? <span class="text-foreground-soft">{unit}</span> : null}
+              </span>
+            </div>
+            <div class="mt-1.5 h-2.5 rounded-full bg-background" aria-hidden="true">
+              <div
+                class:list={['cb-bar h-full min-w-1 rounded-full', on ? 'bg-primary' : 'bg-foreground-soft']}
+                style={`width: ${(row.value / largest) * 100}%; --delay: ${index * 70}ms`}
+              />
+            </div>
+          </li>
+        )
+      })
+    }
+  </ol>
+</Exhibit>
+
+<style>
+  .cb-bar {
+    transform-origin: left;
+    transition:
+      transform 900ms cubic-bezier(0.22, 1, 0.36, 1) var(--delay),
+      background-color 150ms;
+  }
+
+  :global(:root.motion) [data-compare-bars]:not([data-reveal='shown']) .cb-bar {
+    transform: scaleX(0);
+  }
+
+  /* The row under the pointer or focus stands out; the others step back. */
+  .cb-row[data-active] {
+    background: color-mix(in oklch, var(--foreground) 5%, transparent);
+  }
+
+  .cb-row[data-active] .cb-bar.bg-foreground-soft {
+    background-color: var(--foreground-muted);
+  }
+
+  .cb-list:has([data-active]) .cb-row:not([data-active]) {
+    opacity: 0.55;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .cb-bar,
+    .cb-row {
+      transition: none;
+    }
+  }
+</style>
+
+<script>
+  import { reveal } from './reveal'
+  import { hideTip, showTip, showTipAt, type Tip } from './tooltip'
+
+  for (const list of document.querySelectorAll<HTMLElement>('[data-compare-bars]')) {
+    const rows = [...list.querySelectorAll<HTMLElement>('[data-row]')]
+    const activate = (row: HTMLElement | null) => {
+      for (const item of rows) item.toggleAttribute('data-active', item === row)
+      if (!row) hideTip()
+    }
+    for (const row of rows) {
+      const tip = JSON.parse(row.dataset.tip ?? '{}') as Tip
+      row.addEventListener('pointermove', (event) => {
+        activate(row)
+        if (event.pointerType === 'mouse') showTip(tip, event.clientX, event.clientY)
+      })
+      row.addEventListener('pointerdown', (event) => {
+        activate(row)
+        if (event.pointerType !== 'mouse') showTipAt(tip, row)
+      })
+      row.addEventListener('pointerleave', (event) => {
+        if (event.pointerType === 'mouse') activate(null)
+      })
+      row.addEventListener('focus', () => {
+        activate(row)
+        showTipAt(tip, row)
+      })
+      row.addEventListener('blur', () => activate(null))
+    }
+    document.addEventListener('pointerdown', (event) => {
+      if (!list.contains(event.target as Node)) {
+        for (const item of rows) item.removeAttribute('data-active')
+      }
+    })
+  }
+
+  reveal('[data-compare-bars]')
+</script>

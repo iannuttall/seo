@@ -1,0 +1,179 @@
+---
+// Two labelled states of the same thing behind a toggle, such as the HTML a
+// crawler gets and the page a browser draws. Each side takes `html` (our
+// own markup, rendered as is, `<pre>` blocks included), `code` (shown as
+// source text), or both, plus an optional note under it. In MDX, put a
+// multi-line string in an `export const` so its indentation survives.
+// Both sides share one grid cell and the inactive one is only made
+// invisible, so the taller side sets the height and switching never moves
+// the page.
+import Exhibit from './Exhibit.astro'
+
+type Side = {
+  label: string
+  html?: string
+  code?: string
+  note?: string
+}
+
+type Props = {
+  before: Side
+  after: Side
+  title?: string
+  caption?: string
+}
+
+const { before, after, title, caption } = Astro.props
+const sides = [before, after]
+const id = `before-after-${Math.random().toString(36).slice(2, 8)}`
+---
+
+<Exhibit title={title} caption={caption}>
+  <div data-before-after>
+    <div class="flex w-full gap-1 rounded-lg bg-background p-1 sm:inline-flex sm:w-auto" role="tablist" aria-label={title ?? 'Compare two states'}>
+      {
+        sides.map((side, index) => (
+          <button
+            type="button"
+            role="tab"
+            id={`${id}-tab-${index}`}
+            aria-controls={`${id}-panel-${index}`}
+            aria-selected={index === 0 ? 'true' : 'false'}
+            tabindex={index === 0 ? 0 : -1}
+            class="ba-tab flex-1 rounded-md px-3 py-1.5 text-sm/5 text-foreground-muted transition-colors hover:text-foreground focus-visible:outline-none focus-visible:ring-[3px] focus-visible:ring-ring/20 sm:flex-none"
+            data-tab
+          >
+            {side.label}
+          </button>
+        ))
+      }
+    </div>
+    <div class="ba-stack mt-4 grid min-w-0">
+    {
+      sides.map((side, index) => (
+        <div
+          class="ba-panel flex min-w-0 flex-col"
+          role="tabpanel"
+          id={`${id}-panel-${index}`}
+          aria-labelledby={`${id}-tab-${index}`}
+          data-active={index === 0 ? 'true' : 'false'}
+          inert={index !== 0}
+          data-panel
+        >
+          <p class="sr-only">{side.label}</p>
+          {side.html ? (
+            <div class="ba-html flex min-w-0 grow flex-col justify-center rounded-lg bg-background p-4 text-[0.9375rem]/6 text-foreground" set:html={side.html} />
+          ) : null}
+          {/* A div, not a pre: docs-prose forces a muted background on every
+              pre. The hidden pre gives the Markdown copy a code block. */}
+          {side.code ? (
+            <>
+              <div
+                class:list={['max-h-80 overflow-auto whitespace-pre rounded-lg bg-background p-4 font-mono text-[0.8125rem]/5 text-foreground', side.html && 'mt-3']}
+                data-agent-markdown="exclude"
+              ><code>{side.code}</code></div>
+              <pre hidden data-agent-markdown="only"><code>{side.code}</code></pre>
+            </>
+          ) : null}
+          {side.note ? <p class="mt-3 text-sm text-foreground-muted">{side.note}</p> : null}
+        </div>
+      ))
+    }
+    </div>
+  </div>
+</Exhibit>
+
+<style>
+  .ba-tab[aria-selected='true'] {
+    background: var(--muted);
+    color: var(--foreground);
+    font-weight: 500;
+  }
+
+  .ba-html > :global(* + *) {
+    margin-top: 0.75rem;
+  }
+
+  .ba-html :global(pre) {
+    margin-top: 0.75rem;
+    max-height: 20rem;
+    overflow: auto;
+    font-size: 0.8125rem;
+    line-height: 1.25rem;
+  }
+
+  /* docs-prose gives every pre a muted panel with !important in the base
+     layer; only a rule in that layer can clear it. The wrapper is the panel. */
+  @layer base {
+    .ba-html :global(pre) {
+      background: transparent !important;
+      padding: 0;
+    }
+  }
+
+  .ba-html > :global(pre:first-child) {
+    margin-top: 0;
+  }
+
+  .ba-html :global(a) {
+    color: var(--primary);
+    text-decoration-line: underline;
+    text-underline-offset: 4px;
+  }
+
+  .ba-html :global(strong) {
+    font-weight: 500;
+  }
+
+  .ba-panel {
+    grid-area: 1 / 1;
+  }
+
+  .ba-panel[data-active='false'] {
+    visibility: hidden;
+  }
+
+  .ba-panel[data-active='true'] {
+    animation: ba-in 240ms ease-out;
+  }
+
+  @keyframes ba-in {
+    from {
+      opacity: 0;
+      transform: translateY(4px);
+    }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .ba-panel[data-active='true'] {
+      animation: none;
+    }
+  }
+</style>
+
+<script>
+  for (const root of document.querySelectorAll<HTMLElement>('[data-before-after]')) {
+    const tabs = [...root.querySelectorAll<HTMLButtonElement>('[data-tab]')]
+    const panels = [...root.querySelectorAll<HTMLElement>('[data-panel]')]
+    const select = (index: number) => {
+      tabs.forEach((tab, position) => {
+        const active = position === index
+        tab.setAttribute('aria-selected', String(active))
+        tab.tabIndex = active ? 0 : -1
+        panels[position].dataset.active = String(active)
+        panels[position].inert = !active
+      })
+    }
+    tabs.forEach((tab, index) => {
+      tab.addEventListener('click', () => select(index))
+      tab.addEventListener('keydown', (event) => {
+        const step = event.key === 'ArrowRight' ? 1 : event.key === 'ArrowLeft' ? -1 : 0
+        if (!step) return
+        event.preventDefault()
+        const next = (index + step + tabs.length) % tabs.length
+        select(next)
+        tabs[next].focus()
+      })
+    })
+  }
+</script>

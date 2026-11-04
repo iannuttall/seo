@@ -1,0 +1,188 @@
+---
+// A treemap of where a site's search traffic lands: one tile per group of
+// pages, sized by its share. `tone` marks the groups that sell (blue), the
+// ones that are wasted (red) and the rest. Big tiles carry their label; every
+// group is also listed under the map, and hover, tap or focus shows a tip.
+import { formatNumber } from './chart'
+import Exhibit from './Exhibit.astro'
+
+type Tone = 'sells' | 'brand' | 'other' | 'waste'
+type Item = { label: string; value: number; tone?: Tone; note?: string }
+
+type Props = {
+  items: Item[]
+  unit?: string
+  title?: string
+  caption?: string
+}
+
+const { items, unit = 'visits', title, caption } = Astro.props
+
+const sorted = [...items].filter((item) => item.value > 0).sort((a, b) => b.value - a.value || a.label.localeCompare(b.label))
+const total = sorted.reduce((sum, item) => sum + item.value, 0)
+const share = (value: number) => {
+  const percent = (value / total) * 100
+  return percent >= 1 ? `${Math.round(percent)}%` : '<1%'
+}
+
+type Rect = { x: number; y: number; w: number; h: number }
+
+// Squarified treemap (Bruls, Huizing and van Wijk) in a w×h box.
+function squarify(values: number[], box: Rect): Rect[] {
+  const out: Rect[] = []
+  const scale = (box.w * box.h) / values.reduce((a, b) => a + b, 0)
+  const areas = values.map((value) => value * scale)
+  let rest = { ...box }
+  let row: number[] = []
+  const worst = (line: number[], side: number) => {
+    const sum = line.reduce((a, b) => a + b, 0)
+    const max = Math.max(...line)
+    const min = Math.min(...line)
+    return Math.max((side * side * max) / (sum * sum), (sum * sum) / (side * side * min))
+  }
+  const place = (line: number[]) => {
+    const sum = line.reduce((a, b) => a + b, 0)
+    if (rest.w >= rest.h) {
+      const width = sum / rest.h
+      let y = rest.y
+      for (const area of line) {
+        out.push({ x: rest.x, y, w: width, h: area / width })
+        y += area / width
+      }
+      rest = { x: rest.x + width, y: rest.y, w: rest.w - width, h: rest.h }
+    } else {
+      const height = sum / rest.w
+      let x = rest.x
+      for (const area of line) {
+        out.push({ x, y: rest.y, w: area / height, h: height })
+        x += area / height
+      }
+      rest = { x: rest.x, y: rest.y + height, w: rest.w, h: rest.h - height }
+    }
+  }
+  for (const area of areas) {
+    const side = Math.min(rest.w, rest.h)
+    if (row.length === 0 || worst([...row, area], side) <= worst(row, side)) {
+      row.push(area)
+    } else {
+      place(row)
+      row = [area]
+    }
+  }
+  if (row.length) place(row)
+  return out
+}
+
+// One layout for wide screens and a squarer one for phones.
+const layouts = [
+  { name: 'wide', w: 160, h: 90, className: 'hidden sm:block aspect-[16/9]' },
+  { name: 'tall', w: 100, h: 110, className: 'sm:hidden aspect-[10/11]' },
+].map((layout) => ({
+  ...layout,
+  rects: squarify(
+    sorted.map((item) => item.value),
+    { x: 0, y: 0, w: layout.w, h: layout.h },
+  ),
+}))
+
+const tones: Record<Tone, { tile: string; dot: string }> = {
+  sells: { tile: 'bg-primary text-primary-foreground', dot: 'bg-primary' },
+  brand: { tile: 'bg-background text-foreground', dot: 'bg-background ring-1 ring-secondary-active' },
+  other: { tile: 'bg-secondary-active/60 text-foreground', dot: 'bg-secondary-active' },
+  waste: { tile: 'bg-destructive-soft text-destructive', dot: 'bg-destructive-soft ring-1 ring-destructive/40' },
+}
+
+const tipFor = (item: Item) =>
+  JSON.stringify({
+    title: item.label,
+    lines: [
+      { name: unit[0].toUpperCase() + unit.slice(1), value: formatNumber(item.value) },
+      { name: 'Share', value: share(item.value) },
+    ],
+    notes: item.note ? [item.note] : [],
+  })
+---
+
+<Exhibit title={title} caption={caption}>
+  <div data-traffic-map>
+    {
+      layouts.map((layout) => (
+        <div class:list={['relative w-full', layout.className]} aria-hidden="true">
+          {layout.rects.map((rect, index) => {
+            const item = sorted[index]
+            const tone = tones[item.tone ?? 'other']
+            const w = rect.w / layout.w
+            const h = rect.h / layout.h
+            const label = w > 0.26 && h > 0.2
+            const number = w > 0.1 && h > 0.1
+            return (
+              <div
+                class="tm-tile absolute overflow-hidden p-0.5"
+                style={`left: ${(rect.x / layout.w) * 100}%; top: ${(rect.y / layout.h) * 100}%; width: ${(rect.w / layout.w) * 100}%; height: ${(rect.h / layout.h) * 100}%; --delay: ${Math.min(index, 8) * 60}ms`}
+                data-tip={tipFor(item)}
+              >
+                <div class:list={['flex size-full flex-col justify-end overflow-hidden rounded-md transition-[filter]', number && 'p-2 sm:p-3', tone.tile]}>
+                  {label ? (
+                    <>
+                      <span class="text-xl font-medium tabular-nums sm:text-2xl">{share(item.value)}</span>
+                      <span class="text-xs/4 sm:text-sm/5">{item.label}</span>
+                    </>
+                  ) : number ? (
+                    <span class="text-xs font-medium tabular-nums">{share(item.value)}</span>
+                  ) : null}
+                </div>
+              </div>
+            )
+          })}
+        </div>
+      ))
+    }
+    <ul class="mt-4 grid gap-x-6 gap-y-1.5 sm:grid-cols-2">
+      {
+        sorted.map((item) => (
+          <li class="flex items-baseline gap-2 text-sm" style="margin: 0">
+            <span class:list={['inline-block size-2.5 shrink-0 translate-y-px rounded-sm', tones[item.tone ?? 'other'].dot]} />
+            <span class="min-w-0 flex-1 text-foreground-muted">{item.label}</span>
+            <span class="text-foreground tabular-nums">{formatNumber(item.value)}</span>
+          </li>
+        ))
+      }
+    </ul>
+  </div>
+</Exhibit>
+
+<style>
+  .tm-tile {
+    transition:
+      opacity 500ms ease var(--delay),
+      transform 500ms cubic-bezier(0.22, 1, 0.36, 1) var(--delay);
+    transform-origin: center;
+  }
+
+  .tm-tile:hover > div {
+    filter: brightness(0.96);
+  }
+
+  :global(:root.motion) [data-traffic-map]:not([data-reveal='shown']) .tm-tile {
+    opacity: 0;
+    transform: scale(0.92);
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .tm-tile {
+      transition: none;
+    }
+  }
+</style>
+
+<script>
+  import { reveal } from './reveal'
+  import { hideTip, showTip, type Tip } from './tooltip'
+
+  reveal('[data-traffic-map]')
+  for (const tile of document.querySelectorAll<HTMLElement>('[data-traffic-map] [data-tip]')) {
+    const tip = JSON.parse(tile.dataset.tip ?? '{}') as Tip
+    tile.addEventListener('pointermove', (event) => showTip(tip, event.clientX, event.clientY))
+    tile.addEventListener('pointerleave', hideTip)
+  }
+</script>

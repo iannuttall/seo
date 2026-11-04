@@ -60,6 +60,8 @@ const schema = pageSchema({
   dateModified,
   datePublished,
   description,
+  headline: title,
+  image: ogImage,
   title: pageTitle,
   type: schemaType,
 })
@@ -96,6 +98,12 @@ const schema = pageSchema({
     <meta name="twitter:image" content={ogImage} />
     <meta name="twitter:image:alt" content={site.name} />
     <script is:inline type="application/ld+json" set:html={JSON.stringify(schema)} />
+    {/* Blog exhibits start empty and fill on scroll, but only when motion is
+        allowed and the browser can tell when they come into view
+        (components/blog/reveal.ts). Set before the body paints. */}
+    <script is:inline>
+      if (!matchMedia('(prefers-reduced-motion: reduce)').matches && 'IntersectionObserver' in window) document.documentElement.classList.add('motion')
+    </script>
     {/* First visit only: the referring site's host, the landing path and any
         utm_* values, kept in a first-party cookie for 30 days. The hosted MCP
         Worker reads it once, when a new person signs up, to record where they

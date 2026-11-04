@@ -1,31 +1,39 @@
 ---
 // "Built by Ian Nuttall" above the home page title, with his audience on
-// each network. Opens a card that links to the About page. Uses <details>,
-// so it works without JavaScript.
+// each network, and "Written by" as a blog post's byline. Opens a card that
+// links to the About page. Uses <details>, so it works without JavaScript.
+// `align="start"` opens the card from the badge's left edge on phones, where
+// a centred card would run off a left-aligned byline. Clicking outside the
+// card or pressing Escape closes it. The counts are built in from site.ts
+// and updated after load from the Worker's daily refresh.
 import { ArrowDown01Icon } from '@hugeicons/core-free-icons'
 import HugeIcon from './HugeIcon.astro'
 import { founderSocials } from '@/lib/founder-socials'
 import { founder } from '@/lib/site'
+
+type Props = { prefix?: string; align?: 'center' | 'start' }
+
+const { prefix = 'Built by', align = 'center' } = Astro.props
 ---
 
 <details class="founder-badge group relative inline-block text-left">
   <summary class="flex cursor-pointer list-none items-center gap-2.5 rounded-full bg-background py-0.5 pr-2.5 pl-0.5 text-[0.8125rem]/6 text-foreground shadow-sm ring-1 ring-border-strong hover:ring-foreground/30 focus-visible:outline-none focus-visible:ring-[3px] focus-visible:ring-ring/20 [&::-webkit-details-marker]:hidden">
     <span aria-hidden="true" class="flex size-6 items-center justify-center rounded-full bg-primary text-[0.625rem] font-medium text-primary-foreground">IN</span>
-    <span>Built by <span class="font-medium">{founder.name}</span></span>
+    <span>{prefix} <span class="font-medium">{founder.name}</span></span>
     <span aria-hidden="true" class="hidden h-3.5 w-px bg-border sm:block"></span>
     <span class="hidden items-center gap-2.5 text-foreground-muted sm:flex">
       {
         founderSocials.map((item) => (
           <span class="flex items-center gap-1">
             <HugeIcon icon={item.icon} class="size-3.5 text-foreground" />
-            <span class="sr-only">{item.name}:</span>{' '}{item.value}
+            <span class="sr-only">{item.name}:</span>{' '}<span data-founder-count={item.key}>{item.value}</span>
           </span>
         ))
       }
     </span>
     <HugeIcon icon={ArrowDown01Icon} class="size-3.5 text-foreground-muted transition-transform group-open:rotate-180" />
   </summary>
-  <div class="absolute left-1/2 z-20 mt-2 w-80 max-w-[calc(100vw-2rem)] -translate-x-1/2 rounded-lg bg-muted p-5">
+  <div class:list={['absolute z-20 mt-2 w-80 max-w-[calc(100vw-2rem)] rounded-lg bg-muted p-5', align === 'center' ? 'left-1/2 -translate-x-1/2' : 'left-0 sm:left-1/2 sm:-translate-x-1/2']}>
     <p class="text-base/6 font-medium text-foreground">{founder.name}</p>
     <p class="mt-1 text-sm/6 text-foreground-muted">
       More than 20 years in SEO. Founder of Practical Programmatic, a
@@ -38,7 +46,7 @@ import { founder } from '@/lib/site'
           <li>
             <a class="flex items-center gap-3 py-2.5 text-sm/6 no-underline" href={item.url} target="_blank" rel="noreferrer">
               <HugeIcon icon={item.icon} class="size-5 text-foreground" />
-              <span class="font-medium text-foreground">{item.value}</span>
+              <span class="font-medium text-foreground" data-founder-count={item.key}>{item.value}</span>
               <span class="text-foreground-muted">{item.unit} on {item.name}</span>
             </a>
           </li>
@@ -48,3 +56,19 @@ import { founder } from '@/lib/site'
     <a class="mt-4 inline-block text-sm/6 font-medium text-foreground underline underline-offset-4" href={`/about#${founder.anchor}`}>See my background</a>
   </div>
 </details>
+
+<script>
+  import '@/lib/founder-counts'
+
+  for (const badge of document.querySelectorAll<HTMLDetailsElement>('details.founder-badge')) {
+    document.addEventListener('click', (event) => {
+      if (badge.open && !badge.contains(event.target as Node)) badge.open = false
+    })
+    document.addEventListener('keydown', (event) => {
+      if (event.key === 'Escape' && badge.open) {
+        badge.open = false
+        badge.querySelector('summary')?.focus()
+      }
+    })
+  }
+</script>

@@ -1,0 +1,356 @@
+---
+title: How I'd grow Amp with SEO, a full teardown
+description: An SEO teardown of Amp, the coding agent that spun out of Sourcegraph. Where its Google traffic lands, what buyers search for and the fixes I'd ship.
+heading: How I'd grow Amp
+lead: Amp's site has the same authority as Augment Code's and about a seventh of its search traffic. Almost all of it is people typing "amp". This is how I'd point the site at the searches that sell plans and orbs.
+date: '2026-11-04'
+company: Amp
+x:
+  company: ampcode
+draft: false
+---
+
+export const beforeSoft = `<pre>GET /greggh/claude-code.nvim/…
+  302 Found
+  → /auth/sign-in?returnTo=…
+  200 OK "Sign in to Amp"</pre>`
+
+export const afterSoft = `<pre>GET /greggh/claude-code.nvim/…
+  404 Not Found
+
+GET /threads/T-…
+  302 Found
+  → /auth/sign-in?returnTo=…</pre>`
+
+export const beforeCody = `<p><strong>Cody</strong></p><p>Supported on Sourcegraph Enterprise. Available on VS Code, JetBrains, Visual Studio, and the Web app.</p><p>Cody is an AI coding assistant that uses all the latest LLMs and your development context…</p>`
+
+export const afterCody = `<p><strong>Cody</strong></p><p>Supported on Sourcegraph Enterprise. Available on VS Code, JetBrains, Visual Studio, and the Web app.</p><p><em>Used Cody Free or Pro? Those plans moved to <a href="https://ampcode.com/">Amp, the coding agent from the team that built Cody</a>.</em></p>`
+
+[Amp](https://ampcode.com/) is a coding agent. It runs in the terminal, in editors, in apps for Mac, iPhone and Android, and in orbs: cloud machines where every thread gets its own copy of your repository. It started inside Sourcegraph, and at the end of 2025 its founders spun it out as Amp Inc.
+
+Amp makes money from plans. The free Hobby plan pays as you go for orbs. Megawatt costs $20 a month and includes 45,000 minutes of orb time, and Gigawatt is the bigger tier. Teams put members on those plans, and Enterprise is a sales conversation. Amp charges no token fees, and people can bring their own ChatGPT or Claude subscriptions.
+
+So every visitor who matters is a developer choosing an agent, or a team choosing where its agents run.
+
+Amp's search footprint is mostly one domain. I checked the others: www.ampcode.com, ampcode.net and Sourcegraph's old Amp address all redirect to ampcode.com, which is right. ampcode.app serves a full second copy of the site (more on that below). And Sourcegraph, now a separate company, still owns the pages for Cody, the assistant whose free and paid users it sent to Amp.
+
+## Almost all of Amp's search traffic is the word "amp"
+
+Ahrefs estimates ampcode.com gets about 3,300 visits from Google this month. This map shows where they land.
+
+<TrafficMap
+  caption="Estimated Google visits to ampcode.com by kind of page, November 2026 (Ahrefs top pages). Blue pages sell something."
+  items={[
+    { label: "Searches for Amp by name", value: 2734, tone: "brand", note: "The homepage, mostly for \"amp\", \"amp code\" and \"sourcegraph amp\"" },
+    { label: "Searches for the word \"orbs\"", value: 271, tone: "waste", note: "The orbs page and orbs docs, for searches like \"solar orbs\" and \"orbs wheels\"" },
+    { label: "Chronicle, news and podcast", value: 175, tone: "other", note: "Mostly \"amp blog\"" },
+    { label: "Docs", value: 45, tone: "other" },
+    { label: "Pricing, apps and student discount", value: 30, tone: "sells" },
+    { label: "Sign-in and sign-up", value: 25, tone: "brand", note: "People who already use Amp" },
+    { label: "Terms and community pages", value: 3, tone: "other" },
+  ]}
+/>
+
+About 1% of those visits land on a page that sells something. 83% go to the homepage from people who typed Amp's name and would have found it anyway. The biggest group after that is people searching for "orbs", mostly for wheels, solar garden lights and Christmas decorations.
+
+The traffic also looks like it collapsed. Ahrefs had ampcode.com at about 15,500 visits a month in February, and about 3,200 now.
+
+<VerticalBars
+  caption="Estimated monthly Google visits to ampcode.com since March 2025 (Ahrefs). The rise and fall both came from one ambiguous word."
+  unit="visits"
+  data={[{"label": "Mar 25", "value": 0}, {"label": "Apr 25", "value": 1}, {"label": "May 25", "value": 26}, {"label": "Jun 25", "value": 152}, {"label": "Jul 25", "value": 1312}, {"label": "Aug 25", "value": 4498}, {"label": "Sep 25", "value": 5911}, {"label": "Oct 25", "value": 6987}, {"label": "Nov 25", "value": 7851}, {"label": "Dec 25", "value": 10255}, {"label": "Jan 26", "value": 12791}, {"label": "Feb 26", "value": 15452}, {"label": "Mar 26", "value": 12424}, {"label": "Apr 26", "value": 9898}, {"label": "May 26", "value": 9411}, {"label": "Jun 26", "value": 6269}, {"label": "Jul 26", "value": 6530}, {"label": "Aug 26", "value": 7253}, {"label": "Sep 26", "value": 4031}, {"label": "Oct 26", "value": 3794}, {"label": "Nov 26", "value": 3218}]}
+  markers={[{"at": "Dec 25", "text": "Amp Inc. spins out of Sourcegraph"}, {"at": "Feb 26", "text": "Second for \"amp\", about 2,950 visits from it"}]}
+/>
+
+The ranking didn't drop. In February Ahrefs had Amp second for "amp", which gets about 64,000 US searches a month, and credited it with about 2,950 visits from that word. Today Amp is first for the same word, and Ahrefs credits it with about 100. "Amp" also means amplifiers, amperes and Google's AMP pages, so most people who type it probably want something else, and Ahrefs now estimates that most of them click something else.
+
+These are third-party estimates, so the shape matters more than the exact numbers. Either way, none of this traffic was people shopping for a coding agent. Those people search for different words, and Amp has no pages for them.
+
+## Competitors with Amp's authority get several times its traffic
+
+These are Ahrefs' estimates of this month's Google traffic for the main coding agents.
+
+<CompareBars
+  caption="Estimated monthly organic visits, November 2026 (Ahrefs). Augment Code has the same Domain Rating as Amp (76)."
+  unit="visits/month"
+  highlight="ampcode.com"
+  rows={[{"label": "opencode.ai", "value": 411499}, {"label": "cursor.com", "value": 398725}, {"label": "warp.dev", "value": 61245}, {"label": "zed.dev", "value": 34370}, {"label": "windsurf.com", "value": 26658}, {"label": "augmentcode.com", "value": 22869, "note": "Domain Rating 76, the same as Amp"}, {"label": "cline.bot", "value": 13150}, {"label": "kilo.ai", "value": 9421, "note": "Domain Rating 77"}, {"label": "ampcode.com", "value": 3287}, {"label": "factory.ai", "value": 539}]}
+/>
+
+OpenCode and Cursor are household names, so much of their traffic will be people typing their names. The useful comparison is Augment Code. Its site has the same [Domain Rating by Ahrefs](https://ahrefs.com/) as Amp's, and it gets about seven times the traffic. Kilo Code, one point higher, gets almost three times.
+
+Neither got there with a bigger brand. They publish pages for the searches developers make before they've picked a tool.
+
+## Plans: buyers search for a coding agent, and Amp has no page for them
+
+These are the searches people make when they're choosing an agent, with US monthly volumes from Ahrefs.
+
+<KeywordTable
+  caption="Ahrefs, US, November 2026. Who ranks comes from Ahrefs results pages, and from DataForSEO where Ahrefs had none. Amp has no page built for any of these searches."
+  sortBy="volume"
+  columns={[{ key: 'keyword', label: 'Search', format: 'text' }, { key: 'volume', label: 'US searches', format: 'number' }, { key: 'difficulty', label: 'Difficulty', format: 'number', short: 'KD' }, { key: 'who', label: 'Who ranks', format: 'text' }]}
+  rows={[
+    { keyword: 'ai coding tools', volume: 3300, difficulty: 45, who: 'Zapier, Augment Code, Faros' },
+    { keyword: 'ai coding assistant', volume: 2200, difficulty: 60, who: 'Augment Code, Google, IBM, Qodo' },
+    { keyword: 'ai coding agent', volume: 800, difficulty: 26, who: 'Faros, Augment Code, Google Cloud, Kilo' },
+    { keyword: 'coding agent', volume: 700, difficulty: 1, who: 'HackerNoon, DigitalOcean, Medium' },
+    { keyword: 'claude code alternative', volume: 450, difficulty: 2, who: 'Reddit, Verdent, Kilo, Zapier' },
+    { keyword: 'cursor alternative', volume: 250, difficulty: null, who: 'Qodo, Milvus, YouTube' },
+    { keyword: 'best ai for coding', volume: 150, difficulty: 35, who: 'Reddit, Zapier, Qodo, Kilo' },
+    { keyword: 'opencode alternative', volume: 150, difficulty: null, who: 'Best of AI, YouTube, Product Hunt' },
+    { keyword: 'amp vs claude code', volume: 100, difficulty: null, who: 'Terminal Trove, YouTube, Superset. Amp is 12th, with its models page' },
+  ]}
+/>
+
+"coding agent" has a difficulty of 1, and "claude code alternative" has 2. That's close to zero. Both are searches from people who are about to pick, or switch, the tool they pay for. Amp's Domain Rating of 76 matches Augment Code and Qodo, and both of them are on page one.
+
+<SerpLadder
+  keyword="ai coding agent"
+  volume={800}
+  target="ampcode.com"
+  targetPosition={null}
+  caption="Organic results for &quot;ai coding agent&quot; (Ahrefs, US). Augment Code and Kilo, two coding agents with Amp's authority, rank with roundup pages."
+  rows={[
+    { position: 2, domain: 'faros.ai', dr: 73, tag: 'Roundup' },
+    { position: 3, domain: 'augmentcode.com', dr: 76, tag: 'Coding agent' },
+    { position: 4, domain: 'reddit.com', dr: 95, tag: 'Forum thread' },
+    { position: 6, domain: 'cloud.google.com', dr: 100, tag: 'Explainer' },
+    { position: 7, domain: 'vellum.ai', dr: 75, tag: 'Roundup' },
+    { position: 8, domain: 'mindstudio.ai', dr: 76, tag: 'Explainer' },
+    { position: 9, domain: 'admix.software', dr: 16, tag: 'Roundup' },
+    { position: 10, domain: 'kilo.ai', dr: 77, tag: 'Coding agent' },
+  ]}
+/>
+
+A Domain Rating 16 roundup is on page one. So is Augment Code, whose roundup pages also rank in the top three for "ai coding tools" and "ai coding assistant". Amp publishes strong opinion pieces (its post "The coding agent is dead" is a good example), but none of them is aimed at a search.
+
+Even the comparison with Amp's own name in it belongs to other sites.
+
+<SerpLadder
+  keyword="amp vs claude code"
+  volume={100}
+  target="ampcode.com"
+  caption="Results for &quot;amp vs claude code&quot; (DataForSEO, US). Results DataForSEO couldn't name are left out. Amp's best page is its models page, at 12."
+  rows={[
+    { position: 3, domain: 'terminaltrove.com', dr: 52, tag: 'Comparison page' },
+    { position: 5, domain: 'youtube.com', dr: 99, tag: 'Video' },
+    { position: 6, domain: 'superset.sh', dr: 59, tag: 'Comparison page' },
+    { position: 9, domain: 'agensi.io', dr: 57, tag: 'Comparison page' },
+    { position: 12, domain: 'ampcode.com', dr: 76, tag: 'Models page' },
+  ]}
+/>
+
+Someone searching "amp vs claude code" already knows Amp and is close to signing up. Right now a directory with a Domain Rating of 52 tells them the answer. Amp should.
+
+I'd build three kinds of page. First, comparisons against Claude Code, Cursor, Codex and OpenCode that are honest about where each one wins. Second, alternatives pages for "claude code alternative" and "cursor alternative", which also answer the questions in Google's AI Overview for those searches. Third, one guide to what a coding agent is and how to choose one, written in Amp's own voice, which is opinionated enough to stand out on a results page full of near-identical lists of the top ten tools. Google's AI Overview for "claude code alternative" currently cites DigitalOcean, Kilo and Zapier. Being on the lists that rank is what gets Amp named in AI answers too.
+
+## Orbs: the page ranks for the wrong word
+
+Orbs are what Megawatt and Gigawatt sell: minutes of cloud machine time for agents. The orbs page is a good page. It has about 8,900 words, a screencast and around 410 internal links. Its title is "What Are Orbs? - Amp", so it ranks for "orbs", and that brings in people looking for wheels and garden lights.
+
+Developers who want what orbs do search for sandboxes and cloud environments.
+
+<KeywordTable
+  caption="Ahrefs, US, November 2026. The first two are searches from people trying to run agents safely. Amp has no page built for any of them."
+  sortBy="volume"
+  columns={[{ key: 'keyword', label: 'Search', format: 'text' }, { key: 'volume', label: 'US searches', format: 'number' }, { key: 'difficulty', label: 'Difficulty', format: 'number', short: 'KD' }, { key: 'who', label: 'Who ranks', format: 'text' }]}
+  rows={[
+    { keyword: 'claude code sandbox', volume: 1000, difficulty: 9, who: "Anthropic's docs, Reddit, a Substack post" },
+    { keyword: 'ai sandbox', volume: 800, difficulty: 6, who: 'Harvard, Northflank, CircleCI' },
+    { keyword: 'cloud development environment', volume: 200, difficulty: 0, who: 'DreamHost, Coder, Bunnyshell' },
+  ]}
+/>
+
+"claude code sandbox" is the one I'd go after first. Below Anthropic's two docs pages, it's a Reddit thread, a Substack post and a Medium post. Amp lets people run Claude through their own subscription, and orbs are a sandbox for exactly that.
+
+"ai sandbox" is mixed: some of it is universities offering staff a safe chatbot. But Northflank and CircleCI, two developer tool companies, rank with "what is an AI sandbox" pages, which tells me the developer meaning wins clicks too.
+
+<SearchResult
+  caption="The orbs page in Google today, and with a title and description written for the searches above. The page heading keeps the question."
+  before={{
+    url: "https://ampcode.com/what-are-orbs",
+    site: "Amp",
+    title: "What Are Orbs? - Amp",
+    description: "An orb is an isolated cloud machine where an Amp agent builds, runs, and tests without using your computer. Every thread gets its own orb with your repository cloned and tools installed.",
+  }}
+  after={{
+    url: "https://ampcode.com/what-are-orbs",
+    site: "Amp",
+    title: "Cloud sandboxes for coding agents: Amp orbs",
+    description: "An orb is a cloud sandbox where an Amp coding agent builds, runs and tests your code without touching your computer. Each thread gets its own.",
+  }}
+/>
+
+I'd keep "What Are Orbs?" as the heading, because it's the product's name and it's a good line. I'd change the title tag Google shows, name sandboxes and cloud environments in the first paragraph, and add one page for running Claude Code or Codex in an orb.
+
+## The model database is ready to rank, and Google can't find it
+
+Amp has a database of 109 AI models, with context limits, output limits, tool support and release dates, and a page for each model. People compare models before they choose which one to pay for, and Amp sells access to all of them.
+
+The demand is real. "gpt-6 astra" gets about 3,500 US searches a month at a difficulty of 0, and "ai model comparison" gets about 1,400 at 12.
+
+<SerpLadder
+  keyword="ai model comparison"
+  volume={1400}
+  target="ampcode.com"
+  targetPosition={null}
+  caption="Organic results for &quot;ai model comparison&quot; (Ahrefs, US). OpenCode, a coding agent, ranks sixth with its own model data page."
+  rows={[
+    { position: 1, domain: 'artificialanalysis.ai', dr: 84, tag: 'Benchmarks' },
+    { position: 2, domain: 'benchlm.ai', dr: 66, tag: 'Benchmarks' },
+    { position: 4, domain: 'openrouter.ai', dr: 90, tag: 'Model router' },
+    { position: 5, domain: 'aiagentstore.ai', dr: 58, tag: 'Directory' },
+    { position: 6, domain: 'opencode.ai', dr: 85, tag: 'Coding agent' },
+    { position: 7, domain: 'reddit.com', dr: 95, tag: 'Forum thread' },
+    { position: 8, domain: 'rc.dartmouth.edu', dr: 88, tag: 'University guide' },
+    { position: 10, domain: 'developers.openai.com', dr: 94, tag: 'OpenAI docs' },
+  ]}
+/>
+
+OpenCode is a coding agent, and it ranks sixth with the kind of page Amp already has. Kilo's leaderboard ranks second for "best ai model for coding" (900 searches) as well. Amp's database doesn't rank for either, and the section on technical fixes below shows why.
+
+Amp's model content does rank when Google can find it. Its GPT-5.5 model card, which is in the sitemap, ranks fourth for "gpt-5.5 xhigh". I'd give every database page the same chance, then add a short "use it in Amp" block to each one: which mode runs it and what it costs. That turns a reference page into a page that sells.
+
+## Sourcegraph still gets the Cody searches
+
+Amp grew out of Sourcegraph, which also makes Cody, a coding assistant. When Sourcegraph ended Cody Free and Pro, it pointed those users to Amp. The two companies are separate now, but Cody's searches still land on Sourcegraph's site.
+
+I crawled 600 sourcegraph.com pages to see how they link to Amp. There are 15 links in all, and 8 of them point at Amp's homepage with the link text "Amp". The Cody docs page, which Ahrefs estimates gets about 2,800 visits a month, has none.
+
+<BeforeAfter
+  caption="The top of Sourcegraph's Cody docs page today, and with one line for the people who used Cody Free or Pro."
+  before={{ label: "Today", html: beforeCody }}
+  after={{ label: "With one line", html: afterCody }}
+/>
+
+That line is Sourcegraph's call, since it still sells Cody Enterprise. Its own post about the plan changes already sends Cody Pro users to Amp with $40 in credits, so it's the same message on the page that gets the traffic.
+
+Amp can do its part alone. "sourcegraph cody" gets about 600 US searches a month, and the sixth result is a Reddit thread titled "Replaced by Cody AMP is there Alternative?". A page on moving from Cody to Amp would answer that thread's question on Amp's own site.
+
+## Three technical fixes, closest to revenue first
+
+The crawl found three problems I'd fix. I've ordered them by how close each one sits to revenue.
+
+### 1. ampcode.app serves a second copy of the site
+
+ampcode.app returns the same pages as ampcode.com with a 200 status instead of redirecting, from the homepage to the docs. Most of them carry a canonical tag that points back to ampcode.com, which limits the damage. The pricing page has no canonical tag on either domain, so Google sees two equal copies of the page that sells the plans. Ahrefs has no keywords for ampcode.app yet, so this is a fix before it costs anything.
+
+<UrlMap
+  caption="Every address I checked that leads to Amp, and what each one should do. Three already do the right thing."
+  rows={[
+    { url: "ampcode.app (all addresses)", action: "301", to: "the same page on ampcode.com", note: "Serves a full copy today. The pricing copy has no canonical." },
+    { url: "ampcode.com/pricing", action: "Fix", tone: "change", note: "Add a canonical tag that names the page itself." },
+    { url: "www.ampcode.com", action: "Keep", tone: "keep", note: "Already a permanent redirect." },
+    { url: "ampcode.net", action: "Keep", tone: "keep", note: "Already a permanent redirect." },
+    { url: "sourcegraph.com/amp", action: "Keep", tone: "keep", note: "Already a permanent redirect to ampcode.com." },
+  ]}
+/>
+
+**The fix:** a permanent (301) redirect from every ampcode.app address to the same path on ampcode.com, set up as one rule at the CDN. Then add a canonical tag to the pricing page (and every other page without one) that names its own ampcode.com address. To confirm it worked, request ampcode.app/pricing and check the response is a 301, then check the pricing page in Search Console's URL Inspection, where the user-declared canonical should be the ampcode.com address.
+
+### 2. The model database is missing from the sitemap
+
+The sitemap lists 317 addresses. One of them is a model page, the GPT-5.5 model card. The database itself and all 109 model pages are missing, the site's "Models" links go to the modes page instead, and the model pages I checked have no meta description or canonical tag. My crawl of 582 pages, which followed links from the homepage and the sitemap, found none of them.
+
+<PageGrid
+  caption="Every model page on ampcode.com, grouped by model maker. Only the model card is in the sitemap. Hover a tile for its address."
+  litLabel="In the sitemap"
+  targetLabel="Only reachable from the database"
+  otherLabel="Database index, also missing from the sitemap"
+  groups={[{"label":"Model card","pages":[{"name":"/models/gpt-5.5","lit":true,"note":"The one model page in the sitemap. Ranks fourth for \"gpt-5.5 xhigh\" (DataForSEO)"}]},{"label":"Database index","tone":"other","pages":[{"name":"/models","note":"Lists all 109 models. Not in the sitemap, and the site menu links to the modes page instead"}]},{"label":"Google","tone":"target","pages":[{"name":"/models/google/deep-research-max-preview-04-2026"},{"name":"/models/google/deep-research-preview-04-2026"},{"name":"/models/google/diffusiongemma-26b-a4b-it"},{"name":"/models/google/gemini-3-flash-preview"},{"name":"/models/google/gemini-3-pro-image"},{"name":"/models/google/gemini-3.1-flash-image"},{"name":"/models/google/gemini-3.1-flash-image-preview"},{"name":"/models/google/gemini-3.1-flash-lite"},{"name":"/models/google/gemini-3.1-flash-lite-image"},{"name":"/models/google/gemini-3.1-flash-lite-preview"},{"name":"/models/google/gemini-3.1-flash-live-preview"},{"name":"/models/google/gemini-3.1-pro-preview"},{"name":"/models/google/gemini-3.1-pro-preview-customtools"},{"name":"/models/google/gemini-3.5-flash"},{"name":"/models/google/gemini-3.5-flash-lite"},{"name":"/models/google/gemini-3.5-live-translate-preview"},{"name":"/models/google/gemini-3.5-transcribe"},{"name":"/models/google/gemini-3.5-transcribe-live"},{"name":"/models/google/gemini-3.6-flash"},{"name":"/models/google/gemini-3.7-flash"},{"name":"/models/google/gemini-3.8-flash"},{"name":"/models/google/gemini-3.8-live"},{"name":"/models/google/gemini-3.8-live-extended-thinking"},{"name":"/models/google/gemini-4-argon"},{"name":"/models/google/gemini-flash-latest"},{"name":"/models/google/gemini-flash-lite-latest"},{"name":"/models/google/gemini-nano-banana-2.1"},{"name":"/models/google/gemini-robotics-er-1.6-preview"},{"name":"/models/google/gemini-robotics-er-2-preview"},{"name":"/models/google/gemini-robotics-er-2-streaming-preview"},{"name":"/models/google/gemma-4-12b-it"},{"name":"/models/google/gemma-4-26b-a4b-it"},{"name":"/models/google/gemma-4-31b-it"},{"name":"/models/google/gemma-4-E2B-it"},{"name":"/models/google/gemma-4-E4B-it"},{"name":"/models/google/lyria-3-clip-preview"},{"name":"/models/google/lyria-3-pro-preview"},{"name":"/models/google/lyria-3.5"}]},{"label":"OpenAI","tone":"target","pages":[{"name":"/models/openai/gpt-5.3-chat-latest"},{"name":"/models/openai/gpt-5.3-codex"},{"name":"/models/openai/gpt-5.3-codex-spark"},{"name":"/models/openai/gpt-5.4"},{"name":"/models/openai/gpt-5.4-image-2"},{"name":"/models/openai/gpt-5.4-mini"},{"name":"/models/openai/gpt-5.4-nano"},{"name":"/models/openai/gpt-5.4-pro"},{"name":"/models/openai/gpt-5.5","note":"Same title as the GPT-5.5 model card, and no canonical"},{"name":"/models/openai/gpt-5.5-instant"},{"name":"/models/openai/gpt-5.5-pro"},{"name":"/models/openai/gpt-5.6-cyber"},{"name":"/models/openai/gpt-5.6-luna"},{"name":"/models/openai/gpt-5.6-sol"},{"name":"/models/openai/gpt-5.6-terra"},{"name":"/models/openai/gpt-6-astra","note":"3,500 US searches a month for \"gpt-6 astra\" (Ahrefs)"},{"name":"/models/openai/gpt-6-astra-fast"},{"name":"/models/openai/gpt-6-luna"},{"name":"/models/openai/gpt-6-sol"},{"name":"/models/openai/gpt-6.1-sol"},{"name":"/models/openai/gpt-6.1-terra"},{"name":"/models/openai/gpt-audio-1.5"},{"name":"/models/openai/gpt-image-2"},{"name":"/models/openai/gpt-live-1"},{"name":"/models/openai/gpt-live-transcribe"},{"name":"/models/openai/gpt-realtime-1.5"},{"name":"/models/openai/gpt-realtime-2"},{"name":"/models/openai/gpt-realtime-2.1"},{"name":"/models/openai/gpt-realtime-2.1-mini"},{"name":"/models/openai/gpt-realtime-translate"},{"name":"/models/openai/gpt-realtime-whisper"},{"name":"/models/openai/gpt-transcribe"}]},{"label":"Anthropic","tone":"target","pages":[{"name":"/models/anthropic/claude-fable-5"},{"name":"/models/anthropic/claude-fable-5-1"},{"name":"/models/anthropic/claude-haiku-4-5-20251001"},{"name":"/models/anthropic/claude-haiku-5-5"},{"name":"/models/anthropic/claude-mythos-5"},{"name":"/models/anthropic/claude-mythos-5-1"},{"name":"/models/anthropic/claude-opus-4-6"},{"name":"/models/anthropic/claude-opus-4-7"},{"name":"/models/anthropic/claude-opus-4-8"},{"name":"/models/anthropic/claude-opus-5"},{"name":"/models/anthropic/claude-opus-5-5"},{"name":"/models/anthropic/claude-sonnet-4-6"},{"name":"/models/anthropic/claude-sonnet-5"},{"name":"/models/anthropic/claude-sonnet-5-5"}]},{"label":"xAI","tone":"target","pages":[{"name":"/models/xai/grok-4.20-0309-non-reasoning"},{"name":"/models/xai/grok-4.20-0309-reasoning"},{"name":"/models/xai/grok-4.3"},{"name":"/models/xai/grok-4.5"},{"name":"/models/xai/grok-4.6"},{"name":"/models/xai/grok-4.7"},{"name":"/models/xai/grok-build-0.1"},{"name":"/models/xai/grok-voice-3.0"},{"name":"/models/xai/grok-voice-transcribe-2.0"}]},{"label":"Zhipu AI","tone":"target","pages":[{"name":"/models/zhipuai/glm-4.7"},{"name":"/models/zhipuai/glm-4.7-flash"},{"name":"/models/zhipuai/glm-5"},{"name":"/models/zhipuai/glm-5.3"},{"name":"/models/zhipuai/glm-5.3-flash"}]},{"label":"Moonshot AI","tone":"target","pages":[{"name":"/models/moonshotai/kimi-k2.7-code"},{"name":"/models/moonshotai/kimi-k2.8-preview"},{"name":"/models/moonshotai/kimi-k3"},{"name":"/models/moonshotai/kimi-k3.1-pro"}]},{"label":"DeepSeek","tone":"target","pages":[{"name":"/models/deepseek/deepseek-v4.1-flash"},{"name":"/models/deepseek/deepseek-v4.1-flash-1017"}]},{"label":"MiniMax","tone":"target","pages":[{"name":"/models/minimax/MiniMax-M3.1-Flash"},{"name":"/models/minimax/MiniMax-M3.1-Flash-Preview"}]},{"label":"Thinking Machines","tone":"target","pages":[{"name":"/models/thinkingmachines/inkling"},{"name":"/models/thinkingmachines/inkling-small"}]},{"label":"Meta","tone":"target","pages":[{"name":"/models/meta/muse-spark-1.3"}]}]}
+/>
+
+The model card and the database page for GPT-5.5 also share one title tag, so Google has to pick between them. Every database page uses the same pattern, the model's name and "Amp", which says nothing about what's on the page.
+
+<TitleSheet
+  caption="Title tags on Amp's model pages today, and titles that say what each page holds. Click a column to sort it."
+  rows={[
+    // seo-lint-ignore dash (the title Amp uses today)
+    { page: "/models", title: "Models - Amp", after: "AI model comparison: context, limits and release dates", note: "The database of all 109 models" },
+    // seo-lint-ignore dash (the title Amp uses today)
+    { page: "/models/gpt-5.5", title: "GPT-5.5 - Amp", after: "GPT-5.5 review: evals, strengths and weaknesses", note: "Amp's model card, with evals, pros and cons" },
+    // seo-lint-ignore dash (the title Amp uses today)
+    { page: "/models/openai/gpt-5.5", title: "GPT-5.5 - Amp", after: "GPT-5.5: context window, limits and release date", note: "The database page" },
+    // seo-lint-ignore dash (the title Amp uses today)
+    { page: "/models/openai/gpt-6-sol", title: "GPT-6 Sol - Amp", after: "GPT-6 Sol: context window, limits and release date" },
+    // seo-lint-ignore dash (the title Amp uses today)
+    { page: "/models/anthropic/claude-opus-5-5", title: "Claude Opus 5.5 - Amp", after: "Claude Opus 5.5: context window, limits and release date" },
+  ]}
+/>
+
+**The fix:** add the database and every model page to the sitemap, and link the database from the site menu and the footer. Give each model page a self canonical and a description written from its own data, such as its context limit and release date. Give the database page for GPT-5.5 a different title from the model card, or point it at the card. To confirm it worked, check that the sitemap lists about 110 more addresses, then watch Search Console's page indexing report for the model pages over the next two weeks.
+
+### 3. Unknown addresses redirect to the sign-in page
+
+Ask ampcode.com for an address that doesn't exist and it redirects to the sign-in page, which returns a 200 status. To Google, every mistyped or retired address looks like a working page. DataForSEO still shows Google ranking some of these, such as the address of a Neovim plugin file that now ends at "Sign in to Amp".
+
+<BeforeAfter
+  caption="What a visitor or Googlebot gets for an address that doesn't exist, today and after the fix. Real app addresses, such as a private thread, still go to sign-in."
+  before={{ label: "Today", html: beforeSoft }}
+  after={{ label: "After the fix", html: afterSoft }}
+/>
+
+Amp's news section already gets this right: an unknown news address returns a 404. The fix is to do the same everywhere else.
+
+**The fix:** return a 404 for any address that isn't a real page or app route, and only redirect real app routes (such as threads and settings) to sign-in. For a retired address that had links or rankings, add a 301 to the nearest live page instead. While they're in there, the docs link to the orbs profiles page is broken and needs pointing at the right page. To confirm it worked, request a made-up address and check for a 404, then check that Search Console's soft 404 count stops growing.
+
+## Ship it all today, then let it settle
+
+Teardowns like this usually end with a four-week plan. With coding agents, I'd start all of it on the same day, and Amp, of all companies, has the orbs to run it.
+
+Each fix above is a separate job with a clear end, so these can run at once:
+
+<PlanSteps
+  steps={[{"title": "Comparison pages", "body": "Amp vs Claude Code, Cursor, Codex and OpenCode, plus Claude Code and Cursor alternatives pages, honest about where each tool wins."}, {"title": "Coding agent guide", "body": "One guide to what a coding agent is and how to choose one, linked from the homepage and the footer."}, {"title": "Orbs for search", "body": "A new title tag on the orbs page, and a page for running Claude Code or Codex in an orb."}, {"title": "Model database", "body": "Sitemap entries, a menu link, self canonicals and descriptions for all 109 model pages, plus a \"use it in Amp\" block on each."}, {"title": "One domain", "body": "Redirect ampcode.app to ampcode.com and add a canonical tag to the pricing page."}, {"title": "Real 404s", "body": "Return 404 for unknown addresses, keep sign-in redirects for app routes, and fix the orbs profiles docs link."}, {"title": "Moving from Cody", "body": "A page for Cody Free and Pro users, and a note to Sourcegraph asking for one line on the Cody docs page."}]}
+/>
+
+Someone at Amp still needs to review the comparison pages and the guide, because they make claims about competitors. The redirects, titles, sitemap and canonical changes need only a quick check.
+
+Then I'd spend 30 days checking the results:
+
+<PlanSteps
+  steps={[{"marker": "Day 0", "title": "Ask Google to recrawl", "body": "Submit every new and changed URL to Index My Site, so Google recrawls them now instead of on its own schedule."}, {"marker": "Day 3", "title": "Check indexing", "body": "Confirm the comparison pages and model pages are indexed, and that ampcode.app now redirects."}, {"marker": "Day 7", "title": "First impressions", "body": "Look for impressions on \"claude code alternative\", \"coding agent\" and \"claude code sandbox\" in Search Console."}, {"marker": "Day 14", "title": "Model pages", "body": "Check how many model pages have impressions, and which models people search for most."}, {"marker": "Day 30", "title": "Sign-ups", "body": "Compare sign-ups and paid plans that started from search with the month before."}]}
+/>
+
+## Get the changes seen quickly
+
+The model pages are the biggest test here. Google has never been told about 109 of them, and a sitemap entry only asks it to visit when it gets round to it. I'd submit every new and changed URL to [Index My Site](https://indexmysite.app/) the day it ships, so Google is asked to crawl it straight away. That matters most for the model pages, the retitled orbs page and the new comparison pages, where nothing can move until Google has seen them.
+
+## How I ran this
+
+Everything in this teardown came from SEO Skill, run by an agent. You can run the same audit on your own site.
+
+**1. Connect the hosted MCP server.** It's free. You sign in with Google, and there's no password and nothing to install. In Claude Code:
+
+```sh
+claude mcp add --transport http seoskill https://seoskill.dev/mcp
+```
+
+Codex, Cursor and Claude on the web work too. The [MCP guide](/docs/mcp) has the steps for each one.
+
+**2. Add a research key.** On your [account page](/account), save an Ahrefs or DataForSEO key. The key gives your agent search volumes, rankings and results pages, like the tables above.
+
+**3. Install the CLI for crawling.** The crawl runs on your machine, so it can read any site:
+
+```sh
+npm i -g seo
+seo login
+```
+
+**4. Ask your agent.** This is close to the prompt I used:
+
+```text
+Audit example.com and every domain we own.
+Follow redirects from our old and sister domains.
+Crawl each one with seo crawl, and check what
+unknown addresses and the sitemap return.
+Use seo_research to find the searches our buyers
+make, who ranks for them and whether we can compete.
+Rank every fix by how close it sits to revenue.
+```
+
+On your own site, the hosted server adds the part I couldn't see from the outside: your real Search Console clicks and queries. With those, you get measured numbers where this post has estimates.
+
+Check every domain that leads to you, too. Two of the fixes in this teardown came from addresses nobody looks at: a second domain and a hundred pages Google was never told about.
+
+If you're at Amp, I'm happy to talk any of this through. And if you'd like the same teardown for your company, [SEO Skill](/) will run it for you.

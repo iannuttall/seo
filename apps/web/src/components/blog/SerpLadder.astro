@@ -1,0 +1,120 @@
+---
+// The top results for one search as a ladder: position, domain, an optional
+// Domain Rating and a tag for the kind of site. The `target` domain is lit
+// where it ranks. If it is not in `rows`, `targetPosition` slots it in where
+// it would sit, or a closing rung says it does not rank.
+import { formatNumber } from './chart'
+import Exhibit from './Exhibit.astro'
+
+type Row = { position: number; domain: string; title?: string; dr?: number; tag?: string }
+
+type Props = {
+  keyword: string
+  // Monthly searches.
+  volume?: number
+  rows: Row[]
+  target?: string
+  // Where the target would slot in when it is not in the rows. Null or
+  // left out means it does not rank.
+  targetPosition?: number | null
+  title?: string
+  caption?: string
+}
+
+const { keyword, volume, rows, target, targetPosition = null, title, caption } = Astro.props
+
+const sorted = [...rows].sort((a, b) => a.position - b.position || a.domain.localeCompare(b.domain))
+const ranks = target !== undefined && sorted.some((row) => row.domain === target)
+type Rung = Row & { kind: 'row' | 'target' | 'missing' }
+const rungs: Rung[] = sorted.map((row) => ({ ...row, kind: row.domain === target ? 'target' : 'row' }))
+if (target && !ranks) {
+  if (targetPosition !== null) {
+    const at = rungs.findIndex((row) => row.position >= targetPosition)
+    rungs.splice(at < 0 ? rungs.length : at, 0, { position: targetPosition, domain: target, kind: 'target', tag: 'Would slot in here' })
+  } else {
+    rungs.push({ position: 0, domain: target, kind: 'missing' })
+  }
+}
+const showDr = rows.some((row) => row.dr !== undefined)
+---
+
+<Exhibit title={title} caption={caption}>
+  <div data-serp-ladder>
+    <div class="mb-4 flex flex-wrap items-baseline justify-between gap-x-4 gap-y-1">
+      <p class="text-lg font-medium text-foreground">{keyword}</p>
+      {volume !== undefined ? <p class="text-sm text-foreground-muted tabular-nums">{formatNumber(volume)} searches a month</p> : null}
+    </div>
+    <ol class="flex flex-col gap-1">
+      {
+        rungs.map((row, index) => (
+          <li
+            class:list={[
+              'sl-rung flex items-center gap-3 rounded-md px-3 py-2.5 transition-colors',
+              row.kind === 'row' && 'bg-background hover:bg-background/60',
+              row.kind === 'target' && 'bg-primary-soft',
+              row.kind === 'missing' && 'mt-2 bg-destructive-soft',
+            ]}
+            style={`--delay: ${Math.min(index, 10) * 50}ms`}
+          >
+            <span
+              class:list={[
+                'flex size-7 shrink-0 items-center justify-center rounded-full text-xs font-medium tabular-nums',
+                row.kind === 'target' ? 'bg-primary text-primary-foreground' : 'bg-muted text-foreground-muted',
+              ]}
+            >
+              {row.kind === 'missing' ? '×' : row.position}
+            </span>
+            <span class="min-w-0 flex-1">
+              <span class:list={['block truncate text-sm', row.kind === 'row' ? 'text-foreground' : 'font-medium text-foreground']}>
+                {row.domain}
+              </span>
+              {row.title ? <span class="block truncate text-xs/5 text-foreground-muted">{row.title}</span> : null}
+              {row.kind === 'missing' ? <span class="block text-xs/5 text-foreground-muted">Not ranking in these results</span> : null}
+            </span>
+            {row.tag ? (
+              <span class="hidden shrink-0 rounded-md bg-muted px-2 py-0.5 text-xs text-foreground-muted sm:inline">{row.tag}</span>
+            ) : null}
+            {showDr ? (
+              <span class="w-12 shrink-0 text-right text-xs text-foreground-muted tabular-nums">
+                {row.dr !== undefined ? <><span class="text-foreground-soft">DR</span> {row.dr}</> : null}
+              </span>
+            ) : null}
+          </li>
+        ))
+      }
+    </ol>
+    {
+      showDr ? (
+        <p class="mt-3 text-xs text-foreground-soft">
+          DR is <a class="underline underline-offset-4 hover:text-foreground" href="https://ahrefs.com/website-authority-checker" target="_blank" rel="noreferrer">Domain Rating by Ahrefs</a>.
+        </p>
+      ) : null
+    }
+  </div>
+</Exhibit>
+
+<style>
+  .sl-rung {
+    transition:
+      opacity 400ms ease var(--delay),
+      transform 400ms cubic-bezier(0.22, 1, 0.36, 1) var(--delay),
+      background-color 150ms;
+  }
+
+  :global(:root.motion) [data-serp-ladder]:not([data-reveal='shown']) .sl-rung {
+    opacity: 0;
+    transform: translateX(-8px);
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .sl-rung {
+      transition: none;
+    }
+  }
+</style>
+
+<script>
+  import { reveal } from './reveal'
+
+  reveal('[data-serp-ladder]')
+</script>

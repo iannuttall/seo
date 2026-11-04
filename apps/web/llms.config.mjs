@@ -1,3 +1,4 @@
+import { publishedBlogPaths } from './src/content/blog-posts.mjs'
 import { docsSections } from './src/content/docs-nav.mjs'
 import { tools } from './src/content/tools/manifest.mjs'
 
@@ -31,6 +32,15 @@ export const llmsTxt = {
         { path: '/guides/nextjs-seo' },
       ],
     },
+    // Only once a post is published; drafts never appear.
+    ...(publishedBlogPaths().length > 0
+      ? [
+          {
+            heading: 'Blog',
+            items: publishedBlogPaths().map((path) => ({ path })),
+          },
+        ]
+      : []),
     {
       heading: 'Commands',
       items: docsSection('Commands'),

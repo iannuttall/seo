@@ -1,0 +1,138 @@
+---
+// Every page on a site as one tile, grouped by kind of page. Lit tiles get
+// search traffic. Groups with `tone: 'target'` are the pages built to win
+// searches, drawn as outlines so the gap shows. Hover or tap a tile for its
+// path and note. The tiles fill in when the exhibit scrolls into view.
+import Exhibit from './Exhibit.astro'
+
+type Page = { name: string; lit?: boolean; note?: string }
+type Group = { label: string; tone?: 'target' | 'other'; pages: Page[] }
+
+type Props = {
+  groups: Group[]
+  litLabel: string
+  targetLabel?: string
+  otherLabel: string
+  title?: string
+  caption?: string
+}
+
+const { groups, litLabel, targetLabel, otherLabel, title, caption } = Astro.props
+
+const format = (value: number) => value.toLocaleString('en-US')
+let tile = 0
+const rows = groups.map((group) => ({
+  ...group,
+  pages: group.pages.map((page) => ({ ...page, delay: Math.min(tile++ * 10, 900) })),
+}))
+// Without a note, a tile's tip repeats its legend label, so the tip and the
+// legend always describe the same thing.
+const tip = (page: Page, group: Group) =>
+  JSON.stringify({
+    title: page.name,
+    notes: [page.note ?? (page.lit ? litLabel : group.tone === 'target' && targetLabel ? targetLabel : otherLabel)],
+  })
+const hasTarget = groups.some((group) => group.tone === 'target')
+---
+
+<Exhibit title={title} caption={caption}>
+  <div data-page-grid>
+    <div class="flex flex-col gap-3">
+      {
+        rows.map((group) => (
+          <div class="grid gap-1.5 sm:grid-cols-[9.5rem_1fr] sm:gap-4">
+            <p class="text-sm text-foreground-muted sm:pt-0.5">
+              <span class="text-foreground">{group.label}</span> <span class="tabular-nums">{format(group.pages.length)}</span>
+            </p>
+            <div class="flex flex-wrap gap-1.5">
+              {group.pages.map((page) => (
+                <span
+                  class:list={[
+                    'pg-tile size-4 rounded-[3px] sm:size-5',
+                    page.lit ? 'pg-lit bg-primary' : group.tone === 'target' ? 'bg-background ring-1 ring-inset ring-primary/60' : 'bg-secondary-active',
+                    page.note && !page.lit && 'pg-noted',
+                  ]}
+                  style={`--delay: ${page.delay}ms`}
+                  data-tip={tip(page, group)}
+                />
+              ))}
+            </div>
+          </div>
+        ))
+      }
+    </div>
+    <ul class="mt-5 flex flex-wrap gap-x-6 gap-y-2 text-sm text-foreground-muted">
+      <li class="flex items-center gap-2" style="margin: 0">
+        <span class="size-3 rounded-[3px] bg-primary" aria-hidden="true" />{' '}
+        {litLabel}
+      </li>
+      {
+        hasTarget && targetLabel ? (
+          <li class="flex items-center gap-2" style="margin: 0">
+            <span class="size-3 rounded-[3px] bg-background ring-1 ring-inset ring-primary/60" aria-hidden="true" />{' '}
+            {targetLabel}
+          </li>
+        ) : null
+      }
+      <li class="flex items-center gap-2" style="margin: 0">
+        <span class="size-3 rounded-[3px] bg-secondary-active" aria-hidden="true" />{' '}
+        {otherLabel}
+      </li>
+    </ul>
+  </div>
+</Exhibit>
+
+<style>
+  .pg-tile {
+    cursor: default;
+    transition:
+      opacity 300ms ease var(--delay),
+      transform 300ms ease var(--delay);
+  }
+
+  .pg-tile:hover {
+    transform: scale(1.25);
+    transition-delay: 0ms;
+  }
+
+  .pg-noted {
+    background-image: radial-gradient(circle, var(--color-primary) 22%, transparent 26%);
+  }
+
+  [data-reveal='shown'] .pg-lit {
+    animation: pg-glow 1200ms ease-out 1100ms 2;
+  }
+
+  :global(:root.motion) [data-page-grid]:not([data-reveal='shown']) .pg-tile {
+    opacity: 0;
+    transform: scale(0.6);
+  }
+
+  @keyframes pg-glow {
+    50% {
+      transform: scale(1.35);
+    }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .pg-tile {
+      transition: none;
+    }
+
+    [data-reveal='shown'] .pg-lit {
+      animation: none;
+    }
+  }
+</style>
+
+<script>
+  import { reveal } from './reveal'
+  import { hideTip, showTip, type Tip } from './tooltip'
+
+  reveal('[data-page-grid]')
+  for (const tile of document.querySelectorAll<HTMLElement>('[data-page-grid] [data-tip]')) {
+    const tip = JSON.parse(tile.dataset.tip ?? '{}') as Tip
+    tile.addEventListener('pointermove', (event) => showTip(tip, event.clientX, event.clientY))
+    tile.addEventListener('pointerleave', hideTip)
+  }
+</script>

@@ -1,0 +1,125 @@
+---
+title: What is AI slop? How to spot it and fix it
+description: AI slop is AI-made content published without a careful read. The writing patterns that give it away, the research behind them, and a free check for your drafts.
+heading: What AI slop is and how to remove it
+lead: AI slop is content made with AI and published without anyone reading it properly. These are the writing patterns that give it away, the research behind them, and how to check your own drafts.
+date: '2026-11-04'
+---
+
+<SlopDemo />
+
+<Fix rule="stock-opener" slop="In today's fast-paced digital landscape, " />"AI slop" is what people call low-quality content made with AI and published without a careful read. Merriam-Webster made "slop" its [2025 word of the year](https://www.merriam-webster.com/wordplay/word-of-the-year) and defines it as "digital content of low quality that is produced usually in quantity by means of artificial intelligence." <Fix rule="significance-inflation" slop="This marks a pivotal moment for the internet" /><Fix rule="participle-tail" slop=", underscoring the growing tension between speed and quality." />
+
+Simon Willison [helped popularise the word](https://simonwillison.net/2024/May/8/slop/) in May 2024. <Fix rule="throat-clearing" slop="Here's the thing">His test is a good one</Fix>: AI content becomes slop when it is "mindlessly generated and thrust upon someone who didn't ask for it." <Fix rule="negative-parallelism" slop="It's not about the tool, it's about the process.">So the word describes how something got published. A model can help write a good page, and a person can write slop by hand.</Fix>
+
+Readers spot slop fast because models repeat the same habits. This post covers the patterns that give it away, the research behind them, and how to check a draft before you publish it. <Fix rule="cliche" slop="Let's dive in!" />
+
+## How to tell if writing came from AI
+
+<Fix rule="faux-insight" slop="Here's what most people get wrong: no">No</Fix> single sign proves a model wrote something, and people use every one of these patterns too. What gives AI writing away is the pile-up: the same handful of words and sentence shapes, used far more often than a person would use them. <Fix rule="vague-attribution" slop="Studies show this is no accident.">Two studies have measured it.</Fix>
+
+[Kobak and colleagues](https://www.science.org/doi/10.1126/sciadv.adt3813) <Fix rule="ai-vocabulary" slop="delved into">counted words in</Fix> more than 15 million PubMed abstracts from 2010 to 2024. After ChatGPT arrived, some words jumped far past their trend: "delves" appeared 28 times as often in 2024 as the earlier years predicted, "underscores" 13.8 times and "showcasing" 10.7 times. From those excess words they estimate that at least 13.5% of 2024 abstracts were processed with a language model. <Fix rule="performed-insight" slop="Sit with that for a moment." />
+
+<Fix rule="narrative-pivot" slop="But this is where it gets interesting. " />[Reinhart and colleagues](https://www.pnas.org/doi/10.1073/pnas.2422455122) compared grammar instead of vocabulary. Instruction-tuned models used present participial clauses at 2 to 5 times the rate of human text. In practice that is the sentence with a comment tacked on the end, such as "highlighting the importance of..." or "showcasing the team's commitment to quality". <Fix rule="ai-vocabulary" slop="This groundbreaking research offers a glimpse into the intricate interplay between humans and machines." />
+
+## The patterns that give AI slop away
+
+These are the patterns [seo lint](/docs/lint) checks for, with the name of the rule it reports. Each one is common in AI drafts and much rarer in careful human writing. <Fix rule="pithy-fragment" slop="Simple, but powerful." />
+
+| Pattern | Example | Rule |
+| --- | --- | --- |
+| "Not X, it's Y" reframes | "It's not a tool, it's a teammate." | `negative-parallelism` |
+| Contrasts tacked on the end | "The fix is in the template, not in 600 posts." | `contrast-reframe` |
+| Verbless fragments | "Same essay, two titles." | `pithy-fragment` |
+| Stock idioms | "move the needle", "low-hanging fruit" | `cliche` |
+| Overused AI words | "delve", "tapestry", "showcase", "meticulous" | `ai-vocabulary` |
+| Comment tails | "Sales rose 12%, highlighting the strength of the brand." | `participle-tail` |
+| Puffed-up importance | "plays a pivotal role", "a testament to" | `significance-inflation` |
+| Announcing the point | "Here's the thing", "Let that sink in" | `throat-clearing` |
+| Questions answered at once | "The result? Faster pages." | `self-answered-question` |
+| Openers and closers that fit any article | "In today's fast-paced world", "In conclusion" | `stock-opener`, `generic-closer` |
+| Chatbot leftovers | "I hope this helps!", "[Your Name]" | `chatbot-residue` |
+
+### "It isn't X, it's Y"
+
+The most recognisable pattern sets up a claim nobody made so the writer can knock it down: "This isn't a newsletter, it's a movement." A close cousin tacks a contrast such as "not in 600 posts" onto the end of a plain sentence for drama. <Fix rule="self-answered-question" slop="The fix? Say">Say</Fix> the positive claim on its own. When the contrast is a real correction, keep it (seo lint lists those as questions for you to judge instead of errors).
+
+### Verbless fragments
+
+Models like a two-beat fragment after a real sentence: "Same essay, two titles." It sounds punchy and adds nothing the sentence before it didn't already say. Give the fragment a subject and a verb, or delete it.
+
+### Stock idioms and overused words
+
+"Move the needle", "low-hanging fruit" and "at the end of the day" fit any company, so they tell the reader nothing about yours. <Fix rule="cliche" slop="They are the low-hanging fruit of lazy writing." /> The overused words are the ones the studies found: "delve", "tapestry", "showcase", "meticulous", "realm" and "testament". None of them is wrong on its own. A page full of them reads as generated because models use them far more often than people do.
+
+### Comment tails
+
+A sentence states a fact, then a participle clause comments on it: "Sales rose 12%, highlighting the strength of the brand." This is the shape the PNAS study measured. <Fix rule="filler" slop="It is important to note that you should end">End</Fix> the sentence at the comma. If the tail holds a real fact, give it a sentence of its own.
+
+### Openers, closers and announcements
+
+Openers such as "In today's fast-paced world" could start any article, and closers such as "The future looks bright" could end any article. In between, phrases such as "Here's the thing" and "Let that sink in" announce a point instead of making it. Cut them and start with the first concrete sentence.
+
+## Em dashes are a weak signal now
+
+The em dash became the best-known sign of AI writing in 2025, and it was always a weak one. Writers used dashes long before chatbots, and in November 2025 OpenAI said [ChatGPT now follows a custom instruction to stop using them](https://techcrunch.com/2025/11/14/openai-says-its-fixed-chatgpts-em-dash-problem/). A draft with no dashes can still be pure slop, and a dash on its own <Fix rule="hedge-stack" slop="could potentially mean anything">proves nothing</Fix>.
+
+seo lint flags dashes with its `dash` rule. That rule enforces this site's style guide, which bans dashes, and it sits with the copy rules instead of the AI patterns.
+
+## What a flagged line can prove
+
+A flagged line means the sentence has a shape that AI drafts use a lot. It does not mean a model wrote it. <Fix rule="stranded-negation" slop="Does seo lint know who wrote it? It doesn't.">seo lint never guesses who wrote a page.</Fix> Each finding names the pattern, quotes the words and suggests a fix, so the decision stays with <Fix rule="contrast-reframe" slop="you, not with the tool.">you.</Fix>
+
+<Fix rule="copula-avoidance" slop="Accuracy stands as the cornerstone of the whole project." /> Before a rule ships, it runs against 287 labelled AI-style sentences and 221 sentences people wrote. A rule that gives any of the human sentences an error is downgraded to a question for a reader to judge. That is also why passive voice is not a rule at all: people use it too often for it to mean anything.
+
+## What AI detectors can and cannot tell you
+
+Detectors such as Pangram answer a different question: did a model generate this text? They have become accurate. Pangram's [model card for Pangram 4](https://www.pangram.com/research/model-card/pangram-4), released in July 2026, reports 41 false positives in 1,000,000 human-written English texts, about 1 in 24,000. An [independent test at the University of Chicago](https://bfi.uchicago.edu/insights/artificial-writing-and-automated-detection) found Pangram made almost no mistakes on medium and long passages, and slightly more on short ones.
+
+A low false positive rate still means some false positives. Run a detector over a million essays and it will wrongly flag a few dozen of them, and each of those writers has no easy way to prove they wrote it.
+
+A correct verdict also tells you less than it seems. Most published writing now has AI somewhere in the process. A person may have picked the topic and the angle, gathered the data, cut half the draft and checked every claim, while a model wrote most of the sentences. A detector can tell you a model did the typing. It can't tell you whether anyone thought about the reader.
+
+That is the question that decides whether a page is slop. Someone landed on it because they needed something. Can they tell what it is, why they would want it and how it helps them? AI can help write a page that does all three. The patterns in this post are the spots where a draft drifted away from that reader, which is why seo lint looks for them.
+
+## Check your own copy with seo lint
+
+<Fix rule="cliche" slop="Ready to take your writing to the next level?" /> The quickest way is to let your agent check its own work. Add the hosted MCP server to your agent and ask for the check whenever it writes something. The server signs you in with Google the first time, because its other tools read your Search Console data. In Claude Code:
+
+```sh
+claude mcp add --transport http seoskill https://seoskill.dev/mcp
+```
+
+The [hosted MCP guide](/docs/mcp) has the setup for Codex, Cursor and Claude on the web. Then ask:
+
+```text
+Check this draft with seo lint and fix every error.
+```
+
+The hosted tool takes the text itself, up to 200,000 characters, so it works on a draft that only exists in the chat. <Fix rule="colon-reveal" slop="The best part: it's completely free." />
+
+To check files on your machine, or to skip the sign-in, install the CLI. The lint command works offline with no account:
+
+```sh
+npm i -g seo
+seo lint drafts/launch-post.md
+```
+
+<Fix rule="negation-countdown" slop="No setup, no sign-in, no fuss. It">It</Fix> reads Markdown, MDX, HTML, Astro and plain text, and skips code blocks. Each finding has a line and column, the words it matched, why they stand out and a fix:
+
+```text
+drafts/launch-post.md (blog, 18 words): 1 error, 0 warnings, 0 to review
+  5:1  error  contrast-reframe  "The fix is in the template, not in 600 posts."
+      The ", not ..." tail adds a contrast for drama.
+      Fix: Keep the claim and cut the contrast: "The fix is in the template." Mention the other half only if a reader would really assume it.
+```
+
+The command exits with code 1 when it finds an error, so you can run it in CI or before a commit. <Fix rule="stock-closer" slop="That's a real win." /> The [seo lint docs](/docs/lint) cover presets for landing pages and meta descriptions, and how to keep a flagged line on purpose.
+
+## How to fix a flagged line
+
+Swapping "delve" for "explore" leaves the sentence as empty as it was. A flagged line usually means the draft had nothing specific to say at that spot. Ask what the reader needs there: what it is, why they would want it, or how it helps them. Then write that as plainly as you can, with a number, a name or an example. If nothing is left, delete the sentence.
+
+The same test works for a landing page, a tool or an app. Whoever or whatever wrote it, it should be clear about what it is and useful to the person who needs it.
+
+Run seo lint on your next draft before you publish it and fix the errors first. The warnings are often fine on a second read. <Fix rule="generic-closer" slop="In conclusion, the future of content looks bright." /><Fix rule="chatbot-residue" slop=" I hope this helps!" />

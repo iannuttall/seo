@@ -1,0 +1,124 @@
+---
+// A spreadsheet of pages and their title tags. It counts each title's
+// characters, flags titles over 60 characters (where Google usually cuts
+// them) and titles shared by more than one page, and sorts by any column when
+// its header is clicked. Give an `after` title to show the fix next to it.
+import Exhibit from './Exhibit.astro'
+
+type Row = {
+  // The page path or full address.
+  page: string
+  title: string
+  after?: string
+  note?: string
+}
+
+type Props = {
+  rows: Row[]
+  title?: string
+  caption?: string
+}
+
+const { rows, title, caption } = Astro.props
+const LIMIT = 60
+const counts = new Map<string, number>()
+for (const row of rows) counts.set(row.title.trim().toLowerCase(), (counts.get(row.title.trim().toLowerCase()) ?? 0) + 1)
+const withAfter = rows.some((row) => row.after)
+const lines = rows.map((row, index) => {
+  const flags = [
+    (counts.get(row.title.trim().toLowerCase()) ?? 0) > 1 ? 'Duplicate' : null,
+    row.title.length > LIMIT ? 'Too long' : null,
+  ].filter((flag): flag is string => Boolean(flag))
+  return { ...row, index, length: row.title.length, flags }
+})
+const columns = ['Page', 'Title', 'Characters', ...(withAfter ? ['Fix'] : [])]
+---
+
+<Exhibit title={title} caption={caption}>
+  <div class="overflow-x-auto" data-title-sheet>
+    <table class="title-sheet w-full min-w-[36rem] border-collapse text-left text-sm/5">
+      <thead>
+        <tr>
+          {
+            columns.map((label, column) => (
+              <th class="border-b border-border px-2 py-2 font-medium text-foreground-muted" aria-sort="none">
+                <button type="button" class="inline-flex items-center gap-1 hover:text-foreground focus-visible:outline-none focus-visible:ring-[3px] focus-visible:ring-ring/20 rounded" data-sort={column}>
+                  {label}{' '}
+                  <span aria-hidden="true" class="text-xs" data-sort-mark></span>
+                </button>
+              </th>
+            ))
+          }
+        </tr>
+      </thead>
+      <tbody>
+        {
+          lines.map((line) => (
+            <tr class="border-b border-border/60 align-top last:border-0" data-row={line.index}>
+              <td class="px-2 py-2 font-mono text-xs/5 break-all text-foreground-muted" data-value={line.page}>{line.page}</td>
+              <td class="px-2 py-2 text-foreground" data-value={line.title}>
+                {line.title}{' '}
+                {line.flags.length > 0 ? (
+                  <span class="mt-1 flex flex-wrap gap-1">
+                    {line.flags.map((flag) => (
+                      <span class="rounded bg-destructive-soft px-1.5 py-0.5 text-xs font-medium text-destructive">{flag}</span>
+                    ))}
+                  </span>
+                ) : null}
+                {line.note ? <>{' '}<span class="mt-1 block text-xs/5 text-foreground-muted">{line.note}</span></> : null}
+              </td>
+              <td class:list={['px-2 py-2 tabular-nums', line.length > LIMIT ? 'text-destructive' : 'text-foreground']} data-value={line.length}>
+                {line.length}
+              </td>
+              {withAfter ? (
+                <td class="px-2 py-2 text-foreground" data-value={line.after ?? ''}>
+                  {line.after ? (
+                    <>
+                      {line.after}{' '}
+                      <span class="block text-xs text-foreground-muted tabular-nums">{line.after.length} characters</span>
+                    </>
+                  ) : (
+                    <span class="text-foreground-muted">Keep</span>
+                  )}
+                </td>
+              ) : null}
+            </tr>
+          ))
+        }
+      </tbody>
+    </table>
+  </div>
+</Exhibit>
+
+<script>
+  // Click a header to sort by it; click again to reverse. Numbers sort as
+  // numbers, and the original order breaks ties so sorting is stable.
+  for (const sheet of document.querySelectorAll<HTMLElement>('[data-title-sheet]')) {
+    const body = sheet.querySelector('tbody')
+    if (!body) continue
+    const rows = [...body.querySelectorAll<HTMLTableRowElement>('tr')]
+    let current = -1
+    let direction = 1
+    for (const button of sheet.querySelectorAll<HTMLButtonElement>('[data-sort]')) {
+      button.addEventListener('click', () => {
+        const column = Number(button.dataset.sort)
+        direction = column === current ? -direction : 1
+        current = column
+        const value = (row: HTMLTableRowElement) => row.cells[column]?.dataset.value ?? ''
+        const sorted = [...rows].sort((a, b) => {
+          const x = value(a)
+          const y = value(b)
+          const numeric = x !== '' && y !== '' && !Number.isNaN(Number(x)) && !Number.isNaN(Number(y))
+          const order = numeric ? Number(x) - Number(y) : x.localeCompare(y)
+          return order * direction || Number(a.dataset.row) - Number(b.dataset.row)
+        })
+        body.append(...sorted)
+        for (const header of sheet.querySelectorAll<HTMLElement>('th')) header.setAttribute('aria-sort', 'none')
+        for (const mark of sheet.querySelectorAll<HTMLElement>('[data-sort-mark]')) mark.textContent = ''
+        button.closest('th')?.setAttribute('aria-sort', direction > 0 ? 'ascending' : 'descending')
+        const mark = button.querySelector<HTMLElement>('[data-sort-mark]')
+        if (mark) mark.textContent = direction > 0 ? '↑' : '↓'
+      })
+    }
+  }
+</script>

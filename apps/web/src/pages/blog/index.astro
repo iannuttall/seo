@@ -1,0 +1,42 @@
+---
+import { ChartLineData01Icon } from '@hugeicons/core-free-icons'
+import HomeCard from '@/components/HomeCard.astro'
+import PageHeader from '@/components/PageHeader.astro'
+import BaseLayout from '@/layouts/BaseLayout.astro'
+import { getBlogPosts } from '@/lib/blog'
+
+const posts = await getBlogPosts()
+---
+
+<BaseLayout
+  title="SEO and AI search blog"
+  description="Practical SEO and AI search guides from Ian Nuttall, built on real search data: how to get found in Google, ChatGPT and AI answers."
+  canonicalPath="/blog"
+  schemaType="CollectionPage"
+  noindex={posts.length === 0}
+>
+  <main data-agent-content>
+    <PageHeader
+      title="Blog"
+      description="Practical guides to getting found in Google and AI answers, built on real search data."
+    />
+
+    {
+      posts.length === 0 ? (
+        <p class="rounded-lg bg-muted p-6 text-foreground-muted">No posts are published yet.</p>
+      ) : (
+        <div class="grid grid-cols-1 gap-2 sm:grid-cols-2">
+          {posts.map((post) => (
+            <HomeCard
+              title={post.data.heading}
+              text={post.data.lead}
+              icon={ChartLineData01Icon}
+              href={`/blog/${post.id}`}
+              link={post.data.company ? `Read the ${post.data.company} teardown` : 'Read the post'}
+            />
+          ))}
+        </div>
+      )
+    }
+  </main>
+</BaseLayout>

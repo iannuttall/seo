@@ -7,7 +7,7 @@ import type { IssueStore } from './issues.js'
 import type { LiveCheck } from './page-facts.js'
 import type { WeekData } from './week.js'
 
-// The eight public commands. Each runs the same core code in the CLI, the
+// The ten public commands. Each runs the same core code in the CLI, the
 // local MCP and the hosted MCP; only the functions that reach Google and the
 // web differ. "local" commands need the person's machine (a crawl).
 
@@ -48,6 +48,21 @@ export const COMMANDS = {
   'internal-links': {
     where: 'local',
     summary: 'Pages that could link to a target page.',
+  },
+  'ai-access': {
+    where: 'anywhere',
+    summary:
+      'One URL fetched as a browser and as GPTBot, OAI-SearchBot, ClaudeBot and PerplexityBot, with robots.txt, llms.txt and Markdown copies.',
+  },
+  'social-posts': {
+    where: 'anywhere',
+    summary:
+      "One person's X posts with their public views, likes, reposts, quotes, replies and bookmarks, most viewed first.",
+  },
+  lint: {
+    where: 'anywhere',
+    summary:
+      'Check copy for patterns common in AI-written text, weak copy and title and description length.',
   },
 } as const
 

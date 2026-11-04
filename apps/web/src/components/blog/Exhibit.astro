@@ -1,0 +1,20 @@
+---
+// One exhibit in a blog post: a soft panel with an optional title, and a
+// one-line note under it. The chart components wrap themselves in this; use
+// it directly around any other MDX content.
+type Props = {
+  title?: string
+  caption?: string
+  class?: string
+}
+
+const { title, caption, class: className } = Astro.props
+---
+
+<figure class:list={['mt-8 mb-10 min-w-0', className]}>
+  <div class="min-w-0 overflow-x-auto rounded-lg bg-muted p-4 sm:p-6" data-exhibit-panel>
+    {title ? <p class="mb-4 text-sm font-medium text-foreground">{title}</p> : null}
+    <slot />
+  </div>
+  {caption ? <figcaption class="mt-3 px-1 text-sm/6 text-foreground-muted">{caption}</figcaption> : null}
+</figure>

@@ -36,6 +36,10 @@ export type CrawlAiSignals = {
     exists: boolean
     availability: CrawlAiAvailability
     status?: number
+    contentType?: string
+    // The server answered with an HTML page, such as a site that serves its
+    // home page for every path. That is not a robots.txt file.
+    servesHtml?: boolean
     error?: string
     sitemapUrls: string[]
     // Distinct robots.txt Content-Signal directive values. undefined means the
@@ -48,6 +52,9 @@ export type CrawlAiSignals = {
     exists: boolean
     availability?: CrawlAiAvailability
     status?: number
+    contentType?: string
+    // The server answered with an HTML page, not a text file.
+    servesHtml?: boolean
     error?: string
     // Same-site links in llms.txt, checked up to the limit in file order.
     links?: {

@@ -159,3 +159,70 @@ test('crawlSite returns partial evidence before memory use becomes unsafe', asyn
   assert.match(report.warnings.join('\n'), /memory use could become unsafe/)
   assert.match(report.caveats.join('\n'), /Left 2 eligible URLs unchecked/)
 })
+
+test('crawlSite does not crawl auth redirects that leave the start origin', async () => {
+  const ctaLinks = ['hero', 'footer', 'pricing'].map(
+    (source) =>
+      `https://www.example.com/api/auth/start?return_to=%2Fdownload&cta_source=${source}`,
+  )
+  let loginFetches = 0
+
+  const report = await crawlSite(
+    {
+      url: 'https://www.example.com/',
+      useSitemap: false,
+      checkExternal: false,
+      maxPages: 10,
+      maxDepth: 3,
+      concurrency: 2,
+    },
+    {
+      fetch: async () => new Response('', { status: 404 }),
+      fetchStatusPage: async (url) => ({
+        urls: [],
+        page: crawlPageSnapshot(url, { status: 404 }),
+      }),
+      fetchPage: async (url) => {
+        if (!url.includes('/api/auth/start')) {
+          return {
+            urls: ctaLinks,
+            page: crawlPageSnapshot(url, {
+              title: 'Home',
+              outgoingInternalCount: ctaLinks.length,
+            }),
+          }
+        }
+        loginFetches += 1
+        // Each hop mints a fresh OAuth state, so login URLs never repeat.
+        const state = `state-${loginFetches}`
+        const loginUrl = `https://auth.example.com/login?client_id=app&redirect_uri=https%3A%2F%2Fwww.example.com%2Fcallback&code_challenge=${state}&state=${state}`
+        return {
+          urls: ['https://auth.example.com/forgot-password'],
+          page: crawlPageSnapshot(url, {
+            finalUrl: loginUrl,
+            title: 'Log in',
+            contentHash: 'login-screen',
+          }),
+        }
+      },
+    },
+  )
+
+  assert.equal(loginFetches, 3)
+  assert.deepEqual(
+    report.pages.map((page) => page.url),
+    ['https://www.example.com/'],
+  )
+  assert.deepEqual(report.summary.skipReasons, [
+    { reason: 'off-origin', impact: 'non-impacting', count: 3 },
+  ])
+  assert.equal(
+    report.issues.some(
+      (issue) =>
+        issue.url.startsWith('https://auth.example.com/') ||
+        issue.ruleId === 'title_duplicate' ||
+        issue.ruleId === 'duplicate_content',
+    ),
+    false,
+  )
+})

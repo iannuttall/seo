@@ -1,0 +1,331 @@
+---
+// A monthly line chart: one series over a soft area, or several (such as
+// two sites) with a legend. It draws itself in from the left when scrolled
+// into view. A reader can hover, tap or use the arrow keys to move a
+// crosshair; the legend and a tooltip show each series for that month.
+// Notes pin a short label to a month on the first series.
+import { compactNumber, formatNumber, niceTop, seriesColours } from './chart'
+import Exhibit from './Exhibit.astro'
+
+type Point = { label: string; value: number | null }
+type Series = { name: string; data: Point[] }
+type Note = { at: string; text: string }
+
+type Props = {
+  // One series. Use `series` instead for more than one.
+  data?: Point[]
+  series?: Series[]
+  notes?: Note[]
+  // Unit after each value, such as "visits".
+  unit?: string
+  title?: string
+  caption?: string
+}
+
+const { data = [], series: given, notes = [], unit = '', title, caption } = Astro.props
+
+const series = given ?? [{ name: unit || 'Value', data }]
+const several = series.length > 1
+const withUnit = (value: number | null) =>
+  value === null ? 'No data' : unit ? `${formatNumber(value)} ${unit}` : formatNumber(value)
+
+// Months in the order they first appear in any series.
+const labels = [...new Set(series.flatMap((line) => line.data.map((point) => point.label)))]
+const top = niceTop(Math.max(1, ...series.flatMap((line) => line.data.map((point) => point.value ?? 0))))
+const last = Math.max(1, labels.length - 1)
+const xAt = (index: number) => (index / last) * 100
+const yAt = (value: number) => 100 - (value / top) * 100
+
+const lines = series.map((line, index) => {
+  const values = labels.map((label) => line.data.find((point) => point.label === label)?.value ?? null)
+  // A missing month is a gap in the line, not a drop to zero.
+  let path = ''
+  let open = false
+  values.forEach((value, position) => {
+    if (value === null) {
+      open = false
+      return
+    }
+    path += `${open ? 'L' : 'M'}${xAt(position)},${yAt(value)} `
+    open = true
+  })
+  const first = values.findIndex((value) => value !== null)
+  const final = values.findLastIndex((value) => value !== null)
+  const area =
+    !several && first >= 0 && values.every((value, position) => value !== null || position < first || position > final)
+      ? `${path}L${xAt(final)},100 L${xAt(first)},100 Z`
+      : ''
+  return { name: line.name, colour: seriesColours[index % seriesColours.length], values, path, area }
+})
+
+const points = labels.map((label, index) => ({
+  label,
+  x: xAt(index),
+  values: lines.map((line) => line.values[index]),
+  tip: {
+    title: label,
+    lines: lines.map((line) => ({
+      ...(several ? { name: line.name, colour: line.colour } : {}),
+      value: withUnit(line.values[index]),
+    })),
+    notes: notes.filter((note) => note.at === label).map((note) => note.text),
+  },
+}))
+
+// About six month labels on wide screens; phones show every other one.
+const step = Math.max(1, Math.ceil(labels.length / 6))
+const ticks = points
+  .map((point, index) => ({ ...point, index }))
+  .filter(({ index }) => index % step === 0 || index === labels.length - 1)
+  .filter(({ index }) => index === labels.length - 1 || labels.length - 1 - index >= step)
+const pinned = notes
+  .map((note) => {
+    const index = labels.indexOf(note.at)
+    const value = lines[0]?.values[index]
+    return index < 0 || value === null || value === undefined ? null : { note, x: xAt(index), y: yAt(value) }
+  })
+  .filter((item) => item !== null)
+const latest = points.at(-1)
+const summary = `${title ?? 'Monthly chart'}. Use the left and right arrow keys to read each month.`
+---
+
+<Exhibit title={title} caption={caption}>
+  <div
+    class="traffic-curve"
+    data-traffic-curve
+    data-points={JSON.stringify(points.map((point) => ({ x: point.x, y: point.values.map((value) => (value === null ? null : yAt(value))), tip: point.tip })))}
+    data-agent-markdown="exclude"
+  >
+    <div class="mb-4 flex flex-wrap items-baseline gap-x-5 gap-y-1" aria-hidden="true">
+      <span class="text-sm text-foreground-muted" data-active-label>{latest?.label}</span>
+      {
+        lines.map((line, index) => (
+          <span class="inline-flex items-baseline gap-1.5 text-sm text-foreground-muted">
+            {several ? (
+              <>
+                <span class="size-2.5 shrink-0 rounded-full" style={`background: ${line.colour}`} />{' '}
+                {line.name}{' '}
+              </>
+            ) : null}
+            <span class="text-lg font-medium text-foreground tabular-nums" data-series-value>
+              {withUnit(latest?.values[index] ?? null)}
+            </span>
+          </span>
+        ))
+      }
+    </div>
+    <div class="relative h-52 touch-pan-y outline-none sm:h-64" tabindex="0" role="img" aria-label={summary} data-plot>
+      {
+        [1, 0.5, 0].map((share) => (
+          <div
+            class:list={['absolute inset-x-0 h-px', share === 0 ? 'bg-foreground/15' : 'bg-foreground/[0.07]']}
+            style={`top: ${(1 - share) * 100}%`}
+            aria-hidden="true"
+          >
+            {share > 0 ? <span class="absolute top-1 left-0 text-xs text-foreground-soft">{compactNumber(top * share)}</span> : null}
+          </div>
+        ))
+      }
+      <div class="tc-draw absolute inset-0" aria-hidden="true">
+        <svg class="absolute inset-0 size-full overflow-visible" viewBox="0 0 100 100" preserveAspectRatio="none">
+          {lines.map((line) => (line.area ? <path d={line.area} fill={line.colour} fill-opacity="0.14" /> : null))}
+          {
+            [...lines].reverse().map((line) => (
+              <path
+                d={line.path}
+                fill="none"
+                stroke={line.colour}
+                stroke-width="2.5"
+                stroke-linejoin="round"
+                stroke-linecap="round"
+                vector-effect="non-scaling-stroke"
+              />
+            ))
+          }
+        </svg>
+      </div>
+      {
+        pinned.map(({ note, x, y }) => {
+          const align = x < 18 ? 'left' : x > 82 ? 'right' : 'center'
+          return (
+            <div class="tc-note absolute" style={`left: ${x}%; top: ${y}%`} aria-hidden="true">
+              <span class="absolute size-2.5 -translate-x-1/2 -translate-y-1/2 rounded-full bg-primary ring-4 ring-muted" />
+              <span
+                class:list={[
+                  'absolute w-max max-w-[9rem] rounded-md bg-background px-2 py-1 text-xs/4 text-foreground sm:max-w-[12rem]',
+                  y < 30 ? 'top-3' : 'bottom-3',
+                  align === 'left' && '-left-1',
+                  align === 'right' && '-right-1',
+                  align === 'center' && '-translate-x-1/2',
+                ]}
+              >
+                {note.text}
+              </span>
+            </div>
+          )
+        })
+      }
+      <div class="pointer-events-none absolute inset-y-0 hidden w-px bg-foreground-soft" aria-hidden="true" data-cursor>
+        {
+          lines.map((line) => (
+            <span
+              class="absolute left-1/2 size-3 -translate-x-1/2 -translate-y-1/2 rounded-full ring-4 ring-muted"
+              style={`background: ${line.colour}`}
+              data-cursor-dot
+            />
+          ))
+        }
+      </div>
+    </div>
+    <div class="relative mt-2 h-5 text-xs text-foreground-soft" aria-hidden="true">
+      {
+        ticks.map((tick, position) => (
+          <span
+            class:list={[
+              'absolute top-0 whitespace-nowrap',
+              position % 2 === 1 && position !== ticks.length - 1 && 'hidden sm:block',
+              tick.index === 0 ? '' : tick.index === labels.length - 1 ? '-translate-x-full' : '-translate-x-1/2',
+            ]}
+            style={`left: ${tick.x}%`}
+          >
+            {tick.label}
+          </span>
+        ))
+      }
+    </div>
+  </div>
+  {/* Tables ignore a 1px width, so the wrapper does the hiding. */}
+  <div class="sr-only">
+    <table>
+      <thead>
+        <tr>
+          <th>Month</th>
+          {lines.map((line) => <th>{several ? line.name : unit ? `Value (${unit})` : 'Value'}</th>)}
+          <th>Note</th>
+        </tr>
+      </thead>
+      <tbody>
+        {
+          points.map((point) => (
+            <tr>
+              <td>{point.label}</td>
+              {point.values.map((value) => <td>{value === null ? 'No data' : formatNumber(value)}</td>)}
+              <td>{point.tip.notes.join('. ')}</td>
+            </tr>
+          ))
+        }
+      </tbody>
+    </table>
+  </div>
+</Exhibit>
+
+<style>
+  .tc-draw {
+    clip-path: inset(0 0 0 0);
+    transition: clip-path 1400ms cubic-bezier(0.22, 1, 0.36, 1);
+  }
+
+  .tc-note {
+    transition: opacity 400ms ease 1100ms;
+  }
+
+  :global(:root.motion) [data-traffic-curve]:not([data-reveal='shown']) .tc-draw {
+    clip-path: inset(0 100% 0 0);
+  }
+
+  :global(:root.motion) [data-traffic-curve]:not([data-reveal='shown']) .tc-note {
+    opacity: 0;
+  }
+
+  [data-plot]:focus-visible {
+    border-radius: 0.375rem;
+    box-shadow: 0 0 0 3px color-mix(in oklch, var(--ring) 30%, transparent);
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .tc-draw,
+    .tc-note {
+      transition: none;
+    }
+  }
+</style>
+
+<script>
+  import { reveal } from './reveal'
+  import { hideTip, showTip, type Tip } from './tooltip'
+
+  type Point = { x: number; y: (number | null)[]; tip: Tip }
+
+  for (const chart of document.querySelectorAll<HTMLElement>('[data-traffic-curve]')) {
+    const points = JSON.parse(chart.dataset.points ?? '[]') as Point[]
+    const plot = chart.querySelector<HTMLElement>('[data-plot]')
+    const cursor = chart.querySelector<HTMLElement>('[data-cursor]')
+    const dots = [...chart.querySelectorAll<HTMLElement>('[data-cursor-dot]')]
+    const label = chart.querySelector<HTMLElement>('[data-active-label]')
+    const values = [...chart.querySelectorAll<HTMLElement>('[data-series-value]')]
+    if (!plot || !cursor || !label || points.length === 0) continue
+    const resting = { label: label.textContent, values: values.map((value) => value.textContent) }
+    let active = points.length - 1
+    let shown = false
+
+    const show = (index: number, event?: PointerEvent) => {
+      active = Math.min(points.length - 1, Math.max(0, index))
+      shown = true
+      const point = points[active]
+      cursor.classList.remove('hidden')
+      cursor.style.left = `${point.x}%`
+      dots.forEach((dot, position) => {
+        const y = point.y[position]
+        dot.hidden = y === null
+        if (y !== null) dot.style.top = `${y}%`
+      })
+      label.textContent = point.tip.title
+      values.forEach((value, position) => {
+        value.textContent = point.tip.lines?.[position]?.value ?? ''
+      })
+      const box = plot.getBoundingClientRect()
+      const highest = Math.min(...point.y.filter((y) => y !== null))
+      const anchorY = box.top + (box.height * (Number.isFinite(highest) ? highest : 0)) / 100
+      showTip(point.tip, event?.pointerType === 'mouse' ? event.clientX : box.left + (box.width * point.x) / 100, anchorY)
+    }
+    const hide = () => {
+      shown = false
+      cursor.classList.add('hidden')
+      label.textContent = resting.label
+      values.forEach((value, position) => {
+        value.textContent = resting.values[position]
+      })
+      hideTip()
+    }
+    const fromPointer = (event: PointerEvent) => {
+      const box = plot.getBoundingClientRect()
+      show(Math.round(((event.clientX - box.left) / box.width) * (points.length - 1)), event)
+    }
+
+    plot.addEventListener('pointermove', fromPointer)
+    plot.addEventListener('pointerdown', fromPointer)
+    plot.addEventListener('pointerleave', (event) => {
+      if (event.pointerType === 'mouse') hide()
+    })
+    // A tap elsewhere puts away a tapped crosshair.
+    document.addEventListener('pointerdown', (event) => {
+      if (shown && !plot.contains(event.target as Node)) hide()
+    })
+    plot.addEventListener('focus', () => show(active))
+    plot.addEventListener('blur', hide)
+    plot.addEventListener('keydown', (event) => {
+      const moves: Record<string, number> = {
+        ArrowLeft: active - 1,
+        ArrowRight: active + 1,
+        Home: 0,
+        End: points.length - 1,
+      }
+      if (event.key === 'Escape') return hide()
+      if (!(event.key in moves)) return
+      event.preventDefault()
+      show(moves[event.key])
+    })
+  }
+
+  reveal('[data-traffic-curve]')
+</script>

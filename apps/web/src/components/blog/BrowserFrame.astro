@@ -1,0 +1,61 @@
+---
+// A page in a browser window: the tab title, the address bar and, when it
+// matters, the HTTP status, with the page itself in the slot. Use it when the
+// finding is what a visitor sees, such as a made-up address that shows the
+// homepage, or a tab title that says nothing about the page.
+import Exhibit from './Exhibit.astro'
+
+type Props = {
+  url: string
+  // The text in the browser tab, which is the page's <title>.
+  tab: string
+  // Shown at the end of the address bar, such as "200 OK".
+  status?: string
+  // Marks the status as a problem.
+  bad?: boolean
+  title?: string
+  caption?: string
+}
+
+const { url, tab, status, bad = false, title, caption } = Astro.props
+const host = new URL(url).host
+---
+
+<Exhibit title={title} caption={caption}>
+  <div class="overflow-hidden rounded-lg bg-background ring-1 ring-border" data-browser-frame>
+    <div class="flex items-end gap-2 bg-secondary px-3 pt-2" aria-hidden="true">
+      <span class="mb-2.5 flex gap-1.5">
+        <span class="size-2.5 rounded-full bg-foreground/15"></span>
+        <span class="size-2.5 rounded-full bg-foreground/15"></span>
+        <span class="size-2.5 rounded-full bg-foreground/15"></span>
+      </span>
+      <span class="flex min-w-0 max-w-64 items-center gap-2 rounded-t-md bg-background px-3 py-1.5 text-xs text-foreground">
+        <span class="grid size-4 shrink-0 place-items-center rounded-sm bg-muted text-[0.625rem] font-medium">{host.replace(/^www\./, '').slice(0, 1).toUpperCase()}</span>
+        <span class="truncate">{tab}</span>
+      </span>
+    </div>
+    <div class="flex items-center gap-2 border-b border-border px-3 py-2">
+      <p class="m-0 min-w-0 flex-1 truncate rounded-md bg-muted px-3 py-1 font-mono text-xs text-foreground-muted">{url}</p>
+      {
+        status ? (
+          <span class:list={['shrink-0 rounded px-1.5 py-0.5 text-xs font-medium tabular-nums', bad ? 'bg-destructive-soft text-destructive' : 'bg-primary-soft text-foreground']}>
+            {status}
+          </span>
+        ) : null
+      }
+    </div>
+    <p class="sr-only">Browser tab: {tab}. Address: {url}.{status ? ` Status: ${status}.` : ''}</p>
+    <div class="browser-page px-4 py-4 text-sm/6 text-foreground sm:px-6">
+      <slot />
+    </div>
+  </div>
+</Exhibit>
+
+<style>
+  .browser-page :global(> :first-child) {
+    margin-top: 0;
+  }
+  .browser-page :global(> :last-child) {
+    margin-bottom: 0;
+  }
+</style>

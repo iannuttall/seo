@@ -58,7 +58,7 @@
     ]
   },
   // Records the daily skills.sh install count, leaderboard places and search
-  // places.
+  // places, and refreshes Ian's X and YouTube follower counts.
   "triggers": { "crons": ["17 6 * * *"] },
   "d1_databases": [
     {

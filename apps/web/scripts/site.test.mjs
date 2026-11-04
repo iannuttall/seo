@@ -19,6 +19,11 @@ const { integrationPaths } = await import(
   resolve(appRoot, 'src/content/integrations.ts')
 )
 const { cmsPaths } = await import(resolve(appRoot, 'src/content/cms.ts'))
+const { publishedBlogPaths } = await import(
+  resolve(appRoot, 'src/content/blog-posts.mjs')
+)
+// /blog always builds; it joins the sitemap with the first published post.
+const blogPaths = publishedBlogPaths()
 const alternativePaths = [
   '/alternatives',
   ...readdirSync(resolve(appRoot, 'src/content/alternatives'))
@@ -57,6 +62,10 @@ const expectedPages = new Map([
     ...cmsPaths,
     ...alternativePaths,
   ].map((path) => [pagePath(path), `https://seoskill.dev${path}`]),
+  ['blog/index.html', 'https://seoskill.dev/blog'],
+  ...blogPaths
+    .filter((path) => path !== '/blog')
+    .map((path) => [pagePath(path), `https://seoskill.dev${path}`]),
   ['pricing/index.html', 'https://seoskill.dev/pricing'],
   ['about/index.html', 'https://seoskill.dev/about'],
   ['stats/index.html', 'https://seoskill.dev/stats'],
@@ -241,10 +250,16 @@ test('every content page has one deterministic Markdown alternative', () => {
       .length,
     0,
   )
-  // noindex pages keep their copy; the signed-in account page has none.
+  // noindex pages keep their copy; the signed-in account page has none. The
+  // blog index is noindex until a post is published.
   assert.deepEqual(
     manifest.pages.filter((page) => page.noindex).map((page) => page.htmlPath),
-    ['/cookies', '/privacy', '/terms'],
+    [
+      ...(blogPaths.length === 0 ? ['/blog'] : []),
+      '/cookies',
+      '/privacy',
+      '/terms',
+    ],
   )
   assert.equal(existsSync(resolve(dist, 'account.md')), false)
   assert.equal(representedHtml.length, manifest.pages.length)
@@ -319,9 +334,10 @@ test('sitemap is exact and contains only indexable canonical pages', () => {
         path === 'telemetry/index.html',
     )
     .map(([, canonical]) => canonical)
+  indexable.push(...blogPaths.map((path) => `https://seoskill.dev${path}`))
 
   assert.deepEqual(locations.sort(), indexable.sort())
-  assert.doesNotMatch(sitemap, /\/docs\/reports\/|\/docs\/commands|\/blog/)
+  assert.doesNotMatch(sitemap, /\/docs\/reports\/|\/docs\/commands/)
   assert.match(
     readFileSync(resolve(dist, 'robots.txt'), 'utf8'),
     /Sitemap: https:\/\/seoskill\.dev\/sitemap\.xml/,
@@ -420,4 +436,66 @@ test('well-known discovery publishes canonical skills with verified digests', ()
   assert.match(headers, /Access-Control-Allow-Origin: \*/)
   assert.match(headers, /Cache-Control: public, max-age=300, must-revalidate/)
   assert.match(headers, /X-Content-Type-Options: nosniff/)
+})
+
+test('the AI slop post marks only what seo lint flags as an AI pattern', async () => {
+  // The post loads as an AI draft and names the seo lint rule behind each
+  // edit. Rebuild that draft from the <Fix> tags and lint it, so the post
+  // never claims a rule the linter does not fire, never marks a copy or
+  // style rule as AI slop, and never leaves a flagged line unmarked.
+  const { LINT_RULES, lintText } = await import(
+    resolve(repoRoot, 'packages/core/dist/lint/index.js')
+  )
+  const aiRules = new Set(
+    LINT_RULES.filter((rule) => rule.family === 'ai').map((rule) => rule.id),
+  )
+  const source = readFileSync(
+    resolve(appRoot, 'src/content/blog/ai-slop.mdx'),
+    'utf8',
+  )
+  const fixes = []
+  let draft = ''
+  let last = 0
+  for (const match of source.matchAll(
+    /<Fix rule="([^"]+)" slop="([^"]*)"\s*(?:\/>|>[\s\S]*?<\/Fix>)/g,
+  )) {
+    draft += source.slice(last, match.index)
+    fixes.push({
+      rule: match[1],
+      start: draft.length,
+      end: draft.length + match[2].length,
+    })
+    draft += match[2]
+    last = match.index + match[0].length
+  }
+  draft += source.slice(last)
+  assert.ok(fixes.length >= 20)
+
+  const lineStarts = [0]
+  for (let i = 0; i < draft.length; i++) {
+    if (draft[i] === '\n') lineStarts.push(i + 1)
+  }
+  const findings = lintText(draft, { format: 'mdx' }).findings.map((item) => {
+    const start = lineStarts[item.line - 1] + item.column - 1
+    return { ...item, start, end: start + item.excerpt.length }
+  })
+  const overlaps = (a, b) => a.start < b.end && a.end > b.start
+
+  const problems = []
+  for (const fix of fixes) {
+    const text = draft.slice(fix.start, fix.end)
+    if (!aiRules.has(fix.rule)) problems.push(`not an AI rule: ${fix.rule}`)
+    if (
+      !findings.some((item) => item.rule === fix.rule && overlaps(item, fix))
+    ) {
+      problems.push(`${fix.rule} does not fire on "${text}"`)
+    }
+  }
+  for (const item of findings) {
+    if (!fixes.some((fix) => overlaps(item, fix))) {
+      problems.push(`unmarked ${item.rule}: "${item.excerpt}"`)
+    }
+  }
+  assert.deepEqual(problems, [])
+  assert.equal(lintText(source, { format: 'mdx' }).errors, 0)
 })

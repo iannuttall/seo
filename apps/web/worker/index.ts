@@ -14,6 +14,7 @@ import {
   signupSources,
   type Traffic,
 } from './discovery.ts'
+import { founderCounts, refreshFounderCounts } from './founder.ts'
 import { applyDailyToolQuota } from './tools/daily-tool-quota.ts'
 import { handleDomainAge } from './tools/domain-age.ts'
 import { handleFaviconCheck } from './tools/favicon-checker.ts'
@@ -807,6 +808,35 @@ async function handleStats(
   }
 }
 
+// Ian's follower counts for the founder badge and the About page. They
+// change once a day, so each Cloudflare location keeps them for six hours.
+async function handleFounder(
+  request: Request,
+  env: Env,
+  ctx: { waitUntil(promise: Promise<unknown>): void },
+): Promise<Response> {
+  if (request.method !== 'GET') {
+    return jsonResponse({ error: 'Method not allowed' }, 405)
+  }
+  const cacheKey = new Request(new URL('/api/founder?v=1', request.url), {
+    method: 'GET',
+  })
+  const cached = await caches.default.match(cacheKey)
+  if (cached) return cached
+  try {
+    const counts = await founderCounts(env.TELEMETRY_DB)
+    const response = jsonResponse(
+      counts,
+      200,
+      'public, max-age=3600, s-maxage=21600',
+    )
+    ctx.waitUntil(caches.default.put(cacheKey, response.clone()))
+    return response
+  } catch {
+    return jsonResponse({ error: 'Counts are temporarily unavailable' }, 503)
+  }
+}
+
 export const app = new Hono<{ Bindings: Env }>()
 
 app.use('/api/tools/*', async (context, next) => {
@@ -822,6 +852,9 @@ app.all('/api/t', (context) =>
 )
 app.all('/api/stats', (context) =>
   handleStats(context.req.raw, context.env, context.executionCtx),
+)
+app.all('/api/founder', (context) =>
+  handleFounder(context.req.raw, context.env, context.executionCtx),
 )
 app.all('/api/tools/llms-txt', (context) => handleLlmsTxtFetch(context.req.raw))
 app.all('/api/tools/sitemap', (context) => handleSitemapImport(context.req.raw))
@@ -871,5 +904,6 @@ export default {
   fetch: app.fetch,
   async scheduled(_controller, env, ctx) {
     ctx.waitUntil(recordSkills(env))
+    ctx.waitUntil(refreshFounderCounts(env).catch(() => undefined))
   },
 } satisfies ExportedHandler<Env>

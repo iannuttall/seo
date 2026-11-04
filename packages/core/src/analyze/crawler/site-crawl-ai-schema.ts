@@ -22,6 +22,8 @@ export const crawlAiSignalsSchema = z.object({
       exists: z.boolean(),
       availability: crawlAiAvailabilitySchema,
       status: z.number().int().optional(),
+      contentType: z.string().optional(),
+      servesHtml: z.boolean().optional(),
       error: z.string().optional(),
       sitemapUrls: z.array(z.string().url()),
       contentSignals: z.array(z.string()).optional(),
@@ -42,6 +44,8 @@ export const crawlAiSignalsSchema = z.object({
       exists: z.boolean(),
       availability: crawlAiAvailabilitySchema.optional(),
       status: z.number().int().optional(),
+      contentType: z.string().optional(),
+      servesHtml: z.boolean().optional(),
       error: z.string().optional(),
       links: z
         .object({

@@ -37,7 +37,7 @@ import {
   type CrawlSiteDependencies,
   resolveCrawlSiteDependencies,
 } from './site-crawl-dependencies.js'
-import { sitemapSeeds } from './sitemap-discovery.js'
+import { sitemapHostIssues, sitemapSeeds } from './sitemap-discovery.js'
 
 type CrawlTask = CrawlUrlQueueItem & {
   promise: Promise<{
@@ -297,9 +297,13 @@ export async function crawlSite(
       emitStatus('url_queued', { url: normalized, depth })
     }
 
+    // Explicit seeds keep their redirect target, e.g. an apex to www hop.
+    const seedUrls = new Set<string>()
     if (config.mode !== 'sitemap') {
       const seeds = config.mode === 'list' ? config.urls : [config.url]
       for (const seed of seeds) {
+        const normalized = normalizeUrl(seed, config.url)
+        if (normalized) seedUrls.add(normalized)
         enqueue(seed, 0)
       }
     }
@@ -493,6 +497,17 @@ export async function crawlSite(
           url: task.url,
           depth: task.depth,
           reason: 'invalid_final_url',
+        })
+        continue
+      }
+      if (!sameOrigin(finalUrl, origin) && !seedUrls.has(task.url)) {
+        // A redirect may not widen the crawl scope that links obey. The
+        // request evidence stays; the off-origin destination is not a page.
+        recordSkip('off-origin')
+        emitStatus('url_skipped', {
+          url: finalUrl,
+          depth: task.depth,
+          reason: 'off_origin_redirect',
         })
         continue
       }
@@ -842,6 +857,9 @@ export async function crawlSite(
       ...(siteCheckResult ? { siteChecks: siteCheckResult.checks } : {}),
       additionalIssues: [
         ...(siteCheckResult?.issues ?? []),
+        ...(sitemapDiscovery
+          ? sitemapHostIssues(sitemapDiscovery, config.url)
+          : []),
         ...(ai ? agentReadyIssues({ startUrl: config.url, ai, pages }) : []),
       ],
       status: reportStatus,

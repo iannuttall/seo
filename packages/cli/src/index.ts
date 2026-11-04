@@ -23,12 +23,15 @@ import { authCommand } from './commands/auth.js'
 import { cacheCommand } from './commands/cache.js'
 import { contentCommand } from './commands/content.js'
 import {
+  aiAccessCommand,
   compareCommand,
   dataCommand,
   indexCommand,
+  lintCommand,
   pageCommand,
   reportCommand,
   researchCommand,
+  socialPostsCommand,
 } from './commands/core-commands.js'
 import { crawlCommand } from './commands/crawl.js'
 import { gscQueryCommand, urlInspectCommand } from './commands/data.js'
@@ -127,6 +130,15 @@ const helpSections: HelpSection[] = [
       ['seo data', 'Raw Search Console, Bing or Clicky rows'],
       ['seo crawl', 'Crawl a site and list technical issues'],
       ['seo internal-links', 'Pages that could link to a target page'],
+      [
+        'seo ai-access <url>',
+        'What GPTBot, ClaudeBot and others get from a page',
+      ],
+      [
+        'seo social-posts <handle>',
+        "Someone's X posts with their public numbers",
+      ],
+      ['seo lint <files>', 'Check copy for AI writing patterns and length'],
       [
         'seo site new <folder>',
         'Start a data-driven site on Astro and Cloudflare',
@@ -243,6 +255,9 @@ const main = defineCommand({
     index: indexCommand,
     data: dataCommand,
     research: researchCommand,
+    'ai-access': aiAccessCommand,
+    'social-posts': socialPostsCommand,
+    lint: lintCommand,
     reports: reportCatalogCommand,
     'segment-impact': segmentImpactCommand,
     'striking-distance': strikingDistanceCommand,

@@ -2,6 +2,7 @@ import { founder, site } from './site'
 
 export type PageSchemaType =
   | 'AboutPage'
+  | 'BlogPosting'
   | 'CollectionPage'
   | 'TechArticle'
   | 'WebPage'
@@ -17,6 +18,9 @@ export interface PageSchemaInput {
   dateModified?: string
   datePublished?: string
   description: string
+  // The title without the brand, and the share image, for article pages.
+  headline?: string
+  image?: string
   title: string
   type?: PageSchemaType
 }
@@ -42,11 +46,21 @@ export function pageSchema(input: PageSchemaInput) {
     description: input.description,
     inLanguage: 'en',
     isPartOf: { '@id': ids.website },
-    about: { '@id': ids.software },
+    // A post is about the company it covers, not about SEO Skill.
+    ...(input.type === 'BlogPosting' ? {} : { about: { '@id': ids.software } }),
     creator: { '@id': ids.creator },
     publisher: { '@id': ids.creator },
     ...(canonical === new URL(site.url).toString()
       ? { mainEntity: { '@id': ids.software } }
+      : {}),
+    // Google reads headline, author and image on article pages.
+    ...(input.type === 'BlogPosting'
+      ? {
+          headline: input.headline ?? input.title,
+          author: { '@id': ids.creator },
+          mainEntityOfPage: canonical,
+          ...(input.image ? { image: input.image } : {}),
+        }
       : {}),
     ...(input.datePublished ? { datePublished: input.datePublished } : {}),
     ...(input.dateModified ? { dateModified: input.dateModified } : {}),

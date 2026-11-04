@@ -1,0 +1,62 @@
+---
+// A numbered plan drawn as a vertical timeline. Each step is a soft panel
+// that fades up as it scrolls into view, one after another. Every step is
+// as tall as the tallest, so the numbers sit at an even rhythm.
+// `marker` replaces the step number in the circle, such as "Day 3".
+type Step = { title: string; body: string; marker?: string }
+
+type Props = {
+  steps: Step[]
+}
+
+const { steps } = Astro.props
+const marked = steps.some((step) => step.marker)
+---
+
+<ol class="plan-steps mt-8 mb-10 grid auto-rows-fr">
+  {
+    steps.map((step, index) => (
+      <li class="plan-step relative flex gap-4 pb-3 last:pb-0" style={`--delay: ${Math.min(index, 3) * 90}ms; margin: 0`} data-plan-step>
+        <div class:list={['relative flex shrink-0 flex-col items-center justify-center', marked ? 'w-16' : 'w-8']} aria-hidden="true">
+          {index > 0 ? <span class="absolute top-0 bottom-1/2 w-0.5 bg-secondary-active" /> : null}
+          <span class:list={['relative z-10 flex h-8 items-center justify-center rounded-full bg-primary-soft font-medium whitespace-nowrap text-foreground tabular-nums', step.marker ? 'px-2.5 text-xs' : 'w-8 text-sm']}>
+            {step.marker ?? index + 1}
+          </span>
+          {index < steps.length - 1 ? <span class="absolute top-1/2 -bottom-3 w-0.5 bg-secondary-active" /> : null}
+        </div>
+        <div class="flex min-w-0 flex-1 flex-col justify-center rounded-lg bg-muted px-5 py-4">
+          <p class="text-base font-medium text-foreground">
+            {step.marker ? <><span class="sr-only">{step.marker}:</span>{' '}</> : null}
+            {step.title}
+          </p>
+          <p class="mt-1 text-[0.9375rem]/6 text-foreground-muted">{step.body}</p>
+        </div>
+      </li>
+    ))
+  }
+</ol>
+
+<style>
+  .plan-step {
+    transition:
+      opacity 500ms ease var(--delay),
+      transform 500ms cubic-bezier(0.22, 1, 0.36, 1) var(--delay);
+  }
+
+  :global(:root.motion) .plan-step:not([data-reveal='shown']) {
+    opacity: 0;
+    transform: translateY(12px);
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .plan-step {
+      transition: none;
+    }
+  }
+</style>
+
+<script>
+  import { reveal } from './reveal'
+
+  reveal('[data-plan-step]')
+</script>

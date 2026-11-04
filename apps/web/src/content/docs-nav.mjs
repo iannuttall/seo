@@ -103,6 +103,12 @@ export const docsSections = [
         description:
           'Find pages that could link to a page you choose. CLI only.',
       },
+      {
+        path: '/docs/lint',
+        label: 'seo lint',
+        description:
+          'Find lines in a draft, title or description that read as AI-written, with a fix for each.',
+      },
     ],
   },
   {

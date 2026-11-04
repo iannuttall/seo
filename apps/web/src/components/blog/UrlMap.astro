@@ -1,0 +1,86 @@
+---
+// A set of URLs and what happens to each one in the fix: kept, redirected
+// or changed. Each row shows the path, an action badge and, for a redirect,
+// where it goes. Rows slide in one after another as the map scrolls into view.
+import Exhibit from './Exhibit.astro'
+
+type Row = {
+  url: string
+  // Short words for the badge, such as "Keep" or "301".
+  action: string
+  tone?: 'keep' | 'change' | 'remove'
+  // Where a redirect points.
+  to?: string
+  note?: string
+}
+
+type Props = {
+  rows: Row[]
+  title?: string
+  caption?: string
+}
+
+const { rows, title, caption } = Astro.props
+
+const badges = {
+  keep: 'bg-primary text-primary-foreground',
+  change: 'bg-muted text-foreground',
+  remove: 'bg-destructive-soft text-destructive',
+}
+---
+
+<Exhibit title={title} caption={caption}>
+  <ol class="flex flex-col gap-1.5">
+    {
+      rows.map((row, index) => (
+        <li
+          class:list={['url-row rounded-md px-3 py-2.5', row.tone === 'keep' ? 'bg-primary-soft' : 'bg-background']}
+          style={`--delay: ${Math.min(index, 8) * 70}ms; margin: 0`}
+          data-url-row
+        >
+          <div class="flex items-start gap-3">
+            <span class:list={['mt-0.5 w-11 shrink-0 rounded py-0.5 text-center text-xs font-medium tabular-nums', badges[row.tone ?? 'change']]}>
+              {row.action}
+            </span>
+            <div class="min-w-0 flex-1">
+              <p class="font-mono text-xs/5 break-all text-foreground">{row.url}</p>
+              {row.to ? (
+                <p class="font-mono text-xs/5 break-all text-foreground-muted">
+                  <span aria-hidden="true">→</span>{' '}
+                  <span class="sr-only">redirects to</span>{' '}
+                  {row.to}
+                </p>
+              ) : null}
+              {row.note ? <p class="mt-1 text-sm/5 text-foreground-muted">{row.note}</p> : null}
+            </div>
+          </div>
+        </li>
+      ))
+    }
+  </ol>
+</Exhibit>
+
+<style>
+  .url-row {
+    transition:
+      opacity 400ms ease var(--delay),
+      transform 400ms cubic-bezier(0.22, 1, 0.36, 1) var(--delay);
+  }
+
+  :global(:root.motion) .url-row:not([data-reveal='shown']) {
+    opacity: 0;
+    transform: translateX(-8px);
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .url-row {
+      transition: none;
+    }
+  }
+</style>
+
+<script>
+  import { reveal } from './reveal'
+
+  reveal('[data-url-row]')
+</script>

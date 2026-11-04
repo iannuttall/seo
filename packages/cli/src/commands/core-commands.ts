@@ -4,6 +4,7 @@ import {
   localRefreshClicky,
   localResearchKeys,
   nodeCommandDeps,
+  readLintFiles,
   SeoError,
 } from '@seo/core'
 import {
@@ -15,22 +16,29 @@ import {
   ISSUE_MARKS,
   ISSUES_SECTION,
   type IssueMark,
+  LINT_FORMATS,
+  LINT_PRESETS,
+  type LintFormat,
+  type LintPreset,
   MAX_INSPECT_LIMIT,
   RESEARCH_ACTIONS,
   RESEARCH_PROVIDERS,
   type ResearchAction,
   type ResearchProvider,
+  runAiAccess,
   runAiAnswers,
   runAllSites,
   runBingReport,
   runBingRows,
   runClickyRows,
   runCompare,
+  runLint,
   runLostPages,
   runPage,
   runReport,
   runResearch,
   runRows,
+  runSocialPosts,
   SECTION_IDS,
   type SectionId,
 } from '@seo/core/commands'
@@ -610,5 +618,168 @@ export const researchCommand = defineCommand({
         },
       ),
     )
+  },
+})
+
+export const lintCommand = defineCommand({
+  meta: {
+    name: 'lint',
+    description:
+      'Check copy for patterns common in AI-written text, weak copy and title and description length',
+  },
+  args: {
+    paths: {
+      type: 'positional',
+      required: true,
+      description:
+        'Files, folders or globs: .md, .mdx, .html, .astro or .txt. Up to 100 files.',
+    },
+    preset: {
+      type: 'string',
+      description: `${LINT_PRESETS.join(', ')}. Default blog for Markdown and text, landing for HTML and Astro. meta reads one title or description per line.`,
+    },
+    format: {
+      type: 'string',
+      description: `${LINT_FORMATS.join(', ')}. Default: from each file name.`,
+    },
+    'fail-on': {
+      type: 'string',
+      description:
+        'error (default) or warning: exit with code 1 when a finding at that level or above is found.',
+    },
+    ignore: {
+      type: 'string',
+      description: 'Rule ids or review lenses to skip, comma-separated.',
+    },
+    'ignore-phrase': {
+      type: 'string',
+      description:
+        'A phrase to allow, such as a product name a rule keeps matching. Repeat it for more.',
+    },
+    json: common.json,
+  },
+  run: async ({ args }) => {
+    const preset = stringArg(args.preset)
+    if (preset && !LINT_PRESETS.includes(preset as LintPreset)) {
+      throw new SeoError(
+        'INVALID_INPUT',
+        `--preset is one of ${LINT_PRESETS.join(', ')}.`,
+      )
+    }
+    const format = stringArg(args.format)
+    if (format && !LINT_FORMATS.includes(format as LintFormat)) {
+      throw new SeoError(
+        'INVALID_INPUT',
+        `--format is one of ${LINT_FORMATS.join(', ')}.`,
+      )
+    }
+    const failOn = stringArg(args['fail-on']) ?? 'error'
+    if (failOn !== 'error' && failOn !== 'warning') {
+      throw new SeoError('INVALID_INPUT', '--fail-on is error or warning.')
+    }
+    const positionals = (args._ as unknown[] | undefined) ?? []
+    const paths = positionals.filter(
+      (value): value is string => typeof value === 'string',
+    )
+    const phrases = ([] as unknown[])
+      .concat(args['ignore-phrase'] ?? [])
+      .filter((value): value is string => typeof value === 'string')
+    try {
+      const result = await runLint(
+        {
+          paths,
+          preset: preset as LintPreset | undefined,
+          format: format as LintFormat | undefined,
+          ignoreRules: csvArg(args.ignore),
+          ignorePhrases: phrases,
+        },
+        (inputs) => readLintFiles(inputs),
+      )
+      if (jsonFlag(args)) printJson(result.data)
+      else process.stdout.write(`${result.text}\n`)
+      const { errors, warnings } = result.data as {
+        errors: number
+        warnings: number
+      }
+      if (errors > 0 || (failOn === 'warning' && warnings > 0)) {
+        process.exitCode = 1
+      }
+    } catch (error) {
+      throw localError(error)
+    }
+  },
+})
+
+export const aiAccessCommand = defineCommand({
+  meta: {
+    name: 'ai-access',
+    description:
+      'One URL fetched as a browser and as four AI bots, with robots.txt, llms.txt and Markdown copies',
+  },
+  args: {
+    url: {
+      type: 'positional',
+      required: true,
+      description: 'The page URL.',
+    },
+    json: common.json,
+  },
+  run: async ({ args }) => {
+    const url = stringArg(args.url) ?? ''
+    if (!/^https?:\/\/\S+$/.test(url)) {
+      throw new SeoError('INVALID_INPUT', 'The URL must be a full http(s) URL.')
+    }
+    try {
+      const result = await runAiAccess({ url })
+      if (jsonFlag(args)) printJson(result.data)
+      else process.stdout.write(`${result.text}\n`)
+    } catch (error) {
+      throw localError(error)
+    }
+  },
+})
+
+export const socialPostsCommand = defineCommand({
+  meta: {
+    name: 'social-posts',
+    description:
+      "One person's X posts with their public views, likes and other numbers, most viewed first",
+  },
+  args: {
+    handle: {
+      type: 'positional',
+      required: true,
+      description: 'The X handle, such as example or @example.',
+    },
+    posts: {
+      type: 'string',
+      description:
+        'Older post URLs or IDs to look up, comma separated (up to 50). The timeline only reaches back about two weeks.',
+    },
+    replies: {
+      type: 'boolean',
+      default: false,
+      description: "Include the account's replies.",
+    },
+    json: common.json,
+  },
+  run: async ({ args }) => {
+    const posts = ([] as unknown[])
+      .concat(args.posts ?? [])
+      .flatMap((value) =>
+        typeof value === 'string' ? value.split(/[\s,]+/) : [],
+      )
+      .filter(Boolean)
+    try {
+      const result = await runSocialPosts({
+        handle: stringArg(args.handle) ?? '',
+        posts,
+        replies: booleanArg(args.replies),
+      })
+      if (jsonFlag(args)) printJson(result.data)
+      else process.stdout.write(`${result.text}\n`)
+    } catch (error) {
+      throw localError(error)
+    }
   },
 })

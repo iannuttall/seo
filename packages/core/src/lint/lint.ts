@@ -1,0 +1,245 @@
+import { Context, type Hit, type ReviewHit, type RuleInfo } from './engine.js'
+import { defaultPreset, extract, lineOf } from './extract.js'
+import { PHRASE_RULES, runPhraseRules } from './rules-phrases.js'
+import { runSeoRules, SEO_RULES } from './rules-seo.js'
+import { runStructureRules, STRUCTURE_RULES } from './rules-structure.js'
+import {
+  type Block,
+  type Doc,
+  LINT_MAX_CHARS,
+  type LintFinding,
+  type LintOptions,
+  type LintResult,
+  type LintReview,
+} from './types.js'
+
+// Every rule, most specific first: when two AI-pattern rules match the same
+// words, the earlier one is reported.
+export const LINT_RULES: RuleInfo[] = [
+  ...Object.values(STRUCTURE_RULES),
+  ...PHRASE_RULES.map(
+    ({ id, family, level, presets, description }): RuleInfo => ({
+      id,
+      family,
+      level,
+      presets,
+      description,
+    }),
+  ),
+  ...Object.values(SEO_RULES),
+]
+
+export const LINT_REVIEW_LENSES: Record<string, string> = {
+  contrast: 'A ", not X" tail that may or may not be a needed correction.',
+  metaphor:
+    'A figure of speech that may not fit, such as a thing that "waits" or "wants".',
+  evidence: 'A superlative with no number or source nearby.',
+  'mic-drop': 'A short closing line that may only restate the paragraph.',
+  'swap-test':
+    'A headline or description that could sit on a competitor’s page unchanged.',
+  proof: 'A customer count or percentage that needs a source.',
+}
+
+const AI_RULES = new Set(
+  LINT_RULES.filter((rule) => rule.family === 'ai').map((rule) => rule.id),
+)
+
+function position(doc: Doc, block: Block, index: number) {
+  const offset = block.map[Math.min(index, block.map.length - 1)] ?? 0
+  const line = lineOf(doc.lineStarts, offset)
+  return { line: line + 1, column: offset - (doc.lineStarts[line] ?? 0) + 1 }
+}
+
+function excerpt(block: Block, start: number, end: number): string {
+  const text = block.text.slice(start, end).trim()
+  return text.length > 160 ? `${text.slice(0, 157).trimEnd()}...` : text
+}
+
+function overlaps(a: Hit | ReviewHit, b: Hit | ReviewHit) {
+  return a.block === b.block && a.start < b.end && b.start < a.end
+}
+
+// Two AI-pattern rules on the same words: keep the error, then the more
+// specific rule. Copy and SEO rules always stand on their own.
+function dedupe(hits: Hit[]): Hit[] {
+  const sorted = [...hits].sort(
+    (a, b) =>
+      (a.level === b.level ? 0 : a.level === 'error' ? -1 : 1) ||
+      a.rank - b.rank ||
+      a.start - b.start,
+  )
+  const kept: Hit[] = []
+  for (const hit of sorted) {
+    const clash = kept.some(
+      (other) =>
+        overlaps(hit, other) &&
+        (other.rule === hit.rule ||
+          (AI_RULES.has(hit.rule) && AI_RULES.has(other.rule))),
+    )
+    if (!clash) kept.push(hit)
+  }
+  return kept
+}
+
+const RAW_LEAKS =
+  /[?&]utm_source=(?:chatgpt|openai|copilot|claude|gemini|perplexity)(?:\.com|\.ai)?\b/gi
+
+export function lintText(text: string, options: LintOptions = {}): LintResult {
+  if (text.length > LINT_MAX_CHARS) {
+    throw new RangeError(
+      `The text is ${text.length.toLocaleString('en-US')} characters; the most one check reads is ${LINT_MAX_CHARS.toLocaleString('en-US')}.`,
+    )
+  }
+  const format = options.format ?? 'md'
+  const preset = options.preset ?? defaultPreset(format)
+  const doc = extract(text, format, preset)
+  const ctx = new Context(doc, preset, LINT_RULES)
+  runStructureRules(ctx)
+  runPhraseRules(ctx)
+  runSeoRules(ctx)
+
+  const ignored = new Set(options.ignoreRules ?? [])
+  const phrases = (options.ignorePhrases ?? [])
+    .map((phrase) => phrase.toLowerCase().trim())
+    .filter(Boolean)
+  const allowed = (rule: string, line: number, quote: string) => {
+    if (ignored.has(rule)) return false
+    const rules = doc.suppressed.get(line - 1)
+    if (rules === null) return false
+    if (rules?.has(rule)) return false
+    const lower = quote.toLowerCase()
+    return !phrases.some((phrase) => lower.includes(phrase))
+  }
+
+  const hits = dedupe(ctx.hits)
+  const findings: LintFinding[] = []
+  for (const hit of hits) {
+    const at = position(doc, hit.block, hit.start)
+    const quote = excerpt(hit.block, hit.start, hit.end)
+    if (!allowed(hit.rule, at.line, quote)) continue
+    findings.push({
+      rule: hit.rule,
+      level: hit.level,
+      line: at.line,
+      column: at.column,
+      excerpt: quote,
+      message: hit.message,
+      fix: hit.fix,
+    })
+  }
+  for (const found of text.matchAll(RAW_LEAKS)) {
+    const offset = found.index ?? 0
+    const line = lineOf(doc.lineStarts, offset)
+    if (!allowed('chatbot-residue', line + 1, found[0])) continue
+    findings.push({
+      rule: 'chatbot-residue',
+      level: 'error',
+      line: line + 1,
+      column: offset - (doc.lineStarts[line] ?? 0) + 1,
+      excerpt: found[0],
+      message: 'A link tagged by an AI assistant when it was copied.',
+      fix: 'Remove the utm_source parameter from the link.',
+    })
+  }
+
+  const review: LintReview[] = []
+  const seen = new Set<string>()
+  for (const item of ctx.reviews) {
+    if (hits.some((hit) => overlaps(item, hit))) continue
+    const at = position(doc, item.block, item.start)
+    const quote = excerpt(item.block, item.start, item.end)
+    const key = `${item.lens}:${at.line}:${at.column}`
+    if (seen.has(key) || !allowed(item.lens, at.line, quote)) continue
+    seen.add(key)
+    review.push({
+      lens: item.lens,
+      line: at.line,
+      column: at.column,
+      quote,
+      question: item.question,
+    })
+  }
+
+  const order = (
+    a: { line: number; column: number },
+    b: { line: number; column: number },
+  ) => a.line - b.line || a.column - b.column
+  findings.sort(
+    (a, b) =>
+      order(a, b) ||
+      a.rule.localeCompare(b.rule) ||
+      a.excerpt.localeCompare(b.excerpt),
+  )
+  review.sort(
+    (a, b) =>
+      order(a, b) ||
+      a.lens.localeCompare(b.lens) ||
+      a.quote.localeCompare(b.quote),
+  )
+  return {
+    format,
+    preset,
+    words: ctx.words,
+    errors: findings.filter((finding) => finding.level === 'error').length,
+    warnings: findings.filter((finding) => finding.level === 'warning').length,
+    findings,
+    review,
+  }
+}
+
+const plural = (count: number, word: string) =>
+  `${count.toLocaleString('en-US')} ${word}${count === 1 ? '' : 's'}`
+
+export type LintFileResult =
+  | { path: string; result: LintResult }
+  | { path: string; skipped: string }
+
+// The readable report for one or more files.
+export function lintReportText(files: LintFileResult[]): string {
+  const lines: string[] = []
+  let errors = 0
+  let warnings = 0
+  let reviews = 0
+  for (const file of files) {
+    if ('skipped' in file) {
+      lines.push(`${file.path}: not checked. ${file.skipped}`, '')
+      continue
+    }
+    const { result } = file
+    errors += result.errors
+    warnings += result.warnings
+    reviews += result.review.length
+    lines.push(
+      `${file.path} (${result.preset}, ${plural(result.words, 'word')}): ${plural(result.errors, 'error')}, ${plural(result.warnings, 'warning')}, ${result.review.length.toLocaleString('en-US')} to review`,
+    )
+    for (const finding of result.findings) {
+      lines.push(
+        `  ${finding.line}:${finding.column}  ${finding.level}  ${finding.rule}  "${finding.excerpt}"`,
+        `      ${finding.message}`,
+        `      Fix: ${finding.fix}`,
+      )
+    }
+    if (result.review.length) {
+      lines.push('  To review (your call):')
+      for (const item of result.review) {
+        lines.push(
+          `  ${item.line}:${item.column}  ${item.lens}  "${item.quote}"`,
+          `      ${item.question}`,
+        )
+      }
+    }
+    lines.push('')
+  }
+  const checked = files.filter((file) => 'result' in file).length
+  if (files.length > 1) {
+    lines.push(
+      `${plural(checked, 'file')} checked: ${plural(errors, 'error')}, ${plural(warnings, 'warning')}, ${reviews.toLocaleString('en-US')} to review.`,
+    )
+  }
+  if (reviews) {
+    lines.push(
+      'Errors and warnings each come with a fix. Review items are judgement calls: change a line only when it fails the question.',
+    )
+  }
+  return lines.join('\n').trimEnd()
+}

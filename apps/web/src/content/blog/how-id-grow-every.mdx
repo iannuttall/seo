@@ -1,0 +1,323 @@
+---
+title: How I'd grow Every with SEO, a full teardown
+description: An SEO teardown of Every, the AI media company behind Monologue and Cora. Where its Google traffic lands, what makes money and the fixes I'd ship.
+heading: How I'd grow Every
+lead: Every has one of the strongest sites in AI media, but most of its search traffic lands on pages that don't sell anything. This is how I'd send more of it to consulting, courses and the apps.
+date: '2026-11-04'
+company: Every
+x:
+  company: every
+draft: false
+---
+
+export const before6 = `<pre>&lt;head&gt;
+  &lt;title&gt;…&lt;/title&gt;
+&lt;/head&gt;
+&lt;body&gt;
+  …
+  &lt;link rel="canonical" …&gt;  ← too late
+</pre>`
+
+export const after6 = `<pre>&lt;head&gt;
+  &lt;title&gt;…&lt;/title&gt;
+  &lt;link rel="canonical" …&gt;
+&lt;/head&gt;
+&lt;body&gt;
+  …
+</pre>`
+
+export const before7 = `<pre>/source-code/stop-coding-and-start-planning
+  200 OK
+  canonical: itself
+
+/source-code/stop-coding-and-start-planning-be0b4fd1-…
+  200 OK
+  canonical: itself</pre>`
+
+export const after7 = `<pre>/source-code/stop-coding-and-start-planning
+  200 OK
+  canonical: itself
+
+/source-code/stop-coding-and-start-planning-be0b4fd1-…
+  301 Moved Permanently
+  → /source-code/stop-coding-and-start-planning</pre>`
+
+[Every](https://every.to/) is an AI media company. It publishes a daily newsletter and essays, sells a subscription, runs consulting for companies adopting AI, teaches cohort courses, and builds its own apps: Monologue, Cora, Spiral and Sparkle.
+
+So Every makes money five ways from one audience. It also has a site with a Domain Rating of 77 and about 7,800 linking sites. In this teardown I look at how to use that site to sell more consulting, courses and apps.
+
+## Most of Every's search traffic isn't buying anything
+
+Ahrefs estimates every.to gets about 17,100 visits from Google this month. This map shows where they land.
+
+<TrafficMap
+  caption="Estimated Google visits to every.to by kind of page, November 2026 (Ahrefs top pages). Blue pages sell something. Course pages get no measurable search traffic."
+  items={[
+    { label: "Searches for Every by name", value: 10033, tone: "brand", note: "The homepage and author pages" },
+    { label: "Typos and off-topic searches", value: 4703, tone: "waste", note: "Mostly \"hatgpt\", a typo of ChatGPT, and one essay ranking for adult chatbot searches" },
+    { label: "Essays, guides and podcasts", value: 1090, tone: "other" },
+    { label: "Consulting and newsletter sign-up", value: 907, tone: "sells", note: "870 of these land on the consulting page" },
+    { label: "Vibe Check model reviews", value: 305, tone: "other" },
+    { label: "App launch posts", value: 52, tone: "sells", note: "Posts introducing Spiral, Cora and Proof" },
+  ]}
+/>
+
+About 6% of those visits reach a page that sells something. Most of the rest come from people searching for Every by name, who would find it anyway, or from typos and off-topic searches.
+
+Every has had between about 8,600 and 45,000 visits a month from Google over the last year, depending on the month (Ahrefs estimates). The homepage is the steady part, at about 9,700 visits, nearly all from people searching for Every by name.
+
+The rest swings on a handful of pages. The clearest example is a podcast page called "Introducing How Do You Use ChatGPT?". In September it was the biggest page on the site after the homepage, at about 10,800 visits a month. Most of them came from people typing "hatgpt", a typo of ChatGPT.
+
+<VerticalBars
+  caption="Estimated monthly visits to one podcast page (Ahrefs). Typo traffic arrives quickly and leaves the same way."
+  unit="visits/month"
+  highlight={["November 2026"]}
+  data={[{"label": "September 2026", "value": 10845, "note": "Biggest page after the homepage, mostly searches for \"hatgpt\""}, {"label": "November 2026", "value": 2348}]}
+/>
+
+It's now down to about 2,300. Every lost very little, because someone who mistyped ChatGPT wasn't going to hire its consultants. For each part of the site below, I check whether its search traffic reaches a page that sells something.
+
+## AI consulting: one page ranks first, and the rest of the market is open
+
+Every Consulting helps companies adopt AI. It's the part of Every where one new client is worth more than thousands of subscribers, so it's where search traffic matters most.
+
+These are the biggest consulting searches in the US, with monthly volumes from Ahrefs.
+
+<KeywordTable
+  caption="Every ranks first for the biggest search and two others. It has no page for more than 10,000 other searches a month."
+  sortBy="volume"
+  columns={[{ key: 'keyword', label: 'Search', format: 'text' }, { key: 'volume', label: 'US searches', format: 'number' }, { key: 'difficulty', label: 'Difficulty', format: 'number', short: 'KD' }, { key: 'every', label: 'Every today', format: 'text' }]}
+  rows={[
+    { keyword: 'ai consulting', volume: 8500, difficulty: 38, every: '#1' },
+    { keyword: 'ai consulting services', volume: 5800, difficulty: 28, every: 'Not in top 100' },
+    { keyword: 'ai strategy consulting', volume: 3600, difficulty: 5, every: 'Not in top 100' },
+    { keyword: 'ai consulting company', volume: 2300, difficulty: 46, every: '#7' },
+    { keyword: 'ai consultants', volume: 1500, difficulty: 31, every: '#11' },
+    { keyword: 'ai consulting agency', volume: 1400, difficulty: 51, every: '#11' },
+    { keyword: 'generative ai consulting', volume: 1200, difficulty: 18, every: 'Not in top 100' },
+    { keyword: 'artificial intelligence consulting company', volume: 1100, difficulty: 50, every: '#1' },
+    { keyword: 'ai transformation consulting', volume: 800, difficulty: 17, every: '#10' },
+    { keyword: 'ai consulting firm', volume: 700, difficulty: 46, every: '#1' },
+  ]}
+/>
+
+Every's only consulting page has about 760 words and ranks first in the US for "ai consulting", the biggest search in the table. If one short page can do that, Every can also rank for the searches it has no page for yet.
+
+The biggest of those is "ai strategy consulting", with 3,600 searches a month and a difficulty of 5. These are the pages Google shows for it now.
+
+<SerpLadder
+  keyword="ai strategy consulting"
+  volume={3600}
+  target="every.to"
+  targetPosition={null}
+  caption="Results for &quot;ai strategy consulting&quot; (Ahrefs, US). Below BCG, it's a forum thread, a small consultancy, a LinkedIn post, a glossary and a Medium post."
+  rows={[
+    { position: 2, domain: 'bcg.com', dr: 91, tag: 'Consultancy' },
+    { position: 3, domain: 'reddit.com', dr: 95, tag: 'Forum thread' },
+    { position: 5, domain: 'quandarypeak.com', dr: 49, tag: 'Consultancy' },
+    { position: 6, domain: 'linkedin.com', dr: 99, tag: 'LinkedIn post' },
+    { position: 7, domain: 'thehackettgroup.com', dr: 75, tag: 'Glossary' },
+    { position: 8, domain: 'medium.com', dr: 94, tag: 'Blog post' },
+    { position: 10, domain: 'cgi.com', dr: 82, tag: 'Consultancy' },
+  ]}
+/>
+
+A forum thread and a Medium post on page one usually means no firm with real authority has written a good page for the search. Every has the authority, the client stories and the consultants to write one.
+
+"ai consulting services" (5,800) is harder: EY, BCG and IBM hold the top spots, with "top 10 AI consulting companies" lists in between. AI answers often quote those lists too. Every already appears in Google's AI Overview for "ai consulting company", next to McKinsey, BCG and IBM. To stay there, it needs to be named in the lists that rank.
+
+I'd turn consulting into a small hub: a page each for strategy, implementation and team training, each with a client story, linked from the main page. I'd leave the main page as it is, since it already ranks first.
+
+## Courses: compete where a small free site already ranks
+
+Every runs cohort camps for Claude Code, Cursor, Droid and compound engineering. Each run gets its own address and announcement post. The Claude Code camp has had at least three runs, at three different addresses, and Every's courses page sends people to a general events page.
+
+These are the course searches with the most volume, and the sites that rank for them.
+
+<KeywordTable
+  caption="Ahrefs, US. &quot;ai courses&quot; is a catalogue search won by sites with thousands of courses. The Claude Code searches are won by Anthropic, videos and one small independent site."
+  sortBy="volume"
+  columns={[{ key: 'keyword', label: 'Search', format: 'text' }, { key: 'volume', label: 'US searches', format: 'number' }, { key: 'difficulty', label: 'Difficulty', format: 'number', short: 'KD' }, { key: 'who', label: 'Who ranks', format: 'text' }, { key: 'compete', label: 'Can Every compete?', format: 'text', short: 'Every?' }]}
+  rows={[
+    { keyword: 'ai courses', volume: 7700, difficulty: 51, who: 'Coursera, Google, DataCamp, Harvard', compete: 'No' },
+    { keyword: 'claude code tutorial', volume: 2800, difficulty: 17, who: 'Anthropic, YouTube, a Substack post', compete: 'Yes' },
+    { keyword: 'compound engineering', volume: 1600, difficulty: 12, who: "Every's GitHub plugin, Every's guide", compete: 'Already does' },
+    { keyword: 'claude code course', volume: 1000, difficulty: 59, who: 'Anthropic, YouTube, Reddit', compete: 'Yes, below Anthropic' },
+    { keyword: 'learn claude code', volume: 1000, difficulty: 52, who: 'Anthropic, Reddit, freeCodeCamp', compete: 'Yes' },
+    { keyword: 'ai training for employees', volume: 500, difficulty: 16, who: 'HR and training vendors', compete: 'Yes' },
+  ]}
+/>
+
+I'd skip "ai courses". The sites that rank for it, such as Coursera and Harvard, list thousands of courses. Every has five camps, so it can't offer the catalogue those searchers want.
+
+Every has a much better chance with the Claude Code searches.
+
+<SerpLadder
+  keyword="claude code course"
+  volume={1000}
+  target="every.to"
+  targetPosition={null}
+  caption="Organic results for &quot;claude code course&quot; (Ahrefs, US). Videos also sit at position 2. The last result is a free course site with a Domain Rating of 32."
+  rows={[
+    { position: 1, domain: 'academy.claude.com', dr: 92, tag: 'Anthropic' },
+    { position: 3, domain: 'anthropic.skilljar.com', dr: 83, tag: 'Anthropic' },
+    { position: 4, domain: 'academy.claude.com', dr: 92, tag: 'Anthropic' },
+    { position: 5, domain: 'reddit.com', dr: 95, tag: 'Forum thread' },
+    { position: 7, domain: 'anthropic.skilljar.com', dr: 83, tag: 'Anthropic' },
+    { position: 9, domain: 'linkedin.com', dr: 99, tag: 'Course catalogue' },
+    { position: 10, domain: 'ccforeveryone.com', dr: 32, tag: 'Free course' },
+  ]}
+/>
+
+Anthropic's own academy holds the top spots. Below it are YouTube videos, Reddit threads and ccforeveryone.com, a free course site with a Domain Rating of 32. Every's DR is 77, it teaches the subject, and it has three cohorts of students. A permanent Claude Code course page, with reviews from past cohorts and the next start date, could rank just below Anthropic.
+
+The same page can answer "claude code tutorial" (2,800 searches, difficulty 17) with a free first lesson. A page for "ai training for employees" would help the consulting team as well as the courses team. HR and training vendors rank for that search now.
+
+## The model reviews are close to ranking
+
+Every's Vibe Check reviews of new AI models are one of its best-known series, and what someone searching for a new model wants to read. Their titles are written for the brand. They start with "Vibe Check:", and the GPT-5 review's title is just "GPT-5".
+
+People search for the model name. "gpt 5.6 sol" gets about 4,400 US searches a month, and Every's review already ranks seventh for "gpt sol". "claude vs chatgpt" gets 49,500.
+
+<SearchResult
+  caption="The GPT-5.6 Sol review in Google today, and with a title and description written for someone searching for the model. The page headline keeps the Vibe Check name."
+  before={{
+    url: "https://every.to/vibe-check/gpt-5-6-sol",
+    site: "Every",
+    title: "Vibe Check: GPT-5.6 Sol Is Our Favorite Model to Collaborate With",
+    // seo-lint-ignore dash (Every's own description, quoted as is)
+    description: "Sol is fast, resourceful, and unusually easy to steer—but Fable still gets the assignments we want to hand off completely",
+  }}
+  after={{
+    url: "https://every.to/vibe-check/gpt-5-6-sol",
+    site: "Every",
+    title: "GPT-5.6 Sol review: our favorite model to work with",
+    description: "Every's hands-on GPT-5.6 Sol review: fast, resourceful and easy to steer, and the jobs where we still hand work to Fable instead.",
+  }}
+/>
+
+I'd keep the Vibe Check name, because readers know it. I'd change the title tag that Google shows and name the model in the first paragraph and the subheadings. Then I'd add a hub page for each model family (GPT, Claude, Gemini) that links to every review, so each new review gets a link from the hub on the day it's published.
+
+## Every's links go to the wrong pages
+
+I only found this because I crawled every.to for links to Every's other sites.
+
+I crawled 600 every.to pages and pulled out every link to Every's own apps. There are a lot of them, because the newsletter template promotes the products.
+
+<CompareBars
+  caption="Links from 600 crawled every.to pages to Every's own apps. The other 28 go to app logins, changelogs and a few feature pages. None goes to a comparison or use-case page."
+  unit="links"
+  keepOrder
+  highlight={["Cora homepage", "Sparkle homepage", "Monologue homepage", "Spiral homepage"]}
+  rows={[{"label": "Cora homepage", "value": 449, "note": "Already ranks for its own name"}, {"label": "Sparkle homepage", "value": 440, "note": "Already ranks for its own name"}, {"label": "Monologue homepage", "value": 278, "note": "Its comparison pages get no links"}, {"label": "Spiral homepage", "value": 178, "note": "Already ranks for its own name"}, {"label": "Every other product URL combined", "value": 28, "note": "App logins, changelogs and a few feature pages"}]}
+/>
+
+Nearly all of these 1,300 links go to four homepages that already rank for their own names, and the link text is just the product name. Monologue has comparison pages against Wispr Flow and Superwhisper that get no links at all. Four posts also link to monologue.co, a parked domain, which looks like a typo for monologue.to. The [Monologue teardown](/blog/how-id-grow-monologue) lists them.
+
+Most of these links come from the newsletter template, so changing the template fixes them in every post at once. I'd point each product mention at the page that sells to that reader, with link text that says what's there ("dictation app for Mac", "AI email assistant").
+
+## Three technical fixes, closest to revenue first
+
+The crawl found three technical issues. I've put them in order of how close each one is to revenue, so the first one isn't the one that affects the most pages.
+
+### 1. The guides send their canonical tag too late
+
+A canonical tag tells Google which address is the main copy of a page. [Google only reads it in the head](https://developers.google.com/search/docs/crawling-indexing/consolidate-duplicate-urls) of the HTML. On every guide I tested, the tag arrives in the body, so Google ignores it and picks a main copy on its own. Ordinary posts are fine (22 of 22 tested).
+
+<BeforeAfter
+  caption="Where the canonical tag sits in the HTML of a guide page, compared with an ordinary post."
+  before={{ label: "Guide page", html: before6 }}
+  after={{ label: "Ordinary post", html: after6 }}
+/>
+
+Guides are the evergreen pages most likely to rank and to link to products, so they're the pages where this matters most.
+
+**The fix:** output the canonical tag in the head of the guide template, as the post template already does. It should hold the full address of the page itself, such as `https://every.to/guides/compound-engineering`. Then check one guide in Search Console's URL Inspection, where the "User-declared canonical" should show that address.
+
+### 2. Compound Engineering has four pages
+
+Four every.to pages cover the same idea. The guide ranks second or third for "compound engineering" (1,600 US searches a month). The other three split the links that could push it to first, and Google has to work out which one to show.
+
+<UrlMap
+  caption="The four Compound Engineering pages and what I'd do with each. All four return the page today, and each names itself as the canonical."
+  rows={[
+    { url: "/guides/compound-engineering", action: "Keep", tone: "keep", note: "The page that ranks. Move anything newer from the other pages into it." },
+    { url: "/source-code/compound-engineering-the-definitive-guide", action: "301", to: "/guides/compound-engineering", note: "A second guide on the same subject." },
+    { url: "/chain-of-thought/compound-engineering-how-every-codes-with-agents", action: "Keep", note: "The original essay. Keep it, and link to the guide in its first paragraph." },
+    { url: "/source-code/compound-engineering-how-every-codes-with-agents-af3a1bae-…", action: "301", to: "/chain-of-thought/compound-engineering-how-every-codes-with-agents", note: "A copy of the essay at a second address. Fix 3 covers these." },
+  ]}
+/>
+
+**The fix:** one page for each search. Merge the definitive guide into the guide and redirect it there with a permanent (301) redirect. Keep the original essay, since it has its own links and history, and have it send readers on to the guide. Then update the internal links and the sitemap so they only list the pages that stay.
+
+### 3. 72 posts are published twice
+
+Each of these posts has a twin: the same address with a long ID on the end. Both addresses return the full post, both name themselves as the canonical, and both are in the sitemap. So Google sees two equal pages and splits the links between them.
+
+<BeforeAfter
+  caption="What a visitor or Googlebot gets from each address, today and after the fix."
+  before={{ label: "Today", html: before7 }}
+  after={{ label: "After the fix", html: after7 }}
+/>
+
+**The fix:** a permanent (301) redirect from every ID address to the clean one, set up as one pattern rule on the server or CDN. The sitemap and internal links should list only the clean addresses. If the CMS needs the ID addresses for previews, they can stay, as long as each one redirects for everyone else. Some republished posts also have "-rerun" copies. For those, I'd update the original post and its date, or point the rerun's canonical tag at the original.
+
+## Ship it all today, then let it settle
+
+Teardowns like this usually end with a four-week plan, with the links in week one, the consulting pages in week two and so on. With coding agents, I'd start all of it on the same day.
+
+Each fix above is a separate job with a clear end, so six agents can work on them at once:
+
+<PlanSteps
+  steps={[{"title": "Product links", "body": "Change the newsletter template so each product mention links to the page that sells it, with descriptive link text. Fix the monologue.co links."}, {"title": "Guide canonicals", "body": "Make guides send the canonical in the head, like posts already do."}, {"title": "Consulting hub", "body": "Draft strategy, implementation and team training pages from the existing consulting page and client stories, for the team to edit."}, {"title": "Course page", "body": "One permanent Claude Code course page that past and future cohorts point to, plus a courses hub."}, {"title": "Model reviews", "body": "Model-first title tags on Vibe Checks, and a hub page per model family."}, {"title": "Duplicates", "body": "Redirect the ID-suffixed copies and merge the Compound Engineering versions."}]}
+/>
+
+Someone at Every still needs to review the consulting copy, the course page and the client stories, because they know the business. The link, canonical, title and redirect changes need only a quick check.
+
+Then I'd spend 30 days checking the results:
+
+<PlanSteps
+  steps={[{"marker": "Day 0", "title": "Ask Google to recrawl", "body": "Submit every new and changed URL to Index My Site, so Google recrawls them now instead of on its own schedule."}, {"marker": "Day 3", "title": "Check indexing", "body": "Confirm the new pages are indexed and the guides now send the canonical in the head."}, {"marker": "Day 7", "title": "First impressions", "body": "Look for impressions on \"ai strategy consulting\" and \"claude code course\" in Search Console."}, {"marker": "Day 14", "title": "Product clicks", "body": "Check clicks from every.to links to the product pages in analytics. Those clicks are the first sign of new revenue."}, {"marker": "Day 30", "title": "Enquiries and sign-ups", "body": "Compare consulting enquiries and course sign-ups from search with the month before."}]}
+/>
+
+## Get the changes seen quickly
+
+Almost everything above changes pages that Google has already crawled. Google comes back on its own schedule, which for older posts can be weeks. I'd submit every changed and new URL to [Index My Site](https://indexmysite.app/) as it ships. That matters most for the retitled reviews, the merged Compound Engineering guide and the redirected duplicates, where Google needs to see the change before anything moves.
+
+## How I ran this
+
+Everything in this teardown came from SEO Skill, run by an agent. You can run the same audit on your own site.
+
+**1. Connect the hosted MCP server.** It's free. You sign in with Google, and there's no password and nothing to install. In Claude Code:
+
+```sh
+claude mcp add --transport http seoskill https://seoskill.dev/mcp
+```
+
+Codex, Cursor and Claude on the web work too. The [MCP guide](/docs/mcp) has the steps for each one.
+
+**2. Add a research key.** On your [account page](/account), save an Ahrefs or DataForSEO key. The key gives your agent search volumes, rankings and results pages, like the tables above.
+
+**3. Install the CLI for crawling.** The crawl runs on your machine, so it can read any site:
+
+```sh
+npm i -g seo
+seo login
+```
+
+**4. Ask your agent.** This is close to the prompt I used:
+
+```text
+Audit example.com and every site we own.
+Crawl each one with seo crawl. Find where our sites
+link to each other and which pages those links hit.
+Use seo_research to find the searches our buyers
+make, who ranks for them and whether we can compete.
+Rank every fix by how close it sits to revenue.
+```
+
+On your own site, the hosted server adds the part I couldn't see from the outside: your real Search Console clicks and queries. With those, you get measured numbers where this post has estimates.
+
+If you have more than one product, crawl the main site too and look at where it links to the others. The cheapest fixes in this teardown came from those links.
+
+If you're at Every, I'm happy to talk any of this through. And if you'd like the same teardown for your company, [SEO Skill](/) will run it for you.

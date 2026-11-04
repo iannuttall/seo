@@ -10,6 +10,7 @@ import {
   localResearchKeys,
   MAX_MAX_PAGES,
   nodeCommandDeps,
+  readLintFiles,
   resolveLocalSite,
   SeoError,
   type TelemetryOptions,
@@ -109,6 +110,7 @@ export function registerSharedTools(
     signIn: LOCAL_SIGN_IN.signIn,
     connect:
       'run `seo login` to use your seoskill.dev account (Google, Bing and keys in one place), or `seo auth login`, `seo providers bing connect` and `seo providers dataforseo connect` or `seo providers ahrefs connect` on this machine only.',
+    readFiles: (paths: string[]) => readLintFiles(paths),
   }
   for (const shared of SHARED_TOOLS) {
     server.registerTool(

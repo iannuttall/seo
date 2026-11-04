@@ -1,0 +1,21 @@
+---
+// One edit in a post that loads as an AI draft (SlopDemo). The children are
+// the clean words, the page's real text. `slop` is the draft's text for the
+// same spot, kept in an attribute and drawn by CSS only while the draft or
+// the diff shows, so it is never page text for search engines or the
+// Markdown copy. `rule` names the seo lint rule that flags the slop. Leave
+// the children out to delete the slop with no replacement.
+type Props = {
+  rule: string
+  slop: string
+}
+
+const { rule, slop } = Astro.props
+// Curly quotes, to match the Markdown text around it.
+const draft = slop
+  .replace(/(^|[\s(])"/g, '$1\u201c')
+  .replace(/"/g, '\u201d')
+  .replace(/'/g, '\u2019')
+---
+
+<span class="slop-fix" data-rule={rule} data-slop={draft}><span class="slop-new"><slot /></span></span>

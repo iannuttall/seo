@@ -20,6 +20,12 @@
   <url><loc>https://seoskill.dev/guides</loc></url>
   <url><loc>https://seoskill.dev/guides/astro-seo</loc></url>
   <url><loc>https://seoskill.dev/guides/nextjs-seo</loc></url>
+  <url><loc>https://seoskill.dev/blog</loc></url>
+  <url><loc>https://seoskill.dev/blog/ai-slop</loc></url>
+  <url><loc>https://seoskill.dev/blog/how-id-grow-amp</loc></url>
+  <url><loc>https://seoskill.dev/blog/how-id-grow-bens-bites</loc></url>
+  <url><loc>https://seoskill.dev/blog/how-id-grow-every</loc></url>
+  <url><loc>https://seoskill.dev/blog/how-id-grow-monologue</loc></url>
   <url><loc>https://seoskill.dev/tools</loc></url>
   <url><loc>https://seoskill.dev/tools/google-algorithm-update-checker</loc></url>
   <url><loc>https://seoskill.dev/tools/competitor-keyword-research</loc></url>
@@ -62,6 +68,7 @@
   <url><loc>https://seoskill.dev/docs/data</loc></url>
   <url><loc>https://seoskill.dev/docs/crawl</loc></url>
   <url><loc>https://seoskill.dev/docs/internal-links</loc></url>
+  <url><loc>https://seoskill.dev/docs/lint</loc></url>
   <url><loc>https://seoskill.dev/docs/privacy</loc></url>
   <url><loc>https://seoskill.dev/integrations</loc></url>
   <url><loc>https://seoskill.dev/integrations/google-search-console</loc></url>

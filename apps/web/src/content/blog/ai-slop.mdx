@@ -24,7 +24,7 @@ Readers spot slop fast because models repeat the same habits. This post covers t
 
 ## The patterns that give AI slop away
 
-These are the patterns [seo lint](/docs/lint) checks for, with the name of the rule it reports. Each one is common in AI drafts and much rarer in careful human writing. <Fix rule="pithy-fragment" slop="Simple, but powerful." />
+These are the patterns [`seo lint`](/docs/lint) checks for, with the name of the rule it reports. Each one is common in AI drafts and much rarer in careful human writing. <Fix rule="pithy-fragment" slop="Simple, but powerful." />
 
 | Pattern | Example | Rule |
 | --- | --- | --- |
@@ -42,7 +42,7 @@ These are the patterns [seo lint](/docs/lint) checks for, with the name of the r
 
 ### "It isn't X, it's Y"
 
-The most recognisable pattern sets up a claim nobody made so the writer can knock it down: "This isn't a newsletter, it's a movement." A close cousin tacks a contrast such as "not in 600 posts" onto the end of a plain sentence for drama. <Fix rule="self-answered-question" slop="The fix? Say">Say</Fix> the positive claim on its own. When the contrast is a real correction, keep it (seo lint lists those as questions for you to judge instead of errors).
+The most recognisable pattern sets up a claim nobody made so the writer can knock it down: "This isn't a newsletter, it's a movement." A close cousin tacks a contrast such as "not in 600 posts" onto the end of a plain sentence for drama. <Fix rule="self-answered-question" slop="The fix? Say">Say</Fix> the positive claim on its own. When the contrast is a real correction, keep it (`seo lint` lists those as questions for you to judge instead of errors).
 
 ### Verbless fragments
 
@@ -64,11 +64,11 @@ Openers such as "In today's fast-paced world" could start any article, and close
 
 The em dash became the best-known sign of AI writing in 2025, and it was always a weak one. Writers used dashes long before chatbots, and in November 2025 OpenAI said [ChatGPT now follows a custom instruction to stop using them](https://techcrunch.com/2025/11/14/openai-says-its-fixed-chatgpts-em-dash-problem/). A draft with no dashes can still be pure slop, and a dash on its own <Fix rule="hedge-stack" slop="could potentially mean anything">proves nothing</Fix>.
 
-seo lint flags dashes with its `dash` rule. That rule enforces this site's style guide, which bans dashes, and it sits with the copy rules instead of the AI patterns.
+`seo lint` flags dashes with its `dash` rule. That rule enforces this site's style guide, which bans dashes, and it sits with the copy rules instead of the AI patterns.
 
 ## What a flagged line can prove
 
-A flagged line means the sentence has a shape that AI drafts use a lot. It does not mean a model wrote it. <Fix rule="stranded-negation" slop="Does seo lint know who wrote it? It doesn't.">seo lint never guesses who wrote a page.</Fix> Each finding names the pattern, quotes the words and suggests a fix, so the decision stays with <Fix rule="contrast-reframe" slop="you, not with the tool.">you.</Fix>
+A flagged line means the sentence has a shape that AI drafts use a lot. It does not mean a model wrote it. <Fix rule="stranded-negation" slop="Does seo lint know who wrote it? It doesn't.">`seo lint` never guesses who wrote a page.</Fix> Each finding names the pattern, quotes the words and suggests a fix, so the decision stays with <Fix rule="contrast-reframe" slop="you, not with the tool.">you.</Fix>
 
 <Fix rule="copula-avoidance" slop="Accuracy stands as the cornerstone of the whole project." /> Before a rule ships, it runs against 287 labelled AI-style sentences and 221 sentences people wrote. A rule that gives any of the human sentences an error is downgraded to a question for a reader to judge. That is also why passive voice is not a rule at all: people use it too often for it to mean anything.
 
@@ -80,9 +80,9 @@ A low false positive rate still means some false positives. Run a detector over 
 
 A correct verdict also tells you less than it seems. Most published writing now has AI somewhere in the process. A person may have picked the topic and the angle, gathered the data, cut half the draft and checked every claim, while a model wrote most of the sentences. A detector can tell you a model did the typing. It can't tell you whether anyone thought about the reader.
 
-That is the question that decides whether a page is slop. Someone landed on it because they needed something. Can they tell what it is, why they would want it and how it helps them? AI can help write a page that does all three. The patterns in this post are the spots where a draft drifted away from that reader, which is why seo lint looks for them.
+That is the question that decides whether a page is slop. Someone landed on it because they needed something. Can they tell what it is, why they would want it and how it helps them? AI can help write a page that does all three. The patterns in this post are the spots where a draft drifted away from that reader, which is why `seo lint` looks for them.
 
-## Check your own copy with seo lint
+## Check your own copy with `seo lint`
 
 <Fix rule="cliche" slop="Ready to take your writing to the next level?" /> The quickest way is to let your agent check its own work. Add the hosted MCP server to your agent and ask for the check whenever it writes something. The server signs you in with Google the first time, because its other tools read your Search Console data. In Claude Code:
 
@@ -114,7 +114,7 @@ drafts/launch-post.md (blog, 18 words): 1 error, 0 warnings, 0 to review
       Fix: Keep the claim and cut the contrast: "The fix is in the template." Mention the other half only if a reader would really assume it.
 ```
 
-The command exits with code 1 when it finds an error, so you can run it in CI or before a commit. <Fix rule="stock-closer" slop="That's a real win." /> The [seo lint docs](/docs/lint) cover presets for landing pages and meta descriptions, and how to keep a flagged line on purpose.
+The command exits with code 1 when it finds an error, so you can run it in CI or before a commit. <Fix rule="stock-closer" slop="That's a real win." /> The [`seo lint` docs](/docs/lint) cover presets for landing pages and meta descriptions, and how to keep a flagged line on purpose.
 
 ## How to fix a flagged line
 
@@ -122,4 +122,4 @@ Swapping "delve" for "explore" leaves the sentence as empty as it was. A flagged
 
 The same test works for a landing page, a tool or an app. Whoever or whatever wrote it, it should be clear about what it is and useful to the person who needs it.
 
-Run seo lint on your next draft before you publish it and fix the errors first. The warnings are often fine on a second read. <Fix rule="generic-closer" slop="In conclusion, the future of content looks bright." /><Fix rule="chatbot-residue" slop=" I hope this helps!" />
+Run `seo lint` on your next draft before you publish it and fix the errors first. The warnings are often fine on a second read. <Fix rule="generic-closer" slop="In conclusion, the future of content looks bright." /><Fix rule="chatbot-residue" slop=" I hope this helps!" />

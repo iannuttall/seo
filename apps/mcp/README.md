@@ -285,8 +285,6 @@ repository.
 | `seo_index` | Google's indexing reasons for 100 known URLs a run, checked live and labelled, and pages that lost most of their clicks |
 | `seo_research` | Keyword metrics, ranked keywords, SERPs, competitors and backlinks from DataForSEO or Ahrefs, with a free Ahrefs Domain Rating column |
 | `seo_data` | Raw Search Console rows, search landing pages from Google Analytics, or Clicky visits by landing page with traffic sources and search engines. |
-| `seo_ai_access` | Fetches one URL as a browser and as GPTBot, OAI-SearchBot, ClaudeBot and PerplexityBot and compares status, final URL and main-text words, with robots.txt per bot, llms.txt and Markdown copies. It sends each bot's user agent string, not the bot's IP addresses, so a site that checks IPs may answer the real bot differently. Reads no account data. |
-| `seo_social_posts` | Lists one X account's posts with FxTwitter's public views, likes, reposts, quotes, replies and bookmarks, most viewed first, with the date, URL, the start of the text and links to other sites. The timeline holds only about the last two weeks, so older posts come from the post URLs or IDs passed in (up to 50). Reposts of other accounts are left out, and replies unless asked for. Reads no account data. |
 | `seo_lint` | Checks copy sent as text (up to 200,000 characters) for patterns common in AI-written text, weak copy and title and description length, with a fix for each finding and a list of lines to judge. Reads no account data. |
 
 Bing Webmaster Tools runs only in the CLI and the local MCP server, because

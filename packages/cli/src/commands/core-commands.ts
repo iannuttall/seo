@@ -25,7 +25,6 @@ import {
   RESEARCH_PROVIDERS,
   type ResearchAction,
   type ResearchProvider,
-  runAiAccess,
   runAiAnswers,
   runAllSites,
   runBingReport,
@@ -38,7 +37,6 @@ import {
   runReport,
   runResearch,
   runRows,
-  runSocialPosts,
   SECTION_IDS,
   type SectionId,
 } from '@seo/core/commands'
@@ -704,80 +702,6 @@ export const lintCommand = defineCommand({
       if (errors > 0 || (failOn === 'warning' && warnings > 0)) {
         process.exitCode = 1
       }
-    } catch (error) {
-      throw localError(error)
-    }
-  },
-})
-
-export const aiAccessCommand = defineCommand({
-  meta: {
-    name: 'ai-access',
-    description:
-      'One URL fetched as a browser and as four AI bots, with robots.txt, llms.txt and Markdown copies',
-  },
-  args: {
-    url: {
-      type: 'positional',
-      required: true,
-      description: 'The page URL.',
-    },
-    json: common.json,
-  },
-  run: async ({ args }) => {
-    const url = stringArg(args.url) ?? ''
-    if (!/^https?:\/\/\S+$/.test(url)) {
-      throw new SeoError('INVALID_INPUT', 'The URL must be a full http(s) URL.')
-    }
-    try {
-      const result = await runAiAccess({ url })
-      if (jsonFlag(args)) printJson(result.data)
-      else process.stdout.write(`${result.text}\n`)
-    } catch (error) {
-      throw localError(error)
-    }
-  },
-})
-
-export const socialPostsCommand = defineCommand({
-  meta: {
-    name: 'social-posts',
-    description:
-      "One person's X posts with their public views, likes and other numbers, most viewed first",
-  },
-  args: {
-    handle: {
-      type: 'positional',
-      required: true,
-      description: 'The X handle, such as example or @example.',
-    },
-    posts: {
-      type: 'string',
-      description:
-        'Older post URLs or IDs to look up, comma separated (up to 50). The timeline only reaches back about two weeks.',
-    },
-    replies: {
-      type: 'boolean',
-      default: false,
-      description: "Include the account's replies.",
-    },
-    json: common.json,
-  },
-  run: async ({ args }) => {
-    const posts = ([] as unknown[])
-      .concat(args.posts ?? [])
-      .flatMap((value) =>
-        typeof value === 'string' ? value.split(/[\s,]+/) : [],
-      )
-      .filter(Boolean)
-    try {
-      const result = await runSocialPosts({
-        handle: stringArg(args.handle) ?? '',
-        posts,
-        replies: booleanArg(args.replies),
-      })
-      if (jsonFlag(args)) printJson(result.data)
-      else process.stdout.write(`${result.text}\n`)
     } catch (error) {
       throw localError(error)
     }

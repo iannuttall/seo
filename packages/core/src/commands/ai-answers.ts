@@ -249,6 +249,9 @@ export async function runAiAnswers(
     country: string
     detail: Detail
     offset: number
+    // Questions to ask instead of the site's Search Console questions. With
+    // these, the site can be any domain, such as a competitor's.
+    questions?: string[]
   },
   headers: Headers,
   deps: CommandDeps,
@@ -262,20 +265,34 @@ export async function runAiAnswers(
       `ai_answers needs a site with a domain, not "${input.site}".`,
     )
   }
+  const given = [
+    ...new Set((input.questions ?? []).map((q) => q.trim()).filter(Boolean)),
+  ]
+  if (given.length > AI_ANSWER_QUESTIONS) {
+    throw new CommandError(
+      'INVALID_INPUT',
+      `ai_answers takes up to ${AI_ANSWER_QUESTIONS} questions, not ${given.length}.`,
+    )
+  }
   const range = dateWindow({}, QUESTION_DAYS)
-  const report = await aiQueriesReport(
-    { site: input.site, ...range },
-    deps.searchAnalytics,
-  )
-  // Only questions that stand on their own (the report's askable rows).
-  const items = (report.items ?? []) as {
-    query: string
-    askable: boolean
-    impressions: number
-  }[]
-  const questions = items
-    .filter((item) => item.askable)
-    .slice(0, AI_ANSWER_QUESTIONS)
+  let questions: { query: string; impressions: number | null }[]
+  if (given.length) {
+    questions = given.map((query) => ({ query, impressions: null }))
+  } else {
+    const report = await aiQueriesReport(
+      { site: input.site, ...range },
+      deps.searchAnalytics,
+    )
+    // Only questions that stand on their own (the report's askable rows).
+    const items = (report.items ?? []) as {
+      query: string
+      askable: boolean
+      impressions: number
+    }[]
+    questions = items
+      .filter((item) => item.askable)
+      .slice(0, AI_ANSWER_QUESTIONS)
+  }
   const site = { domain, terms: deriveBrandTerms({ siteUrl: input.site }) }
   const markets = questions.length
     ? await marketsFor(keys, input.country)
@@ -300,9 +317,11 @@ export async function runAiAnswers(
   const count = (result: Answer['result']) =>
     answers.filter((row) => row.result === result).length
   const notes = [
-    questions.length
-      ? `The top ${questions.length} askable questions in Search Console’s AI-shaped queries for ${range.startDate} to ${range.endDate}, by impressions. No calls were made for other questions.`
-      : `No askable questions in Search Console’s AI-shaped queries for ${range.startDate} to ${range.endDate}, so no answers were checked and nothing was spent.`,
+    given.length
+      ? `The ${given.length} questions you gave, asked as written. Impressions are blank because they don't come from Search Console.`
+      : questions.length
+        ? `The top ${questions.length} askable questions in Search Console’s AI-shaped queries for ${range.startDate} to ${range.endDate}, by impressions. No calls were made for other questions.`
+        : `No askable questions in Search Console’s AI-shaped queries for ${range.startDate} to ${range.endDate}, so no answers were checked and nothing was spent.`,
     ...(questions.length
       ? [
           `Cited ${count('cited')}, mentioned ${count('mentioned')}, neither ${count('neither')}, no answer shown ${count('no_answer')}, unavailable ${count('unavailable')}. DataForSEO cost: $${cost}.`,
@@ -327,7 +346,9 @@ export async function runAiAnswers(
       action: 'ai_answers',
       site: input.site,
       country: input.country,
-      questionsFrom: { section: 'ai-queries', ...range },
+      questionsFrom: given.length
+        ? { section: 'given' }
+        : { section: 'ai-queries', ...range },
       questions: questions.map((question) => question.query),
       costUsd: cost,
       total: answers.length,

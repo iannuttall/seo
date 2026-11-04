@@ -21,7 +21,7 @@ seo providers ahrefs connect
 | `serp` | Up to 5 keywords | The pages that rank for each one |
 | `competitors` | A domain or URL | Domains that rank for the same keywords |
 | `backlinks` | A domain or URL | Referring domains |
-| `ai_answers` | Your site (DataForSEO only) | Whether AI answers to your site's own AI-style questions cite or mention it |
+| `ai_answers` | Any site (DataForSEO only) | Whether AI answers cite or mention the site, for its own AI-style questions or up to 10 of yours |
 
 Each request also takes a two-letter country code. The default is `us`. Every DataForSEO result says what the request cost, from DataForSEO's own numbers.
 
@@ -44,13 +44,19 @@ Without `--provider`, the CLI uses the first provider with a saved key.
 
 ## Check whether AI answers cite your site
 
-`ai_answers` starts from questions people already ask about your site. It takes the top 10 chat-style and long questions from the [AI queries section](/docs/report) of your Search Console data, so you need Google connected as well as a DataForSEO key. You cannot give it your own list.
+`ai_answers` starts from questions people already ask about your site. It takes the top 10 chat-style and long questions from the [AI queries section](/docs/report) of your Search Console data, so you need Google connected as well as a DataForSEO key.
 
 ```sh
 seo research ai_answers --target example.com --country gb
 ```
 
-Each question goes to ChatGPT search, Google AI Mode and Google AI Overviews. Every row says whether the answer cited a page on your site, mentioned it by name, did neither, or showed no AI answer at all. ChatGPT rows also name the model DataForSEO reports for the answer. A full run costs about 12 cents of DataForSEO credit, and the result shows what it actually cost.
+To ask your own questions, pass up to 10 in `--keywords`. Then the target can be any site, such as a competitor's, and Google doesn't need to be connected:
+
+```sh
+seo research ai_answers --target example.org --keywords "what is the best crm for a small team,how do I import contacts"
+```
+
+Each question goes to ChatGPT search, Google AI Mode and Google AI Overviews. Every row says whether the answer cited a page on your site, mentioned it by name, did neither, or showed no AI answer at all. ChatGPT rows also name the model DataForSEO reports for the answer. A run of 10 questions costs about 12 cents of DataForSEO credit, and the result shows what it actually cost.
 
 Treat each row as one sample. Ask the same question tomorrow and the answer can change, so a "neither" today is not proof you will never be cited.
 

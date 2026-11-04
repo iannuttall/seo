@@ -567,7 +567,9 @@ export const researchCommand = defineCommand({
       if (provider !== 'dataforseo') {
         throw new SeoError('INVALID_INPUT', 'ai_answers uses dataforseo.')
       }
-      const site = await property(args, target)
+      const site = keywords.length
+        ? (target ?? '')
+        : await property(args, target)
       await run(args, (deps) =>
         runAiAnswers(
           {
@@ -575,6 +577,7 @@ export const researchCommand = defineCommand({
             country: country ?? 'us',
             detail: detailArg(args),
             offset: numberArg(args.offset) ?? 0,
+            questions: keywords,
           },
           keys,
           deps,
@@ -582,6 +585,7 @@ export const researchCommand = defineCommand({
             cliCall('research', {
               action,
               target,
+              keywords: keywords.join(',') || undefined,
               country,
               detail: 'rows',
               offset,

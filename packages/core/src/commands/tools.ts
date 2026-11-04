@@ -454,10 +454,13 @@ export const SHARED_TOOLS: SharedTool[] = [
         }
         return runAiAnswers(
           {
-            site: await surface.resolveSite(input.target),
+            site: input.keywords.length
+              ? input.target
+              : await surface.resolveSite(input.target),
             country: input.country,
             detail: input.detail,
             offset: input.offset,
+            questions: input.keywords,
           },
           await surface.keys(),
           surface.deps,

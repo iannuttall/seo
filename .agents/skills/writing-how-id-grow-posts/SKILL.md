@@ -28,7 +28,7 @@ Sources:
 - **One provider per table**, named in the caption. Ahrefs and DataForSEO volumes can differ by 7 times for the same search.
 - **The CLI** for crawls. Hosted platforms (Substack, Webflow, Shopify) rate-limit, so crawl them with `--concurrency 2 --fetch-interval-cap 1 --fetch-interval-ms 1200 --refresh`.
 - Ahrefs MCP calls can return JSON with trailing text: parse from the raw result up to the last `}`. Ask the SERP overview for one keyword per call.
-- AI answers for an outside site can't be measured with these tools. Leave AEO claims to what you can see on the page.
+- **AI answers:** `seo research ai_answers --target <domain> --keywords "<q1>,<q2>"` asks ChatGPT search, Google AI Mode and AI Overviews up to 10 questions through DataForSEO, for any domain, and says whether each answer cites or mentions it (about $0.01 a question). Run the same questions for the top competitor so the result has a comparison. Ahrefs Brand Radar isn't on the plan.
 
 Save raw output under `.amp/in/research/<slug>-<date>/` (biome ignores `.amp/`), with a `sources.md` that lists each number, its tool call and date. Transcribe MCP output there by hand, since code_exec can't write files. Never commit real data outside the post itself.
 
@@ -47,6 +47,14 @@ For each domain:
 8. **Every domain and subdomain:** list each host the company uses (links in the site and the newsletter, certificate transparency at `https://crt.sh/?q=%25.<domain>&output=json`, old addresses from the Wayback Machine). For each, record what it serves, its status and its referring domains (Ahrefs). This table backs the one-domain recommendation.
 9. **The founder's best social posts:** find the founder's and the company's most viewed or most linked posts on X and other networks. Read the last two weeks of X posts, with views, likes, reposts and bookmarks, from FxTwitter's public API (`https://api.fxtwitter.com/2/profile/<handle>/statuses`, sent with a user agent; it often answers 404 for a real account, so retry a few times). Then read older posts found on the company's site, in its newsletter or in Ahrefs referring pages one by one from `https://api.fxtwitter.com/2/status/<id>`. These are research steps for the post, not `seo` commands. For each long or evergreen post, check whether a web copy exists and gets search traffic, then map its sections to searches with volume (`KeywordTable`). A post with millions of views and no web page that ranks is a finding.
 10. **AI readiness:** request the homepage and one post as a browser, GPTBot, OAI-SearchBot, ClaudeBot and PerplexityBot (`curl -A "<user agent>"`). Record the status and whether the full text comes back. Also read the robots.txt rules for those bots, check whether llms.txt exists and returns text (not HTML), and check for Markdown copies and structured data. Say what the platform allows (Substack, Webflow, Ghost and so on) before recommending a change it can't make. A user agent string isn't the bot's real IP, so call these results what the site serves to that user agent.
+
+11. **Keyword research for new content:** this is half the post, not an extra. For each topic the company could own:
+    - **Competitor gap:** find 3 to 5 competitors (`seo research competitors --target <domain>`, plus the names people compare it with). Pull each one's ranking keywords (`ranked_keywords`) and list the searches with volume where a competitor ranks and the company has no page.
+    - **What competitors publish:** for the biggest gaps, read the ranking pages (`serp`) and record the page type (guide, glossary, comparison, template, free tool), length and who it's written for. Say how the company could do it better: first-hand data, the founder's voice, a tool instead of an article.
+    - **Clusters:** group the gaps into clusters with a head term and the supporting searches, total volume and the easiest difficulty. Each cluster gets a proposed page: title, URL, the sections it covers and the searches each section answers (`KeywordTable`).
+    - **Social posts:** every post from step 9 that's worth a page gets the same treatment: target search, title, URL and sections mapped to searches.
+12. **Free tools and programmatic pages:** look for searches with tool intent (checker, generator, calculator, template, "free") and for repeatable page patterns (one page per tool, model, integration or city) in the company's niche. Record volume, who ranks and what the company already has (data, an API, a product feature) that could power the page. Propose only what the company can build from what it owns.
+13. **AI visibility:** pick 5 to 10 questions buyers ask an AI assistant about the company's category ("best <category> for <use>", "how do I <job>"). Run `ai_answers` for the company and its top competitor. Report who's cited, which pages get cited, and what the cited pages have that the company's don't (a direct answer near the top, a comparison table, a definition, fresh dates). Pair it with step 10: an AI crawler that gets the full page but no cited answer points to content, not access.
 
 Write every number with its source and month. Third-party estimates are called estimates.
 
@@ -90,10 +98,12 @@ Sections, in this order, adjusted to the company:
 2. Where its search traffic lands (`TrafficMap`), and why most of it doesn't sell.
 3. One section per revenue line: the demand, who ranks, whether the company can compete there, and what page it needs.
 4. Portfolio links: where the company's own sites link to each other, with an example page and the exact link.
-5. Technical fixes, closest to revenue first. Each gets an `###` subsection: what it is in plain words, an exhibit that shows it, **The fix:** with best practice, and how to confirm it worked.
-6. "Ship it all today, then let it settle": the fixes as parallel agent jobs (`PlanSteps`, numbered, no "Agent 1" labels), then 30 days of checks (`PlanSteps` with `marker: "Day 0"` and so on). Never a week-by-week sprint.
-7. Get the changes seen quickly: Index My Site for every changed and new URL.
-8. How I ran this: the hosted MCP first (free, Google sign-in, research key on the account page), then the CLI for crawling, then the prompt.
+5. New content: the keyword clusters from step 11, the free tools and page patterns from step 12, and the social posts worth a page. Each proposal has a target search with volume, a title and its sections.
+6. AI search: what crawlers get (step 10) and who AI answers cite (step 13), with the fixes the platform allows.
+7. Technical fixes, closest to revenue first. Each gets an `###` subsection: what it is in plain words, an exhibit that shows it, **The fix:** with best practice, and how to confirm it worked.
+8. "Ship it all today, then let it settle": the fixes as parallel agent jobs (`PlanSteps`, numbered, no "Agent 1" labels), then 30 days of checks (`PlanSteps` with `marker: "Day 0"` and so on). Never a week-by-week sprint.
+9. Get the changes seen quickly: Index My Site for every changed and new URL.
+10. How I ran this: the hosted MCP first (free, Google sign-in, research key on the account page), then the CLI for crawling, then the prompt.
 
 Rules that came from Ian's reviews:
 
@@ -162,11 +172,21 @@ Check every exhibit in the dev server (`amp orb service start blog-dev --command
 3. Every number traces to `sources.md`.
 4. `pnpm build`, `pnpm typecheck`, `pnpm test` and `pnpm lint` pass, and the post stays out of `dist` and the sitemap while `draft: true`.
 
-## 6. Ian's review
+## 6. Feed it back into SEO Skill
+
+Every audit finds things the product could do for anyone. Before Ian's review, list them at the end of `.amp/in/research/<slug>-<date>/sources.md`:
+
+- a check you ran by hand that every site would benefit from (it belongs in `seo crawl` or a report)
+- a command that refused, broke or needed a workaround (log it in `docs/known-issues.md`)
+- data you pulled from a provider directly that `seo research` should return
+
+Then raise the list with Ian. Only changes any SEO Skill user would want go into the product; research helpers for these posts stay in this skill.
+
+## 7. Ian's review
 
 Turn the post into Markdown with `node .agents/skills/writing-how-id-grow-posts/scripts/mdx-to-markdown.mjs apps/web/src/content/blog/<slug>.mdx` and publish it as an Amp document artifact titled "Draft: How I'd grow <Company>" in the folder "How I'd grow". Read the artifact's comments before each update, and reply to each comment you address.
 
-## 7. Publish and launch
+## 8. Publish and launch
 
 Only after Ian approves the post:
 

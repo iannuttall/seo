@@ -1,5 +1,15 @@
 # Changelog
 
+## 0.15.1
+
+### Changed
+
+- `seo research ai_answers` takes up to 10 questions in `--keywords` and
+  asks those instead of the site's Search Console questions. With your own
+  questions the target can be any domain, such as a competitor's, and no
+  Search Console property is needed. `seo_research` does the same with
+  `keywords`.
+
 ## 0.15.0
 
 ### Added

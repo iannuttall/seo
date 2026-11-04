@@ -1,33 +1,51 @@
 ---
 // What SEO Skill costs. Facts must match apps/mcp/README.md (Paid plan).
+import {
+  Analytics01Icon,
+  CheckListIcon,
+  CommandLineIcon,
+  CreditCardIcon,
+  Database01Icon,
+  Globe02Icon,
+  Key01Icon,
+  Link04Icon,
+  Plug01Icon,
+  Target02Icon,
+  WebDesign01Icon,
+  Wrench01Icon,
+} from '@hugeicons/core-free-icons'
 import FaqAccordion from '@/components/FaqAccordion.astro'
+import HomeCard from '@/components/HomeCard.astro'
 import LandingHero from '@/components/LandingHero.astro'
-import SplitList from '@/components/SplitList.astro'
+import SectionHeading from '@/components/SectionHeading.astro'
 import BaseLayout from '@/layouts/BaseLayout.astro'
 import type { SchemaBreadcrumb } from '@/lib/schema'
 
 const breadcrumbs: SchemaBreadcrumb[] = [{ label: 'Home', href: '/' }, { label: 'Pricing' }]
 
 const free = [
-  { title: 'Every on-demand tool', text: 'Search Console reports, page checks, before and after comparisons, index checks and raw data. No usage cap, no trial and no time limit.' },
-  { title: 'Google Analytics and Clicky', text: 'Search sessions, landing pages and visits from AI assistants, with your own sign-in.' },
-  { title: 'Keyword research with your own key', text: 'DataForSEO or Ahrefs results through your agent. You pay the provider for what you use, and nothing to us on top.' },
-  { title: 'The CLI and local MCP server', text: 'The site crawl, internal links and Bing Webmaster Tools, open source under Apache 2.0.' },
-  { title: 'Free web tools', text: 'Backlinks, Domain Rating, competitor keywords, SERPs, traffic estimates and more in your browser, with no account.', href: '/tools' },
+  { title: 'Every on-demand tool', icon: Database01Icon, text: 'Search Console reports, page checks, before and after comparisons, index checks and raw data. No usage cap, no trial and no time limit.' },
+  { title: 'Google Analytics and Clicky', icon: Analytics01Icon, text: 'Search sessions, landing pages and visits from AI assistants, with your own sign-in.' },
+  { title: 'Keyword research with your own key', icon: Key01Icon, text: 'DataForSEO or Ahrefs results through your agent. You pay the provider for what you use, and nothing to us on top.' },
+  { title: 'The CLI and local MCP server', icon: CommandLineIcon, text: 'The site crawl, internal links and Bing Webmaster Tools, open source under Apache 2.0.' },
+  { title: 'Free web tools', icon: Wrench01Icon, text: 'Backlinks, Domain Rating, competitor keywords, SERPs, traffic estimates and more in your browser, with no account.', href: '/tools', link: 'Free SEO tools' },
+  { title: 'The hosted MCP server', icon: Plug01Icon, text: 'Add seoskill.dev/mcp to your agent and sign in with Google. Nothing to install on your machine.', href: '/docs/mcp', link: 'Set up the hosted MCP' },
 ]
 
 const paid = [
-  { title: 'Weekly crawl', text: 'Every audited site is crawled once a week, with what is new, back or resolved since the crawl before.' },
-  { title: 'Daily Google index checks', text: "Up to each property's full 2,000 URL Inspection checks a day, top pages first, so your agent answers index questions at once." },
-  { title: 'Drop and return alerts', text: 'An alert when a page drops out of Google or comes back, by email and signed webhook.' },
-  { title: 'Monday email', text: "Each site's week as facts: Google index, the weekly crawl and search clicks." },
+  { title: 'A weekly crawl that sees what Google sees', icon: WebDesign01Icon, text: 'Broken links, titles, canonicals, noindex and sitemap problems, with what is new, back or resolved since last week. Pages that need JavaScript are rendered in a real browser.' },
+  { title: 'Daily Google index monitoring', icon: Globe02Icon, text: "Up to each property's full 2,000 URL Inspection checks a day, top pages first, so your agent answers index questions at once. Drops and returns come in one daily roundup." },
+  { title: 'Competitor opportunities', icon: Target02Icon, text: 'Every week we check what your competitors rank for, on our own DataForSEO account. You only hear about a keyword or free tool idea that competitors prove, that is worth money and that looks winnable. Some weeks that is nothing (which is the point).' },
+  { title: 'A fix list your agent remembers', icon: CheckListIcon, text: 'What the crawl, index checks and Search Console reports find goes on one list per site. Your agent marks what it fixed, and 28 and 56 days later it sees the Search Console clicks for that page against the same days before.' },
+  { title: 'Internal links on up to 5,000 pages', icon: Link04Icon, text: 'The internal linking tool reads up to 5,000 pages of an audited site, against 100 on the free plan.', href: '/tools/internal-linking-tool', link: 'Internal linking tool' },
+  { title: 'Start with one site', icon: CreditCardIcon, text: 'Pick a site on your account page. Your first one opens Stripe Checkout, and you can add or remove sites and cancel any time.', href: '/account', link: 'Your account page' },
 ]
 
 const faqs = [
   { question: 'Is SEO Skill really free?', answer: 'Yes. Every tool your agent calls on demand is free with no usage cap and no trial that ends. The weekly site audit is the only paid part, because it runs on our servers in the background.' },
   { question: 'How much does the weekly site audit cost?', answer: '$50 a month per site. A site is one Search Console property. There are no seats and no plan sizes to choose: the plan is the sites you audit.' },
   { question: 'What happens when I add or remove a site?', answer: 'Your first site opens Stripe Checkout. Each site after that raises the plan by one, charged for the rest of the month at once. Removing a site lowers the plan from the next bill.' },
-  { question: 'Do I pay for keyword data?', answer: 'You pay DataForSEO or Ahrefs directly, on your own key. SEO Skill adds nothing on top. Without a key, everything else still works.' },
+  { question: 'Do I pay for keyword data?', answer: "For your agent's own research, you pay DataForSEO or Ahrefs directly, on your own key. SEO Skill adds nothing on top, and without a key everything else still works. The weekly audit's competitor check runs on our account and is included in the $50." },
   { question: 'Can my agent start the paid audit?', answer: 'Yes. Ask it to audit a site. Without a plan it returns a Stripe Checkout link for you to open, and it cannot pay for you. With a plan, it adds the site and raises the plan by one, charged to your card at once.' },
   { question: 'How do I cancel?', answer: 'Choose Manage billing on your account page. It opens Stripe, where you can change the card, read invoices or cancel.' },
 ]
@@ -35,7 +53,7 @@ const faqs = [
 
 <BaseLayout
   title="Pricing for the free SEO MCP server"
-  description="SEO Skill is free for every tool your AI agent calls, with no usage cap. The weekly site audit is $50 a month per site: weekly crawl, daily index checks and alerts."
+  description="SEO Skill is free for every tool your AI agent calls, with no usage cap. The weekly site audit is $50 a month per site: a rendered weekly crawl, daily index monitoring and competitor opportunities."
   canonicalPath="/pricing"
   {breadcrumbs}
   framed={false}
@@ -48,21 +66,27 @@ const faqs = [
     />
 
     <div class="space-y-24 py-24 sm:space-y-32 sm:py-32">
-      <SplitList
-        id="free-heading"
-        title="Free, with no usage cap"
-        text="Everything your agent asks for on demand. No credit card and no message credits (ask as often as you like)."
-        items={free}
-      />
+      <section class="site-frame" aria-labelledby="free-heading">
+        <SectionHeading
+          id="free-heading"
+          title="Free, with no usage cap"
+          text="Everything your agent asks for on demand. No credit card and no message credits (ask as often as you like)."
+        />
+        <div class="grid grid-cols-1 gap-2 sm:grid-cols-2">
+          {free.map((item) => <HomeCard {...item} />)}
+        </div>
+      </section>
 
-      <SplitList
-        id="paid-heading"
-        title="Weekly site audit, $50 a month per site"
-        text="Runs on our servers in the background for the sites you pick. Add or remove a site any time, and cancel any time."
-        items={paid}
-      >
-        <a class="mt-6 inline-block text-base font-medium underline underline-offset-4" href="/account">Start from your account page</a>
-      </SplitList>
+      <section class="site-frame" aria-labelledby="paid-heading">
+        <SectionHeading
+          id="paid-heading"
+          title="Weekly site audit, $50 a month per site"
+          text="Runs on our servers in the background for the sites you pick, so your agent starts each session with the week's evidence already gathered."
+        />
+        <div class="grid grid-cols-1 gap-2 sm:grid-cols-2">
+          {paid.map((item) => <HomeCard {...item} />)}
+        </div>
+      </section>
 
       <section class="site-frame" aria-labelledby="pricing-faq">
         <div class="max-w-2xl">

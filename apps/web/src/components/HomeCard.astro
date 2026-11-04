@@ -2,8 +2,9 @@
 // A card from the ilo home page: an icon in the corner, the title and text
 // below. Linked cards add an arrow, lift the icon, and change colour on
 // hover. With link, the card ends with that text, so a reader knows where it
-// goes. Each card spans its rows of the parent grid (icon, title, text, link)
-// as a subgrid, so titles and text line up across a row whatever their length.
+// goes. Each card spans four rows of the parent grid (icon, title, text, link)
+// as a subgrid, so titles and text line up across a row whatever their length,
+// and a card without a link stays as tall as a linked card beside it.
 import { ArrowUpRight01Icon } from '@hugeicons/core-free-icons'
 import HugeIcon from './HugeIcon.astro'
 
@@ -24,8 +25,7 @@ const Tag = href ? 'a' : 'div'
 <Tag
   href={href}
   class:list={[
-    link ? 'row-span-4' : 'row-span-3',
-    'grid grid-rows-subgrid gap-y-0 rounded-lg bg-muted p-6',
+    'row-span-4 grid grid-rows-subgrid gap-y-0 rounded-lg bg-muted p-6',
     href &&
       'group no-underline transition-colors hover:bg-secondary-hover focus-visible:outline-none focus-visible:ring-[3px] focus-visible:ring-ring/20',
   ]}

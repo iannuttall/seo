@@ -1,6 +1,11 @@
-import { previousWeek, type WeekData } from '@seo/core/commands'
+import {
+  previousWeek,
+  searchConsoleDay,
+  type WeekData,
+} from '@seo/core/commands'
 import { queueAlert } from '../alerts/deliver.ts'
 import { hasWeeklyAudit } from '../beta.ts'
+import { isMonday, unsentIndexChanges } from './index-roundup.ts'
 import { auditSites, siteId, siteObject } from './schedule.ts'
 
 // The weekly summary (seo report with no site, and the Monday email): the last full week,
@@ -8,8 +13,6 @@ import { auditSites, siteId, siteObject } from './schedule.ts'
 // object answers for its own week; the rest comes from D1.
 
 const ACCOUNTS_PER_TICK = 25
-// The first hourly tick on a Monday that sends summaries (07:17 UTC).
-const SEND_FROM_HOUR = 7
 
 export async function weekData(
   env: Env,
@@ -51,13 +54,16 @@ export async function weekData(
   }
 }
 
-// From the hourly cron on a Monday: one summary per beta account with a
-// site, a few accounts a tick. weekly_summaries records each account's week
-// before it is queued, so an account is never sent the same week twice;
-// delivery then retries through the alerts table like any alert.
+// From the hourly cron once the Search Console Monday starts (07:17 or
+// 08:17 UTC), so Sunday's index checks are done: one summary per beta
+// account with a site, a few accounts a tick. It carries the day's index
+// roundup (audit/index-roundup.ts), whose pages are marked sent only when
+// the summary is queued; otherwise Tuesday's roundup has them.
+// weekly_summaries records each account's week before it is queued, so an
+// account is never sent the same week twice; delivery then retries through
+// the alerts table like any alert.
 export async function sendWeeklySummaries(env: Env, now = Date.now()) {
-  const date = new Date(now)
-  if (date.getUTCDay() !== 1 || date.getUTCHours() < SEND_FROM_HOUR) return
+  if (!isMonday(searchConsoleDay(now))) return
   const week = previousWeek(now).start
   const due = await env.DB.prepare(
     `SELECT DISTINCT s.user_id FROM audit_sites s
@@ -67,8 +73,12 @@ export async function sendWeeklySummaries(env: Env, now = Date.now()) {
     .bind(week, ACCOUNTS_PER_TICK)
     .all<{ user_id: string }>()
   for (const { user_id: userId } of due.results) {
-    const data = await weekData(env, userId, now).catch(() => null)
-    if (!data) continue
+    const [summary, unsent] = await Promise.all([
+      weekData(env, userId, now).catch(() => null),
+      unsentIndexChanges(env, userId).catch(() => null),
+    ])
+    if (!summary) continue
+    const data = { ...summary, index_changes: unsent?.sites ?? [] }
     const claimed = await env.DB.prepare(
       `INSERT INTO weekly_summaries (user_id, week, sent_at) VALUES (?, ?, ?)
        ON CONFLICT DO NOTHING RETURNING week`,
@@ -76,11 +86,12 @@ export async function sendWeeklySummaries(env: Env, now = Date.now()) {
       .bind(userId, week, now)
       .first()
     if (!claimed) continue
-    await queueAlert(
+    const queued = await queueAlert(
       env,
       { userId, type: 'weekly-summary', site: '', data },
       now,
     ).catch(() => null)
+    if (queued && unsent) await unsent.markSent()
   }
   await env.DB.prepare('DELETE FROM weekly_summaries WHERE sent_at < ?')
     .bind(now - 90 * 86_400_000)

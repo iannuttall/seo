@@ -233,11 +233,11 @@ function siteLines(site: WeekSite, startMs: number, endMs: number): string[] {
     const reasons = new Set(index.dropped_pages.map((page) => page.coverage))
     const reason = reasons.size === 1 ? [...reasons][0] : null
     lines.push(
-      `Google index: ${plural(index.dropped, 'page')} dropped out (${shown}).${reason ? ` Google says: ${reason}.` : ''}${index.returned ? ` ${plural(index.returned, 'page')} came back.` : ''} ${plural(index.checked, 'page')} checked.`,
+      `Google index: ${plural(index.dropped, 'page')} dropped out (${shown}${reason ? `: ${reason}` : ''}).${index.returned ? ` ${plural(index.returned, 'page')} now indexed.` : ''} ${plural(index.checked, 'page')} checked.`,
     )
   } else {
     lines.push(
-      `Google index: ${plural(index.checked, 'page')} checked, none dropped${index.returned ? `, ${plural(index.returned, 'page')} came back` : ''}.`,
+      `Google index: ${plural(index.checked, 'page')} checked, none dropped${index.returned ? `, ${plural(index.returned, 'page')} now indexed` : ''}.`,
     )
   }
   const crawl = site.crawl

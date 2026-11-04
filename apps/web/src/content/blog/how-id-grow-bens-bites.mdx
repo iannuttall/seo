@@ -4,6 +4,7 @@ description: An SEO teardown of Ben's Bites, Ben Tossell's AI newsletter. Where 
 heading: How I'd grow Ben's Bites
 lead: Ben's Bites has more than 118,000 subscribers and about 890 visits a month from Google. Most of those visits land on a catalog that now returns a 404. This is how I'd turn search back into a steady source of new readers.
 date: '2026-11-04'
+updated: '2026-11-04'
 company: Ben's Bites
 x:
   company: bentossell
@@ -195,7 +196,7 @@ I'd put these guides where the authority already is: on bensbites.com, as posts 
 
 Ben has more than 200,000 followers on X, and his best posts there are guides on the subjects people search for. They live on x.com, where they bring in a spike of readers and then stop.
 
-His X Article "How I code with agents, without being 'technical'" got 3.9 million views on New Year's Eve 2025, and 28 sites link to it on x.com (Ahrefs). A week later he republished it on the newsletter, where 12 sites link to it, and there's a third copy on the cookbook. None of the three gets measurable search traffic.
+His X Article "How I code with agents, without being 'technical'" went out on New Year's Eve 2025 and has more than 4 million views and 24,000 bookmarks (November 2026). 28 sites link to it on x.com (Ahrefs). A week later he republished it on the newsletter, where 12 sites link to it, and there's a third copy on the cookbook. None of the three gets measurable search traffic.
 
 His follow-up, "What you need to know to build with coding agents, if you're not technical", got about 580,000 views in January. That's the "Become Technical in 1 Day" guide on the cookbook. Each of its sections answers a search beginners make, and the cookbook also has four short glossary pages that its homepage doesn't link to.
 
@@ -227,6 +228,8 @@ I'd split the guide into one post per question, each with a title that uses the 
 
 The views on an X post come in the first few days. A page that ranks for "what is a terminal" is in front of about 1,100 searchers a month (Ahrefs, US), every month, and they're the people Ben writes for.
 
+The New content section below turns this guide and two more of Ben's posts into pages, each with the search it targets.
+
 ## One domain instead of seven
 
 Ben's Bites is spread across a lot of addresses: the newsletter on www.bensbites.com, the catalog, the cookbook, a sessions site, a partner page, and the old bensbites.co and news.bensbites.com. Search engines treat each subdomain as its own site, so every one starts from zero, needs its own Search Console property and has to earn its own links.
@@ -247,7 +250,7 @@ The newsletter has the authority. Ahrefs counts about 4,000 sites linking to www
 
 Substack decides how far this can go. It needs www.bensbites.com pointed straight at its servers, with Cloudflare's proxy off ([Substack's setup guide](https://support.substack.com/hc/en-us/articles/360051222571-How-do-I-set-up-my-custom-domain-on-Substack)), so Ben can't serve a folder like /guides from anything else on that domain. That's probably why the cookbook and sessions sites ended up on subdomains. Inside Substack, the guides go where the posts go, under /p/.
 
-For search and AI answers, that's fine. Every post's full text is in the HTML, and the AI crawlers I tested (GPTBot, OAI-SearchBot, ClaudeBot and PerplexityBot) get the same page as a browser. robots.txt blocks none of them, and each post has a canonical tag and NewsArticle structured data. What Substack doesn't offer is an llms.txt, a Markdown copy of each post, or control over templates and redirects.
+For search, that's fine. Every post's full text is in the HTML, and each post has a canonical tag and NewsArticle structured data. What Substack doesn't offer is control over templates and redirects, an llms.txt or a Markdown copy of each post (the AI search section below has what each AI crawler gets).
 
 Those gaps are much smaller than splitting the guides across another domain, so I'd keep everything on Substack. If Ben later wants that control, the move is a site he runs himself on www.bensbites.com, with the same /p/ addresses, rather than another subdomain.
 
@@ -270,6 +273,187 @@ These links point at bensbites.com addresses from when the catalog lived there. 
 The newer sites get almost nothing. Across all 270 posts I found one link to the cookbook and three to Ben's sessions site, which is another reason to put those pages on the newsletter's own domain.
 
 **The fix:** add the old bensbites.com catalog addresses to the same redirect list as the catalog subdomain in fix 1 below. bensbites.com already runs through Cloudflare, so one rule there catches the 566 dead links in every old issue at once, without editing a post. Then link each new issue that teaches something to the matching guide, with link text that names it.
+
+## New content: the pages the bigger newsletters rank with
+
+Apart from searches for their own names, the bigger AI newsletters get their search traffic from three kinds of page, and Ben's Bites doesn't have any of them yet.
+
+<KeywordTable
+  caption="Searches where a bigger AI newsletter ranks in the top 20 and Ben's Bites has no page, with the competitor's page that ranks (Ahrefs, US, November 2026)."
+  sortBy="volume"
+  columns={[{ key: 'keyword', label: 'Search', format: 'text' }, { key: 'volume', label: 'US searches', format: 'number' }, { key: 'difficulty', label: 'Difficulty', format: 'number', short: 'KD' }, { key: 'who', label: 'Who ranks', format: 'text' }]}
+  rows={[
+    { keyword: 'notion ai', volume: 37000, difficulty: 19, who: 'Rundown tool page' },
+    { keyword: 'websim', volume: 24000, difficulty: 1, who: 'Latent Space wiki' },
+    { keyword: 'claude dashboard', volume: 2600, difficulty: 1, who: 'Neuron news post' },
+    { keyword: 'ai newsletter', volume: 2100, difficulty: 39, who: 'Rundown, TLDR' },
+    { keyword: 'chatgpt picture generator', volume: 1900, difficulty: 49, who: 'Superhuman guide' },
+    { keyword: 'news ai', volume: 1500, difficulty: 23, who: 'Superhuman home' },
+    { keyword: 'best ai newsletter', volume: 1300, difficulty: 68, who: 'Rundown, TLDR' },
+    { keyword: 'data engineering news', volume: 450, difficulty: 6, who: 'TLDR Data page' },
+    { keyword: 'what is cline', volume: 450, difficulty: 0, who: 'Latent Space post' },
+    { keyword: 'agentic harness', volume: 450, difficulty: 45, who: 'Latent Space essay' },
+    { keyword: 'difference between grok and chatgpt', volume: 350, difficulty: 5, who: 'Superhuman guide' },
+    { keyword: 'ai newsletters', volume: 350, difficulty: 4, who: 'TLDR, Superhuman' },
+  ]}
+/>
+
+The first kind is a page that says what the newsletter is. "ai newsletter" and "best ai newsletter" go to a homepage or newsletter page whose title names the category. That's the homepage title fix above. TLDR also has a page for each of its newsletters, and its data one is 10th for "data engineering news".
+
+The second is evergreen guides and comparisons. Superhuman's "Grok AI vs ChatGPT" (about 7,200 words) ranks first for "difference between grok and chatgpt", and its ChatGPT image generation guide (about 7,100 words) is 11th for "chatgpt picture generator". A team writes them for general readers. Ben can write the same kind of page from tools he has tested himself.
+
+The third is a page per tool or company, built from what the newsletter already has. The Rundown's directory gives every tool the same sections: what it is, who it's for, features and how it works. Latent Space builds a wiki page per company and person from its own archive. Its WebSim page is a timeline by year plus links to every Latent Space piece on it, and it gets about 870 visits a month from "websim" (Ahrefs).
+
+Ben's Bites has four years of issues about the same tools and people. The pages below come from that archive and from Ben's best X posts. Each one gets a title that uses the search, a two-sentence answer at the top, and a link from the issue that announces it.
+
+### Coding agent comparisons, from the Vibe Coding Deathmatch
+
+Ben's most linked post on X is the "Vibe Coding Deathmatch" from March 2025, a video of Bolt, Replit, Cursor and Windsurf building the same project (Replit won). Ahrefs counts 1,731 sites linking to it, more than any other post of Ben's. The newsletter write-up, "AI coding tools: Head-to-head", ranks for nothing in Ahrefs, and neither does "What AI coding tool should you use?".
+
+These searches have grown since then, and their difficulty is still low. "cursor vs claude code" gets 6,100 searches a month at a difficulty of 5, and a post on someone's Substack ranks sixth. Another Substack post is sixth for "claude code vs codex". I'd make one hub and one page per pair, each from Ben's own test, with the verdict in the first two sentences.
+
+<KeywordTable
+  caption="Searches for the proposed comparison pages (Ahrefs, US). Ben's Bites ranks for none of them today."
+  sortBy="volume"
+  columns={[{ key: 'keyword', label: 'Target search', format: 'text' }, { key: 'volume', label: 'US searches', format: 'number' }, { key: 'difficulty', label: 'Difficulty', format: 'number', short: 'KD' }, { key: 'who', label: 'Ranks first', format: 'text' }]}
+  rows={[
+    { keyword: 'cursor vs claude code', volume: 6100, difficulty: 5, who: 'ksred.com' },
+    { keyword: 'claude code vs codex', volume: 4800, difficulty: 13, who: 'Reddit' },
+    { keyword: 'best ai coding tools', volume: 2900, difficulty: 9, who: 'Zapier' },
+    { keyword: 'best vibe coding tools', volume: 2300, difficulty: 9, who: 'Zite' },
+    { keyword: 'replit vs lovable', volume: 1200, difficulty: 2, who: 'Superblocks' },
+    { keyword: 'codex vs cursor', volume: 1100, difficulty: 1, who: 'Medium' },
+  ]}
+/>
+
+The pages, each on bensbites.com at /p/ plus its search:
+
+1. The hub, "The best vibe coding tools, tested head to head", at /p/best-vibe-coding-tools.
+2. "Cursor vs Claude Code, if you don't code", at /p/cursor-vs-claude-code.
+3. "Claude Code vs Codex: which I use for what", at /p/claude-code-vs-codex.
+4. "The best AI coding tools for people who don't code", at /p/best-ai-coding-tools.
+5. "Replit vs Lovable" and "Codex vs Cursor", at /p/replit-vs-lovable and /p/codex-vs-cursor.
+
+Each page covers what the two tools are, the same project built in both, what each got wrong, the cost, and which one Ben would give a beginner. Ben works at Factory ("I use Droid because I work at Factory", he writes in the agents article), so each page should say that at the top and include Droid in the test. A stake readers can see reads better than one they find out about later.
+
+### "How I code with agents" as a page that ranks
+
+The newsletter copy keeps the title from X, which no one types into Google. I'd keep the address, since 12 sites link to it, and change the title to "How to code with AI agents when you're not technical", with a short answer above the first section. Then each section links to the page that answers its question in full.
+
+<KeywordTable
+  caption="Sections of the agents article and the search each one answers (Ahrefs, US). The article would target the first two searches. The rest link to their own pages."
+  sortBy="volume"
+  columns={[{ key: 'section', label: 'Section', format: 'text' }, { key: 'keyword', label: 'Search', format: 'text' }, { key: 'volume', label: 'US searches', format: 'number' }, { key: 'difficulty', label: 'Difficulty', format: 'number', short: 'KD' }]}
+  rows={[
+    { section: 'How I actually work', keyword: 'how to vibe code', volume: 900, difficulty: 12 },
+    { section: 'How I actually work', keyword: 'how to code with ai', volume: 150, difficulty: 9 },
+    { section: 'Beyond "vibe coding"', keyword: 'what is vibe coding', volume: 50000, difficulty: 42 },
+    { section: 'What I\'ve been learning: VPS', keyword: 'what is a vps', volume: 3500, difficulty: 39 },
+    { section: 'What I\'ve been learning: bash commands', keyword: 'what is bash', volume: 2800, difficulty: 7 },
+    { section: 'CLIs over MCPs', keyword: 'what is a cli', volume: 1500, difficulty: 26 },
+    { section: 'My agents.md setup', keyword: 'agents.md', volume: 1400, difficulty: 53 },
+    { section: 'What I\'ve been learning: skills', keyword: 'agent skills', volume: 1400, difficulty: 42 },
+    { section: 'Just pick one', keyword: 'coding agents', volume: 1100, difficulty: 25 },
+  ]}
+/>
+
+The biggest one already has a post. Ben published "What is 'vibe coding'?" in February 2025, the month the term took off. "what is vibe coding" now gets 50,000 searches a month (Ahrefs, US), and the post ranks for none of them. Page one is IBM, Reddit, Wikipedia, Cloudflare and Replit, all explaining it from the outside. Ben does it every day and has opinions on the name ("Vibe coding is old now"). I'd update that post with a two-sentence definition at the top, a section on how to vibe code and links to the comparisons. At a difficulty of 42 it's a slower win than the comparisons.
+
+### Become Technical in 1 Day, one page per question
+
+The table in the X section maps the guide's sections. As pages, they make a glossary for people who build with agents but don't code, at /p/ plus the search.
+
+<KeywordTable
+  caption="Proposed glossary pages, from the guide and the cookbook's glossary (Ahrefs, US). Each is titled as the question, such as &quot;What is a terminal? A guide for people who don't code&quot; at /p/what-is-a-terminal."
+  sortBy="volume"
+  columns={[{ key: 'keyword', label: 'Target search', format: 'text' }, { key: 'volume', label: 'US searches', format: 'number' }, { key: 'difficulty', label: 'Difficulty', format: 'number', short: 'KD' }]}
+  rows={[
+    { keyword: 'what is an mcp server', volume: 6300, difficulty: 47 },
+    { keyword: 'what is a vps', volume: 3500, difficulty: 39 },
+    { keyword: 'what is bash', volume: 2800, difficulty: 7 },
+    { keyword: 'context window', volume: 2100, difficulty: 36 },
+    { keyword: 'what is a cli', volume: 1500, difficulty: 26 },
+    { keyword: 'what is a terminal', volume: 1100, difficulty: 5 },
+    { keyword: 'what is localhost', volume: 900, difficulty: 39 },
+    { keyword: 'system prompt', volume: 700, difficulty: 9 },
+    { keyword: 'what is an api token', volume: 350, difficulty: 0 },
+    { keyword: 'what are environment variables', volume: 300, difficulty: 24 },
+  ]}
+/>
+
+Every glossary page gets the same four sections: the answer in two sentences, why it matters when you work with an agent, the one command or setting you'll actually use, and a link back to the hub. Once the first few are written, each new term is a short job.
+
+### Free tools and a page per tool
+
+Ben already builds free tools. His personal site has a token usage tracker (10,011 views on X), a live view of which models OpenRouter's top apps use (15,395 views) and "50 years of devices" (31,202 views). Ahrefs credits the site with about 10 visits a month from search, all for Ben's name.
+
+Substack can't host an interactive page, so the tools stay on his personal site. What's missing is a post on bensbites.com that answers the search and links to the tool. The same goes for a page per coding agent, in the Latent Space pattern: what it is, what Ben built with it, his verdict, and every issue that covered it.
+
+<KeywordTable
+  caption="Searches a page per tool or a free tool could answer, and what Ben already has to build it from (Ahrefs, US)."
+  sortBy="volume"
+  columns={[{ key: 'keyword', label: 'Search', format: 'text' }, { key: 'volume', label: 'US searches', format: 'number' }, { key: 'difficulty', label: 'Difficulty', format: 'number', short: 'KD' }, { key: 'has', label: 'Ben has', format: 'text' }]}
+  rows={[
+    { keyword: 'what is claude code', volume: 11000, difficulty: 22, has: 'Claude Code issues' },
+    { keyword: 'codex cli', volume: 8500, difficulty: 7, has: 'Codex issues' },
+    { keyword: 'what is codex', volume: 7000, difficulty: 1, has: 'Codex issues' },
+    { keyword: 'what is cursor', volume: 4300, difficulty: 22, has: 'Cursor guides' },
+    { keyword: 'claude code usage', volume: 3600, difficulty: 30, has: 'Token tracker' },
+    { keyword: 'ai model comparison', volume: 1400, difficulty: 12, has: 'OpenRouter page' },
+    { keyword: 'agents.md', volume: 1400, difficulty: 53, has: 'His AGENTS.md' },
+    { keyword: 'openrouter leaderboard', volume: 350, difficulty: null, has: 'OpenRouter page' },
+  ]}
+/>
+
+"what is codex" is the easiest of these: 7,000 searches a month at a difficulty of 1, with a small Swedish AI news site and a tools directory on page one. Ben's "What makes a good AGENTS.md?" post is 198 words. A version with his own file, ready to copy, answers "agents.md" and its "template" and "example" searches in one page.
+
+## AI search: the crawlers get every post, the answers go elsewhere
+
+### What AI crawlers get
+
+Every AI crawler gets every post in full, about 4,300 words for "How I code with agents". robots.txt doesn't block any of the AI bots, and each post has NewsArticle structured data.
+
+<KeywordTable
+  caption="What www.bensbites.com serves for the homepage and &quot;How I code with agents&quot; to each user agent, 4 November 2026. Requests sent with each bot's user agent, not from the bots' own addresses."
+  sortBy="agent"
+  columns={[{ key: 'agent', label: 'User agent', format: 'text' }, { key: 'home', label: 'Homepage', format: 'text' }, { key: 'post', label: 'A post', format: 'text' }]}
+  rows={[
+    { agent: 'Browser', home: '200, no post links in the HTML', post: '200, full text' },
+    { agent: 'ClaudeBot', home: '200, no post links in the HTML', post: '200, full text' },
+    { agent: 'GPTBot', home: '200, no post links in the HTML', post: '200, full text' },
+    { agent: 'Googlebot', home: '200, 34 post links and site structured data', post: '200, full text' },
+    { agent: 'OAI-SearchBot', home: '200, 34 post links and site structured data', post: '200, full text' },
+    { agent: 'PerplexityBot', home: '200, no post links in the HTML', post: '200, full text' },
+  ]}
+/>
+
+The homepage is different. Substack sends Googlebot and OAI-SearchBot, the crawler behind ChatGPT search, a full version with 34 post links. GPTBot, ClaudeBot and PerplexityBot get what a browser gets, with the post list loaded by JavaScript, so they find posts through the sitemap and the archive (24 links) instead. Ben can't change either version.
+
+### Who AI answers cite
+
+Across 30 answers from ChatGPT search, Google AI Mode and Google's AI Overviews, Ben's Bites is cited 4 times and mentioned twice. The Rundown is cited 5 times and mentioned 7 times. Every citation, for both, is the homepage. Ben's Bites does best when the question says "builders" or "coding tools", which is the audience the new homepage title names. Answers change from one run to the next, so ten questions are a sample.
+
+<KeywordTable
+  caption="Whether each answer cites or mentions the newsletter, for 10 questions a Ben's Bites reader might ask (DataForSEO, US, 4 November 2026). AI Overview means Google's AI Overview. Not named also covers the 5 of 60 answers that didn't come back."
+  sortBy="question"
+  columns={[{ key: 'question', label: 'Question', format: 'text' }, { key: 'bb', label: "Ben's Bites", format: 'text' }, { key: 'rundown', label: 'The Rundown', format: 'text' }]}
+  rows={[
+    { question: 'what is the best ai newsletter', bb: 'Not named', rundown: 'Cited by AI Mode, mentioned by the other two' },
+    { question: 'best ai newsletter for non-technical people', bb: 'Not named', rundown: 'Mentioned by ChatGPT and AI Mode' },
+    { question: 'which ai newsletters should i subscribe to in 2026', bb: 'Cited by ChatGPT, mentioned by AI Overview', rundown: 'Cited by ChatGPT, mentioned by the other two' },
+    { question: 'best newsletter for learning to build with ai agents', bb: 'Not named', rundown: 'Cited by AI Overview' },
+    { question: 'best ai newsletters for builders and founders', bb: 'Cited by ChatGPT and AI Mode', rundown: 'Cited by ChatGPT and AI Mode, mentioned by AI Overview' },
+    { question: 'best newsletter about ai coding tools', bb: 'Cited by ChatGPT, mentioned by AI Overview', rundown: 'Not named' },
+    { question: "how do i start coding with ai agents if i'm not technical", bb: 'Not named', rundown: 'Not named' },
+    { question: "how to use claude code if i can't code", bb: 'Not named', rundown: 'Not named' },
+    { question: 'claude code vs codex for non-technical users', bb: 'Not named', rundown: 'Not named' },
+    { question: 'what are the best vibe coding tools for beginners', bb: 'Not named', rundown: 'Not named' },
+  ]}
+/>
+
+On the four how-to questions, neither newsletter appears. The answers draw on Anthropic's and OpenAI's help pages, Zapier, Builder.io and Reddit. For "how to use claude code if i can't code", Google AI Mode cites a free course site called CC for Everyone, written for exactly the readers Ben writes for.
+
+The AI crawlers already get every word Ben writes, so the missing citations come from missing pages. The pages in New content are the fix: each one starts with a direct answer, compares tools by name and says when Ben last tested them. For the newsletter questions, the lists are the way in again. AI Mode's sources for "what is the best ai newsletter" were The Rundown, Superhuman, TLDR, Medium, GitHub, Quora, Reddit and YouTube, and the GitHub list is already on the outreach list.
 
 ## Technical fixes, closest to revenue first
 
@@ -368,7 +552,7 @@ The crawl found 26 addresses on www.bensbites.com, linked from older issues, tha
 None of this needs a sprint plan. Each fix is a separate job with a clear end, so coding agents can work on all of them at once:
 
 <PlanSteps
-  steps={[{"title": "Catalog redirects", "body": "Export every catalog URL from Webflow or the Wayback Machine, on both catalog.bensbites.com and the old bensbites.com paths. Point the 95 articles at their newsletter copies, the name searches at the homepage, and return 410 for the rest. One Cloudflare bulk redirect list does it."}, {"title": "Restore the tutorials that ranked", "body": "Rebuild the 32 catalog pages that still had search traffic as posts on bensbites.com, and redirect each old address to its new one."}, {"title": "Old domains", "body": "Map bensbites.co and news.bensbites.com addresses to their exact new pages in one hop, and return 410 for the spam profiles."}, {"title": "Broken links in old issues", "body": "Find every link in the archive that points at a bensbites.com address that 404s, and point it at the original source."}, {"title": "Fold in the cookbook", "body": "Republish the cookbook guides and glossary pages as posts on bensbites.com, and redirect each cookbook page to its copy. Do the same for the sessions site."}, {"title": "Guides from X", "body": "Split Become Technical in 1 Day into one post per question, starting with what a terminal and Bash are, and keep the full guide as the hub that links to them."}, {"title": "List outreach", "body": "Draft a short, accurate pitch for each best AI newsletter list that ranks and leaves Ben's Bites out."}]}
+  steps={[{"title": "Catalog redirects", "body": "Export every catalog URL from Webflow or the Wayback Machine, on both catalog.bensbites.com and the old bensbites.com paths. Point the 95 articles at their newsletter copies, the name searches at the homepage, and return 410 for the rest. One Cloudflare bulk redirect list does it."}, {"title": "Restore the tutorials that ranked", "body": "Rebuild the 32 catalog pages that still had search traffic as posts on bensbites.com, and redirect each old address to its new one."}, {"title": "Old domains", "body": "Map bensbites.co and news.bensbites.com addresses to their exact new pages in one hop, and return 410 for the spam profiles."}, {"title": "Broken links in old issues", "body": "Find every link in the archive that points at a bensbites.com address that 404s, and point it at the original source."}, {"title": "Fold in the cookbook", "body": "Republish the cookbook guides and glossary pages as posts on bensbites.com, and redirect each cookbook page to its copy. Do the same for the sessions site."}, {"title": "Guides from X", "body": "Split Become Technical in 1 Day into one post per question, starting with what a terminal and Bash are, and keep the full guide as the hub that links to them."}, {"title": "List outreach", "body": "Draft a short, accurate pitch for each best AI newsletter list that ranks and leaves Ben's Bites out."}, {"title": "Comparison pages", "body": "Turn the Vibe Coding Deathmatch into the best vibe coding tools hub and the five pair pages, each from Ben's own test, with his Factory role stated at the top."}, {"title": "Search titles on the posts that have them", "body": "Retitle How I code with agents and What is vibe coding for the searches above, add a two-sentence answer at the top of each, and link every section to its own page."}, {"title": "Tool pages and free tools", "body": "Write one page per coding agent from the archive, starting with Codex, and one post per free tool on Ben's personal site, plus his AGENTS.md as a template."}]}
 />
 
 Someone at Ben's Bites still needs to pick which tutorials to restore and write the guides in Ben's voice, because that's the part readers subscribe for. The redirects and link fixes need only a quick check.
@@ -376,7 +560,7 @@ Someone at Ben's Bites still needs to pick which tutorials to restore and write 
 Then I'd spend 30 days checking the results:
 
 <PlanSteps
-  steps={[{"marker": "Day 0", "title": "Ask Google to recrawl", "body": "Submit every redirected, restored and new URL to Index My Site, so Google sees the changes now instead of on its own schedule."}, {"marker": "Day 3", "title": "Check the redirects", "body": "Crawl the old catalog, cookbook, bensbites.co and news.bensbites.com addresses again. Each should answer in one hop with a 301 to a real page, or a 410."}, {"marker": "Day 7", "title": "First impressions", "body": "Look for the restored guides in Search Console, and impressions on \"how to use claude cowork\" and \"claude code tutorial\"."}, {"marker": "Day 14", "title": "Sign-ups from search", "body": "Check Substack's subscriber sources for sign-ups from Google."}, {"marker": "Day 30", "title": "New readers", "body": "Compare free sign-ups from search with the month before. Those readers are what sponsors pay for."}]}
+  steps={[{"marker": "Day 0", "title": "Ask Google to recrawl", "body": "Submit every redirected, restored and new URL to Index My Site, so Google sees the changes now instead of on its own schedule."}, {"marker": "Day 3", "title": "Check the redirects", "body": "Crawl the old catalog, cookbook, bensbites.co and news.bensbites.com addresses again. Each should answer in one hop with a 301 to a real page, or a 410."}, {"marker": "Day 7", "title": "First impressions", "body": "Look for the restored guides in Search Console, and impressions on \"how to use claude cowork\" and \"claude code tutorial\"."}, {"marker": "Day 14", "title": "Sign-ups from search", "body": "Check Substack's subscriber sources for sign-ups from Google."}, {"marker": "Day 30", "title": "New readers", "body": "Compare free sign-ups from search with the month before. Those readers are what sponsors pay for."}, {"marker": "Day 30", "title": "Ask the AI questions again", "body": "Ask the same 10 questions for bensbites.com and therundown.ai with SEO Skill's AI answers research, and compare with today's 4 and 5 citations."}]}
 />
 
 ## Get the changes seen quickly
@@ -412,7 +596,11 @@ Crawl each one with seo crawl, including old domains
 and subdomains. Check where each old address redirects.
 Crawl the old URLs the Wayback Machine has saved.
 Use seo_research to find the searches new readers
-make and who ranks for them.
+make and who ranks for them, and the searches
+our competitors rank for that we don't.
+Ask AI assistants ten questions our readers ask
+with seo research ai_answers, for us and our
+biggest competitor.
 Rank every fix by how close it sits to revenue.
 ```
 

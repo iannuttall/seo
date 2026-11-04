@@ -188,7 +188,7 @@ For onboarding pages, prefer this order:
 4. Run the first useful report.
 5. Explain how to read it and what to do next.
 
-Introduce a command before the code block. Do not leave a heading and a command
+Write a command in running text as inline code, such as `seo lint`, on the site and in social posts, so readers can tell it is a command. Introduce a command before the code block. Do not leave a heading and a command
 floating together with no explanation. Avoid repeating that every report works
 through the CLI, MCP server, and library. Explain alternate surfaces once, in a
 section where the choice is useful.

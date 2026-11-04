@@ -520,6 +520,11 @@ export const researchCommand = defineCommand({
       description: `${RESEARCH_PROVIDERS.join(', ')}. Default: the first one with a saved key.`,
     },
     keywords: { type: 'string', description: 'Comma-separated keywords.' },
+    tasks: {
+      type: 'string',
+      description:
+        'ai_answers only: comma-separated tasks an earlier run returned as not ready.',
+    },
     target: { type: 'string', description: 'Domain or URL.' },
     country: {
       type: 'string',
@@ -567,9 +572,11 @@ export const researchCommand = defineCommand({
       if (provider !== 'dataforseo') {
         throw new SeoError('INVALID_INPUT', 'ai_answers uses dataforseo.')
       }
-      const site = keywords.length
-        ? (target ?? '')
-        : await property(args, target)
+      const tasks = csvArg(args.tasks) ?? []
+      const site =
+        keywords.length || tasks.length
+          ? (target ?? '')
+          : await property(args, target)
       await run(args, (deps) =>
         runAiAnswers(
           {
@@ -578,6 +585,9 @@ export const researchCommand = defineCommand({
             detail: detailArg(args),
             offset: numberArg(args.offset) ?? 0,
             questions: keywords,
+            tasks,
+            // No MCP client to time out, so wait for the queue.
+            waitSeconds: 240,
           },
           keys,
           deps,

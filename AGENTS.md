@@ -43,13 +43,11 @@ tell you. Product and privacy decisions are not rules for this file.
 - Bound every fetch, list and output before the work starts, not after.
   Peak memory follows the active work window, not the site size.
 
-## Real data never goes in the repo
+## Examples in code
 
-Never write Ian's sites, a client's site or real account data into code,
-tests, fixtures, examples, comments, docs, commits or PR text. Use
-`example.com`, `example.org` or `*.example` for examples. Grep the diff for
-such domains before every commit. Marketing pages on the site may name
-competitors and their domains.
+Code, tests, fixtures and code comments use `example.com`, `example.org` or
+`*.example`, never Ian's own sites or real account data. Site pages and
+blog posts may name real companies and their domains.
 
 ## Tests and CI
 

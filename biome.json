@@ -13,6 +13,7 @@
       "!!**/.turbo",
       "!!**/.wrangler",
       "!!.claude/worktrees",
+      "!!.amp",
       "!!docs",
       "!!**/pnpm-lock.yaml",
       "!!**/package-lock.json",

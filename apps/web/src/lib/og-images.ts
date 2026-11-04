@@ -9,12 +9,15 @@ import { fileURLToPath } from 'node:url'
 import type { AstroIntegration } from 'astro'
 import { render } from 'takumi-js'
 import {
+  OG_COVER_SRC,
   OG_IMAGE_FORMAT,
   OG_IMAGE_HEIGHT,
   OG_IMAGE_WIDTH,
+  type OgCoverAlign,
   ogCardFonts,
   ogCardImages,
   renderOgCard,
+  renderOgCoverCard,
 } from './og-card'
 
 const ENTITIES: Record<string, string> = {
@@ -40,6 +43,15 @@ export const readOgMeta = (html: string, property: string) => {
   )?.[0]
   const content = tag?.match(/content="([^"]*)"/i)?.[1]
   return content === undefined ? undefined : decodeEntities(content)
+}
+
+/** The path of an image marked `data-og-cover`, such as a post's cover. */
+export const readOgCover = (html: string) => {
+  const tag = html.match(/<img\b[^>]*\sdata-og-cover\b[^>]*>/i)?.[0]
+  if (!tag) return undefined
+  const src = tag.match(/\ssrc="([^"]+)"/i)?.[1]
+  const align = tag.match(/\sdata-og-cover="left"/i) ? 'left' : 'center'
+  return src ? { src, align: align as OgCoverAlign } : undefined
 }
 
 /** Reads the text of the first `<h1>` in built HTML. */
@@ -95,17 +107,29 @@ export const ogImages = (): AstroIntegration => ({
             `${page.pathname}: og:image is ${image}, but the card is written to ${expected}`,
           )
         }
+        // A page with a cover image gets it as the card's background.
+        const cover = readOgCover(html)
+        const coverFile = cover
+          ? path.join(outDir, decodeEntities(cover.src).replace(/^\/+/, ''))
+          : null
+        if (coverFile && !(await exists(coverFile))) {
+          throw new Error(`${page.pathname}: cover ${cover?.src} is missing`)
+        }
         const png = await render(
-          renderOgCard({
-            title,
-            pathname: page.pathname,
-          }),
+          coverFile
+            ? renderOgCoverCard({ title, align: cover?.align })
+            : renderOgCard({ title, pathname: page.pathname }),
           {
             width: OG_IMAGE_WIDTH,
             height: OG_IMAGE_HEIGHT,
             format: OG_IMAGE_FORMAT,
             fonts: ogCardFonts,
-            images: ogCardImages,
+            images: coverFile
+              ? [
+                  ...ogCardImages,
+                  { src: OG_COVER_SRC, data: () => readFile(coverFile) },
+                ]
+              : ogCardImages,
           },
         )
         await writeFile(imageFile, png)

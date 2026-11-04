@@ -64,7 +64,19 @@ company: <Company>
 x:
   company: <handle without @>
 draft: true
+cover:
+  alt: What the art shows, in one sentence.
+  title: center                               # or left when the subject stands on the right
 ```
+
+Cover: every post gets illustrated art, saved as `apps/web/public/blog/covers/<slug>.webp`. The post shows it above the article, and the build draws the title over it for the sharing card.
+
+- Make the company's mascot or mark the hero when it has one (Ben's Bites' red mascot, Amp's olive green Puck), drawn in its real colours.
+- Give each post its own style and palette (screenprint, risograph, engraving, film still) so the covers don't look alike. Take the colours from the company's brand.
+- The scene shows the post's main finding as a picture a reader gets at a glance.
+- Leave a calm band where the title goes: the middle for `center`, the left half for `left`. No text in the art.
+- Save it at 1200×630: `magick in.png -resize 1200x630^ -gravity center -extent 1200x630 -quality 70 -define webp:method=6 <out>.webp`, under about 250 KB.
+- Build the site and check `dist/blog/<slug>/index.png`: the title must be legible and clear of the subject.
 
 Series rules:
 

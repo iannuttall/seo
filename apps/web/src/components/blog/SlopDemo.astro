@@ -28,13 +28,13 @@ import Button from '@/components/Button.astro'
   <div data-when="draft">
     <p class="text-sm font-medium text-foreground">You're reading the AI draft</p>
     <p class="mt-1 text-[0.9375rem]/6 text-foreground-muted">
-      This post loaded as a sloppy first draft from a chatbot. Remove the slop to watch seo lint take it out, one fix at a time, with the rule behind each one.
+      This post loaded as a sloppy first draft from a chatbot. Remove the slop to watch <code>seo lint</code> take it out, one fix at a time, with the rule behind each one.
     </p>
   </div>
   <div data-when="start">
     <p class="text-sm font-medium text-foreground">This post started as an AI draft</p>
     <p class="mt-1 text-[0.9375rem]/6 text-foreground-muted">
-      Show the changes to see each AI pattern seo lint found in the draft, what replaced it and the rule that caught it.
+      Show the changes to see each AI pattern <code>seo lint</code> found in the draft, what replaced it and the rule that caught it.
     </p>
   </div>
   <div data-when="live">
@@ -189,6 +189,9 @@ import Button from '@/components/Button.astro'
     bar.className = 'slop-bar'
     bar.setAttribute('data-nosnippet', '')
     bar.setAttribute('data-agent-markdown', 'exclude')
+    // Start hidden: the observer reports the panel's position a frame later,
+    // so a visible start would flash the bar on load.
+    bar.setAttribute('data-panel-visible', '')
     const barText = document.createElement('span')
     const barAction = action?.cloneNode(true) as HTMLButtonElement
     bar.append(barText, barAction)

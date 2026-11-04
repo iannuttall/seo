@@ -1,5 +1,26 @@
 # Changelog
 
+## 0.15.0
+
+### Added
+
+- `seo lint <paths>` checks copy for patterns common in AI-written text,
+  weak copy, and title and description length. It reads Markdown, MDX,
+  HTML, Astro and text files, up to 100 at a time, with presets for blog
+  posts, landing pages, docs and meta lines. `--fail-on warning` fails a
+  build on warnings too, and `--ignore` and `--ignore-phrase` skip rules or
+  allow a phrase. `seo_lint` does the same in both MCP servers and takes
+  the text itself.
+- `seo crawl` flags sitemap URLs on another host, such as a staging or
+  localhost address, a robots.txt that returns an HTML page, and an
+  llms.txt that returns an HTML page. An HTML robots.txt counts as absent,
+  so its rules are not read.
+
+### Fixed
+
+- `seo research serp` takes a result's domain from its breadcrumb when
+  Google's redirect link can't be resolved.
+
 ## 0.14.0
 
 ### Added

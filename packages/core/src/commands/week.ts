@@ -1,4 +1,6 @@
+import { latestFinalGscDate, shiftIsoDate } from '../gsc/dates.js'
 import { AUDIT_RULES } from './audit.js'
+import type { IssueMeasure, StoredIssue } from './issues.js'
 import { type CommandDeps, CommandError, type CommandResult } from './types.js'
 
 // The weekly summary of the sites in the weekly site audit beta: one
@@ -45,6 +47,13 @@ export type WeekSite = {
   // Competitor keywords first named this week that passed every gate, or
   // null before the first check (or when the check is off on this server).
   opportunities?: WeekOpportunities | null
+  // Fixed issues whose after-fix days ended in the latest 7 days of final
+  // Search Console data, first MAX_MEASURED, oldest fix first, and how many
+  // there were in all.
+  measured?: {
+    total: number
+    items: (IssueMeasure & { subject: string })[]
+  }
 }
 
 export type WeekOpportunities = {
@@ -94,6 +103,7 @@ export type WeekData = {
 }
 
 export const MAX_DROPPED_PAGES = 5
+export const MAX_MEASURED = 5
 const DAY_MS = 86_400_000
 
 // The Monday to Sunday (UTC) before the week that holds now.
@@ -134,6 +144,14 @@ export function weekLabel(start: string, end: string): string {
     ? `${from.day} to ${to.day} ${to.month}`
     : `${from.day} ${from.month} to ${to.day} ${to.month}`
 }
+
+// "3 Oct".
+const dayLabel = (date: string) =>
+  new Date(`${date}T00:00:00Z`).toLocaleString('en-GB', {
+    day: 'numeric',
+    month: 'short',
+    timeZone: 'UTC',
+  })
 
 export const weekTitle = (data: Pick<WeekData, 'start' | 'end'>) =>
   `Your SEO Skill week, ${weekLabel(data.start, data.end)}`
@@ -318,6 +336,49 @@ function opportunityLines(site: WeekSite): string[] {
   ]
 }
 
+// A site's measures whose days after the fix ended in the latest 7 days
+// of final Search Console data, so each one is in exactly one weekly
+// summary.
+export function weekMeasured(
+  issues: StoredIssue[],
+  now = Date.now(),
+): NonNullable<WeekSite['measured']> {
+  const latest = latestFinalGscDate(new Date(now))
+  const from = shiftIsoDate(latest, -6)
+  const all = issues
+    .filter((issue) => issue.mark === 'fixed')
+    .flatMap((issue) =>
+      (issue.measures ?? [])
+        .filter((m) => m.after.end >= from && m.after.end <= latest)
+        .map((m) => ({ ...m, subject: issue.subject })),
+    )
+    .sort(
+      (a, b) =>
+        a.fixed_on.localeCompare(b.fixed_on) ||
+        a.subject.localeCompare(b.subject) ||
+        a.days - b.days,
+    )
+  return { total: all.length, items: all.slice(0, MAX_MEASURED) }
+}
+
+// The fixes whose 28 or 56 days after ended this week, as facts.
+function measuredLines(site: WeekSite): string[] {
+  const found = site.measured
+  if (!found?.total) return []
+  const more = found.total - found.items.length
+  return [
+    `- After fixes: ${plural(found.total, 'result')} from Search Console, the days from the day an issue was marked fixed against the same days before (timing, not proof the fix caused it).`,
+    ...found.items.map((item) => {
+      const subject = item.subject.replace(/https?:\/\/[^\s/]+/g, '') || '/'
+      const change = item.after.clicks - item.before.clicks
+      return `  - ${subject}, ${item.days} days from ${dayLabel(item.fixed_on)}: ${plural(item.after.clicks, 'click')} (${change > 0 ? 'up' : change < 0 ? 'down' : 'level'}${change ? ` ${count(Math.abs(change))}` : ''} on ${count(item.before.clicks)}), ${plural(item.after.impressions, 'impression')} (from ${count(item.before.impressions)}).${item.updates?.length ? ` Google updates in these dates: ${list(item.updates)}.` : ''}`
+    }),
+    ...(more > 0
+      ? [`  - And ${plural(more, 'more')} in the issues list.`]
+      : []),
+  ]
+}
+
 // The week as Markdown.
 export function weekMarkdown(data: WeekData): string {
   const startMs = Date.parse(`${data.start}T00:00:00Z`)
@@ -363,6 +424,7 @@ export function weekMarkdown(data: WeekData): string {
       '',
       ...siteLines(site, startMs, endMs).map((line) => `- ${line}`),
       ...opportunityLines(site),
+      ...measuredLines(site),
       ...(site.link ? [`- [View site](${site.link})`] : []),
     )
   }

@@ -55,7 +55,14 @@ For an audited site, `seo_report` with section `issues` also keeps the
 issues list (`packages/core/src/commands/issues.ts`) in D1's `site_issues`,
 one row per account and property, deleted with the site or the account.
 For any other site the section stores nothing and returns the list as JSON
-for the agent to save and pass back as `saved`.
+for the agent to save and pass back as `saved`. An issue marked fixed whose
+subject is a page, or a query on a page, gets Search Console clicks,
+impressions and position for the 28 and 56 days from the day it was marked
+fixed (Search Console's calendar) against the same days before, once final
+data covers them: one call per issue, at most 20 a run, kept on the issue.
+The Monday summary measures what is due first (at most 20 calls an
+account) and lists the results whose days after ended in the latest 7 days
+of final data.
 
 ## Paid plan
 

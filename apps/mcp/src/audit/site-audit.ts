@@ -8,8 +8,6 @@ import {
   type WeekSite,
 } from '@seo/core/commands'
 import robotsParser from 'robots-parser'
-import { queueAlert } from '../alerts/deliver.ts'
-import { MAX_LISTED } from '../alerts/registry.ts'
 import { betaFlags } from '../beta.ts'
 import { directory } from '../google.ts'
 import { accountsOf } from '../store.ts'
@@ -1014,7 +1012,6 @@ export class SiteAudit extends DurableObject<Env> {
         : null
       saveState(meter, { next_at: at })
       await flushUnmetered(this.env, meter, site.user_id)
-      await this.alertChanges(meter, site)
       await this.pushMonitor(meter, site)
       // A new day's plan goes to D1 for the account page.
       const now = state(meter)
@@ -1025,24 +1022,17 @@ export class SiteAudit extends DurableObject<Env> {
     if (current === null || at < current) await this.ctx.storage.setAlarm(at)
   }
 
-  // This wake's drops out of and returns to the index, as one alert. They
-  // are marked only once the alert is queued, so a failed queue is tried
-  // again on the next wake with anything new added.
-  private async alertChanges(meter: Meter, site: Site): Promise<void> {
-    const changes = unalertedChanges(meter, MAX_LISTED)
-    if (changes.upto === null) return
-    const { upto, ...data } = changes
-    try {
-      await queueAlert(this.env, {
-        userId: site.user_id,
-        type: 'index-changes',
-        site: site.property,
-        data,
-      })
-    } catch {
-      return
-    }
-    markAlerted(meter, upto)
+  // The drops out of and returns to the index not in a daily roundup yet
+  // (audit/index-roundup.ts), and marking them sent once it is queued. A
+  // failed queue leaves them for the next day's roundup.
+  async unalertedIndex(limit: number) {
+    const meter = new Meter(this.ctx.storage)
+    if (!meter.one('SELECT 1 FROM site')) return null
+    return unalertedChanges(meter, limit)
+  }
+
+  async markIndexAlerted(upto: number): Promise<void> {
+    markAlerted(new Meter(this.ctx.storage), upto)
   }
 
   // Properties added in Search Console count from the next wake: the day's

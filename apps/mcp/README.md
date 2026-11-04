@@ -142,10 +142,12 @@ MCP tools still send agents to the CLI for internal links.
 
 ## Alerts
 
-An account in the weekly-audit beta gets alerts without asking: when a page
-drops out of Google's index (a top page's drop only after a second check
-agrees) or comes back. Each run of a site's background checks that finds
-changes sends one alert for that site. Under Alerts on the Beta tab, each
+An account in the weekly-audit beta gets alerts without asking: once a day,
+one roundup of the pages on all its sites that dropped out of Google's index
+(a top page's drop only after a second check agrees) or got into it. It goes
+out after the Search Console day's checks are done, early morning UTC, and
+only when something changed. On Monday it goes in the weekly summary
+instead. Under Alerts on the Beta tab, each
 alert type has its own email and webhook switch; both are on by default, and
 the webhook only once a URL is saved. Email goes to the first linked Google
 account from `alerts@e.seoskill.dev`, through PostShiba, at most 550 a day
@@ -173,43 +175,53 @@ other answer stops that alert. The Beta tab shows the last call's result.
 {
   "id": "alt_0f4c2a9e8b7d4c1fa3e5b6c7d8e9f001",
   "type": "index-changes",
-  "site": "sc-domain:example.com",
-  "created_at": "2026-10-22T14:17:03.000Z",
+  "site": null,
+  "created_at": "2026-10-22T08:17:03.000Z",
   "data": {
-    "dropped": 1,
-    "returned": 1,
-    "pages": [
+    "sites": [
       {
-        "url": "https://example.com/pricing",
-        "change": "dropped",
-        "at": "2026-10-22T14:16:58.000Z",
-        "verdict": "NEUTRAL",
-        "coverage": "Crawled - currently not indexed"
-      },
-      {
-        "url": "https://example.com/blog/guide",
-        "change": "returned",
-        "at": "2026-10-22T14:17:01.000Z",
-        "verdict": "PASS",
-        "coverage": "Submitted and indexed"
+        "property": "sc-domain:example.com",
+        "dropped": 1,
+        "returned": 1,
+        "pages": [
+          {
+            "url": "https://example.com/pricing",
+            "change": "dropped",
+            "at": "2026-10-21T14:16:58.000Z",
+            "verdict": "NEUTRAL",
+            "coverage": "Crawled - currently not indexed"
+          },
+          {
+            "url": "https://example.com/blog/guide",
+            "change": "returned",
+            "at": "2026-10-21T19:17:01.000Z",
+            "verdict": "PASS",
+            "coverage": "Submitted and indexed"
+          }
+        ]
       }
     ]
   }
 }
 ```
 
-`type` says what `data` holds. `index-changes` lists up to 100 pages, drops
-first; `dropped` and `returned` count them all. `verdict` and `coverage` are
-Google's own words.
+`type` says what `data` holds. `index-changes` is the daily roundup, so
+`site` is `null`; `data.sites` lists only the sites with changes. Each lists
+up to 100 pages, drops first; `dropped` and `returned` count them all. A
+`returned` page is indexed now and was not on its last check, which
+includes a new page indexed for the first time. `verdict` and `coverage`
+are Google's own words.
 
-`weekly-summary` goes out on Monday morning (UTC) for the week from the
+`weekly-summary` goes out on Monday morning (07:17 UTC in summer, 08:17 in
+winter, once the Pacific Sunday is over) for the week from the
 Monday before to Sunday. It covers every audited site, so `site` is `null`.
 `data` is what `seo report` and `seo_report` summarise with no site: `start` and `end`, and per
 site `property`, `link`, `crawl` (the last finished crawl, with `new_issues`
 first seen or back that week), `index` (the week's `checked`, `dropped` and
 `returned`, with up to 5 `dropped_pages`) and `clicks` (the latest 7 days
 of final Search Console data against the 7 before). Each is `null` when it
-is not known yet.
+is not known yet. `index_changes` is Monday's daily roundup, the same
+list as `index-changes` `data.sites`, empty when nothing changed.
 
 More types may come; ignore one you do not know.
 

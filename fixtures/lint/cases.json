@@ -1,0 +1,2607 @@
+{
+  "about": "Labelled passages for seo lint. A tell lists rule ids (or review lenses when review is true); at least one must fire. A control (expect null) is plain human writing and must get no error.",
+  "cases": [
+    {
+      "id": "tell-001",
+      "text": "The fix is in the newsletter template, not in 600 posts.",
+      "expect": ["contrast-reframe"]
+    },
+    {
+      "id": "tell-002",
+      "text": "This is the finding that only shows up when you treat Fernhill as a portfolio, not a website.",
+      "expect": ["contrast-reframe", "faux-insight"]
+    },
+    {
+      "id": "tell-003",
+      "text": "The 30 days are for watching, not building:",
+      "expect": ["contrast-reframe"]
+    },
+    {
+      "id": "tell-004",
+      "text": "The fix is mostly retitling and adding, not rewriting.",
+      "expect": ["contrast-reframe"]
+    },
+    {
+      "id": "tell-005",
+      "text": "I've ordered them by how close they sit to revenue, not by how many pages they touch.",
+      "expect": ["contrast-reframe"]
+    },
+    {
+      "id": "tell-006",
+      "text": "That chart is a third-party estimate, so treat the shape as the point rather than the exact numbers.",
+      "expect": ["contrast-reframe"]
+    },
+    {
+      "id": "tell-007",
+      "text": "The win comes from the internal links, not from the new pages.",
+      "expect": ["contrast-reframe"]
+    },
+    {
+      "id": "tell-008",
+      "text": "Think of your sitemap as a promise, not a list.",
+      "expect": ["contrast-reframe"]
+    },
+    {
+      "id": "tell-009",
+      "text": "Write the page for the person searching, not for the crawler.",
+      "expect": ["contrast-reframe"]
+    },
+    {
+      "id": "tell-010",
+      "text": "Our job is to answer the question, not to rank for it.",
+      "expect": ["contrast-reframe"]
+    },
+    {
+      "id": "tell-011",
+      "text": "The goal here is clarity for the reader, not cleverness.",
+      "expect": ["contrast-reframe"]
+    },
+    {
+      "id": "tell-012",
+      "text": "Rank on what you know, not on what you wish you knew.",
+      "expect": ["contrast-reframe"]
+    },
+    {
+      "id": "tell-013",
+      "text": "These guides are for reading, not skimming.",
+      "expect": ["contrast-reframe"]
+    },
+    {
+      "id": "tell-014",
+      "text": "Treat the report as a starting point rather than a verdict.",
+      "expect": ["contrast-reframe"]
+    },
+    {
+      "id": "tell-015",
+      "text": "The problem is the internal linking on old posts, not the content.",
+      "expect": ["contrast-reframe"]
+    },
+    {
+      "id": "tell-016",
+      "text": "Pick the keywords by intent, not by volume.",
+      "expect": ["contrast-reframe"]
+    },
+    {
+      "id": "tell-017",
+      "text": "We grew the blog by pruning rather than publishing.",
+      "expect": ["contrast-reframe"]
+    },
+    {
+      "id": "tell-018",
+      "text": "Search Console is where you start, not where you finish.",
+      "expect": ["contrast-reframe"]
+    },
+    {
+      "id": "tell-019",
+      "text": "The value of an audit is in the follow-up, not in the audit itself.",
+      "expect": ["contrast-reframe"]
+    },
+    {
+      "id": "tell-020",
+      "text": "Measure clicks from people who buy, not from people who browse.",
+      "expect": ["contrast-reframe"]
+    },
+    {
+      "id": "tell-021",
+      "text": "Use the crawl as a map, not a checklist.",
+      "expect": ["contrast-reframe"]
+    },
+    {
+      "id": "tell-022",
+      "text": "Most of the gain came from consolidating, not creating.",
+      "expect": ["contrast-reframe"]
+    },
+    {
+      "id": "tell-023",
+      "text": "Spend the first week on listening to customers, not on writing copy.",
+      "expect": ["contrast-reframe"]
+    },
+    {
+      "id": "tell-024",
+      "text": "People search for the model, not the review series.",
+      "expect": ["contrast"],
+      "review": true
+    },
+    {
+      "id": "tell-025",
+      "text": "We're writing for buyers, not browsers.",
+      "expect": ["contrast"],
+      "review": true
+    },
+    {
+      "id": "tell-026",
+      "text": "It's not a content problem, it's a linking problem.",
+      "expect": ["negative-parallelism"]
+    },
+    {
+      "id": "tell-027",
+      "text": "This isn't just a redesign. It's a chance to fix every redirect on the site.",
+      "expect": ["negative-parallelism"]
+    },
+    {
+      "id": "tell-028",
+      "text": "The issue isn't the keywords. It's the page that ranks for them.",
+      "expect": ["negative-parallelism"]
+    },
+    {
+      "id": "tell-029",
+      "text": "The problem isn't the product, and it isn't the site. It's where the effort is pointed.",
+      "expect": ["negative-parallelism"]
+    },
+    {
+      "id": "tell-030",
+      "text": "SEO isn't about tricks, it's about answers.",
+      "expect": ["negative-parallelism"]
+    },
+    {
+      "id": "tell-031",
+      "text": "This isn't merely a title change, it's a new search intent.",
+      "expect": ["negative-parallelism"]
+    },
+    {
+      "id": "tell-032",
+      "text": "It's not about more posts. It's about better ones.",
+      "expect": ["negative-parallelism"]
+    },
+    {
+      "id": "tell-033",
+      "text": "Your homepage isn't a brochure, it's a router.",
+      "expect": ["negative-parallelism"]
+    },
+    {
+      "id": "tell-034",
+      "text": "They're not just visitors, they're future customers.",
+      "expect": ["negative-parallelism"]
+    },
+    {
+      "id": "tell-035",
+      "text": "Speed isn't a feature. It's the baseline.",
+      "expect": ["negative-parallelism"]
+    },
+    {
+      "id": "tell-036",
+      "text": "The answer isn't another tool, it's a clear owner for each page.",
+      "expect": ["negative-parallelism"]
+    },
+    {
+      "id": "tell-037",
+      "text": "This is not a dashboard, it's a to-do list.",
+      "expect": ["negative-parallelism"]
+    },
+    {
+      "id": "tell-038",
+      "text": "Content isn't king any more, it's the price of entry.",
+      "expect": ["negative-parallelism"]
+    },
+    {
+      "id": "tell-039",
+      "text": "The bottleneck isn't writing. It's distribution.",
+      "expect": ["negative-parallelism"]
+    },
+    {
+      "id": "tell-040",
+      "text": "Link building isn't dead. It's just harder.",
+      "expect": ["negative-parallelism"]
+    },
+    {
+      "id": "tell-041",
+      "text": "Here's the demand, and who owns it.",
+      "expect": ["heres-announcement"]
+    },
+    {
+      "id": "tell-042",
+      "text": "The biggest gap is a search with 3,600 visits a month. Here's who Google shows today.",
+      "expect": ["heres-announcement"]
+    },
+    {
+      "id": "tell-043",
+      "text": "Most of its traffic does not touch the paid plans. Here's how I'd change that.",
+      "expect": ["heres-announcement"]
+    },
+    {
+      "id": "tell-044",
+      "text": "Most teams get this backwards. Here's why:",
+      "expect": ["heres-announcement"]
+    },
+    {
+      "id": "tell-045",
+      "text": "We crawled 600 pages. Here's what we found.",
+      "expect": ["heres-announcement"]
+    },
+    {
+      "id": "tell-046",
+      "text": "Here are the numbers.",
+      "expect": ["heres-announcement"]
+    },
+    {
+      "id": "tell-047",
+      "text": "So here's the plan.",
+      "expect": ["heres-announcement"]
+    },
+    {
+      "id": "tell-048",
+      "text": "Here is what changed after the migration.",
+      "expect": ["heres-announcement"]
+    },
+    {
+      "id": "tell-049",
+      "text": "We tested both versions for a month. Same essay, two titles. The second one got the clicks.",
+      "expect": ["pithy-fragment"]
+    },
+    {
+      "id": "tell-050",
+      "text": "Simple, but powerful.",
+      "expect": ["pithy-fragment"]
+    },
+    {
+      "id": "tell-051",
+      "text": "The new layout is tighter. Dense, not cramped.",
+      "expect": ["pithy-fragment"]
+    },
+    {
+      "id": "tell-052",
+      "text": "Our rule for headlines is short. Clarity over cleverness.",
+      "expect": ["pithy-fragment"]
+    },
+    {
+      "id": "tell-053",
+      "text": "One page, three intents.",
+      "expect": ["pithy-fragment"]
+    },
+    {
+      "id": "tell-054",
+      "text": "We rewrote the intro and kept the table. Different query, same answer.",
+      "expect": ["pithy-fragment"]
+    },
+    {
+      "id": "tell-055",
+      "text": "So part of the answer is simply time. But only part.",
+      "expect": ["pithy-fragment", "stranded-negation"]
+    },
+    {
+      "id": "tell-056",
+      "text": "We deleted 200 thin posts. Fewer pages, more traffic.",
+      "expect": ["pithy-fragment"]
+    },
+    {
+      "id": "tell-057",
+      "text": "The old setup worked. Fast, but fragile.",
+      "expect": ["pithy-fragment"]
+    },
+    {
+      "id": "tell-058",
+      "text": "Small site, big results.",
+      "expect": ["pithy-fragment"]
+    },
+    {
+      "id": "tell-059",
+      "text": "Two products, one audience.",
+      "expect": ["pithy-fragment"]
+    },
+    {
+      "id": "tell-060",
+      "text": "<Figure caption=\"Same essay, two titles. The brand name stays in the headline.\" />",
+      "expect": ["pithy-fragment"],
+      "format": "mdx"
+    },
+    {
+      "id": "tell-061",
+      "text": "The consulting page ranks first for the main search. That's a real win.",
+      "expect": ["stock-closer"]
+    },
+    {
+      "id": "tell-062",
+      "text": "It has a parent company with a strong site. That is what makes this teardown interesting.",
+      "expect": ["stock-closer"]
+    },
+    {
+      "id": "tell-063",
+      "text": "Nobody else covers the topic in depth. That's the point.",
+      "expect": ["stock-closer"]
+    },
+    {
+      "id": "tell-064",
+      "text": "One page answers the question and the other sells. And that's the difference.",
+      "expect": ["stock-closer"]
+    },
+    {
+      "id": "tell-065",
+      "text": "Each page has one job. This is what makes the approach work.",
+      "expect": ["stock-closer"]
+    },
+    {
+      "id": "tell-066",
+      "text": "Search traffic only counts when it reaches a page that sells. That's why it matters.",
+      "expect": ["stock-closer"]
+    },
+    {
+      "id": "tell-067",
+      "text": "A redirect and a canonical do different jobs. That distinction matters.",
+      "expect": ["stock-closer"]
+    },
+    {
+      "id": "tell-068",
+      "text": "The guide went from page three to the top result. That's huge.",
+      "expect": ["stock-closer"]
+    },
+    {
+      "id": "tell-069",
+      "text": "Clicks fell, but sign-ups rose. That's the real story.",
+      "expect": ["stock-closer"]
+    },
+    {
+      "id": "tell-070",
+      "text": "It drifted from 2,300 visits to 900. That drop doesn't matter much, which is the point.",
+      "expect": ["cliche"]
+    },
+    {
+      "id": "tell-071",
+      "text": "Teardowns like this usually end with a four-week plan. That's not how this work gets done any more.",
+      "expect": ["negative-reframe"]
+    },
+    {
+      "id": "tell-072",
+      "text": "That's not what buyers search for.",
+      "expect": ["negative-reframe"]
+    },
+    {
+      "id": "tell-073",
+      "text": "The big course sites have thousands of courses and we have five. That's not a fight worth picking.",
+      "expect": ["figurative-worth"]
+    },
+    {
+      "id": "tell-074",
+      "text": "Keeping the old URLs is a hill worth dying on.",
+      "expect": ["figurative-worth"]
+    },
+    {
+      "id": "tell-075",
+      "text": "A second product page is a bet worth making.",
+      "expect": ["figurative-worth"]
+    },
+    {
+      "id": "tell-076",
+      "text": "It's worth noting that rankings move every day.",
+      "expect": ["figurative-worth", "filler"]
+    },
+    {
+      "id": "tell-077",
+      "text": "The redesign is a gamble worth taking this quarter.",
+      "expect": ["figurative-worth"]
+    },
+    {
+      "id": "tell-078",
+      "text": "The results are worth a closer look.",
+      "expect": ["figurative-worth"]
+    },
+    {
+      "id": "tell-079",
+      "text": "Parlo also has something most startups would kill for: a parent company with one of the strongest sites in AI media.",
+      "expect": ["cliche"]
+    },
+    {
+      "id": "tell-080",
+      "text": "These three fixes will move the needle.",
+      "expect": ["cliche"]
+    },
+    {
+      "id": "tell-081",
+      "text": "Start with the low-hanging fruit on page two.",
+      "expect": ["cliche"]
+    },
+    {
+      "id": "tell-082",
+      "text": "At the end of the day, rankings follow useful pages.",
+      "expect": ["cliche"]
+    },
+    {
+      "id": "tell-083",
+      "text": "Structured data was a game-changer for our recipes.",
+      "expect": ["cliche"]
+    },
+    {
+      "id": "tell-084",
+      "text": "Internal links are the secret sauce.",
+      "expect": ["cliche"]
+    },
+    {
+      "id": "tell-085",
+      "text": "Some of that gap is brand. But brand isn't the whole story.",
+      "expect": ["cliche"]
+    },
+    {
+      "id": "tell-086",
+      "text": "The broken redirects were just the tip of the iceberg.",
+      "expect": ["cliche"]
+    },
+    {
+      "id": "tell-087",
+      "text": "Nobody wants to mention the elephant in the room: the blog has no owner.",
+      "expect": ["cliche"]
+    },
+    {
+      "id": "tell-088",
+      "text": "The comparison table does the heavy lifting on this page.",
+      "expect": ["cliche"]
+    },
+    {
+      "id": "tell-089",
+      "text": "Every section on the page earns its place.",
+      "expect": ["cliche"]
+    },
+    {
+      "id": "tell-090",
+      "text": "Fixing the canonical tags is a no-brainer.",
+      "expect": ["cliche"]
+    },
+    {
+      "id": "tell-091",
+      "text": "The new hub paves the way for the product pages.",
+      "expect": ["cliche"]
+    },
+    {
+      "id": "tell-092",
+      "text": "Programmatic pages are a double-edged sword.",
+      "expect": ["cliche"]
+    },
+    {
+      "id": "tell-093",
+      "text": "Revenue from search is our north star.",
+      "expect": ["cliche"]
+    },
+    {
+      "id": "tell-094",
+      "text": "Parlo is the bottom bar, and it's not a rounding error.",
+      "expect": ["cliche"]
+    },
+    {
+      "id": "tell-095",
+      "text": "Take your content to the next level with these tips.",
+      "expect": ["cliche"]
+    },
+    {
+      "id": "tell-096",
+      "text": "In this deep dive we look at crawl budget.",
+      "expect": ["cliche"]
+    },
+    {
+      "id": "tell-097",
+      "text": "Long-tail pages give you the best of both worlds.",
+      "expect": ["cliche"]
+    },
+    {
+      "id": "tell-098",
+      "text": "A few small fixes slipped through the cracks.",
+      "expect": ["cliche"]
+    },
+    {
+      "id": "tell-099",
+      "text": "In this post we delve into the data behind the drop.",
+      "expect": ["ai-vocabulary"]
+    },
+    {
+      "id": "tell-100",
+      "text": "The site is a rich tapestry of guides, tools and reviews.",
+      "expect": ["ai-vocabulary"]
+    },
+    {
+      "id": "tell-101",
+      "text": "The new pages showcase how the product works.",
+      "expect": ["ai-vocabulary"]
+    },
+    {
+      "id": "tell-102",
+      "text": "The team took a meticulous approach to redirects.",
+      "expect": ["ai-vocabulary"]
+    },
+    {
+      "id": "tell-103",
+      "text": "Crawl budget is an intricate topic for large sites.",
+      "expect": ["ai-vocabulary"]
+    },
+    {
+      "id": "tell-104",
+      "text": "The guide garnered 4,000 links in a year.",
+      "expect": ["ai-vocabulary"]
+    },
+    {
+      "id": "tell-105",
+      "text": "In the realm of local SEO, reviews matter most.",
+      "expect": ["ai-vocabulary"]
+    },
+    {
+      "id": "tell-106",
+      "text": "Before you embark on a migration, export every URL.",
+      "expect": ["ai-vocabulary"]
+    },
+    {
+      "id": "tell-107",
+      "text": "Fresh case studies bolster the consulting page.",
+      "expect": ["ai-vocabulary"]
+    },
+    {
+      "id": "tell-108",
+      "text": "Ranking well is a multifaceted challenge.",
+      "expect": ["ai-vocabulary"]
+    },
+    {
+      "id": "tell-109",
+      "text": "The groundbreaking study changed how we write titles.",
+      "expect": ["ai-vocabulary"]
+    },
+    {
+      "id": "tell-110",
+      "text": "The guide helps you navigate the complexities of hreflang.",
+      "expect": ["ai-vocabulary"]
+    },
+    {
+      "id": "tell-111",
+      "text": "Search is an ever-evolving field.",
+      "expect": ["ai-vocabulary"]
+    },
+    {
+      "id": "tell-112",
+      "text": "The results underscore the need for better internal links.",
+      "expect": ["ai-vocabulary"]
+    },
+    {
+      "id": "tell-113",
+      "text": "Leverage your existing content to win new searches.",
+      "expect": ["banned-word"]
+    },
+    {
+      "id": "tell-114",
+      "text": "Unlock more traffic from the pages you already have.",
+      "expect": ["banned-word"]
+    },
+    {
+      "id": "tell-115",
+      "text": "The plugin offers a seamless setup.",
+      "expect": ["banned-word"]
+    },
+    {
+      "id": "tell-116",
+      "text": "We built a robust reporting pipeline.",
+      "expect": ["banned-word"]
+    },
+    {
+      "id": "tell-117",
+      "text": "Take a holistic view of the site before you change anything.",
+      "expect": ["banned-word"]
+    },
+    {
+      "id": "tell-118",
+      "text": "Utilize the crawl data to find thin pages.",
+      "expect": ["banned-word"]
+    },
+    {
+      "id": "tell-119",
+      "text": "The spreadsheet is our source of truth for redirects.",
+      "expect": ["banned-word"]
+    },
+    {
+      "id": "tell-120",
+      "text": "This guide covers everything you need to know about sitemaps.",
+      "expect": ["banned-word"]
+    },
+    {
+      "id": "tell-121",
+      "text": "Traffic to the guides doubled, highlighting the need for more of them.",
+      "expect": ["participle-tail"]
+    },
+    {
+      "id": "tell-122",
+      "text": "The page now ranks first, underscoring the value of a clear title.",
+      "expect": ["participle-tail"]
+    },
+    {
+      "id": "tell-123",
+      "text": "We added twelve case studies, showcasing the range of client work.",
+      "expect": ["participle-tail"]
+    },
+    {
+      "id": "tell-124",
+      "text": "Clicks rose 40% in a month, emphasizing how much the old title held it back.",
+      "expect": ["participle-tail"]
+    },
+    {
+      "id": "tell-125",
+      "text": "The hub now links every review, cementing its place as the main entry point.",
+      "expect": ["participle-tail"]
+    },
+    {
+      "id": "tell-126",
+      "text": "The new logo uses a single line, symbolizing the brand's focus.",
+      "expect": ["participle-tail"]
+    },
+    {
+      "id": "tell-127",
+      "text": "The team rebuilt the sitemap, paving the way for the new product pages.",
+      "expect": ["participle-tail"]
+    },
+    {
+      "id": "tell-128",
+      "text": "Organic sign-ups grew each quarter, reflecting a broader shift in how buyers research tools.",
+      "expect": ["participle-tail", "significance-inflation"]
+    },
+    {
+      "id": "tell-129",
+      "text": "Internal links play a crucial role in how pages rank.",
+      "expect": ["significance-inflation"]
+    },
+    {
+      "id": "tell-130",
+      "text": "The launch marks a pivotal moment for the company.",
+      "expect": ["significance-inflation"]
+    },
+    {
+      "id": "tell-131",
+      "text": "The guide's rankings are a testament to the team's work.",
+      "expect": ["significance-inflation"]
+    },
+    {
+      "id": "tell-132",
+      "text": "This update is a significant step towards better search results.",
+      "expect": ["significance-inflation"]
+    },
+    {
+      "id": "tell-133",
+      "text": "The new hub is setting the stage for next year's growth.",
+      "expect": ["significance-inflation"]
+    },
+    {
+      "id": "tell-134",
+      "text": "The brand's values are deeply rooted in the local community.",
+      "expect": ["significance-inflation"]
+    },
+    {
+      "id": "tell-135",
+      "text": "It is important to note that Search Console data is delayed.",
+      "expect": ["filler"]
+    },
+    {
+      "id": "tell-136",
+      "text": "Needless to say, the redirects had to go.",
+      "expect": ["filler"]
+    },
+    {
+      "id": "tell-137",
+      "text": "In this article, we will look at three ways to find thin content.",
+      "expect": ["filler"]
+    },
+    {
+      "id": "tell-138",
+      "text": "As mentioned earlier, the sitemap was out of date.",
+      "expect": ["filler"]
+    },
+    {
+      "id": "tell-139",
+      "text": "It goes without saying that titles matter.",
+      "expect": ["filler"]
+    },
+    {
+      "id": "tell-140",
+      "text": "Let me walk you through the setup.",
+      "expect": ["filler"]
+    },
+    {
+      "id": "tell-141",
+      "text": "In today's fast-paced digital world, every brand needs a blog.",
+      "expect": ["stock-opener"]
+    },
+    {
+      "id": "tell-142",
+      "text": "In an era where AI answers every question, pages still need to rank.",
+      "expect": ["stock-opener"]
+    },
+    {
+      "id": "tell-143",
+      "text": "Imagine a world where every page ranks on day one.",
+      "expect": ["stock-opener"]
+    },
+    {
+      "id": "tell-144",
+      "text": "Whether you're a beginner or an expert, this guide has something for you.",
+      "expect": ["stock-opener"]
+    },
+    {
+      "id": "tell-145",
+      "text": "Say goodbye to messy spreadsheets.",
+      "expect": ["stock-opener"]
+    },
+    {
+      "id": "tell-146",
+      "text": "In the ever-changing landscape of search, one thing stays constant.",
+      "expect": ["stock-opener", "ai-vocabulary"]
+    },
+    {
+      "id": "tell-147",
+      "text": "In conclusion, fix the redirects first.",
+      "expect": ["generic-closer"]
+    },
+    {
+      "id": "tell-148",
+      "text": "With these changes in place, the future looks bright.",
+      "expect": ["generic-closer"]
+    },
+    {
+      "id": "tell-149",
+      "text": "Will the new pages rank? Only time will tell.",
+      "expect": ["generic-closer"]
+    },
+    {
+      "id": "tell-150",
+      "text": "One thing is certain: search keeps changing.",
+      "expect": ["generic-closer"]
+    },
+    {
+      "id": "tell-151",
+      "text": "To sum up, the hub pages did most of the work.",
+      "expect": ["generic-closer"]
+    },
+    {
+      "id": "tell-152",
+      "text": "This is where it gets interesting.",
+      "expect": ["narrative-pivot"]
+    },
+    {
+      "id": "tell-153",
+      "text": "Then something interesting happened.",
+      "expect": ["narrative-pivot"]
+    },
+    {
+      "id": "tell-154",
+      "text": "We moved the canonical into the head. That changes everything.",
+      "expect": ["narrative-pivot"]
+    },
+    {
+      "id": "tell-155",
+      "text": "The new comparison pages flipped the script on a crowded search.",
+      "expect": ["narrative-pivot"]
+    },
+    {
+      "id": "tell-156",
+      "text": "Forty new sign-ups a month from one page. That's not nothing.",
+      "expect": ["performed-insight"]
+    },
+    {
+      "id": "tell-157",
+      "text": "Don't take my word for it. Run the crawl yourself.",
+      "expect": ["performed-insight"]
+    },
+    {
+      "id": "tell-158",
+      "text": "The only metric that matters is revenue from search.",
+      "expect": ["performed-insight"]
+    },
+    {
+      "id": "tell-159",
+      "text": "Most of the traffic never buys. Sit with that.",
+      "expect": ["performed-insight"]
+    },
+    {
+      "id": "tell-160",
+      "text": "Here's the thing: most audits never get read.",
+      "expect": ["throat-clearing"]
+    },
+    {
+      "id": "tell-161",
+      "text": "The truth is, nobody reads the full report.",
+      "expect": ["throat-clearing"]
+    },
+    {
+      "id": "tell-162",
+      "text": "Half your pages get no clicks. Let that sink in.",
+      "expect": ["throat-clearing"]
+    },
+    {
+      "id": "tell-163",
+      "text": "Make no mistake, this migration will cost traffic.",
+      "expect": ["throat-clearing"]
+    },
+    {
+      "id": "tell-164",
+      "text": "Let's be honest about what the report can show.",
+      "expect": ["throat-clearing"]
+    },
+    {
+      "id": "tell-165",
+      "text": "Here's what nobody tells you about migrations.",
+      "expect": ["faux-insight", "heres-announcement"]
+    },
+    {
+      "id": "tell-166",
+      "text": "The part most people miss is the redirect chain.",
+      "expect": ["faux-insight"]
+    },
+    {
+      "id": "tell-167",
+      "text": "This is the part I didn't expect.",
+      "expect": ["faux-insight"]
+    },
+    {
+      "id": "tell-168",
+      "text": "The best-kept secret in local SEO is the photo count.",
+      "expect": ["faux-insight"]
+    },
+    {
+      "id": "tell-169",
+      "text": "Most people don't realize their sitemap lists redirects.",
+      "expect": ["faux-insight"]
+    },
+    {
+      "id": "tell-170",
+      "text": "The result? Clicks doubled in six weeks.",
+      "expect": ["self-answered-question"]
+    },
+    {
+      "id": "tell-171",
+      "text": "The catch? It only works for pages Google already trusts.",
+      "expect": ["self-answered-question"]
+    },
+    {
+      "id": "tell-172",
+      "text": "You publish twice a week and traffic stays flat. Sound familiar?",
+      "expect": ["self-answered-question"]
+    },
+    {
+      "id": "tell-173",
+      "text": "But what does this mean for small sites?",
+      "expect": ["self-answered-question"]
+    },
+    {
+      "id": "tell-174",
+      "text": "The best part: it runs on its own every week.",
+      "expect": ["colon-reveal"]
+    },
+    {
+      "id": "tell-175",
+      "text": "Not a plugin. Not a template. Just a report you can act on.",
+      "expect": ["negation-countdown"]
+    },
+    {
+      "id": "tell-176",
+      "text": "No fluff, no filler, no guesswork.",
+      "expect": ["negation-countdown"]
+    },
+    {
+      "id": "tell-177",
+      "text": "No setup, no card, no waiting.",
+      "expect": ["negation-countdown"]
+    },
+    {
+      "id": "tell-178",
+      "text": "Traffic fell not because of the update, but because the sitemap broke.",
+      "expect": ["not-because"]
+    },
+    {
+      "id": "tell-179",
+      "text": "It ranked not because of links. It ranked because it answered the question.",
+      "expect": ["not-because"]
+    },
+    {
+      "id": "tell-180",
+      "text": "I hope this helps! Let me know if you'd like a shorter version.",
+      "expect": ["chatbot-residue"]
+    },
+    {
+      "id": "tell-181",
+      "text": "Certainly! Here is a revised version of the intro.",
+      "expect": ["chatbot-residue"]
+    },
+    {
+      "id": "tell-182",
+      "text": "As an AI language model, I can't see your Search Console data.",
+      "expect": ["chatbot-residue"]
+    },
+    {
+      "id": "tell-183",
+      "text": "Founded in 2019, [Company Name] helps teams publish faster.",
+      "expect": ["chatbot-residue"]
+    },
+    {
+      "id": "tell-184",
+      "text": "Read the full guide at https://example.com/guide?utm_source=chatgpt.com for details.",
+      "expect": ["chatbot-residue"]
+    },
+    {
+      "id": "tell-185",
+      "text": "Experts agree that page speed matters.",
+      "expect": ["vague-attribution"]
+    },
+    {
+      "id": "tell-186",
+      "text": "Studies show that longer posts rank better.",
+      "expect": ["vague-attribution"]
+    },
+    {
+      "id": "tell-187",
+      "text": "Research suggests readers skim the first paragraph.",
+      "expect": ["vague-attribution"]
+    },
+    {
+      "id": "tell-188",
+      "text": "The change could potentially lift clicks.",
+      "expect": ["hedge-stack"]
+    },
+    {
+      "id": "tell-189",
+      "text": "This may possibly affect your rankings.",
+      "expect": ["hedge-stack"]
+    },
+    {
+      "id": "tell-190",
+      "text": "The new hub might potentially replace the old category pages.",
+      "expect": ["hedge-stack"]
+    },
+    {
+      "id": "tell-191",
+      "text": "The guide stands as a reference for the whole industry.",
+      "expect": ["copula-avoidance"]
+    },
+    {
+      "id": "tell-192",
+      "text": "The tool boasts a clean interface and fast reports.",
+      "expect": ["copula-avoidance"]
+    },
+    {
+      "id": "tell-193",
+      "text": "The blog serves as a hub for the product pages.",
+      "expect": ["copula-avoidance"]
+    },
+    {
+      "id": "tell-194",
+      "text": "Keyword research, reimagined.",
+      "expect": ["marketing-phrase", "pithy-fragment"],
+      "preset": "landing"
+    },
+    {
+      "id": "tell-195",
+      "text": "Build a content plan in just a few clicks.",
+      "expect": ["marketing-phrase"],
+      "preset": "landing"
+    },
+    {
+      "id": "tell-196",
+      "text": "Join thousands of happy marketers who track rankings with Tidepool.",
+      "expect": ["marketing-phrase"],
+      "preset": "landing"
+    },
+    {
+      "id": "tell-197",
+      "text": "Tidepool is more than just a rank tracker.",
+      "expect": ["marketing-phrase"],
+      "preset": "landing"
+    },
+    {
+      "id": "tell-198",
+      "text": "Reporting is slow and manual. That's where Tidepool comes in.",
+      "expect": ["marketing-phrase"],
+      "preset": "landing"
+    },
+    {
+      "id": "tell-199",
+      "text": "Get world-class SEO reports for your team.",
+      "expect": ["buzzword"],
+      "preset": "landing"
+    },
+    {
+      "id": "tell-200",
+      "text": "Our cutting-edge crawler finds every broken link.",
+      "expect": ["buzzword"],
+      "preset": "landing"
+    },
+    {
+      "id": "tell-201",
+      "text": "Effortless reporting for busy agencies.",
+      "expect": ["buzzword"],
+      "preset": "landing"
+    },
+    {
+      "id": "tell-202",
+      "text": "Take your rankings next-level with weekly audits.",
+      "expect": ["buzzword"],
+      "preset": "landing"
+    },
+    {
+      "id": "tell-203",
+      "text": "Our crawler is significantly faster.",
+      "expect": ["unquantified-claim"],
+      "preset": "landing"
+    },
+    {
+      "id": "tell-204",
+      "text": "Reports that are much easier to read.",
+      "expect": ["unquantified-claim"],
+      "preset": "landing"
+    },
+    {
+      "id": "tell-205",
+      "text": "Start your free trial today!",
+      "expect": ["exclamation"],
+      "preset": "landing"
+    },
+    {
+      "id": "tell-206",
+      "text": "We crawled 600 pages to see if something technical was holding them back. It isn't.",
+      "expect": ["stranded-negation"]
+    },
+    {
+      "id": "tell-207",
+      "text": "Is the redesign finished? Not quite.",
+      "expect": ["stranded-negation"]
+    },
+    {
+      "id": "tell-208",
+      "text": "We fixed it. It worked. Traffic came back. Clicks too.",
+      "expect": ["staccato"],
+      "review": true
+    },
+    {
+      "id": "tell-209",
+      "text": "It's fast. It's free. It's yours.",
+      "expect": ["anaphora"]
+    },
+    {
+      "id": "tell-210",
+      "text": "You get the crawl every Monday. You get the issues ranked by revenue. You get a fix for each one.",
+      "expect": ["anaphora"]
+    },
+    {
+      "id": "tell-211",
+      "text": "Crucially, this pivotal change will foster a healthier link profile.",
+      "expect": ["ai-vocabulary-cluster"]
+    },
+    {
+      "id": "tell-212",
+      "text": "Moreover, the new hub helps readers navigate the product landscape.",
+      "expect": ["ai-vocabulary-cluster"]
+    },
+    {
+      "id": "tell-213",
+      "text": "Good content needs innovation, collaboration and transformation.",
+      "expect": ["triad"]
+    },
+    {
+      "id": "tell-214",
+      "text": "Teams pay the integration tax every time they add a tool. Then they hit the supervision paradox, where more checks mean less trust.",
+      "expect": ["invented-label"]
+    },
+    {
+      "id": "tell-215",
+      "text": "What makes this work is the hub page. What changed is the internal linking.",
+      "expect": ["pseudo-cleft"]
+    },
+    {
+      "id": "tell-216",
+      "text": "The crawl found 40 broken links — most of them in old posts.",
+      "expect": ["dash"]
+    },
+    {
+      "id": "tell-217",
+      "text": "The update rolled out over two weeks – and rankings moved daily.",
+      "expect": ["dash"]
+    },
+    {
+      "id": "tell-218",
+      "text": "We moved the blog to a subfolder - the traffic followed.",
+      "expect": ["dash"]
+    },
+    {
+      "id": "tell-219",
+      "text": "The crawl takes 10 -- 15 minutes on a small site.",
+      "expect": ["dash"]
+    },
+    {
+      "id": "tell-220",
+      "text": "Most posts get 2–3 clicks a day.",
+      "expect": ["dash"]
+    },
+    {
+      "id": "tell-221",
+      "text": "Read [the full guide](/docs/report) or [click here](/docs/start) to begin.",
+      "expect": ["weak-link-text"]
+    },
+    {
+      "id": "tell-222",
+      "text": "The steps are in the setup guide, [here](/docs/setup).",
+      "expect": ["weak-link-text"]
+    },
+    {
+      "id": "tell-223",
+      "text": "Click here to download the checklist.",
+      "expect": ["weak-link-text"]
+    },
+    {
+      "id": "tell-224",
+      "text": "## Key takeaways\n\nRedirect the old URLs first.",
+      "expect": ["heading-cliche"]
+    },
+    {
+      "id": "tell-225",
+      "text": "## Why it matters\n\nSearch traffic is the cheapest traffic you get.",
+      "expect": ["heading-cliche"]
+    },
+    {
+      "id": "tell-226",
+      "text": "## Final thoughts\n\nShip the fixes this week.",
+      "expect": ["heading-cliche"]
+    },
+    {
+      "id": "control-509",
+      "text": "Ask what the reader needs there: what the thing is, why they would want it and what it costs.",
+      "expect": null
+    },
+    {
+      "id": "control-227",
+      "text": "## How To Find Thin Content On Your Site\n\nStart with the pages that get no clicks.",
+      "expect": null
+    },
+    {
+      "id": "tell-228",
+      "text": "## 🚀 Launch checklist\n\nCheck the sitemap before launch.",
+      "expect": ["emoji"]
+    },
+    {
+      "id": "tell-229",
+      "text": "# Fix redirects\n\nSome text about redirects.\n\n# Fix canonicals\n\nSome text about canonicals.",
+      "expect": ["h1-count"]
+    },
+    {
+      "id": "tell-230",
+      "text": "## Setup\n\n#### Install the CLI\n\nRun the installer.",
+      "expect": ["heading-skip"]
+    },
+    {
+      "id": "tell-231",
+      "text": "---\ntitle: SEO tips\ndescription: A guide to fixing redirects, canonicals and sitemaps on a site that moved to a new domain last year.\n---\n\nRedirect the old URLs first.",
+      "expect": ["title-length"]
+    },
+    {
+      "id": "tell-232",
+      "text": "---\ntitle: How to find pages that lost their clicks after an update\ndescription: Lost clicks.\n---\n\nStart with the pages that dropped most.",
+      "expect": ["description-length"]
+    },
+    {
+      "id": "tell-233",
+      "text": "---\ntitle: How to find pages that lost their clicks after a Google core update in 2026\ndescription: Find the pages that lost the most clicks after an update, and check whether the drop came from rankings or demand.\n---\n\nStart with the pages that dropped most.",
+      "expect": ["title-length"]
+    },
+    {
+      "id": "tell-234",
+      "text": "- **Speed:** The crawl finishes in minutes.\n- **Coverage:** Every page is checked.\n- **Clarity:** Each issue has a fix.",
+      "expect": ["bold-label-bullets"]
+    },
+    {
+      "id": "tell-235",
+      "text": "title: SEO tips that work",
+      "expect": ["title-length"],
+      "preset": "meta",
+      "format": "text"
+    },
+    {
+      "id": "tell-236",
+      "text": "description: Learn more about our amazing SEO services today!",
+      "expect": ["description-length", "exclamation"],
+      "preset": "meta",
+      "format": "text"
+    },
+    {
+      "id": "tell-237",
+      "text": "Unlock the power of your data",
+      "expect": ["banned-word", "marketing-phrase"],
+      "preset": "meta",
+      "format": "text"
+    },
+    {
+      "id": "tell-238",
+      "text": "<StatCards caption=\"Parlo is the bottom bar, and it's not a rounding error.\" />",
+      "expect": ["cliche"],
+      "format": "mdx"
+    },
+    {
+      "id": "tell-239",
+      "text": "<Chart\n  data={[{\"label\": \"Sep\", \"value\": 3, \"note\": \"That's a real win.\"}]}\n/>",
+      "expect": ["stock-closer"],
+      "format": "mdx"
+    },
+    {
+      "id": "tell-240",
+      "text": "---\ntitle: How I'd grow a dictation app with SEO\nlead: The app has something most startups would kill for.\n---\n\nIt is a dictation app.",
+      "expect": ["cliche"],
+      "format": "mdx"
+    },
+    {
+      "id": "tell-241",
+      "text": "<h1>Rank tracking, reimagined</h1><p>Track every keyword.</p>",
+      "expect": ["marketing-phrase"],
+      "format": "html"
+    },
+    {
+      "id": "tell-242",
+      "text": "<p>Our platform will <strong>supercharge</strong> your SEO.</p>",
+      "expect": ["buzzword"],
+      "format": "html"
+    },
+    {
+      "id": "tell-243",
+      "text": "<p>Want the full report? <a href=\"/report\">Click here</a>.</p>",
+      "expect": ["weak-link-text"],
+      "format": "html"
+    },
+    {
+      "id": "tell-244",
+      "text": "<html><head><title>SEO</title></head><body><h1>Rank tracking for agencies</h1></body></html>",
+      "expect": ["title-length"],
+      "format": "html"
+    },
+    {
+      "id": "tell-245",
+      "text": "<section><h2>Why it matters</h2><p>Search is cheap traffic.</p></section>",
+      "expect": ["heading-cliche"],
+      "format": "html"
+    },
+    {
+      "id": "tell-246",
+      "text": "<p>The fix is in the template, not in the posts.</p>",
+      "expect": ["contrast-reframe"],
+      "format": "html"
+    },
+    {
+      "id": "tell-247",
+      "text": "<p>It isn't a tool, it's a teammate.</p>",
+      "expect": ["negative-parallelism"],
+      "format": "html"
+    },
+    {
+      "id": "tell-248",
+      "text": "The value is in the follow-up emails, not in the first send.",
+      "expect": ["contrast-reframe"]
+    },
+    {
+      "id": "tell-249",
+      "text": "Treat each page as a product, not a post.",
+      "expect": ["contrast-reframe"]
+    },
+    {
+      "id": "tell-250",
+      "text": "Our edge comes from speed, not from size.",
+      "expect": ["contrast-reframe"]
+    },
+    {
+      "id": "tell-251",
+      "text": "The audit is for deciding, not documenting.",
+      "expect": ["contrast-reframe"]
+    },
+    {
+      "id": "tell-252",
+      "text": "Build the page for intent rather than for volume.",
+      "expect": ["contrast-reframe"]
+    },
+    {
+      "id": "tell-253",
+      "text": "It's not a traffic problem, it's a conversion problem.",
+      "expect": ["negative-parallelism"]
+    },
+    {
+      "id": "tell-254",
+      "text": "The blog isn't just a marketing channel. It's the product's manual.",
+      "expect": ["negative-parallelism"]
+    },
+    {
+      "id": "tell-255",
+      "text": "Your title tag isn't a label, it's an ad.",
+      "expect": ["negative-parallelism"]
+    },
+    {
+      "id": "tell-256",
+      "text": "Here's the breakdown.",
+      "expect": ["heres-announcement"]
+    },
+    {
+      "id": "tell-257",
+      "text": "Here's what the data says.",
+      "expect": ["heres-announcement"]
+    },
+    {
+      "id": "tell-258",
+      "text": "Old posts, new life.",
+      "expect": ["pithy-fragment"]
+    },
+    {
+      "id": "tell-259",
+      "text": "Short title, long tail.",
+      "expect": ["pithy-fragment"]
+    },
+    {
+      "id": "tell-260",
+      "text": "Fast, but careful.",
+      "expect": ["pithy-fragment"]
+    },
+    {
+      "id": "tell-261",
+      "text": "That's the magic.",
+      "expect": ["stock-closer"]
+    },
+    {
+      "id": "tell-262",
+      "text": "That's what makes the format so useful.",
+      "expect": ["stock-closer"]
+    },
+    {
+      "id": "tell-263",
+      "text": "A rebrand is a battle worth fighting.",
+      "expect": ["figurative-worth"]
+    },
+    {
+      "id": "tell-264",
+      "text": "This tip is worth knowing before you migrate.",
+      "expect": ["figurative-worth"]
+    },
+    {
+      "id": "tell-265",
+      "text": "The calculator was the low-hanging fruit.",
+      "expect": ["cliche"]
+    },
+    {
+      "id": "tell-266",
+      "text": "Agencies would kill for a client list like that.",
+      "expect": ["cliche"]
+    },
+    {
+      "id": "tell-267",
+      "text": "The redesign moved the needle on sign-ups.",
+      "expect": ["cliche"]
+    },
+    {
+      "id": "tell-268",
+      "text": "We delved into the logs for a week.",
+      "expect": ["ai-vocabulary"]
+    },
+    {
+      "id": "tell-269",
+      "text": "The case study showcases our process.",
+      "expect": ["ai-vocabulary"]
+    },
+    {
+      "id": "tell-270",
+      "text": "Leverage reviews to win local searches.",
+      "expect": ["banned-word"]
+    },
+    {
+      "id": "tell-271",
+      "text": "Rankings rose after the fix, underscoring the role of internal links.",
+      "expect": ["participle-tail"]
+    },
+    {
+      "id": "tell-272",
+      "text": "Schema plays a pivotal role in rich results.",
+      "expect": ["significance-inflation"]
+    },
+    {
+      "id": "tell-273",
+      "text": "It's worth mentioning that Bing data lags.",
+      "expect": ["filler", "figurative-worth"]
+    },
+    {
+      "id": "tell-274",
+      "text": "In today's crowded market, content wins.",
+      "expect": ["stock-opener"]
+    },
+    {
+      "id": "tell-275",
+      "text": "Whether you're a freelancer or an agency, the report helps.",
+      "expect": ["stock-opener"]
+    },
+    {
+      "id": "tell-276",
+      "text": "In summary, start with the titles.",
+      "expect": ["generic-closer"]
+    },
+    {
+      "id": "tell-277",
+      "text": "Then everything changed.",
+      "expect": ["narrative-pivot"]
+    },
+    {
+      "id": "tell-278",
+      "text": "The truth is, most sites never fix their redirects.",
+      "expect": ["throat-clearing"]
+    },
+    {
+      "id": "tell-279",
+      "text": "What most people get wrong is the canonical.",
+      "expect": ["faux-insight"]
+    },
+    {
+      "id": "tell-280",
+      "text": "The upshot? Fewer pages, more clicks.",
+      "expect": ["self-answered-question", "pithy-fragment"]
+    },
+    {
+      "id": "tell-281",
+      "text": "No plugins, no code, no stress.",
+      "expect": ["negation-countdown"]
+    },
+    {
+      "id": "tell-282",
+      "text": "Studies suggest shorter titles get more clicks.",
+      "expect": ["vague-attribution"]
+    },
+    {
+      "id": "tell-283",
+      "text": "This might eventually possibly help.",
+      "expect": ["hedge-stack"]
+    },
+    {
+      "id": "tell-284",
+      "text": "The page serves as a landing spot for ads.",
+      "expect": ["copula-avoidance"]
+    },
+    {
+      "id": "tell-285",
+      "text": "Content planning, redefined.",
+      "expect": ["marketing-phrase"]
+    },
+    {
+      "id": "tell-286",
+      "text": "Is the crawl done? Not yet. Not even close.",
+      "expect": ["stranded-negation"]
+    },
+    {
+      "id": "tell-287",
+      "text": "We published — and nothing happened.",
+      "expect": ["dash"]
+    },
+    {
+      "id": "control-001",
+      "text": "The page isn't indexed.",
+      "expect": null
+    },
+    {
+      "id": "control-002",
+      "text": "Not every post needs a hub.",
+      "expect": null
+    },
+    {
+      "id": "control-003",
+      "text": "Bing calls run locally, not on the hosted server.",
+      "expect": null
+    },
+    {
+      "id": "control-004",
+      "text": "The update landed in March, not April.",
+      "expect": null
+    },
+    {
+      "id": "control-005",
+      "text": "Search Console dates use the Pacific calendar, not UTC.",
+      "expect": null
+    },
+    {
+      "id": "control-006",
+      "text": "Google doesn't show a date for this result.",
+      "expect": null
+    },
+    {
+      "id": "control-007",
+      "text": "We didn't change the template, so the drop came from somewhere else.",
+      "expect": null
+    },
+    {
+      "id": "control-008",
+      "text": "The sitemap isn't listed in robots.txt, so add it there.",
+      "expect": null
+    },
+    {
+      "id": "control-009",
+      "text": "The page isn't broken. Google just hasn't crawled it since the change.",
+      "expect": null
+    },
+    {
+      "id": "control-010",
+      "text": "The redirect isn't working yet, so the old URL still returns a 404.",
+      "expect": null
+    },
+    {
+      "id": "control-011",
+      "text": "It's not a big change, but it fixed the canonical on 72 posts.",
+      "expect": null
+    },
+    {
+      "id": "control-012",
+      "text": "There's no single fix for a site this size.",
+      "expect": null
+    },
+    {
+      "id": "control-013",
+      "text": "No sign-up is needed for the free checker.",
+      "expect": null
+    },
+    {
+      "id": "control-014",
+      "text": "The change affected not only the blog but also the docs.",
+      "expect": null
+    },
+    {
+      "id": "control-015",
+      "text": "This isn't the first time the sitemap broke after a deploy.",
+      "expect": null
+    },
+    {
+      "id": "control-016",
+      "text": "If the report shows no rows, the property may not have data for those dates yet.",
+      "expect": null
+    },
+    {
+      "id": "control-017",
+      "text": "Don't delete the old posts until the redirects are live.",
+      "expect": null
+    },
+    {
+      "id": "control-018",
+      "text": "The tool doesn't write copy. It lists the lines that need a second look.",
+      "expect": null
+    },
+    {
+      "id": "control-019",
+      "text": "The crawl did not reach pages behind the login, so they are missing from the report.",
+      "expect": null
+    },
+    {
+      "id": "control-020",
+      "text": "We haven't tested the change on mobile.",
+      "expect": null
+    },
+    {
+      "id": "control-021",
+      "text": "They weren't using a CDN, which explained the slow pages.",
+      "expect": null
+    },
+    {
+      "id": "control-022",
+      "text": "It isn't clear yet whether the drop is seasonal.",
+      "expect": null
+    },
+    {
+      "id": "control-023",
+      "text": "A noindex tag isn't an error if you meant to hide the page.",
+      "expect": null
+    },
+    {
+      "id": "control-024",
+      "text": "Nobody on the team owned the blog, so posts went out without titles.",
+      "expect": null
+    },
+    {
+      "id": "control-025",
+      "text": "Use a 301 redirect, not a 302, when the move is permanent.",
+      "expect": null
+    },
+    {
+      "id": "control-026",
+      "text": "Prices are in US dollars, not pounds.",
+      "expect": null
+    },
+    {
+      "id": "control-027",
+      "text": "Three issues are worth fixing first: the redirects, the canonicals and the sitemap.",
+      "expect": null
+    },
+    {
+      "id": "control-028",
+      "text": "The house next to the office is worth about £400,000.",
+      "expect": null
+    },
+    {
+      "id": "control-029",
+      "text": "Fernhill.example has a Domain Rating of 77 and about 7,800 sites linking to it. Parlo has 50 and 780. Fernhill is the strongest asset Parlo has.",
+      "expect": null
+    },
+    {
+      "id": "control-030",
+      "text": "The consulting page ranks first for \"ai consulting\", which gets 8,500 searches a month in the US.",
+      "expect": null
+    },
+    {
+      "id": "control-031",
+      "text": "That's 40 more clicks a week than in March.",
+      "expect": null
+    },
+    {
+      "id": "control-032",
+      "text": "That's why we moved the guides under /guides/ in 2025.",
+      "expect": null
+    },
+    {
+      "id": "control-033",
+      "text": "That was the last change we made before the traffic came back.",
+      "expect": null
+    },
+    {
+      "id": "control-034",
+      "text": "That's the page we rebuilt first, because it had the most impressions.",
+      "expect": null
+    },
+    {
+      "id": "control-035",
+      "text": "This is the page that gets most of the sign-ups.",
+      "expect": null
+    },
+    {
+      "id": "control-036",
+      "text": "That is what the second table shows: the same pages, a month later.",
+      "expect": null
+    },
+    {
+      "id": "control-037",
+      "text": "This post is the first in a series about crawl budget.",
+      "expect": null
+    },
+    {
+      "id": "control-038",
+      "text": "The free plan is worth trying before you pay for a tool.",
+      "expect": null
+    },
+    {
+      "id": "control-039",
+      "text": "Is the upgrade worth it for a site with 50 pages? Probably not.",
+      "expect": null
+    },
+    {
+      "id": "control-040",
+      "text": "Export the queries, pages and countries for the last 90 days.",
+      "expect": null
+    },
+    {
+      "id": "control-041",
+      "text": "The crawl checks titles, canonicals and redirects.",
+      "expect": null
+    },
+    {
+      "id": "control-042",
+      "text": "Run the crawl. Then fix the redirects it lists.",
+      "expect": null
+    },
+    {
+      "id": "control-043",
+      "text": "It works on Mac, Windows and Linux.",
+      "expect": null
+    },
+    {
+      "id": "control-044",
+      "text": "Open Search Console. Pick the property. Go to the Pages report.",
+      "expect": null
+    },
+    {
+      "id": "control-045",
+      "text": "Sign in with Google. The report loads in about a minute.",
+      "expect": null
+    },
+    {
+      "id": "control-046",
+      "text": "We publish on Tuesdays and Thursdays.",
+      "expect": null
+    },
+    {
+      "id": "control-047",
+      "text": "Yes, you can run it on a staging site.",
+      "expect": null
+    },
+    {
+      "id": "control-048",
+      "text": "Thanks for reading.",
+      "expect": null
+    },
+    {
+      "id": "control-049",
+      "text": "Here is the full command with every flag:",
+      "expect": null
+    },
+    {
+      "id": "control-050",
+      "text": "Here is the list of pages the crawl skipped, with the reason for each one:",
+      "expect": null
+    },
+    {
+      "id": "control-051",
+      "text": "The post is called \"Same essay, two titles\" and it ranks third.",
+      "expect": null
+    },
+    {
+      "id": "control-052",
+      "text": "We renamed the guide \"Fix redirects before you migrate\" and clicks rose.",
+      "expect": null
+    },
+    {
+      "id": "control-053",
+      "text": "The old title was \"SEO tips\", which said nothing about the page.",
+      "expect": null
+    },
+    {
+      "id": "control-054",
+      "text": "Search Console showed 12,400 clicks in October, down from 15,100 in September. Most of the drop came from five posts about tax deadlines, which always peak in spring. The rest of the site held steady.",
+      "expect": null
+    },
+    {
+      "id": "control-055",
+      "text": "We moved the blog from a subdomain to a folder in May. It took about six weeks for Google to settle on the new URLs, and clicks dipped by around 10% in that time. By July they were back above where they started.",
+      "expect": null
+    },
+    {
+      "id": "control-056",
+      "text": "The comparison pages are new, so part of the answer is time. Google first saw them in October, and new pages on a small site often take a few months to rank. I'd give them until January before changing anything.",
+      "expect": null
+    },
+    {
+      "id": "control-057",
+      "text": "Our pricing page had two H1 headings and no meta description. We fixed both, added a short FAQ, and linked to it from the footer. It now gets about 300 visits a month from search.",
+      "expect": null
+    },
+    {
+      "id": "control-058",
+      "text": "Start with the pages that already get impressions but few clicks. Their titles are often vague or cut off, and a clearer title can lift clicks without any new content.",
+      "expect": null
+    },
+    {
+      "id": "control-059",
+      "text": "If you run a small site, you probably don't need a crawl every week. Once a month is enough unless you are shipping big changes.",
+      "expect": null
+    },
+    {
+      "id": "control-060",
+      "text": "The audit found 72 posts with a duplicate copy at a second address. Both versions returned the page and both were in the sitemap, so Google had to guess which one to show.",
+      "expect": null
+    },
+    {
+      "id": "control-061",
+      "text": "I crawled 600 pages and pulled out every link to the product site. Most pointed at the homepage with the product name as the link text.",
+      "expect": null
+    },
+    {
+      "id": "control-062",
+      "text": "A forum thread and a blog post rank for this search because few companies have written a page for it. A clear guide with real examples could rank within a few months.",
+      "expect": null
+    },
+    {
+      "id": "control-063",
+      "text": "The big course sites have catalogues of thousands of courses. We have five, so I'd skip that search and focus on the course people ask us about.",
+      "expect": null
+    },
+    {
+      "id": "control-064",
+      "text": "The tool reads your Search Console data and lists the pages that lost the most clicks. It doesn't guess why. You still have to look at each page and decide.",
+      "expect": null
+    },
+    {
+      "id": "control-065",
+      "text": "Write the title for the person searching. Put the main topic first, keep it under about 60 characters, and say what makes the page worth clicking.",
+      "expect": null
+    },
+    {
+      "id": "control-066",
+      "text": "Our support docs used to live on a separate help site. Moving them into the main site gave them the same internal links as the blog, and they started ranking for setup questions within a month.",
+      "expect": null
+    },
+    {
+      "id": "control-067",
+      "text": "The newsletter template adds a link to each product at the bottom of every post. Changing that one template changes the links on 600 pages at once.",
+      "expect": null
+    },
+    {
+      "id": "control-068",
+      "text": "We ask Google to recrawl a page only after it changes. Asking for unchanged pages does nothing useful.",
+      "expect": null
+    },
+    {
+      "id": "control-069",
+      "text": "The category pages had no text above the product grid. We added two sentences to each, naming what the category covers and who it is for.",
+      "expect": null
+    },
+    {
+      "id": "control-070",
+      "text": "Rankings for the main keyword moved between fourth and sixth all month. That kind of movement is normal and not worth reacting to.",
+      "expect": null
+    },
+    {
+      "id": "control-071",
+      "text": "I'd start with the guides. They are the pages most likely to rank and the ones most likely to link to the product.",
+      "expect": null
+    },
+    {
+      "id": "control-072",
+      "text": "The data comes from a third-party estimate, so the exact numbers will be off. The trend is still useful.",
+      "expect": null
+    },
+    {
+      "id": "control-073",
+      "text": "If a page gets impressions for a search but sits on page two, look at what the top results cover that it doesn't.",
+      "expect": null
+    },
+    {
+      "id": "control-074",
+      "text": "The crawler respects robots.txt, including a crawl delay, and stops at 500 pages unless you ask for more.",
+      "expect": null
+    },
+    {
+      "id": "control-075",
+      "text": "Most of the visits to the podcast page came from people who mistyped a product name. They left within seconds.",
+      "expect": null
+    },
+    {
+      "id": "control-076",
+      "text": "We rewrote the intro to answer the question in the first two sentences. Time on page went up, and the page moved from eighth to fourth.",
+      "expect": null
+    },
+    {
+      "id": "control-077",
+      "text": "For a local business, the Google Business Profile often brings more calls than the website. Keep the hours and phone number current.",
+      "expect": null
+    },
+    {
+      "id": "control-078",
+      "text": "Agencies usually send a monthly report. A short list of what changed and what to do next is more useful than forty pages of charts.",
+      "expect": null
+    },
+    {
+      "id": "control-079",
+      "text": "Product names in titles help when people already know the product. For new products, lead with what it does.",
+      "expect": null
+    },
+    {
+      "id": "control-080",
+      "text": "Each review gets its own page, and a hub page links to all of them. New reviews pick up links from the hub on day one.",
+      "expect": null
+    },
+    {
+      "id": "control-081",
+      "text": "We kept the old URL structure and only changed the templates, so there were no redirects to manage.",
+      "expect": null
+    },
+    {
+      "id": "control-082",
+      "text": "Our biggest traffic source last year was a single calculator page. It still brings in about a third of all sign-ups.",
+      "expect": null
+    },
+    {
+      "id": "control-083",
+      "text": "The checker runs in your browser, so nothing you paste is stored.",
+      "expect": null
+    },
+    {
+      "id": "control-084",
+      "text": "When a search shows mostly videos, a written guide is unlikely to rank near the top. A short video might do better.",
+      "expect": null
+    },
+    {
+      "id": "control-085",
+      "text": "You can ignore the warning if the page is meant to stay out of search.",
+      "expect": null
+    },
+    {
+      "id": "control-086",
+      "text": "I asked three customers how they found us. Two searched for the problem, not the product name, which surprised me.",
+      "expect": null
+    },
+    {
+      "id": "control-087",
+      "text": "The hosted server keeps your sign-in and keys encrypted, and it stores report data only for sites in the weekly audit.",
+      "expect": null
+    },
+    {
+      "id": "control-088",
+      "text": "A title that changes every week makes it hard to tell what worked. Change it once, then wait a month.",
+      "expect": null
+    },
+    {
+      "id": "control-089",
+      "text": "Most of the links came from two directories we paid for in 2019. We removed them and nothing happened to rankings.",
+      "expect": null
+    },
+    {
+      "id": "control-090",
+      "text": "There are 80 pages in the sitemap, and only the homepage gets search traffic.",
+      "expect": null
+    },
+    {
+      "id": "control-091",
+      "text": "The plan has three steps: fix the links, publish the comparison pages, and ask the roundup authors to add us.",
+      "expect": null
+    },
+    {
+      "id": "control-092",
+      "text": "Google rewrote the title on about a third of our pages. Shorter, more literal titles were rewritten less often.",
+      "expect": null
+    },
+    {
+      "id": "control-093",
+      "text": "The free tier covers one site. Paid plans start at $15 a month per site.",
+      "expect": null
+    },
+    {
+      "id": "control-094",
+      "text": "We used to publish five posts a week. Now we publish one and update an old one, and traffic is higher.",
+      "expect": null
+    },
+    {
+      "id": "control-095",
+      "text": "Ask your agent which pages lost clicks after the update, then open each one and check the title, the intro and the date.",
+      "expect": null
+    },
+    {
+      "id": "control-096",
+      "text": "Track rankings for 500 keywords, with a daily update and a weekly email.",
+      "expect": null,
+      "preset": "landing"
+    },
+    {
+      "id": "control-097",
+      "text": "Find broken links on your site in about two minutes.",
+      "expect": null,
+      "preset": "landing"
+    },
+    {
+      "id": "control-098",
+      "text": "Tidepool reads your Search Console data and lists the pages that lost clicks this week.",
+      "expect": null,
+      "preset": "landing"
+    },
+    {
+      "id": "control-099",
+      "text": "Start a free crawl",
+      "expect": null,
+      "preset": "landing"
+    },
+    {
+      "id": "control-100",
+      "text": "Plans start at $15 a month. Cancel any time.",
+      "expect": null,
+      "preset": "landing"
+    },
+    {
+      "id": "control-101",
+      "text": "Used by 1,200 agencies, from two-person shops to teams of 80.",
+      "expect": null,
+      "preset": "landing"
+    },
+    {
+      "id": "control-102",
+      "text": "See which pages lost clicks after the last Google update.",
+      "expect": null,
+      "preset": "landing"
+    },
+    {
+      "id": "control-103",
+      "text": "Export every issue to a spreadsheet your client can read.",
+      "expect": null,
+      "preset": "landing"
+    },
+    {
+      "id": "control-104",
+      "text": "<h1>Rank tracking for small agencies</h1><p>Daily rankings for every client site, in one report.</p><a href=\"/signup\">Start a free trial</a>",
+      "expect": null,
+      "format": "html"
+    },
+    {
+      "id": "control-105",
+      "text": "<html><head><title>Broken link checker for WordPress sites</title><meta name=\"description\" content=\"Find broken links on your WordPress site in about two minutes, with the page and anchor text for each one.\"></head><body><h1>Find broken links</h1><p>Paste your URL and the check starts.</p></body></html>",
+      "expect": null,
+      "format": "html"
+    },
+    {
+      "id": "control-106",
+      "text": "<section><h2>How the crawl works</h2><p>It starts from your sitemap and follows links up to 500 pages.</p></section>",
+      "expect": null,
+      "format": "html"
+    },
+    {
+      "id": "control-107",
+      "text": "<p>Read the <a href=\"/docs/google\">Google connection guide</a> before you sign in.</p>",
+      "expect": null,
+      "format": "html"
+    },
+    {
+      "id": "control-108",
+      "text": "title: Broken link checker for small sites",
+      "expect": null,
+      "preset": "meta",
+      "format": "text"
+    },
+    {
+      "id": "control-109",
+      "text": "description: Find broken links on your site in about two minutes, with the page and the link text for each one.",
+      "expect": null,
+      "preset": "meta",
+      "format": "text"
+    },
+    {
+      "id": "control-110",
+      "text": "Search Console report for traffic drops\nFind the pages that lost clicks after an update and see whether rankings or demand changed.",
+      "expect": null,
+      "preset": "meta",
+      "format": "text"
+    },
+    {
+      "id": "control-111",
+      "text": "title: Free title length checker for SEO titles\ndescription: Check whether a title fits in search results before you publish it, with the pixel width and character count.",
+      "expect": null,
+      "preset": "meta",
+      "format": "text"
+    },
+    {
+      "id": "control-112",
+      "text": "---\ntitle: How to find pages that lost clicks\ndescription: Find the pages that lost the most clicks after an update, and check whether the drop came from rankings or demand.\n---\n\n## Pick the dates\n\nChoose a week before the update and a week after it.\n\n## Compare the pages\n\nSort by the change in clicks and start at the top.",
+      "expect": null,
+      "format": "mdx"
+    },
+    {
+      "id": "control-113",
+      "text": "## Add the skill for your agent\n\nRun the install command and pick the agents you use.\n\n### Check it worked\n\nAsk your agent to list your sites.",
+      "expect": null
+    },
+    {
+      "id": "control-114",
+      "text": "Install the CLI first:\n\n```sh\nnpm i -g seo\nseo start\n```\n\nThen run your first report.",
+      "expect": null
+    },
+    {
+      "id": "control-115",
+      "text": "```text\nIt's not a content problem, it's a linking problem. Same essay, two titles. Leverage synergy!\n```\n\nThe code block above is an example prompt.",
+      "expect": null
+    },
+    {
+      "id": "control-116",
+      "text": "Run `seo lint --preset landing` to check a page. The `--fail-on warning` flag makes it stricter.",
+      "expect": null
+    },
+    {
+      "id": "control-117",
+      "text": "The docs live at https://example.com/unlock-robust-seamless-leverage and the guide at https://example.com/guide.",
+      "expect": null
+    },
+    {
+      "id": "control-118",
+      "text": "import { Chart } from '../components/Chart'\nexport const rows = [{ note: 'leverage' }]\n\nThe chart below shows clicks by month.",
+      "expect": null,
+      "format": "mdx"
+    },
+    {
+      "id": "control-119",
+      "text": "<Chart\n  data={[{\"label\": \"Sep 2026\", \"value\": 3108}, {\"label\": \"Oct 2026\", \"value\": 154}]}\n  unit=\"visits\"\n/>\n\nVisits fell after the update in August.",
+      "expect": null,
+      "format": "mdx"
+    },
+    {
+      "id": "control-120",
+      "text": "<Figure caption=\"Estimated monthly visits to one podcast page. Typo traffic arrives quickly and leaves the same way.\" />",
+      "expect": null,
+      "format": "mdx"
+    },
+    {
+      "id": "control-121",
+      "text": "<BeforeAfter caption=\"What Google gets on a guide page, compared with an ordinary post.\" />",
+      "expect": null,
+      "format": "mdx"
+    },
+    {
+      "id": "control-122",
+      "text": "- Six comparison pages\n- Five use-case pages\n- A dictation page, a notes page, pricing and docs",
+      "expect": null
+    },
+    {
+      "id": "control-123",
+      "text": "1. Fix the redirects.\n2. Update the sitemap.\n3. Ask Google to recrawl the changed pages.",
+      "expect": null
+    },
+    {
+      "id": "control-124",
+      "text": "The site uses self-hosted fonts, long-tail keywords and a two-step checkout.",
+      "expect": null
+    },
+    {
+      "id": "control-125",
+      "text": "Our office is open 9 to 5, Monday to Friday.",
+      "expect": null
+    },
+    {
+      "id": "control-126",
+      "text": "The report covers 2024-01-01 to 2024-03-31.",
+      "expect": null
+    },
+    {
+      "id": "control-127",
+      "text": "Clicks fell by 5 to 10% on most posts.",
+      "expect": null
+    },
+    {
+      "id": "control-128",
+      "text": "Use `--max-pages` to crawl more than 500 pages.",
+      "expect": null
+    },
+    {
+      "id": "control-129",
+      "text": "Read [the Google connection guide](/docs/google) before you sign in.",
+      "expect": null
+    },
+    {
+      "id": "control-130",
+      "text": "The [report docs](/docs/report) explain each section.",
+      "expect": null
+    },
+    {
+      "id": "control-131",
+      "text": "> Setup can add the skill for you (and if you chose no, you can add it later).",
+      "expect": null
+    },
+    {
+      "id": "control-132",
+      "text": "We tried three title formats. The one with the number in it won by a wide margin, so we used it on every review.",
+      "expect": null
+    },
+    {
+      "id": "control-133",
+      "text": "## Results from the first month\n\nClicks rose 18% and sign-ups from search rose 11%.",
+      "expect": null
+    },
+    {
+      "id": "control-134",
+      "text": "# Technical SEO crawler\n\nCrawl your site and list the technical issues.\n\n## Run the crawl\n\nIt takes a few minutes.",
+      "expect": null
+    },
+    {
+      "id": "control-135",
+      "text": "Hi Sam,\n\nThanks for the list. I'll fix the redirects today.",
+      "expect": null
+    },
+    {
+      "id": "control-136",
+      "text": "What changed was the template: the canonical moved into the head.",
+      "expect": null
+    },
+    {
+      "id": "control-137",
+      "text": "The truth table in the docs lists every combination of flags.",
+      "expect": null
+    },
+    {
+      "id": "control-138",
+      "text": "We use the landscape layout for the charts so the labels fit.",
+      "expect": null
+    },
+    {
+      "id": "control-139",
+      "text": "The journey from search to sign-up takes three pages on average.",
+      "expect": null
+    },
+    {
+      "id": "control-140",
+      "text": "Click the Export button, then choose CSV.",
+      "expect": null
+    },
+    {
+      "id": "control-141",
+      "text": "The hub links to each review, and each review links back to the hub.",
+      "expect": null
+    },
+    {
+      "id": "control-142",
+      "text": "A new post usually takes a week or two to show up in Search Console.",
+      "expect": null
+    },
+    {
+      "id": "control-143",
+      "text": "The real numbers come from Search Console, and the estimates come from Ahrefs.",
+      "expect": null
+    },
+    {
+      "id": "control-144",
+      "text": "We found the problem by comparing two crawls a week apart.",
+      "expect": null
+    },
+    {
+      "id": "control-145",
+      "text": "Paid plans include the weekly crawl, daily index checks and an email each Monday.",
+      "expect": null
+    },
+    {
+      "id": "control-146",
+      "text": "The checklist is short: titles, descriptions, canonicals, redirects and the sitemap.",
+      "expect": null
+    },
+    {
+      "id": "control-147",
+      "text": "Your site will not lose rankings because of one slow page.",
+      "expect": null
+    },
+    {
+      "id": "control-148",
+      "text": "Some teams prefer a weekly crawl. Others run one before each release.",
+      "expect": null
+    },
+    {
+      "id": "control-149",
+      "text": "If you use a CMS, the canonical is usually set for you.",
+      "expect": null
+    },
+    {
+      "id": "control-150",
+      "text": "I wouldn't touch the brand name. People already know it.",
+      "expect": null
+    },
+    {
+      "id": "control-151",
+      "text": "The vendor's own academy takes the top spots, as it should.",
+      "expect": null
+    },
+    {
+      "id": "control-152",
+      "text": "Fernhill's DR is 77, it teaches the subject, and it has three cohorts of students.",
+      "expect": null
+    },
+    {
+      "id": "control-153",
+      "text": "The same page can answer the tutorial search with a free first lesson.",
+      "expect": null
+    },
+    {
+      "id": "control-154",
+      "text": "Five posts link to a parked domain that shows an advert instead of the app.",
+      "expect": null
+    },
+    {
+      "id": "control-155",
+      "text": "Point each product mention at the page that sells to that reader.",
+      "expect": null
+    },
+    {
+      "id": "control-156",
+      "text": "The crawl turned up three technical issues. I've listed them in order of how much revenue they affect.",
+      "expect": null
+    },
+    {
+      "id": "control-157",
+      "text": "On every guide I tested, the canonical tag arrives in the page body instead of the head.",
+      "expect": null
+    },
+    {
+      "id": "control-158",
+      "text": "Almost everything above changes pages that Google has already crawled.",
+      "expect": null
+    },
+    {
+      "id": "control-159",
+      "text": "It costs $15 a month, or it comes free with a subscription.",
+      "expect": null
+    },
+    {
+      "id": "control-160",
+      "text": "About 1,300 people a month search for an alternative, at a difficulty of zero.",
+      "expect": null
+    },
+    {
+      "id": "control-161",
+      "text": "That word is mostly searched by people looking for theatre monologues.",
+      "expect": null
+    },
+    {
+      "id": "control-162",
+      "text": "You can't rank for someone else's brand name with a comparison page alone.",
+      "expect": null
+    },
+    {
+      "id": "control-163",
+      "text": "Each run of the course gets its own address and announcement post.",
+      "expect": null
+    },
+    {
+      "id": "control-164",
+      "text": "The Wayback Machine first saw the pages on 19 October.",
+      "expect": null
+    },
+    {
+      "id": "control-165",
+      "text": "Most of the search traffic comes from people typing the company name.",
+      "expect": null
+    },
+    {
+      "id": "control-166",
+      "text": "A peak of 3,000 visits from people who wanted a theatre speech was never going to sell many subscriptions.",
+      "expect": null
+    },
+    {
+      "id": "control-167",
+      "text": "When Google decided those searchers wanted drama school, traffic fell.",
+      "expect": null
+    },
+    {
+      "id": "control-168",
+      "text": "Our team spent the first week reading support tickets before writing any copy.",
+      "expect": null
+    },
+    {
+      "id": "control-169",
+      "text": "We kept the vs pages and added alternatives pages next to them.",
+      "expect": null
+    },
+    {
+      "id": "control-170",
+      "text": "Turn on the weekly email if you want the report without asking for it.",
+      "expect": null
+    },
+    {
+      "id": "control-171",
+      "text": "The robots.txt file blocks the staging site, which is what we want.",
+      "expect": null
+    },
+    {
+      "id": "control-172",
+      "text": "A canonical tag tells Google which version of a page you prefer. It is a hint, so Google can still pick another one.",
+      "expect": null
+    },
+    {
+      "id": "control-173",
+      "text": "Keep one H1 that names the page, and use H2 headings for the sections.",
+      "expect": null
+    },
+    {
+      "id": "control-174",
+      "text": "If you change a URL, add a permanent redirect from the old one.",
+      "expect": null
+    },
+    {
+      "id": "control-175",
+      "text": "The free checker needs no account and no key.",
+      "expect": null
+    },
+    {
+      "id": "control-176",
+      "text": "This guide explains how the report works and what it can't show.",
+      "expect": null
+    },
+    {
+      "id": "control-177",
+      "text": "Bing sends far less traffic than Google for most sites, but its data is free.",
+      "expect": null
+    },
+    {
+      "id": "control-178",
+      "text": "Clicky counts visits, which are not the same as Google Analytics sessions.",
+      "expect": null
+    },
+    {
+      "id": "control-179",
+      "text": "I'd rather fix ten titles than write one new post this month.",
+      "expect": null
+    },
+    {
+      "id": "control-180",
+      "text": "Pick one search per page. Two pages that target the same search compete with each other.",
+      "expect": null
+    },
+    {
+      "id": "control-181",
+      "text": "Search for the brand name and check what shows up first.",
+      "expect": null
+    },
+    {
+      "id": "control-182",
+      "text": "Google indexed the new pages within four days.",
+      "expect": null
+    },
+    {
+      "id": "control-183",
+      "text": "The redirect goes to the new URL, not the homepage.",
+      "expect": null
+    },
+    {
+      "id": "control-184",
+      "text": "The data covers the US only, not other countries.",
+      "expect": null
+    },
+    {
+      "id": "control-185",
+      "text": "We don't track rankings for brand searches.",
+      "expect": null
+    },
+    {
+      "id": "control-186",
+      "text": "The page isn't in the sitemap yet.",
+      "expect": null
+    },
+    {
+      "id": "control-187",
+      "text": "Not all of the drop came from the update.",
+      "expect": null
+    },
+    {
+      "id": "control-188",
+      "text": "It's worth $40 a month to us because it saves a day of work.",
+      "expect": null
+    },
+    {
+      "id": "control-189",
+      "text": "Here are the steps to connect Bing:",
+      "expect": null
+    },
+    {
+      "id": "control-190",
+      "text": "The report shows clicks, impressions and position for each page.",
+      "expect": null
+    },
+    {
+      "id": "control-191",
+      "text": "Fix the title. Then wait two weeks.",
+      "expect": null
+    },
+    {
+      "id": "control-192",
+      "text": "We tested two intros on the same page for a month.",
+      "expect": null
+    },
+    {
+      "id": "control-193",
+      "text": "That's the version we kept.",
+      "expect": null
+    },
+    {
+      "id": "control-194",
+      "text": "The new hub links to 14 reviews.",
+      "expect": null
+    },
+    {
+      "id": "control-195",
+      "text": "Our biggest page gets 3,000 visits a month from people searching for a template.",
+      "expect": null
+    },
+    {
+      "id": "control-196",
+      "text": "A crawl of 500 pages takes about four minutes on a home connection.",
+      "expect": null
+    },
+    {
+      "id": "control-197",
+      "text": "The team rewrote 30 titles in March and clicks rose 12% by May.",
+      "expect": null
+    },
+    {
+      "id": "control-198",
+      "text": "If the canonical points elsewhere, Google may index the other page instead.",
+      "expect": null
+    },
+    {
+      "id": "control-199",
+      "text": "There is no penalty for a short title, but it may get rewritten.",
+      "expect": null
+    },
+    {
+      "id": "control-200",
+      "text": "She writes the newsletter and I write the docs.",
+      "expect": null
+    },
+    {
+      "id": "control-201",
+      "text": "The tool isn't free for agencies with more than five clients.",
+      "expect": null
+    },
+    {
+      "id": "control-202",
+      "text": "We paused the ads in June, so organic sign-ups look higher than they were.",
+      "expect": null
+    },
+    {
+      "id": "control-203",
+      "text": "The help page explains how to export the data.",
+      "expect": null
+    },
+    {
+      "id": "control-204",
+      "text": "Most of our readers find us through one guide about invoices.",
+      "expect": null
+    },
+    {
+      "id": "control-205",
+      "text": "The meeting notes are in the shared folder, not in email.",
+      "expect": null
+    },
+    {
+      "id": "control-206",
+      "text": "You can run it from the terminal or from your agent.",
+      "expect": null
+    },
+    {
+      "id": "control-207",
+      "text": "The pages load in under a second on mobile.",
+      "expect": null
+    },
+    {
+      "id": "control-208",
+      "text": "Search for the error message and you'll find the fix on the first result.",
+      "expect": null
+    },
+    {
+      "id": "control-209",
+      "text": "Their pricing page lists three plans and a free trial.",
+      "expect": null
+    },
+    {
+      "id": "control-210",
+      "text": "This year we published fewer posts and updated more old ones.",
+      "expect": null
+    },
+    {
+      "id": "control-211",
+      "text": "The old domain still gets about 200 visits a month from bookmarks.",
+      "expect": null
+    },
+    {
+      "id": "control-212",
+      "text": "Ask Google to recrawl only pages that changed.",
+      "expect": null
+    },
+    {
+      "id": "control-213",
+      "text": "The crawl skipped 12 pages because robots.txt blocked them.",
+      "expect": null
+    },
+    {
+      "id": "control-214",
+      "text": "Keep the URL short and use words people search for.",
+      "expect": null
+    },
+    {
+      "id": "control-215",
+      "text": "The chart starts in January because that is when we added tracking.",
+      "expect": null
+    },
+    {
+      "id": "control-216",
+      "text": "Two of the five posts never ranked, so we merged them.",
+      "expect": null
+    },
+    {
+      "id": "control-217",
+      "text": "I'd skip the generic search and write for the specific one.",
+      "expect": null
+    },
+    {
+      "id": "control-218",
+      "text": "Our support team answers most questions within a day.",
+      "expect": null
+    },
+    {
+      "id": "control-219",
+      "text": "Each review takes about a week to write and test.",
+      "expect": null
+    },
+    {
+      "id": "control-220",
+      "text": "The list below shows the pages with the biggest drops.",
+      "expect": null
+    },
+    {
+      "id": "control-221",
+      "text": "We moved the docs, then fixed the links that broke.",
+      "expect": null
+    }
+  ]
+}

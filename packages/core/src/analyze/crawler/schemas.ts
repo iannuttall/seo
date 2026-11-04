@@ -755,6 +755,14 @@ const crawlSitemapDiscoverySchema = z.object({
       ),
       possiblyTruncated: z.boolean(),
       warnings: z.array(z.string()),
+      offHost: z
+        .object({
+          count: z.number().int().positive(),
+          localhost: z.number().int().nonnegative(),
+          hosts: z.array(z.string()),
+          samples: z.array(z.string()),
+        })
+        .optional(),
     }),
   ),
 })

@@ -14,14 +14,17 @@ const MAX_BYTES = 1_000_000
 const clean = (value: string | null | undefined) =>
   value?.trim().replace(/\s+/g, ' ') || null
 
-// Reads at most MAX_BYTES of the body as text.
-async function boundedText(response: Response): Promise<string> {
+// Reads at most maxBytes of the body as text.
+export async function boundedText(
+  response: Response,
+  maxBytes = MAX_BYTES,
+): Promise<string> {
   if (!response.body) return ''
   const reader = response.body.getReader()
   const decoder = new TextDecoder()
   let text = ''
   let total = 0
-  while (total < MAX_BYTES) {
+  while (total < maxBytes) {
     const { done, value } = await reader.read()
     if (done) return text + decoder.decode()
     total += value.byteLength

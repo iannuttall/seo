@@ -172,16 +172,17 @@ async function checkLlmsTxt(
 ): Promise<NonNullable<CrawlAiSignals['llmsTxt']>> {
   const result = await get(input, new URL('/llms.txt', input.url).toString())
   // A site that serves its HTML shell for every path has no llms.txt.
-  const availability =
+  const servesHtml =
     result.availability === 'available' && isHtml(result.contentType)
-      ? 'absent'
-      : result.availability
+  const availability = servesHtml ? 'absent' : result.availability
   const exists = availability === 'available'
   const base = {
     url: result.url,
     exists,
     availability,
     ...(result.status === undefined ? {} : { status: result.status }),
+    ...(result.contentType ? { contentType: result.contentType } : {}),
+    ...(servesHtml ? { servesHtml } : {}),
     ...(result.error ? { error: result.error } : {}),
   }
   if (!exists) return base
@@ -252,7 +253,11 @@ async function checkRobotsAiAccess(input: SignalInput): Promise<{
   allows: RobotsGate
 }> {
   const result = await get(input, new URL('/robots.txt', input.url).toString())
-  const exists = result.availability === 'available'
+  // An HTML page holds no robots rules, so crawlers treat it as no file.
+  const servesHtml =
+    result.availability === 'available' && isHtml(result.contentType)
+  const availability = servesHtml ? 'absent' : result.availability
+  const exists = availability === 'available'
   const unknown =
     result.availability === 'rate-limited' ||
     result.availability === 'unreachable'
@@ -261,8 +266,10 @@ async function checkRobotsAiAccess(input: SignalInput): Promise<{
   const robotsTxt: NonNullable<CrawlAiSignals['robotsTxt']> = {
     url: result.url,
     exists,
-    availability: result.availability,
+    availability,
     ...(result.status === undefined ? {} : { status: result.status }),
+    ...(result.contentType ? { contentType: result.contentType } : {}),
+    ...(servesHtml ? { servesHtml } : {}),
     ...(unknown
       ? {
           error: result.error ?? `robots.txt returned HTTP ${result.status}.`,

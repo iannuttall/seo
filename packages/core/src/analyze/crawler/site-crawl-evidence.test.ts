@@ -344,3 +344,48 @@ test('crawlSite preserves conflicting HTML and HTTP canonical evidence', async (
     await fixture.close()
   }
 })
+
+// A site that serves its home page for every path, with a sitemap built
+// against a development base URL.
+test('crawlSite flags an HTML robots.txt and llms.txt, soft 404s and a localhost sitemap', async () => {
+  const fixture = await withServer((req, res) => {
+    if (req.url === '/sitemap.xml') {
+      res.setHeader('content-type', 'application/xml')
+      res.end(
+        `<?xml version="1.0"?><urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9"><url><loc>http://localhost:8000/</loc></url><url><loc>http://localhost:8000/guide/</loc></url><url><loc>${fixture.baseUrl}/</loc></url></urlset>`,
+      )
+      return
+    }
+    res.setHeader('content-type', 'text/html; charset=utf-8')
+    res.end('<!doctype html><title>Home</title><h1>Home</h1><p>Welcome.</p>')
+  })
+
+  try {
+    const report = await crawlSite({
+      url: `${fixture.baseUrl}/`,
+      maxPages: 3,
+      concurrency: 1,
+      js: 'off',
+      checkExternal: false,
+    })
+    const byRule = (ruleId: string) =>
+      report.issues.filter((issue) => issue.ruleId === ruleId)
+
+    assert.equal(byRule('robots_txt_html').length, 1)
+    assert.equal(report.ai?.robotsTxt?.exists, false)
+    assert.equal(report.ai?.llmsTxt?.servesHtml, true)
+    assert.match(byRule('llms_txt_missing')[0]?.detail ?? '', /HTML page/)
+    assert.equal(byRule('soft_404').length, 1)
+    const offHost = byRule('sitemap_url_off_host')
+    assert.equal(offHost.length, 1)
+    assert.equal(offHost[0]?.url, `${fixture.baseUrl}/sitemap.xml`)
+    assert.deepEqual(report.sitemapDiscovery?.roots[0]?.offHost, {
+      count: 2,
+      localhost: 2,
+      hosts: ['localhost:8000'],
+      samples: ['http://localhost:8000/', 'http://localhost:8000/guide/'],
+    })
+  } finally {
+    await fixture.close()
+  }
+})

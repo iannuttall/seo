@@ -158,6 +158,14 @@ export type CrawlSitemapDiscovery = {
     documents: SitemapDocument[]
     possiblyTruncated: boolean
     warnings: string[]
+    // URLs read from this sitemap on a host other than the site's. Counts
+    // cover only the URLs read, up to the crawl's page limit.
+    offHost?: {
+      count: number
+      localhost: number
+      hosts: string[]
+      samples: string[]
+    }
   }>
 }
 

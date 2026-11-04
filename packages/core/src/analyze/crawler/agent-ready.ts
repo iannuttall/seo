@@ -71,12 +71,28 @@ export function agentReadyIssues(input: {
     )
   }
 
+  if (ai.robotsTxt?.servesHtml) {
+    issues.push(
+      issue(
+        'robots_txt_html',
+        ai.robotsTxt.url,
+        `/robots.txt returned an HTML page (HTTP ${ai.robotsTxt.status}, ${ai.robotsTxt.contentType}), so it has no rules or sitemap lines.`,
+        { status: ai.robotsTxt.status, contentType: ai.robotsTxt.contentType },
+      ),
+    )
+  }
+
   if (ai.llmsTxt?.availability === 'absent') {
     issues.push(
       issue(
         'llms_txt_missing',
         ai.llmsTxt.url,
-        `/llms.txt returned ${ai.llmsTxt.status === undefined ? 'no file' : `HTTP ${ai.llmsTxt.status}`}.`,
+        ai.llmsTxt.servesHtml
+          ? `/llms.txt returned an HTML page (HTTP ${ai.llmsTxt.status}, ${ai.llmsTxt.contentType}), not a text file.`
+          : `/llms.txt returned ${ai.llmsTxt.status === undefined ? 'no file' : `HTTP ${ai.llmsTxt.status}`}.`,
+        ai.llmsTxt.servesHtml
+          ? { status: ai.llmsTxt.status, contentType: ai.llmsTxt.contentType }
+          : undefined,
       ),
     )
   }

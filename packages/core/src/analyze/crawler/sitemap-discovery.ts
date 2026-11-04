@@ -1,7 +1,79 @@
+import { explainRule } from '../../rules.js'
 import type { fetchSitemapUrls } from '../monitoring/sitemaps.js'
-import type { CrawlSitemapDiscovery } from './report.js'
+import type { CrawlIssue, CrawlSitemapDiscovery } from './report.js'
 
 const MAX_SITEMAP_ROOTS = 20
+const OFF_HOST_SAMPLES = 5
+
+type SitemapRoot = CrawlSitemapDiscovery['roots'][number]
+
+const siteHost = (hostname: string) => hostname.replace(/^www\./, '')
+
+function isLocalHost(hostname: string): boolean {
+  return (
+    hostname === 'localhost' ||
+    hostname.endsWith('.localhost') ||
+    hostname === '0.0.0.0' ||
+    hostname === '[::1]' ||
+    /^127\.\d+\.\d+\.\d+$/.test(hostname)
+  )
+}
+
+// Sitemap URLs on a host other than the site's, such as localhost left by a
+// build. www and the bare domain count as the same site.
+function offHostUrls(
+  urls: string[],
+  siteUrl: string,
+): SitemapRoot['offHost'] | undefined {
+  const site = siteHost(new URL(siteUrl).hostname)
+  const off = urls.filter((url) => {
+    try {
+      return siteHost(new URL(url).hostname) !== site
+    } catch {
+      return false
+    }
+  })
+  if (!off.length) return undefined
+  const hosts = [...new Set(off.map((url) => new URL(url).host))].sort()
+  return {
+    count: off.length,
+    localhost: off.filter((url) => isLocalHost(new URL(url).hostname)).length,
+    hosts: hosts.slice(0, OFF_HOST_SAMPLES),
+    samples: off.slice(0, OFF_HOST_SAMPLES),
+  }
+}
+
+function withOffHost(urls: string[], siteUrl: string) {
+  const offHost = offHostUrls(urls, siteUrl)
+  return offHost ? { offHost } : {}
+}
+
+export function sitemapHostIssues(
+  discovery: CrawlSitemapDiscovery,
+  siteUrl: string,
+): CrawlIssue[] {
+  const rule = explainRule('sitemap_url_off_host')
+  if (!rule) throw new Error('Missing rule guidance for sitemap_url_off_host')
+  const host = new URL(siteUrl).host
+  return discovery.roots.flatMap((root) => {
+    const off = root.offHost
+    if (!off) return []
+    const where = off.localhost
+      ? `${off.localhost === off.count ? '' : `${off.localhost} of them `}on localhost (${off.hosts.join(', ')})`
+      : `on ${off.hosts.join(', ')}`
+    return [
+      {
+        ruleId: rule.id,
+        title: rule.title,
+        category: rule.category,
+        severity: rule.defaultSeverity,
+        url: root.url,
+        detail: `${off.count} of ${root.urlsReturned} URLs read from this sitemap are ${where}, not ${host}.`,
+        evidence: off,
+      },
+    ]
+  })
+}
 
 function isSameOrigin(url: string, origin: string): boolean {
   try {
@@ -94,6 +166,7 @@ export async function sitemapSeeds(input: {
       documents: sitemap.source.documents,
       possiblyTruncated: sitemap.truncation.possiblyTruncated,
       warnings: sitemap.warnings,
+      ...withOffHost(sitemap.urls, input.url),
     })
   }
 
@@ -125,6 +198,7 @@ export async function sitemapSeeds(input: {
         documents: sitemap.source.documents,
         possiblyTruncated: sitemap.truncation.possiblyTruncated,
         warnings: sitemap.warnings,
+        ...withOffHost(sitemap.urls, input.url),
       })
     }
   }

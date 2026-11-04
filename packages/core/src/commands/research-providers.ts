@@ -405,15 +405,29 @@ async function dataForSeoRows(
         })
         return items
           .filter((item) => item.type === 'organic')
-          .map((item) => ({
-            keyword,
-            ...pick(item, {
+          .map((item) => {
+            const row = pick(item, {
               position: 'rank_absolute',
               url: 'url',
               domain: 'domain',
               title: 'title',
-            }),
-          }))
+            })
+            // Live requests leave about half of Google's goto redirects
+            // unresolved. The page is then unknown, but the breadcrumb
+            // still shows the site when it starts with one.
+            if (
+              /^https?:\/\/(www\.)?google\.[a-z.]+\/goto\b/.test(
+                String(row.url),
+              )
+            ) {
+              const site = /^https?:\/\/([^/\s›]+)/.exec(
+                String(item.breadcrumb ?? ''),
+              )
+              row.url = null
+              row.domain = site?.[1] ?? null
+            }
+            return { keyword, ...row }
+          })
       },
     )
   }

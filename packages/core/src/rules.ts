@@ -778,6 +778,42 @@ const RULE_DEFINITIONS = [
     },
   },
   {
+    id: 'robots_txt_html',
+    title: 'robots.txt returns an HTML page',
+    category: 'indexability',
+    defaultSeverity: 'medium',
+    whyItMatters:
+      'Crawlers read /robots.txt as plain text rules. An HTML page there, often the home page served for every path, holds no rules and no Sitemap line, so crawlers treat the site as having no robots.txt.',
+    howToFix:
+      'Serve a plain text /robots.txt with the rules the site needs and a Sitemap line. Check that the catch-all route does not answer before the static file.',
+    impactIfIgnored:
+      'Rules meant to keep crawlers out of some paths do nothing, and crawlers must find the sitemap another way.',
+    howToVerify:
+      'Request /robots.txt and confirm a 200 text/plain response with User-agent lines.',
+    agentHints: {
+      evidenceFields: ['report.ai.robotsTxt'],
+      suggestedCommands: ['seo crawl <url> --json'],
+    },
+  },
+  {
+    id: 'sitemap_url_off_host',
+    title: 'Sitemap lists URLs on another host',
+    category: 'indexability',
+    defaultSeverity: 'high',
+    whyItMatters:
+      "A sitemap may list only URLs on its own host, unless the other host's robots.txt or Search Console vouches for it. Localhost URLs, left by a build that used a development base URL, can never be fetched. Either way, those entries tell search engines nothing about the real pages.",
+    howToFix:
+      'Build the sitemap with the production URL as the base, so every <loc> uses the same scheme and host as the live site.',
+    impactIfIgnored:
+      'Search engines find pages only through links, and new or deep pages can take longer to be crawled.',
+    howToVerify:
+      'Open the sitemap and confirm every <loc> starts with the live site URL, then re-run the crawl.',
+    agentHints: {
+      evidenceFields: ['report.sitemapDiscovery.roots[].offHost'],
+      suggestedCommands: ['seo crawl <url> --json'],
+    },
+  },
+  {
     id: 'canonicalized_page',
     title: 'Canonicalized page',
     category: 'indexability',

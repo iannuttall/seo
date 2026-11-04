@@ -7,9 +7,10 @@ import {
   Link01Icon,
   Route01Icon,
   SearchList01Icon,
+  TextCheckIcon,
 } from '@hugeicons/core-free-icons'
 
-// The eight commands, in the order people need them. The hosted MCP runs the
+// The nine commands, in the order people need them. The hosted MCP runs the
 // same reports under the tool names listed here.
 export const commands = [
   {
@@ -83,5 +84,14 @@ export const commands = [
     path: '/docs/internal-links',
     icon: Link01Icon,
     text: 'Find the internal links your site is missing, across the whole site or to one page. Runs on your machine with the CLI.',
+  },
+  {
+    id: 'lint',
+    needs: 'A draft, page, title or description',
+    command: 'seo lint',
+    tool: 'seo_lint',
+    path: '/docs/lint',
+    icon: TextCheckIcon,
+    text: 'Find the lines in your copy that read as AI-written, with a fix for each. Also checks title and description length.',
   },
 ] as const

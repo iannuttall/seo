@@ -1,4 +1,6 @@
 import { z } from 'zod'
+import { LINT_FORMATS, LINT_MAX_CHARS, LINT_PRESETS } from '../lint/types.js'
+import { AI_ACCESS_NOTE, runAiAccess } from './ai-access.js'
 import { runAiAnswers } from './ai-answers.js'
 import { analyticsSignIn, runAnalyticsRows } from './analytics.js'
 import { AUDIT_SECTION, AUDIT_SECTION_TEXT } from './audit.js'
@@ -17,6 +19,7 @@ import {
   NOTE_MAX,
   SAVED_MAX,
 } from './issues.js'
+import { type LintSource, runLint } from './lint.js'
 import type { Detail } from './present.js'
 import { runBingReport, runReport, SECTION_IDS, SECTIONS } from './report.js'
 import {
@@ -34,6 +37,11 @@ import {
   runPage,
 } from './site.js'
 import { type GoogleAccount, runSites } from './sites.js'
+import {
+  runSocialPosts,
+  SOCIAL_POSTS_MAX_LOOKUPS,
+  SOCIAL_POSTS_NOTE,
+} from './social-posts.js'
 import {
   type Caller,
   type CommandDeps,
@@ -65,6 +73,9 @@ export type ToolSurface = {
   signIn: string
   // Where to add a Google account, Bing or a key on this surface.
   connect: string
+  // Reads files for seo_lint, where the surface runs on the person's
+  // machine (the local MCP).
+  readFiles?: (paths: string[]) => Promise<LintSource[]>
 }
 
 const site = z
@@ -171,6 +182,40 @@ const listSites = async (surface: ToolSurface) =>
     bing: surface.deps.bing ? await surface.deps.bing() : undefined,
     connect: surface.connect,
   })
+
+const lintInput = {
+  text: z
+    .string()
+    .max(LINT_MAX_CHARS)
+    .optional()
+    .describe(
+      `The copy to check: a page, post, title or description, up to ${LINT_MAX_CHARS.toLocaleString('en-US')} characters. Markdown, MDX or HTML as written, so line numbers match.`,
+    ),
+  format: z
+    .enum(LINT_FORMATS)
+    .optional()
+    .describe(
+      'Optional. md (default for text), mdx, html, astro or text. Code, tags and URLs are skipped; captions and titles are checked.',
+    ),
+  preset: z
+    .enum(LINT_PRESETS)
+    .optional()
+    .describe(
+      'Optional. blog (default for Markdown), landing (default for HTML: stricter on buzzwords, weak links and claims with no number), docs, or meta (one title or description per line).',
+    ),
+  ignore_rules: z
+    .array(z.string().min(1).max(60))
+    .max(50)
+    .optional()
+    .describe('Optional rule ids or review lenses to skip.'),
+  ignore_phrases: z
+    .array(z.string().min(1).max(200))
+    .max(50)
+    .optional()
+    .describe(
+      'Optional phrases to allow, such as a product name a rule keeps matching.',
+    ),
+}
 
 export const SHARED_TOOLS: SharedTool[] = [
   tool({
@@ -548,6 +593,72 @@ export const SHARED_TOOLS: SharedTool[] = [
       )
     },
   }),
+  tool({
+    name: 'seo_ai_access',
+    command: 'ai-access',
+    title: 'What AI bots get from a page',
+    description: `Fetches one URL as a browser and as GPTBot, OAI-SearchBot, ClaudeBot and PerplexityBot, and compares each bot with the browser: status, final URL, whether the main text is there, and its word count. Also says whether robots.txt allows each bot, and whether /llms.txt and a Markdown copy of the page (a rel="alternate" link, the URL with .md, or Accept: text/markdown) exist or return an HTML page instead. Works on any public URL; reads no accounts. ${AI_ACCESS_NOTE}`,
+    input: z.object({ url: z.url() }),
+    run: async (_surface, input) => runAiAccess({ url: input.url }),
+  }),
+  tool({
+    name: 'seo_social_posts',
+    command: 'social-posts',
+    title: "A person's X posts and their numbers",
+    description: `Lists one person's X posts with their public views, likes, reposts, quotes, replies and bookmarks, most viewed first, with the date, URL, the first 200 characters and any links to other sites. Use it to find someone's best posts, such as a founder's, to turn into web pages. Reposts of other accounts are left out, and replies too unless replies is true. Pass up to ${SOCIAL_POSTS_MAX_LOOKUPS} older post URLs or IDs in posts (for example from backlink data or the company's site) to add their numbers; posts by other accounts are left out and failed lookups are listed by ID. Reads FxTwitter's public data; no sign-in. ${SOCIAL_POSTS_NOTE}`,
+    input: z.object({
+      handle: z
+        .string()
+        .min(1)
+        .max(100)
+        .describe('The X handle, such as example or @example.'),
+      posts: z
+        .array(z.string().min(1).max(300))
+        .max(SOCIAL_POSTS_MAX_LOOKUPS)
+        .optional()
+        .describe('Post URLs or IDs by this account to look up.'),
+      replies: z
+        .boolean()
+        .optional()
+        .describe("Include the account's replies. Default false."),
+    }),
+    run: async (_surface, input) =>
+      runSocialPosts({
+        handle: input.handle,
+        posts: input.posts,
+        replies: input.replies,
+      }),
+  }),
+  tool({
+    name: 'seo_lint',
+    command: 'lint',
+    title: 'Check copy for AI writing patterns',
+    description:
+      'Checks landing page copy, blog posts, titles and meta descriptions for patterns common in AI-written text (such as "isn\'t X, it\'s Y" reframes, ", not X" contrasts, two-beat fragments, stock idioms and kicker lines), weak copy (dash punctuation, buzzwords, vague link text) and SEO rules (title 30 to 60 characters, description 70 to 160, one H1). Each error and warning has a line, the words, and a concrete fix. Review items are judgement calls for you: read each quote and change it only when it fails the question. It runs offline and reads no accounts.',
+    input: z.object(lintInput),
+    localInput: z.object({
+      ...lintInput,
+      paths: z
+        .array(z.string().min(1))
+        .max(20)
+        .optional()
+        .describe(
+          'Optional instead of text: files, folders or globs on this machine (.md, .mdx, .html, .astro, .txt). The format comes from each file name.',
+        ),
+    }),
+    run: async (surface, input) =>
+      runLint(
+        {
+          text: input.text,
+          paths: (input as { paths?: string[] }).paths,
+          format: input.format,
+          preset: input.preset,
+          ignoreRules: input.ignore_rules,
+          ignorePhrases: input.ignore_phrases,
+        },
+        surface.readFiles,
+      ),
+  }),
 ]
 
 // seo_index for an account in the weekly site audit beta: it answers at once
@@ -673,7 +784,9 @@ export const MCP_SERVER_INFO = {
 export const MCP_INSTRUCTIONS = `SEO Skill reads the person's own Search Console, Google Analytics, Bing Webmaster Tools, Clicky and optional keyword accounts, and returns facts with their dates and limits. It gives no advice.
 1. seo_sites: the properties the connected accounts can read.
 2. seo_report: start here. Without site it summarises last week across every site in the weekly site audit (beta) and names the site to ask about next. With site it shows that property's overview and every section's count and top rows; then ask for the one section you need. Section issues keeps a list of what it found for the site between sessions; mark records which the person fixed or wants ignored.
-3. seo_page for one URL, seo_compare for before and after a date, seo_index for Google's indexing reasons and pages that lost their clicks, seo_research for keyword, competitor and backlink data, and whether AI answers cite the site, from the DataForSEO or Ahrefs key the person saved, seo_data for raw rows, including Google Analytics, Bing and Clicky.`
+3. seo_page for one URL, seo_compare for before and after a date, seo_index for Google's indexing reasons and pages that lost their clicks, seo_research for keyword, competitor and backlink data, and whether AI answers cite the site, from the DataForSEO or Ahrefs key the person saved, seo_data for raw rows, including Google Analytics, Bing and Clicky.
+4. seo_ai_access fetches one URL as a browser and as four AI bots and compares what each gets, with robots.txt, llms.txt and Markdown copies. seo_social_posts lists one person's X posts with their public numbers, most viewed first; its timeline holds only the last two weeks or so, so pass older post URLs in posts.
+5. seo_lint checks copy you are writing or editing (a landing page, blog post, title or meta description) for patterns common in AI-written text and for title and description length. It reads only the text or files you give it.`
 
 // How an MCP surface writes "run this next": the tool name and its inputs.
 export const mcpCall: Caller = (command, args) => {

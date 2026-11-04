@@ -17,7 +17,7 @@ type Props = { entry: BlogPost }
 
 const { entry } = Astro.props
 const { Content } = await render(entry)
-const { date, updated, draft } = entry.data
+const { date, updated, draft, cover } = entry.data
 const breadcrumbs: SchemaBreadcrumb[] = [
   { label: 'Home', href: '/' },
   { label: 'Blog', href: '/blog' },
@@ -46,12 +46,26 @@ const breadcrumbs: SchemaBreadcrumb[] = [
     }
     <PageHeader title={entry.data.heading} description={entry.data.lead} class="!mb-4" />
     <div class="mb-10 flex flex-wrap items-center gap-x-3 gap-y-2 text-sm text-foreground-muted">
-      <FounderBadge prefix="Written by" align="start" />
+      <FounderBadge prefix="Written by AI and" align="start" ai />
       <span>
         <time datetime={date}>{formatPostDate(date)}</time>
         {updated ? <span>, updated <time datetime={updated}>{formatPostDate(updated)}</time></span> : null}
       </span>
     </div>
+    {
+      cover ? (
+        <img
+          src={`/blog/covers/${entry.id}.webp`}
+          alt={cover.alt}
+          width="1200"
+          height="630"
+          fetchpriority="high"
+          decoding="async"
+          class="mb-10 aspect-[1200/630] w-full rounded-lg bg-muted object-cover"
+          data-og-cover={cover.title}
+        />
+      ) : null
+    }
     <article class="docs-prose min-w-0">
       <Content components={blogMdxComponents} />
     </article>

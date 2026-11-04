@@ -53,6 +53,13 @@ export const collections = {
       // the company's own site. A founder's handle when the founder is the
       // brand and there is no company account.
       x: z.object({ company: z.string().regex(/^[A-Za-z0-9_]{1,15}$/) }).optional(),
+      // The post's illustration, at public/blog/covers/<file name>.webp
+      // (1200 by 630). It tops the post and becomes its sharing card, with
+      // the heading drawn over it. Without one the post gets the plain card.
+      // Set `title: left` when the art's subject stands on the right.
+      cover: z
+        .object({ alt: z.string(), title: z.enum(['center', 'left']).default('center') })
+        .optional(),
       draft: z.boolean().default(false),
     }),
   }),

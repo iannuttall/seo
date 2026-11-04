@@ -35,9 +35,9 @@ export const ogCardFonts: FontLoader[] = [
   },
 ]
 
-export const ogCardImages: ImagesInput = [
+export const ogCardImages = [
   { src: 'seo-mark.svg', data: () => Buffer.from(LOGO_SVG) },
-]
+] satisfies ImagesInput
 
 type Style = Record<string, string | number>
 type Child = CardNode | string | null
@@ -140,6 +140,80 @@ export const renderOgCard = (input: {
         'seoskill.dev',
       ),
       ogCardPath(input.pathname ?? ''),
+    ),
+  ) as unknown as RenderInput
+}
+
+// A post with an illustration: the art fills the card, and a soft dark fade
+// sits only behind the centred heading, so the title reads on any image
+// while the rest of the art keeps its colour and grain. The image is
+// registered under OG_COVER_SRC by the caller.
+export const OG_COVER_SRC = 'cover'
+
+// `left` centres the heading in the left 55% of the card, for art whose
+// subject stands on the right.
+export type OgCoverAlign = 'center' | 'left'
+
+export const renderOgCoverCard = (input: {
+  title: string
+  align?: OgCoverAlign
+}): RenderInput => {
+  const title = ogCardTitle(input.title)
+  const left = input.align === 'left'
+  const full = {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    width: '100%',
+    height: '100%',
+  }
+
+  return element(
+    'div',
+    {
+      style: {
+        display: 'flex',
+        position: 'relative',
+        alignItems: 'center',
+        justifyContent: left ? 'flex-start' : 'center',
+        paddingLeft: left ? 40 : 0,
+        width: '100%',
+        height: '100%',
+        backgroundColor: '#000',
+        fontFamily: 'Inter',
+      },
+    },
+    element('img', {
+      src: OG_COVER_SRC,
+      alt: '',
+      style: { ...full, objectFit: 'cover' },
+    }),
+    element('div', {
+      style: {
+        ...full,
+        backgroundImage: `radial-gradient(ellipse ${left ? '440px' : '540px'} 220px at ${left ? '30%' : '50%'} 50%, rgba(0,0,0,0.78) 0%, rgba(0,0,0,0.6) 45%, rgba(0,0,0,0) 100%)`,
+      },
+    }),
+    element(
+      'h1',
+      {
+        style: {
+          position: 'relative',
+          margin: 0,
+          ...(left ? { width: 660 } : {}),
+          maxWidth: left ? 660 : 880,
+          color: '#ffffff',
+          textShadow: '0 2px 18px rgba(0,0,0,0.55)',
+          fontSize: ogTitleSize(title),
+          fontWeight: 600,
+          lineHeight: 1.08,
+          letterSpacing: -2.2,
+          textAlign: 'center',
+          textWrap: 'balance',
+          lineClamp: 3,
+        },
+      },
+      title,
     ),
   ) as unknown as RenderInput
 }

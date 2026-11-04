@@ -201,8 +201,6 @@ test('the installed CLI serves the MCP handshake and tool list', async () => {
     'seo_index',
     'seo_research',
     'seo_data',
-    'seo_ai_access',
-    'seo_social_posts',
     'seo_lint',
     'seo_crawl',
     'seo_internal_links',

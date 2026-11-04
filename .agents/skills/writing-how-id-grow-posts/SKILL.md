@@ -45,7 +45,7 @@ For each domain:
 6. **Links between the company's sites:** the crawler treats other subdomains as off-origin, so it doesn't report their broken links. Pull every link out of the post bodies in the crawl JSON, request each target on another of the company's hosts, and count 404s, homepage redirects and good destinations. Count post-to-post links from the body only; the crawler's inlink counts include navigation.
 7. **Traffic swings:** when the history drops, check whether rankings dropped or whether the brand word is ambiguous and Ahrefs' click estimate for it changed. Say which one it is.
 8. **Every domain and subdomain:** list each host the company uses (links in the site and the newsletter, certificate transparency at `https://crt.sh/?q=%25.<domain>&output=json`, old addresses from the Wayback Machine). For each, record what it serves, its status and its referring domains (Ahrefs). This table backs the one-domain recommendation.
-9. **The founder's best social posts:** find the founder's and the company's most viewed or most linked posts on X and other networks. Run `seo social-posts <handle>` for the last two weeks of X posts with views, likes, reposts and bookmarks, then pass older post URLs found on the company's site, in its newsletter or in Ahrefs referring pages with `--posts` to get their numbers too. For each long or evergreen post, check whether a web copy exists and gets search traffic, then map its sections to searches with volume (`KeywordTable`). A post with millions of views and no web page that ranks is a finding.
+9. **The founder's best social posts:** find the founder's and the company's most viewed or most linked posts on X and other networks. Read the last two weeks of X posts, with views, likes, reposts and bookmarks, from FxTwitter's public API (`https://api.fxtwitter.com/2/profile/<handle>/statuses`, sent with a user agent; it often answers 404 for a real account, so retry a few times). Then read older posts found on the company's site, in its newsletter or in Ahrefs referring pages one by one from `https://api.fxtwitter.com/2/status/<id>`. These are research steps for the post, not `seo` commands. For each long or evergreen post, check whether a web copy exists and gets search traffic, then map its sections to searches with volume (`KeywordTable`). A post with millions of views and no web page that ranks is a finding.
 10. **AI readiness:** request the homepage and one post as a browser, GPTBot, OAI-SearchBot, ClaudeBot and PerplexityBot (`curl -A "<user agent>"`). Record the status and whether the full text comes back. Also read the robots.txt rules for those bots, check whether llms.txt exists and returns text (not HTML), and check for Markdown copies and structured data. Say what the platform allows (Substack, Webflow, Ghost and so on) before recommending a change it can't make. A user agent string isn't the bot's real IP, so call these results what the site serves to that user agent.
 
 Write every number with its source and month. Third-party estimates are called estimates.
@@ -64,7 +64,19 @@ company: <Company>
 x:
   company: <handle without @>
 draft: true
+cover:
+  alt: What the art shows, in one sentence.
+  title: center                               # or left when the subject stands on the right
 ```
+
+Cover: every post gets illustrated art, saved as `apps/web/public/blog/covers/<slug>.webp`. The post shows it above the article, and the build draws the title over it for the sharing card.
+
+- Make the company's mascot or mark the hero when it has one (Ben's Bites' red mascot, Amp's olive green Puck), drawn in its real colours.
+- Give each post its own style and palette (screenprint, risograph, engraving, film still) so the covers don't look alike. Take the colours from the company's brand.
+- The scene shows the post's main finding as a picture a reader gets at a glance.
+- Leave a calm band where the title goes: the middle for `center`, the left half for `left`. No text in the art.
+- Save it at 1200×630: `magick in.png -resize 1200x630^ -gravity center -extent 1200x630 -quality 70 -define webp:method=6 <out>.webp`, under about 250 KB.
+- Build the site and check `dist/blog/<slug>/index.png`: the title must be legible and clear of the subject.
 
 Series rules:
 

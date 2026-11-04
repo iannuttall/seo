@@ -5,15 +5,16 @@
 // `align="start"` opens the card from the badge's left edge on phones, where
 // a centred card would run off a left-aligned byline. Clicking outside the
 // card or pressing Escape closes it. The counts are built in from site.ts
-// and updated after load from the Worker's daily refresh.
+// and updated after load from the Worker's daily refresh. `ai` says in the
+// card how the post was written.
 import { ArrowDown01Icon } from '@hugeicons/core-free-icons'
 import HugeIcon from './HugeIcon.astro'
 import { founderSocials } from '@/lib/founder-socials'
 import { founder } from '@/lib/site'
 
-type Props = { prefix?: string; align?: 'center' | 'start' }
+type Props = { prefix?: string; align?: 'center' | 'start'; ai?: boolean }
 
-const { prefix = 'Built by', align = 'center' } = Astro.props
+const { prefix = 'Built by', align = 'center', ai = false } = Astro.props
 ---
 
 <details class="founder-badge group relative inline-block text-left">
@@ -53,6 +54,14 @@ const { prefix = 'Built by', align = 'center' } = Astro.props
         ))
       }
     </ul>
+    {
+      ai ? (
+        <p class="mt-4 text-sm/6 text-foreground-muted">
+          AI writes these posts. I plan each one, gather the data from real
+          sources and review the draft before it goes live.
+        </p>
+      ) : null
+    }
     <a class="mt-4 inline-block text-sm/6 font-medium text-foreground underline underline-offset-4" href={`/about#${founder.anchor}`}>See my background</a>
   </div>
 </details>

@@ -27,8 +27,6 @@ link for them to approve, then run it again.
 | `seo data --site <site>` | `seo_data` | Raw Search Console, Bing, Clicky or Google Analytics rows |
 | `seo crawl --url <url>` | `seo_crawl` | Technical issues across a site |
 | `seo internal-links --site <site>` or `--url <url>` | `seo_internal_links` | Links to add across a site, or to one page |
-| `seo ai-access <url>` | `seo_ai_access` | What GPTBot, OAI-SearchBot, ClaudeBot and PerplexityBot get from a page against a browser, robots.txt per bot, llms.txt and Markdown copies; no sign-in |
-| `seo social-posts <handle>` | `seo_social_posts` | One person's X posts with public views, likes, reposts and bookmarks, most viewed first; the timeline reaches back about two weeks, so pass older post URLs with `--posts`; no sign-in |
 | `seo lint <files>` | `seo_lint` | Lines in a draft, title or description that read as AI-written, each with a fix; no sign-in |
 | `seo sites` | `seo_sites` | The properties the person can read |
 | `seo site new <folder>`, then `seo site guide <step>` | CLI only | Build a new data-driven site on Astro and Cloudflare, one step at a time. Its build runs `seo site check` |

@@ -1,6 +1,5 @@
 import { z } from 'zod'
 import { LINT_FORMATS, LINT_MAX_CHARS, LINT_PRESETS } from '../lint/types.js'
-import { AI_ACCESS_NOTE, runAiAccess } from './ai-access.js'
 import { runAiAnswers } from './ai-answers.js'
 import { analyticsSignIn, runAnalyticsRows } from './analytics.js'
 import { AUDIT_SECTION, AUDIT_SECTION_TEXT } from './audit.js'
@@ -37,11 +36,6 @@ import {
   runPage,
 } from './site.js'
 import { type GoogleAccount, runSites } from './sites.js'
-import {
-  runSocialPosts,
-  SOCIAL_POSTS_MAX_LOOKUPS,
-  SOCIAL_POSTS_NOTE,
-} from './social-posts.js'
 import {
   type Caller,
   type CommandDeps,
@@ -594,42 +588,6 @@ export const SHARED_TOOLS: SharedTool[] = [
     },
   }),
   tool({
-    name: 'seo_ai_access',
-    command: 'ai-access',
-    title: 'What AI bots get from a page',
-    description: `Fetches one URL as a browser and as GPTBot, OAI-SearchBot, ClaudeBot and PerplexityBot, and compares each bot with the browser: status, final URL, whether the main text is there, and its word count. Also says whether robots.txt allows each bot, and whether /llms.txt and a Markdown copy of the page (a rel="alternate" link, the URL with .md, or Accept: text/markdown) exist or return an HTML page instead. Works on any public URL; reads no accounts. ${AI_ACCESS_NOTE}`,
-    input: z.object({ url: z.url() }),
-    run: async (_surface, input) => runAiAccess({ url: input.url }),
-  }),
-  tool({
-    name: 'seo_social_posts',
-    command: 'social-posts',
-    title: "A person's X posts and their numbers",
-    description: `Lists one person's X posts with their public views, likes, reposts, quotes, replies and bookmarks, most viewed first, with the date, URL, the first 200 characters and any links to other sites. Use it to find someone's best posts, such as a founder's, to turn into web pages. Reposts of other accounts are left out, and replies too unless replies is true. Pass up to ${SOCIAL_POSTS_MAX_LOOKUPS} older post URLs or IDs in posts (for example from backlink data or the company's site) to add their numbers; posts by other accounts are left out and failed lookups are listed by ID. Reads FxTwitter's public data; no sign-in. ${SOCIAL_POSTS_NOTE}`,
-    input: z.object({
-      handle: z
-        .string()
-        .min(1)
-        .max(100)
-        .describe('The X handle, such as example or @example.'),
-      posts: z
-        .array(z.string().min(1).max(300))
-        .max(SOCIAL_POSTS_MAX_LOOKUPS)
-        .optional()
-        .describe('Post URLs or IDs by this account to look up.'),
-      replies: z
-        .boolean()
-        .optional()
-        .describe("Include the account's replies. Default false."),
-    }),
-    run: async (_surface, input) =>
-      runSocialPosts({
-        handle: input.handle,
-        posts: input.posts,
-        replies: input.replies,
-      }),
-  }),
-  tool({
     name: 'seo_lint',
     command: 'lint',
     title: 'Check copy for AI writing patterns',
@@ -785,8 +743,7 @@ export const MCP_INSTRUCTIONS = `SEO Skill reads the person's own Search Console
 1. seo_sites: the properties the connected accounts can read.
 2. seo_report: start here. Without site it summarises last week across every site in the weekly site audit (beta) and names the site to ask about next. With site it shows that property's overview and every section's count and top rows; then ask for the one section you need. Section issues keeps a list of what it found for the site between sessions; mark records which the person fixed or wants ignored.
 3. seo_page for one URL, seo_compare for before and after a date, seo_index for Google's indexing reasons and pages that lost their clicks, seo_research for keyword, competitor and backlink data, and whether AI answers cite the site, from the DataForSEO or Ahrefs key the person saved, seo_data for raw rows, including Google Analytics, Bing and Clicky.
-4. seo_ai_access fetches one URL as a browser and as four AI bots and compares what each gets, with robots.txt, llms.txt and Markdown copies. seo_social_posts lists one person's X posts with their public numbers, most viewed first; its timeline holds only the last two weeks or so, so pass older post URLs in posts.
-5. seo_lint checks copy you are writing or editing (a landing page, blog post, title or meta description) for patterns common in AI-written text and for title and description length. It reads only the text or files you give it.`
+4. seo_lint checks copy you are writing or editing (a landing page, blog post, title or meta description) for patterns common in AI-written text and for title and description length. It reads only the text or files you give it.`
 
 // How an MCP surface writes "run this next": the tool name and its inputs.
 export const mcpCall: Caller = (command, args) => {

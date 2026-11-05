@@ -1,15 +1,17 @@
 import { type CollectionEntry, getCollection } from 'astro:content'
+import { isPostLive } from '@/content/blog-posts.mjs'
 
 export type BlogPost = CollectionEntry<'blog'>
 
 /**
- * Blog posts newest first. Drafts show only in `astro dev`, so a production
- * build has no page, card or footer link for them.
+ * Blog posts newest first. Drafts, and posts whose date hasn't reached 09:00
+ * UK time, show only in `astro dev`, so a production build has no page, card
+ * or footer link for them.
  */
 export async function getBlogPosts(): Promise<BlogPost[]> {
   const posts = await getCollection(
     'blog',
-    ({ data }) => import.meta.env.DEV || !data.draft,
+    ({ data }) => import.meta.env.DEV || (!data.draft && isPostLive(data.date)),
   )
   return posts.sort(
     (a, b) =>

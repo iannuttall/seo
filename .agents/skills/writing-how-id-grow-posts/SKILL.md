@@ -5,7 +5,7 @@ description: "Researches, writes and launches a \"How I'd grow <company>\" SEO t
 
 # Writing How I'd grow posts
 
-One post a month: a pure SEO and AEO teardown of a company people know, built from SEO Skill data, written as interactive MDX in `apps/web/src/content/blog/<slug>.mdx`, and shared on X with the company tagged ("How I'd grow @every with SEO"). It markets SEO Skill and Index My Site, so every post shows how it was made and ends with both.
+One post a week, published on Thursdays: a pure SEO and AEO teardown of a company people know, built from SEO Skill data, written as interactive MDX in `apps/web/src/content/blog/<slug>.mdx`, and shared on X with the company tagged ("How I'd grow @every with SEO"). It markets SEO Skill and Index My Site, so every post shows how it was made and ends with both.
 
 The published examples are the reference: `how-id-grow-every.mdx` (a portfolio company) and `how-id-grow-monologue.mdx` (one product inside it). Read both before writing a new one. Read `CONTENT.md` and `apps/web/AGENTS.md` too.
 
@@ -73,7 +73,7 @@ title: How I'd grow <Company> with SEO        # 30 to 60 characters
 description: ...                              # 70 to 160 characters
 heading: How I'd grow <Company>
 lead: One or two sentences with the finding.
-date: 'YYYY-MM-DD'
+date: 'YYYY-MM-DD'                            # the Thursday it goes live, at 09:00 UK time
 company: <Company>
 x:
   company: <handle without @>
@@ -96,6 +96,8 @@ Series rules:
 
 - **One domain beats subdomains; less is more.** Recommend folding subdomains and side sites into subfolders on the main domain, or into the platform's post path when it can't serve folders, with a 301 from every old address. Make an exception only with evidence against it, and say what the evidence is. The referring domain counts from step 8 show what each move gains.
 - **Turn the best social posts into lasting pages.** When step 9 finds them, propose the playbook: the long version on the web, a short post that links to it, and the link in a reply under the original post.
+- **Lead with the upside.** The title, the lead, the first section and the X post open on what the company could win (the searches, the data it already owns, what's already working), never on spam, gambling, penalties or a problem in its link profile. Put spam, hijacked pages and similar cleanup last, in a short neutral housekeeping section, and keep the numbers. Order the fixes by the growth they bring.
+- **Brand search is a strength, not a problem.** Call searches for the company's own name brand searches (or brand search, brand demand), the industry term, never "people typing its name". Brand demand shows the company is known, and Google already treats it as an entity, which makes non-brand pages easier to rank. Frame the gap as non-brand search: the people who need the product and don't know the brand yet. Leave brand searches out of keyword gap tables and say so in the caption. When the name is a common word (Amp, Linear, Notion), searches for the word aren't all brand demand: say what else the word means and treat only the clearly branded searches ("amp code", "ampcode") as brand.
 - **Only findings go in the post.** The research steps are a checklist for you, not a list of sections. When a step finds nothing to act on, leave it out: no heading, no "I checked X and found nothing". Keep an absence only when the absence is the finding ("Amp was in none of 28 AI answers").
 - **Lead with the finding, not the method.** Open a section with what's true, not "I requested..." or "I pulled...". The method goes in a short clause or the exhibit caption.
 - **No judgment words.** "Unusually", "remarkably", "impressively", "well set up", "strong" and the like say nothing a reader can check. State the fact instead.
@@ -201,8 +203,7 @@ Turn the post into Markdown with `node .agents/skills/writing-how-id-grow-posts/
 
 Only after Ian approves the post:
 
-1. On publish day, re-pull the headline numbers and recheck that the issues are still live. Update anything that changed.
-2. Set `draft: false`, run all four repo gates, and ship through a PR to `main`. Merging deploys the site.
-3. Submit the post URL to Index My Site.
-4. Draft the X post in Typefully as a plain draft (`typefully.create_draft` with no `plan_at` or `publish_at`). Line one is the post title with the company's handle ("How I'd grow @every with SEO"), then a short summary of the main findings, then the post link. One mention only: `x.company`. The post link is the only URL or domain in the text, so X builds the card from our post; describe other sites in words ("a second domain", "the main site"). Put `seo` commands in backticks. Run `seo lint` on the text with `--preset landing`. Ian schedules it himself.
-5. To try an X Article instead, create a separate `x_article` draft from the post's Markdown, and compare performance before choosing a default.
+1. Before merging, re-pull the headline numbers and recheck that the issues are still live. Update anything that changed.
+2. Set `date` to the post's Thursday and `draft: false`, run all four repo gates, and ship through a PR to `main`. A post with a future date stays out of the build, and `.github/workflows/scheduled-posts.yml` rebuilds the site after 09:00 UK time on its date, so it goes live then without another merge.
+3. Submit the post URL to Index My Site once it's live.
+4. Draft the X Article in Typefully as a plain `x_article` draft (no `plan_at` or `publish_at`), with the cover cropped to 1500x600. Title: "How I'd grow <Company> with SEO". The first line tags the company with the upside, then the main findings in an informal voice, then the post link at the end. One mention only: `x.company`. The post link is the only URL or domain in the text, so X builds the card from our post; describe other sites in words ("a second domain", "the main site"). Put `seo` commands in backticks. Run `seo lint` on the text with `--preset landing`. Ian schedules it himself, for about 13:15 UK time on the post's Thursday.

@@ -5,6 +5,7 @@ import FounderBadge from '@/components/FounderBadge.astro'
 import PageHeader from '@/components/PageHeader.astro'
 import { blogMdxComponents } from '@/components/blog/mdx'
 import BaseLayout from '@/layouts/BaseLayout.astro'
+import { isPostLive } from '@/content/blog-posts.mjs'
 import { type BlogPost, formatPostDate, getBlogPosts } from '@/lib/blog'
 import type { SchemaBreadcrumb } from '@/lib/schema'
 
@@ -18,6 +19,7 @@ type Props = { entry: BlogPost }
 const { entry } = Astro.props
 const { Content } = await render(entry)
 const { date, updated, draft, cover } = entry.data
+const scheduled = !draft && !isPostLive(date)
 const breadcrumbs: SchemaBreadcrumb[] = [
   { label: 'Home', href: '/' },
   { label: 'Blog', href: '/blog' },
@@ -33,7 +35,7 @@ const breadcrumbs: SchemaBreadcrumb[] = [
   schemaType="BlogPosting"
   datePublished={date}
   dateModified={updated ?? date}
-  noindex={draft}
+  noindex={draft || scheduled}
 >
   <main data-agent-content>
     <Breadcrumbs {breadcrumbs} />
@@ -41,6 +43,10 @@ const breadcrumbs: SchemaBreadcrumb[] = [
       draft ? (
         <p class="mb-6 rounded-lg bg-muted px-4 py-3 text-sm text-foreground" data-agent-markdown="exclude">
           Draft. This post shows in the dev server only and is left out of the production build.
+        </p>
+      ) : scheduled ? (
+        <p class="mb-6 rounded-lg bg-muted px-4 py-3 text-sm text-foreground" data-agent-markdown="exclude">
+          Scheduled for {formatPostDate(date)} at 9:00 UK time. Until then it shows in the dev server only.
         </p>
       ) : null
     }

@@ -1,0 +1,411 @@
+---
+title: How I'd grow Typefully with SEO
+description: An SEO teardown of Typefully, the social media scheduler. The best time to post study its own data could power, and the four changes I'd ship first.
+heading: How I'd grow Typefully
+lead: 'Typefully schedules posts for more than 10,000 customers, the kind of first-hand data Buffer and Sprout Social use to win "best time to post" searches. Its free tools already bring most of its 35,200 monthly Google visits. Four changes would point more of it at the pages that sell scheduling.'
+date: '2026-11-12'
+company: Typefully
+x:
+  company: typefully
+draft: false
+cover:
+  alt: "Typefully's blue quill climbs a ladder to light up the best hours on a huge wall heatmap, while people at their desks look up from their phones and notebooks."
+  title: left
+---
+
+export const beforeBio = `<pre>&lt;title&gt;
+  TDTC \u002D Thiên Đường Trò Chơi (@tdtcemail)
+&lt;/title&gt;
+&lt;link rel="canonical"
+  href="https://typefully.com/tdtcemail"&gt;
+(no robots meta tag)
+
+&lt;a href="https://tdtc.email"
+   rel="noopener noreferrer"&gt;
+  tdtc.email
+&lt;/a&gt;</pre>`
+
+export const afterBio = `<pre>&lt;meta name="robots"
+  content="noindex, follow"&gt;
+
+&lt;a href="https://tdtc.email"
+   rel="ugc nofollow noopener noreferrer"&gt;
+  tdtc.email
+&lt;/a&gt;</pre>`
+
+export const beforeFormatter = `<pre>Can I schedule or publish
+the styled post?
+… with &lt;a href="/?typ_source=tools…"&gt;
+  Typefully
+&lt;/a&gt;</pre>`
+
+export const afterFormatter = `<pre>Can I schedule or publish
+the styled post?
+… with &lt;a href="/linkedin"&gt;
+  Typefully's LinkedIn scheduler
+&lt;/a&gt;</pre>`
+
+export const beforeHome = `<pre>&lt;h1&gt;Write better content
+Grow on social media faster&lt;/h1&gt;
+&lt;p&gt;The AI-powered, collaborative
+social media scheduler for X,
+LinkedIn, Bluesky, and Threads.&lt;/p&gt;
+
+/about → 200, blank page</pre>`
+
+export const afterHome = `<pre>&lt;h1&gt;Write better content
+Grow on social media faster&lt;/h1&gt;
+&lt;p&gt;Typefully is a social media
+publishing and scheduling platform
+for X, LinkedIn, Threads, Bluesky,
+Mastodon and Instagram.&lt;/p&gt;
+
+/about → opens with that sentence</pre>`
+
+export const beforeAi = `<pre>GET typefully.com/ai
+200 OK
+
+&lt;title&gt;AI Writing Assistant
+  | Typefully&lt;/title&gt;
+&lt;body&gt;: 5 words of text,
+no h1 and no links</pre>`
+
+export const afterAi = `<pre>GET typefully.com/ai
+200 OK
+
+&lt;h1&gt;Turn rough ideas
+into great posts&lt;/h1&gt;
+… the 1,272 words a browser
+shows, in the HTML</pre>`
+
+[Typefully](https://typefully.com/) is a tool for writing and scheduling posts on X, LinkedIn, Threads, Bluesky, Mastodon and Instagram. It makes money from subscriptions, and it has an API and an MCP server, so AI agents can draft and schedule posts too. Fabrizio Rinaldi and Francesco Di Lorenzo built it.
+
+Its site has a Domain Rating of 74 and about 8,200 linking sites, free tools that already bring most of its search traffic, and scheduling data from more than 10,000 customers. That's enough to rank for the searches people make before they pay for a scheduler. Four changes would do most of the work, in order of what they'd bring:
+
+1. Turn the "best time to post" pages into a study built on Typefully's own scheduling data.
+2. Make the LinkedIn and Threads scheduler pages answer the search, and link the LinkedIn text formatter to them.
+3. Publish a page per platform for the MCP server, which AI answers now credit to Buffer.
+4. Tidy up the public profile pages, so only real users' profiles are indexed.
+
+## Typefully's free tools already bring most of its search traffic
+
+Ahrefs estimates typefully.com gets about 35,200 visits a month from Google. This map shows where they land.
+
+<TrafficMap
+  caption="Estimated Google visits to typefully.com by kind of page, 5 November 2026 (Ahrefs top pages, all countries). Blue pages sell scheduling. The spam profiles are accounts that promote gambling, escort and download sites, covered in the housekeeping section."
+  items={[
+    { label: "Free AI writing tools", value: 11022, tone: "other", note: "AI content, text, paragraph and essay generators. Mostly people who want free text written for them" },
+    { label: "LinkedIn and X tools", value: 8376, tone: "other", note: "7,443 of these land on the LinkedIn text formatter" },
+    { label: "Brand searches for Typefully", value: 6207, tone: "brand", note: "The homepage, changelog and help centre" },
+    { label: "Blog and glossary", value: 4644, tone: "other", note: "Led by \"what does gm mean\" and the X logo" },
+    { label: "Spam profiles", value: 2555, tone: "waste", note: "31 profile and post pages from 24 accounts" },
+    { label: "Other public profiles and posts", value: 1306, tone: "other" },
+    { label: "Scheduling, pricing and product pages", value: 1099, tone: "sells", note: "Several rank only for \"typefully\"" },
+  ]}
+/>
+
+The tools are the asset to build on. The LinkedIn text formatter ranks fourth for "linkedin text formatter" (4,800 US searches a month) and gets about 7,400 visits a month, and the people using it write LinkedIn posts for a living, so they're Typefully's buyers. The AI writing tools bring more visits, but the searches behind them ("ai text generator", "free ai writer") come from people who want a paragraph written for free. I'd keep them, since they cost little, and I wouldn't count them as growth.
+
+Brand search brings about 18% of the visits. That shows Typefully is known, and Google already treats it as an entity, which makes its other pages easier to rank. The gap is non-brand search: about 3% of all visits land on a page that sells scheduling, so the people who need a scheduler and don't know Typefully yet mostly don't find it.
+
+## 1. A best time to post study built on Typefully's own data
+
+Typefully schedules posts on X, LinkedIn, Threads and Bluesky for more than 10,000 customers (its homepage's figure), and it reads their analytics. So it can say when posts on each platform actually get read. Few companies can, and the searches for it are steady:
+
+<KeywordTable
+  caption="Ahrefs, US, November 2026. Sprout Social, Buffer and LinkedIn's own blog rank for the LinkedIn and X searches. For Threads and Bluesky, the results are forum threads and small sites. Typefully ranks for none of these."
+  sortBy="volume"
+  columns={[{ key: 'keyword', label: 'Search', format: 'text' }, { key: 'volume', label: 'US searches', format: 'number', short: 'US' }, { key: 'difficulty', label: 'Difficulty', format: 'number', short: 'KD' }, { key: 'who', label: 'Who ranks', format: 'text' }]}
+  rows={[
+    { keyword: 'best time to post on linkedin', volume: 6300, difficulty: 26, who: 'LinkedIn, Sprout' },
+    { keyword: 'best time to post on twitter', volume: 1900, difficulty: 3, who: 'Sprout, Reddit' },
+    { keyword: 'best time to post on social media', volume: 1100, difficulty: 0, who: 'Tailor Brands, CoSchedule' },
+    { keyword: 'best time to post on x', volume: 400, difficulty: 14, who: 'Sprout, Buffer' },
+    { keyword: 'best day to post on linkedin', volume: 400, difficulty: 30, who: 'LinkedIn, Sprout' },
+    { keyword: 'best time to post on threads', volume: 300, difficulty: 0, who: 'SocialKit, Reddit' },
+    { keyword: 'best time to post on linkedin on monday', volume: 250, difficulty: 26, who: 'LinkedIn, Sprout' },
+    { keyword: 'best time to post on bluesky', volume: 200, difficulty: 3, who: 'Reddit, besttimetopost.blue' },
+  ]}
+/>
+
+Typefully already has two of these pages: "The Best Times to Post on LinkedIn in 2026" and the same for X. The LinkedIn one says it used "the analyzed data from millions of posts", but it shows no numbers from them, and no sample size or method. Both are dated October 2024. Ahrefs finds no US search traffic to either page, and one linking site between them.
+
+Buffer and Sprout Social publish the same kind of page with their numbers in it, and other sites link to those numbers.
+
+<CompareBars
+  caption="Sites linking to each &quot;best time to post on LinkedIn&quot; page, November 2026 (Ahrefs, live referring domains)."
+  unit="linking sites"
+  highlight={["Typefully"]}
+  rows={[
+    { label: "Buffer", value: 392, note: "About 900 US visits a month to this page" },
+    { label: "Sprout Social", value: 305, note: "About 1,200 US visits a month" },
+    { label: "Typefully", value: 0 },
+  ]}
+/>
+
+Buffer gets about 36,000 US visits a month from its TikTok version alone. AI answers quote these pages too. Asked the best time to post on LinkedIn or X, ChatGPT and Google's AI answers cited Buffer in five of six answers and Typefully in none.
+
+I'd republish both pages as one yearly study, with one page per platform at the addresses Typefully already has, and a new page for Threads and Bluesky. Each page opens with a sentence an AI answer could quote alone, such as "Based on [N] posts scheduled through Typefully in 2026, LinkedIn posts published between [time] and [time] on [day] got the most impressions." Below that goes a heatmap by day and hour, then the method with the sample size and the date it was last updated.
+
+The same data can power a free tool: pick a platform and a time zone and get the best hours to post, with a "schedule it" button that opens Typefully. That turns a page someone reads once into one they come back to.
+
+### Who to send it to
+
+A study with first-hand numbers gives Typefully a reason to email the people who link to the older studies. These sites link to Buffer's or Sprout's LinkedIn page today:
+
+<KeywordTable
+  caption="Sites linking to Buffer's or Sprout Social's &quot;best time to post on LinkedIn&quot; page, November 2026 (Ahrefs, sorted by Domain Rating). Check each page before writing, and skip any site that sells links."
+  sortBy="dr"
+  columns={[{ key: 'site', label: 'Site', format: 'text' }, { key: 'dr', label: 'Domain Rating', format: 'number', short: 'DR' }, { key: 'links', label: 'Links to', format: 'text' }]}
+  rows={[
+    { site: 'shopify.com', dr: 97, links: 'Sprout' },
+    { site: 'hubspot.com', dr: 93, links: 'Buffer' },
+    { site: 'wordstream.com', dr: 90, links: 'Buffer' },
+    { site: 'webfx.com', dr: 89, links: 'Buffer' },
+    { site: 'influencermarketinghub.com', dr: 88, links: 'Both' },
+    { site: 'business.com', dr: 87, links: 'Sprout' },
+    { site: 'meltwater.com', dr: 87, links: 'Buffer' },
+    { site: 'ama.org', dr: 84, links: 'Sprout' },
+    { site: 'databox.com', dr: 83, links: 'Buffer' },
+    { site: 'jeffbullas.com', dr: 79, links: 'Sprout' },
+  ]}
+/>
+
+An agent can draft each email: the page that links, the line it quotes, and the newer number Typefully can offer instead. Someone at Typefully approves each one before it goes.
+
+## 2. The LinkedIn and Threads pages rank for nothing
+
+Typefully has a page for each platform it schedules. The X page works: it ranks fourth for "twitter scheduler", below X's own help page and Buffer. The LinkedIn and Threads pages rank for no search in the US except a misspelling of "typefully" (Ahrefs).
+
+<KeywordTable
+  caption="Ahrefs, US, November 2026. Typefully's LinkedIn and Threads pages aren't in the top 100 for any of these searches. The two it ranks for go to its X page. LinkedIn's help centre, Buffer and Planable rank for the LinkedIn searches; Threads posts and schedulethreads.com for &quot;threads scheduler&quot;."
+  sortBy="volume"
+  columns={[{ key: 'keyword', label: 'Search', format: 'text' }, { key: 'volume', label: 'US searches', format: 'number', short: 'US' }, { key: 'difficulty', label: 'Difficulty', format: 'number', short: 'KD' }, { key: 'typefully', label: 'Typefully', format: 'text' }]}
+  rows={[
+    { keyword: 'schedule linkedin posts', volume: 1200, difficulty: 24, typefully: 'Not ranked' },
+    { keyword: 'threads scheduler', volume: 1000, difficulty: 1, typefully: 'Not ranked' },
+    { keyword: 'linkedin scheduler', volume: 350, difficulty: 14, typefully: 'Not ranked' },
+    { keyword: 'schedule tweets', volume: 350, difficulty: 8, typefully: '#7' },
+    { keyword: 'how to schedule a post on linkedin', volume: 250, difficulty: 22, typefully: 'Not ranked' },
+    { keyword: 'twitter scheduler', volume: 250, difficulty: 10, typefully: '#4' },
+  ]}
+/>
+
+Links aren't what's missing. Typefully's LinkedIn page has 12 linking sites. contentin.io's free LinkedIn scheduler has 5 and ranks seventh for "linkedin scheduler". For "threads scheduler", the fourth result is schedulethreads.com, with a Domain Rating of 30.
+
+What's missing is a page that answers the search. The results for "schedule linkedin posts" are mostly how-to pages: LinkedIn's help centre, a Planable guide and Buffer's LinkedIn page, which explains the steps. Typefully's LinkedIn page is a feature list, titled for the brand.
+
+<SearchResult
+  caption="Typefully's LinkedIn page in Google today, and with a title and description written for the search."
+  before={{
+    url: "https://typefully.com/linkedin",
+    site: "Typefully",
+    title: "Write and Schedule Your LinkedIn Posts with Typefully",
+    description: "Schedule and post on LinkedIn with Typefully's LinkedIn post scheduler. Write, plan, schedule, and analyze your LinkedIn posts to grow your audience faster.",
+  }}
+  after={{
+    url: "https://typefully.com/linkedin",
+    site: "Typefully",
+    title: "LinkedIn scheduler: schedule LinkedIn posts for free",
+    description: "How to schedule LinkedIn posts, with LinkedIn's own scheduler or with Typefully: the steps, the limits of each, and the best times to post from our data.",
+  }}
+/>
+
+I'd keep each page's address and add three sections under the hero. First, how to schedule a post with LinkedIn's built-in scheduler, in steps. Second, what it can't do (no queue and no cross-posting). Third, the best times to post, from the study in the previous section. The Threads page gets the same treatment, since "threads scheduler" has 1,000 searches a month and a difficulty of 1.
+
+The page that should feed the LinkedIn scheduler is the LinkedIn text formatter. It gets about 7,400 visits a month from people writing LinkedIn posts, and it uses its own template, without the site footer. Its only links to the product go to the homepage.
+
+<BeforeAfter
+  caption="The LinkedIn text formatter's answer to &quot;Can I schedule or publish the styled post?&quot; today, and with its link pointed at the LinkedIn scheduler."
+  before={{ label: "Today", html: beforeFormatter }}
+  after={{ label: "After the fix", html: afterFormatter }}
+/>
+
+Keep the sign-up button as it is, since it already works. Point the text links, and a new line under the formatter ("Schedule this post for later"), at the LinkedIn page. Do the same on the X character counter and the tweet generators for the X page.
+
+## 3. AI search: Typefully is ready for agents, and AI answers cite Buffer
+
+Typefully's site is built for AI agents. Its llms.txt, Markdown copies, MCP server card and API catalog all work, and the homepage lists them in its HTTP headers so an agent can find them without guessing.
+
+<UrlMap
+  caption="What typefully.com offers AI crawlers and agents, 5 November 2026. GPTBot, OAI-SearchBot, ClaudeBot and PerplexityBot user agents get the same pages a browser gets."
+  rows={[
+    { url: "/robots.txt", action: "Keep", tone: "keep", note: "Allows every crawler, with Content-Signal search=yes, ai-input=yes, ai-train=yes." },
+    { url: "/llms.txt", action: "Keep", tone: "keep", note: "Plain text: the API docs, OpenAPI spec, AI agents page, skills index and MCP server card." },
+    { url: "/index.md, /docs/api.md, /ai-agents.md", action: "Keep", tone: "keep", note: "Real Markdown. The homepage copy opens with a one-sentence definition of Typefully." },
+    { url: "/.well-known/mcp/server-card.json", action: "Keep", tone: "keep", note: "Describes the MCP server for clients that look for it." },
+    { url: "/mcp", action: "Add", tone: "change", note: "A blank 200 from the profile route. This address should be the MCP page." },
+    { url: "/about", action: "Add", tone: "change", note: "A blank 200 from the profile route. There's no About page." },
+  ]}
+/>
+
+The AI answers don't reflect that work yet. I asked ChatGPT search, Google AI Mode and Google's AI Overviews ten questions a Typefully buyer might ask, and ran the same questions for Buffer.
+
+<KeywordTable
+  caption="AI answers on 5 November 2026 from ChatGPT search, Google AI Mode and AI Overviews (SEO Skill ai_answers with DataForSEO, US), three answers per question. Cited means the answer links to the site, named means it names it without a link. Each answer is one sample."
+  sortBy="question"
+  columns={[{ key: 'question', label: 'Question', format: 'text' }, { key: 'typefully', label: 'Typefully', format: 'text' }, { key: 'buffer', label: 'Buffer', format: 'text' }]}
+  rows={[
+    { question: 'Best time to post on LinkedIn', typefully: 'Not ranked', buffer: '2 cited' },
+    { question: 'Best time to post on X', typefully: 'Not ranked', buffer: '3 cited' },
+    { question: 'Social media scheduler with an API or MCP for AI agents', typefully: 'Not ranked', buffer: '2 cited' },
+    { question: 'Best LinkedIn post scheduler for creators', typefully: 'Not ranked', buffer: '1 cited, 2 named' },
+    { question: 'Best tool to schedule posts on X and LinkedIn', typefully: '1 cited', buffer: '2 cited, 1 named' },
+    { question: 'How to schedule a thread on X', typefully: '1 cited, 2 named', buffer: '2 cited' },
+    { question: 'Best Twitter thread scheduler', typefully: '2 cited, 1 named', buffer: '2 cited, 1 named' },
+    { question: 'Best app to write and schedule Threads and Bluesky posts', typefully: '2 cited', buffer: '2 cited, 1 named' },
+    { question: 'Best Buffer alternative for X creators', typefully: '1 cited, 2 named', buffer: 'Named in all 3' },
+    { question: 'How do I bold text in a LinkedIn post', typefully: '1 cited', buffer: 'Not ranked' },
+  ]}
+/>
+
+Typefully was cited in 8 of 30 answers and Buffer in 16. Typefully holds its own on X threads, its home ground. It loses on the two best-time questions, which the study above fixes, and on LinkedIn.
+
+The MCP question is the sharpest miss. Typefully has an MCP server, Agent Skills and a public API, and the answers cited Buffer's MCP page, Buffer's developer guide and Postiz's docs. Typefully's MCP setup guide is an article in its help centre, and its AI agents page is titled "Give AI Agents Social Media Skills", with no mention of MCP in the title or headline. People search for the server by platform:
+
+<KeywordTable
+  caption="Ahrefs, US, November 2026. For &quot;linkedin mcp&quot;, a GitHub repo, a Reddit thread and Zapier rank, and postiv.ai is eighth with 9 linking sites. For &quot;x mcp&quot;, X's own MCP server ranks, so Typefully's X page has to explain what it adds."
+  sortBy="volume"
+  columns={[{ key: 'keyword', label: 'Search', format: 'text' }, { key: 'volume', label: 'US searches', format: 'number', short: 'US' }, { key: 'difficulty', label: 'Difficulty', format: 'number', short: 'KD' }, { key: 'page', label: 'Typefully page', format: 'text' }]}
+  rows={[
+    { keyword: 'linkedin mcp', volume: 900, difficulty: 11, page: 'LinkedIn MCP' },
+    { keyword: 'linkedin mcp server', volume: 600, difficulty: 7, page: 'LinkedIn MCP' },
+    { keyword: 'x mcp', volume: 350, difficulty: 11, page: 'X MCP' },
+    { keyword: 'social media api', volume: 350, difficulty: 18, page: 'MCP and API hub' },
+    { keyword: 'social media posting api', volume: 200, difficulty: null, page: 'MCP and API hub' },
+    { keyword: 'twitter mcp', volume: 150, difficulty: null, page: 'X MCP' },
+    { keyword: 'social media scheduling api', volume: 150, difficulty: 1, page: 'MCP and API hub' },
+    { keyword: 'x mcp server', volume: 100, difficulty: null, page: 'X MCP' },
+  ]}
+/>
+
+**The fix:**
+
+- Put an MCP and API hub at /mcp, which today serves a blank profile page. Open it with one sentence that names the subject and answers the question: "Typefully's MCP server lets Claude, ChatGPT, Cursor and other AI agents draft, schedule and publish posts on X, LinkedIn, Threads, Bluesky and Mastodon."
+- Add a page per platform under it, starting with LinkedIn: what an agent can do there and how to set it up in each client. The X page should say what Typefully adds to X's own MCP server: drafts, team review, scheduling and posting to other platforms. Move the help centre article's setup steps onto these pages and point the article at them.
+- Retitle the AI agents page so the title names the MCP server and the API, and link it to the hub.
+
+### Say what Typefully is in the HTML
+
+AI answers quote sections that make sense on their own, and the first one they look for is "what is Typefully". Typefully has written that sentence, but only in the Markdown copy for agents. The homepage that people, Google and most AI crawlers read opens with a slogan, and typefully.com/about is a blank profile page.
+
+<BeforeAfter
+  caption="The top of Typefully's homepage HTML today, and with the sentence from its own Markdown copy added under the headline."
+  before={{ label: "Today", html: beforeHome }}
+  after={{ label: "After the fix", html: afterHome }}
+/>
+
+**The fix:** add the index.md sentence under the homepage headline, and publish an About page that opens with it, then says who runs Typefully and since when. Add the About page to the Organization structured data the homepage already has.
+
+To confirm the AI search fixes worked, ask the same ten questions with `seo research ai_answers` after 30 days, for Typefully and Buffer, and compare the counts.
+
+## 4. Housekeeping: public profiles
+
+Anyone can sign up for Typefully and get a public profile at typefully.com/their-username. Ahrefs finds 31 profile and post pages from 24 accounts that rank for searches about gambling and escort sites, mostly in Vietnam and Korea. Together they get about 2,500 visits a month.
+
+These rankings come and go. On 15 October, Ahrefs credited a profile for a TikTok download site with about 175,000 visits a month, for its own name in Pakistan, Nigeria, Chile and the UK.
+
+<CompareBars
+  caption="Estimated monthly Google visits to typefully.com's biggest pages on 15 October 2026 (Ahrefs, all countries). The top page ranked third for &quot;x&quot;. Both spikes were gone by November."
+  unit="visits/month"
+  keepOrder
+  highlight={["A spam profile for a TikTok download site"]}
+  rows={[
+    { label: "Blog post: Twitter is now X", value: 281183, note: "Briefly ranked for \"x\" in the US" },
+    { label: "A spam profile for a TikTok download site", value: 175171, note: "#1 for its own name in Pakistan, Nigeria, Chile and the UK" },
+    { label: "LinkedIn text formatter", value: 6647 },
+    { label: "Homepage", value: 5313 },
+  ]}
+/>
+
+Each profile is indexable and names itself as the canonical, and the link in its bio is a followed link, so it passes authority to the site it points at. The accounts then build links to their profiles. One gambling profile has links from about 1,068 sites (Ahrefs), against 15 for the LinkedIn text formatter.
+
+The same profile route answers every made-up address. typefully.com/this-page-does-not-exist returns a blank page with a 200, and so do typefully.com/about and typefully.com/mcp. Blog and tool addresses that don't exist return a proper 404.
+
+<BeforeAfter
+  caption="A spam profile's head and bio link today, and with noindex and a ugc nofollow link."
+  before={{ label: "Today", html: beforeBio }}
+  after={{ label: "After the fix", html: afterBio }}
+/>
+
+**The fix:**
+
+- Add `noindex` to profile and shared post pages by default. Let a profile be indexed only when its owner opts in and the account has published through Typefully. Real users lose little: other public profiles and posts get about 1,300 visits a month between them.
+- Mark every bio link and every link in a shared post `rel="ugc nofollow"`. [Google asks sites to do this](https://developers.google.com/search/docs/crawling-indexing/qualify-outbound-links) for links that users add.
+- Return a 404 for usernames that don't exist.
+- Delete the 24 accounts, and add a sign-up check for gambling and escort terms in usernames and bios.
+
+To confirm it worked, crawl the old spam addresses with `seo crawl --mode list` and check each one returns a 404 or carries `noindex`. Ahrefs should drop them from Typefully's top pages within a few weeks.
+
+## One technical fix: the AI writing page is empty without JavaScript
+
+The crawl turned up one more problem I'd fix. Typefully's AI writing assistant page, the product page for its AI features, sends 5 words of text in its HTML, with no headline and no links. A browser builds the full page (1,272 words) with JavaScript. Google renders JavaScript eventually, but most AI crawlers don't, and they get an empty page. The homepage has a smaller version of the same problem: its text is in the HTML, but none of its 64 links are.
+
+<BeforeAfter
+  caption="What a crawler that doesn't run JavaScript gets from typefully.com/ai, today and with the page rendered on the server."
+  before={{ label: "Today", html: beforeAi }}
+  after={{ label: "After the fix", html: afterAi }}
+/>
+
+**The fix:** render the AI page and the homepage's navigation and footer links on the server, as the scheduler and tool pages already are. Then request typefully.com/ai with curl and check that the headline and the feature text are in the response.
+
+## Ship it all today, then let it settle
+
+None of this needs a sprint plan. Each fix is a separate job with a clear end, so agents can work on all of them at once:
+
+<PlanSteps
+  steps={[{"title": "Best time to post study", "body": "Pull a year of scheduled posts and their impressions by platform, day and hour, and draft the LinkedIn, X, Threads and Bluesky pages with the numbers and the method."}, {"title": "Best time to post tool", "body": "A free tool built on the same data: pick a platform and a time zone, get the best hours, then schedule in Typefully."}, {"title": "Scheduler pages", "body": "New titles, a how-to section and a best-times section on the LinkedIn and Threads pages."}, {"title": "Tool links", "body": "Point the LinkedIn formatter's text links at the LinkedIn page, and the X tools at the X page."}, {"title": "MCP pages", "body": "An MCP and API hub at /mcp, then a page each for LinkedIn and X, with the setup steps moved from the help centre."}, {"title": "Homepage and About page", "body": "Add the one-sentence definition under the homepage headline, and publish an About page that opens with it."}, {"title": "Outreach drafts", "body": "Draft an email for each site linking to the older best-time studies, for someone at Typefully to approve."}, {"title": "Profile settings", "body": "Noindex profiles and shared posts by default, ugc nofollow on every user link, and a 404 for unknown usernames."}, {"title": "Spam accounts", "body": "Delete the 24 spam accounts and add a sign-up check for gambling and escort terms."}, {"title": "Server rendering", "body": "Render the AI writing page and the homepage links in the HTML."}]}
+/>
+
+Someone at Typefully still needs to check the study's numbers and approve each outreach email. The link and robots changes need only a quick check.
+
+Then I'd spend 30 days checking the results:
+
+<PlanSteps
+  steps={[{"marker": "Day 0", "title": "Ask Google to recrawl", "body": "Submit every new and changed URL, and the old profile addresses, to Index My Site, so Google sees the changes now instead of on its own schedule."}, {"marker": "Day 3", "title": "Check the profiles", "body": "Crawl the spam addresses in list mode and confirm each returns a 404 or carries noindex."}, {"marker": "Day 7", "title": "First impressions", "body": "Look for impressions on \"schedule linkedin posts\", \"threads scheduler\", \"linkedin mcp\" and \"best time to post on linkedin\" in Search Console."}, {"marker": "Day 14", "title": "Clicks from the tools", "body": "Check how many formatter visitors click through to the LinkedIn page, and how many of those sign up."}, {"marker": "Day 30", "title": "Sign-ups, links and AI answers", "body": "Compare sign-ups from search with the month before, count the sites linking to the study, and ask the same ten AI questions again."}]}
+/>
+
+## Get the changes seen quickly
+
+Most of these changes are to pages Google has already crawled, and it comes back to them on its own schedule. I'd submit every changed and new URL to [Index My Site](https://indexmysite.app/) as it ships. That matters most for the retitled LinkedIn and Threads pages, and for the old profile addresses, where Google has to recrawl each one to see the `noindex`.
+
+## How I ran this
+
+Everything in this teardown came from SEO Skill, run by an agent. You can run the same audit on your own site.
+
+**1. Connect the hosted MCP server.** It's free. You sign in with Google, and there's no password and nothing to install. In Claude Code:
+
+```sh
+claude mcp add --transport http seoskill https://seoskill.dev/mcp
+```
+
+Codex, Cursor and Claude on the web work too. The [MCP guide](/docs/mcp) has the steps for each one.
+
+**2. Add a research key.** On your [account page](/account), save an Ahrefs or DataForSEO key. The key gives your agent search volumes, rankings and results pages, like the tables above. With DataForSEO it can also ask ChatGPT and Google's AI answers your questions and check who they cite.
+
+**3. Install the CLI for crawling.** The crawl runs on your machine, so it can read any site:
+
+```sh
+npm i -g seo
+seo login
+```
+
+**4. Ask your agent.** This is close to the prompt I used:
+
+```text
+Audit example.com. Find where our search traffic
+lands and how much of it reaches a page that sells.
+Crawl the site with seo crawl and check what a
+made-up address and a user profile page return.
+Use seo_research to find the searches our buyers
+make, who ranks and which of our pages should.
+Ask ai_answers 10 buyer questions for us and our
+top competitor, and say who gets cited.
+Rank the fixes and give me the few that matter most.
+```
+
+On your own site, the hosted server adds the part I couldn't see from the outside: your real Search Console clicks and queries. With those, you get measured numbers where this post has estimates.
+
+If your product has public user pages, request a few of them as a stranger would. That's where the spam profiles in this teardown turned up.
+
+If you're at Typefully, I'm happy to talk any of this through. And if you'd like the same teardown for your company, [SEO Skill](/) will run it for you.

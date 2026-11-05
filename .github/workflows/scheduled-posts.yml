@@ -1,0 +1,40 @@
+name: Scheduled posts
+
+# A blog post goes live at 09:00 UK time on its date, but the site is built
+# at merge time. Each morning this checks whether a post went live in the
+# last three hours and, only then, asks Cloudflare Workers Builds to rebuild
+# main through its deploy hook. The three runs cover GMT and BST and a late
+# GitHub schedule; a second rebuild on the same morning is harmless.
+
+on:
+  schedule:
+    - cron: "10 8-10 * * *"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  rebuild:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v6
+        with:
+          node-version-file: .node-version
+      - name: Rebuild when a post went live
+        env:
+          WEB_DEPLOY_HOOK: ${{ secrets.WEB_DEPLOY_HOOK }}
+        run: |
+          node --input-type=module -e "
+          import { publishedBlogPaths } from './apps/web/src/content/blog-posts.mjs'
+          const before = publishedBlogPaths(new Date(Date.now() - 3 * 3600e3))
+          const due = publishedBlogPaths().filter((path) => !before.includes(path))
+          if (due.length === 0) { console.log('No post went live.'); process.exit(0) }
+          console.log('Went live:', due.join(', '))
+          if (!process.env.WEB_DEPLOY_HOOK) throw new Error('The WEB_DEPLOY_HOOK secret is not set.')
+          const response = await fetch(process.env.WEB_DEPLOY_HOOK, { method: 'POST', signal: AbortSignal.timeout(30000) })
+          if (!response.ok) throw new Error('Deploy hook returned ' + response.status)
+          console.log('Rebuild started.')
+          "

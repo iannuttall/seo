@@ -1,0 +1,311 @@
+---
+title: How I'd grow Dub with SEO, a full teardown
+description: An SEO teardown of Dub. It has a higher Domain Rating than Rewardful, 399 affiliate programs and payout data from $20 million. Here's how I'd use them.
+heading: How I'd grow Dub
+lead: Dub has a higher Domain Rating than Rewardful or PartnerStack, a marketplace of 399 affiliate programs and payout data from more than $20 million. "best affiliate programs" gets 6,000 US searches a month at a difficulty of 6, and Dub's marketplace doesn't rank for it yet. This is how I'd win those searches.
+date: '2026-11-19'
+company: Dub
+x:
+  company: dubdotco
+draft: false
+cover:
+  alt: "Colourful hot-air balloons lift off at a sunset festival while partners climb into the baskets with bags of coins and a host hands out tickets."
+---
+
+export const beforeRedirect = `<pre>GET https://dub.sh/pm33group   (a link that no longer exists)
+  307 Temporary Redirect
+  → https://dub.co/links
+  200 OK  \"Short links with superpowers\"</pre>`
+
+export const afterRedirect = `<pre>GET https://dub.sh/pm33group
+  404 Not Found
+  X-Robots-Tag: noindex
+  \"Link not found\" page, with a link to dub.co/links</pre>`
+
+export const beforeAbout = `<pre>&lt;h1&gt;Building the modern partner growth engine&lt;/h1&gt;
+&lt;p&gt;We're building the infrastructure to help companies
+grow revenue with affiliates, creators, user referrals,
+and more.&lt;/p&gt;</pre>`
+
+export const afterAbout = `<pre>&lt;h1&gt;About Dub&lt;/h1&gt;
+&lt;p&gt;Dub is a link attribution and affiliate platform:
+short links, conversion tracking and partner programs
+for SaaS companies, used by Framer, Perplexity and
+Superhuman.&lt;/p&gt;</pre>`
+
+[Dub](https://dub.co/) started as an open-source link shortener and is now a link attribution platform. It sells three things on one account: short links with analytics, conversion tracking from click to sale, and Dub Partners, which runs affiliate programs for SaaS companies such as Framer, Perplexity and Polymarket. Framer alone pays out about $900,000 a month through Dub Partners, and Dub says it has paid more than $20 million to partners.
+
+The site has a Domain Rating of 82, higher than Rewardful (77) or PartnerStack (81). AI answers already cite Dub for four of the five link shortener questions I asked. And Dub owns two things it can build pages from: a Program Marketplace of 399 programs and the payout data behind them. That authority hasn't reached the affiliate pages yet, and that's where Dub could grow, so I lead with those pages.
+
+## The affiliate searches are where Dub's traffic could grow
+
+Ahrefs estimates dub.co and its subdomains get about 46,000 visits from Google a month. This map shows where they land.
+
+<TrafficMap
+  caption="Estimated Google visits to dub.co and its subdomains by kind of page, 4 November 2026 (Ahrefs top pages, all countries). Blue pages sell something."
+  items={[
+    { label: "Indonesian searches on the Links page", value: 41218, tone: "waste", note: "Indonesian slot and lottery brand names, such as \"dugempoker\" and \"slotdadu\"" },
+    { label: "Brand searches for Dub", value: 2993, tone: "brand", note: "Homepage, status page, login, pricing" },
+    { label: "Free link shortener tools", value: 1471, tone: "sells", note: "Google, Spotify, Amazon and QR code tools that end at sign-up" },
+    { label: "Partner program pages", value: 244, tone: "sells", note: "Customers' affiliate programs on partners.dub.co" },
+    { label: "Blog posts and comparisons", value: 149, tone: "other" },
+  ]}
+/>
+
+About 89% of the estimated visits go to one page, the Dub Links product page, from searches in Indonesia for gambling brand names. They don't sell anything, and the housekeeping section near the end covers where they come from. In the US, Ahrefs credits dub.co with about 2,050 visits a month.
+
+The affiliate pages get under 400 of those visits between them: 244 to partner program pages and 149 to blog posts and comparisons. Buyers search for affiliate programs and affiliate software every month, and that's the upside.
+
+## The affiliate marketplace can own "best affiliate programs"
+
+In 2026 Dub launched its Program Marketplace: a directory of SaaS affiliate programs at dub.co/marketplace, titled "Best SaaS affiliate programs in 2026", with category pages for AI, marketing, developer tools and more, and a page per program. People search for exactly this.
+
+<KeywordTable
+  caption="Ahrefs, US, November 2026. Dub's marketplace ranks for none of these. Its program pages rank for a few searches for one program, from partners.dub.co, such as the beehiiv one."
+  sortBy="volume"
+  columns={[{ key: 'keyword', label: 'Search', format: 'text' }, { key: 'volume', label: 'US searches', format: 'number' }, { key: 'difficulty', label: 'Difficulty', format: 'number', short: 'KD' }, { key: 'who', label: 'Who ranks', format: 'text' }]}
+  rows={[
+    { keyword: 'best affiliate programs', volume: 6000, difficulty: 6, who: 'Reddit, affiliate.watch' },
+    { keyword: 'high ticket affiliate programs', volume: 900, difficulty: 7, who: 'Reddit, Shopify' },
+    { keyword: 'saas affiliate programs', volume: 450, difficulty: 0, who: 'Reddit, Reditus' },
+    { keyword: 'ai affiliate programs', volume: 250, difficulty: 35, who: 'PartnerStack, Instantly' },
+    { keyword: 'beehiiv affiliate program', volume: 90, difficulty: null, who: 'beehiiv; Dub 4th, a login page' },
+  ]}
+/>
+
+"best affiliate programs" has 6,000 US searches and a difficulty of 6. Below a Reddit thread, Google shows directories and blog lists, one of them on a site with a Domain Rating of 37.
+
+<SerpLadder
+  keyword="best affiliate programs"
+  volume={6000}
+  target="dub.co"
+  targetPosition={null}
+  caption="Organic results for &quot;best affiliate programs&quot; (Ahrefs, US). Dub's marketplace has more live programs than most of these lists, with the commission for each."
+  rows={[
+    { position: 2, domain: 'reddit.com', dr: 95, tag: 'Forum thread' },
+    { position: 3, domain: 'affiliate.watch', dr: 53, tag: 'Directory' },
+    { position: 5, domain: 'youtube.com', dr: 99, tag: 'Video' },
+    { position: 6, domain: 'digistore24.com', dr: 91, tag: 'Blog list' },
+    { position: 7, domain: 'thedoublethink.com', dr: 37, tag: 'Blog list' },
+    { position: 8, domain: 'flowlu.com', dr: 77, tag: 'Blog list' },
+    { position: 9, domain: 'businessofapps.com', dr: 86, tag: 'Directory' },
+  ]}
+/>
+
+Ahrefs finds one keyword and no traffic for the whole marketplace. Three things hold it back, and all three are in Dub's own code.
+
+<UrlMap
+  caption="The same beehiiv program at three addresses on two domains, and what I'd do with each. All return 200 and share the title &quot;beehiiv Affiliate Program | Dub&quot;."
+  rows={[
+    { url: "dub.co/marketplace/beehiiv", action: "Keep", tone: "keep", note: "Add to the sitemap. It isn't in it today, and neither is any other marketplace page." },
+    { url: "partners.dub.co/beehiiv", action: "Canonical", to: "dub.co/marketplace/beehiiv", note: "Names itself as canonical today, so Google sees two equal pages. Keep it as the apply page for partners." },
+    { url: "partners.dub.co/beehiiv/login", action: "Fix", tone: "change", note: "The address Google ranks 4th for \"beehiiv affiliate program\". It already canonicalises to /beehiiv; noindex the login and apply views." },
+  ]}
+/>
+
+First, none of the marketplace's pages is in dub.co's sitemap, which lists 259 addresses. Second, partners.dub.co has its own sitemap with 399 program pages, each naming itself as canonical, so every program is two equal pages on two hosts. Third, many program pages are thin: the Framer page has about 50 words, the Buffer page 53.
+
+**The fix:** make dub.co/marketplace the one public home for every program, in line with keeping one domain. Point each partners.dub.co program page's canonical at its marketplace page and list only the marketplace in a sitemap. Then fill each program page from data Dub already holds: commission, how long it pays, cookie length, payout method and the category. A program page that answers "how much does the beehiiv affiliate program pay" in its first sentence is also the page an AI answer can quote.
+
+The category pages carry the head terms. "Best AI SaaS affiliate programs in 2026" already exists at the AI category; it needs the programs ranked by a number a reader cares about, such as commission, with a short answer at the top.
+
+## Dub Partners can win buyers who compare affiliate software
+
+Dub Partners is the part of Dub that brings in the biggest accounts. Buyers search for the category and for the tools they're leaving, and Dub isn't on page one for any of these yet.
+
+<KeywordTable
+  caption="Ahrefs, US, November 2026. Dub isn't in the top 10 for any of them. Review sites, vendor homepages and lists that link out to vendors hold page one."
+  sortBy="volume"
+  columns={[{ key: 'keyword', label: 'Search', format: 'text' }, { key: 'volume', label: 'US searches', format: 'number' }, { key: 'difficulty', label: 'Difficulty', format: 'number', short: 'KD' }, { key: 'who', label: 'Who ranks', format: 'text' }]}
+  rows={[
+    { keyword: 'affiliate marketing software', volume: 1300, difficulty: 65, who: 'Rewardful, G2' },
+    { keyword: 'affiliate software', volume: 1000, difficulty: 61, who: 'Rewardful, Tapfiliate' },
+    { keyword: 'affiliate management software', volume: 800, difficulty: 68, who: 'Rewardful, Tapfiliate' },
+    { keyword: 'referral program software', volume: 800, difficulty: 65, who: 'Referral Factory' },
+  ]}
+/>
+
+These are hard, with difficulties in the 60s, and Pipedrive's list of affiliate management software ranks for two of them. That's a links job, covered in the next section. The searches for a rival's name are easier: "rewardful alternative" and "firstpromoter alternative" get about 200 US searches a month each and "partnerstack alternative" 90, all from people about to switch, and Dub has already written the pages: its Dub vs Rewardful post ranks second for "rewardful pricing". But dub.co/compare/rewardful, /partnerstack, /firstpromoter and /tolt all send a temporary 307 to blog addresses, while the link shortener comparisons (Bitly, Rebrandly) live at /compare.
+
+**The fix:** move the four affiliate comparisons to their /compare addresses and 301 the blog posts there, so the comparisons for both products sit in one section. Title each one for the search ("The best Rewardful alternative for SaaS: Dub vs Rewardful") and open with a two-sentence verdict.
+
+## Links and PR: Dub already holds the data for the report everyone cites
+
+The lists that rank and get quoted for affiliate software link to Dub's rivals and not to Dub. Of the sites with a Domain Rating of 50 or more that link to two or more of Rewardful, PartnerStack, FirstPromoter and Tolt, 92 don't link to Dub (Ahrefs, top 250 linking sites for each). The ones worth an email are editorial lists:
+
+<UrlMap
+  caption="Pages that link to two or more of Dub's affiliate rivals and not to Dub (Ahrefs, 4 November 2026). Each is a list of affiliate tools, and each is one email to its editor."
+  rows={[
+    { url: "searchenginejournal.com: 10 affiliate marketing tracking software platforms", action: "Pitch", tone: "change", note: "Cites Rewardful's statistics page for \"$38 billion\"." },
+    { url: "influencermarketinghub.com: affiliate marketing software, management and tracking lists", action: "Pitch", tone: "change", note: "Three lists, linking Rewardful, PartnerStack and FirstPromoter." },
+    { url: "pipedrive.com/en/blog/affiliate-management-software", action: "Pitch", tone: "change", note: "The list names Rewardful, PartnerStack and FirstPromoter, but not Dub." },
+    { url: "pipedrive.com/en/blog/affiliate-marketing-software", action: "Pitch", tone: "change", note: "The list names Rewardful but not Dub." },
+  ]}
+/>
+
+The bigger link play is a report. Rewardful's "affiliate marketing statistics" page has links from 142 sites, and FirstPromoter's from 108, for a search with 2,400 US searches a month. Both are collections of other people's numbers. Dub has its own, from more than $20 million in payouts.
+
+Even the public part is a story. I read the rewards line on all 399 program pages on partners.dub.co. Of the 292 that pay a share of each sale, the median is 25%, and the most common rates are 20% and 30%. About half the programs (196 of 387) stop paying after a year, and 81 pay for the customer's lifetime.
+
+A headline a journalist could use: "The median SaaS affiliate program pays 25% of each sale, and half stop after a year (Dub, 387 programs, November 2026)." With the private data Dub could add what no one else can: which commission structures get the most partner sign-ups and sales, how much the top 1% of partners earn, and what share of clicks from creators turn into sales. The Polymarket payouts that went round X in October (one partner posted a notice for $7,439 in commissions) show the appetite for those numbers.
+
+I'd publish it as a dated page at dub.co/affiliate-marketing-statistics, updated each quarter, and send it to the writers of the lists above and of the statistics pages that rank.
+
+## AI answers cite Dub for link shorteners and can for affiliate software
+
+I asked ChatGPT search, Google AI Mode and Google's AI Overviews ten questions a Dub buyer might ask, for Dub, Bitly and Rewardful (`seo research ai_answers`, DataForSEO, US, 5 November 2026). Dub is cited for four of the five link shortener questions. For affiliate software, it's named but not yet linked.
+
+<KeywordTable
+  caption="Answers that cite (link to) or name each site, out of three engines per question (DataForSEO, US, 5 November 2026). Every Dub citation was its homepage."
+  sortBy="question"
+  columns={[{ key: 'question', label: 'Question', format: 'text' }, { key: 'dub', label: 'Dub', format: 'text' }, { key: 'rival', label: 'Rival', format: 'text' }]}
+  rows={[
+    { question: 'What is the best URL shortener with analytics?', dub: 'Cited 2, named 1', rival: 'Bitly: cited 1, named 2' },
+    { question: 'What is the best link shortener for marketing teams?', dub: 'Cited 2', rival: 'Bitly: cited 2, named 1' },
+    { question: 'What is the best Bitly alternative?', dub: 'Cited 1, named 2', rival: 'Bitly: named 3' },
+    { question: 'What is the best open source link shortener?', dub: 'Cited 2', rival: 'Bitly: named 2' },
+    { question: 'How do I track conversions from short links?', dub: 'None', rival: 'Bitly: cited 1, named 1' },
+    { question: 'What is the best affiliate software for SaaS?', dub: 'Named 2', rival: 'Rewardful: cited 1, named 1' },
+    { question: 'What is the best Rewardful alternative?', dub: 'None', rival: 'Rewardful: cited 1, named 2' },
+    { question: 'How do I start an affiliate program for my SaaS?', dub: 'Named 1', rival: 'Rewardful: cited 1, named 1' },
+    { question: 'What are the best SaaS affiliate programs to join?', dub: 'None', rival: 'Rewardful: none' },
+  ]}
+/>
+
+AI crawlers already get everything. GPTBot, OAI-SearchBot, ClaudeBot and PerplexityBot user agents get the same full pages a browser gets, and Dub's docs and help centre (on Mintlify) serve Markdown to the search bots. So the gaps are in what the pages say.
+
+Rewardful gets cited with an article ("Rewardful vs PartnerStack") and its homepage. Bitly gets cited for conversion tracking with its Google Analytics 4 integration page. Dub has a help article on conversion tracking, and it opens with "Data is the lifeblood of any business." An AI answer quotes a section that makes sense on its own, so a section should start with a sentence that names Dub and answers the question.
+
+The About page has the same gap. It opens with a slogan, and nothing in its first lines says what Dub is or who it's for.
+
+<BeforeAfter
+  caption="The top of Dub's About page today, and with one sentence that names the company, the category and the buyer. The customer names are from Dub's own Partners page."
+  before={{ label: "Today", html: beforeAbout }}
+  after={{ label: "With a first sentence", html: afterAbout }}
+/>
+
+**The fix:**
+
+- Start each help and docs article with one sentence that answers its title and names Dub, starting with conversion tracking, attribution and the Partners overview. Docs and help pages earn a large share of AI citations for developer tools, and Dub has more than 260 of them.
+- Open the About page with what Dub is, who it's for and who uses it.
+- Add the product pages (Partners, pricing, the comparisons and the marketplace) to llms.txt. Today it lists only docs and help pages.
+- The comparison pages and marketplace pages above are the pages that would be cited for the three affiliate questions where Dub is missing.
+
+Google still sends most buyers, so none of this replaces the work above. AI Overviews lean on the same links Google's ranking uses, which is why the commission report matters here too.
+
+## Three technical fixes
+
+The crawl (`seo crawl`, 600 pages each on dub.co and partners.dub.co) found plenty of small issues. Two of them matter, and a third comes from checking what dead short links return.
+
+### 1. Made-up addresses on dub.co return the 404 page with a 200
+
+Any unknown address at the top level of dub.co shows "404 Page not found" with a 200 status, so to Google each one is a working copy of a near-empty page. The blog, help and docs sections already return a real 404.
+
+<BrowserFrame
+  url="https://dub.co/this-page-does-not-exist"
+  tab="Dub - The Modern Link Attribution Platform"
+  status="200 OK"
+  bad
+  caption="An address that doesn't exist on dub.co. The page says 404, the status says 200."
+>
+  <p class="text-lg font-medium">404</p>
+  <p class="text-foreground-muted">Page not found. Go back home.</p>
+</BrowserFrame>
+
+The tools index at dub.co/tools does the same: it's linked and its 17 tools are in the sitemap, but the index itself is that 404 page with a 200. The same catch-all serves llms-full.txt, pricing.md and partners.md as HTML.
+
+**The fix:** call Next.js's `notFound()` in the catch-all route so it returns a 404 status, and give /tools a real index of the tools. To confirm it worked, request a made-up address and check for a 404.
+
+### 2. The program pages compete with themselves
+
+The partners.dub.co crawl found 398 duplicate titles, mostly each program's page against its apply page. The apply pages already point their canonical at the program page, so the duplicates that matter are the ones across the two domains in the marketplace section above. That fix covers this one.
+
+### 3. Housekeeping: dead short links
+
+The Indonesian visits in the traffic map land on the Links page, and a live Google search in Indonesia (DataForSEO, 5 November) puts that page first for "dugempoker", with its normal title and no gambling text anywhere on it. Ahrefs credits the page with one US visit a month. It started ranking in August, and it grew with its backlinks.
+
+<VerticalBars
+  caption="Estimated monthly Google visits to the Dub Links page (Ahrefs). It had under a dozen a month until July 2026. Referring domains to the page went from 5,732 in August to 8,237 in November."
+  unit="visits"
+  highlight={["Nov 26"]}
+  data={[{"label": "Aug 26", "value": 5716}, {"label": "Sep 26", "value": 11401}, {"label": "Oct 26", "value": 39238}, {"label": "Nov 26", "value": 40144}]}
+/>
+
+Indonesian gambling sites use Dub short links in their Telegram channels and landing pages, with link text like "SLOT GACOR" and "DAFTAR" (sign up). When one of those links stops existing, because it was deleted or never created, the dub.sh domain doesn't return a 404. Dub's code sends unknown links on its default domain to the Links page with a 307 redirect, and its own test suite checks for exactly that.
+
+<BeforeAfter
+  caption="What a visitor or Googlebot gets for a dub.sh link that no longer exists, today and with a 404. Dub's disabled and banned link pages are already marked noindex; the missing link redirect is the one that isn't."
+  before={{ label: "Today", html: beforeRedirect }}
+  after={{ label: "With a 404", html: afterRedirect }}
+/>
+
+Ahrefs counts 41,167 links from 8,209 sites to the Links page, and the gambling anchors are among the most common ("toto slot" alone, 6,493 links from 248 sites). Google follows each redirect to the Links page, reads the link text, and ranks the page for the casino's name. Each new page that uses a dead Dub link adds another one.
+
+I can't see inside Google, so this is the most likely cause rather than a proven one. The anchors, the redirect and the timing all point the same way. Either way, the Links page ranks for about 1,900 Indonesian searches, nearly all of them gambling brand names, that have nothing to do with the product.
+
+**The fix:** return a 404 for a missing link on dub.sh, dub.link and the other Dub domains, marked noindex like the disabled and banned link pages. Keep the "Link not found" page with its link to Dub Links, so a person who clicks a dead link still sees the product. Branded domains that send unknown links to a tool page (chatg.pt goes to the ChatGPT link shortener) need the same change.
+
+To confirm it worked, request a made-up dub.sh link and check for a 404, then watch the Links page's Indonesian keywords in Ahrefs or Search Console fall over the next few weeks. The US numbers shouldn't move.
+
+## Ship it all today, then let it settle
+
+Each fix is a separate job with a clear end, so these can run at once:
+
+<PlanSteps
+  steps={[{"title": "One home for each program", "body": "Add the marketplace to dub.co's sitemap, point partners.dub.co program pages' canonicals at their marketplace pages, and noindex the login and apply views."}, {"title": "Program pages worth reading", "body": "Fill each marketplace page from program data: commission, duration, cookie length, payout method, category, with the answer in the first sentence."}, {"title": "Comparisons in one place", "body": "Move the Rewardful, PartnerStack, FirstPromoter and Tolt comparisons to /compare with 301s from the blog, each opening with a verdict."}, {"title": "The commission report", "body": "Draft affiliate marketing statistics from Dub's payout data, then email the list editors and statistics page writers."}, {"title": "Answer-first docs", "body": "A first sentence that names Dub and answers the title on the conversion tracking, attribution and Partners help articles, a new About page opening, and product pages in llms.txt."}, {"title": "Site 404s", "body": "Return a 404 from the catch-all route and build a real tools index."}, {"title": "Real 404s for dead links", "body": "Return a 404 with noindex for missing links on dub.sh, dub.link and the branded domains, keeping the Link not found page. Update the redirect test that expects a 307."}]}
+/>
+
+Someone at Dub needs to choose which payout numbers to publish and review the comparison verdicts. The canonical, sitemap and redirect changes need only a quick check.
+
+Then I'd spend 30 days checking the results:
+
+<PlanSteps
+  steps={[{"marker": "Day 0", "title": "Ask Google to recrawl", "body": "Submit the marketplace pages, the moved comparisons and the About page to Index My Site."}, {"marker": "Day 3", "title": "Check the marketplace and redirects", "body": "The marketplace pages show as indexed in Search Console; a dead dub.sh link returns 404."}, {"marker": "Day 14", "title": "Indonesian impressions fall", "body": "The Links page's Indonesian impressions in Search Console should be falling."}, {"marker": "Day 30", "title": "Marketplace and AI answers", "body": "Impressions for \"best affiliate programs\" and \"saas affiliate programs\", partner sign-ups from search, and the same ten AI questions asked again."}]}
+/>
+
+## Get the changes seen quickly
+
+The marketplace is the biggest test. Once the canonicals point at it, Google has to recrawl about 400 program pages on two hosts before it moves their signals across, and on its own schedule that can take weeks. I'd submit every marketplace page and every moved comparison to [Index My Site](https://indexmysite.app/) the day it ships, so Google crawls them straight away.
+
+## How I ran this
+
+Everything in this teardown came from SEO Skill, run by an agent. You can run the same audit on your own site.
+
+**1. Connect the hosted MCP server.** It's free. You sign in with Google, and there's no password and nothing to install. In Claude Code:
+
+```sh
+claude mcp add --transport http seoskill https://seoskill.dev/mcp
+```
+
+Codex, Cursor and Claude on the web work too. The [MCP guide](/docs/mcp) has the steps for each one.
+
+**2. Add a research key.** On your [account page](/account), save an Ahrefs or DataForSEO key. The key gives your agent search volumes, rankings and results pages, like the tables above. With DataForSEO it can also ask ChatGPT and Google's AI answers your questions and check who they cite.
+
+**3. Install the CLI for crawling.** The crawl runs on your machine, so it can read any site:
+
+```sh
+npm i -g seo
+seo login
+```
+
+**4. Ask your agent.** This is close to the prompt I used:
+
+```text
+Audit example.com and every domain we use for links.
+Crawl each one with seo crawl, and check what unknown
+addresses and short links return.
+For our biggest page, check which countries and
+searches its traffic comes from, and whether they
+match what the page sells.
+Use seo_research to find the searches our buyers make
+and who ranks for them.
+Ask ai_answers ten buyer questions for us and our top
+competitor, and say who gets cited.
+Rank the fixes by how much revenue each one is near.
+```
+
+On your own site, the hosted server adds what I couldn't see from the outside: your real Search Console clicks and queries. With those, you'd see the Indonesian impressions directly instead of through an estimate.
+
+If you run a link shortener, check what your dead links return. Every redirect to your homepage or product page passes along whatever the linking page says about it.
+
+If you're at Dub, I'm happy to talk any of this through. And if you'd like the same teardown for your company, [SEO Skill](/) will run it for you.

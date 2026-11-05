@@ -1,0 +1,486 @@
+---
+title: How I'd grow TypingMind with SEO
+description: An SEO teardown of TypingMind, the AI chat app for your own API keys. The pricing, API key and comparison pages it has, and why they don't rank.
+heading: How I'd grow TypingMind
+lead: TypingMind already has a price page for 7,323 model listings and a setup guide for every AI provider it supports. Together they get about 1,400 Google visits a month. Four changes to pages it already has would bring most of the gain.
+date: '2026-11-26'
+company: TypingMind
+x:
+  company: TypingMindApp
+draft: false
+cover:
+  alt: "TypingMind's low-poly brain holds up a price tag in a back storeroom stacked with thousands of them, while across the street a crowd queues at a small market stall."
+  title: center
+---
+
+export const beforeHome = `<pre>GET www.typingmind.com/
+200 OK, 202 KB of HTML
+about 2,400 words
+
+links to other pages: 0
+canonical tag: none
+
+The menu and footer (pricing,
+skills, MCP, docs, Teams) are
+added by JavaScript later.</pre>`
+
+export const afterHome = `<pre>GET www.typingmind.com/
+200 OK
+
+&lt;link rel="canonical"
+  href="https://www.typingmind.com/"&gt;
+
+&lt;nav&gt; and &lt;footer&gt; in the HTML,
+with plain &lt;a href&gt; links to
+/buy, /skills, /mcp, /guide,
+the price pages and Teams
+
+/home → 301 → /</pre>`
+
+export const beforeSitemap = `<pre>www.typingmind.com/robots.txt
+  User-agent: *
+  Disallow: /share/
+  Disallow: /plugins/
+  Disallow: /characters/
+  Disallow: /artifacts/
+
+www.typingmind.com/sitemap.xml
+  404 Not Found</pre>`
+
+export const afterSitemap = `<pre>www.typingmind.com/robots.txt
+  User-agent: *
+  Disallow: /share/
+  …
+  Sitemap: https://www.typingmind.com/sitemap.xml
+
+www.typingmind.com/sitemap.xml
+  a sitemap index: guides, price
+  pages, comparisons, main pages,
+  then the skills and MCP servers
+  worth indexing</pre>`
+
+[TypingMind](https://www.typingmind.com/) is a chat app for AI models. You bring your own API keys from OpenAI, Anthropic, Google, OpenRouter and about 20 other providers, and chat with all of them in one place. It's built by Tony Dinh, who has been building it in public on X since he bought the domain in March 2023.
+
+It makes money two ways. People pay once for a licence ($39, "once + pay per API use", next to "$20/mo" for ChatGPT Plus or Claude Pro on its own pricing page). Companies pay monthly for TypingMind Teams, from $83 a month, to run a chat workspace for their staff.
+
+So TypingMind's buyers are people who pay for AI by the token, or are about to. That makes the searches it should win easy to name: what the API costs, how to get a key, and which model to use.
+
+## Two thirds of TypingMind's search traffic is brand search
+
+Ahrefs estimates typingmind.com and its subdomains get about 8,600 visits a month from Google, with a Domain Rating of 70. This map shows where they land.
+
+<TrafficMap
+  caption="Estimated Google visits to typingmind.com and its subdomains by kind of page, 4 November 2026 (Ahrefs top pages, all countries, 103 pages). Blue pages reach people who use AI by the token."
+  items={[
+    { label: "Searches for TypingMind by name", value: 5760, tone: "brand", note: "4,584 of them land on the homepage" },
+    { label: "Provider setup guides", value: 1219, tone: "sells", note: "829 land on the Groq guide, from people looking for Groq's console" },
+    { label: "Model logo pages", value: 611, tone: "waste", note: "Searches like \"claude logo\" and \"llama icon\"" },
+    { label: "Skills and MCP directory", value: 583, tone: "other", note: "461 on one skill page" },
+    { label: "API price calculators", value: 166, tone: "sells", note: "Spread over 7,323 pages" },
+    { label: "Other docs", value: 105, tone: "other" },
+  ]}
+/>
+
+About 68% of the visits are brand searches. That's a good sign: people know TypingMind, and Google treats it as a known brand, which makes the non-brand pages below easier to rank. The provider guides look better than they are. Most of that traffic is one page: the Groq guide ranks on page one for "console.groq", for people looking for Groq's own console.
+
+The surprise is the bottom of the map. TypingMind has 7,323 pages that price every model at every provider, and they get 166 visits a month between them. One page on BenchLM, a site with a lower Domain Rating, gets about 7,300 on its own.
+
+<CompareBars
+  caption="Estimated monthly Google visits, November 2026 (Ahrefs). BenchLM's Claude API pricing page against all of TypingMind's price pages, and TypingMind's homepage."
+  unit="visits/month"
+  highlight="TypingMind: all 7,323 price pages"
+  rows={[{"label": "BenchLM: one Claude API pricing page", "value": 7287, "note": "Ranks #2 for \"claude api pricing\""}, {"label": "TypingMind: homepage", "value": 4584}, {"label": "BenchLM: one OpenAI API pricing page", "value": 2253}, {"label": "TypingMind: all 7,323 price pages", "value": 166}]}
+/>
+
+That gap, 166 visits against 7,287, is the largest in this teardown, and the other three are like it. TypingMind has already built the pages. They're titled, split or hosted in a way that keeps them out of the results.
+
+## The four changes that bring most of the gain
+
+1. Retitle the price pages for the search. "claude api pricing" gets 7,400 US searches a month at a difficulty of 3, and TypingMind has the data.
+2. Retitle the API key guides the same way. "anthropic api key" and "claude api key" get 35,000 US searches a month between them, and TypingMind has two pages that answer them.
+3. Turn the side-by-side model tests into comparison pages. "claude vs chatgpt" gets 35,000 a month at a difficulty of 8, and TypingMind's X account already runs these tests.
+4. Bring back the Teams comparison pages. Their old addresses return a 404, and AI answers about team chat cite LibreChat instead.
+
+Then three technical fixes (a sitemap, links in the homepage HTML and redirects for the old docs) let Google and AI crawlers find all of it.
+
+## 1. API pricing: the data is there, the title isn't
+
+Every price page sits under TypingMind Teams' site, custom.typingmind.com, in a free tool called the LLM cost estimator. There's one page per provider (100 of them) and one per model at each provider (7,222).
+
+These are the searches for API prices, with Ahrefs' US volumes. The ones with low difficulty are wide open.
+
+<KeywordTable
+  caption="Searches for AI API prices (Ahrefs, US, November 2026). TypingMind has a page with the answer for each one and ranks in the top 100 for one of them."
+  sortBy="volume"
+  columns={[{ key: 'keyword', label: 'Search', format: 'text' }, { key: 'volume', label: 'US searches', format: 'number', short: 'US' }, { key: 'difficulty', label: 'Difficulty', format: 'number', short: 'KD' }, { key: 'tm', label: 'TypingMind today', format: 'text' }]}
+  rows={[
+    { keyword: 'openai api pricing', volume: 16000, difficulty: 38, tm: 'Not in top 100' },
+    { keyword: 'claude api pricing', volume: 7400, difficulty: 3, tm: 'Not in top 100' },
+    { keyword: 'gemini api pricing', volume: 3900, difficulty: 56, tm: 'Not in top 100' },
+    { keyword: 'is chatgpt plus worth it', volume: 3700, difficulty: 0, tm: 'No page' },
+    { keyword: 'anthropic api pricing', volume: 2900, difficulty: 16, tm: 'Not in top 100' },
+    { keyword: 'grok api pricing', volume: 1200, difficulty: 61, tm: 'Not in top 100' },
+    { keyword: 'openrouter pricing', volume: 1200, difficulty: 31, tm: 'Not in top 100' },
+    { keyword: 'claude opus pricing', volume: 900, difficulty: 4, tm: '#10, with the Opus 4.6 page' },
+    { keyword: 'deepseek api pricing', volume: 400, difficulty: 26, tm: 'Not in top 100' },
+  ]}
+/>
+
+BenchLM's Claude page shows what wins. Its title is the search, the month and the price range per 1M tokens, every Claude model sits in one table near the top, and Google's AI Overview for "claude api pricing" cites it. One of its sections is called "Subscription or API?", which is TypingMind's whole pitch.
+
+TypingMind's Anthropic page has the same prices for 32 models. Its title is about the team plan.
+
+<SearchResult
+  caption="TypingMind's Anthropic price page in Google today, and with a title and description for the search. The prices are the ones the page lists."
+  before={{
+    url: "https://custom.typingmind.com/tools/estimate-llm-usage-costs/anthropic",
+    site: "TypingMind",
+    title: "Estimate Anthropic API costs for your team",
+    description: "Estimate how much you will spend on Anthropic API models to keep your budget in check. Compare pricing for 32 Anthropic models.",
+  }}
+  after={{
+    url: "https://www.typingmind.com/pricing/claude-api",
+    site: "TypingMind",
+    title: "Claude API pricing: every model per 1M tokens (November 2026)",
+    description: "Input, output and cache prices for all 32 Claude models, from $0.10 per 1M tokens. Work out what your usage would cost, and compare it with Claude Pro.",
+  }}
+/>
+
+### 32 pages for one model
+
+The second problem is that each model is listed once per provider that sells it. Claude Opus 5.5 has 32 pages. 25 of them show Anthropic's own price, so Google sees 25 near-identical pages and has to pick one. For "claude opus pricing" it picked the page for Opus 4.6, an older model, and put it tenth.
+
+<UrlMap
+  caption="The 32 Claude Opus 5.5 price pages, by the price each one lists per 1M input and output tokens (TypingMind's own data, 5 November 2026)."
+  rows={[
+    { url: "/anthropic/claude-opus-5-5", action: "Keep", tone: "keep", note: "Lists $4 per 1M input tokens and $20 per 1M output. It becomes the one Claude Opus 5.5 page, with a row for every provider" },
+    { url: "/openrouter, /vercel, /azure, /google-vertex and 20 more", action: "301", tone: "change", to: "/anthropic/claude-opus-5-5", note: "The same $4 and $20" },
+    { url: "/amazon-bedrock/au-, eu-, jp-, us-anthropic-claude-opus-5-5", action: "301", tone: "change", to: "/anthropic/claude-opus-5-5", note: "$4.40 and $22, 10% more than Bedrock's global endpoint. A row in the table" },
+    { url: "/venice/claude-opus-5-5-fast, /vercel/claude-opus-5-5-fast", action: "301", tone: "change", to: "/anthropic/claude-opus-5-5", note: "$8 and $40 for fast mode. A row in the table" },
+    { url: "/gitlab/duo-chat-opus-5-5", action: "Fix", tone: "remove", note: "Lists $0, because GitLab bills by seat. Leave it out of the table or say so" },
+  ]}
+/>
+
+One page per model, with every provider in a table, is also a better page. Nobody else in the results shows that Bedrock's regional endpoints cost 10% more, or which gateways charge Anthropic's list price.
+
+**The fix:**
+
+1. Title each provider page for the search: "Claude API pricing", "OpenAI API pricing", "Gemini API pricing". Put the price table first in the HTML, with the month in the title.
+2. Merge each model's provider pages into one page with a row per provider, and 301 the rest to it. That turns 7,222 model pages into roughly the number of models, each with something the others don't have.
+3. Add a "Subscription or API?" section to the Claude and OpenAI pages that uses the calculator. TypingMind already compares "$39 once + pay per API use" with "$20/mo" on its own pricing page. Then give that comparison a page of its own for "is chatgpt plus worth it" (3,700 searches, difficulty 0).
+4. Move the tool to www.typingmind.com, where the links are. The main site has about 2,650 referring domains and the Teams site about 800 (Ahrefs).
+
+To confirm it worked, check in Search Console that the Claude page gets impressions for "claude api pricing" within two weeks, and that only one Opus 5.5 address shows up for "claude opus pricing".
+
+## 2. API keys: the moment someone becomes a TypingMind buyer
+
+Someone searching for an Anthropic API key is about to pay for Claude by the token. The next thing they need is somewhere to use the key, which is what TypingMind sells.
+
+<KeywordTable
+  caption="Searches for getting an API key (Ahrefs, US, November 2026). TypingMind has a guide for every provider here and ranks in the top 100 for none of these."
+  sortBy="volume"
+  columns={[{ key: 'keyword', label: 'Search', format: 'text' }, { key: 'volume', label: 'US searches', format: 'number', short: 'US' }, { key: 'difficulty', label: 'Difficulty', format: 'number', short: 'KD' }]}
+  rows={[
+    { keyword: 'anthropic api key', volume: 19000, difficulty: 16 },
+    { keyword: 'claude api key', volume: 16000, difficulty: 11 },
+    { keyword: 'openrouter free models', volume: 3200, difficulty: 26 },
+    { keyword: 'openrouter api key', volume: 2600, difficulty: 31 },
+    { keyword: 'perplexity api key', volume: 1400, difficulty: 28 },
+    { keyword: 'how to get claude api key', volume: 1300, difficulty: 51 },
+    { keyword: 'deepseek api key', volume: 1000, difficulty: 48 },
+    { keyword: 'mistral api key', volume: 450, difficulty: 0 },
+  ]}
+/>
+
+Anthropic's own pages hold the top spots, as they should. Below them the results are open: a YouTube video, a Reddit thread and two small guides.
+
+<SerpLadder
+  keyword="anthropic api key"
+  volume={19000}
+  target="typingmind.com"
+  targetPosition={null}
+  caption="Organic results for &quot;anthropic api key&quot; (Ahrefs, US, November 2026). Merge's three-step guide ranks ninth on a site with a Domain Rating of 75."
+  rows={[
+    { position: 1, domain: 'platform.claude.com', dr: 92, tag: 'API keys page' },
+    { position: 2, domain: 'platform.claude.com', dr: 92, tag: 'Docs' },
+    { position: 6, domain: 'academy.claude.com', dr: 92, tag: 'Course' },
+    { position: 7, domain: 'youtube.com', dr: 99, tag: 'Video' },
+    { position: 8, domain: 'reddit.com', dr: 95, tag: 'Thread' },
+    { position: 9, domain: 'merge.dev', dr: 75, tag: 'Guide' },
+    { position: 10, domain: 'community.pickaxeproject.com', dr: 61, tag: 'Forum' },
+  ]}
+/>
+
+TypingMind has two pages that answer it. The docs page "Anthropic Claude" has the four steps (create an account, add credit, create the key, paste it into TypingMind) in 241 words and no meta description. The guide "How to use Anthropic API Key for AI chat" on the main site has the same steps in about 1,500 words. Both are titled for the second step, after the searcher has a key, and they compete with each other.
+
+<SearchResult
+  caption="TypingMind's Claude key guide in Google today, and titled for the search. The steps are the ones the guide already has."
+  before={{
+    url: "https://www.typingmind.com/guide/use-claude-api-key-to-chat-with-ai",
+    site: "TypingMind",
+    title: "How to use Anthropic API Key for AI chat | TypingMind",
+    description: "Complete guide on how to use your Claude (Anthropic) API key with TypingMind. No monthly fees, advanced features, and better AI chat experience.",
+  }}
+  after={{
+    url: "https://www.typingmind.com/guide/claude-api-key",
+    site: "TypingMind",
+    title: "How to get a Claude API key (Anthropic) in 4 steps",
+    description: "Create an Anthropic account, add credit, create a key at platform.claude.com, then chat with it. What it costs per message, and the error you get with no credit.",
+  }}
+/>
+
+**The fix:** make the main-site guide the one page per provider, titled with the search ("How to get a Claude API key"), and 301 the old guide address to it. Open it with one sentence that answers the question on its own: "To get a Claude API key, create an account at platform.claude.com, add credit under Billing, then create a key under Settings, API keys." Then the steps, what a message costs (linked to the price page) and how to chat with the key. Keep the docs page for setting up TypingMind, and link it to the guide for getting the key.
+
+The same template covers every provider TypingMind supports. OpenRouter is worth its own page for free models: TypingMind already has a guide for each OpenRouter model, so a list of the free ones is a filter over pages it has.
+
+## 3. Model comparisons: the side-by-side tests live only on X
+
+TypingMind's best feature for a comparison is in the product: send one prompt to several models and see the answers side by side. The company's X account uses it in public. "Kimi K3.1 Pro vs. Claude Opus 5.5: Drawing clouds in the sky" got 13,175 views on 26 October, the account's best post in the last two weeks.
+
+Those tests have no web page. The full chats are shared on cloud.typingmind.com/share/, which robots.txt blocks, so Google never sees them. People search for these comparisons in large numbers, at very low difficulty.
+
+<KeywordTable
+  caption="Searches comparing AI models (Ahrefs, US, November 2026). TypingMind has no comparison page."
+  sortBy="volume"
+  columns={[{ key: 'keyword', label: 'Search', format: 'text' }, { key: 'volume', label: 'US searches', format: 'number', short: 'US' }, { key: 'difficulty', label: 'Difficulty', format: 'number', short: 'KD' }, { key: 'page', label: 'Page', format: 'text' }]}
+  rows={[
+    { keyword: 'claude vs chatgpt', volume: 35000, difficulty: 8, page: 'Claude vs ChatGPT' },
+    { keyword: 'deepseek vs chatgpt', volume: 15000, difficulty: 8, page: 'DeepSeek vs ChatGPT' },
+    { keyword: 'gemini vs chatgpt', volume: 11000, difficulty: 15, page: 'Gemini vs ChatGPT' },
+    { keyword: 'chatgpt vs claude', volume: 9000, difficulty: 4, page: 'Claude vs ChatGPT' },
+    { keyword: 'grok vs chatgpt', volume: 6800, difficulty: 5, page: 'Grok vs ChatGPT' },
+    { keyword: 'opus vs sonnet', volume: 5300, difficulty: 4, page: 'Claude Opus vs Sonnet' },
+    { keyword: 'claude vs gemini', volume: 3600, difficulty: 12, page: 'Claude vs Gemini' },
+    { keyword: 'claude opus vs sonnet', volume: 3300, difficulty: 7, page: 'Claude Opus vs Sonnet' },
+    { keyword: 'opus 5.5 vs astra', volume: 450, difficulty: null, page: 'One page per new pair' },
+  ]}
+/>
+
+For "claude vs chatgpt", Reddit, Hackernoon and Zapier rank in the top ten with written comparisons. TypingMind can publish what none of them have: the same prompts sent to both models at once, the full answers, and what each answer cost at API prices from its own price data. And it can end with the answer the searcher didn't know about, which is to use both with your own keys and stop paying two subscriptions.
+
+**The fix:** the playbook for any post that does well. Publish the long version on the web at /compare/claude-vs-chatgpt, post a short version that links to it, and add the link in a reply under the original post. Start with the pairs above, and add a page when a new pair starts getting searches (Ahrefs already shows 450 a month for "opus 5.5 vs astra").
+
+Tony's own account matters here. The company account has about 5,200 followers and Tony has about 207,000. His post about the first $10,000 in four days got 893,000 views. When a comparison page or the price report below goes live, a post from him is the fastest way to get it read and linked.
+
+## 4. Teams: the comparison pages that used to rank
+
+TypingMind Teams is the subscription line, and it's where AI answers leave TypingMind out completely. For two questions about chat for teams, TypingMind was cited or named in none of six answers. LibreChat was in five.
+
+The docs used to have the pages these buyers want. Their addresses still have links pointing at them, and now return a 404:
+
+<UrlMap
+  caption="Teams and comparison pages from the old docs at docs.typingmind.com, as captured by the Wayback Machine. Each one returns a 404 today (SEO Skill crawl in list mode, 5 November 2026)."
+  rows={[
+    { url: "/typingmind-custom/getting-started/typingmind-vs-chatgpt-for-team", action: "Rebuild", tone: "remove" },
+    { url: "/typingmind-custom/getting-started/typingmind-vs-claude-team", action: "Rebuild", tone: "remove" },
+    { url: "/getting-started/typingmind-vs-chatgpt-plus-vs-other-chatgpt-uis", action: "Rebuild", tone: "remove" },
+    { url: "/getting-started/typingmind-vs-typingmind-custom", action: "301", tone: "change", to: "the Teams pricing page" },
+  ]}
+/>
+
+The searches behind them are team plan prices, and TypingMind's price data covers half of each answer.
+
+<KeywordTable
+  caption="Searches from companies pricing AI chat for staff (Ahrefs, US, November 2026)."
+  sortBy="volume"
+  columns={[{ key: 'keyword', label: 'Search', format: 'text' }, { key: 'volume', label: 'US searches', format: 'number', short: 'US' }, { key: 'difficulty', label: 'Difficulty', format: 'number', short: 'KD' }, { key: 'page', label: 'Page', format: 'text' }]}
+  rows={[
+    { keyword: 'chatgpt enterprise pricing', volume: 6400, difficulty: 13, page: 'vs ChatGPT Business' },
+    { keyword: 'claude enterprise pricing', volume: 5000, difficulty: 10, page: 'vs Claude Team' },
+    { keyword: 'claude team plan', volume: 3600, difficulty: 28, page: 'vs Claude Team' },
+    { keyword: 'claude team pricing', volume: 2000, difficulty: 26, page: 'vs Claude Team' },
+    { keyword: 'chatgpt team', volume: 1000, difficulty: 13, page: 'vs ChatGPT Business' },
+  ]}
+/>
+
+**The fix:** rebuild the two comparison pages on the main site, at /teams/vs-chatgpt-business and /teams/vs-claude-team, and 301 the old docs addresses to them. Lead with the cost for a team of 20 at both, worked out with the calculator, then the parts a buyer checks: which models, where the data is stored, single sign-on. The Teams pricing page already has the numbers for TypingMind's side ($83 to $249 a month, and enterprise from $18,700 a year).
+
+## Links: the integration pages that list everyone but TypingMind
+
+Links come to sites that others have a reason to cite. TypingMind connects to more than 20 AI providers, and the providers' own pages that list compatible apps don't include it. These are pages that link to two or more of LibreChat, Open WebUI, Msty and ChatHub. None of them mentions TypingMind.
+
+<UrlMap
+  caption="Pages that link to two or more of TypingMind's competitors and not to TypingMind, with the Domain Rating of each site (Ahrefs referring domains, Domain Rating 61 and up; each page checked by hand on 5 November 2026)."
+  rows={[
+    { url: "openrouter.ai/works-with-openrouter", action: "DR 90", tone: "change", note: "Lists LibreChat and Open WebUI. TypingMind supports OpenRouter natively and has a guide per OpenRouter model" },
+    { url: "unite.ai/best-llm-tools-to-run-models-locally", action: "DR 79", tone: "change", note: "Lists Open WebUI and Msty. TypingMind connects to Ollama and LM Studio" },
+    { url: "itsfoss.com/ollama-web-ui-tools", action: "DR 78", tone: "change", note: "Lists LibreChat and Msty. TypingMind has an Ollama setup guide" },
+    { url: "helicone.ai/blog/open-webui-alternatives", action: "DR 75", tone: "change", note: "Lists LibreChat and Open WebUI. TypingMind is the hosted option for people who don't want to self-host" },
+    { url: "vellum.ai/blog/best-anythingllm-alternatives", action: "DR 75", tone: "change", note: "Lists LibreChat and Msty. TypingMind Teams has a knowledge base" },
+  ]}
+/>
+
+OpenRouter's page is the one to start with. Each app it lists gets its own page there, with setup steps and a link back. TypingMind would need a short request and the OpenRouter guide it already has.
+
+The lists that rank for "chatgpt alternative" (23,000 US searches a month) leave TypingMind out too. Neither GoodDay's list (second) nor Zapier's (third) mentions it.
+
+### A price report only TypingMind can publish
+
+TypingMind tracks 7,323 model listings across 120 providers. With a date and a finding, that's a dataset other sites can quote. From one model alone: Claude Opus 5.5 is sold by 32 providers, 25 of them charge Anthropic's list price, and Amazon Bedrock's regional endpoints charge 10% more than its global one.
+
+A monthly report would work as the headline: "Claude Opus 5.5 is sold by 32 providers in November 2026, and 25 charge the same price." The Teams side has a second dataset, with more than a million messages a month across 873 company workspaces (from TypingMind's About page). "Which models companies actually use", counted from those messages, is a number nobody else can publish.
+
+An agent can work through the list above and the writers who cover AI pricing, with the TypingMind team approving each email. Ian's [cold outbound method](https://ian.is/cold-outbound-backlinks) has the steps.
+
+## AI answers cite TypingMind as an app and skip its price and key pages
+
+TypingMind does well when someone asks for a chat app. It's cited or named in 13 of 30 answers to ten buyer questions, against 18 for LibreChat. The gaps are the pricing, API key and teams questions, the same three as in Google.
+
+<KeywordTable
+  caption="How many of three AI answers (ChatGPT search, Google AI Mode, AI Overviews) cite or name TypingMind (TM) and LibreChat (LC), 5 November 2026 (SEO Skill ai_answers with DataForSEO, US). Each answer is one sample, and answers change from run to run."
+  sortBy="question"
+  columns={[{ key: 'question', label: 'Question', format: 'text' }, { key: 'tm', label: 'TypingMind', format: 'text', short: 'TM' }, { key: 'lc', label: 'LibreChat', format: 'text', short: 'LC' }, { key: 'who', label: 'Cited instead', format: 'text', short: 'Instead' }]}
+  rows={[
+    { question: 'best llm frontend for using multiple ai models', tm: '3 of 3', lc: '3 of 3', who: 'Open WebUI, OpenRouter' },
+    { question: 'how do I use my claude api key to chat', tm: '3 of 3', lc: '3 of 3', who: 'Anthropic' },
+    { question: 'how to chat with claude gpt and gemini in one app', tm: '3 of 3', lc: '1 of 3', who: 'Poe, ChatHub' },
+    { question: 'best chatgpt alternative that uses your own api key', tm: '2 of 3', lc: '3 of 3', who: 'Msty, Open WebUI' },
+    { question: 'best chat app for an openrouter api key', tm: '2 of 3', lc: '2 of 3', who: 'LobeHub, OpenRouter' },
+    { question: 'best ai chat platform for teams with your own api keys', tm: '0 of 3', lc: '2 of 3', who: 'Open WebUI, AnythingLLM' },
+    { question: 'self hosted chatgpt alternative for teams', tm: '0 of 3', lc: '3 of 3', who: 'Open WebUI, AnythingLLM' },
+    { question: 'how much does the claude api cost per million tokens', tm: '0 of 3', lc: '0 of 3', who: 'Anthropic, BenchLM' },
+    { question: 'how to get an anthropic api key', tm: '0 of 3', lc: '0 of 3', who: 'Anthropic, Merge' },
+    { question: 'is the chatgpt api cheaper than chatgpt plus', tm: '0 of 3', lc: '1 of 3', who: 'OpenAI' },
+  ]}
+/>
+
+AI crawlers can read TypingMind's pages. The homepage, a guide, a skill page and the Anthropic price page return the same full page to a browser and to the GPTBot, OAI-SearchBot, ClaudeBot and PerplexityBot user agents. The docs, on Mintlify, send OAI-SearchBot, PerplexityBot and ChatGPT-User a clean Markdown copy. So the gaps are in what the pages say and where they link.
+
+<UrlMap
+  caption="What TypingMind gives AI crawlers and agents, checked with crawler user agents on 5 November 2026."
+  rows={[
+    { url: "docs.typingmind.com", action: "Keep", tone: "keep", note: "Markdown for AI fetchers, and an llms.txt that indexes every page" },
+    { url: "www.typingmind.com/llms.txt", action: "Fix", tone: "change", note: "A 600 KB knowledge dump with no links to any page, so an answer that uses it has nothing to cite. List the price pages, guides and comparisons with a line each" },
+    { url: "www.typingmind.com/", action: "Fix", tone: "change", note: "No links in the HTML. Agents that don't run JavaScript can't get from the homepage to any other page" },
+    { url: "www.typingmind.com/about", action: "Add", tone: "remove", note: "A 404 that other sites link to. The Teams About page opens with \"On a mission to transform team workflows\"" },
+    { url: "docs provider pages", action: "Fix", tone: "change", note: "Open with \"Use Claude models such as Claude Sonnet 4.6\" (an older model), and the answer comes later" },
+  ]}
+/>
+
+AI answers quote sections that make sense on their own, so each new page should open every section with a sentence that answers the question and names the subject. The About page needs one sentence that names the company, the category and who it's for: "TypingMind is an AI chat app for people and teams who use ChatGPT, Claude, Gemini and 20 other providers with their own API keys."
+
+The pricing and API key questions went to Anthropic, BenchLM and Merge, which have a page titled with the question. The fixes in sections 1 and 2 are the AI fix too. For the teams questions, the Teams comparison pages and the integration lists above are what's missing.
+
+## Three technical fixes, closest to revenue first
+
+### 1. The main site has no sitemap
+
+www.typingmind.com has no sitemap, and robots.txt doesn't point to one. That site holds the 2,772 model guides, 72,641 skill pages and 8,207 MCP server pages. Google can only find them through the menu and the directories' numbered pages. The skills directory stops at page 200, which reaches 10,200 of the 72,641 skills, and any later page number shows page 200 again.
+
+<BeforeAfter
+  caption="The main site's robots.txt and sitemap today, and with a sitemap index."
+  before={{ label: "Today", html: beforeSitemap }}
+  after={{ label: "With a sitemap", html: afterSitemap }}
+/>
+
+**The fix:** a sitemap index with the guides, the price pages and the comparison pages first. For skills, list the ones with a reason to rank. The UI UX Pro Max skill page ranks ninth for its name (3,700 US searches), behind GitHub, Reddit and five other sites about the same skill, so 72,641 pages built from GitHub repos won't rank just by being listed. Pages that add what only TypingMind has (which models run the skill, and a button to try it with your own key) will.
+
+To confirm it worked, submit it in Search Console and check the indexed count for the guides a week later.
+
+### 2. The homepage has no links in its HTML
+
+The homepage gets 4,584 of the main site's Google visits, and its HTML links to nothing. The menu and footer appear only after JavaScript runs. Google renders JavaScript, but a crawler or agent that reads the HTML as served gets no links at all. The homepage also has no canonical tag, and /home serves the same page under the same title.
+
+<BeforeAfter
+  caption="The homepage as served to a browser or crawler before JavaScript runs, and with the menu in the HTML."
+  before={{ label: "Today", html: beforeHome }}
+  after={{ label: "Fixed", html: afterHome }}
+/>
+
+**The fix:** render the menu and footer on the server as plain links, add a self canonical, and 301 /home to the homepage. The pricing pages for both the licence and Teams need a canonical too, because every footer link to the Teams site adds ?ref=typingmind. To confirm, request the homepage with curl and count the links.
+
+### 3. 342 old docs addresses return a 404
+
+When the docs moved to their current structure, the old addresses weren't redirected. Of 585 docs addresses the Wayback Machine has and today's sitemap doesn't, 342 return a 404. They include the Teams comparisons above, "get-openai-api-key" and the old setup page for every provider. GitHub, the Cloudron forum and Glarity still link to some of them.
+
+<UrlMap
+  caption="A sample of old docs addresses that return a 404 and where each should go, checked on 5 November 2026."
+  rows={[
+    { url: "/chat-models-settings/use-with-anthropic-claude", action: "301", tone: "change", to: "/manage-and-connect-ai-models/anthropic-claude" },
+    { url: "/chat-models-settings/get-openai-api-key", action: "301", tone: "change", to: "the OpenAI API key guide" },
+    { url: "/chat-models-settings/use-with-deepseek-ai", action: "301", tone: "change", to: "/manage-and-connect-ai-models/deepseek-ai" },
+    { url: "/plugins/integrate-typingmind-with-zapier-using-webhook", action: "301", tone: "change", to: "the plugins section", note: "Linked from TypingMind's own GitHub repo" },
+    { url: "/self-host-package-and-updates", action: "301", tone: "change", to: "/static-self-host/static-self-host-package-and-updates", note: "Linked from the Cloudron forum" },
+  ]}
+/>
+
+**The fix:** map each old address to its new page and add the redirects in Mintlify's redirects setting. To confirm, run the old list through a crawl again and check for zero 404s.
+
+## One domain instead of five
+
+TypingMind runs on www, docs, custom (Teams), feedback (changelog) and typingmind.app. The links are split the same way.
+
+<UrlMap
+  caption="TypingMind's sites, what each serves and its referring domains (Ahrefs, November 2026)."
+  rows={[
+    { url: "www.typingmind.com", action: "Keep", tone: "keep", note: "The app, pricing, guides, skills and MCP directory. About 2,650 referring domains" },
+    { url: "custom.typingmind.com", action: "Move", tone: "change", to: "www.typingmind.com/teams and /pricing", note: "Teams and the price pages. About 800 referring domains" },
+    { url: "docs.typingmind.com", action: "Move", tone: "change", to: "www.typingmind.com/docs", note: "58 referring domains. Mintlify can serve docs from a subfolder" },
+    { url: "feedback.typingmind.com", action: "Keep", tone: "keep", note: "The changelog and feature requests on a hosted tool, 14 referring domains" },
+    { url: "typingmind.app", action: "301", tone: "change", to: "www.typingmind.com", note: "A 142-word page that sends visitors to typingmind.com" },
+  ]}
+/>
+
+The price pages are the move that matters. Under www they'd share the main site's links; on the Teams site they get a third as many.
+
+## Ship it all today, then let it settle
+
+None of this needs a four-week sprint. Each fix is a separate job, so coding agents can work on all of them at once:
+
+<PlanSteps
+  steps={[{"title": "Price pages", "body": "Retitle the provider pages for \"Claude API pricing\" and the rest, put the table first, merge each model's provider pages into one with a row per provider, and move the tool to www.typingmind.com/pricing."}, {"title": "Subscription or API", "body": "A section on the Claude and OpenAI price pages, and a page for \"is chatgpt plus worth it\", built on the calculator."}, {"title": "API key guides", "body": "One guide per provider, titled \"How to get a <provider> API key\", opening with a one-sentence answer. 301 the old guide addresses, and link the docs pages to them."}, {"title": "Comparison pages", "body": "Claude vs ChatGPT, DeepSeek vs ChatGPT, Gemini vs ChatGPT, Grok vs ChatGPT, Claude vs Gemini and Opus vs Sonnet, each with the side-by-side answers and their cost."}, {"title": "Teams comparisons", "body": "TypingMind Teams vs ChatGPT Business and vs Claude Team, with the cost for 20 seats, and 301s from the old docs addresses."}, {"title": "Sitemap and homepage", "body": "A sitemap index on www, the menu and footer as plain links in the HTML, canonicals on the homepage and both pricing pages, and /home redirected."}, {"title": "Old docs redirects", "body": "Map the 342 old docs addresses to their new pages in Mintlify."}, {"title": "llms.txt and About", "body": "Links to the price pages, guides and comparisons in llms.txt, and an About page that opens with what TypingMind is and who it's for."}, {"title": "Integration listings", "body": "Request a listing on OpenRouter's Works with OpenRouter page, and draft a short note to each list in the links table and to the ChatGPT alternatives lists."}]}
+/>
+
+Someone at TypingMind still needs to check the comparison pages and approve each outreach email. The titles, redirects and sitemap need only a quick review.
+
+Then I'd spend 30 days checking the results:
+
+<PlanSteps
+  steps={[{"marker": "Day 0", "title": "Ask Google to recrawl", "body": "Submit every new and changed URL to Index My Site, so Google recrawls them now instead of on its own schedule."}, {"marker": "Day 3", "title": "Check indexing", "body": "Confirm the merged price pages, the key guides and the comparison pages are indexed, and the old addresses redirect."}, {"marker": "Day 7", "title": "First impressions", "body": "Look for impressions on \"claude api pricing\", \"anthropic api key\" and \"claude vs chatgpt\" in Search Console."}, {"marker": "Day 14", "title": "One page per model", "body": "Check that a single Opus 5.5 address shows for \"claude opus pricing\", and that the redirected copies have dropped out."}, {"marker": "Day 30", "title": "Licences and trials", "body": "Compare licence sales and Teams trials that started from search with the month before."}, {"marker": "Day 30", "title": "AI answers", "body": "Ask the same ten questions with ai_answers, for TypingMind and LibreChat, and compare."}]}
+/>
+
+## Get the changes seen quickly
+
+Most of these fixes change pages Google already knows under a different title or address. Google won't recrawl 7,000 price pages on your schedule. I'd submit each new and changed URL to [Index My Site](https://indexmysite.app/) the day it ships, so Google is asked to crawl it straight away. That matters most for the merged price pages, where the redirects only count once Google has seen them.
+
+## How I ran this
+
+Everything in this teardown came from SEO Skill, run by an agent. You can run the same audit on your own site.
+
+**1. Connect the hosted MCP server.** It's free. You sign in with Google, and there's no password and nothing to install. In Claude Code:
+
+```sh
+claude mcp add --transport http seoskill https://seoskill.dev/mcp
+```
+
+Codex, Cursor and Claude on the web work too. The [MCP guide](/docs/mcp) has the steps for each one.
+
+**2. Add a research key.** On your [account page](/account), save an Ahrefs or DataForSEO key. The key gives your agent search volumes, rankings and results pages, like the tables above.
+
+**3. Install the CLI for crawling.** The crawl runs on your machine, so it can read any site:
+
+```sh
+npm i -g seo
+seo login
+```
+
+TypingMind's main site draws its menu with JavaScript, so a plain crawl stops at the homepage. Run `seo crawl` with `--rendering on` for sites like that.
+
+**4. Ask your agent.** This is close to the prompt I used:
+
+```text
+Audit example.com and every subdomain we use.
+Crawl each one with seo crawl, with rendering on
+if the homepage has no links in its HTML.
+Count the pages each template makes, and check
+their titles against the search each should win.
+Use seo_research to find the searches our buyers
+make, who ranks for them and whether we can compete.
+Ask ai_answers ten buyer questions for us and for
+our biggest competitor.
+Rank every fix by how close it sits to revenue.
+```
+
+On your own site, the hosted server adds the part I couldn't see from the outside: your real Search Console clicks and queries. With those, you get measured numbers where this post has estimates.
+
+If you're at TypingMind, I'm happy to go through any of this. And if you'd like the same teardown for your site, [SEO Skill](/) will run it for you.

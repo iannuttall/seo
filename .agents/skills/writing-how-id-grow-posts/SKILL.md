@@ -5,7 +5,7 @@ description: "Researches, writes and launches a \"How I'd grow <company>\" SEO t
 
 # Writing How I'd grow posts
 
-One post a week, published on Thursdays: a pure SEO and AEO teardown of a company people know, built from SEO Skill data, written as interactive MDX in `apps/web/src/content/blog/<slug>.mdx`, and shared on X with the company tagged ("How I'd grow @every with SEO"). It markets SEO Skill and Index My Site, so every post shows how it was made and ends with both.
+One post a day while there's a backlog: a pure SEO and AEO teardown of a company people know, built from SEO Skill data, written as interactive MDX in `apps/web/src/content/blog/<slug>.mdx`, and shared on X with the company tagged ("How I'd grow @every with SEO"). It markets SEO Skill and Index My Site, so every post shows how it was made and ends with both.
 
 The published examples are the reference: `how-id-grow-every.mdx` (a portfolio company) and `how-id-grow-monologue.mdx` (one product inside it). Read both before writing a new one. Read `CONTENT.md` and `apps/web/AGENTS.md` too.
 
@@ -73,7 +73,7 @@ title: How I'd grow <Company> with SEO        # 30 to 60 characters
 description: ...                              # 70 to 160 characters
 heading: How I'd grow <Company>
 lead: One or two sentences with the finding.
-date: 'YYYY-MM-DD'                            # the Thursday it goes live, at 09:00 UK time
+date: 'YYYY-MM-DD'                            # the day it goes live, at 09:00 UK time: the next free day after the last scheduled post
 company: <Company>
 x:
   company: <handle without @>
@@ -204,6 +204,6 @@ Turn the post into Markdown with `node .agents/skills/writing-how-id-grow-posts/
 Only after Ian approves the post:
 
 1. Before merging, re-pull the headline numbers and recheck that the issues are still live. Update anything that changed.
-2. Set `date` to the post's Thursday and `draft: false`, run all four repo gates, and ship through a PR to `main`. A post with a future date stays out of the build, and `.github/workflows/scheduled-posts.yml` rebuilds the site after 09:00 UK time on its date, so it goes live then without another merge.
+2. Set `date` to the post's day and `draft: false`, run all four repo gates, and ship through a PR to `main`. A post with a future date stays out of the build, and `.github/workflows/scheduled-posts.yml` rebuilds the site after 09:00 UK time on its date, so it goes live then without another merge.
 3. Submit the post URL to Index My Site once it's live.
-4. Draft the X Article in Typefully as a plain `x_article` draft (no `plan_at` or `publish_at`), with the cover cropped to 1500x600. Title: "How I'd grow <Company> with SEO". The first line tags the company with the upside, then the main findings in an informal voice, then the post link at the end. One mention only: `x.company`. The post link is the only URL or domain in the text, so X builds the card from our post; describe other sites in words ("a second domain", "the main site"). Put `seo` commands in backticks. Run `seo lint` on the text with `--preset landing`. Ian schedules it himself, for about 13:15 UK time on the post's Thursday.
+4. Draft the X Article in Typefully as a plain `x_article` draft (no `plan_at` or `publish_at`), with the cover cropped to 1500x600. Title: "How I'd grow <Company> with SEO". The first line tags the company with the upside, then the main findings in an informal voice, then the post link at the end. One mention only: `x.company`. The post link is the only URL or domain in the text, so X builds the card from our post; describe other sites in words ("a second domain", "the main site"). Put `seo` commands in backticks. Run `seo lint` on the text with `--preset landing`. Ian schedules it himself, for 13:15 UK time on the post's day.

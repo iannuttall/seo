@@ -1,5 +1,42 @@
 # Changelog
 
+## 0.16.0
+
+### Added
+
+- `seo research link_gap --target <domain> --competitors <a>,<b>` lists
+  the sites that link to two or more competitors and not to the target,
+  highest authority first. It reads each site's top 1,000 referring
+  domains. When a site has more, the list stops at the lowest authority it
+  read and says so. `seo_research` takes `competitors` for the same action.
+- `seo crawl` finds the Chrome that agent-browser and Playwright install,
+  so `--rendering on` works without setting `SEO_BROWSER_EXECUTABLE_PATH`.
+
+### Fixed
+
+- The soft 404 check also requests a made-up top-level path and a nested
+  one. It passes only when every made-up path returns a 404 or 410, so a
+  site that answers unknown profile or page addresses with a 200 is no
+  longer reported as fine.
+- `--rendering on` stops with an error when no browser can start, instead
+  of quietly crawling the raw HTML. A fallback under `--rendering auto` is
+  now a crawl-level caveat.
+- A crawl that can only reach its start page, because the page has no
+  links in its HTML and the site has no sitemap, now leads the report with
+  a high-severity fix that says to rerun with `--rendering on`.
+- Pages whose canonical points to another crawled page in the group no
+  longer count as duplicate titles, descriptions or content. The crawl
+  reads at most 5 query-string versions of one path and reports how many
+  it skipped.
+- `research serp` asks DataForSEO again when it gets an empty results
+  page, and says when a keyword stays empty instead of printing "No rows".
+  Results that DataForSEO returns as Google redirect links keep their
+  domain and a shortened `url_hint`, and the notes count them.
+- `research keyword_metrics` lists the keywords the provider has no data
+  for.
+- `ai_answers` no longer counts DataForSEO, image hosts or example domains
+  as cited sites.
+
 ## 0.15.2
 
 ### Fixed

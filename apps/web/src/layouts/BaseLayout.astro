@@ -47,6 +47,7 @@ const branded =
     : `${title} | ${site.name}`
 const pageTitle = branded.length <= 60 ? branded : title
 const canonical = canonicalUrl(canonicalPath)
+const isBlog = canonicalPath === '/blog' || canonicalPath.startsWith('/blog/')
 // Pages kept out of search share the home page's card.
 const ogImage = ogImageUrl(noindex ? canonicalUrl('/') : canonical)
 const isLocalHost = ['localhost', '127.0.0.1', '::1', '[::1]'].includes(
@@ -77,6 +78,7 @@ const schema = pageSchema({
     <meta name="theme-color" content="#343434" media="(prefers-color-scheme: dark)" />
     {noindex ? <meta name="robots" content="noindex, follow" /> : null}
     <link rel="canonical" href={canonical} />
+    {isBlog ? <link rel="alternate" type="application/rss+xml" title={`${site.name} blog`} href="/rss.xml" /> : null}
     {/* Start both font downloads from the HTML, before the stylesheet is parsed. */}
     <link rel="preload" href="/fonts/InterLatinVF.woff2" as="font" type="font/woff2" crossorigin="anonymous" />
     <link rel="preload" href="/fonts/JetBrainsMonoLatinVF.woff2" as="font" type="font/woff2" crossorigin="anonymous" />

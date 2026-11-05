@@ -98,3 +98,6 @@
 
 /telemetry.md
   Link: <https://seoskill.dev/telemetry>; rel="canonical"
+
+/rss.xml
+  Content-Type: application/rss+xml; charset=utf-8

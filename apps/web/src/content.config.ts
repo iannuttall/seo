@@ -30,9 +30,10 @@ export const collections = {
       checked: z.string(),
     }),
   }),
-  // Blog posts at /blog/<file name>. Dates are YYYY-MM-DD. A draft renders
-  // in `astro dev` only; src/lib/blog.ts and src/content/blog-posts.mjs keep
-  // it out of the build, the index, the sitemap and llms.txt.
+  // Blog posts at /blog/<file name>. Dates are YYYY-MM-DD, and a post goes
+  // live at 09:00 UK time on its date. A draft or a future post renders in
+  // `astro dev` only; src/lib/blog.ts and src/content/blog-posts.mjs keep it
+  // out of the build, the index, the sitemap and llms.txt.
   blog: defineCollection({
     loader: glob({
       pattern: '*.mdx',

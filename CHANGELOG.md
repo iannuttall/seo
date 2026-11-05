@@ -1,5 +1,29 @@
 # Changelog
 
+## 0.16.1
+
+### Fixed
+
+- `seo crawl` slows down when a site rate limits it, instead of stopping.
+  After a 429, or a 503 with Retry-After, it waits as the site asks (up to
+  30 seconds), drops to one request at a time with a gap between requests,
+  and tries the page again. If pages are still unread, the first line says
+  how many were read and gives a slower command to rerun. The same applies
+  to `--health`, which also says when it checked only the first 500
+  sitemap URLs and how to check more.
+- The soft 404 check reports `complete: false` when a probe was skipped,
+  blocked or rate limited, and retries it once after a cool-down.
+- Cloudflare's `/cdn-cgi/` email protection links are no longer crawled or
+  reported as broken internal links.
+- Paging through `ai_answers` no longer asks every question again. Each
+  result lists every answer's task, and the next-page command passes them,
+  so later pages are read back at no cost.
+- `link_gap` with DataForSEO gives the top 200 rows a Domain Rating and
+  sorts them by it. URL shorteners, link lists and coupon or site-stats
+  directories are left out, and the notes name each one.
+- Domain Rating is filled for the page of rows being shown, not only the
+  first 25 rows.
+
 ## 0.16.0
 
 ### Added

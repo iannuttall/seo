@@ -137,6 +137,8 @@ export type ResearchRows = {
   noData: string[]
   // link_gap: the authority the gap stops at, when a site's list was cut.
   floor?: { field: string; value: number }
+  // link_gap: link lists, shorteners and directories left out.
+  leftOut?: string[]
 }
 
 // Each keyword's rows in order. A keyword that fails is listed in missed
@@ -595,6 +597,35 @@ async function dataForSeoRows(
 const GAP_DOMAINS = 1000
 const GAP_COMPETITORS = 5
 
+// Hosts that link to every site because they list or redirect links, not
+// because they chose to: URL shorteners, free app hosting used for login
+// and link pages, and domain, coupon and site-stats directories. A heuristic
+// by name; the note lists every host it left out.
+const SHORTENERS = [
+  'bit.ly',
+  'tinyurl.com',
+  't.co',
+  'ow.ly',
+  'buff.ly',
+  'is.gd',
+  'cutt.ly',
+  'rebrand.ly',
+  'shorturl.at',
+  'rb.gy',
+  'lnkd.in',
+]
+const FREE_APP_HOSTS = ['web.app', 'firebaseapp.com', 'pages.dev']
+const LINK_LIST_NAME =
+  /(subdomain|whois|login|signin|coupon|promo|voucher|discount|sitelike|similarsite|sitesimilar|siteprice|sitevalue|siteworth|websiteworth|hypestat|statshow|websiteoutlook|siteinfo|domaininfo|domainstat|domaintools|ipaddress|dnslookup|linkdirectory|webdirectory|alternativeto-)/
+
+export function isLinkList(domain: string): boolean {
+  const within = (name: string) =>
+    domain === name || domain.endsWith(`.${name}`)
+  if (SHORTENERS.some(within)) return true
+  if (FREE_APP_HOSTS.some((name) => domain.endsWith(`.${name}`))) return true
+  return LINK_LIST_NAME.test(domain.replace(/[-.]/g, ''))
+}
+
 // Referring domains that link to two or more competitors and not to the
 // target. Each site's list is its top GAP_DOMAINS referring domains by the
 // provider's own authority (Ahrefs Domain Rating, DataForSEO rank). When a
@@ -657,11 +688,16 @@ async function linkGap(
       found.set(domain, entry)
     }
   })
-  const rows = [...found.entries()]
-    .filter(
-      ([, entry]) =>
-        entry.sites.length >= 2 && (floor === null || entry.value >= floor),
-    )
+  const gap = [...found.entries()].filter(
+    ([, entry]) =>
+      entry.sites.length >= 2 && (floor === null || entry.value >= floor),
+  )
+  const linkLists = gap
+    .map(([domain]) => domain)
+    .filter(isLinkList)
+    .sort((a, b) => a.localeCompare(b))
+  const rows = gap
+    .filter(([domain]) => !isLinkList(domain))
     .sort(
       ([a, left], [b, right]) =>
         right.value - left.value ||
@@ -682,6 +718,7 @@ async function linkGap(
     missed: [],
     noData: [],
     ...(floor !== null ? { floor: { field: score, value: floor } } : {}),
+    ...(linkLists.length ? { leftOut: linkLists } : {}),
   }
 }
 

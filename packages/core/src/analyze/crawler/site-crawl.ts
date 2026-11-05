@@ -4,9 +4,14 @@ import { createRobotsSession } from '../../fetch/page-fetcher/robots.js'
 import { createPageRenderer } from '../../fetch/page-fetcher.js'
 import type { CrawlOneResult } from '../monitoring/crawl-page.js'
 import { agentReadyIssues, isPublicPage } from './agent-ready.js'
-import { crawlCaveats, crawlReachIssues } from './crawl-caveats.js'
+import {
+  crawlCaveats,
+  crawlReachIssues,
+  sitemapLimitCaveatInput,
+} from './crawl-caveats.js'
 import { CRAWL_CANCELLED, cancellationRace } from './crawl-control.js'
 import { crawlMemoryPressure } from './crawl-memory.js'
+import { CrawlRateLimit } from './crawl-rate-limit.js'
 import type { CrawlSkipReason } from './crawl-skip-reasons.js'
 import {
   CRAWL_QUERY_VARIANTS_PER_PATH,
@@ -15,6 +20,7 @@ import {
 } from './crawl-url-queue.js'
 import { verifyExternalLinks } from './external-link-checks.js'
 import { resolveLinkCountAliases } from './link-graph.js'
+import { isCdnUtilityUrl } from './page-eligibility.js'
 import type {
   CrawlConfigInput,
   CrawlReport,
@@ -160,6 +166,7 @@ export async function crawlSite(
   const queryVariantsByPath = new Map<string, number>()
   const queryVariantSkipped = new Set<string>()
   let renderingFallbackUrls = 0
+  const rateLimit = new CrawlRateLimit(config.fetchRate)
   let failedUrls = 0
   let observedInternalLinks = 0
   let memoryLimited = false
@@ -262,6 +269,15 @@ export async function crawlSite(
           url: normalized,
           depth,
           reason: 'off_origin',
+        })
+        return
+      }
+      if (isCdnUtilityUrl(normalized)) {
+        recordSkip('cdn-utility-url')
+        emitStatus('url_skipped', {
+          url: normalized,
+          depth,
+          reason: 'cdn_utility_url',
         })
         return
       }
@@ -387,7 +403,7 @@ export async function crawlSite(
           js: config.js,
           refresh: config.refresh,
           timeoutMs: config.timeoutMs,
-          rate: config.fetchRate,
+          rate: rateLimit.rate,
           signal,
           writeCache: false,
           respectRobots: config.respectRobots,
@@ -423,9 +439,15 @@ export async function crawlSite(
       (!memoryLimited || inFlight.size > 0) &&
       pages.length < config.maxPages
     ) {
+      // Let every in-flight request settle, then wait once for the wave.
+      if (rateLimit.pendingMs > 0 && inFlight.size === 0) {
+        await rateLimit.settle(deps.sleep, signal)
+        if (isCancelled()) break
+      }
       while (
         !isCancelled() &&
         !memoryLimited &&
+        rateLimit.pendingMs === 0 &&
         inFlight.size < activeConcurrency &&
         pages.length + inFlight.size < config.maxPages
       ) {
@@ -459,6 +481,48 @@ export async function crawlSite(
               error: result.warning ?? 'Crawler returned no page snapshot.',
               extraction: 'not-applicable' as const,
             })
+
+      const limited = rateLimit.observe(
+        task.url,
+        result,
+        request.outcome === 'response' ? request.status : undefined,
+        deps.now().getTime(),
+      )
+      if (limited) {
+        activeConcurrency = 1
+        healthyProbeStreak = 0
+      }
+      if (limited === 'retry') {
+        visited.delete(task.url)
+        if (!queue.has(task.url)) {
+          queue.push({ url: task.url, depth: task.depth })
+        }
+        emitStatus('url_queued', {
+          url: task.url,
+          depth: task.depth,
+          reason: 'rate_limited_retry',
+          message: `The origin rate limited ${task.url}. Waiting ${Math.ceil(rateLimit.pendingMs / 1000)}s, then retrying one request at a time.`,
+        })
+        continue
+      }
+      if (limited) {
+        // Keep the 429 as evidence, but not as a page the audit judges.
+        requests.push(request)
+        recordSkip('origin-backpressure')
+        emitStatus('page_skipped', {
+          url: task.url,
+          depth: task.depth,
+          reason: 'origin-backpressure',
+        })
+        if (limited === 'stop') {
+          // The cool-down budget is spent: stop instead of hammering on.
+          let left = 0
+          while (queue.take()) left += 1
+          recordSkips('origin-backpressure', left)
+          rateLimit.skippedUrls += left
+        }
+        continue
+      }
       requests.push(request)
 
       if (healthStrategy) {
@@ -469,7 +533,7 @@ export async function crawlSite(
         if (healthy) {
           healthyProbeStreak += 1
           activeConcurrency = Math.min(
-            config.concurrency,
+            rateLimit.limited ? 1 : config.concurrency,
             1 + Math.floor(healthyProbeStreak / 20),
           )
         } else {
@@ -577,7 +641,9 @@ export async function crawlSite(
         const directlyRequested = sourceRequest === finalUrl
         const normalizedLinks = urls
           .map((url) => normalizeUrl(url, finalUrl))
-          .filter((url): url is string => Boolean(url))
+          .filter(
+            (url): url is string => Boolean(url) && !isCdnUtilityUrl(url ?? ''),
+          )
         const syncLinkEvidence = (
           target: CrawlReport['pages'][number],
           links: Set<string>,
@@ -687,6 +753,7 @@ export async function crawlSite(
             if (
               normalized &&
               sameOrigin(normalized, origin) &&
+              !isCdnUtilityUrl(normalized) &&
               !isLikelyAsset(normalized) &&
               passesFilters(normalized, config.include, config.exclude) &&
               !visited.has(normalized) &&
@@ -741,6 +808,8 @@ export async function crawlSite(
         `${robotsDisallowed} URL${robotsDisallowed === 1 ? '' : 's'} disallowed ${SEO_CRAWLER_USER_AGENT} in robots.txt. If the audit should reach them, allow the SEO-Skill token on only those public paths.`,
       )
     }
+    const rateLimitWarning = rateLimit.warning()
+    if (rateLimitWarning) warnings.push(rateLimitWarning)
     if (cancelled) {
       warnings.push('Crawl cancelled; returning a partial report.')
       emitStatus('cancelled', {
@@ -764,6 +833,7 @@ export async function crawlSite(
       pageLimitReached ||
       robotsDeferredUrls > 0 ||
       originBackpressureSkippedUrls > 0 ||
+      rateLimit.skippedUrls > 0 ||
       queueSafetySkippedUrls > 0 ||
       queue.size > 0 ||
       inFlight.size > 0 ||
@@ -843,6 +913,9 @@ export async function crawlSite(
             fetchStatusPage: deps.fetchStatusPage,
             respectRobots: config.respectRobots,
             signal,
+            rate: rateLimit.rate,
+            sleep: deps.sleep,
+            retryDelayMs: rateLimit.settleMs,
           })
         : undefined
 
@@ -935,6 +1008,12 @@ export async function crawlSite(
         queueSafetySkippedUrls,
         queueSafetyInventoryCapped,
         originBackpressureSkippedUrls,
+        rateLimit: rateLimit.caveatInput(config, pages.length),
+        sitemapLimit: sitemapLimitCaveatInput(
+          config,
+          sitemapDiscovery,
+          input.maxPages === undefined,
+        ),
         memoryPressureSkippedUrls,
         queryVariantSkippedUrls: queryVariantSkipped.size,
         renderingFallbackUrls,

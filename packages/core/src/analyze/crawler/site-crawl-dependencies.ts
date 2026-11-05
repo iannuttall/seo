@@ -29,8 +29,23 @@ export type ResolvedCrawlSiteDependencies = {
   fetchLandingPageValues: typeof fetchLandingPageValues
   landingValueForUrl: typeof landingValueForUrl
   now: () => Date
+  /** Waits out a rate-limit cool-down. Tests inject a zero delay. */
+  sleep: (ms: number, signal?: AbortSignal) => Promise<void>
   memoryUsage: () => Pick<NodeJS.MemoryUsage, 'rss' | 'heapUsed' | 'external'>
   totalMemory: () => number
+}
+
+function sleep(ms: number, signal?: AbortSignal): Promise<void> {
+  return new Promise((resolve) => {
+    if (signal?.aborted) return resolve()
+    const done = (): void => {
+      clearTimeout(timer)
+      signal?.removeEventListener('abort', done)
+      resolve()
+    }
+    const timer = setTimeout(done, ms)
+    signal?.addEventListener('abort', done, { once: true })
+  })
 }
 
 export type CrawlSiteDependencies = Partial<ResolvedCrawlSiteDependencies>
@@ -98,6 +113,7 @@ export function resolveCrawlSiteDependencies(
       dependencies.fetchLandingPageValues ?? fetchLandingPageValues,
     landingValueForUrl: dependencies.landingValueForUrl ?? landingValueForUrl,
     now: dependencies.now ?? (() => new Date()),
+    sleep: dependencies.sleep ?? sleep,
     memoryUsage: dependencies.memoryUsage ?? (() => process.memoryUsage()),
     totalMemory: dependencies.totalMemory ?? totalmem,
   }

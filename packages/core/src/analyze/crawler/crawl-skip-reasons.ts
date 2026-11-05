@@ -1,5 +1,6 @@
 export const CRAWL_SKIP_REASONS = [
   'asset-url',
+  'cdn-utility-url',
   'configured-exclusion',
   'duplicate-normalization',
   'invalid-url',
@@ -30,6 +31,7 @@ export type CrawlSkippedUrlsByImpact = {
 
 const SKIP_IMPACT = {
   'asset-url': 'non-impacting',
+  'cdn-utility-url': 'non-impacting',
   'configured-exclusion': 'non-impacting',
   'duplicate-normalization': 'non-impacting',
   'invalid-url': 'non-impacting',

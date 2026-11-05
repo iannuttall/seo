@@ -67,6 +67,8 @@ test('link_gap keeps domains linking to two competitors and not the target, down
   const lists: Record<string, { domain: string; domain_rating: number }[]> = {
     'example.com': [{ domain: 'both-and-target.example', domain_rating: 90 }],
     'example.org': [
+      { domain: 'bit.ly', domain_rating: 94 },
+      { domain: 'best-coupons.example', domain_rating: 70 },
       { domain: 'both-and-target.example', domain_rating: 90 },
       { domain: 'strong.example', domain_rating: 80 },
       { domain: 'only-org.example', domain_rating: 75 },
@@ -85,7 +87,10 @@ test('link_gap keeps domains linking to two competitors and not the target, down
       })),
     ],
     // weak.example links to two competitors but sits below the cut.
+    // Link lists and shorteners link to every site, so they are left out.
     'example.edu': [
+      { domain: 'bit.ly', domain_rating: 94 },
+      { domain: 'best-coupons.example', domain_rating: 70 },
       { domain: 'mid.example', domain_rating: 50 },
       { domain: 'strong.example', domain_rating: 80 },
       { domain: 'weak.example', domain_rating: 20 },
@@ -119,4 +124,5 @@ test('link_gap keeps domains linking to two competitors and not the target, down
     },
   ])
   assert.deepEqual(out.floor, { field: 'domain_rating', value: 30 })
+  assert.deepEqual(out.leftOut, ['best-coupons.example', 'bit.ly'])
 })

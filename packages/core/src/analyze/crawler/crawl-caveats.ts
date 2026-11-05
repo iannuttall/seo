@@ -1,6 +1,55 @@
 import { explainRule } from '../../rules.js'
 import { CRAWL_QUERY_VARIANTS_PER_PATH } from './crawl-url-queue.js'
-import type { CrawlIssue } from './report.js'
+import {
+  type CrawlConfig,
+  type CrawlIssue,
+  type CrawlSitemapDiscovery,
+  MAX_CRAWL_PAGES,
+} from './report.js'
+
+/** Reports rank a caveat with this prefix first and lead with it. */
+export const CRAWL_COVERAGE_CAVEAT_PREFIX = 'Coverage incomplete:'
+
+export function rateLimitRerunCommand(
+  config: Pick<CrawlConfig, 'url' | 'mode' | 'strategy' | 'maxPages'> & {
+    sitemapUrl?: string
+  },
+  intervalMs: number,
+): string {
+  const scope =
+    config.strategy === 'health'
+      ? ' --health'
+      : config.mode === 'site'
+        ? ''
+        : ` --mode ${config.mode}`
+  const sitemap = config.sitemapUrl ? ` --sitemap-url ${config.sitemapUrl}` : ''
+  const slowMs = Math.min(8_000, Math.max(2_000, intervalMs * 2))
+  return `seo crawl ${config.url}${scope}${sitemap} --max-pages ${config.maxPages} --concurrency 1 --fetch-interval-cap 1 --fetch-interval-ms ${slowMs}`
+}
+
+/** Set when the sitemaps list more URLs than the page limit let the crawl read. */
+export function sitemapLimitCaveatInput(
+  config: CrawlConfig,
+  discovery: CrawlSitemapDiscovery | undefined,
+  defaulted: boolean,
+): CrawlCaveatInput['sitemapLimit'] {
+  if (
+    !discovery ||
+    discovery.urlsReturned < config.maxPages ||
+    !discovery.roots.some((root) => root.possiblyTruncated)
+  ) {
+    return undefined
+  }
+  return {
+    maxPages: config.maxPages,
+    defaulted,
+    ceiling: MAX_CRAWL_PAGES,
+    health: config.strategy === 'health',
+    url: config.url,
+  }
+}
+
+type CrawlCaveatInput = Parameters<typeof crawlCaveats>[0]
 
 export function crawlCaveats(input: {
   cancelled: boolean
@@ -9,6 +58,14 @@ export function crawlCaveats(input: {
   queueSafetySkippedUrls: number
   queueSafetyInventoryCapped?: boolean
   originBackpressureSkippedUrls: number
+  rateLimit?: { readPages: number; skippedUrls: number; rerunCommand: string }
+  sitemapLimit?: {
+    maxPages: number
+    defaulted: boolean
+    ceiling: number
+    health: boolean
+    url: string
+  }
   memoryPressureSkippedUrls: number
   queryVariantSkippedUrls?: number
   renderingFallbackUrls?: number
@@ -29,6 +86,18 @@ export function crawlCaveats(input: {
   if (input.originBackpressureSkippedUrls > 0) {
     caveats.push(
       `Stopped ${input.originBackpressureSkippedUrls} queued URL${input.originBackpressureSkippedUrls === 1 ? '' : 's'} because the origin stayed slow. This is incomplete crawl evidence, not a failed URL check.`,
+    )
+  }
+  if (input.rateLimit) {
+    const { readPages, skippedUrls, rerunCommand } = input.rateLimit
+    caveats.push(
+      `${CRAWL_COVERAGE_CAVEAT_PREFIX} read ${readPages} of ${readPages + skippedUrls} pages because the origin kept rate limiting the crawl (HTTP 429) after it backed off. Rerun slower: ${rerunCommand}`,
+    )
+  }
+  if (input.sitemapLimit) {
+    const { maxPages, defaulted, ceiling, health, url } = input.sitemapLimit
+    caveats.push(
+      `Checked only the first ${maxPages} sitemap URLs because the page limit is ${maxPages}${defaulted ? ' by default' : ''}, and the sitemaps list more. Raise --max-pages, up to ${ceiling.toLocaleString('en-US')}, to check more: seo crawl ${url}${health ? ' --health' : ''} --max-pages ${ceiling}`,
     )
   }
   if (input.memoryPressureSkippedUrls > 0) {

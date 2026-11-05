@@ -53,3 +53,47 @@ test('soft 404 checks warn when only a made-up root path returns 200', async () 
     /^1 of 3 made-up paths .*-not-found \(200\)\.$/,
   )
 })
+
+test('soft 404 checks are incomplete when probes are skipped, and retry once after a cool-down', async () => {
+  const skipped = (url: string): CrawlOneResult => ({
+    request: {
+      requestedUrl: url,
+      outcome: 'skipped',
+      reason: 'origin-backpressure',
+      error: 'Origin backpressure stopped fetches for example.com',
+      extraction: 'not-applicable',
+    },
+    urls: [],
+  })
+  const allSkipped = await collectCrawlSiteChecks({
+    startUrl: 'https://example.com/',
+    timeoutMs: 1_000,
+    respectRobots: true,
+    fetchStatusPage: (async (url: string) =>
+      skipped(
+        url,
+      )) as typeof import('../monitoring/crawl-page.js').crawlStatusOnly,
+  })
+  assert.equal(allSkipped.checks.soft404.status, 'unknown')
+  assert.equal(allSkipped.checks.soft404.complete, false)
+
+  const calls = new Map<string, number>()
+  const sleeps: number[] = []
+  const retried = await collectCrawlSiteChecks({
+    startUrl: 'https://example.com/',
+    timeoutMs: 1_000,
+    respectRobots: true,
+    retryDelayMs: 4_000,
+    sleep: async (ms) => {
+      sleeps.push(ms)
+    },
+    fetchStatusPage: (async (url: string) => {
+      const count = (calls.get(url) ?? 0) + 1
+      calls.set(url, count)
+      return count === 1 ? response(url, 429) : response(url, 404)
+    }) as typeof import('../monitoring/crawl-page.js').crawlStatusOnly,
+  })
+  assert.deepEqual(sleeps, [4_000])
+  assert.equal(retried.checks.soft404.status, 'pass')
+  assert.equal(retried.checks.soft404.complete, true)
+})

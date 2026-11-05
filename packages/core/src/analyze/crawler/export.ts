@@ -1,5 +1,6 @@
 import { renderCsv } from '../../export/csv.js'
 import { explainRule } from '../../rules.js'
+import { CRAWL_COVERAGE_CAVEAT_PREFIX } from './crawl-caveats.js'
 import type { CrawlReport } from './report.js'
 import { reviewObservations, type TopFix, topFixes } from './top-fixes.js'
 
@@ -97,6 +98,13 @@ export function renderCrawlPagesCsv(report: CrawlReport): string {
   )
 }
 
+/** The caveat a report must lead with when the crawl read too little. */
+export function crawlCoverageCaveat(report: CrawlReport): string | undefined {
+  return report.caveats.find((caveat) =>
+    caveat.startsWith(CRAWL_COVERAGE_CAVEAT_PREFIX),
+  )
+}
+
 export function renderCrawlPretty(
   report: CrawlReport,
   fixes: TopFix[] = topFixes(report),
@@ -108,7 +116,9 @@ export function renderCrawlPretty(
       : report.requestEvidenceStatus === 'partial'
         ? `${report.requests.length} observed requests; some started requests were still in flight when the crawl stopped`
         : 'request evidence unavailable for this legacy report'
+  const coverage = crawlCoverageCaveat(report)
   const lines = [
+    ...(coverage ? [coverage, ''] : []),
     `Crawl report for ${report.config.url}`,
     '',
     `Status: ${report.status}`,

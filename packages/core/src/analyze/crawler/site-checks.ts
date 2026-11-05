@@ -1,4 +1,5 @@
 import { createHash } from 'node:crypto'
+import type { FetchRateControls } from '../../fetch/page-fetcher/types.js'
 import { explainRule } from '../../rules.js'
 import type { CrawlOneResult } from '../monitoring/crawl-page.js'
 import type { CrawlIssue } from './report.js'
@@ -54,30 +55,61 @@ function probeObservation(url: string, result: CrawlOneResult) {
   }
 }
 
+type Probe = CrawlSiteChecks['soft404']['probes'][number]
+
+// A skipped, failed, blocked or rate-limited probe says nothing about how
+// the site answers a missing path.
+function isConclusive(probe: Probe): boolean {
+  return (
+    probe.status !== undefined &&
+    !probe.accessBlocked &&
+    probe.status !== 429 &&
+    probe.status !== 503
+  )
+}
+
 export async function collectCrawlSiteChecks(input: {
   startUrl: string
   timeoutMs: number
   respectRobots: boolean
   signal?: AbortSignal
+  rate?: FetchRateControls
+  /** Inconclusive probes are retried once after this cool-down. */
+  retryDelayMs?: number
+  sleep?: (ms: number, signal?: AbortSignal) => Promise<void>
   fetchStatusPage: typeof import('../monitoring/crawl-page.js').crawlStatusOnly
 }): Promise<{ checks: CrawlSiteChecks; issues: CrawlIssue[] }> {
-  const probes: CrawlSiteChecks['soft404']['probes'] = []
+  const probe = async (url: string): Promise<Probe> =>
+    probeObservation(
+      url,
+      await input.fetchStatusPage(url, {
+        js: 'off',
+        refresh: true,
+        timeoutMs: input.timeoutMs,
+        signal: input.signal,
+        writeCache: false,
+        respectRobots: input.respectRobots,
+        ...(input.rate ? { rate: input.rate } : {}),
+      }),
+    )
+  const probes: Probe[] = []
   for (const url of probeUrls(input.startUrl)) {
     if (input.signal?.aborted) break
-    const result = await input.fetchStatusPage(url, {
-      js: 'off',
-      refresh: true,
-      timeoutMs: input.timeoutMs,
-      signal: input.signal,
-      writeCache: false,
-      respectRobots: input.respectRobots,
-    })
-    probes.push(probeObservation(url, result))
+    probes.push(await probe(url))
+  }
+  if (
+    input.sleep &&
+    !input.signal?.aborted &&
+    probes.some((item) => !isConclusive(item))
+  ) {
+    await input.sleep(input.retryDelayMs ?? 2_000, input.signal)
+    for (const [index, item] of probes.entries()) {
+      if (input.signal?.aborted) break
+      if (!isConclusive(item)) probes[index] = await probe(item.url)
+    }
   }
 
-  const conclusive = probes.filter(
-    (probe) => probe.status !== undefined && !probe.accessBlocked,
-  )
+  const conclusive = probes.filter(isConclusive)
   const successful = conclusive.filter(
     (probe) => (probe.status ?? 0) >= 200 && (probe.status ?? 0) < 400,
   )
@@ -95,7 +127,7 @@ export async function collectCrawlSiteChecks(input: {
       status,
       probes,
       probeLimit: PROBE_COUNT,
-      complete: probes.length === PROBE_COUNT,
+      complete: conclusive.length === PROBE_COUNT,
     },
   }
   if (status !== 'warning') return { checks, issues: [] }

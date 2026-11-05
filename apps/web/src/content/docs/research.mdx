@@ -51,7 +51,7 @@ Without `--provider`, the CLI uses the first provider with a saved key.
 seo research link_gap --provider ahrefs --target example.com --competitors example.org,example.net
 ```
 
-It reads the top 1,000 referring domains of each site, one `backlinks` request per site. When a site has more than that, the list stops at the lowest authority it read and says so, rather than guessing below it.
+It reads the top 1,000 referring domains of each site, one `backlinks` request per site. When a site has more than that, the list stops at the lowest authority it read and says so, rather than guessing below it. With DataForSEO, the top 200 rows are sorted by Domain Rating. URL shorteners, link lists and coupon or site-stats directories link to almost every site, so they're left out, and the result names each one.
 
 ## When a result is empty
 
@@ -74,6 +74,8 @@ seo research ai_answers --target example.org --keywords "what is the best crm fo
 Each question goes to ChatGPT search, Google AI Mode and Google AI Overviews. Every row says whether the answer cited a page on your site, mentioned it by name, did neither, or showed no AI answer at all. ChatGPT rows also name the model DataForSEO reports for the answer. A run of 10 questions costs about 7 cents of DataForSEO credit, and the result shows what it actually cost. Each row also lists the other sites the answer cites, and the notes rank the sites cited most.
 
 Answers come from DataForSEO's queue and usually take about 15 seconds. Through the MCP server, any answers not ready after about 40 seconds come back as tasks that are already paid for. Ask again with the same target and those tasks to read them at no cost. The CLI waits up to four minutes, and prints the same tasks if any are still waiting; pass them with `--tasks`.
+
+To see more rows, use the next-page command the result gives you. It passes every answer's task, so the answers are read back at no cost instead of asked again.
 
 Treat each row as one sample. Ask the same question tomorrow and the answer can change, so a "neither" today is not proof you will never be cited.
 

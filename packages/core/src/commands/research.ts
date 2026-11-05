@@ -127,6 +127,7 @@ export async function runResearch(
     missed,
     noData,
     floor,
+    leftOut,
   } = await research(input.provider, keys, {
     action: input.action,
     keywords: input.keywords ?? [],
@@ -143,7 +144,11 @@ export async function runResearch(
     (row) => row.url === null && row.url_hint !== undefined,
   ).length
   const drKey = keys.get('x-ahrefs-key') ?? options.drKey
-  const rated = await withDomainRating(rows, drKey)
+  const byDr =
+    input.action === 'link_gap' && input.provider === 'dataforseo' && drKey
+  const rated = byDr
+    ? await sortedByDomainRating(rows, drKey)
+    : await withDomainRating(rows, drKey, offset)
   const targetDr = target
     ? (await domainRatings([target], drKey)).get(bareDomain(target))
     : undefined
@@ -169,6 +174,18 @@ export async function runResearch(
             ]
           : []),
         ...(noData.length ? [noDataNote(input, noData)] : []),
+        ...(byDr
+          ? [
+              rows.length > GAP_RATED
+                ? `Sorted by Domain Rating for the top ${GAP_RATED} rows by DataForSEO rank; the ${rows.length - GAP_RATED} rows after them follow by rank, with no Domain Rating.`
+                : 'Sorted by Domain Rating, then DataForSEO rank.',
+            ]
+          : []),
+        ...(leftOut?.length
+          ? [
+              `Left out ${leftOut.length} link lists, URL shorteners and directories that link to most sites (a guess from the host name): ${leftOut.join(', ')}.`,
+            ]
+          : []),
         ...(floor
           ? [
               `Cut at ${floor.field} ${floor.value}: at least one site has more than 1,000 referring domains, and only its top 1,000 were read, so domains below ${floor.field} ${floor.value} are left out rather than guessed.`,
@@ -197,7 +214,11 @@ export async function runResearch(
       missedKeywords: missed,
       noDataKeywords: noData,
       ...(input.action === 'link_gap'
-        ? { competitors: input.competitors ?? [], cutAt: floor ?? null }
+        ? {
+            competitors: input.competitors ?? [],
+            cutAt: floor ?? null,
+            leftOut: leftOut ?? [],
+          }
         : {}),
       total: rated.rows.length,
       offset,
@@ -224,4 +245,50 @@ function unresolvedNote(
   total: number,
 ): string {
   return `${count} of ${total} results have no exact page: ${input.provider} returned Google redirect links for them. Their domain and url_hint come from Google's breadcrumb, which is shortened.${input.provider === 'dataforseo' ? ' For exact pages, use provider ahrefs.' : ''}`
+}
+
+// How many link_gap rows get a Domain Rating to sort by when the gap comes
+// from DataForSEO, whose own rank is a different scale.
+const GAP_RATED = 200
+
+// link_gap rows from DataForSEO: the top GAP_RATED by rank get a Domain
+// Rating and are sorted by it, then by rank and domain; the rest keep their
+// order by rank.
+async function sortedByDomainRating(
+  rows: Row[],
+  key: string,
+): Promise<{ rows: Row[]; added: boolean }> {
+  const top = rows.slice(0, GAP_RATED)
+  const ratings = await domainRatings(
+    top.map((row) => String(row.domain ?? '')),
+    key,
+    GAP_RATED,
+  )
+  // domain_rating goes right after domain, as withDomainRating places it.
+  const withDr = (row: Row, rated: boolean): Row => {
+    const { domain = null, ...rest } = row
+    return {
+      domain,
+      domain_rating: rated
+        ? (ratings.get(bareDomain(String(domain ?? ''))) ?? null)
+        : null,
+      ...rest,
+    }
+  }
+  const dr = (row: Row) => Number(row.domain_rating ?? -1)
+  const sorted = top
+    .map((row) => withDr(row, true))
+    .sort(
+      (a, b) =>
+        dr(b) - dr(a) ||
+        Number(b.rank ?? 0) - Number(a.rank ?? 0) ||
+        String(a.domain).localeCompare(String(b.domain)),
+    )
+  return {
+    rows: [
+      ...sorted,
+      ...rows.slice(GAP_RATED).map((row) => withDr(row, false)),
+    ],
+    added: true,
+  }
 }

@@ -598,11 +598,11 @@ export const researchCommand = defineCommand({
           },
           keys,
           deps,
-          (offset) =>
+          (offset, answered) =>
             cliCall('research', {
               action,
               target,
-              keywords: keywords.join(',') || undefined,
+              tasks: answered.join(',') || undefined,
               country,
               detail: 'rows',
               offset,

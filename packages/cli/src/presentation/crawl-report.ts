@@ -1,5 +1,6 @@
 import {
   type CrawlReport,
+  crawlCoverageCaveat,
   explainRule,
   reviewObservations,
   type TopFix,
@@ -56,9 +57,10 @@ export function printCrawlHuman(
     target: report.config.url,
     status,
     summary:
-      report.status === 'partial'
+      crawlCoverageCaveat(report) ??
+      (report.status === 'partial'
         ? `Partial evidence from ${report.summary.totalPages} retained pages. Review the caveats before treating missing findings as an all-clear.`
-        : `${report.summary.totalPages} pages retained with ${report.issues.length} findings.`,
+        : `${report.summary.totalPages} pages retained with ${report.issues.length} findings.`),
     metrics: [
       { label: 'Pages', value: report.summary.totalPages },
       {

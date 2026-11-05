@@ -55,6 +55,12 @@ For each domain:
     - **Social posts:** every post from step 9 that's worth a page gets the same treatment: target search, title, URL and sections mapped to searches.
 12. **Free tools and programmatic pages:** look for searches with tool intent (checker, generator, calculator, template, "free") and for repeatable page patterns (one page per tool, model, integration or city) in the company's niche. Record volume, who ranks and what the company already has (data, an API, a product feature) that could power the page. Propose only what the company can build from what it owns.
 13. **AI visibility:** pick 5 to 10 questions buyers ask an AI assistant about the company's category ("best <category> for <use>", "how do I <job>"). Run `ai_answers` for the company and its top competitor. Report who's cited, which pages get cited, and what the cited pages have that the company's don't (a direct answer near the top, a comparison table, a definition, fresh dates). Pair it with step 10: an AI crawler that gets the full page but no cited answer points to content, not access.
+14. **Links and PR:** links come from having something worth linking to, so look for what the company owns that others would cite.
+    - **Link gap:** run `seo research backlinks --target <domain>` for the company and its top 3 competitors. List the referring domains (with Domain Rating) that link to two or more competitors and not to the company, and the competitor page each one links to. Group them by why they link: a tool, a data report, a comparison, a quote in a news story.
+    - **Unique data:** list the data only the company has (usage numbers, benchmarks, model scores, a survey of its readers, prices it tracks) and one report each could become, with a dated headline a journalist could quote ("1.7% of 49,345 sites were deindexed in March 2024"). Check who covered the last report like it (`serp` for the topic plus "study", "report" or "data"), since those writers are the outreach list.
+    - **Linkable tools:** from step 12, mark the tool pages that sites in the link gap already link to on a competitor.
+    - **Outreach the company can hand to an agent:** for each target, the page that would link, the reason it should (a broken or outdated link it could replace, a stat the company has newer data for), and whether it already sells links. Leave out sites that sell links or have no topical reason to link. Ian's method is at https://ian.is/cold-outbound-backlinks.
+    Propose only reports and tools the company can build from what it owns. Name real data, never a generic "do a study".
 
 Write every number with its source and month. Third-party estimates are called estimates.
 
@@ -104,6 +110,7 @@ Sections, in this order, adjusted to the company:
 4. Portfolio links: where the company's own sites link to each other, with an example page and the exact link.
 5. New content: the keyword clusters from step 11, the free tools and page patterns from step 12, and the social posts worth a page. Each proposal has a target search with volume, a title and its sections.
 6. AI search: what crawlers get (step 10) and who AI answers cite (step 13), with the fixes the platform allows.
+6a. Links and PR (step 14): the link gap as a `UrlMap` or table, the data reports with draft headlines, and the outreach list an agent can work through with the company approving each email. Leave the section out when step 14 finds nothing to act on.
 7. Technical fixes, closest to revenue first. Each gets an `###` subsection: what it is in plain words, an exhibit that shows it, **The fix:** with best practice, and how to confirm it worked.
 8. "Ship it all today, then let it settle": the fixes as parallel agent jobs (`PlanSteps`, numbered, no "Agent 1" labels), then 30 days of checks (`PlanSteps` with `marker: "Day 0"` and so on). Never a week-by-week sprint.
 9. Get the changes seen quickly: Index My Site for every changed and new URL.

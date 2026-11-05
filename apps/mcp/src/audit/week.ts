@@ -10,6 +10,7 @@ import { queueAlert } from '../alerts/deliver.ts'
 import { hasWeeklyAudit } from '../beta.ts'
 import { directory } from '../google.ts'
 import { accountsOf } from '../store.ts'
+import { withWeekUpdates } from './google-updates.ts'
 import { isMonday, unsentIndexChanges } from './index-roundup.ts'
 import { auditSites, siteId, siteIssues, siteObject } from './schedule.ts'
 
@@ -115,7 +116,10 @@ export async function sendWeeklySummaries(env: Env, now = Date.now()) {
       unsentIndexChanges(env, userId).catch(() => null),
     ])
     if (!summary) continue
-    const data = { ...summary, index_changes: unsent?.sites ?? [] }
+    const withUpdates = await withWeekUpdates(env, userId, summary, now).catch(
+      () => summary,
+    )
+    const data = { ...withUpdates, index_changes: unsent?.sites ?? [] }
     const claimed = await env.DB.prepare(
       `INSERT INTO weekly_summaries (user_id, week, sent_at) VALUES (?, ?, ?)
        ON CONFLICT DO NOTHING RETURNING week`,

@@ -47,6 +47,10 @@ export type WeekSite = {
   // Competitor keywords first named this week that passed every gate, or
   // null before the first check (or when the check is off on this server).
   opportunities?: WeekOpportunities | null
+  // Google ranking updates that ran during the week or whose result
+  // became ready in it (Monday email only), each with the site's result
+  // once final data covers it, else null.
+  google_updates?: WeekGoogleUpdate[]
   // Fixed issues whose after-fix days ended in the latest 7 days of final
   // Search Console data, first MAX_MEASURED, oldest fix first, and how many
   // there were in all.
@@ -104,6 +108,20 @@ export type WeekData = {
 
 export const MAX_DROPPED_PAGES = 5
 export const MAX_MEASURED = 5
+
+export type WeekGoogleUpdate = {
+  name: string
+  start: string
+  end: string | null
+  // Final data covers it, so the result is ready to read.
+  ready: boolean
+  result: {
+    verdict: 'within-normal' | 'outside-normal' | 'not-enough-data'
+    clicks: number
+    previous: number
+    days: number
+  } | null
+}
 const DAY_MS = 86_400_000
 
 // The Monday to Sunday (UTC) before the week that holds now.
@@ -305,6 +323,36 @@ function siteLines(site: WeekSite, startMs: number, endMs: number): string[] {
 // The competitor opportunities line, and one line per keyword under it.
 // Only keywords that passed every gate are named, so a week with none says
 // so, and a week the budget cut short says more may follow.
+// One line per Google update: the site's result when it is ready, else
+// that the update is still running or final data has not caught up.
+function updateLines(site: WeekSite): string[] {
+  return (site.google_updates ?? []).map((update) => {
+    const when = update.end ? 'ran' : 'has been rolling out'
+    const result = update.result
+    if (!result && update.ready) {
+      return `- Google update: the ${update.name} ran ${update.start.slice(0, 10)} to ${update.end?.slice(0, 10) ?? 'now'}. Ask for the report's google-updates section on this site for what moved.`
+    }
+    if (!result) {
+      return `- Google update: the ${update.name} ${when}${update.end ? ` (${update.start.slice(0, 10)} to ${update.end.slice(0, 10)})` : ` since ${update.start.slice(0, 10)}`}. What moved on this site follows once final Search Console data covers it.`
+    }
+    const diff = result.clicks - result.previous
+    const pct =
+      result.previous > 0 ? Math.round((diff / result.previous) * 100) : null
+    const moved =
+      pct === null
+        ? `${count(result.clicks)} clicks from ${count(result.previous)}`
+        : pct === 0
+          ? `clicks level at ${count(result.clicks)}`
+          : `clicks ${pct > 0 ? 'up' : 'down'} ${Math.abs(pct)}% (${count(result.clicks)} from ${count(result.previous)})`
+    const verdict = {
+      'outside-normal': 'more than this site usually moves',
+      'within-normal': 'within this site’s normal movement',
+      'not-enough-data': 'too little data to say if that is unusual',
+    }[result.verdict]
+    return `- Google update: the ${update.name}, ${moved} over the ${result.days} days from its start against the ${result.days} before, ${verdict} (timing only, not cause).`
+  })
+}
+
 function opportunityLines(site: WeekSite): string[] {
   const found = site.opportunities
   if (!found) return []
@@ -425,6 +473,7 @@ export function weekMarkdown(data: WeekData): string {
       ...siteLines(site, startMs, endMs).map((line) => `- ${line}`),
       ...opportunityLines(site),
       ...measuredLines(site),
+      ...updateLines(site),
       ...(site.link ? [`- [View site](${site.link})`] : []),
     )
   }

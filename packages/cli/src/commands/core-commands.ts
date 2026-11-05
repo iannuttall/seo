@@ -39,6 +39,7 @@ import {
   runRows,
   SECTION_IDS,
   type SectionId,
+  UPDATES_SECTION,
 } from '@seo/core/commands'
 import { defineCommand } from 'citty'
 import { booleanArg, csvArg, jsonFlag, numberArg, stringArg } from '../args.js'
@@ -62,6 +63,7 @@ const FLAGS: Record<string, string> = {
   mark: '--mark',
   issues: '--issues',
   note: '--note',
+  end_date: '--end-date',
 }
 
 const quote = (value: string | number) =>
@@ -155,7 +157,7 @@ export const reportCommand = defineCommand({
     },
     section: {
       type: 'string',
-      description: `Optional, needs --site. One of ${[...SECTION_IDS, ISSUES_SECTION].join(', ')}. issues keeps a list of what was found for the site, on this machine.`,
+      description: `Optional, needs --site. One of ${[...SECTION_IDS, ISSUES_SECTION, UPDATES_SECTION].join(', ')}. issues keeps a list of what was found for the site, on this machine. ${UPDATES_SECTION} lays the latest Google ranking update (or the latest that started by --end-date) over the site.`,
     },
     mark: {
       type: 'string',
@@ -173,7 +175,7 @@ export const reportCommand = defineCommand({
   },
   run: async ({ args }) => {
     const section = stringArg(args.section)
-    const sections = [...SECTION_IDS, ISSUES_SECTION]
+    const sections = [...SECTION_IDS, ISSUES_SECTION, UPDATES_SECTION]
     if (section && !sections.includes(section)) {
       throw new SeoError(
         'INVALID_INPUT',

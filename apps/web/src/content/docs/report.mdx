@@ -55,6 +55,7 @@ Sessions are Google Analytics' own count, so they never equal clicks. If no web 
 | `cannibalization` | Queries where more than one of your pages gets impressions, with each page's share. |
 | `traffic-drop` | Daily clicks and impressions checked for sudden changes, with Google updates whose dates overlap. |
 | `ai-queries` | Queries that look like AI conversations and agent searches: replies such as "yes", follow-ups such as "what about…", agent prompts, search operators and long chat-style questions. Rewordings are grouped into one question. A heuristic, covering the last 90 days. |
+| `google-updates` | The latest Google ranking update laid over your clicks: the update's days against the same number of days before, whether that is more movement than usual for your site, and the folders, pages and queries that moved most. Add an end date for an earlier update. |
 | `bing` | Bing's top queries and pages with Google's numbers for the same rows beside them. Needs [Bing connected](/docs/bing) in the CLI or the local MCP server. |
 
 Ask for a section by name:
@@ -90,5 +91,15 @@ It is a pattern match on the query text, not a label from Google. Search Console
 ## Read it carefully
 
 The click-through rate curve is built from your own site's data. It is a useful yardstick, not a Google rule. In `traffic-drop`, a Google update that overlaps a change only shows the timing matched. It does not prove the update caused it.
+
+## Did a Google update hit the site?
+
+The `google-updates` section answers it from your own data. It compares the days of the latest core, spam or similar update with the same days of the week just before it, then checks that change against your site's own movement in the eight comparisons before. A quiet result is a real answer: most updates leave most sites alone.
+
+```sh
+seo report --site example.com --section google-updates
+```
+
+For an earlier update, add `--end-date` with a day in or after it, and the section picks the latest update that started by then. Sites in the weekly site audit get the same result by email once Google's update has finished and Search Console has caught up. It shows timing only, never proof that the update caused a change.
 
 For one page, use [`seo page`](/docs/page). To check a release or an update, use [`seo compare`](/docs/compare).

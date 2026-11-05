@@ -227,7 +227,10 @@ site `property`, `link`, `crawl` (the last finished crawl, with `new_issues`
 first seen or back that week), `index` (the week's `checked`, `dropped` and
 `returned`, with up to 5 `dropped_pages`) and `clicks` (the latest 7 days
 of final Search Console data against the 7 before). Each is `null` when it
-is not known yet. `index_changes` is Monday's daily roundup, the same
+is not known yet. A site's `google_updates` lists Google ranking updates
+that ran that week or whose result became ready in the last 7 days, each
+with `ready` and a `result` (`verdict`, `clicks`, `previous`, `days`) for
+up to 20 sites once final data covers it, else `null`. `index_changes` is Monday's daily roundup, the same
 list as `index-changes` `data.sites`, empty when nothing changed.
 
 `google-update` goes out within the hour of Google's
@@ -236,8 +239,14 @@ ranking update (a core, spam or similar update) started rolling out, and
 again when it says the update finished: once per phase and account,
 covering every audited site, so `site` is `null`. Only updates that started,
 or finished, in the last 7 days are sent; an account first alerted after an
-update finished gets only `finished`. `data.update` has Google's `id` and
-`name`, `phase` (`started` or `finished`), `start`, `end` (`null` while it
+update finished gets only `finished`. Once final Search Console data covers an
+update that finished in the last 14 days, a third `google-update` alert has
+`phase` `impact` and `data.impacts`: one result per audited site, the same
+data as `seo_report` section `google-updates` (`before`, `after`,
+`normal_range`, `verdict`, `folders`, `pages`, `queries`, `capped` and
+`window`), with `data.unread` listing sites Search Console could not be
+read for. `data.update` has Google's `id` and
+`name`, `phase` (`started`, `finished` or `impact`), `start`, `end` (`null` while it
 rolls out) and `url` (Google's notice); `data.sites` lists the account's
 audited properties.
 

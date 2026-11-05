@@ -54,6 +54,7 @@ import {
   type DateRange,
   type PageFacts,
 } from './types.js'
+import { runUpdates, UPDATES_SECTION } from './updates.js'
 
 // The main report: one overview plus sections, each from the same report
 // code. Without a section it shows every section's count and top rows; with
@@ -517,7 +518,11 @@ export function pageFactsTable(
 
 export type ReportInput = DateInput & {
   site: string
-  section?: SectionId | typeof AUDIT_SECTION | typeof ISSUES_SECTION
+  section?:
+    | SectionId
+    | typeof AUDIT_SECTION
+    | typeof ISSUES_SECTION
+    | typeof UPDATES_SECTION
   detail?: Detail
   offset?: number
   // Marks these issue ids instead of running a report.
@@ -630,7 +635,12 @@ async function allSections(
     `## ${ISSUES_SECTION}\n${issuesPreview(kept, deps.call, input.site)}`,
   )
   sections[ISSUES_SECTION] = { total: kept?.length ?? null, stored: !!kept }
-  const names = [...ids, ...(deps.audit ? [AUDIT_SECTION] : []), ISSUES_SECTION]
+  const names = [
+    ...ids,
+    ...(deps.audit ? [AUDIT_SECTION] : []),
+    ISSUES_SECTION,
+    UPDATES_SECTION,
+  ]
   parts.push(
     `More: ${deps.call('report', { site: input.site, section: '<section>' })} for its rows (${names.join(', ')}). Page sections also check their top 20 URLs live and merge same-site redirects.`,
   )
@@ -816,6 +826,9 @@ export function runReport(
     return runIssues(input, deps, (section, range) =>
       build(read, input.site, section, range, now, bing),
     )
+  }
+  if (input.section === UPDATES_SECTION) {
+    return runUpdates(input, deps)
   }
   if (input.section === AUDIT_SECTION) {
     const audit = deps.audit

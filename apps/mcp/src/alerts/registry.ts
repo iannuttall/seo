@@ -1,5 +1,7 @@
 import {
+  impactLines,
   siteName,
+  type UpdateImpact,
   type WeekData,
   weekMarkdown,
   weekTitle,
@@ -204,7 +206,8 @@ export type GoogleUpdate = {
   id: string
   // Google's own name for it, such as "November 2026 core update".
   name: string
-  phase: 'started' | 'finished'
+  // impact: what moved on each site, once final data covers the update.
+  phase: 'started' | 'finished' | 'impact'
   // ISO times from Google's feed; end is null while it rolls out.
   start: string
   end: string | null
@@ -212,7 +215,20 @@ export type GoogleUpdate = {
   url: string
 }
 
-export type GoogleUpdateAlert = { update: GoogleUpdate; sites: string[] }
+export type GoogleUpdateAlert = {
+  update: GoogleUpdate
+  sites: string[]
+  // impact only: each site's result, and the sites Search Console could
+  // not be read for.
+  impacts?: UpdateImpact[]
+  unread?: string[]
+}
+
+const VERDICT_ORDER = {
+  'outside-normal': 0,
+  'within-normal': 1,
+  'not-enough-data': 2,
+} as const
 
 // "4 Nov 2026" in UTC.
 const dayOf = (iso: string) =>
@@ -225,11 +241,41 @@ const dayOf = (iso: string) =>
 
 const googleUpdate: AlertType<GoogleUpdateAlert> = {
   title: 'Google updates',
-  text: 'When Google starts or finishes a ranking update, such as a core or spam update.',
+  text: 'When Google starts or finishes a ranking update, such as a core or spam update, then what moved on your sites.',
   flag: 'weekly-audit',
   defaults: { email: true, webhook: true },
-  email({ update, sites }) {
+  email({ update, sites, impacts, unread }) {
     const names = sites.map(siteName)
+    if (update.phase === 'impact') {
+      const sorted = [...(impacts ?? [])].sort(
+        (a, b) =>
+          VERDICT_ORDER[a.verdict] - VERDICT_ORDER[b.verdict] ||
+          siteName(a.site).localeCompare(siteName(b.site)),
+      )
+      const outside = sorted.filter((i) => i.verdict === 'outside-normal')
+      const summary = outside.length
+        ? `${outside.length} of ${sorted.length} ${sorted.length === 1 ? 'site' : 'sites'} moved more than usual`
+        : `No site moved more than usual`
+      return {
+        subject: `What moved during the ${update.name}`,
+        preview: `${summary}.`,
+        markdown: [
+          `Search Console’s final data now covers the ${update.name}. ${summary}, judged against each site’s own movement in the weeks before (a heuristic).`,
+          ...sorted.flatMap((impact) => [
+            '',
+            `## ${siteName(impact.site)}`,
+            '',
+            ...impactLines(impact).map((line) => `- ${line}`),
+          ]),
+          ...(unread?.length
+            ? [
+                '',
+                `Search Console could not be read for ${unread.map(siteName).join(', ')}. Ask your agent for seo_report with section google-updates on ${unread.length === 1 ? 'it' : 'them'}.`,
+              ]
+            : []),
+        ].join('\n'),
+      }
+    }
     const yours = names.length
       ? `Your audited ${names.length === 1 ? 'site' : 'sites'}: ${names.join(', ')}.`
       : ''
@@ -256,7 +302,7 @@ const googleUpdate: AlertType<GoogleUpdateAlert> = {
       markdown: [
         `Google’s Search Status Dashboard says the ${update.name} finished rolling out on ${dayOf(update.end)}, ${days} ${days === 1 ? 'day' : 'days'} after it began on ${dayOf(update.start)} (UTC). ${notice}`,
         '',
-        `Search Console’s final data runs a few days behind. To see what moved, ask your agent to compare each site before and after ${update.start.slice(0, 10)} (seo_compare), which also names the updates in those dates. A change that lines up with the update is timing only, not proof it caused it. ${yours}`,
+        `Search Console’s final data runs a few days behind. Once it covers the update, you get one more email with what moved on each audited site. Your agent can ask sooner with seo_report and section google-updates. A change that lines up with the update is timing only, not proof it caused it. ${yours}`,
       ].join('\n'),
     }
   },

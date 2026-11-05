@@ -8,6 +8,7 @@ import {
 import { readJson } from '../http/read-json.js'
 import {
   findOverlappingSearchUpdates,
+  type SearchUpdate,
   searchUpdatesFromIncidents,
   UPDATE_PADDING_DAYS,
   withRankingHistory,
@@ -139,6 +140,29 @@ export function sharedReader(
 export { UPDATE_PADDING_DAYS } from '../updates/search-updates.js'
 
 const MAX_STATUS_BYTES = 10 * 1024 * 1024
+
+// Every Google ranking update, newest first, from the live feed and its
+// saved history, or a sentence when the feed could not be read.
+export async function rankingUpdates(): Promise<SearchUpdate[] | string> {
+  const incidents = await fetch(
+    'https://status.search.google.com/incidents.json',
+    { signal: AbortSignal.timeout(8000) },
+  )
+    .then((response) =>
+      response.ok
+        ? readJson(response, 'Google Search Status', {
+            maxBytes: MAX_STATUS_BYTES,
+          })
+        : null,
+    )
+    .catch(() => null)
+  if (!Array.isArray(incidents))
+    return 'Google Search Status could not be read.'
+  return searchUpdatesFromIncidents(withRankingHistory(incidents), {
+    product: 'Ranking',
+    limit: Number.POSITIVE_INFINITY,
+  })
+}
 
 export async function googleUpdates(window?: {
   start: string

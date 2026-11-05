@@ -52,6 +52,15 @@ ends with the list as JSON (`{"version":1,"sites":{"<site>":[...]}}`, the
 `.seo/issues.json`, and pass its contents as `saved` with the next `issues`
 or `mark` call so marks carry over.
 
+## Google updates
+
+When the person asks whether a Google update hit the site, run
+`seo report --site <site> --section google-updates` (`section
+"google-updates"`). It compares the latest ranking update's days with the
+same days before and says whether that is outside the site's normal
+movement. `--end-date` (`end_date`) picks an earlier update. Report it as
+timing, never as the cause.
+
 ## Indexing reasons each week
 
 `seo index` inspects known URLs in a fixed order (lost-click pages, Search

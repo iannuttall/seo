@@ -44,6 +44,7 @@ import {
   type CommandResult,
   type StartAudit,
 } from './types.js'
+import { UPDATES_SECTION, UPDATES_SECTION_TEXT } from './updates.js'
 import { runAllSites } from './week.js'
 
 // The MCP tools for the shared commands, defined once for the hosted MCP and
@@ -264,7 +265,7 @@ export const SHARED_TOOLS: SharedTool[] = [
       .map(([id, text]) => `- ${id}: ${text}`)
       .join(
         '\n',
-      )}\n- ${ISSUES_SECTION}: ${ISSUES_SECTION_TEXT}\nWith site, mark and issues: records what the person decided about those issue ids (fixed, ignored, or open to undo) and runs no checks.`,
+      )}\n- ${ISSUES_SECTION}: ${ISSUES_SECTION_TEXT}\n- ${UPDATES_SECTION}: ${UPDATES_SECTION_TEXT}\nWith site, mark and issues: records what the person decided about those issue ids (fixed, ignored, or open to undo) and runs no checks.`,
     input: z.object({
       site: site
         .optional()
@@ -272,7 +273,7 @@ export const SHARED_TOOLS: SharedTool[] = [
           'Leave it out for the summary of every audited site (weekly site audit beta). Otherwise a Search Console property or site, such as sc-domain:example.com, https://example.com/ or example.com.',
         ),
       section: z
-        .enum([...SECTION_IDS, ISSUES_SECTION])
+        .enum([...SECTION_IDS, ISSUES_SECTION, UPDATES_SECTION])
         .optional()
         .describe(
           'Optional, needs site. Leave it out first; then ask for one section.',
@@ -687,7 +688,12 @@ export const AUDIT_TOOLS: SharedTool[] = SHARED_TOOLS.map((shared) =>
           description: `${shared.description}\n- ${AUDIT_SECTION}: ${AUDIT_SECTION_TEXT}`,
           input: shared.input.extend({
             section: z
-              .enum([...SECTION_IDS, ISSUES_SECTION, AUDIT_SECTION])
+              .enum([
+                ...SECTION_IDS,
+                ISSUES_SECTION,
+                UPDATES_SECTION,
+                AUDIT_SECTION,
+              ])
               .optional()
               .describe(
                 'Optional. Leave it out first; then ask for one section.',

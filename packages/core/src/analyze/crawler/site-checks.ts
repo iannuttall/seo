@@ -19,17 +19,18 @@ export type CrawlSiteChecks = {
   }
 }
 
-const PROBE_COUNT = 2
+// Root, nested and reserved paths: a site can return 404 under one prefix
+// and a blank 200 for any made-up root path, where profile routes live.
+const PROBE_COUNT = 3
 
 function probeUrls(startUrl: string): string[] {
   const origin = new URL(startUrl).origin
   const seed = createHash('sha256').update(origin).digest('hex').slice(0, 12)
-  return Array.from({ length: PROBE_COUNT }, (_, index) =>
-    new URL(
-      `/.well-known/seo-audit/not-found-${seed}-${index + 1}`,
-      origin,
-    ).toString(),
-  )
+  return [
+    `/${seed}-not-found`,
+    `/${seed}-not-found/${seed}-missing`,
+    `/.well-known/seo-audit/not-found-${seed}-1`,
+  ].map((path) => new URL(path, origin).toString())
 }
 
 function probeObservation(url: string, result: CrawlOneResult) {
@@ -84,13 +85,11 @@ export async function collectCrawlSiteChecks(input: {
     (probe) => probe.status === 404 || probe.status === 410,
   )
   const status: CrawlSiteChecks['soft404']['status'] =
-    conclusive.length !== PROBE_COUNT
-      ? 'unknown'
-      : successful.length === PROBE_COUNT
-        ? 'warning'
-        : correctMissing.length === PROBE_COUNT
-          ? 'pass'
-          : 'unknown'
+    successful.length > 0
+      ? 'warning'
+      : correctMissing.length === PROBE_COUNT
+        ? 'pass'
+        : 'unknown'
   const checks: CrawlSiteChecks = {
     soft404: {
       status,
@@ -112,7 +111,9 @@ export async function collectCrawlSiteChecks(input: {
         category: rule.category,
         severity: rule.defaultSeverity,
         url: new URL('/', input.startUrl).toString(),
-        detail: `${successful.length} known-nonexistent paths returned a successful response or redirect.`,
+        detail: `${successful.length} of ${probes.length} made-up paths returned a successful response or redirect: ${successful
+          .map((probe) => `${new URL(probe.url).pathname} (${probe.status})`)
+          .join(', ')}.`,
         evidence: checks.soft404,
       },
     ],

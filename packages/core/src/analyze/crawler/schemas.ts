@@ -299,7 +299,12 @@ export const crawlPageSnapshotSchema = z.object({
           documentDifference: renderingDocumentDifferenceSchema.optional(),
           browser: z
             .object({
-              source: z.enum(['environment', 'playwright-cache', 'system']),
+              source: z.enum([
+                'environment',
+                'playwright-cache',
+                'agent-browser-cache',
+                'system',
+              ]),
               product: z.string(),
               version: z.string().optional(),
             })

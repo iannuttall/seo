@@ -416,3 +416,40 @@ test('auditCrawlPages does not turn word count or llms.txt into SEO issues', () 
 
   assert.deepEqual(agentIssues, [])
 })
+
+test('duplicate checks ignore pages that canonicalise to another page in the group', () => {
+  const home = 'https://example.com/'
+  const issues = auditCrawlPages([
+    page({ url: home, canonical: home, mainContentHash: 'home' }),
+    ...Array.from({ length: 3 }, (_, index) =>
+      page({
+        url: `https://example.com/?ref=${index}`,
+        canonical: home,
+        mainContentHash: 'home',
+      }),
+    ),
+    page({
+      url: 'https://example.com/x',
+      title: 'Job X',
+      canonical: 'https://example.com/x',
+    }),
+    page({
+      url: 'https://example.com/x/apply',
+      title: 'Job X',
+      canonical: 'https://example.com/x',
+    }),
+    page({ url: 'https://example.com/y', title: 'Same title' }),
+    page({ url: 'https://example.com/z', title: 'Same title' }),
+  ])
+  const urlsFor = (ruleId: string) =>
+    issues
+      .filter((issue) => issue.ruleId === ruleId)
+      .map((issue) => issue.url)
+      .sort()
+
+  assert.deepEqual(urlsFor('title_duplicate'), [
+    'https://example.com/y',
+    'https://example.com/z',
+  ])
+  assert.deepEqual(urlsFor('duplicate_content'), [])
+})

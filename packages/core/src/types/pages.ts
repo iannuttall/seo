@@ -115,7 +115,11 @@ export interface PageFetchDiagnostics {
     }
     documentDifference?: RenderingDocumentDifference
     browser?: {
-      source: 'environment' | 'playwright-cache' | 'system'
+      source:
+        | 'environment'
+        | 'playwright-cache'
+        | 'agent-browser-cache'
+        | 'system'
       product: string
       version?: string
     }

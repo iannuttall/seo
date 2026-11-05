@@ -405,6 +405,31 @@ const RULE_DEFINITIONS = [
     },
   },
   {
+    id: 'crawl_single_page_reach',
+    title: 'Crawl could reach only the start page',
+    category: 'links',
+    defaultSeverity: 'high',
+    whyItMatters:
+      'The start page had no crawlable internal links and no sitemap returned URLs, so the crawl checked one page. Every other finding in this report covers that page only. The page probably builds its links with JavaScript.',
+    howToFix:
+      'Rerun with `--rendering on` so the crawler reads the links a browser sees, or pass the pages to check with `--mode list`. For crawlers that do not run JavaScript, put plain `<a href>` links in the initial HTML and publish a sitemap.',
+    impactIfIgnored:
+      'Crawlers and audits that do not run JavaScript can find only this page, so the rest of the site stays unchecked and harder to discover.',
+    howToVerify:
+      'Rerun the crawl and confirm it retains more than one page and the start page reports internal links.',
+    agentHints: {
+      evidenceFields: [
+        'page.outgoingInternalCount',
+        'report.sitemapDiscovery.urlsReturned',
+        'page.fetchDiagnostics.rendering',
+      ],
+      suggestedCommands: [
+        'seo crawl <url> --rendering on --json',
+        'seo crawl --mode list --urls <url>,<url> --json',
+      ],
+    },
+  },
+  {
     id: 'soft_404',
     title: 'Unknown URLs return a successful response',
     category: 'response',
@@ -416,7 +441,7 @@ const RULE_DEFINITIONS = [
     impactIfIgnored:
       'Missing URLs can remain in crawl queues, waste crawl attention, and create confusing search or monitoring evidence.',
     howToVerify:
-      'Request several known-nonexistent paths and confirm each returns 404 or 410 without redirecting to a generic successful page.',
+      'Request several made-up paths, including one at the site root and one nested path, and confirm each returns 404 or 410 without redirecting to a generic successful page.',
     agentHints: {
       evidenceFields: ['report.siteChecks.soft404'],
       suggestedCommands: ['seo crawl <url> --json'],

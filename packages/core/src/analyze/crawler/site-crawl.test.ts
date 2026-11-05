@@ -609,3 +609,109 @@ test('crawlSite returns completed pages and skips joins after cancellation', asy
   assert.match(report.warnings.join('\n'), /cancelled/)
   assert.match(report.caveats.join('\n'), /cancelled/)
 })
+
+function offlineCrawlDependencies(
+  fetchPage: NonNullable<Parameters<typeof crawlSite>[1]>['fetchPage'],
+): NonNullable<Parameters<typeof crawlSite>[1]> {
+  return {
+    fetch: async () => new Response('missing', { status: 404 }),
+    fetchSitemapUrls: async ({ sitemapUrl }) =>
+      ({
+        sitemapUrl,
+        urls: [],
+        warnings: [],
+        dataStatus: 'complete',
+        source: { sitemapsFetched: 0, lastmods: [], documents: [] },
+        truncation: { possiblyTruncated: false },
+      }) as never,
+    fetchStatusPage: async (url) => ({
+      request: {
+        requestedUrl: url,
+        outcome: 'response',
+        finalUrl: url,
+        status: 404,
+        extraction: 'not-applicable',
+      },
+      urls: [],
+    }),
+    fetchPage,
+  }
+}
+
+test('crawlSite fails instead of using raw HTML when --rendering on has no browser', async () => {
+  await assert.rejects(
+    crawlSite(
+      { url: 'https://example.com/', js: 'on', checkExternal: false },
+      offlineCrawlDependencies(async (url) => ({
+        urls: [],
+        page: crawlPageSnapshot(url, {
+          fetchDiagnostics: {
+            source: 'network',
+            cache: 'miss',
+            fetched: true,
+            rendered: false,
+            blocked: false,
+            durationMs: 10,
+            retries: 0,
+            rendering: {
+              mode: 'on',
+              status: 'unavailable',
+              error:
+                'JavaScript rendering needs a local Chrome or Chromium browser.',
+            },
+          } as never,
+        }),
+      })),
+    ),
+    /--rendering on needs a local Chrome or Chromium browser.*SEO_BROWSER_EXECUTABLE_PATH/,
+  )
+})
+
+test('crawlSite caps query-string variants of one path and reports the skips', async () => {
+  const variants = Array.from(
+    { length: 12 },
+    (_, index) => `https://example.com/?ref=${index}&utm_source=x`,
+  )
+  const report = await crawlSite(
+    {
+      url: 'https://example.com/',
+      maxPages: 50,
+      concurrency: 1,
+      checkExternal: false,
+    },
+    offlineCrawlDependencies(async (url) => ({
+      urls: url === 'https://example.com/' ? variants : [],
+      page: crawlPageSnapshot(url, { outgoingInternalCount: 12 }),
+    })),
+  )
+
+  const crawledVariants = report.pages.filter((page) =>
+    page.url.includes('?ref='),
+  )
+  assert.equal(crawledVariants.length, 5)
+  assert.deepEqual(
+    report.summary.skipReasons.find(
+      (item) => item.reason === 'query-variant-limit',
+    ),
+    { reason: 'query-variant-limit', impact: 'coverage-affecting', count: 7 },
+  )
+  assert.match(report.caveats.join('\n'), /Left 7 query-string variants/)
+})
+
+test('crawlSite flags a start page with no links and no sitemap as single-page reach', async () => {
+  const report = await crawlSite(
+    { url: 'https://example.com/', checkExternal: false },
+    offlineCrawlDependencies(async (url) => ({
+      urls: [],
+      page: crawlPageSnapshot(url, { wordCount: 0 }),
+    })),
+  )
+
+  assert.equal(report.summary.totalPages, 1)
+  const reach = report.issues.filter(
+    (issue) => issue.ruleId === 'crawl_single_page_reach',
+  )
+  assert.equal(reach.length, 1)
+  assert.equal(reach[0]?.severity, 'high')
+  assert.match(report.caveats.join('\n'), /--rendering on.*--mode list/)
+})

@@ -1,13 +1,18 @@
+import { SeoError } from '../../errors.js'
 import { SEO_CRAWLER_USER_AGENT } from '../../fetch/crawler-identity.js'
 import { createRobotsSession } from '../../fetch/page-fetcher/robots.js'
 import { createPageRenderer } from '../../fetch/page-fetcher.js'
 import type { CrawlOneResult } from '../monitoring/crawl-page.js'
 import { agentReadyIssues, isPublicPage } from './agent-ready.js'
-import { crawlCaveats } from './crawl-caveats.js'
+import { crawlCaveats, crawlReachIssues } from './crawl-caveats.js'
 import { CRAWL_CANCELLED, cancellationRace } from './crawl-control.js'
 import { crawlMemoryPressure } from './crawl-memory.js'
 import type { CrawlSkipReason } from './crawl-skip-reasons.js'
-import { CrawlUrlQueue, type CrawlUrlQueueItem } from './crawl-url-queue.js'
+import {
+  CRAWL_QUERY_VARIANTS_PER_PATH,
+  CrawlUrlQueue,
+  type CrawlUrlQueueItem,
+} from './crawl-url-queue.js'
 import { verifyExternalLinks } from './external-link-checks.js'
 import { resolveLinkCountAliases } from './link-graph.js'
 import type {
@@ -151,6 +156,10 @@ export async function crawlSite(
     Math.max(1_000, config.maxPages * 5),
   )
   let queueSafetyInventoryCapped = false
+  // Queued query-string variants per path, and the variants left unqueued.
+  const queryVariantsByPath = new Map<string, number>()
+  const queryVariantSkipped = new Set<string>()
+  let renderingFallbackUrls = 0
   let failedUrls = 0
   let observedInternalLinks = 0
   let memoryLimited = false
@@ -274,6 +283,26 @@ export async function crawlSite(
         })
         return
       }
+      const parsed = new URL(normalized)
+      const pathKey = parsed.search ? `${parsed.origin}${parsed.pathname}` : ''
+      if (
+        pathKey &&
+        (queryVariantsByPath.get(pathKey) ?? 0) >= CRAWL_QUERY_VARIANTS_PER_PATH
+      ) {
+        if (
+          !queryVariantSkipped.has(normalized) &&
+          queryVariantSkipped.size < maxTrackedQueueSafetyUrls
+        ) {
+          queryVariantSkipped.add(normalized)
+          recordSkip('query-variant-limit')
+          emitStatus('url_skipped', {
+            url: normalized,
+            depth,
+            reason: 'query_variant_limit',
+          })
+        }
+        return
+      }
       if (queue.size + visited.size + inFlight.size >= config.maxPages * 5) {
         if (!queueSafetyDeferredUrls.has(normalized)) {
           if (queueSafetyDeferredUrls.size < maxTrackedQueueSafetyUrls) {
@@ -290,6 +319,12 @@ export async function crawlSite(
           }
         }
         return
+      }
+      if (pathKey) {
+        queryVariantsByPath.set(
+          pathKey,
+          (queryVariantsByPath.get(pathKey) ?? 0) + 1,
+        )
       }
       discovered.add(normalized)
       queuedUrls += 1
@@ -489,6 +524,22 @@ export async function crawlSite(
         continue
       }
       const page = result.page
+      const rendering = page.fetchDiagnostics?.rendering
+      if (rendering?.status === 'unavailable' && config.js === 'on') {
+        // An explicit request for rendering must not quietly become raw HTML.
+        throw new SeoError(
+          'INVALID_INPUT',
+          `--rendering on needs a local Chrome or Chromium browser, and none could start. ${rendering.error ?? ''} Install Chromium, or set SEO_BROWSER_EXECUTABLE_PATH to a Chromium executable, then rerun. Use --rendering auto to accept raw HTML.`
+            .replace(/\s+/g, ' ')
+            .trim(),
+        )
+      }
+      if (
+        rendering?.status === 'unavailable' ||
+        rendering?.status === 'failed'
+      ) {
+        renderingFallbackUrls += 1
+      }
       const finalUrl = normalizeUrl(page.finalUrl, config.url)
       if (!finalUrl) {
         failedUrls += 1
@@ -842,6 +893,18 @@ export async function crawlSite(
           }
         : aiSignals?.signals
 
+    const reachIssues =
+      followLinks && config.maxDepth > 0 && config.maxPages > 1 && !cancelled
+        ? crawlReachIssues({
+            startUrl: config.url,
+            pages: pages.filter(
+              (page) => page.status >= 200 && page.status < 300,
+            ),
+            crawledPages: pages.length,
+            sitemapUrlsReturned: sitemapDiscovery?.urlsReturned ?? 0,
+          })
+        : []
+
     const report = createCrawlReport({
       config,
       site,
@@ -856,6 +919,7 @@ export async function crawlSite(
       ...(externalLinkVerification ? { externalLinkVerification } : {}),
       ...(siteCheckResult ? { siteChecks: siteCheckResult.checks } : {}),
       additionalIssues: [
+        ...reachIssues,
         ...(siteCheckResult?.issues ?? []),
         ...(sitemapDiscovery
           ? sitemapHostIssues(sitemapDiscovery, config.url)
@@ -872,6 +936,9 @@ export async function crawlSite(
         queueSafetyInventoryCapped,
         originBackpressureSkippedUrls,
         memoryPressureSkippedUrls,
+        queryVariantSkippedUrls: queryVariantSkipped.size,
+        renderingFallbackUrls,
+        reachIssues,
       }),
       stats: {
         discoveredUrls: discovered.size,

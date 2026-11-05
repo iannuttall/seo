@@ -10,7 +10,9 @@ export const DR_ATTRIBUTION =
   'domain_rating: Domain Rating by Ahrefs (https://ahrefs.com/).'
 
 const ENDPOINT = 'https://api.ahrefs.com/v3/public/domain-rating-free'
-const MAX_DOMAINS = 25
+// Domains rated per call by default, and how many lookups run at once.
+const MAX_DOMAINS = 50
+const AT_ONCE = 25
 const TTL_SECONDS = 24 * 60 * 60
 const DOMAIN_FIELDS = ['domain', 'competitor_domain', 'Dn'] as const
 
@@ -60,27 +62,33 @@ async function lookup(domain: string, key: string): Promise<number | null> {
 export async function domainRatings(
   domains: string[],
   key: string | null | undefined,
+  max = MAX_DOMAINS,
 ): Promise<Map<string, number | null>> {
   const found = new Map<string, number | null>()
   if (!key) return found
   const unique = [...new Set(domains.map(bareDomain).filter(Boolean))].slice(
     0,
-    MAX_DOMAINS,
+    max,
   )
-  const values = await Promise.all(
-    unique.map((domain) => lookup(domain, key).catch(() => null)),
-  )
-  unique.forEach((domain, index) => {
-    found.set(domain, values[index] ?? null)
-  })
+  for (let start = 0; start < unique.length; start += AT_ONCE) {
+    const batch = unique.slice(start, start + AT_ONCE)
+    const values = await Promise.all(
+      batch.map((domain) => lookup(domain, key).catch(() => null)),
+    )
+    batch.forEach((domain, index) => {
+      found.set(domain, values[index] ?? null)
+    })
+  }
   return found
 }
 
 // Adds a domain_rating column after the domain column of each row that has a
-// domain and no DR yet. Rows past the first MAX_DOMAINS domains get null.
+// domain and no DR yet. Only the rows from start (the page being shown) are
+// rated, up to MAX_DOMAINS domains; the others get null.
 export async function withDomainRating(
   rows: Row[],
   key: string | null | undefined,
+  start = 0,
 ): Promise<{ rows: Row[]; added: boolean }> {
   const field = DOMAIN_FIELDS.find((name) =>
     rows.some((row) => typeof row[name] === 'string'),
@@ -89,7 +97,7 @@ export async function withDomainRating(
     return { rows, added: false }
   }
   const ratings = await domainRatings(
-    rows.map((row) => String(row[field] ?? '')),
+    rows.slice(start).map((row) => String(row[field] ?? '')),
     key,
   )
   const out = rows.map((row) => {

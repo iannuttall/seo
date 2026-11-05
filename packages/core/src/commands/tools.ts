@@ -479,7 +479,8 @@ export const SHARED_TOOLS: SharedTool[] = [
           },
           await surface.keys(),
           surface.deps,
-          more,
+          (offset, tasks) =>
+            `seo_research with the same provider, action and target, tasks ${JSON.stringify(tasks)}, detail "rows", offset ${offset}. Passing the tasks reads these answers back at no cost; without them every question is asked and paid for again`,
         )
       }
       return runResearch(input, await surface.keys(), {

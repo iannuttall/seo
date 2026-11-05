@@ -291,6 +291,9 @@ type Row = {
   impressions: number | null
   engine: string
   task: string | null
+  // The answer's task, kept after it is read, so later pages read it back
+  // for free instead of asking again.
+  ref: string | null
   cost_usd: number
 } & Answer
 
@@ -317,7 +320,9 @@ export async function runAiAnswers(
   },
   headers: Headers,
   deps: CommandDeps,
-  more: (offset: number) => string,
+  // How to ask for the next page: the same target with these tasks, which
+  // reads every answer back at no cost instead of asking again.
+  more: (offset: number, tasks: string[]) => string,
 ): Promise<CommandResult> {
   const keys = dataForSeoKeys(headers)
   const domain = registrableDomain(input.site)?.domain
@@ -345,6 +350,7 @@ export async function runAiAnswers(
     question,
     impressions,
     task: null,
+    ref: null,
     cost_usd: 0,
     ...empty,
   })
@@ -365,6 +371,7 @@ export async function runAiAnswers(
         engine: engine.name,
         result: 'pending',
         task: value,
+        ref: value,
       }
       rows.push(row)
       waiting.push({ row, engine, id: match[2] as string })
@@ -439,6 +446,7 @@ export async function runAiAnswers(
           }
           row.result = 'pending'
           row.task = `${engine.name}:${task.id}`
+          row.ref = row.task
           waiting.push({ row, engine, id: task.id })
         })
       }),
@@ -495,6 +503,7 @@ export async function runAiAnswers(
   const count = (result: Answer['result']) =>
     rows.filter((row) => row.result === result).length
   const left = rows.filter((row) => row.task).map((row) => row.task as string)
+  const refs = rows.flatMap((row) => (row.ref ? [row.ref] : []))
   // Which other sites the answers cite, by how many answers cite each.
   const cites = new Map<string, number>()
   for (const row of rows) {
@@ -552,7 +561,7 @@ export async function runAiAnswers(
       limit: PAGE_SIZE,
       detail: input.detail,
       notes,
-      more,
+      more: (offset) => more(offset, refs),
     }),
     data: {
       provider: 'dataforseo',
@@ -567,6 +576,9 @@ export async function runAiAnswers(
       questions: [...new Set(rows.map((row) => row.question))],
       costUsd: cost,
       pendingTasks: left,
+      // Every answer's task: pass them as tasks to page through these
+      // answers again at no cost.
+      tasks: refs,
       citedSites: topCited.map(([host, answers]) => ({ host, answers })),
       total: rows.length,
       offset: input.offset,

@@ -1,6 +1,7 @@
 // Build-time sharing images. After `astro build`, every prerendered page gets
 // a PNG beside its HTML (`/pricing/index.html` -> `/pricing/index.png`),
-// drawn by Takumi from the page's H1 (else its og:title). Pages kept out of
+// drawn by Takumi from the page's H1 (else its og:title) over art: a post's
+// own cover, else its section's art in src/assets/og. Pages kept out of
 // search point at the home page's card instead.
 // The build fails if a page's og:image does not match the file written.
 import { access, readFile, writeFile } from 'node:fs/promises'
@@ -15,10 +16,25 @@ import {
   OG_IMAGE_WIDTH,
   type OgCoverAlign,
   ogCardFonts,
-  ogCardImages,
-  renderOgCard,
   renderOgCoverCard,
 } from './og-card'
+
+// Each section's card art. Pages outside these sections use the home art.
+const SECTION_ART = new Set([
+  'alternatives',
+  'docs',
+  'features',
+  'guides',
+  'integrations',
+  'pricing',
+  'tools',
+])
+
+const sectionArtFile = (pathname: string) => {
+  const section = pathname.replace(/^\/+/, '').split('/')[0] ?? ''
+  const name = SECTION_ART.has(section) ? section : 'home'
+  return fileURLToPath(new URL(`../assets/og/${name}.webp`, import.meta.url))
+}
 
 const ENTITIES: Record<string, string> = {
   amp: '&',
@@ -107,29 +123,23 @@ export const ogImages = (): AstroIntegration => ({
             `${page.pathname}: og:image is ${image}, but the card is written to ${expected}`,
           )
         }
-        // A page with a cover image gets it as the card's background.
+        // A post's own cover is the card's background; other pages get
+        // their section's art.
         const cover = readOgCover(html)
         const coverFile = cover
           ? path.join(outDir, decodeEntities(cover.src).replace(/^\/+/, ''))
-          : null
-        if (coverFile && !(await exists(coverFile))) {
-          throw new Error(`${page.pathname}: cover ${cover?.src} is missing`)
+          : sectionArtFile(page.pathname)
+        if (!(await exists(coverFile))) {
+          throw new Error(`${page.pathname}: card art ${coverFile} is missing`)
         }
         const png = await render(
-          coverFile
-            ? renderOgCoverCard({ title, align: cover?.align })
-            : renderOgCard({ title, pathname: page.pathname }),
+          renderOgCoverCard({ title, align: cover?.align }),
           {
             width: OG_IMAGE_WIDTH,
             height: OG_IMAGE_HEIGHT,
             format: OG_IMAGE_FORMAT,
             fonts: ogCardFonts,
-            images: coverFile
-              ? [
-                  ...ogCardImages,
-                  { src: OG_COVER_SRC, data: () => readFile(coverFile) },
-                ]
-              : ogCardImages,
+            images: [{ src: OG_COVER_SRC, data: () => readFile(coverFile) }],
           },
         )
         await writeFile(imageFile, png)

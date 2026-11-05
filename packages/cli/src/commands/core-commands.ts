@@ -528,6 +528,10 @@ export const researchCommand = defineCommand({
         'ai_answers only: comma-separated tasks an earlier run returned as not ready.',
     },
     target: { type: 'string', description: 'Domain or URL.' },
+    competitors: {
+      type: 'string',
+      description: 'link_gap only: 2 to 5 comma-separated competitor domains.',
+    },
     country: {
       type: 'string',
       description: 'Two-letter country code. Default us.',
@@ -569,6 +573,7 @@ export const researchCommand = defineCommand({
     }
     const keywords = csvArg(args.keywords) ?? []
     const target = stringArg(args.target)
+    const competitors = csvArg(args.competitors) ?? []
     const country = stringArg(args.country)
     if (action === 'ai_answers') {
       if (provider !== 'dataforseo') {
@@ -613,6 +618,7 @@ export const researchCommand = defineCommand({
           action,
           keywords,
           target,
+          competitors,
           country,
           detail: detailArg(args),
           offset: numberArg(args.offset),
@@ -625,6 +631,7 @@ export const researchCommand = defineCommand({
               provider,
               keywords: keywords.join(',') || undefined,
               target,
+              competitors: competitors.join(',') || undefined,
               country,
               detail: 'rows',
               offset,

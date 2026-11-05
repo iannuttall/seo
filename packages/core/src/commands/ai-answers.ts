@@ -171,6 +171,25 @@ const hostOf = (url: string) => {
   }
 }
 
+// Hosts that show up in answers without being a source: DataForSEO's own
+// API, image hosts and CDNs, and placeholder domains written into examples.
+const NOT_SOURCES = [
+  'dataforseo.com',
+  'images.openai.com',
+  'gstatic.com',
+  'googleusercontent.com',
+  'ggpht.com',
+  'example.com',
+  'example.org',
+  'example.net',
+]
+const IMAGE = /\.(png|jpe?g|gif|webp|avif|svg)(\?|#|$)/i
+const isSource = (url: string) => {
+  const host = hostOf(url)
+  if (!host || IMAGE.test(url)) return false
+  return !NOT_SOURCES.some((name) => host === name || host.endsWith(`.${name}`))
+}
+
 const empty = { cited_url: null, sources: [], model: null, answered_at: null }
 
 // What a finished task says about the site.
@@ -199,7 +218,7 @@ function judge(
   const sources = [
     ...new Set(
       all
-        .filter((url) => !onSite(url, site.domain))
+        .filter((url) => !onSite(url, site.domain) && isSource(url))
         .map(hostOf)
         .filter((host): host is string => Boolean(host)),
     ),

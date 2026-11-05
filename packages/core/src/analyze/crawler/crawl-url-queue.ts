@@ -1,3 +1,6 @@
+// Tracking parameters can mint endless copies of one page, e.g. `/?ref=...`.
+export const CRAWL_QUERY_VARIANTS_PER_PATH = 5
+
 export type CrawlUrlQueueItem = {
   url: string
   depth: number

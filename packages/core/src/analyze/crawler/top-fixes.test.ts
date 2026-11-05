@@ -233,3 +233,42 @@ test('topFixes does not turn partial GSC evidence into zero visibility', () => {
   assert.match(reason, /evidence is partial/)
   assert.doesNotMatch(reason, /No affected URL has joined/)
 })
+
+test('topFixes puts single-page crawl reach above page findings', () => {
+  const url = 'https://example.com/'
+  const report = createCrawlReport({
+    config: { url },
+    pages: [
+      {
+        url,
+        finalUrl: url,
+        status: 200,
+        indexable: true,
+        wordCount: 0,
+        contentHash: 'home',
+        outgoingInternalCount: 0,
+      },
+    ],
+    issues: [
+      {
+        ruleId: 'missing_title',
+        title: 'Title missing',
+        category: 'metadata',
+        severity: 'high',
+        url,
+      },
+      {
+        ruleId: 'crawl_single_page_reach',
+        title: 'Crawl could reach only the start page',
+        category: 'links',
+        severity: 'high',
+        url,
+      },
+    ],
+  })
+
+  assert.deepEqual(
+    topFixes(report).map((fix) => fix.ruleId),
+    ['crawl_single_page_reach', 'missing_title'],
+  )
+})

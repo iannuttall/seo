@@ -88,6 +88,14 @@ const VALUE_WEIGHT: Record<RuleSeverity, number> = {
   low: 0.15,
 }
 
+// Findings about the crawl's own reach come first: they decide whether the
+// other findings can stand for the site at all.
+const CRAWL_REACH_RULES = new Set<string>(['crawl_single_page_reach'])
+
+function reachRank(ruleId: string): number {
+  return CRAWL_REACH_RULES.has(ruleId) ? 0 : 1
+}
+
 function matchesPattern(pattern: string, value: string): boolean {
   if (!pattern.includes('*')) return value.includes(pattern)
   const parts = pattern.split('*')
@@ -268,6 +276,7 @@ export function topFixes(
   return fixes
     .sort(
       (a, b) =>
+        reachRank(a.ruleId) - reachRank(b.ruleId) ||
         b.score - a.score ||
         SEVERITY_SCORE[b.severity] - SEVERITY_SCORE[a.severity] ||
         b.count - a.count ||

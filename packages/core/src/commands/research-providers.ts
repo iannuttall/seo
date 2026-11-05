@@ -14,12 +14,15 @@ export type ResearchAction =
   | 'serp'
   | 'competitors'
   | 'backlinks'
+  | 'link_gap'
   | 'ai_answers'
 
 export type ResearchInput = {
   action: Exclude<ResearchAction, 'ai_answers'>
   keywords: string[]
   target: string
+  // link_gap only: the sites to compare the target with.
+  competitors?: string[]
   country: string
   limit: number
 }
@@ -108,6 +111,12 @@ function requireInput(input: ResearchInput) {
   if (needsKeywords && input.keywords.length === 0) {
     throw new CommandError('INVALID_INPUT', `${input.action} needs keywords.`)
   }
+  if (input.action === 'link_gap' && !input.target) {
+    throw new CommandError(
+      'INVALID_INPUT',
+      'link_gap needs a target domain and competitors.',
+    )
+  }
   if (!needsKeywords && !input.target) {
     throw new CommandError(
       'INVALID_INPUT',
@@ -117,13 +126,17 @@ function requireInput(input: ResearchInput) {
 }
 
 // Rows, plus what DataForSEO says the calls cost (null for Ahrefs, whose
-// responses carry no cost), whether any call came back partial, and the
-// keywords that failed while others answered.
+// responses carry no cost), whether any call came back partial, the
+// keywords that failed while others answered, and the keywords the provider
+// answered with no data, so an empty answer is never silent.
 export type ResearchRows = {
   rows: Row[]
   costUsd: number | null
   partial: boolean
   missed: string[]
+  noData: string[]
+  // link_gap: the authority the gap stops at, when a site's list was cut.
+  floor?: { field: string; value: number }
 }
 
 // Each keyword's rows in order. A keyword that fails is listed in missed
@@ -155,14 +168,17 @@ export async function research(
   input: ResearchInput,
 ): Promise<ResearchRows> {
   requireInput(input)
+  if (input.action === 'link_gap') return linkGap(provider, headers, input)
   const keys = need(headers, provider)
   if (provider === 'dataforseo') return dataForSeo(keys, input)
   const missed: string[] = []
+  const rows = await ahrefs(keys[0] ?? '', input, missed)
   return {
-    rows: await ahrefs(keys[0] ?? '', input, missed),
+    rows,
     costUsd: null,
     partial: false,
     missed,
+    noData: withoutData(input, rows, missed, 100),
   }
 }
 
@@ -253,6 +269,7 @@ export async function dataForSeoTask(
   cost: number
   result: Record<string, unknown> | null
   partial: boolean
+  noResults?: boolean
 }> {
   const response = await call(
     'dataforseo',
@@ -277,7 +294,12 @@ export async function dataForSeoTask(
   // 40102 is DataForSEO's "No Search Results": an empty answer, not an
   // error. 40106 is a result with some pages missing.
   if (result?.status_code === NO_RESULTS) {
-    return { cost: result.cost ?? 0, result: null, partial: false }
+    return {
+      cost: result.cost ?? 0,
+      result: null,
+      partial: false,
+      noResults: true,
+    }
   }
   if (
     !result ||
@@ -382,7 +404,32 @@ async function dataForSeo(
     costUsd: Math.round(spent.cost * 10_000) / 10_000,
     partial: spent.partial,
     missed: spent.missed,
+    noData: withoutData(input, rows, spent.missed, 700),
   }
+}
+
+// The keywords asked for that got no row and did not fail: the provider
+// has no data for them, or Google showed no results.
+function withoutData(
+  input: ResearchInput,
+  rows: Row[],
+  missed: string[],
+  keywordLimit: number,
+): string[] {
+  if (input.action === 'keyword_metrics' || input.action === 'serp') {
+    const max = input.action === 'serp' ? 5 : keywordLimit
+    const answered = new Set(
+      rows.map((row) => String(row.keyword ?? '').toLowerCase()),
+    )
+    const failed = new Set(missed)
+    return input.keywords
+      .slice(0, max)
+      .filter(
+        (keyword) =>
+          !failed.has(keyword) && !answered.has(keyword.toLowerCase()),
+      )
+  }
+  return []
 }
 
 async function dataForSeoRows(
@@ -398,7 +445,11 @@ async function dataForSeoRows(
     )
   }
   const market = dataForSeoMarket(input.country, language)
-  const post = async (path: string, task: Record<string, unknown>) => {
+  const post = async (
+    path: string,
+    task: Record<string, unknown>,
+    attempts = 1,
+  ): Promise<Record<string, unknown>[]> => {
     const done = await dataForSeoTask(keys, path, {
       ...market,
       ...task,
@@ -408,6 +459,9 @@ async function dataForSeoRows(
     })
     spent.cost += done.cost
     spent.partial ||= done.partial
+    // Google sometimes shows DataForSEO no results for a search that has
+    // them; a second request usually gets the page.
+    if (done.noResults && attempts > 1) return post(path, task, attempts - 1)
     return (done.result?.items as Record<string, unknown>[] | undefined) ?? []
   }
   const get = (value: unknown, path: string): unknown =>
@@ -468,32 +522,34 @@ async function dataForSeoRows(
       input.keywords.slice(0, 5),
       spent.missed,
       async (keyword) => {
-        const items = await post('v3/serp/google/organic/live/advanced', {
-          keyword,
-          depth: Math.min(input.limit, 100),
-        })
+        const items = await post(
+          'v3/serp/google/organic/live/advanced',
+          { keyword, depth: Math.min(input.limit, 100) },
+          2,
+        )
         return items
           .filter((item) => item.type === 'organic')
           .map((item) => {
-            const row = pick(item, {
+            const row: Row = pick(item, {
               position: 'rank_absolute',
               url: 'url',
               domain: 'domain',
               title: 'title',
             })
-            // Live requests leave about half of Google's goto redirects
-            // unresolved. The page is then unknown, but the breadcrumb
-            // still shows the site when it starts with one.
+            // DataForSEO leaves most of Google's goto redirects unresolved,
+            // and they resolve only in a browser. The page is then unknown,
+            // but Google's breadcrumb still shows the site and the start of
+            // the path.
             if (
               /^https?:\/\/(www\.)?google\.[a-z.]+\/goto\b/.test(
                 String(row.url),
               )
             ) {
-              const site = /^https?:\/\/([^/\s›]+)/.exec(
-                String(item.breadcrumb ?? ''),
-              )
+              const crumb = String(item.breadcrumb ?? '')
+              const site = /^https?:\/\/([^/\s›]+)/.exec(crumb)
               row.url = null
               row.domain = site?.[1] ?? null
+              row.url_hint = site ? crumb.replace(/^https?:\/\//, '') : null
             }
             return { keyword, ...row }
           })
@@ -532,6 +588,101 @@ async function dataForSeoRows(
       organic_etv: 'full_domain_metrics.organic.etv',
     }),
   )
+}
+
+// How many referring domains link_gap reads per site, highest authority
+// first, and how many competitors it compares.
+const GAP_DOMAINS = 1000
+const GAP_COMPETITORS = 5
+
+// Referring domains that link to two or more competitors and not to the
+// target. Each site's list is its top GAP_DOMAINS referring domains by the
+// provider's own authority (Ahrefs Domain Rating, DataForSEO rank). When a
+// list is cut there, a domain below its lowest authority may be missing
+// from it, so the gap stops at that authority and says so.
+async function linkGap(
+  provider: ResearchProvider,
+  headers: Headers,
+  input: ResearchInput,
+): Promise<ResearchRows> {
+  const target = bareTarget(input.target).replace(/^www\./, '')
+  const competitors = [
+    ...new Set(
+      (input.competitors ?? []).map((site) =>
+        bareTarget(site).replace(/^www\./, ''),
+      ),
+    ),
+  ].filter((site) => site && site !== target)
+  if (competitors.length < 2 || competitors.length > GAP_COMPETITORS) {
+    throw new CommandError(
+      'INVALID_INPUT',
+      `link_gap needs a target and 2 to ${GAP_COMPETITORS} competitors.`,
+    )
+  }
+  const score = provider === 'ahrefs' ? 'domain_rating' : 'rank'
+  const sites = [target, ...competitors]
+  const lists: Row[][] = []
+  let cost = 0
+  let partial = false
+  for (const site of sites) {
+    const got = await research(provider, headers, {
+      ...input,
+      action: 'backlinks',
+      target: site,
+      limit: GAP_DOMAINS,
+    })
+    cost += got.costUsd ?? 0
+    partial ||= got.partial
+    lists.push(got.rows)
+  }
+  const domainOf = (row: Row) =>
+    String(row.domain ?? '')
+      .toLowerCase()
+      .replace(/^www\./, '')
+  const authority = (row: Row) => Number(row[score] ?? 0)
+  const floors = lists
+    .filter((rows) => rows.length >= GAP_DOMAINS)
+    .map((rows) => Math.min(...rows.map(authority)))
+  const floor = floors.length ? Math.max(...floors) : null
+  const own = new Set((lists[0] ?? []).map(domainOf))
+  const found = new Map<string, { value: number; sites: string[] }>()
+  competitors.forEach((site, index) => {
+    for (const row of lists[index + 1] ?? []) {
+      const domain = domainOf(row)
+      if (!domain || own.has(domain) || domain === target) continue
+      if (domain.endsWith(`.${target}`)) continue
+      const entry = found.get(domain) ?? { value: 0, sites: [] }
+      entry.value = Math.max(entry.value, authority(row))
+      if (!entry.sites.includes(site)) entry.sites.push(site)
+      found.set(domain, entry)
+    }
+  })
+  const rows = [...found.entries()]
+    .filter(
+      ([, entry]) =>
+        entry.sites.length >= 2 && (floor === null || entry.value >= floor),
+    )
+    .sort(
+      ([a, left], [b, right]) =>
+        right.value - left.value ||
+        right.sites.length - left.sites.length ||
+        a.localeCompare(b),
+    )
+    .map(([domain, entry]) => ({
+      domain,
+      [score]: entry.value,
+      competitors_linking: entry.sites.length,
+      links_to: entry.sites.join(' '),
+    }))
+  return {
+    rows,
+    costUsd:
+      provider === 'dataforseo' ? Math.round(cost * 10_000) / 10_000 : null,
+    partial,
+    missed: [],
+    noData: [],
+    ...(floor !== null ? { floor: { field: score, value: floor } } : {}),
+  }
 }
 
 // A target with a path is one page; otherwise it is a whole site.

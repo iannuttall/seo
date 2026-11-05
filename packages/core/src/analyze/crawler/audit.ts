@@ -175,43 +175,83 @@ function normalizedMetadata(value?: string): string | undefined {
   return normalized || undefined
 }
 
-function metadataDuplicates(
+type DuplicateGroup = {
+  count: number
+  sampleUrls: string[]
+  value: string
+  urls: Set<string>
+}
+
+/**
+ * A page whose canonical names another crawled page in its group is already
+ * handled. A group counts only when two or more of its pages are
+ * self-canonical or declare no canonical, and only those pages are reported.
+ */
+function duplicateGroups(
   pages: CrawlPageSnapshot[],
-  read: (page: CrawlPageSnapshot) => string | undefined,
-): Map<string, { count: number; sampleUrls: string[]; value: string }> {
-  const counts = new Map<
+  read: (page: CrawlPageSnapshot) => { key: string; value: string } | undefined,
+): Map<string, DuplicateGroup> {
+  const grouped = new Map<
     string,
-    { count: number; sampleUrls: string[]; value: string }
+    { value: string; pages: CrawlPageSnapshot[] }
   >()
   for (const page of pages) {
     if (!isAuditableHtmlPage(page)) continue
-    const raw = read(page)?.trim()
-    const key = normalizedMetadata(raw)
-    if (!key || !raw) continue
-    const existing = counts.get(key) ?? { count: 0, sampleUrls: [], value: raw }
-    existing.count += 1
-    if (existing.sampleUrls.length < 10) existing.sampleUrls.push(page.url)
-    counts.set(key, existing)
+    const entry = read(page)
+    if (!entry) continue
+    const group = grouped.get(entry.key) ?? { value: entry.value, pages: [] }
+    group.pages.push(page)
+    grouped.set(entry.key, group)
   }
-  return new Map([...counts].filter(([, value]) => value.count > 1))
+  const duplicates = new Map<string, DuplicateGroup>()
+  for (const [key, group] of grouped) {
+    if (group.pages.length < 2) continue
+    const groupUrls = new Set<string>()
+    for (const page of group.pages) {
+      for (const value of [page.url, page.finalUrl]) {
+        const url = urlKey(value)
+        if (url) groupUrls.add(url)
+      }
+    }
+    const counted = group.pages.filter((page) => {
+      const canonical = urlKey(page.canonical)
+      return (
+        !canonical ||
+        canonical === urlKey(page.url) ||
+        canonical === urlKey(page.finalUrl) ||
+        !groupUrls.has(canonical)
+      )
+    })
+    if (counted.length < 2) continue
+    duplicates.set(key, {
+      count: counted.length,
+      sampleUrls: counted.slice(0, 10).map((page) => page.url),
+      value: group.value,
+      urls: new Set(counted.map((page) => page.url)),
+    })
+  }
+  return duplicates
+}
+
+function metadataDuplicates(
+  pages: CrawlPageSnapshot[],
+  read: (page: CrawlPageSnapshot) => string | undefined,
+): Map<string, DuplicateGroup> {
+  return duplicateGroups(pages, (page) => {
+    const value = read(page)?.trim()
+    const key = normalizedMetadata(value)
+    return key && value ? { key, value } : undefined
+  })
 }
 
 function contentDuplicates(
   pages: CrawlPageSnapshot[],
-): Map<string, { count: number; sampleUrls: string[] }> {
-  const counts = new Map<string, { count: number; sampleUrls: string[] }>()
-  for (const page of pages) {
-    if (!isAuditableHtmlPage(page)) continue
-    if (page.wordCount < 20 || !page.mainContentHash) continue
-    const existing = counts.get(page.mainContentHash) ?? {
-      count: 0,
-      sampleUrls: [],
-    }
-    existing.count += 1
-    if (existing.sampleUrls.length < 10) existing.sampleUrls.push(page.url)
-    counts.set(page.mainContentHash, existing)
-  }
-  return new Map([...counts].filter(([, value]) => value.count > 1))
+): Map<string, DuplicateGroup> {
+  return duplicateGroups(pages, (page) =>
+    page.wordCount >= 20 && page.mainContentHash
+      ? { key: page.mainContentHash, value: page.mainContentHash }
+      : undefined,
+  )
 }
 
 const QUERY_STOP_WORDS = new Set([
@@ -648,7 +688,7 @@ export function auditCrawlPages(
         }),
       )
     }
-    if (title && duplicateTitle) {
+    if (title && duplicateTitle?.urls.has(page.url)) {
       issues.push(
         issue('title_duplicate', page, duplicateTitle.value, {
           title,
@@ -665,7 +705,7 @@ export function auditCrawlPages(
     if (!metaDescription) {
       issues.push(issue('missing_meta_description', page))
     }
-    if (metaDescription && duplicateDescription) {
+    if (metaDescription && duplicateDescription?.urls.has(page.url)) {
       issues.push(
         issue('meta_description_duplicate', page, duplicateDescription.value, {
           metaDescription,
@@ -800,7 +840,7 @@ export function auditCrawlPages(
     const contentDuplicate = page.mainContentHash
       ? duplicateContent.get(page.mainContentHash)
       : undefined
-    if (contentDuplicate) {
+    if (contentDuplicate?.urls.has(page.url)) {
       issues.push(
         issue('duplicate_content', page, 'Duplicate main content', {
           mainContentHash: page.mainContentHash,

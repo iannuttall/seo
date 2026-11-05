@@ -1,6 +1,7 @@
 import assert from 'node:assert/strict'
 import { test } from 'node:test'
 import type { PageFetchResult } from '../types.js'
+import { resolveBrowserExecutable } from './page-fetcher/browser-path.js'
 import { JavaScriptRenderingError } from './page-fetcher/rendered.js'
 import type { PageRenderer } from './page-fetcher/types.js'
 import { fetchPage } from './page-fetcher.js'
@@ -136,5 +137,47 @@ test('retains raw provenance alongside successful rendered evidence', async () =
   assert.equal(
     result.diagnostics.rendering?.documentDifference?.rendered.title,
     'Rendered page',
+  )
+})
+
+test('finds the newest browser that agent-browser or Playwright installed', () => {
+  const home = '/home/example'
+  const listings: Record<string, string[]> = {
+    [`${home}/.agent-browser/browsers`]: [
+      'chrome-99.0.1',
+      'chrome-157.0.8103.38',
+      'chrome-156.0.8078.73',
+    ],
+    [`${home}/.cache/ms-playwright`]: ['chromium-1200', 'chromium-1300'],
+  }
+  const installed = new Set([
+    `${home}/.agent-browser/browsers/chrome-156.0.8078.73/chrome`,
+    `${home}/.agent-browser/browsers/chrome-157.0.8103.38/chrome`,
+    `${home}/.cache/ms-playwright/chromium-1300/chrome-linux64/chrome`,
+  ])
+  const resolve = (available: Set<string>) =>
+    resolveBrowserExecutable('/missing/playwright/chrome', {
+      environment: {},
+      platform: 'linux',
+      homeDirectory: home,
+      fileExists: (path) => available.has(path),
+      listDirectory: (path) => listings[path] ?? [],
+    })
+
+  assert.deepEqual(resolve(installed), {
+    status: 'available',
+    browser: {
+      path: `${home}/.agent-browser/browsers/chrome-157.0.8103.38/chrome`,
+      source: 'agent-browser-cache',
+      product: 'agent-browser Chrome for Testing',
+    },
+  })
+  const playwrightOnly = new Set(
+    [...installed].filter((path) => path.includes('ms-playwright')),
+  )
+  const fallback = resolve(playwrightOnly)
+  assert.equal(
+    fallback.status === 'available' ? fallback.browser.path : undefined,
+    `${home}/.cache/ms-playwright/chromium-1300/chrome-linux64/chrome`,
   )
 })

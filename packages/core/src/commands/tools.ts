@@ -439,6 +439,11 @@ export const SHARED_TOOLS: SharedTool[] = [
       action: z.enum(RESEARCH_ACTIONS),
       keywords: z.array(z.string().min(1)).max(100).default([]),
       target: z.string().default('').describe('Domain or URL.'),
+      competitors: z
+        .array(z.string().min(1))
+        .max(5)
+        .default([])
+        .describe('link_gap only: 2 to 5 competitor domains.'),
       tasks: z
         .array(z.string().regex(AI_ANSWER_TASK_PATTERN))
         .max(30)

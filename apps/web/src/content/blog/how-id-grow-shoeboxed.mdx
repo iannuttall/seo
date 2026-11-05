@@ -1,0 +1,528 @@
+---
+title: How I'd grow Shoeboxed with SEO
+description: An SEO teardown of Shoeboxed, the receipt scanning and mileage app. The free tax tools it just built, the searches they target and what they need to rank.
+heading: How I'd grow Shoeboxed
+lead: Shoeboxed has just built free pages for some of the biggest searches small business owners make, led by the IRS mileage rate at 109,000 US searches a month. Ahrefs finds none of them in the top 100 yet, while a page on a site with about half its Domain Rating gets 7,500 visits a month from the same searches.
+date: '2026-11-05'
+company: Shoeboxed
+x:
+  company: Shoeboxed
+draft: false
+cover:
+  alt: A cardboard shoebox with its lid flipped open drives down an open highway as a delivery van, trailing paper receipts past mile markers toward tall blank road signs.
+  title: left
+---
+
+export const beforeFaq = `<pre>&lt;script type="application/ld+json"&gt;
+{
+  "@type": "FAQPage",
+  "mainEntity": [{
+    "name": "Does the IRS accept
+      receipt images?",
+    "acceptedAnswer": {
+      "text": "&lt;p&gt; IRS acc…
+      ↑ a raw line break inside
+        the string, line 38
+
+JSON.parse: Bad control
+character in string literal</pre>`
+
+export const afterFaq = `<pre>&lt;script type="application/ld+json"&gt;
+{
+  "@type": "FAQPage",
+  "mainEntity": [{
+    "name": "Does the IRS accept
+      receipt images?",
+    "acceptedAnswer": {
+      "text": "IRS accepts …\\n…"
+      ↑ written with JSON.stringify
+        (or to_json in Rails)
+
+JSON.parse: OK</pre>`
+
+export const beforeHelp = `<pre>GET /support/how-do-i-integrate-with-quickbooks-online
+200 OK
+
+&lt;title&gt;How do I integrate with QuickBooks
+  Online? — Shoeboxed Help Center&lt;/title&gt;
+&lt;meta name="robots" content="noindex, follow"&gt;
+no canonical tag
+
+The same on /support and all 49
+help articles in the crawl.</pre>`
+
+export const afterHelp = `<pre>GET /support/how-do-i-integrate-with-quickbooks-online
+200 OK
+
+&lt;title&gt;Shoeboxed and QuickBooks Online:
+  connect and export receipts&lt;/title&gt;
+&lt;link rel="canonical" href="https://www.shoeboxed.com
+  /support/how-do-i-integrate-with-quickbooks-online"&gt;
+
+noindex only on pages a signed-out
+visitor shouldn't land on</pre>`
+
+export const beforeUtm = `<pre>&lt;a href="/pricing/?utm_source=blog
+  &amp;utm_medium=content
+  &amp;utm_campaign=blog-receipt-book"&gt;
+
+&lt;a href="/features/?utm_source=blog
+  &amp;utm_medium=article&amp;utm_campaign=utm"&gt;
+
+&lt;a href="/home?utm_source=blog…"&gt;</pre>`
+
+export const afterUtm = `<pre>&lt;a href="/pricing"&gt;
+
+&lt;a href="/features"&gt;
+
+&lt;a href="/"&gt;
+
+Blog-to-pricing clicks are still
+counted in analytics by the landing
+page and its referrer.</pre>`
+
+[Shoeboxed](https://www.shoeboxed.com/) turns receipts into tax records. Small business owners snap receipts with the app, forward them by email, or stuff the paper ones into a prepaid Magic Envelope and mail it. Shoeboxed scans them, has a person check the data, and files each one by tax category. The same app tracks mileage in the background.
+
+It makes money from subscriptions, from $9 a month with a 30-day money-back guarantee. It was founded in 2007, and its pricing page says more than 552,000 small businesses have used it. Doug Breaker owns and runs it, and he asked me how I'd grow it, adding "We have a DR of 73." Ahrefs agrees: a Domain Rating of 73, from about 3,750 referring domains. That's the same as MileIQ and more than Everlance (68), two of the mileage apps it competes with.
+
+Its buyers are sole proprietors, 1099 contractors and small business owners who file a Schedule C, plus the bookkeepers who do it for them. Their searches are easy to name: what's the mileage rate, what can I deduct, how do I keep receipts, and which app should I use.
+
+## Most of Shoeboxed's search traffic lands on spreadsheet templates
+
+Ahrefs estimates Shoeboxed gets about 10,000 visits a month from Google. This map shows where they land.
+
+<TrafficMap
+  caption="Estimated Google visits to shoeboxed.com and its subdomains by kind of page, 5 November 2026 (Ahrefs top pages, all countries, 250 pages). Blue pages reach people who track business expenses."
+  items={[
+    { label: "Spreadsheet and template posts", value: 3868, tone: "sells", note: "984 on the small business expense spreadsheet" },
+    { label: "Homepage, product pages and login", value: 1959, tone: "brand", note: "Brand searches, plus receipt app searches where Google's AI Overview links the homepage" },
+    { label: "Store receipt lookups", value: 1734, tone: "waste", note: "750 on the Walmart receipt post, from shoppers" },
+    { label: "Receipt and bookkeeping explainers", value: 1566, tone: "other", note: "540 on how to fill in a receipt book" },
+    { label: "529 college cost pages", value: 505, tone: "waste" },
+    { label: "Mileage", value: 327, tone: "sells", note: "303 on the Canadian mileage rate post" },
+  ]}
+/>
+
+The template posts are the closest thing Shoeboxed has to non-brand buyers. Someone who searches for a "business expense spreadsheet" is tracking receipts by hand, and Shoeboxed already has a page for them (Shoeboxed vs spreadsheets). Brand demand is there too. "shoeboxed" gets about 600 US searches a month, so Google already knows Shoeboxed as a brand, and that makes new non-brand pages easier to rank.
+
+The map is a lot smaller than it was. Shoeboxed got about 57,800 visits a month in August 2025.
+
+<VerticalBars
+  caption="Estimated monthly Google visits to shoeboxed.com and its subdomains, January 2025 to November 2026 (Ahrefs)."
+  unit="visits"
+  highlight={["Nov 26"]}
+  data={[{"label": "Jan 25", "value": 53605}, {"label": "Feb 25", "value": 55843}, {"label": "Mar 25", "value": 44077}, {"label": "Apr 25", "value": 42047}, {"label": "May 25", "value": 36833}, {"label": "Jun 25", "value": 32065}, {"label": "Jul 25", "value": 42886}, {"label": "Aug 25", "value": 57783}, {"label": "Sep 25", "value": 55196}, {"label": "Oct 25", "value": 53202}, {"label": "Nov 25", "value": 48969}, {"label": "Dec 25", "value": 46426}, {"label": "Jan 26", "value": 41619}, {"label": "Feb 26", "value": 30842}, {"label": "Mar 26", "value": 24843}, {"label": "Apr 26", "value": 15826}, {"label": "May 26", "value": 11706}, {"label": "Jun 26", "value": 8066}, {"label": "Jul 26", "value": 7444}, {"label": "Aug 26", "value": 10226}, {"label": "Sep 26", "value": 9061}, {"label": "Oct 26", "value": 8841}, {"label": "Nov 26", "value": 9068}]}
+  markers={[{"at": "Oct 25", "text": "The Excel expense template post peaks at 7,720 visits"}, {"at": "Jun 26", "text": "The same post is at 194"}]}
+/>
+
+Two things happened. The first was deliberate: Shoeboxed removed or merged posts that had nothing to do with receipts for a business, such as store return policies and accounting jokes. Those posts brought shoppers, not buyers, and Ahrefs finds almost no links to them, so cutting them cost little.
+
+The second was a ranking drop. The Excel expense template post still exists, and it ranked third for "expense report template excel" in September 2025. Today it's outside the top 15, behind Microsoft and Smartsheet. The Google Sheets tracker went from third to eighth for "expense tracker google sheets".
+
+The good news is in the footer. Shoeboxed has spent 2026 building free tools for the biggest searches its buyers make, and they haven't started ranking yet.
+
+## The four changes that bring most of the gain
+
+1. Get the new IRS mileage rate calculator ranking. "irs mileage rate 2026" gets 109,000 US searches a month, and pages with 2 to 7 referring domains get 4,600 to 7,500 visits a month from it.
+2. Finish the Schedule C and per diem sections. "schedule c" gets 66,000 US searches a month at a difficulty of 14, and the Schedule C index page returns a 404.
+3. Turn the AI Overview citation for "receipt scanner app" into organic rankings, with comparison pages and a business card scanning page.
+4. Let Google and AI answers read the help center. All 49 help articles are marked noindex.
+
+Then a few smaller fixes and a links plan to help all of it rank.
+
+## 1. Mileage: the biggest search in Shoeboxed's market
+
+People who drive for work search for the IRS rate every time it changes. In 2026 it changed twice, from 72.5 cents a mile in January to 76 cents from 1 July. These are the searches, with Ahrefs' US volumes.
+
+<KeywordTable
+  caption="Searches for the mileage rate and mileage logs (Ahrefs, US, November 2026). Shoeboxed ranks in the top 100 for none of the rate searches."
+  sortBy="volume"
+  columns={[{ key: 'keyword', label: 'Search', format: 'text' }, { key: 'volume', label: 'US searches', format: 'number', short: 'US' }, { key: 'difficulty', label: 'Difficulty', format: 'number', short: 'KD' }, { key: 'sb', label: 'Shoeboxed today', format: 'text', short: 'Today' }]}
+  rows={[
+    { keyword: 'irs mileage rate 2026', volume: 109000, difficulty: 29, sb: 'Not in top 100' },
+    { keyword: 'mileage rate 2026', volume: 37000, difficulty: 1, sb: 'Not in top 100' },
+    { keyword: 'irs mileage rate 2025', volume: 37000, difficulty: 4, sb: 'Not in top 100' },
+    { keyword: 'irs mileage rate', volume: 6200, difficulty: 28, sb: 'Not in top 100' },
+    { keyword: 'mileage reimbursement calculator', volume: 1500, difficulty: 5, sb: 'Not in top 100' },
+    { keyword: 'mileage log', volume: 1400, difficulty: 10, sb: 'Not in top 100' },
+    { keyword: 'mileage log template', volume: 900, difficulty: 2, sb: 'Not in top 100' },
+    { keyword: 'standard mileage rate', volume: 700, difficulty: 24, sb: 'Not in top 100' },
+    { keyword: 'how to track mileage for taxes', volume: 500, difficulty: 5, sb: 'Not in top 100' },
+  ]}
+/>
+
+Below the IRS's own pages, the results are open. For "mileage rate 2026", sites with a lower Domain Rating than Shoeboxed's hold most of the first page.
+
+<SerpLadder
+  keyword="mileage rate 2026"
+  volume={37000}
+  target="shoeboxed.com"
+  targetPosition={null}
+  caption="Organic results for &quot;mileage rate 2026&quot; (Ahrefs, US, November 2026). Pinion's post ranks second on a site with a Domain Rating of 51 and gets an estimated 11,900 visits a month."
+  rows={[
+    { position: 2, domain: 'pinionglobal.com', dr: 51, tag: 'Blog post' },
+    { position: 4, domain: 'bradyware.com', dr: 45, tag: 'Blog post' },
+    { position: 5, domain: 'calhr.ca.gov', dr: 94, tag: 'State notice' },
+    { position: 6, domain: 'cardata.co', dr: 38, tag: 'Guide' },
+    { position: 7, domain: 'sarpy.gov', dr: 57, tag: 'PDF' },
+    { position: 8, domain: 'reedcorp.tax', dr: 29, tag: 'Guide' },
+    { position: 9, domain: 'uvafinance.virginia.edu', dr: 90, tag: 'Guide' },
+  ]}
+/>
+
+The pages that win don't have many links either. Cardata's page gets about 7,500 visits a month from 7 referring domains, and Expensify's gets about 4,600 from 2.
+
+<CompareBars
+  caption="Estimated monthly Google visits to mileage rate pages, with each page's referring domains (Ahrefs, November 2026)."
+  unit="visits/month"
+  highlight="Shoeboxed: IRS mileage rate calculator"
+  rows={[{"label": "Cardata: mileage rate guide", "value": 7465, "note": "7 referring domains"}, {"label": "Everlance: IRS mileage rate", "value": 6018, "note": "131 referring domains"}, {"label": "Expensify: 2026 mileage rate guide", "value": 4590, "note": "2 referring domains"}, {"label": "Shoeboxed: IRS mileage rate calculator", "value": 0, "note": "No referring domains yet"}]}
+/>
+
+Shoeboxed's page already has what these pages have, and more. It opens with the answer ("The 2026 IRS business mileage rate is 72.5¢ a mile from January through June, and 76¢ a mile from July 1 on"), then a calculator, a free PDF for your accountant, every rate since 2017, and a section on how far 158 Shoeboxed drivers actually drive. It's signed by Doug and dated 26 October.
+
+It's also new. The Wayback Machine has no copy of it, Google has indexed it, and Ahrefs finds it ranking for nothing yet. A new page on a 73 site still needs a reason for Google to put it above pages that have held these spots all year, and today it has no links from other sites and a few links from Shoeboxed's own footer.
+
+**The fix:**
+
+1. Make it the mileage hub. Link to it with the words "2026 IRS mileage rate" from the mileage tracker page, the gig driver and truck owner-operator pages, the mileage log template and the Canadian rate post, which already ranks sixth for "cra mileage rate 2026".
+2. Keep one address for every year. People still search for last year's rate when they file (37,000 searches for "irs mileage rate 2025"), and the page already has the history. Update the title and the first sentence when the rate changes, and keep the URL.
+3. Be first with the 2027 rate. The IRS usually announces it in December. Update the page that day and send it to Index My Site, so the page with the new number is the one Google sees first.
+4. Give writers something to link to. The 158 drivers section is the start of a report (see the links section below).
+
+To confirm it worked, check Search Console for impressions on "irs mileage rate 2026" and "mileage rate 2026" within two weeks of the links going live.
+
+### The mileage tracker itself
+
+Mileage is a paid feature too, and the app searches are harder. "mileage tracker app" gets 2,400 US searches a month at a difficulty of 45, and "free mileage tracker app" 1,300. In three AI answers to "best mileage tracker app for self employed", Shoeboxed wasn't named once. Everlance, MileIQ and TripLog were.
+
+Shoeboxed's mileage tracker page leads with "The Mileage Tracking App That Does The Work For You". The difference its own llms.txt names is the better pitch: receipts and mileage in one app. That's the line for the title and the first sentence, and the reason for two comparison pages, Shoeboxed vs MileIQ and Shoeboxed vs Everlance, for people who pay for one app to track miles and another for receipts.
+
+## 2. Schedule C and per diem: two sections that are almost done
+
+### Schedule C
+
+Shoeboxed has 12 pages that each explain one Schedule C expense line, such as "Office Expenses on Schedule C (Line 18 List, 2026)" and "Contract Labor on Schedule C (Line 11 Rules, 2026)". They're in the sitemap. The page they'd all sit under isn't:
+
+<BrowserFrame
+  url="https://www.shoeboxed.com/schedule-c"
+  tab="404 - Page Not Found"
+  status="404 Not Found"
+  bad
+  caption="The address above Shoeboxed's 12 Schedule C pages, 5 November 2026. Nothing links the 12 pages together as a set."
+>
+  <p class="text-lg font-medium">404</p>
+  <p class="text-foreground-muted">Page Not Found. The 12 Schedule C pages have no index page.</p>
+</BrowserFrame>
+
+That missing page is the one with the demand. "schedule c" gets 66,000 US searches a month at a difficulty of 14. The IRS holds the top spots, then TurboTax, Block Advisors (Domain Rating 61), FreeTaxUSA (66), Wolters Kluwer and NerdWallet.
+
+<KeywordTable
+  caption="Schedule C searches (Ahrefs, US, November 2026). Shoeboxed ranks for &quot;schedule c worksheet&quot; with a blog post, and for none of the others."
+  sortBy="volume"
+  columns={[{ key: 'keyword', label: 'Search', format: 'text' }, { key: 'volume', label: 'US searches', format: 'number', short: 'US' }, { key: 'difficulty', label: 'Difficulty', format: 'number', short: 'KD' }, { key: 'page', label: 'Page', format: 'text' }]}
+  rows={[
+    { keyword: 'schedule c', volume: 66000, difficulty: 14, page: 'Schedule C line by line' },
+    { keyword: 'schedule c instructions', volume: 10000, difficulty: 48, page: 'Schedule C line by line' },
+    { keyword: '1099 tax calculator', volume: 7300, difficulty: 12, page: 'A new calculator' },
+    { keyword: 'self employed tax calculator', volume: 5900, difficulty: 19, page: 'A new calculator' },
+    { keyword: 'home office deduction', volume: 5700, difficulty: 43, page: 'Home office calculator' },
+    { keyword: '1099 deductions', volume: 600, difficulty: 2, page: 'Schedule C line by line' },
+    { keyword: 'schedule c deductions', volume: 250, difficulty: 8, page: 'Schedule C line by line' },
+  ]}
+/>
+
+**The fix:** build "Schedule C line by line (2026)" at that address, with one row for every expense line, what goes on it and a link to the page for it. Three of the rows lead to tools Shoeboxed already has: line 9 (car and truck expenses) to the mileage calculator, line 30 (business use of your home) to the home office calculator, and line 24b (meals) to the business meals page. Write the missing line pages next, so the table has a page for every line.
+
+The table also gives Shoeboxed a reason to build what its competitors rank with. Everlance, Keeper and MileIQ each have a 1099 tax calculator in Google's top ten for "1099 tax calculator", and Everlance's gets about 1,900 visits a month. A Schedule C calculator that takes the totals from the line pages fits right under the table.
+
+### Per diem rates
+
+The per diem section has 346 addresses in the sitemap, covering 297 cities and every state, each with a calculator and a PDF. Ahrefs finds none of them ranking. "per diem rates 2026" gets 8,000 US searches a month at a difficulty of 4, and "per diem calculator" 1,100 at 0. Taxstra, with a Domain Rating of 31 and 3 referring domains, ranks fifth for the first and gets about 1,900 visits a month.
+
+**The fix:** the same as the mileage page. Link to the per diem index from the posts truckers and travelling contractors read (the truck owner-operator page and the truck driver expense worksheet, which ranks for "truck driver tax deductions worksheet"), and update every page on the day the GSA publishes new rates.
+
+## 3. Receipt scanner apps: Google's AI already picks Shoeboxed
+
+This is the search closest to a sign-up. "receipt scanner app" gets 2,500 US searches a month and "best receipt scanner app" 1,300. Google's AI Overview for both links Shoeboxed's homepage. The organic results below it don't include Shoeboxed at all.
+
+<SerpLadder
+  keyword="receipt scanner app"
+  volume={2500}
+  target="shoeboxed.com"
+  targetPosition={null}
+  caption="Organic results for &quot;receipt scanner app&quot; (Ahrefs, US, November 2026). The AI Overview above them links shoeboxed.com; the ten organic results don't."
+  rows={[
+    { position: 2, domain: 'play.google.com', dr: 100, tag: 'Easy Expense app' },
+    { position: 3, domain: 'reddit.com', dr: 95, tag: 'Thread' },
+    { position: 5, domain: 'apps.apple.com', dr: 97, tag: 'SimplyWise app' },
+    { position: 6, domain: 'bill.com', dr: 81, tag: 'List of 13 apps' },
+    { position: 7, domain: 'simular.ai', dr: 57, tag: 'List of 10 tools' },
+    { position: 8, domain: 'waveapps.com', dr: 84, tag: 'Product page' },
+    { position: 9, domain: 'dext.com', dr: 77, tag: 'Product page' },
+    { position: 10, domain: 'fetch.com', dr: 74, tag: 'Cashback apps' },
+  ]}
+/>
+
+Shoeboxed's homepage ranks 10th for "best receipt app" and 7th for "receipt scanning software", so Google already connects the brand to the category. The pages that rank around it are lists and comparisons. That's the gap, and it's the cheapest one in this teardown to close: the comparison searches have almost no competition.
+
+<KeywordTable
+  caption="Searches from people comparing receipt apps (Ahrefs, US, November 2026). Shoeboxed has one comparison page, Expensify vs Shoeboxed, and it ranks first and second for the two word orders."
+  sortBy="volume"
+  columns={[{ key: 'keyword', label: 'Search', format: 'text' }, { key: 'volume', label: 'US searches', format: 'number', short: 'US' }, { key: 'difficulty', label: 'Difficulty', format: 'number', short: 'KD' }, { key: 'page', label: 'Page', format: 'text' }]}
+  rows={[
+    { keyword: 'expensify pricing', volume: 700, difficulty: 1, page: 'Expensify alternatives' },
+    { keyword: 'neat scanner', volume: 700, difficulty: 5, page: 'Neat scanner replacement' },
+    { keyword: 'expensify alternatives', volume: 600, difficulty: 1, page: 'Expensify alternatives' },
+    { keyword: 'quickbooks receipt scanner', volume: 400, difficulty: 2, page: 'vs QuickBooks receipt capture' },
+    { keyword: 'expensify vs quickbooks', volume: 200, difficulty: 1, page: 'vs QuickBooks receipt capture' },
+    { keyword: 'dext alternatives', volume: 200, difficulty: 0, page: 'Dext alternatives' },
+    { keyword: 'dext pricing', volume: 150, difficulty: 0, page: 'Dext alternatives' },
+    { keyword: 'neat receipts', volume: 150, difficulty: 7, page: 'Neat scanner replacement' },
+  ]}
+/>
+
+Each page has one thing to lead with: Shoeboxed scans the paper for you. The Magic Envelope takes a shoebox of receipts by post, and AI answers already notice. Asked "is there a service that scans paper receipts for you", ChatGPT and Google AI Mode both cited Shoeboxed.
+
+The receipt scanning page is where that service lives, and its title doesn't say it.
+
+<SearchResult
+  caption="Shoeboxed's receipt scanning page in Google today, and titled for the mail-in service it describes."
+  before={{
+    url: "https://www.shoeboxed.com/receipt-scanning",
+    site: "Shoeboxed",
+    // seo-lint-ignore dash (the title Shoeboxed uses today)
+    title: "Discover Receipt Scanning Solutions - Shoeboxed",
+    description: "Digitize your life with Shoeboxed! Discover the best receipt & document scanning solutions for individuals and businesses.",
+  }}
+  after={{
+    url: "https://www.shoeboxed.com/receipt-scanning",
+    site: "Shoeboxed",
+    title: "Receipt scanning service: mail us your paper receipts",
+    description: "Stuff your receipts in a prepaid Magic Envelope and post it. We scan them, a person checks every total, and each one is filed by tax category.",
+  }}
+/>
+
+**The fix:** four comparison pages (Expensify alternatives, Dext alternatives, Shoeboxed vs QuickBooks receipt capture, and a page for owners of old Neat scanners), each with a table near the top: price, who scans the paper, human checking, mileage and which accounting software it exports to. Retitle the receipt scanning page for the service. And ask Bill.com to add Shoeboxed to its list of 13 receipt scanner apps, which ranks sixth, includes Expensify and doesn't mention Shoeboxed.
+
+### Business cards
+
+Shoeboxed scans business cards too (the Magic Envelope takes them with the receipts), and its help center explains how to export them to Outlook, Google Contacts, LinkedIn and Salesforce. There's no page that says so. The old post on contact cards now redirects to the features page.
+
+<KeywordTable
+  caption="Business card scanning searches (Ahrefs, US, November 2026). Shoeboxed has no page for any of them."
+  sortBy="volume"
+  columns={[{ key: 'keyword', label: 'Search', format: 'text' }, { key: 'volume', label: 'US searches', format: 'number', short: 'US' }, { key: 'difficulty', label: 'Difficulty', format: 'number', short: 'KD' }, { key: 'who', label: 'Who ranks', format: 'text' }]}
+  rows={[
+    { keyword: 'business card scanner', volume: 900, difficulty: 10, who: 'Zapier, HubSpot' },
+    { keyword: 'business card scanner app', volume: 600, difficulty: 22, who: 'Zapier, HubSpot' },
+    { keyword: 'best business card scanner app', volume: 600, difficulty: 22, who: 'Zapier, Blinq' },
+    { keyword: 'scan business cards', volume: 400, difficulty: 14, who: 'HubSpot, CamCard' },
+    { keyword: 'business card scanner to excel', volume: 150, difficulty: 4, who: 'Lists and apps' },
+  ]}
+/>
+
+AI answers to "best business card scanner app" named Shoeboxed in none of three, and cited Zapier, HubSpot and CamCard. A page at /business-card-scanner, with the export steps the help center already has, covers both.
+
+## 4. The help center: 49 answers Google is told to skip
+
+All 49 help center pages in the crawl are marked noindex, from the index to articles like "How do I integrate with QuickBooks Online?" and "How do I import my business card contacts into Microsoft Outlook?".
+
+<BeforeAfter
+  caption="A help center article as Google gets it today, and with the noindex removed."
+  before={{ label: "Today", html: beforeHelp }}
+  after={{ label: "Fixed", html: afterHelp }}
+/>
+
+These are the questions people check before they pay: does it connect to QuickBooks Online, Xero, Salesforce or Dropbox, and how does Gmail receipt sync work. Bookkeepers ask them most. In AI answers to "best receipt app for bookkeepers and accountants", Shoeboxed was named in neither of the two answers shown, and Dext, Hubdoc and AutoEntry were cited for their integration pages.
+
+**The fix:** remove the noindex from the help articles and add a canonical to each, keep it only on pages for signed-in customers, and link the integration articles from the features and pricing pages. The bookkeeper partner page (Shoeboxed's case study of a bookkeeper who saves 900 hours a year is the proof for it) is noindex too. If it's the public offer for bookkeepers, it should be indexable.
+
+To confirm it worked, check the help articles' indexed count in Search Console a week later.
+
+## The template posts: keep the buyer topics
+
+Shoeboxed's blog has 124 posts in its sitemap today. The Wayback Machine has 504 blog addresses, and 383 of them aren't in the sitemap. Most were cut on purpose, and for shopper posts that was right. A few went with them that small business buyers search for.
+
+<UrlMap
+  caption="Old blog posts and what each returns today, checked on 5 November 2026. Ahrefs volumes are US searches a month."
+  rows={[
+    { url: "/blog/construction-bookkeeping", action: "Restore", tone: "remove", note: "Redirects to the Excel expense template. \"construction bookkeeping\" gets 1,000 searches a month, and the post got about 630 visits in August 2025" },
+    { url: "/blog/cash-receipts-journal", action: "Restore", tone: "remove", note: "Redirects to the Excel expense template. It got about 400 visits a month in August 2025" },
+    { url: "/blog/real-estate-bookkeeping-a-basic-guide", action: "Restore", tone: "remove", note: "410 today. Realtors have their own industry page on Shoeboxed" },
+    { url: "/blog/what-is-the-key-difference-between-cost-and-price", action: "410", tone: "change", note: "Redirects to the Excel expense template, which Google can treat as a missing page anyway" },
+    { url: "/blog/lowes-return-policy and the other return policy posts", action: "Keep", tone: "keep", note: "410 today. Shoppers, not buyers, and almost no links" },
+  ]}
+/>
+
+Fifteen old posts, from construction bookkeeping and a kakeibo budgeting guide to the difference between cost and price, now redirect to the Excel expense template, and three more (including a WellyBox alternative comparison) redirect to the homepage. Google can treat a redirect to a page about something else as a soft 404, so those redirects may pass nothing on, and they point a mix of unrelated searches at the one page Shoeboxed most needs to rank.
+
+**The fix:** restore construction bookkeeping and the cash receipts journal as pages for contractors and bookkeepers, with the Shoeboxed vs spreadsheets page linked from each. Give the rest a 410, like the return policy posts. Then the Excel template page only has to answer one search.
+
+## Links: the integration directories and the data only Shoeboxed has
+
+Links come to pages other sites have a reason to cite, and for an app like Shoeboxed the first reason is the integrations. Expensify, Dext and WellyBox have listings in the app directories of the software they connect to. Shoeboxed integrates with the same software and isn't listed.
+
+<UrlMap
+  caption="Sites that link to two or more of Expensify, Dext, Everlance, MileIQ and WellyBox and not to Shoeboxed (SEO Skill link_gap, 5 November 2026), with Domain Rating by Ahrefs. Each page checked by hand."
+  rows={[
+    { url: "apps.xero.com", action: "DR 90", tone: "change", note: "Xero's app store lists Dext, Expensify and WellyBox. Shoeboxed's help center has a guide to its direct Xero integration, and the app address returns a 404" },
+    { url: "pipedream.com/apps", action: "DR 83", tone: "change", note: "Has pages for the Dext and Expensify APIs. Shoeboxed has a public OAuth2 API and no page" },
+    { url: "cpapracticeadvisor.com", action: "DR 78", tone: "change", note: "Covered Dext's AI bookkeeping assistant in March. Shoeboxed's new CLI, and the MCP server for AI assistants it has announced, are news for the same readers" },
+    { url: "pricingsaas.com/companies", action: "DR 54", tone: "change", note: "Tracks MileIQ's and Expensify's pricing. No Shoeboxed page" },
+    { url: "bill.com/blog/best-receipt-scanning-app", action: "DR 81", tone: "change", note: "Ranks sixth for \"receipt scanner app\" and doesn't mention Shoeboxed" },
+  ]}
+/>
+
+Zapier, which has no Shoeboxed page either, is the other directory worth an afternoon. Each listing is a link and a page that ranks for "shoeboxed + the other app".
+
+### A mileage report every December
+
+The mileage rate page already has the start of a dataset: how far 158 Shoeboxed drivers drive for work. Shoeboxed's tracker logs trips for every user who turns it on. Each December, when the IRS announces the new rate, the same writers cover it: SHRM, the Journal of Accountancy, Thomson Reuters and the firms that rank above. They all quote the IRS, and none of them has real driving data.
+
+A report with a date and a number gives them one: "Self-employed Shoeboxed users drove a median of [X] business miles in 2026, worth $[Y] at the IRS rate." The receipts give Shoeboxed a second report nobody else can publish, from receipts a person has checked: "The most common deductions on [N] small business receipts in 2026, by Schedule C line." That one links straight into the Schedule C table.
+
+### Who to contact, and what to say
+
+None of this is "please link to us". Each contact has a reason to add Shoeboxed that helps their own readers, and the email leads with that reason:
+
+1. The app directories (Xero, Pipedream, Zapier and PricingSaaS) are listing forms, not emails, and Shoeboxed qualifies today: it has a direct Xero integration and a public API. Fill them in this week.
+2. For lists that rank and leave Shoeboxed out, start with the author of Bill.com's list of 13 receipt scanner apps, sixth for "receipt scanner app". The angle is a gap in the list, not a favour: none of the 13 apps scans paper receipts for you, and Shoeboxed is the one that does. Offer a two-line description and a screenshot they can paste in.
+3. For the writers who cover the IRS rate, wait for the day the 2027 rate comes out and email the reporters at SHRM, the Journal of Accountancy and the payroll firms that wrote up the 2026 rate. The angle is a number they can't get from the IRS: how far real self-employed drivers drive, and what that's worth at the new rate. Send the headline number in the first line and link the report.
+4. For bookkeepers, CPA Practice Advisor covered Dext's AI assistant in March. A Shoeboxed CLI and MCP server for AI assistants is the same story for the same readers, so pitch it as news when it ships.
+
+Find these contacts the way my [cold outbound guide](https://ian.is/cold-outbound-backlinks) describes: start from sites that already link to two or more competitors, check each one by hand, and only email when Shoeboxed has something better for that page than what's there. An agent can find the author, draft the email and track replies. Someone at Shoeboxed should approve each one before it goes, because one careless email to a journalist costs more than ten unsent ones.
+
+## AI answers cite Shoeboxed for receipts, and not for mileage
+
+Shoeboxed already does well when someone asks about scanning receipts. In ten buyer questions asked of ChatGPT search, Google AI Mode and AI Overviews, it was cited or named in 6 of 30 answers and Expensify in 12. Shoeboxed got more direct citations (5 against Expensify's 2), and every one was a receipt question.
+
+<KeywordTable
+  caption="How many of three AI answers (ChatGPT search, Google AI Mode, AI Overviews) cite or name Shoeboxed (SB) and Expensify (EX), 5 November 2026 (SEO Skill ai_answers with DataForSEO, US). Each answer is one sample, and answers change from run to run."
+  sortBy="question"
+  columns={[{ key: 'question', label: 'Question', format: 'text' }, { key: 'sb', label: 'Shoeboxed', format: 'text', short: 'SB' }, { key: 'ex', label: 'Expensify', format: 'text', short: 'EX' }, { key: 'who', label: 'Cited instead', format: 'text', short: 'Instead' }]}
+  rows={[
+    { question: 'best receipt scanner app for small business', sb: '2 of 3', ex: '2 of 3', who: 'Zoho, QuickBooks' },
+    { question: 'is there a service that scans paper receipts for you', sb: '2 of 3', ex: '1 of 3', who: 'Neat, Wave' },
+    { question: 'best app to keep receipts for taxes', sb: '1 of 3', ex: '3 of 3', who: 'Keeper, QuickBooks' },
+    { question: 'how do I organize receipts for taxes as a sole proprietor', sb: '1 of 3', ex: '1 of 3', who: 'IRS, TurboTax' },
+    { question: 'best receipt app for bookkeepers and accountants', sb: '0 of 2', ex: '3 of 3', who: 'Dext, Hubdoc' },
+    { question: 'best expensify alternative for a small business', sb: '0 of 3', ex: 'Named in the question', who: 'Ramp, Zoho' },
+    { question: 'best mileage tracker app for self employed', sb: '0 of 3', ex: '0 of 3', who: 'Everlance, MileIQ' },
+    { question: 'best business card scanner app', sb: '0 of 3', ex: '0 of 3', who: 'Zapier, CamCard' },
+    { question: 'what is the irs mileage rate for 2026', sb: '0 of 3', ex: '0 of 3', who: 'IRS' },
+    { question: 'how long do I need to keep receipts for the irs', sb: '0 of 3', ex: '0 of 3', who: 'IRS' },
+  ]}
+/>
+
+AI crawlers can read everything. The homepage, a blog post and the mileage calculator return the same full page to a browser and to the GPTBot, OAI-SearchBot, ClaudeBot and PerplexityBot user agents. robots.txt blocks none of them, and Shoeboxed has an llms.txt in plain text and an agents.json for its API and CLI. So the gaps are in which pages exist.
+
+The mileage, business card and bookkeeper questions are the gaps, and they're the same three as in Google. The mileage hub, the business card page and an indexable help center cover them. For the IRS questions, AI answers cite the IRS only, and a calculator won't change that. The record-keeping question can still be Shoeboxed's: "how long to keep receipts for taxes" gets 200 US searches a month, and a page that opens with the answer in one sentence and the IRS source next to it is the kind AI answers quote.
+
+## Four technical fixes
+
+### 1. The homepage FAQ markup doesn't parse
+
+The homepage has FAQ structured data, and it breaks on a raw line break inside one of the answers, so a parser reads nothing from it. The crawl found invalid JSON-LD on 23 pages.
+
+<BeforeAfter
+  caption="The homepage's FAQ JSON-LD today and written with a JSON encoder."
+  before={{ label: "Today", html: beforeFaq }}
+  after={{ label: "Fixed", html: afterFaq }}
+/>
+
+**The fix:** build the JSON-LD with `to_json` in the Rails view instead of writing the answer HTML into the string. Google no longer shows FAQ rich results for most sites, but other search engines and AI crawlers read the markup. To confirm, run the 23 pages through a crawl and check for zero invalid blocks.
+
+### 2. Blog links to pricing carry tracking tags
+
+Blog posts link to the pricing and features pages with `utm_` tags, and some link to /home instead of the homepage. Each tagged address is a separate URL with the same content, and a tag on an internal link overwrites the visit's source in Google Analytics, so sign-ups that started from Google get credited to a "blog" campaign.
+
+<BeforeAfter
+  caption="Links from Shoeboxed's blog posts to its own pages, today and without tags."
+  before={{ label: "Today", html: beforeUtm }}
+  after={{ label: "Fixed", html: afterUtm }}
+/>
+
+**The fix:** plain internal links, and a 301 from /home to the homepage.
+
+### 3. The sitemap has no dates and leads with college costs
+
+The sitemap lists 2,514 addresses with no lastmod on any of them. 1,994 are 529 college cost pages, and the mileage calculator is one line among them. When the rate changes in December, nothing in the sitemap tells Google which page changed.
+
+**The fix:** a sitemap index with one file per section (product pages, tools, mileage and per diem, Schedule C, blog, colleges), each with a real lastmod. To confirm, check the sitemap report in Search Console for each file's discovered and indexed counts.
+
+### 4. No sharing cards
+
+589 of the 594 pages in the crawl have no Open Graph title, description or image, so a link to the mileage calculator shared on X, LinkedIn or Slack shows as a bare address. That matters for the December report more than for rankings. Add the three tags to the layout, with the page's own title and an image per tool.
+
+## Housekeeping
+
+A login page for a staff support tool, on its own subdomain, ranks fifth for "shoeboxed login" (Ahrefs credits it with about 5 visits a month). Customers looking for their account end up there. Add a noindex and a robots.txt rule on that subdomain.
+
+The 529 college cost section is 79% of the sitemap and brings about 505 visits a month, about 5% of the total, from parents pricing colleges. It doesn't have to go, but it shouldn't be what Google spends its time on before the mileage and tax pages.
+
+## Ship it all today, then let it settle
+
+None of this needs a sprint. Each fix is a separate job, so coding agents can work on all of them at once:
+
+<PlanSteps
+  steps={[{"title": "Mileage hub", "body": "Link the IRS mileage rate calculator from the mileage tracker, gig driver, owner-operator, mileage log and Canadian rate pages with the words \"2026 IRS mileage rate\". Keep one address for every year."}, {"title": "Schedule C index", "body": "Build \"Schedule C line by line (2026)\" at /schedule-c, linking all 12 line pages, the mileage and home office calculators and the meals page, then write the missing lines."}, {"title": "Per diem links", "body": "Link the per diem index from the truck owner-operator page and the truck driver worksheet."}, {"title": "Comparison pages", "body": "Expensify alternatives, Dext alternatives, Shoeboxed vs QuickBooks receipt capture and a page for Neat scanner owners, each with a comparison table near the top."}, {"title": "Receipt scanning and business cards", "body": "Retitle the receipt scanning page for the mail-in service, and build /business-card-scanner with the export steps from the help center."}, {"title": "Help center", "body": "Remove noindex from the help articles, add canonicals, and link the integration articles from features and pricing."}, {"title": "Blog redirects", "body": "Restore the construction bookkeeping and cash receipts journal posts. Give the other unrelated redirects a 410."}, {"title": "Markup, links and sitemap", "body": "Fix the FAQ JSON-LD on 23 pages, remove utm tags from internal links, 301 /home, add Open Graph tags, and split the sitemap by section with lastmod."}, {"title": "Listings and outreach", "body": "Apply for listings on Xero's app store, Pipedream, Zapier and PricingSaaS, and draft the note to Bill.com and the writers who cover the mileage rate."}]}
+/>
+
+Someone at Shoeboxed needs to review the comparison pages and approve each outreach email. The titles, redirects and markup need only a quick look.
+
+Then I'd spend 30 days watching:
+
+<PlanSteps
+  steps={[{"marker": "Day 0", "title": "Ask Google to recrawl", "body": "Submit every new and changed URL to Index My Site, so Google recrawls them now instead of on its own schedule."}, {"marker": "Day 3", "title": "Check indexing", "body": "Confirm the Schedule C index, the comparison pages and the help articles are indexed, and the old redirects return 410."}, {"marker": "Day 7", "title": "First impressions", "body": "Look for impressions on \"irs mileage rate 2026\", \"schedule c\" and \"expensify alternatives\" in Search Console."}, {"marker": "Day 14", "title": "The 2027 rate", "body": "When the IRS announces the 2027 rate, update the calculator that day, submit it again, and send the mileage report to the writers covering it."}, {"marker": "Day 30", "title": "Sign-ups", "body": "Compare trials started from search with the month before, split by landing page."}, {"marker": "Day 30", "title": "AI answers", "body": "Ask the same ten questions with ai_answers, for Shoeboxed and Expensify, and compare."}]}
+/>
+
+## Get the changes seen quickly
+
+The mileage calculator, the per diem pages and the Schedule C pages are indexed, but Google hasn't decided where they belong yet, and every change above gives it a reason to look again. I'd submit each new and changed URL to [Index My Site](https://indexmysite.app/) the day it ships, so Google is asked to crawl it straight away. It matters most in December, when the page that shows the new rate first has the best chance at 109,000 searches.
+
+## How I ran this
+
+Everything in this teardown came from SEO Skill, run by an agent. You can run the same audit on your own site.
+
+**1. Connect the hosted MCP server.** It's free. You sign in with Google, and there's no password and nothing to install. In Claude Code:
+
+```sh
+claude mcp add --transport http seoskill https://seoskill.dev/mcp
+```
+
+Codex, Cursor and Claude on the web work too. The [MCP guide](/docs/mcp) has the steps for each one.
+
+**2. Add a research key.** On your [account page](/account), save an Ahrefs or DataForSEO key. The key gives your agent search volumes, rankings, the link gap and AI answers, like the tables above.
+
+**3. Install the CLI for crawling.** The crawl runs on your machine, so it can read any site:
+
+```sh
+npm i -g seo
+seo login
+```
+
+Shoeboxed sits behind Cloudflare, which answered a fast crawl with a 429 after 12 pages. A slower crawl read 600:
+
+```sh
+seo crawl https://www.example.com --max-pages 600 \
+  --concurrency 2 --fetch-interval-cap 1 --fetch-interval-ms 1200
+```
+
+**4. Ask your agent.** This is close to the prompt I used:
+
+```text
+Audit example.com. Crawl it with seo crawl, slowly
+if it rate-limits. Find the pages we built for searches
+we don't rank for yet, and say what each one needs.
+Use seo_research to find the searches our buyers make,
+who ranks for them and whether we can compete.
+Run link_gap against our three biggest competitors.
+Ask ai_answers ten buyer questions for us and for
+our biggest competitor.
+Rank every fix by how close it sits to revenue.
+```
+
+On your own site, the hosted server adds the part I couldn't see from the outside: your real Search Console clicks and queries. With those, you get measured numbers where this post has estimates.
+
+If you're at Shoeboxed, I'm happy to go through any of this. And if you'd like the same teardown for your site, [SEO Skill](/) will run it for you.

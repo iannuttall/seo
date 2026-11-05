@@ -23,6 +23,7 @@ import type {
   ExternalLinkCheckState,
 } from '../monitoring/types.js'
 import { auditCrawlPages, auditCrawlRequests } from './audit.js'
+import { CRAWL_COVERAGE_CAVEAT_PREFIX } from './crawl-caveats.js'
 import {
   type CrawlSkippedUrlsByImpact,
   type CrawlSkipReason,
@@ -573,6 +574,13 @@ function compareText(left: string, right: string): number {
   return left < right ? -1 : left > right ? 1 : 0
 }
 
+// A coverage caveat leads, since every other finding depends on it.
+function compareCaveats(left: string, right: string): number {
+  const rank = (value: string) =>
+    value.startsWith(CRAWL_COVERAGE_CAVEAT_PREFIX) ? 0 : 1
+  return rank(left) - rank(right) || compareText(left, right)
+}
+
 function sortPages(pages: CrawlPageSnapshot[]): CrawlPageSnapshot[] {
   return [...pages].sort((left, right) => compareText(left.url, right.url))
 }
@@ -969,7 +977,7 @@ export function createCrawlReport(input: {
         }
       : {}),
     warnings: sanitizeMessages(input.warnings).sort(compareText),
-    caveats: sanitizeMessages(input.caveats).sort(compareText),
+    caveats: sanitizeMessages(input.caveats).sort(compareCaveats),
   }
 }
 
@@ -1011,6 +1019,6 @@ export function normalizeLoadedCrawlReport(report: CrawlReport): CrawlReport {
     issues,
     issueGroups: groupCrawlIssues(issues),
     warnings: sanitizeMessages(report.warnings).sort(compareText),
-    caveats: sanitizeMessages(report.caveats).sort(compareText),
+    caveats: sanitizeMessages(report.caveats).sort(compareCaveats),
   }
 }

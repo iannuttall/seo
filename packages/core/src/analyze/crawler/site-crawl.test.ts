@@ -715,3 +715,85 @@ test('crawlSite flags a start page with no links and no sitemap as single-page r
   assert.equal(reach[0]?.severity, 'high')
   assert.match(report.caveats.join('\n'), /--rendering on.*--mode list/)
 })
+
+test('crawlSite backs off on 429, retries the URL and reports what stayed unread', async () => {
+  const sleeps: number[] = []
+  const attempts = new Map<string, number>()
+  const report = await crawlSite(
+    { url: 'https://example.com/', maxPages: 10, checkExternal: false },
+    {
+      ...offlineCrawlDependencies(async (url) => {
+        const attempt = (attempts.get(url) ?? 0) + 1
+        attempts.set(url, attempt)
+        const limited =
+          url.endsWith('/always-limited') ||
+          (url.endsWith('/limited-once') && attempt === 1)
+        return {
+          urls:
+            url === 'https://example.com/'
+              ? [
+                  'https://example.com/limited-once',
+                  'https://example.com/always-limited',
+                ]
+              : [],
+          page: crawlPageSnapshot(url, limited ? { status: 429 } : {}),
+        }
+      }),
+      sleep: async (ms) => {
+        sleeps.push(ms)
+      },
+    },
+  )
+
+  assert.equal(attempts.get('https://example.com/limited-once'), 2)
+  assert.equal(attempts.get('https://example.com/always-limited'), 4)
+  assert.deepEqual(sleeps, [2_000, 4_000, 8_000])
+  assert.deepEqual(
+    report.pages.map((page) => new URL(page.url).pathname),
+    ['/', '/limited-once'],
+  )
+  assert.equal(report.status, 'partial')
+  assert.deepEqual(
+    report.summary.skipReasons.find(
+      (item) => item.reason === 'origin-backpressure',
+    ),
+    { reason: 'origin-backpressure', impact: 'coverage-affecting', count: 1 },
+  )
+  assert.match(
+    report.caveats[0] ?? '',
+    /^Coverage incomplete: read 2 of 3 pages .*HTTP 429.*seo crawl https:\/\/example\.com\/ --max-pages 10 --concurrency 1 --fetch-interval-cap 1 --fetch-interval-ms \d+$/,
+  )
+})
+
+test('crawlSite never queues or counts Cloudflare /cdn-cgi/ links', async () => {
+  const fetched: string[] = []
+  const report = await crawlSite(
+    { url: 'https://example.com/', maxPages: 10, checkExternal: false },
+    offlineCrawlDependencies(async (url) => {
+      fetched.push(url)
+      const urls =
+        url === 'https://example.com/'
+          ? ['https://example.com/cdn-cgi/l/email-protection']
+          : []
+      return {
+        urls,
+        page: crawlPageSnapshot(url, {
+          outgoingInternalCount: urls.length,
+        }),
+      }
+    }),
+  )
+
+  assert.deepEqual(fetched, ['https://example.com/'])
+  assert.equal(report.pages[0]?.outgoingInternalCount, 0)
+  assert.deepEqual(
+    report.summary.skipReasons.find(
+      (item) => item.reason === 'cdn-utility-url',
+    ),
+    { reason: 'cdn-utility-url', impact: 'non-impacting', count: 1 },
+  )
+  assert.equal(
+    report.issues.some((issue) => issue.ruleId === 'broken_internal_link'),
+    false,
+  )
+})

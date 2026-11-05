@@ -2,6 +2,11 @@ import assert from 'node:assert/strict'
 import { test } from 'node:test'
 import type { PageFetchResult } from '../types.js'
 import { resolveBrowserExecutable } from './page-fetcher/browser-path.js'
+import {
+  normalizeRateControls,
+  recordHostFetch,
+  waitForHostBackpressure,
+} from './page-fetcher/rate-controls.js'
 import { JavaScriptRenderingError } from './page-fetcher/rendered.js'
 import type { PageRenderer } from './page-fetcher/types.js'
 import { fetchPage } from './page-fetcher.js'
@@ -180,4 +185,22 @@ test('finds the newest browser that agent-browser or Playwright installed', () =
     fallback.status === 'available' ? fallback.browser.path : undefined,
     `${home}/.cache/ms-playwright/chromium-1300/chrome-linux64/chrome`,
   )
+})
+
+test('rate limits slow the host down instead of stopping it', async () => {
+  const host = 'rate-limited.example'
+  const rate = normalizeRateControls({ concurrency: 1 })
+  for (let index = 0; index < 4; index += 1) {
+    recordHostFetch({ host, status: 429, durationMs: 5, rate })
+  }
+  const snapshot = await waitForHostBackpressure(host, rate)
+  assert.equal(snapshot.status, 'ok')
+  assert.equal(snapshot.consecutiveBlocked, 0)
+  assert.match(snapshot.reason ?? '', /rate limited the crawler \(HTTP 429\)/)
+
+  recordHostFetch({ host, status: 403, durationMs: 5, rate })
+  recordHostFetch({ host, status: 403, durationMs: 5, rate })
+  await assert.rejects(waitForHostBackpressure(host, rate), {
+    name: 'OriginBackpressureError',
+  })
 })

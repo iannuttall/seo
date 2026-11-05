@@ -226,16 +226,24 @@ export function recordHostFetch(input: {
   health.durations.push(input.durationMs)
   if (health.durations.length > 20) health.durations.shift()
 
-  const blocked = [401, 403, 429].includes(input.status)
-  const errored = input.status >= 500
+  // A rate limit asks the client to slow down, not to stop. The crawl backs
+  // off and requeues these URLs, so they never trip the hard stop below.
+  const rateLimited =
+    input.status === 429 ||
+    (input.status === 503 && input.retryAfterMs !== undefined)
+  const blocked = [401, 403].includes(input.status)
+  const errored = input.status >= 500 && !rateLimited
   const slow = input.durationMs >= cfg.slowMs
 
   health.consecutiveBlocked = blocked ? health.consecutiveBlocked + 1 : 0
   health.consecutiveErrors = errored ? health.consecutiveErrors + 1 : 0
   health.consecutiveSlow = slow ? health.consecutiveSlow + 1 : 0
 
-  if (!blocked && !errored && !slow) {
+  if (!blocked && !errored && !slow && !rateLimited) {
     health.reason = undefined
+  }
+  if (rateLimited) {
+    health.reason = `origin rate limited the crawler (HTTP ${input.status})`
   }
 
   const retryDelay =

@@ -10,6 +10,7 @@ import type {
 import { estimateSerpTitleWidth } from '../title-width.js'
 import {
   isAuditableHtmlPage,
+  isCdnUtilityUrl,
   isHtmlPage,
   isRedirectedPage,
 } from './page-eligibility.js'
@@ -429,7 +430,7 @@ export function auditCrawlPages(
           status: page.status,
         }),
       )
-      if ((page.internalInlinkCount ?? 0) > 0) {
+      if ((page.internalInlinkCount ?? 0) > 0 && !isCdnUtilityUrl(page.url)) {
         issues.push(
           issue('broken_internal_link', page, String(page.status), {
             status: page.status,
@@ -447,7 +448,8 @@ export function auditCrawlPages(
       )
       if (
         isBrokenLinkStatus(page.status) &&
-        (page.internalInlinkCount ?? 0) > 0
+        (page.internalInlinkCount ?? 0) > 0 &&
+        !isCdnUtilityUrl(page.url)
       ) {
         issues.push(
           issue('broken_internal_link', page, String(page.status), {

@@ -151,3 +151,45 @@ test('health strategy marks access-blocked evidence partial', async () => {
   assert.equal(report.access.blockedRequests, 1)
   assert.equal(report.issues[0]?.ruleId, 'crawler_access_blocked')
 })
+
+test('health strategy backs off on 429 and names the sitemap page limit', async () => {
+  const urls = ['a', 'b', 'c'].map((path) => `https://example.com/${path}`)
+  const attempts = new Map<string, number>()
+  const sleeps: number[] = []
+  const report = await crawlSite(
+    {
+      url: 'https://example.com/',
+      strategy: 'health',
+      sitemapUrl: 'https://example.com/sitemap.xml',
+      maxPages: 3,
+    },
+    {
+      fetchSitemapUrls: async (input) => {
+        const result = completeSitemapResult(input.sitemapUrl, urls)
+        result.dataStatus = 'partial'
+        result.truncation.possiblyTruncated = true
+        result.truncation.urlLimitExceeded = true
+        return result
+      },
+      fetchStatusPage: async (url) => {
+        const attempt = (attempts.get(url) ?? 0) + 1
+        attempts.set(url, attempt)
+        return statusResult(url, {
+          status: url.endsWith('/b') && attempt === 1 ? 429 : 200,
+        })
+      },
+      sleep: async (ms) => {
+        sleeps.push(ms)
+      },
+    },
+  )
+
+  assert.equal(report.summary.totalPages, 3)
+  assert.equal(attempts.get('https://example.com/b'), 2)
+  assert.deepEqual(sleeps, [2_000])
+  assert.equal(report.summary.skippedUrls, 0)
+  assert.match(
+    report.caveats.join('\n'),
+    /Checked only the first 3 sitemap URLs because the page limit is 3.*seo crawl https:\/\/example\.com\/ --health --max-pages 10000/,
+  )
+})

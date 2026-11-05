@@ -39,3 +39,15 @@ export function isAuditableHtmlPage(page: CrawlPageSnapshot): boolean {
     contentAuditAllowed
   )
 }
+
+/**
+ * Cloudflare serves its own endpoints under `/cdn-cgi/`, such as the email
+ * obfuscation link `/cdn-cgi/l/email-protection`. They are not site pages.
+ */
+export function isCdnUtilityUrl(value: string): boolean {
+  try {
+    return new URL(value).pathname.startsWith('/cdn-cgi/')
+  } catch {
+    return false
+  }
+}

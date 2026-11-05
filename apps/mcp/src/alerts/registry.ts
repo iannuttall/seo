@@ -197,13 +197,80 @@ const weeklySummary: AlertType<WeeklySummary> = {
   },
 }
 
+// google-update: Google posted that a ranking update started rolling out,
+// or that it finished (audit/google-updates.ts), within the hour, once per
+// phase and account, covering every audited site.
+export type GoogleUpdate = {
+  id: string
+  // Google's own name for it, such as "November 2026 core update".
+  name: string
+  phase: 'started' | 'finished'
+  // ISO times from Google's feed; end is null while it rolls out.
+  start: string
+  end: string | null
+  // The notice on Google's Search Status Dashboard.
+  url: string
+}
+
+export type GoogleUpdateAlert = { update: GoogleUpdate; sites: string[] }
+
+// "4 Nov 2026" in UTC.
+const dayOf = (iso: string) =>
+  new Date(iso).toLocaleDateString('en-GB', {
+    day: 'numeric',
+    month: 'short',
+    year: 'numeric',
+    timeZone: 'UTC',
+  })
+
+const googleUpdate: AlertType<GoogleUpdateAlert> = {
+  title: 'Google updates',
+  text: 'When Google starts or finishes a ranking update, such as a core or spam update.',
+  flag: 'weekly-audit',
+  defaults: { email: true, webhook: true },
+  email({ update, sites }) {
+    const names = sites.map(siteName)
+    const yours = names.length
+      ? `Your audited ${names.length === 1 ? 'site' : 'sites'}: ${names.join(', ')}.`
+      : ''
+    const notice = `[Google’s notice](${update.url})`
+    if (update.phase === 'started' || !update.end) {
+      return {
+        subject: `Google started the ${update.name}`,
+        preview: `It began rolling out on ${dayOf(update.start)}.`,
+        markdown: [
+          `Google’s Search Status Dashboard says the ${update.name} began rolling out on ${dayOf(update.start)} (UTC). ${notice}`,
+          '',
+          `Rankings can move while an update rolls out, so a change in your Search Console clicks in these days may line up with it. Lining up is timing only: it does not show the update caused the change. ${yours}`,
+          '',
+          'You get one more email when Google says it has finished.',
+        ].join('\n'),
+      }
+    }
+    const days = Math.round(
+      (Date.parse(update.end) - Date.parse(update.start)) / 86_400_000,
+    )
+    return {
+      subject: `Google finished the ${update.name}`,
+      preview: `It ran from ${dayOf(update.start)} to ${dayOf(update.end)}.`,
+      markdown: [
+        `Google’s Search Status Dashboard says the ${update.name} finished rolling out on ${dayOf(update.end)}, ${days} ${days === 1 ? 'day' : 'days'} after it began on ${dayOf(update.start)} (UTC). ${notice}`,
+        '',
+        `Search Console’s final data runs a few days behind. To see what moved, ask your agent to compare each site before and after ${update.start.slice(0, 10)} (seo_compare), which also names the updates in those dates. A change that lines up with the update is timing only, not proof it caused it. ${yours}`,
+      ].join('\n'),
+    }
+  },
+}
+
 export const ALERTS = {
+  'google-update': googleUpdate,
   'index-changes': indexChanges,
   'weekly-summary': weeklySummary,
 } as const
 
 export type AlertTypeId = keyof typeof ALERTS
 export type AlertData = {
+  'google-update': GoogleUpdateAlert
   'index-changes': IndexChanges
   'weekly-summary': WeeklySummary
 }

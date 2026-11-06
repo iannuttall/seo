@@ -542,6 +542,16 @@ export const researchCommand = defineCommand({
       description:
         'ai_answers only: comma-separated tasks an earlier run returned as not ready.',
     },
+    also: {
+      type: 'string',
+      description:
+        "ai_answers only: the brand's other domains, comma-separated, such as claude.ai beside claude.com. A citation to any of them counts as citing the target.",
+    },
+    brand: {
+      type: 'string',
+      description:
+        "ai_answers only: comma-separated brand names that count as a mention, such as Datadog for datadoghq.com. Default: each domain's name.",
+    },
     target: {
       type: 'string',
       description: 'Domain, subfolder ending in / or page URL.',
@@ -601,6 +611,8 @@ export const researchCommand = defineCommand({
         throw new SeoError('INVALID_INPUT', 'ai_answers uses dataforseo.')
       }
       const tasks = csvArg(args.tasks) ?? []
+      const also = csvArg(args.also)
+      const brand = csvArg(args.brand)
       const site =
         keywords.length || tasks.length
           ? (target ?? '')
@@ -614,6 +626,8 @@ export const researchCommand = defineCommand({
             offset: numberArg(args.offset) ?? 0,
             questions: keywords,
             tasks,
+            also,
+            brand,
             // No MCP client to time out, so wait for the queue.
             waitSeconds: 240,
           },
@@ -623,6 +637,8 @@ export const researchCommand = defineCommand({
             cliCall('research', {
               action,
               target,
+              also: also?.join(','),
+              brand: brand?.join(','),
               tasks: answered.join(',') || undefined,
               country,
               detail: 'rows',

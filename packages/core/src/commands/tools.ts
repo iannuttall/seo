@@ -6,7 +6,11 @@ import {
   LINT_META_KINDS,
   LINT_PRESETS,
 } from '../lint/types.js'
-import { AI_ANSWER_TASK_PATTERN, runAiAnswers } from './ai-answers.js'
+import {
+  AI_ANSWER_DOMAINS,
+  AI_ANSWER_TASK_PATTERN,
+  runAiAnswers,
+} from './ai-answers.js'
 import { analyticsSignIn, runAnalyticsRows } from './analytics.js'
 import { AUDIT_SECTION, AUDIT_SECTION_TEXT } from './audit.js'
 import {
@@ -497,6 +501,20 @@ export const SHARED_TOOLS: SharedTool[] = [
         .describe(
           'ai_answers only: the tasks an earlier run returned as not ready, to read back at no cost.',
         ),
+      also: z
+        .array(z.string().min(1))
+        .max(AI_ANSWER_DOMAINS - 1)
+        .default([])
+        .describe(
+          "ai_answers only: the brand's other domains, such as claude.ai beside claude.com. A citation to any of them counts as citing the target.",
+        ),
+      brand: z
+        .array(z.string().min(1).max(60))
+        .max(10)
+        .default([])
+        .describe(
+          "ai_answers only: the brand names that count as a mention, such as Datadog for datadoghq.com. Default: each domain's name.",
+        ),
       country: z
         .string()
         .regex(/^[a-z]{2}$/)
@@ -531,11 +549,13 @@ export const SHARED_TOOLS: SharedTool[] = [
             offset: input.offset,
             questions: input.keywords,
             tasks: input.tasks,
+            also: input.also,
+            brand: input.brand,
           },
           await surface.keys(),
           surface.deps,
           (offset, tasks) =>
-            `seo_research with the same provider, action and target, tasks ${JSON.stringify(tasks)}, detail "rows", offset ${offset}. Passing the tasks reads these answers back at no cost; without them every question is asked and paid for again`,
+            `seo_research with the same provider, action, target, also and brand, tasks ${JSON.stringify(tasks)}, detail "rows", offset ${offset}. Passing the tasks reads these answers back at no cost; without them every question is asked and paid for again`,
         )
       }
       return runResearch(input, await surface.keys(), {

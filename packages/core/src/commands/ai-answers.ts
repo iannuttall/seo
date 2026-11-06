@@ -29,6 +29,8 @@ import { type CommandDeps, CommandError, type CommandResult } from './types.js'
 // later at no cost.
 
 export const AI_ANSWER_QUESTIONS = 10
+// The most domains one brand is checked under: the target and the rest.
+export const AI_ANSWER_DOMAINS = 5
 const QUESTION_DAYS = 90
 
 // What an engine showed: the answer as Markdown, the URLs it cited (never
@@ -154,6 +156,8 @@ type Answer = {
     | 'pending'
     | 'unavailable'
   cited_url: string | null
+  // For a mentioned answer, the domain or brand name its text names.
+  mentioned_as: string | null
   // The other sites the answer cites, by host, up to MAX_SOURCES.
   sources: string[]
   // The model DataForSEO reports for the answer, when it reports one.
@@ -196,14 +200,20 @@ const isSource = (url: string) => {
   return !NOT_SOURCES.some((name) => host === name || host.endsWith(`.${name}`))
 }
 
-const empty = { cited_url: null, sources: [], model: null, answered_at: null }
+const empty = {
+  cited_url: null,
+  mentioned_as: null,
+  sources: [],
+  model: null,
+  answered_at: null,
+}
+
+// The site an answer is judged for: every domain a citation can be on, and
+// the domains and brand names its text can mention it by.
+type Site = { domains: string[]; names: string[]; terms: string[] }
 
 // What a finished task says about the site.
-function judge(
-  engine: Engine,
-  task: DataForSeoQueued,
-  site: { domain: string; terms: string[] },
-): Answer {
+function judge(engine: Engine, task: DataForSeoQueued, site: Site): Answer {
   if (task.status_code === DATAFORSEO_NO_RESULTS) {
     return { result: 'no_answer', ...empty }
   }
@@ -222,27 +232,40 @@ function judge(
   const linked = (shown.markdown.match(/https?:\/\/[^\s)\]]+/g) ?? []).map(
     (url) => url.replace(/[`'"‘’“”()[\]{}<>.,;:!?*]+$/, ''),
   )
-  const all = [...shown.sources, ...linked]
-  // A placeholder site, such as example.com, is never cited or mentioned.
-  const placeholder = isPlaceholder(site.domain)
-  const cited = placeholder
-    ? null
-    : (all.find((url) => onSite(url, site.domain)) ?? null)
+  // Every citation, for the site or another, comes from this one list, so
+  // an image, a CDN or a placeholder link (such as a ChatGPT thumbnail on
+  // images.openai.com) is never one.
+  const all = [...shown.sources, ...linked].filter(isSource)
+  const onTarget = (url: string) =>
+    site.domains.some((domain) => onSite(url, domain))
+  const cited = all.find(onTarget) ?? null
   const sources = [
     ...new Set(
       all
-        .filter((url) => !onSite(url, site.domain) && isSource(url))
+        .filter((url) => !onTarget(url))
         .map(hostOf)
         .filter((host): host is string => Boolean(host)),
     ),
   ].slice(0, MAX_SOURCES)
-  const base = { cited_url: cited, sources, model: shown.model, answered_at }
+  const base = {
+    cited_url: cited,
+    mentioned_as: null,
+    sources,
+    model: shown.model,
+    answered_at,
+  }
   if (cited) return { result: 'cited', ...base }
   const text = prose(shown.markdown)
-  const mentioned =
-    !placeholder &&
-    (text.toLowerCase().includes(site.domain) || isBrandQuery(text, site.terms))
-  return { result: mentioned ? 'mentioned' : 'neither', ...base }
+  const lower = text.toLowerCase()
+  const mentioned_as =
+    site.names.find((name) => lower.includes(name)) ??
+    site.terms.find((term) => isBrandQuery(text, [term])) ??
+    null
+  return {
+    result: mentioned_as ? 'mentioned' : 'neither',
+    ...base,
+    mentioned_as,
+  }
 }
 
 // The market for each engine, checked against DataForSEO's free location
@@ -331,6 +354,12 @@ export async function runAiAnswers(
     // How long to wait for queued answers before returning the rest as
     // tasks. Default AI_ANSWER_WAIT_SECONDS.
     waitSeconds?: number
+    // Other domains of the same brand, such as claude.ai beside
+    // claude.com: a citation to any of them counts as citing the site.
+    also?: string[]
+    // The names that count as a mention. Default: each domain's name, such
+    // as "datadoghq" for datadoghq.com.
+    brand?: string[]
   },
   headers: Headers,
   deps: CommandDeps,
@@ -346,7 +375,39 @@ export async function runAiAnswers(
       `ai_answers needs a site with a domain, not "${input.site}".`,
     )
   }
-  const site = { domain, terms: deriveBrandTerms({ siteUrl: input.site }) }
+  const domains = [domain]
+  for (const value of input.also ?? []) {
+    const other = registrableDomain(value)?.domain
+    if (!other) {
+      throw new CommandError(
+        'INVALID_INPUT',
+        `ai_answers takes domains in also, not "${value}".`,
+      )
+    }
+    if (!domains.includes(other)) domains.push(other)
+  }
+  if (domains.length > AI_ANSWER_DOMAINS) {
+    throw new CommandError(
+      'INVALID_INPUT',
+      `ai_answers takes up to ${AI_ANSWER_DOMAINS - 1} other domains in also.`,
+    )
+  }
+  // A placeholder, such as example.com, is never cited or mentioned.
+  const names = domains.filter((name) => !isPlaceholder(name))
+  const brand = [
+    ...new Set((input.brand ?? []).map((b) => b.trim()).filter(Boolean)),
+  ]
+  const site: Site = {
+    domains,
+    names,
+    terms: [
+      ...new Set(
+        brand.length
+          ? brand.flatMap((name) => deriveBrandTerms({ name, siteUrl: '' }))
+          : names.flatMap((name) => deriveBrandTerms({ siteUrl: name })),
+      ),
+    ],
+  }
   const given = [
     ...new Set((input.questions ?? []).map((q) => q.trim()).filter(Boolean)),
   ]
@@ -548,13 +609,14 @@ export async function runAiAnswers(
                 `Other sites these answers cite: ${topCited.map(([host, n]) => `${host} (${n})`).join(', ')}.`,
               ]
             : []),
-          ...(isPlaceholder(domain)
-            ? [
-                `${domain} is a placeholder domain that answers write into examples, so no answer counts as citing or mentioning it.`,
-              ]
-            : []),
+          ...domains
+            .filter((name) => !names.includes(name))
+            .map(
+              (name) =>
+                `${name} is a placeholder domain that answers write into examples, so no answer counts as citing or mentioning it.`,
+            ),
           'Each row is one sample of an answer that changes from run to run, not a ranking.',
-          `cited: the answer lists or links a page on ${domain} or a subdomain. mentioned: no such source, but the answer text names ${[domain, ...site.terms].join(' or ')}, a text match. no_answer: the engine showed no AI answer for the question. sources: the other sites the answer cites, up to ${MAX_SOURCES}. model: the model DataForSEO reports for the answer, when it reports one.`,
+          `cited: the answer lists or links a page on ${domains.join(', ')} or a subdomain. mentioned: no such source, but the answer text names ${[...names, ...site.terms].join(' or ') || 'nothing to match'}, a text match (brand names ${brand.length ? 'as given' : 'from the domain names; pass brand names to match others'}); mentioned_as is the one found. no_answer: the engine showed no AI answer for the question. sources: the other sites the answer cites, up to ${MAX_SOURCES}. model: the model DataForSEO reports for the answer, when it reports one.`,
           `Engines: ${ENGINES.map((engine) => `${engine.name} is ${engine.means}`).join('; ')}.`,
         ]
       : []),
@@ -565,6 +627,7 @@ export async function runAiAnswers(
     engine: row.engine,
     result: row.result,
     cited_url: row.cited_url,
+    mentioned_as: row.mentioned_as,
     sources: row.sources.join(', '),
     model: row.model,
     answered_at: row.answered_at,
@@ -593,6 +656,11 @@ export async function runAiAnswers(
           ? { section: 'given' }
           : { section: 'ai-queries', ...range },
       questions: [...new Set(rows.map((row) => row.question))],
+      // Where a citation counts as citing the site, and the brand names a
+      // mention is matched by, with where they came from.
+      domains,
+      brandTerms: site.terms,
+      brandTermsFrom: brand.length ? 'given' : 'domains',
       costUsd: cost,
       pendingTasks: left,
       // Every answer's task: pass them as tasks to page through these

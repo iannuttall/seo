@@ -18,7 +18,7 @@ export const redirectTraceCommand = defineCommand({
     },
     'max-hops': {
       type: 'string',
-      description: 'Maximum redirect hops to follow. Defaults to 10.',
+      description: 'Maximum redirect hops to follow, up to 10. Defaults to 10.',
     },
     refresh: {
       type: 'boolean',
@@ -52,18 +52,27 @@ export const redirectTraceCommand = defineCommand({
       title: 'Redirect trace',
       target: report.url,
       status:
-        report.summary.issues.length > 0
+        report.summary.issues.length > 0 || report.summary.error
           ? 'warning'
           : report.summary.finalIndexable === undefined
             ? 'unknown'
             : 'pass',
-      summary:
-        report.summary.issues.length > 0
-          ? report.summary.issues.join(', ')
-          : `${report.summary.hops} redirect hops ended at HTTP ${report.summary.finalStatus}.`,
+      summary: [
+        report.summary.error
+          ? `${report.summary.outcome === 'timeout' ? 'Timed out' : 'Failed'} at ${report.finalUrl}: ${report.summary.error}`
+          : report.summary.issues.length > 0
+            ? ''
+            : `${report.summary.hops} redirect ${report.summary.hops === 1 ? 'hop' : 'hops'} ended at HTTP ${report.summary.finalStatus}.`,
+        report.summary.issues.join(', '),
+      ]
+        .filter(Boolean)
+        .join(' '),
       metrics: [
         { label: 'Final URL', value: report.finalUrl },
-        { label: 'Final status', value: report.summary.finalStatus },
+        {
+          label: 'Final status',
+          value: report.summary.finalStatus ?? 'No response',
+        },
         {
           label: 'Indexable',
           value:

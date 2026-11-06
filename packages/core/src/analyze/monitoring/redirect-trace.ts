@@ -1,4 +1,7 @@
-import { publicHttpFetch } from '../../fetch/http-client.js'
+import {
+  type RedirectOutcome,
+  traceRedirects,
+} from '../../commands/redirect-chain.js'
 import { crawlOne } from './crawl-page.js'
 
 export type RedirectTraceStep = {
@@ -24,7 +27,11 @@ export type RedirectTraceReport = {
   generatedAt: string
   summary: {
     hops: number
-    finalStatus: number
+    // Null when the last request got no response (see outcome and error).
+    finalStatus: number | null
+    // How the trace ended: done, loop, too_many, timeout or error.
+    outcome: RedirectOutcome
+    error?: string
     finalIndexable?: boolean
     issues: RedirectTraceIssue[]
   }
@@ -37,16 +44,6 @@ export type RedirectTraceReport = {
     indexable: boolean
   }
   warnings: string[]
-}
-
-function resolveNextUrl(location: string, baseUrl: string): string | undefined {
-  try {
-    const next = new URL(location, baseUrl)
-    next.hash = ''
-    return next.toString()
-  } catch {
-    return undefined
-  }
 }
 
 function redirectIssue(input: {
@@ -83,77 +80,33 @@ export async function redirectTrace(input: {
   refresh?: boolean
   js?: boolean | 'auto'
 }): Promise<RedirectTraceReport> {
-  const maxHops = input.maxHops ?? 10
   const warnings: string[] = []
-  const chain: RedirectTraceStep[] = []
-  const seen = new Set<string>()
-  let currentUrl = new URL(input.url).toString()
-  let stoppedForLoop = false
-  let stoppedForLimit = false
-
-  for (let hop = 0; hop <= maxHops; hop += 1) {
-    if (seen.has(currentUrl)) {
-      stoppedForLoop = true
-      break
-    }
-    seen.add(currentUrl)
-
-    const startedAt = Date.now()
-    const controller = new AbortController()
-    const timer = setTimeout(
-      () => controller.abort(),
-      input.timeoutMs ?? 20_000,
-    )
-
-    try {
-      const response = await publicHttpFetch(currentUrl, {
-        redirect: 'manual',
-        signal: controller.signal,
-      })
-      const location = response.headers.get('location') ?? undefined
-      const nextUrl = location
-        ? resolveNextUrl(location, currentUrl)
-        : undefined
-
-      chain.push({
-        url: currentUrl,
-        status: response.status,
-        location,
-        nextUrl,
-        durationMs: Date.now() - startedAt,
-      })
-
-      if (response.status < 300 || response.status >= 400) break
-      if (!nextUrl) break
-      currentUrl = nextUrl
-    } catch (error) {
-      warnings.push(
-        `${currentUrl}: ${error instanceof Error ? error.message : String(error)}`,
-      )
-      break
-    } finally {
-      clearTimeout(timer)
-    }
-  }
-
-  const lastStep = chain.at(-1)
-  if (
-    lastStep &&
-    lastStep.status >= 300 &&
-    lastStep.status < 400 &&
-    chain.length > maxHops
-  ) {
-    stoppedForLimit = true
-  }
-
-  const finalUrl = lastStep?.nextUrl ?? lastStep?.url ?? currentUrl
-  const final = await crawlOne(finalUrl, {
-    refresh: input.refresh,
-    js: input.js ?? 'auto',
+  const trace = await traceRedirects(new URL(input.url).toString(), {
+    maxHops: input.maxHops,
+    timeoutMs: input.timeoutMs,
   })
-  if (final.warning) warnings.push(final.warning)
+  const chain: RedirectTraceStep[] = trace.steps.map((step) => ({
+    url: step.url,
+    status: step.status,
+    ...(step.location
+      ? { location: step.location, nextUrl: step.location }
+      : {}),
+    durationMs: step.ms,
+  }))
+  if (trace.error) warnings.push(`${trace.final_url}: ${trace.error}`)
 
-  const finalPage = final.page
+  const finalUrl = trace.final_url
+  // The final page is only read when the redirects ended on a response.
+  const final =
+    trace.outcome === 'done'
+      ? await crawlOne(finalUrl, {
+          refresh: input.refresh,
+          js: input.js ?? 'auto',
+        })
+      : undefined
+  if (final?.warning) warnings.push(final.warning)
+
+  const finalPage = final?.page
     ? {
         title: final.page.title,
         canonical: final.page.canonical,
@@ -167,8 +120,8 @@ export async function redirectTrace(input: {
     finalIndexable: finalPage?.indexable,
     canonical: finalPage?.canonical,
     finalUrl,
-    stoppedForLoop,
-    stoppedForLimit,
+    stoppedForLoop: trace.outcome === 'loop',
+    stoppedForLimit: trace.outcome === 'too_many',
   })
 
   return {
@@ -176,8 +129,10 @@ export async function redirectTrace(input: {
     finalUrl,
     generatedAt: new Date().toISOString(),
     summary: {
-      hops: Math.max(0, chain.length - 1),
-      finalStatus: final.page?.status ?? chain.at(-1)?.status ?? 0,
+      hops: trace.hops,
+      finalStatus: trace.final_status,
+      outcome: trace.outcome,
+      ...(trace.error ? { error: trace.error } : {}),
       finalIndexable: finalPage?.indexable,
       issues,
     },

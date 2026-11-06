@@ -4,6 +4,7 @@ import {
   hasMetaRobotsDirective,
   hasXRobotsDirective,
 } from '../robots-directives.js'
+import { traceRedirects } from './redirect-chain.js'
 import type { PageFacts } from './types.js'
 
 // Live facts for report URLs: status, redirect target, title, meta
@@ -129,7 +130,8 @@ export function headFacts(
   }
 }
 
-async function facts(url: string): Promise<PageFacts> {
+// Facts for one URL. With a response, reads that one instead of fetching.
+async function facts(url: string, given?: Response): Promise<PageFacts> {
   const out: PageFacts = {
     url,
     status: null,
@@ -142,11 +144,13 @@ async function facts(url: string): Promise<PageFacts> {
     google_noindex: null,
   }
   try {
-    const response = await fetch(url, {
-      redirect: 'manual',
-      headers: { 'user-agent': SEO_CRAWLER_USER_AGENT, accept: 'text/html' },
-      signal: AbortSignal.timeout(TIMEOUT_MS),
-    })
+    const response =
+      given ??
+      (await fetch(url, {
+        redirect: 'manual',
+        headers: { 'user-agent': SEO_CRAWLER_USER_AGENT, accept: 'text/html' },
+        signal: AbortSignal.timeout(TIMEOUT_MS),
+      }))
     out.status = response.status
     const location = response.headers.get('location')
     if (location) out.redirects_to = new URL(location, url).toString()
@@ -178,10 +182,8 @@ async function facts(url: string): Promise<PageFacts> {
 }
 
 export function checkPages(urls: string[]): Promise<PageFacts[]> {
-  return Promise.all(urls.slice(0, MAX_PAGES).map(facts))
+  return Promise.all(urls.slice(0, MAX_PAGES).map((url) => facts(url)))
 }
-
-const MAX_HOPS = 5
 
 export type RedirectKind = 'permanent' | 'temporary'
 
@@ -191,7 +193,7 @@ export type LiveCheck = {
   // Each redirect followed, in order, with its status.
   hops: { from: string; status: number; to: string; kind: RedirectKind }[]
   // The last response: the URL itself when it does not redirect. Null when
-  // the redirects loop or go past MAX_HOPS.
+  // the redirects loop or go past MAX_REDIRECT_HOPS.
   last: PageFacts | null
 }
 
@@ -203,26 +205,48 @@ export const redirectKind = (status: number | null): RedirectKind | null =>
       : null
 
 // One URL fetched live from this machine or server, following up to
-// MAX_HOPS redirects one request at a time. These are the redirects the
-// server sends; a browser's HSTS upgrade (shown as "307 Internal Redirect")
-// never reaches a server-side fetch.
+// MAX_REDIRECT_HOPS redirects one request at a time. These are the redirects
+// the server sends; a browser's HSTS upgrade (shown as "307 Internal
+// Redirect") never reaches a server-side fetch.
 export async function liveCheck(url: string): Promise<LiveCheck> {
-  const first = await facts(url)
-  const hops: LiveCheck['hops'] = []
-  const seen = new Set([url])
-  let last = first
-  while (last.redirects_to && last.status !== null) {
-    const kind = redirectKind(last.status)
-    if (!kind) break
-    const to = last.redirects_to
-    hops.push({ from: last.url, status: last.status, to, kind })
-    if (seen.has(to) || hops.length > MAX_HOPS) {
-      return { first, hops, last: null }
-    }
-    seen.add(to)
-    last = await facts(to)
+  const pages: PageFacts[] = []
+  const trace = await traceRedirects(url, {
+    timeoutMs: TIMEOUT_MS,
+    onResponse: async (response, at) => {
+      pages.push(await facts(at, response))
+    },
+  })
+  const hops = trace.steps.flatMap((step) => {
+    const kind = redirectKind(step.status)
+    return step.location && kind
+      ? [{ from: step.url, status: step.status, to: step.location, kind }]
+      : []
+  })
+  if (trace.outcome === 'loop' || trace.outcome === 'too_many') {
+    return { first: pages[0] as PageFacts, hops, last: null }
   }
-  return { first, hops, last }
+  let last = pages.at(-1)
+  if (trace.error) {
+    last =
+      trace.final_status !== null && last
+        ? { ...last, error: trace.error }
+        : {
+            url: trace.final_url,
+            status: null,
+            redirects_to: null,
+            title: null,
+            description: null,
+            h1: null,
+            canonical: null,
+            robots: null,
+            google_noindex: null,
+            error: trace.error,
+          }
+  }
+  const lastPage = last as PageFacts
+  // A failure on the URL's own request is the first response's failure.
+  const first = pages.length > 1 || !trace.error ? pages[0] : lastPage
+  return { first: first as PageFacts, hops, last: lastPage }
 }
 
 // A note, not a defect: same-site 302 and 307 redirects are temporary, and a

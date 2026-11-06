@@ -1,5 +1,6 @@
 import type { LiveCheck } from './page-facts.js'
 import { table } from './present.js'
+import { MAX_REDIRECT_HOPS } from './redirect-chain.js'
 import type { SitemapUrls } from './sitemap-urls.js'
 import type { CommandDeps, IndexStatus } from './types.js'
 
@@ -163,7 +164,7 @@ export function labelOf(e: Evidence): { label: IndexingLabel; why: string } {
   if (!last) {
     return {
       label: 'fix',
-      why: `The redirects loop or pass 5 hops (${hops.map((hop) => hop.status).join(' > ')}).`,
+      why: `The redirects loop or pass ${MAX_REDIRECT_HOPS} hops (${hops.map((hop) => hop.status).join(' > ')}).`,
     }
   }
   if (last.error) {

@@ -101,6 +101,7 @@ Series rules:
 - **Only findings go in the post.** The research steps are a checklist for you, not a list of sections. When a step finds nothing to act on, leave it out: no heading, no "I checked X and found nothing". Keep an absence only when the absence is the finding ("Amp was in none of 28 AI answers").
 - **Lead with the finding, not the method.** Open a section with what's true, not "I requested..." or "I pulled...". The method goes in a short clause or the exhibit caption.
 - **No judgment words.** "Unusually", "remarkably", "impressively", "well set up", "strong" and the like say nothing a reader can check. State the fact instead.
+- Load the `writing-research-led-content` skill and follow it; it sets the writing standard.
 - **Real tables, not code blocks.** Never line up columns with spaces in a code block. Use `UrlMap`, `KeywordTable` or a Markdown table, and check it at 390px.
 
 Sections, in this order, adjusted to the company:

@@ -653,6 +653,7 @@ export const crawlRequestObservationSchema = z.union([
       'tls',
       'timeout',
       'redirect-limit',
+      'redirect-loop',
       'aborted',
       'unknown',
     ]),

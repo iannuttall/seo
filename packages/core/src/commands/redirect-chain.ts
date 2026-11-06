@@ -89,26 +89,71 @@ export async function traceRedirects(
     onResponse?: (response: Response, url: string) => Promise<void>
   } = {},
 ): Promise<RedirectTrace> {
+  const request = options.fetch ?? ((to, init) => fetch(to, init))
+  const { trace, response } = await followRedirects(url, {
+    maxHops: options.maxHops,
+    timeoutMs: options.timeoutMs,
+    onResponse: options.onResponse,
+    request: (to, signal) =>
+      request(to, {
+        redirect: 'manual',
+        headers: {
+          'user-agent': SEO_CRAWLER_USER_AGENT,
+          accept: 'text/html,application/xhtml+xml,*/*;q=0.8',
+        },
+        signal,
+      }),
+  })
+  await response?.body?.cancel().catch(() => undefined)
+  return trace
+}
+
+type HopResponse = {
+  status: number
+  headers: { get(name: string): string | null }
+  body?: { cancel(): Promise<void> } | null
+}
+
+// The redirect loop behind traceRedirects and the crawler's fetches.
+// request must not follow redirects itself. Each request has its own
+// timeout, which also covers onResponse. The response that ends a 'done'
+// trace comes back with its body unread, for the caller to read or cancel;
+// every other body is cancelled. error holds what a failed request threw.
+// When the caller's signal aborts, its error is rethrown as it is.
+export async function followRedirects<R extends HopResponse>(
+  url: string,
+  options: {
+    request: (url: string, signal: AbortSignal) => Promise<R>
+    maxHops?: number
+    timeoutMs?: number
+    signal?: AbortSignal
+    onResponse?: (response: R, url: string) => Promise<void>
+  },
+): Promise<{ trace: RedirectTrace; response: R | null; error?: unknown }> {
   const maxHops = Math.min(
     Math.max(Math.trunc(options.maxHops ?? MAX_REDIRECT_HOPS), 0),
     MAX_REDIRECT_HOPS,
   )
   const timeoutMs = options.timeoutMs ?? REDIRECT_HOP_TIMEOUT_MS
-  const request = options.fetch ?? ((to, init) => fetch(to, init))
   const steps: RedirectStep[] = []
   const end = (
     final_url: string,
     final_status: number | null,
     outcome: RedirectOutcome,
     error?: string,
-  ): RedirectTrace => ({
-    url,
-    steps,
-    hops: steps.filter((step) => step.location !== null).length,
-    final_url,
-    final_status,
-    outcome,
-    ...(error ? { error } : {}),
+    extra: { response?: R; error?: unknown } = {},
+  ) => ({
+    trace: {
+      url,
+      steps,
+      hops: steps.filter((step) => step.location !== null).length,
+      final_url,
+      final_status,
+      outcome,
+      ...(error ? { error } : {}),
+    } satisfies RedirectTrace,
+    response: extra.response ?? null,
+    ...('error' in extra ? { error: extra.error } : {}),
   })
 
   const start = httpUrl(url)
@@ -118,45 +163,61 @@ export async function traceRedirects(
   while (true) {
     seen.add(current)
     const startedAt = Date.now()
-    let response: Response
+    const hop = new AbortController()
+    let timedOut = false
+    const timer = setTimeout(() => {
+      timedOut = true
+      hop.abort()
+    }, timeoutMs)
+    const signal = options.signal
+      ? AbortSignal.any([options.signal, hop.signal])
+      : hop.signal
     try {
-      response = await request(current, {
-        redirect: 'manual',
-        headers: {
-          'user-agent': SEO_CRAWLER_USER_AGENT,
-          accept: 'text/html,application/xhtml+xml,*/*;q=0.8',
-        },
-        signal: AbortSignal.timeout(timeoutMs),
-      })
-    } catch (error) {
-      const timedOut =
-        error instanceof Error &&
-        (error.name === 'TimeoutError' || error.name === 'AbortError')
-      return timedOut
-        ? end(current, null, 'timeout', `No response within ${timeoutMs} ms.`)
-        : end(current, null, 'error', errorText(error))
+      let response: R
+      try {
+        response = await options.request(current, signal)
+      } catch (error) {
+        if (options.signal?.aborted) throw error
+        const timeout =
+          timedOut ||
+          (error instanceof Error &&
+            (error.name === 'TimeoutError' || error.name === 'AbortError'))
+        return timeout
+          ? end(
+              current,
+              null,
+              'timeout',
+              `No response within ${timeoutMs} ms.`,
+              { error },
+            )
+          : end(current, null, 'error', errorText(error), { error })
+      }
+      const ms = Date.now() - startedAt
+      const header = response.headers.get('location')
+      const redirects =
+        REDIRECT_STATUSES.has(response.status) && header !== null
+      const location = redirects ? httpUrl(header, current) : null
+      if (options.onResponse) await options.onResponse(response, current)
+      steps.push({ url: current, status: response.status, location, ms })
+      if (!redirects)
+        return end(current, response.status, 'done', '', { response })
+      await response.body?.cancel().catch(() => undefined)
+      if (!location) {
+        return end(
+          current,
+          response.status,
+          'error',
+          `The Location header is not an http or https URL: ${header.slice(0, 200)}`,
+        )
+      }
+      if (seen.has(location)) return end(current, response.status, 'loop')
+      if (steps.length > maxHops) {
+        return end(current, response.status, 'too_many')
+      }
+      current = location
+    } finally {
+      clearTimeout(timer)
     }
-    const ms = Date.now() - startedAt
-    const header = response.headers.get('location')
-    const redirects = REDIRECT_STATUSES.has(response.status) && header !== null
-    const location = redirects ? httpUrl(header, current) : null
-    if (options.onResponse) await options.onResponse(response, current)
-    await response.body?.cancel().catch(() => undefined)
-    steps.push({ url: current, status: response.status, location, ms })
-    if (!redirects) return end(current, response.status, 'done')
-    if (!location) {
-      return end(
-        current,
-        response.status,
-        'error',
-        `The Location header is not an http or https URL: ${header.slice(0, 200)}`,
-      )
-    }
-    if (seen.has(location)) return end(current, response.status, 'loop')
-    if (steps.length > maxHops) {
-      return end(current, response.status, 'too_many')
-    }
-    current = location
   }
 }
 

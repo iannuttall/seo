@@ -190,6 +190,7 @@ async function readHomepage(
       url,
       controller.signal,
       fetch,
+      { timeoutMs: SITE_FACTS_TIMEOUT_MS },
     )
     const finalUrl = redirectChain.at(-1)?.location ?? url
     const accessBlock = detectAccessBlock({

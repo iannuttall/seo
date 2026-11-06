@@ -11,6 +11,7 @@ export type CrawlFetchErrorKind =
   | 'tls'
   | 'timeout'
   | 'redirect-limit'
+  | 'redirect-loop'
   | 'too-large'
   | 'aborted'
   | 'unknown'

@@ -255,6 +255,7 @@ export type CrawlRequestObservation =
         | 'tls'
         | 'timeout'
         | 'redirect-limit'
+        | 'redirect-loop'
         | 'aborted'
         | 'unknown'
       error: string

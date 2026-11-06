@@ -1,0 +1,418 @@
+---
+title: How I'd grow Anthropic with SEO
+description: "An SEO and AEO teardown of Claude. AI answers name Claude in 54 to 56 of 60 answers but link its pages in only 17 or 18. Here's what I'd ship."
+heading: How I'd grow Anthropic
+lead: AI answers named Claude in 54 to 56 of the 60 answers I collected in two runs, but linked a Claude or Anthropic page in only 17 or 18. Anthropic recently advertised for an SEO Lead. This is what I'd do in that job, starting with the pages AI answers and Google already want to send people to.
+date: '2026-11-06'
+company: Anthropic
+x:
+  company: AnthropicAI
+draft: false
+cover:
+  alt: "A crowd in a town square holds up speech bubbles with Claude's orange spark, while dotted paths lead to a video theatre, a forum hall and a newsstand instead of the open tower with the spark on its roof."
+  title: center
+---
+
+export const beforeHead = `<pre>GET https://claude.com/pricing   (as Googlebot)
+
+&lt;head&gt;
+  …scripts and styles…
+&lt;/head&gt;              ← byte 5,017
+&lt;body&gt;
+  …1.3 MB of page…
+  &lt;title&gt;Plans &amp;amp; pricing | Claude by Anthropic&lt;/title&gt;
+  &lt;link rel="canonical" href="https://claude.com/pricing"&gt;
+  &lt;link rel="alternate" hreflang="ja" …&gt;  (and 7 more)
+                     ← byte 1,319,147</pre>`
+
+export const afterHead = `<pre>GET https://claude.com/pricing   (every user agent)
+
+&lt;head&gt;
+  &lt;title&gt;Plans &amp;amp; pricing | Claude by Anthropic&lt;/title&gt;
+  &lt;meta name="description" …&gt;
+  &lt;link rel="canonical" href="https://claude.com/pricing"&gt;
+  &lt;link rel="alternate" hreflang="ja" …&gt;  (and 7 more)
+  …scripts and styles…
+&lt;/head&gt;
+&lt;body&gt;
+  …</pre>`
+
+export const beforeChain = `<pre>GET https://docs.anthropic.com/en/api/getting-started
+  301 → https://platform.claude.com/docs/en/api/getting-started
+  307 → /docs/en/api/overview
+  200
+
+GET https://support.anthropic.com/en/articles/8324991-about-claude-pro-usage
+  301 → https://support.claude.com/en/articles/8324991-about-claude-pro-usage
+  404</pre>`
+
+export const afterChain = `<pre>GET https://docs.anthropic.com/en/api/getting-started
+  301 → https://platform.claude.com/docs/en/api/overview
+  200
+
+GET https://support.anthropic.com/en/articles/8324991-about-claude-pro-usage
+  301 → https://support.claude.com/en/articles/[the current usage article]
+  200</pre>`
+
+[Claude](https://claude.com/) is the AI assistant and model family built by Anthropic. It makes money from subscriptions (Free, Pro, Max, Team and Enterprise plans) and from the Claude API that developers pay for by the token.
+
+Earlier this year Anthropic advertised for an [SEO Lead](https://web.archive.org/web/20260623120558/https://job-boards.greenhouse.io/anthropic/jobs/5102291008) to "own organic search strategy and technical SEO infrastructure across Anthropic's web properties", naming claude.ai, docs.anthropic.com and anthropic.com. The listing has since closed. This post is what I'd do in that job, using only what anyone can see from outside: public pages, search data and AI answers.
+
+Key findings, from data pulled on 6 November 2026:
+
+- ChatGPT, Google AI Mode and Google's AI Overviews named Claude in 56 of 60 answers to 20 buyer questions, and in 54 of 60 when I asked again. 17 and then 18 of the 60 linked a Claude or Anthropic page, and only 3 and then 5 of Google's 40 did.
+- About 0.6% (19,481 of 3,370,973) of the estimated US Google visits to claude.ai, claude.com and anthropic.com come from searches that don't name Claude or Anthropic.
+- No Claude or Anthropic page is in Google's live results for "chatgpt alternative" (22,200 US searches a month, difficulty 1; 99 results) or "ai assistant" (301,000, difficulty 25; 43 results).
+- For "claude vs chatgpt" (49,500 searches a month), 5 of the 13 sources in Google's AI Overview are YouTube videos. None is from Anthropic.
+- On claude.com/pricing, the title, canonical and hreflang tags arrive after the head for Googlebot, 1.3 MB into the page.
+- 72 of the 300 most-linked old support.anthropic.com addresses now end in a 404, and 159 of the 300 most-linked docs.anthropic.com addresses pass through a temporary redirect.
+
+## Claude is the answer AI gives, in 54 to 56 of 60 answers
+
+Claude doesn't have a brand problem. I asked ChatGPT search, Google AI Mode and Google's AI Overviews 20 questions a buyer might ask ("what is the best AI for writing?", "what are the best ChatGPT alternatives?", "which AI assistant is best for lawyers?"), through `seo research ai_answers` with DataForSEO on 6 November 2026. Claude was named in 56 of the 60 answers. I asked the same 20 questions again later that day, and it was named in 54. Answers vary from one run to the next, so I give both.
+
+The gap is the link. 17 of the 60 answers linked a Claude or Anthropic page in the first run, and 18 in the second. ChatGPT did most of the linking (13 of its 20 answers in the second run). Google's two engines linked one in 3 of their 40 answers, then 5, mostly Claude Academy pages. AI Overviews linked none in the second run.
+
+<KeywordTable
+  caption="Five of the 20 questions, one answer each from three engines in the second run (DataForSEO, US, 6 November 2026). Named means the answer says Claude; linked means it cites a Claude or Anthropic page."
+  sortBy="keyword"
+  columns={[{ key: 'keyword', label: 'Question', format: 'text' }, { key: 'named', label: 'Named Claude', format: 'text', short: 'Named' }, { key: 'linked', label: 'Linked a Claude page', format: 'text', short: 'Linked' }, { key: 'cited', label: 'Google cited instead', format: 'text', short: 'Cited' }]}
+  rows={[
+    { keyword: 'What is the best AI assistant?', named: '3 of 3', linked: 'None', cited: 'Reddit, YouTube, Fortune' },
+    { keyword: 'What is the best AI for coding?', named: '3 of 3', linked: 'ChatGPT (Claude Code page)', cited: 'Reddit, Zapier' },
+    { keyword: 'What is the best AI for writing?', named: '3 of 3', linked: 'ChatGPT (claude.ai)', cited: 'YouTube, a Substack' },
+    { keyword: 'What is the best AI for students?', named: '3 of 3', linked: 'ChatGPT (claude.ai)', cited: 'Reddit, YouTube' },
+    { keyword: 'What is the best AI chatbot for research?', named: '2 of 3', linked: 'ChatGPT, AI Mode (claude.ai)', cited: 'Zapier, a university guide' },
+  ]}
+/>
+
+Two answers show what changes it. "What is Claude AI used for?" got Google AI Mode to cite the Claude Academy lesson "What is Claude?" in both runs. "How are companies using Claude at work?" got AI Mode to cite Academy's use-case page in both runs. Both pages answer the question in their first lines, in plain words. Most of claude.com doesn't.
+
+## What the cited pages say that claude.com doesn't
+
+Zapier was cited in 10 of the 60 answers in each run, and Google's AI Overview for "chatgpt alternative" cites [its "The 4 best ChatGPT alternatives in 2026"](https://zapier.com/blog/chatgpt-alternatives/). It opens with a list:
+
+- "Claude for professionals"
+- "Google Gemini for Google integrations"
+- "Microsoft Copilot for an integrated experience"
+- "Perplexity for searching the web"
+
+Then a table with "Best for" and "Pricing" for each, then pros, cons and a price line ("Free; Pro is $17/month (billed annually)"), and a note that it was "last reviewed in September 2026". An answer engine can lift any one of those lines and it still makes sense on its own.
+
+Claude's own pages describe the product in brand lines. The homepage heading is "Question what's next", and its title calls Claude "The AI for problem solvers". The product overview's heading is "Give Claude more".
+
+<SearchResult
+  caption="The product overview page as Google shows it today, and with a title and description that say what an answer engine would repeat. The page keeps its design and its heading."
+  before={{
+    url: "https://claude.com/product/overview",
+    site: "Claude",
+    title: "Claude | The AI assistant for work",
+    description: "Claude is the AI assistant that gets work done. Hand off tasks, turn ideas into decks, spreadsheets and prototypes, and run scheduled tasks.",
+  }}
+  after={{
+    url: "https://claude.com/product/overview",
+    site: "Claude",
+    title: "Claude: AI assistant for writing, coding and analysis",
+    description: "Claude is Anthropic's AI assistant for long documents, writing and code. Free plan; Pro from $17 a month billed annually. What it does best, with examples.",
+  }}
+/>
+
+The product overview title is already close, and it has 4,498 words of content. What it lacks is the sentence an answer would quote: what Claude is best at, for whom, and what it costs, in the first paragraph. I'd add a short block under the heading on the overview, pricing and each solutions page:
+
+- One sentence on what Claude is and who it's for, naming the job ("Claude is an AI assistant for professionals who work with long documents, writing and code").
+- A "best for" line per plan, with the price.
+- A dated "last updated" line, as Zapier's has.
+
+That's the same message Zapier already uses ("Claude for professionals"), which is a good sign it's the one answers repeat. The [AEO advice I keep coming back to](https://x.com/i/web/status/2102415384104337674) is that answer engines cite paragraphs, not pages, so each section should open with a sentence that answers its question on its own.
+
+## 0.6% of Claude's search traffic is from people who don't search its name
+
+Brand demand for Claude is enormous. The non-brand demand is where the room is.
+
+<TrafficMap
+  caption="Estimated US Google visits to claude.ai, claude.com and anthropic.com, from each domain's top 1,000 organic keywords (DataForSEO Labs, 6 November 2026). Blue pages sell a plan or the API. Non-brand topics are the small tile in grey."
+  items={[
+    { label: "Brand searches to the claude.ai sign-in", value: 1854035, tone: "brand" },
+    { label: "Brand searches to anthropic.com", value: 654006, tone: "brand", note: "Mostly the homepage, news and model pages" },
+    { label: "Product, pricing and download pages", value: 345809, tone: "sells", note: "claude.com, led by the Claude Code page and the download page" },
+    { label: "Docs, help center and Academy", value: 181227, tone: "brand" },
+    { label: "Console and API keys", value: 175300, tone: "sells" },
+    { label: "Status page", value: 84466, tone: "brand" },
+    { label: "Typos and off-topic searches", value: 56651, tone: "waste", note: 'Searches such as "laude", "cl", "clause" and the word "ai"' },
+    { label: "Searches that don't name Claude", value: 19481, tone: "other", note: 'Led by "cowork", "skills" and "agent sdk"' },
+  ]}
+/>
+
+These are DataForSEO estimates, and Anthropic publishes no web traffic figures I could find to check them against. Read the map for its shape. Brand searches are a strength: Google already treats Claude as an entity, and that makes new non-brand pages easier to rank.
+
+The comparison is ChatGPT. chatgpt.com gets an estimated 543,652 US visits a month to its translate pages, 120,462 to its writing tools and 104,013 to its image pages, all from searches that don't say ChatGPT (same data and date). OpenAI built pages for the jobs people search for. Claude has a solutions page per industry, and none of them is written for a search.
+
+## No Claude page in 99 results for "chatgpt alternative"
+
+These are the non-brand searches where Claude is the answer people want and Anthropic has no page that ranks.
+
+<KeywordTable
+  caption="US searches a month and keyword difficulty (DataForSEO, 6 November 2026). Who ranks is the top two organic results, and Claude today is any Claude or Anthropic page, in Google's live US results on 6 November 2026 (DataForSEO, 36 to 99 organic results per search). Brand searches are left out."
+  sortBy="volume"
+  columns={[{ key: 'keyword', label: 'Search', format: 'text' }, { key: 'volume', label: 'US searches', format: 'number' }, { key: 'difficulty', label: 'Difficulty', format: 'number', short: 'KD' }, { key: 'who', label: 'Who ranks', format: 'text' }, { key: 'claude', label: 'Claude today', format: 'text' }]}
+  rows={[
+    { keyword: 'ai assistant', volume: 301000, difficulty: 25, who: 'Google Play, Chatly', claude: 'None in 43' },
+    { keyword: 'claude vs chatgpt', volume: 49500, difficulty: 26, who: 'Pluralsight, Improvado', claude: 'None in 56' },
+    { keyword: 'chatgpt alternative', volume: 22200, difficulty: 1, who: 'Plain English, RightBlogger', claude: 'None in 99' },
+    { keyword: 'ai writing assistant', volume: 18100, difficulty: 38, who: 'Microsoft, QuillBot', claude: 'None in 94' },
+    { keyword: 'codex vs claude code', volume: 14800, difficulty: 22, who: 'Facebook, Morion', claude: 'None in 36' },
+    { keyword: 'chatgpt vs claude', volume: 12100, difficulty: 22, who: 'LowCode Agency, JustThink', claude: 'None in 36' },
+    { keyword: 'is claude better than chatgpt', volume: 12100, difficulty: 13, who: 'Reddit, igmGuru', claude: 'None in 96' },
+    { keyword: 'best ai for coding', volume: 9900, difficulty: 20, who: 'Reddit, Zapier', claude: 'None in 58' },
+    { keyword: 'ai coding agent', volume: 8100, difficulty: 27, who: 'Buildcamp, Reddit', claude: 'None in 56' },
+    { keyword: 'claude code vs cursor', volume: 6600, difficulty: 0, who: 'Medium, Qodo', claude: 'None in 96' },
+    { keyword: 'claude vs gemini', volume: 5400, difficulty: 4, who: 'Reddit, GuruSup', claude: 'None in 93' },
+  ]}
+/>
+
+"chatgpt alternative" has a difficulty of 1. The top 10 are listicles, several from other AI companies (Fyxer, Lovable, StackAI, DigitalOcean), plus Reddit, YouTube and Quora. None is from Anthropic.
+
+<SerpLadder
+  keyword="chatgpt alternative"
+  volume={22200}
+  target="claude.com"
+  targetPosition={null}
+  caption="Organic results for &quot;chatgpt alternative&quot;, US, 6 November 2026 (DataForSEO live). The AI Overview above them cites proton.me, zapier.com, justinmckelvey.com, goodday.work, bit-flows.com and two YouTube videos."
+  rows={[
+    { position: 1, domain: 'ai.plainenglish.io', tag: 'Listicle' },
+    { position: 2, domain: 'rightblogger.com', tag: 'Listicle' },
+    { position: 3, domain: 'tech.co', tag: 'Listicle' },
+    { position: 4, domain: 'reddit.com', tag: 'Forum thread' },
+    { position: 5, domain: 'fyxer.com', tag: 'AI company blog' },
+    { position: 6, domain: 'youtube.com', tag: 'Video' },
+    { position: 7, domain: 'lovable.dev', tag: 'AI company guide' },
+  ]}
+/>
+
+Anthropic already has the page that should rank. claude.com/import-memory is titled "Switch to Claude without starting over" and walks through bringing your context from other AI providers. It mentions ChatGPT 0 times.
+
+I'd make that the switching page, at a clear address such as claude.com/switch, with the import page as one section:
+
+<KeywordTable
+  caption="The sections of a switching page and the search each one answers (DataForSEO, US, November 2026)."
+  sortBy="volume"
+  columns={[{ key: 'section', label: 'Section', format: 'text' }, { key: 'keyword', label: 'Search it answers', format: 'text' }, { key: 'volume', label: 'US searches', format: 'number' }, { key: 'difficulty', label: 'Difficulty', format: 'number', short: 'KD' }]}
+  rows={[
+    { section: 'Why switch', keyword: 'chatgpt alternative', volume: 22200, difficulty: 1 },
+    { section: 'Why switch', keyword: 'chatgpt alternatives', volume: 22200, difficulty: 0 },
+    { section: 'Is Claude free?', keyword: 'is claude free', volume: 22200, difficulty: 10 },
+    { section: 'Bring your memory', keyword: 'best chatgpt alternative', volume: 1000, difficulty: 5 },
+    { section: 'What switching costs', keyword: 'free chatgpt alternative', volume: 720, difficulty: 4 },
+  ]}
+/>
+
+"is claude free" gets 22,200 searches a month. Google's AI Overview cites claude.ai's sign-in page first, but a Reddit thread ranks #1 and the best Anthropic result is claude.com/product/overview at #16. A plain answer on a page that can be crawled (the free plan, its limits and what Pro adds) gives those searches somewhere better to land.
+
+### Comparison pages, written by the company that knows the answer
+
+"claude vs chatgpt", "chatgpt vs claude" and "is claude better than chatgpt" add up to 73,700 US searches a month, and no Claude or Anthropic page ranks for any of them. Google's AI Overview for "claude vs chatgpt" cites 13 sources: 5 YouTube videos, Zapier's own Claude vs ChatGPT page, Towards AI, Medium, HackerNoon, Reddit and a few blogs.
+
+Vendor comparison pages can read as sales copy, which is why most companies skip them. Anthropic can do something nobody else can: say plainly which jobs it built Claude for, with its own benchmark numbers and a date. One page per pair, each with the verdict in the first paragraph:
+
+- Claude vs ChatGPT (49,500, plus 24,200 for the two variants above)
+- Claude Code vs Codex (14,800 and 5,400 for the reverse order)
+- Claude Code vs Cursor (6,600, difficulty 0)
+- Claude vs Gemini (5,400, difficulty 4)
+
+### Use-case pages for the searches ChatGPT already wins
+
+claude.com has 19 solutions pages for industries and teams. Their titles are written for the brand ("Coding | Claude by Anthropic", "Claude legal solutions | Claude by Anthropic"), and none ranks for the search its section answers. "ai for legal" gets 18,100 US searches a month, and Claude's legal page isn't in Google's 99 live results.
+
+<TitleSheet
+  caption="Four of claude.com's solutions pages, with the search each one could answer (DataForSEO, US, November 2026). Each new title keeps the Claude name and leads with the job."
+  rows={[
+    { page: '/solutions/coding', title: 'Coding | Claude by Anthropic', after: 'AI coding assistant and agent for developers | Claude' },
+    { page: '/solutions/legal', title: 'Claude legal solutions | Claude by Anthropic', after: 'AI for legal teams: contract review and research | Claude' },
+    { page: '/solutions/healthcare', title: 'Healthcare | Claude by Anthropic', after: 'AI for healthcare teams and life sciences | Claude' },
+    { page: '/solutions/agents', title: 'AI agents | Claude by Anthropic', after: 'Build AI agents with Claude: tools, SDK and examples' },
+  ]}
+/>
+
+"ai coding assistant" (14,800 searches, difficulty 37), "ai for healthcare" (14,800) and "ai summarizer" (18,100) follow the same pattern. The solutions pages are the right address for them. They need titles, first paragraphs and sections written for the search.
+
+## Be where AI answers already look: YouTube, LinkedIn and the lists
+
+Claude's own pages are one part of the job. The rest is the sources AI answers already cite, and here the engines differ.
+
+<CompareBars
+  caption="Answers that cited YouTube, out of 20 per engine (second run, DataForSEO, US, 6 November 2026; the first run gave 19, 12 and 0). Google's engines lean on video; ChatGPT doesn't."
+  unit="answers"
+  keepOrder
+  highlight={["Google AI Overviews"]}
+  rows={[{"label": "Google AI Overviews", "value": 14}, {"label": "Google AI Mode", "value": 9}, {"label": "ChatGPT search", "value": 0}]}
+/>
+
+That matches larger studies. Across 117,858 AI answers between 1 September and 6 November 2026, [Rankspot](https://www.rankspot.ai/most-cited-sources) found YouTube in 22.5% of AI Overviews and 0.9% of ChatGPT answers, and LinkedIn in 5.7% of AI Overviews. In my runs LinkedIn showed up in 3 and then 4 of 60 answers, all for work questions (financial analysts, consultants, rolling AI out to a company).
+
+Claude's Organization markup already links Anthropic's YouTube channel, LinkedIn page and X account. The plan is one message per use case, published everywhere answers look, in the words people search:
+
+1. The page: the claude.com comparison or use-case page, with the verdict in the first paragraph.
+2. A YouTube video with the search as its title ("Claude vs ChatGPT: which should you use?"), chapters that match the page's sections and a link to the page. The cited videos in the AI Overview are titled exactly like the search.
+3. The same verdict as a LinkedIn post or article from the Claude page, for the work questions where LinkedIn is cited.
+4. An X post with the short version, linking to the page.
+5. Send the page to the lists that answers already cite: Zapier's [ChatGPT alternatives](https://zapier.com/blog/chatgpt-alternatives/) and [best AI chatbots](https://zapier.com/blog/best-ai-chatbot/), plus TechTarget and Digital Trends. Google's AI Overviews cite these for "chatgpt alternative" and "best ai chatbot". Zapier's ChatGPT alternatives page already names Claude first, so the ask is a newer fact or a correction.
+
+Every channel repeats the same sentence about what Claude is best at. That's how an answer engine ends up repeating it too. Jake Ward's [How to win search in 2026](https://x.com/i/article/2093291732741873664) splits this the same way: what you own, and what you influence.
+
+## Technical fixes, closest to revenue first
+
+The listing asked for "sitemaps, structured data (JSON-LD), canonical tags, redirect strategies, and robots.txt across multiple domains". Here's that list for today's sites, ordered by how close each fix sits to a sign-up.
+
+Anthropic runs at least 13 public hosts. I'd keep the split that exists: claude.ai is the app, claude.com the product site, anthropic.com the company and platform.claude.com and code.claude.com the docs. The docs have moved twice already (docs.anthropic.com, then docs.claude.com, then their current homes). The evidence against a third move is in fix 2: the first two moves are still leaking links. Fix the redirects before moving anything again.
+
+<UrlMap
+  caption="Anthropic's main hosts, what each serves and its referring domains (DataForSEO backlinks, host only, 6 November 2026)."
+  rows={[
+    { url: "claude.ai", action: "Keep", tone: "keep", note: "The app, with 141,071 referring domains. It blocks GPTBot, OAI-SearchBot and ChatGPT-User in robots.txt." },
+    { url: "www.anthropic.com", action: "Keep", tone: "keep", note: "The company site, news and research, with 109,888 referring domains." },
+    { url: "claude.com", action: "Keep", tone: "keep", note: "The product site with pricing, solutions and customer stories, with 49,680 referring domains." },
+    { url: "platform.claude.com/docs", action: "Keep", tone: "keep", note: "The API docs and console, with 29,404 referring domains." },
+    { url: "code.claude.com/docs", action: "Keep", tone: "keep", note: "The Claude Code docs, with 26,269 referring domains." },
+    { url: "docs.anthropic.com", action: "Fix", tone: "change", note: "The first docs home, with 22,792 referring domains, now redirected through temporary hops." },
+    { url: "docs.claude.com", action: "Fix", tone: "change", note: "The second docs home, with 10,165 referring domains." },
+    { url: "support.anthropic.com", action: "Fix", tone: "change", note: "The old help center, with 6,917 referring domains. Many of its links end in a 404." },
+  ]}
+/>
+
+### 1. claude.com sends its title and canonical after the head on some pages
+
+The canonical tag tells Google which address is the main copy, and hreflang tells it which language copy to show where. [Google reads both only in the head](https://developers.google.com/search/docs/crawling-indexing/consolidate-duplicate-urls). On claude.com/pricing, requested as Googlebot or a browser, the head closes at byte 5,017. The title, canonical and all eight hreflang links arrive at byte 1,319,147, inside the body. They're still in the body after the page renders in Chrome.
+
+<BeforeAfter
+  caption="Where the head tags sit in the HTML of claude.com/pricing, as Googlebot gets it today (6 of 6 requests on 6 November 2026), and where they belong."
+  before={{ label: "Today", html: beforeHead }}
+  after={{ label: "After the fix", html: afterHead }}
+/>
+
+It depends on the page, the user agent and the request. Of six requests each, the homepage put the tags in the body on some and in the head on others, for Googlebot and a browser alike. On the pricing page, only Bingbot got them in the head. My crawl on 6 November found the pattern on 132 of 600 claude.com pages. The pricing page is the one that matters most: it's where plans are sold, in eight languages.
+
+**The fix:** claude.com runs on Next.js, which streams metadata into the body for any user agent not on its [`htmlLimitedBots`](https://nextjs.org/docs/app/api-reference/config/next-config-js/htmlLimitedBots) list. Google's crawlers are on the default list, yet Googlebot still got the body here, so I'd set `htmlLimitedBots: /.*/` and make metadata blocking for every request. The head tags then arrive in the first bytes of every response. Then confirm with URL Inspection in Search Console that the "User-declared canonical" for claude.com/pricing and claude.com/ja/pricing is the page itself.
+
+### 2. The moved docs and help center leak their most-linked pages
+
+docs.anthropic.com still has 22,792 referring domains and support.anthropic.com 6,917. I followed the 300 most-linked addresses on each old host, as Googlebot.
+
+<CompareBars
+  caption="The 300 most-linked addresses on each old host, by where they end up (DataForSEO backlinks, followed on 6 November 2026). A temporary hop is a 302 or 307 somewhere in the chain."
+  unit="addresses"
+  keepOrder
+  highlight={["support.anthropic.com: end in a 404"]}
+  rows={[{"label": "docs.anthropic.com: one clean 301", "value": 119}, {"label": "docs.anthropic.com: through a temporary hop", "value": 159}, {"label": "docs.claude.com: through a temporary hop", "value": 211}, {"label": "support.anthropic.com: end in a 404", "value": 72}]}
+/>
+
+Two problems. Most docs redirects pass through a 307 inside platform.claude.com, which Google treats as temporary. And 72 of the 300 most-linked help articles end at a 404, because the article slugs changed. "About Claude Pro usage", with 135 referring domains, is one.
+
+<BeforeAfter
+  caption="Two of the most-linked old addresses, followed as Googlebot, today and with one permanent redirect each."
+  before={{ label: "Today", html: beforeChain }}
+  after={{ label: "After the fix", html: afterChain }}
+/>
+
+The Claude Code docs have the same gap in other languages. The Chinese and Japanese slash commands pages, with 67 and 19 referring domains on the old host, redirect to code.claude.com addresses that 404.
+
+**The fix:** a redirect map for every old address with links, built from a backlink export, each pointing with one 301 to the page that answers the same question today. For the help center, map each old article to the one that replaced it, since some slugs changed and some articles were retired. Then rerun the same 900 addresses: every one should end in one 301 and a 200.
+
+### 3. Made-up docs addresses return a 200
+
+platform.claude.com/docs/en/ followed by any made-up path returns a 200 page titled "Documentation | Claude Platform". Every typo and dead link becomes a copy of the docs index for Google. code.claude.com and anthropic.com return a real 404.
+
+<BrowserFrame
+  url="https://platform.claude.com/docs/en/this-page-does-not-exist"
+  tab="Documentation | Claude Platform"
+  status="200 OK"
+  bad
+  caption="A docs address that doesn't exist, 6 November 2026."
+>
+  <p class="text-lg font-medium">Documentation</p>
+  <p class="text-foreground-muted">The docs index, served for any address under /docs/en/.</p>
+</BrowserFrame>
+
+**The fix:** return a 404 status for unknown docs paths, keeping the helpful page as the body. Check it by requesting a made-up address and reading the status.
+
+### 4. claude.com and anthropic.com have no llms.txt or Markdown copies
+
+The docs do this well. platform.claude.com, code.claude.com/docs, claude.com/docs and the help center all serve llms.txt as plain text, and docs pages have Markdown copies. code.claude.com even sends Markdown to the OAI-SearchBot and PerplexityBot user agents.
+
+The pages that sell don't. claude.com/llms.txt and anthropic.com/llms.txt return 404. claude.com pages show a "Copy as markdown" button, but claude.com/pricing.md returns a 404 and a request that asks for Markdown gets HTML. Whether llms.txt itself gets read [is still disputed](https://old.reddit.com/r/GrowthHacking/comments/1uyzkbo/everyones_adding_llmstxt_for_ai_visibility_the), so I'd rank this below the head tags and the copy changes.
+
+**The fix:** a claude.com/llms.txt that lists the product, pricing, plans, comparison and solutions pages with one line each, and Markdown copies of those pages at the same address plus .md.
+
+### 5. No structured data says Claude is software with plans and prices
+
+claude.com marks up WebSite, Organization and Brand on every page, and FAQPage on pricing. No page says Claude is a SoftwareApplication with plans and prices. The anthropic.com homepage has no structured data, and the crawl found 89 of 600 anthropic.com pages without any.
+
+**The fix:** SoftwareApplication markup on the product overview and pricing pages, with an Offer per plan matching the visible prices, and Organization markup on anthropic.com that links to claude.com. Suganthan Mohanadasan's [three lives of schema markup](https://suganthan.com/blog/three-lives-of-schema-markup) explains what this does for Google and less clearly for AI answers.
+
+### Housekeeping
+
+- claude.ai blocks GPTBot, OAI-SearchBot, ChatGPT-User and Google-Extended in robots.txt, and ChatGPT still cites its homepage. That's a fair choice for an app, and it's why the claude.com pages need to carry the answer.
+- anthropic.com's context engineering article links to /effective-context-engineering-for-ai-agents (the "Sonnet 4.5 launch" link), which 404s. The article itself lives at /research/effective-context-engineering-for-ai-agents.
+- 84 of the 600 claude.com pages I crawled share a title with another page, mostly Code with Claude session pages that appear under three addresses.
+
+## Ship it all today, then let it settle
+
+Each fix above is a separate job with a clear end, so these can run in parallel with agents, with Anthropic's team approving each change:
+
+<PlanSteps
+  steps={[{"title": "Head tags", "body": "Make metadata blocking for search crawlers on claude.com so title, canonical and hreflang ship in the head."}, {"title": "Redirect map", "body": "Export every linked address on docs.anthropic.com, docs.claude.com and support.anthropic.com and point each at its current page with one 301."}, {"title": "Docs 404s", "body": "Return a 404 status for unknown paths on platform.claude.com/docs."}, {"title": "Answer blocks", "body": "Add a what-it-is, best-for and price block with a date to the overview, pricing and solutions pages, and retitle the solutions pages for their searches."}, {"title": "Switching page", "body": "Turn the import memory page into the ChatGPT alternative page, with an is-Claude-free section."}, {"title": "Comparison pages", "body": "Draft Claude vs ChatGPT, Claude Code vs Codex, Claude Code vs Cursor and Claude vs Gemini, each with the verdict first and a date."}, {"title": "Video and LinkedIn", "body": "Script one YouTube video and one LinkedIn post per comparison page, titled like the search."}, {"title": "AI-readable copies", "body": "Publish claude.com/llms.txt, Markdown copies of the selling pages and SoftwareApplication markup."}]}
+/>
+
+Then 30 days of checks:
+
+<PlanSteps
+  steps={[{"marker": "Day 0", "title": "Ask Google to recrawl", "body": "Submit every changed and new URL to Index My Site."}, {"marker": "Day 3", "title": "Check the head and redirects", "body": "URL Inspection shows the canonical on claude.com/pricing; the 900 old addresses each end in one 301 and a 200."}, {"marker": "Day 7", "title": "First impressions", "body": "Search Console impressions for chatgpt alternative, claude vs chatgpt and is claude free on the new pages."}, {"marker": "Day 14", "title": "Sign-ups from the new pages", "body": "Free and Pro sign-ups that started on a comparison, switching or solutions page."}, {"marker": "Day 30", "title": "Ask the same 20 questions", "body": "Rerun the AI answers and compare: how many of the 60 link a Claude page, and how many of Google's 40."}]}
+/>
+
+## Get the changes seen quickly
+
+Most of this changes pages Google already knows, and the redirect fixes only count once Google recrawls the old addresses. I'd submit every changed URL and every fixed old address to [Index My Site](https://indexmysite.app/) as it ships.
+
+## How I ran this
+
+I build SEO Skill and Index My Site, and everything in this teardown came from SEO Skill, run by an agent, plus a few hand checks with curl and a browser. You can run the same audit on your own site.
+
+**1. Connect the hosted MCP server.** It's free. You sign in with Google, and there's nothing to install. In Claude Code:
+
+```sh
+claude mcp add --transport http seoskill https://seoskill.dev/mcp
+```
+
+The [MCP guide](/docs/mcp) has the steps for other agents.
+
+**2. Add a research key.** On your [account page](/account), save an Ahrefs or DataForSEO key. With DataForSEO, your agent can also ask ChatGPT and Google's AI answers your questions and check who they cite.
+
+**3. Install the CLI for crawling.** The crawl runs on your machine:
+
+```sh
+npm i -g seo
+seo login
+```
+
+**4. Ask your agent.** This is close to the prompt I used:
+
+```text
+Audit example.com and every host we own.
+Ask ai_answers 20 buyer questions about our category
+and list which answers name us and which link to us.
+Find the non-brand searches where we have no page.
+Crawl the main site and check that title, canonical
+and hreflang are in the head for Googlebot.
+Follow the 300 most-linked URLs on every old host
+and count redirects that are temporary or end in 404.
+Rank every fix by how close it sits to a sign-up.
+```
+
+If your brand is already the answer, the lesson from this one is cheap to apply: ask the engines your buyers' questions, count the answers that name you and the ones that link to you, and write the sentence you want repeated at the top of the page that should get the link.
+
+If you're at Anthropic, I'm happy to talk any of this through. And if you'd like the same teardown for your company, [SEO Skill](/) will run it for you.
+
+## Further reading
+
+- [GEO is a distraction](https://www.mariehaynes.com/geo-is-a-distraction), Marie Haynes: Google still drives most conversions, which is why the head tags and redirects come first.
+- [Make each section useful on its own](https://x.com/i/web/status/2097252340973617458), on how answer engines read a page one section at a time.
+- [Almost nobody gets XML sitemaps right](https://joost.blog/broken-sitemaps), Joost de Valk.

@@ -183,6 +183,9 @@ CREATE TABLE IF NOT EXISTS pages (
   h1 TEXT,
   canonical TEXT,
   robots TEXT,
+  -- 1 when the robots or googlebot meta tag or an X-Robots-Tag for Google
+  -- says noindex; a header scoped to another crawler does not count.
+  google_noindex INTEGER,
   words INTEGER,
   bytes INTEGER,
   ms INTEGER,
@@ -243,6 +246,7 @@ export const PAGES_ADDED: [string, string][] = [
   ['render', 'TEXT'],
   ['render_error', 'TEXT'],
   ['raw', 'TEXT'],
+  ['google_noindex', 'INTEGER'],
 ]
 
 // Creates the tables and adds columns an older object lacks. Run when the

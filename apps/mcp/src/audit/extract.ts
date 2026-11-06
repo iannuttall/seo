@@ -1,3 +1,4 @@
+import { hasMetaRobotsDirective } from '@seo/core/hosted'
 import { Parser } from 'htmlparser2'
 
 // Reads one HTML response as a stream and keeps only the facts the audit
@@ -15,7 +16,12 @@ export type PageFacts = {
   description: string | null
   h1: string | null
   canonical: string | null
+  // The robots and googlebot meta tags, a googlebot one with its name.
   robots: string | null
+  // A noindex in the robots or googlebot meta tags (not the header).
+  google_noindex: boolean
+  // A nofollow in the robots meta tag, which this crawler honours.
+  nofollow: boolean
   lang: string | null
   words: number
   bytes: number
@@ -53,6 +59,7 @@ export async function extractPage(
   let lang: string | null = null
   let base = pageUrl
   const robots: string[] = []
+  const googlebot: string[] = []
   let words = 0
   let anchor: { href: string; text: string; nofollow: boolean } | null = null
   const internal = new Map<string, Link>()
@@ -78,6 +85,9 @@ export async function extractPage(
           }
           if (metaName === 'robots' && attributes.content) {
             robots.push(attributes.content)
+          }
+          if (metaName === 'googlebot' && attributes.content) {
+            googlebot.push(attributes.content)
           }
         } else if (
           name === 'link' &&
@@ -157,7 +167,17 @@ export async function extractPage(
     description,
     h1: h1Seen || h1 ? clean(h1) : null,
     canonical,
-    robots: robots.length ? robots.join(', ').toLowerCase() : null,
+    robots:
+      robots.length || googlebot.length
+        ? [...robots, ...googlebot.map((value) => `googlebot: ${value}`)]
+            .join(', ')
+            .toLowerCase()
+        : null,
+    google_noindex: hasMetaRobotsDirective(
+      [...robots, ...googlebot],
+      'noindex',
+    ),
+    nofollow: hasMetaRobotsDirective(robots, 'nofollow'),
     lang,
     words,
     bytes,

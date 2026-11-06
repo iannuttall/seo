@@ -179,7 +179,8 @@ export function syncKnown(
     `UPDATE checks SET live = p.live,
        live_changed_at = CASE WHEN checks.live IS NULL THEN checks.live_changed_at ELSE ? END
      FROM (SELECT url, status || '|' || coalesce(location, '') || '|' || coalesce(canonical, '')
-             || '|' || (lower(coalesce(robots, '') || coalesce(x_robots, '')) LIKE '%noindex%') AS live
+             || '|' || coalesce(google_noindex,
+               lower(coalesce(robots, '') || ' ' || coalesce(x_robots, '')) LIKE '%noindex%') AS live
            FROM pages WHERE state = 'fetched') AS p
      WHERE checks.url = p.url AND checks.live IS NOT p.live`,
     now,

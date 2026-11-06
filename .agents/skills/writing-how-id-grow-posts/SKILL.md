@@ -73,7 +73,7 @@ title: How I'd grow <Company> with SEO        # 30 to 60 characters
 description: ...                              # 70 to 160 characters
 heading: How I'd grow <Company>
 lead: One or two sentences with the finding.
-date: 'YYYY-MM-DD'                            # the day it goes live, at 09:00 UK time: the next free day after the last scheduled post
+date: 'YYYY-MM-DD'                            # the day it ships; the post goes live as soon as it's approved
 company: <Company>
 x:
   company: <handle without @>
@@ -205,6 +205,6 @@ Turn the post into Markdown with `node .agents/skills/writing-how-id-grow-posts/
 Only after Ian approves the post:
 
 1. Before merging, re-pull the headline numbers and recheck that the issues are still live. Update anything that changed.
-2. Set `date` to the post's day and `draft: false`, run all four repo gates, and ship through a PR to `main`. A post with a future date stays out of the build, and `.github/workflows/scheduled-posts.yml` rebuilds the site after 09:00 UK time on its date, so it goes live then without another merge.
+2. Publish as soon as it's approved: set `date` to today and `draft: false`, run all four repo gates, and ship through a PR to `main`. Don't hold a ready post for a later date; only the X posts are spaced out.
 3. Submit the post URL to Index My Site once it's live.
-4. Draft the X Article in Typefully as a plain `x_article` draft (no `plan_at` or `publish_at`), with the cover cropped to 1500x600. Title: "How I'd grow <Company> with SEO". The first line tags the company with the upside, then the main findings in an informal voice, then the post link at the end. One mention only: `x.company`. The post link is the only URL or domain in the text, so X builds the card from our post; describe other sites in words ("a second domain", "the main site"). Put `seo` commands in backticks. Run `seo lint` on the text with `--preset landing`. Ian schedules it himself, for 13:15 UK time on the post's day.
+4. Draft the X Article in Typefully as a plain `x_article` draft (no `plan_at` or `publish_at`), with the cover cropped to 1500x600. Title: "How I'd grow <Company> with SEO". The first line tags the company with the upside, then the main findings in an informal voice, then the post link at the end. One mention only: `x.company`. The post link is the only URL or domain in the text, so X builds the card from our post; describe other sites in words ("a second domain", "the main site"). Put `seo` commands in backticks. Run `seo lint` on the text with `--preset landing`. Ian schedules it himself, for 13:15 UK time on the next free day in the X queue (one teardown a day).

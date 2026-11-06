@@ -117,7 +117,7 @@ Sections, in this order, adjusted to the company:
 7. Technical fixes, closest to revenue first. Each gets an `###` subsection: what it is in plain words, an exhibit that shows it, **The fix:** with best practice, and how to confirm it worked.
 8. "Ship it all today, then let it settle": the fixes as parallel agent jobs (`PlanSteps`, numbered, no "Agent 1" labels), then 30 days of checks (`PlanSteps` with `marker: "Day 0"` and so on). Never a week-by-week sprint.
 9. Get the changes seen quickly: Index My Site for every changed and new URL.
-10. How I ran this: the hosted MCP first (free, Google sign-in, research key on the account page), then the CLI for crawling, then the prompt. Say here, once, that we build SEO Skill and Index My Site; nowhere else in the post or the X Article.
+10. How I ran this: the hosted MCP first (free, Google sign-in, research key on the account page), then the CLI for crawling, then the prompt. No disclosure line: it's a product site, so readers can see we build the tools.
 
 Rules that came from Ian's reviews:
 

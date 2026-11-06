@@ -88,7 +88,13 @@ function siteChanges(site: IndexSiteChanges, level: string): string[] {
           const url = new URL(page.url)
           path = `${url.pathname}${url.search}`
         } catch {}
-        lines.push(`- [${path}](${page.url})`)
+        // A drop gets a one-click site: search, because search results can
+        // lag URL Inspection by days.
+        const check =
+          change === 'dropped'
+            ? ` ([check Google](https://www.google.com/search?q=${encodeURIComponent(`site:${page.url}`)}))`
+            : ''
+        lines.push(`- [${path}](${page.url})${check}`)
       }
     }
   }
@@ -101,6 +107,13 @@ function siteChanges(site: IndexSiteChanges, level: string): string[] {
   }
   return lines
 }
+
+// Under every index roundup.
+const INDEX_NOTE = [
+  'URL Inspection shows Google’s latest indexing decision. Search results can take a few days to catch up, so a dropped page may still show in a site: search for a while (and Google sometimes puts it back). Use check Google to see what search shows now.',
+  '',
+  'A top page’s drop is reported only after a second check agrees.',
+]
 
 const indexChanges: AlertType<IndexChanges> = {
   title: 'Google index changes',
@@ -145,7 +158,7 @@ const indexChanges: AlertType<IndexChanges> = {
           ...siteChanges(site, '###'),
         ]),
         '',
-        'A top page’s drop is reported only after a second check agrees.',
+        ...INDEX_NOTE,
       ].join('\n'),
     }
   },
@@ -189,7 +202,7 @@ const weeklySummary: AlertType<WeeklySummary> = {
           '## Google index changes since the last daily roundup',
           ...roundup,
           '',
-          'A top page’s drop is reported only after a second check agrees.',
+          ...INDEX_NOTE,
         ].join('\n')
       : ''
     const markdown = `${weekMarkdown(data)}${index}${data.sites.length ? autopilot(data.account) : ''}`

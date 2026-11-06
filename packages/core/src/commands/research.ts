@@ -7,23 +7,23 @@ import {
 } from './domain-rating.js'
 import type { Detail } from './present.js'
 import {
-  dataForSeoLanguage,
-  SERP_DEPTH,
-  type ResearchAction,
-  type ResearchProvider,
-  type ResearchScope,
-  research,
-  researchScope,
-  type SiteTotal,
-} from './research-providers.js'
-import { PAGE_SIZE, rowsText } from './rows.js'
-import {
   type ResearchStore,
   readResearch,
   researchKey,
   saveResearch,
   workersResearchStore,
 } from './research-cache.js'
+import {
+  dataForSeoLanguage,
+  type ResearchAction,
+  type ResearchProvider,
+  type ResearchScope,
+  research,
+  researchScope,
+  SERP_DEPTH,
+  type SiteTotal,
+} from './research-providers.js'
+import { PAGE_SIZE, rowsText } from './rows.js'
 import { CommandError, type CommandResult } from './types.js'
 
 export type {

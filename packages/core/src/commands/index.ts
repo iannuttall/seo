@@ -9,7 +9,6 @@ export type {
 } from '../gsc/client/types.js'
 export * from '../lint/index.js'
 export * from './ai-answers.js'
-export type { ResearchStore } from './research-cache.js'
 export * from './analytics.js'
 export * from './analytics-site.js'
 export * from './audit.js'
@@ -27,6 +26,7 @@ export * from './present.js'
 export * from './redirect-chain.js'
 export * from './report.js'
 export * from './research.js'
+export type { ResearchStore } from './research-cache.js'
 export {
   dataForSeoLanguage,
   dataForSeoMarket,

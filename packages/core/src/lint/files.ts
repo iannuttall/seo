@@ -21,6 +21,18 @@ const EXTENSIONS = new Set([
   '.txt',
 ])
 const SKIP_DIRS = new Set(['node_modules', '.git', 'dist', '.astro', '.next'])
+const CODE_TAGS = /(<(script|style|svg)\b[^>]*>)([\s\S]*?)(<\/\2\s*>)/gi
+
+// An HTML page with the insides of its script, style and SVG tags taken
+// out. seo lint never reads them, and they are most of a big page. Line
+// breaks stay, so line numbers still match.
+function withoutCode(html: string): string {
+  return html.replace(
+    CODE_TAGS,
+    (_whole, open: string, _name, body: string, close: string) =>
+      `${open}${body.replace(/[^\n]/g, '')}${close}`,
+  )
+}
 
 function tooMany(): SeoError {
   return new SeoError(
@@ -95,14 +107,25 @@ export async function readLintFiles(
       continue
     }
     const text = await readFile(path, 'utf8')
-    if (text.length > LINT_MAX_CHARS) {
+    if (text.length <= LINT_MAX_CHARS) {
+      sources.push({ path: label, text })
+      continue
+    }
+    const size = `It has ${text.length.toLocaleString('en-US')} characters`
+    const html = ['.html', '.htm'].includes(extname(path).toLowerCase())
+    const readable = html ? withoutCode(text) : text
+    if (readable.length > LINT_MAX_CHARS) {
       sources.push({
         path: label,
-        skipped: `It has ${text.length.toLocaleString('en-US')} characters; seo lint reads up to ${LINT_MAX_CHARS.toLocaleString('en-US')}.`,
+        skipped: `${size}${html ? `, ${readable.length.toLocaleString('en-US')} without scripts, styles and SVG` : ''}; seo lint reads up to ${LINT_MAX_CHARS.toLocaleString('en-US')}.`,
       })
       continue
     }
-    sources.push({ path: label, text })
+    sources.push({
+      path: label,
+      text: readable,
+      note: `${size}, so the insides of its script, style and SVG tags were left out first (${readable.length.toLocaleString('en-US')} remain). Line numbers match; a column on a line that held one of those tags can be off.`,
+    })
   }
   return sources
 }

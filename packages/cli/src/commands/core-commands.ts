@@ -669,7 +669,7 @@ export const lintCommand = defineCommand({
     'fail-on': {
       type: 'string',
       description:
-        'error (default) or warning: exit with code 1 when a finding at that level or above is found.',
+        'error (default) or warning: exit with code 1 when a finding at that level or above is found. A file that could not be checked in full also exits with code 1.',
     },
     ignore: {
       type: 'string',
@@ -721,11 +721,20 @@ export const lintCommand = defineCommand({
       )
       if (jsonFlag(args)) printJson(result.data)
       else process.stdout.write(`${result.text}\n`)
-      const { errors, warnings } = result.data as {
+      const { errors, warnings, skipped, partial } = result.data as {
         errors: number
         warnings: number
+        skipped: number
+        partial: number
       }
-      if (errors > 0 || (failOn === 'warning' && warnings > 0)) {
+      // Text that was not checked cannot pass: a skipped file or a cut
+      // page fails the run like an error does.
+      if (
+        errors > 0 ||
+        (failOn === 'warning' && warnings > 0) ||
+        skipped > 0 ||
+        partial > 0
+      ) {
         process.exitCode = 1
       }
     } catch (error) {

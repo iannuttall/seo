@@ -14,8 +14,10 @@ import { CommandError, type CommandResult } from './types.js'
 // SEO length rules. Runs offline on text; the CLI and the local MCP also read
 // files from paths.
 
+// note says where the text came from; partial says what part of it was not
+// read, so the result is not an all-clear.
 export type LintSource =
-  | { path: string; text: string }
+  | { path: string; text: string; note?: string; partial?: string }
   | { path: string; skipped: string }
 
 export type LintInput = {
@@ -60,9 +62,11 @@ export async function runLint(
   const files: LintFileResult[] = sources.map((source) => {
     if ('skipped' in source) return source
     const format =
-      input.format ?? (hasText ? 'md' : formatFromPath(source.path))
+      input.format ?? (hasPaths ? formatFromPath(source.path) : 'md')
     return {
       path: source.path,
+      ...(source.note ? { note: source.note } : {}),
+      ...(source.partial ? { partial: source.partial } : {}),
       result: lintText(source.text, {
         format,
         preset: input.preset ?? defaultPreset(format),
@@ -71,24 +75,28 @@ export async function runLint(
       }),
     }
   })
+  const checked = files.flatMap((file) => ('result' in file ? [file] : []))
+  const total = (count: (file: (typeof checked)[number]) => number) =>
+    checked.reduce((sum, file) => sum + count(file), 0)
   return {
     text: lintReportText(files),
     data: {
       files: files.map((file) =>
-        'skipped' in file ? file : { path: file.path, ...file.result },
+        'skipped' in file
+          ? file
+          : {
+              path: file.path,
+              ...(file.note ? { note: file.note } : {}),
+              ...(file.partial ? { partial: file.partial } : {}),
+              ...file.result,
+            },
       ),
-      errors: files.reduce(
-        (sum, file) => sum + ('result' in file ? file.result.errors : 0),
-        0,
-      ),
-      warnings: files.reduce(
-        (sum, file) => sum + ('result' in file ? file.result.warnings : 0),
-        0,
-      ),
-      review: files.reduce(
-        (sum, file) => sum + ('result' in file ? file.result.review.length : 0),
-        0,
-      ),
+      errors: total((file) => file.result.errors),
+      warnings: total((file) => file.result.warnings),
+      review: total((file) => file.result.review.length),
+      checked: checked.length,
+      skipped: files.length - checked.length,
+      partial: checked.filter((file) => file.partial).length,
     },
   }
 }

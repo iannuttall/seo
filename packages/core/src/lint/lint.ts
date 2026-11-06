@@ -190,8 +190,10 @@ export function lintText(text: string, options: LintOptions = {}): LintResult {
 const plural = (count: number, word: string) =>
   `${count.toLocaleString('en-US')} ${word}${count === 1 ? '' : 's'}`
 
+// One checked or skipped file. note says where the text came from, such
+// as a live page; partial says what part of it was not checked.
 export type LintFileResult =
-  | { path: string; result: LintResult }
+  | { path: string; result: LintResult; note?: string; partial?: string }
   | { path: string; skipped: string }
 
 // The readable report for one or more files.
@@ -212,6 +214,8 @@ export function lintReportText(files: LintFileResult[]): string {
     lines.push(
       `${file.path} (${result.preset}, ${plural(result.words, 'word')}): ${plural(result.errors, 'error')}, ${plural(result.warnings, 'warning')}, ${result.review.length.toLocaleString('en-US')} to review`,
     )
+    if (file.note) lines.push(`  ${file.note}`)
+    if (file.partial) lines.push(`  Partly checked: ${file.partial}`)
     for (const finding of result.findings) {
       lines.push(
         `  ${finding.line}:${finding.column}  ${finding.level}  ${finding.rule}  "${finding.excerpt}"`,
@@ -231,9 +235,26 @@ export function lintReportText(files: LintFileResult[]): string {
     lines.push('')
   }
   const checked = files.filter((file) => 'result' in file).length
-  if (files.length > 1) {
+  const skipped = files.length - checked
+  const partial = files.filter(
+    (file) => 'partial' in file && file.partial,
+  ).length
+  if (files.length > 1 || skipped || partial) {
+    const gaps = [
+      skipped ? `${skipped.toLocaleString('en-US')} not checked` : '',
+      partial ? `${partial.toLocaleString('en-US')} partly checked` : '',
+    ].filter(Boolean)
     lines.push(
-      `${plural(checked, 'file')} checked: ${plural(errors, 'error')}, ${plural(warnings, 'warning')}, ${reviews.toLocaleString('en-US')} to review.`,
+      `${plural(checked, 'file')} checked${gaps.length ? ` (${gaps.join(', ')})` : ''}: ${plural(errors, 'error')}, ${plural(warnings, 'warning')}, ${reviews.toLocaleString('en-US')} to review.`,
+    )
+  }
+  if (!checked) {
+    lines.push(
+      'Nothing was checked, so this is not a clean result. The reason is beside each file above.',
+    )
+  } else if (skipped || partial) {
+    lines.push(
+      'Not an all-clear: the totals cover only the text that was checked.',
     )
   }
   if (reviews) {

@@ -17,9 +17,11 @@ seo providers ahrefs connect
 | Action | Give it | What comes back |
 | --- | --- | --- |
 | `keyword_metrics` | Up to 100 keywords | Search volume, keyword difficulty and cost per click |
+| `keyword_ideas` | Up to 5 seed keywords | Searches that contain each seed, highest volume first |
 | `ranked_keywords` | A site, subfolder or page | The keywords it ranks for, and the provider's traffic estimate for the whole target |
 | `top_pages` | A site or subfolder | The pages with the most estimated search traffic |
 | `serp` | Up to 5 keywords | The pages that rank for each one, with each domain's authority |
+| `serp_overlap` | 2 to 10 keywords | For each pair, how many top 10 pages and sites they share |
 | `competitors` | A domain | Domains that rank for the same keywords |
 | `backlinks` | A site, subfolder or page | Referring domains |
 | `pages_by_backlinks` | A site or subfolder | The pages with the most referring domains |
@@ -66,6 +68,26 @@ seo research link_gap --provider ahrefs --target example.com --competitors examp
 ```
 
 It reads the top 1,000 referring domains of each site, one `backlinks` request per site. When a site has more than that, the list stops at the lowest authority it read and says so, rather than guessing below it. With DataForSEO, the top 200 rows are sorted by Domain Rating. URL shorteners, link lists and coupon or site-stats directories link to almost every site, so they're left out, and the result names each one.
+
+## Read SERPs and check overlap
+
+`serp` reads 20 results per keyword unless you set `--depth` (1 to 100). Deeper costs more: DataForSEO charges about five times as much for 100 results as for 10. With several keywords, the rows run position by position, so every keyword shows up on the first page.
+
+`serp_overlap` helps you decide whether a set of searches needs one page or several. It reads the top 10 for each keyword and counts the pages and sites each pair shares. Lots of shared pages usually means Google treats the searches as one topic.
+
+```sh
+seo research serp_overlap --keywords "seo migration checklist,website migration seo,site migration"
+```
+
+DataForSEO returns most results as Google redirect links with no exact page, so the result says how many pages it could compare. When that's only a few, compare sites, or use Ahrefs.
+
+## Page through results without paying again
+
+A research result is kept for a day. The next page, and the same rows with `--detail full`, are read from it at no new cost, and the result says so. `--detail full` gives every row that was read. Add `--refresh` to ask the provider again.
+
+## Read search volumes in the provider's own terms
+
+DataForSEO's search volume is Google Ads' monthly average over the last 12 months. Ahrefs estimates its own volumes. The two can differ two to eight times for the same keyword, so compare keywords within one provider. A keyword with no volume is listed as no data, because its volume is unknown, not zero.
 
 ## Read traffic estimates in the provider's own terms
 

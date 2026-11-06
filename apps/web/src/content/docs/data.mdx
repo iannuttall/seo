@@ -26,6 +26,8 @@ seo data --site example.com --dimensions query --query pricing
 
 Add `--start-date` and `--end-date` for other dates, and `--detail rows` with `--offset` to page through long results.
 
+Queries that look like spam or tool noise get a `spam_hint` label: host names on top-level domains common in referral spam (such as `07.seo-anomaly-traffic.xyz`), rank tracker test queries, and spreadsheet rows pasted into Google. It's a guess from the query text alone. The rows stay in, with their numbers, so totals still match Search Console.
+
 ## Analytics landing pages
 
 In the hosted MCP, `seo_data` also reads Google Analytics landing pages for visits from search, with your Google sign-in, and Clicky landing pages for a Clicky site saved on your account. Each tool keeps its own metric names, such as sessions or visits, so compare them with Search Console clicks with care. The [analytics guide](/docs/analytics) covers Google Analytics and Clicky.

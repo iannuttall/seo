@@ -23,6 +23,14 @@ To check copy from your agent, ask it to run the check on what it just wrote:
 Check the draft in drafts/launch-post.md with seo lint and fix every error.
 ```
 
+## Check a live page
+
+```sh
+seo lint --url https://example.com/blog/launch-post
+```
+
+It reads the page's main content, the same text `seo page --detail full` shows, with navigation, scripts and footers left out, and checks it with the `blog` preset. It works in the CLI and the local MCP server. The hosted MCP can't fetch pages, so send it the copy as text instead.
+
 The hosted MCP takes the text itself (up to 200,000 characters, about a long post many times over), so it works from any agent without the CLI.
 
 ## Read the result
@@ -35,9 +43,23 @@ Each finding has a line and column, the words it matched, why they stand out, an
     Fix: Say it literally, such as "I would not compete for that search."
 ```
 
-Errors are patterns a careful writer almost never needs. Warnings are often fine on a second read, such as a list item that opens with a bold label. The command exits with code 1 when it finds an error, so you can run it before a commit or in CI. Add `--fail-on warning` to stop on warnings too.
+Errors are patterns a careful writer almost never needs. Warnings are often fine on a second read, such as a list item that opens with a bold label. The command exits with code 1 when it finds an error or couldn't check a file, so you can run it before a commit or in CI. Add `--fail-on warning` to stop on warnings too.
 
 The "to review" list is different. These are lines a pattern can find but only a reader can judge, such as a superlative with no number nearby or a ", not X" that might be a real correction. Each comes with a question. Change the line only when it fails the question.
+
+## Check what wasn't checked
+
+A file that is too big or can't be read, or a page with no main content, is counted as not checked, and a page cut at the size limit is counted as partly checked. The summary says so, and the command exits with code 1, so a run that skipped something never reads as clean. HTML over the limit is first checked again without its scripts, styles and inline images, which is where most of the size of a real page sits.
+
+## Check only AI writing patterns
+
+Every finding has a category: `ai` for patterns common in AI-written text, `copy` for house style such as dashes, buzzwords and emoji, and `seo` for title and description length. Dashes are often most of the findings on a real page. To look only at AI writing patterns:
+
+```sh
+seo lint --only ai --url https://example.com/blog/launch-post
+```
+
+The summary also counts findings by category, so you can see the split without filtering.
 
 ## Pick a preset for the kind of copy
 

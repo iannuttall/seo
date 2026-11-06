@@ -1,8 +1,8 @@
 ---
 title: Keyword and competitor research
-description: Get keyword metrics, ranked keywords, SERPs, competitors, backlinks, link gaps and AI answer checks from your own DataForSEO or Ahrefs key with seo research.
+description: Get keyword metrics, ranked keywords, top pages, SERPs, competitors, backlinks, link gaps and AI answer checks for a site, subfolder or page from your own DataForSEO or Ahrefs key.
 heading: seo research
-lead: Keyword metrics, rankings, SERPs, competitors, backlinks and AI answer citations from your own DataForSEO or Ahrefs account.
+lead: Keyword metrics, rankings, top pages, SERPs, competitors, backlinks and AI answer citations from your own DataForSEO or Ahrefs account.
 ---
 
 Use it when you need data from outside your own site: search volume for a keyword, who ranks for it, or what a competitor ranks for. You need a key from DataForSEO or Ahrefs, and each request uses your credits with them. For the hosted MCP, the [API keys guide](/docs/keys) shows how to add one. For the CLI, connect a provider once:
@@ -17,21 +17,35 @@ seo providers ahrefs connect
 | Action | Give it | What comes back |
 | --- | --- | --- |
 | `keyword_metrics` | Up to 100 keywords | Search volume, keyword difficulty and cost per click |
-| `ranked_keywords` | A domain or URL | The keywords it ranks for |
-| `serp` | Up to 5 keywords | The pages that rank for each one |
-| `competitors` | A domain or URL | Domains that rank for the same keywords |
-| `backlinks` | A domain or URL | Referring domains |
+| `ranked_keywords` | A site, subfolder or page | The keywords it ranks for, and the provider's traffic estimate for the whole target |
+| `top_pages` | A site or subfolder | The pages with the most estimated search traffic |
+| `serp` | Up to 5 keywords | The pages that rank for each one, with each domain's authority |
+| `competitors` | A domain | Domains that rank for the same keywords |
+| `backlinks` | A site, subfolder or page | Referring domains |
+| `pages_by_backlinks` | A site or subfolder | The pages with the most referring domains |
 | `link_gap` | Your domain and 2 to 5 competitors | Sites that link to two or more competitors and not to you |
 | `ai_answers` | Any site (DataForSEO only) | Whether AI answers cite or mention the site, for its own AI-style questions or up to 10 of yours |
 
-Each request also takes a two-letter country code. The default is `us`. Every DataForSEO result says what the request cost, from DataForSEO's own numbers.
+Each request also takes a two-letter country code. The default is `us`. Link data covers every country. Every DataForSEO result says what the request cost, from DataForSEO's own numbers.
+
+## Pick a site, a subfolder or one page
+
+The shape of the target decides what gets read. A bare domain such as `example.com` is the whole site with its subdomains. A path that ends in a slash, such as `example.com/blog/`, is every page under it. Any other path is that one page. To read a target another way, add `--scope domain`, `--scope prefix` or `--scope exact`.
+
+```sh
+seo research top_pages --target example.com/blog/
+seo research pages_by_backlinks --target example.com/blog/
+seo research ranked_keywords --target https://example.com/pricing
+```
+
+A teardown usually starts here: the top pages show where a site's search traffic comes from, and the pages by backlinks show which content earns its links.
 
 ## Run research
 
-Ask your agent and name the provider you have a key for:
+Ask your agent. You don't need to name a provider: research uses the key you saved, and DataForSEO when you saved both.
 
 ```text
-Use Ahrefs to show the keywords competitor.com ranks for in the UK
+Show the keywords competitor.com ranks for in the UK
 ```
 
 The hosted MCP runs `seo_research`. In a terminal, put the action first:
@@ -41,7 +55,7 @@ seo research keyword_metrics --keywords "seo audit,seo report" --country us
 seo research ranked_keywords --provider ahrefs --target competitor.com --country gb
 ```
 
-Without `--provider`, the CLI uses the first provider with a saved key.
+Add `--provider` (or `provider` in the MCP tools) to choose one when you saved both keys. Asking for a provider you have no key for stops with how to add it.
 
 ## Find a link gap
 
@@ -53,9 +67,15 @@ seo research link_gap --provider ahrefs --target example.com --competitors examp
 
 It reads the top 1,000 referring domains of each site, one `backlinks` request per site. When a site has more than that, the list stops at the lowest authority it read and says so, rather than guessing below it. With DataForSEO, the top 200 rows are sorted by Domain Rating. URL shorteners, link lists and coupon or site-stats directories link to almost every site, so they're left out, and the result names each one.
 
+## Read traffic estimates in the provider's own terms
+
+`ranked_keywords` gives a total for the whole target next to its rows, named in the provider's own metric. DataForSEO's `etv` multiplies each keyword's volume by a click-through rate for its position, over the keywords in DataForSEO's database. Ahrefs' organic traffic comes from its own keyword database and click model. The two can differ tenfold for the same page, so compare a site with itself in one provider, never one provider's number with the other's.
+
+When a provider has more rows than one request reads, the result says how many it has and how many were read.
+
 ## When a result is empty
 
-An empty result always says why. A `serp` with no results means Google showed an empty page twice, which happens for rare or filtered searches and doesn't mean nothing ranks. Keywords with no metrics are listed as having no data, and their volume is unknown, not zero. DataForSEO returns many SERP results as Google redirect links. Those rows keep the domain and a shortened `url_hint`, and the notes count them. Use Ahrefs when you need the exact pages.
+An empty result always says why. A `serp` with no results means Google showed an empty page twice, which happens for rare or filtered searches and doesn't mean nothing ranks. Keywords with no metrics are listed as having no data, and their volume is unknown, not zero. An empty top pages, backlinks or ranked keywords list means the provider has nothing for that target in its database, which doesn't show the site has no traffic or links. DataForSEO returns many SERP results as Google redirect links. Those rows keep the domain and a shortened `url_hint`, and the notes count them. Use Ahrefs when you need the exact pages.
 
 ## Check whether AI answers cite your site
 
@@ -79,9 +99,11 @@ To see more rows, use the next-page command the result gives you. It passes ever
 
 Treat each row as one sample. Ask the same question tomorrow and the answer can change, so a "neither" today is not proof you will never be cited.
 
-## Domain Rating column
+## Authority columns
 
-Rows with a domain, and the target itself, get a free Domain Rating column. It is Domain Rating by [Ahrefs](https://ahrefs.com), and you do not need an Ahrefs key for it.
+With DataForSEO, each `serp` result gets `domain_rank`, DataForSEO's own authority score from 0 to 100. It is a different scale from Domain Rating.
+
+Rows with a domain, and the target itself, also get a Domain Rating column, Domain Rating by [Ahrefs](https://ahrefs.com). The hosted MCP adds it for free. In the CLI it needs an Ahrefs key, and the result says so when it's missing.
 
 ## Estimates, not your data
 

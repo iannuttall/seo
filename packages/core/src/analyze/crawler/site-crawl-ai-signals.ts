@@ -252,7 +252,8 @@ async function checkRobotsAiAccess(input: SignalInput): Promise<{
   robotsTxt: NonNullable<CrawlAiSignals['robotsTxt']>
   allows: RobotsGate
 }> {
-  const result = await get(input, new URL('/robots.txt', input.url).toString())
+  const robotsUrl = new URL('/robots.txt', input.url).toString()
+  const result = await get(input, robotsUrl)
   // An HTML page holds no robots rules, so crawlers treat it as no file.
   const servesHtml =
     result.availability === 'available' && isHtml(result.contentType)
@@ -262,7 +263,18 @@ async function checkRobotsAiAccess(input: SignalInput): Promise<{
     result.availability === 'rate-limited' ||
     result.availability === 'unreachable'
   const declared = exists ? declaredUserAgents(result.text) : new Set<string>()
-  const parsed = parseRobots(result.url, exists ? result.text : '')
+  const parsed = parseRobots(robotsUrl, exists ? result.text : '')
+  // robots-parser answers only for its own origin. robots.txt often
+  // redirects between a site's hosts, such as example.com to www.example.com,
+  // and its rules then cover both, so URLs on either host match by path.
+  const ruleHosts = new Set([new URL(robotsUrl).host, new URL(result.url).host])
+  const isAllowed = (url: string, userAgent: string) => {
+    const target = new URL(url)
+    const local = ruleHosts.has(target.host)
+      ? new URL(`${target.pathname}${target.search}`, robotsUrl).toString()
+      : url
+    return parsed.isAllowed(local, userAgent) ?? true
+  }
   const robotsTxt: NonNullable<CrawlAiSignals['robotsTxt']> = {
     url: result.url,
     exists,
@@ -284,17 +296,14 @@ async function checkRobotsAiAccess(input: SignalInput): Promise<{
     botAccess: AI_BOTS.map(([userAgent, purpose]) => ({
       userAgent,
       purpose,
-      allowed: unknown
-        ? null
-        : (parsed.isAllowed(input.url, userAgent) ?? true),
+      allowed: unknown ? null : isAllowed(input.url, userAgent),
       declared: declared.has(userAgent.toLowerCase()),
       coveredByWildcard: declared.has('*'),
     })),
   }
   return {
     robotsTxt,
-    allows: (url) =>
-      unknown ? null : (parsed.isAllowed(url, SEO_CRAWLER_USER_AGENT) ?? true),
+    allows: (url) => (unknown ? null : isAllowed(url, SEO_CRAWLER_USER_AGENT)),
   }
 }
 

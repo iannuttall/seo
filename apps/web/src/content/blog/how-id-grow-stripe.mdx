@@ -109,7 +109,7 @@ Key findings:
 - In live US Google results on 6 November 2026, another country's English copy of stripe.com showed for 12 of the 40 searches I checked, from the ACH and CVV guides to Stripe's phone number. DataForSEO's database lists 8,454 such US searches, but live results matched its page for only 3 of the 40, so treat 8,454 as an upper bound.
 - Seven US searches for Stripe's phone number, about 11,000 a month between them, show the New Zealand or Singapore sales form in Google's top four (live, 6 November 2026). Neither form has a phone number. The US contact page does.
 - YouTube was cited in 11 of 17 AI Overviews in one run and 11 of 18 in the next, more than stripe.com (7, then 8). None of the videos came from Stripe's two YouTube channels.
-- docs.stripe.com tells AI search crawlers not to index what it sends them. ChatGPT's, Claude's and Perplexity's crawlers get a Markdown copy with an `X-Robots-Tag: none` header.
+- For "Accept a payment", docs.stripe.com sends ChatGPT's, Claude's and Perplexity's crawlers an 854-byte list of six links and no steps. A browser gets about 1,469 words, and Googlebot about 2,800.
 
 Stripe doesn't publish its search traffic, so every visit number here is a third-party estimate. Read them for proportions.
 
@@ -324,11 +324,11 @@ Stripe's ACH guide, by contrast, says "Last updated May 8, 2026" on the page but
 
 To confirm it worked, ask the same ten questions again after 30 days and count the AI Mode answers that cite stripe.com.
 
-## docs.stripe.com sends AI crawlers a page marked "none"
+## docs.stripe.com sends AI crawlers 854 bytes where a browser gets 1,469 words
 
 Stripe's docs are ahead of most companies on agents. There's an llms.txt with 742 lines, a Markdown copy of every page, and a robots.txt line that says `ai-train=yes, search=yes, ai-input=yes`.
 
-The catch is in what the Markdown copy says about itself. When the docs see the user agent of ChatGPT's search crawler (OAI-SearchBot), GPTBot, ClaudeBot, PerplexityBot, ChatGPT-User or Claude-User, they answer the normal page address with Markdown and an `X-Robots-Tag: none` header. That header means noindex and nofollow. Googlebot and Bingbot get HTML with no such header, and a bigger page than a browser gets: about 1.84 MB and 2,800 words, against 1.68 MB and 1,469 words.
+The catch is in what that Markdown copy holds. The docs answer the normal page address with Markdown whenever the request asks for it: the user agents of OAI-SearchBot, GPTBot, ClaudeBot, PerplexityBot, ChatGPT-User and Claude-User, and even a browser that sends `Accept: text/markdown`. Googlebot and Bingbot get HTML with no such header, and a bigger page than a browser gets: about 1.84 MB and 2,800 words, against 1.68 MB and 1,469 words.
 
 <BeforeAfter
   caption="What docs.stripe.com/payments/accept-a-payment sends to OAI-SearchBot's user agent today, and what I'd send instead (checked 6 November 2026). This is what the site serves to that user agent string, not proof of what OpenAI's verified crawler receives."
@@ -336,9 +336,9 @@ The catch is in what the Markdown copy says about itself. When the docs see the 
   after={{ label: "After the fix", code: afterDocs }}
 />
 
-In the [robots rules Google documents](https://developers.google.com/search/docs/crawling-indexing/robots-meta-tag), `none` means noindex and nofollow. So the docs robots.txt says "search=yes" and the page says "none". At best that's a mixed signal to the crawlers the listing cares most about.
+"Accept a payment" is one of the most important pages in the docs, and an AI crawler gets 854 bytes: a list of six variants to fetch, and no steps. A browser gets about 1,469 words.
 
-The body is the second problem. "Accept a payment" is one of the most important pages in the docs, and an AI crawler gets 854 bytes: a list of six variants to fetch, and no steps. A browser gets about 1,469 words.
+The Markdown also carries an `X-Robots-Tag: none` header, which in the [robots rules Google documents](https://developers.google.com/search/docs/crawling-indexing/robots-meta-tag) means noindex and nofollow. Noindex on a Markdown copy is common, since it keeps duplicates out of Google, and none of the AI companies say whether their crawlers obey the header. So it's a small risk next to a robots.txt that says "search=yes", not a shown problem.
 
 **The fix:** send the `noindex` only on the `.md` addresses, where it stops duplicates in Google, and never on the page's own address. Add a `Link` header with `rel="canonical"` to every Markdown response. On pages with variants, send the default variant in full, with the others listed below it.
 

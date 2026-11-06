@@ -281,7 +281,11 @@ test('every content page has one deterministic Markdown alternative', () => {
       /^---\ntitle: .+\ndescription: .+\ncanonical: .+\nlanguage: .+\n---\n/u,
       page.markdownFile,
     )
-    assert.equal(matches(markdown, /^#\s+.+$/gmu).length, 1, page.markdownFile)
+    assert.equal(
+      matches(markdown.replace(/```[\s\S]*?```/g, ''), /^#\s+.+$/gmu).length,
+      1,
+      page.markdownFile,
+    )
     // Code samples in the guides show these on purpose; leaked markup is
     // never inside a code span or block.
     assert.doesNotMatch(

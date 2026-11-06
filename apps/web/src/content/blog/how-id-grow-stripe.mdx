@@ -1,0 +1,500 @@
+---
+title: How I'd grow Stripe with SEO and AI answers
+description: Stripe is hiring a Head of AEO and SEO. What I'd do in the job, from US searches that land on another country's copy to AI answers that skip stripe.com.
+heading: How I'd grow Stripe
+lead: "Every one of 59 AI answers to ten payment questions named Stripe across two runs, and Google AI Mode cited a stripe.com page in 1 of 10 each time. Stripe is hiring someone to close that gap. This is what I would do in the job, starting with US searches that land on another country's copy of a Stripe page."
+date: '2026-11-06'
+company: Stripe
+x:
+  company: stripe
+draft: false
+cover:
+  alt: "In a woodcut post office sorting room, a clerk files a bundle of identical US-stamped envelopes into the slot under the Australian flag, in a wall of pigeonholes that each hold the same violet letter."
+  title: left
+---
+
+export const beforeGuide = `<p><strong>stripe.com/resources/more/ach-payments-101</strong> (the US copy)</p><p>Menu: … Financial Connections, Treasury, Crypto Onramp, Capital for platforms, Issuing …</p><p>If you’ve ever received a paycheck through direct deposit or paid a utility bill directly from your bank account using your account and routing numbers, you’re already familiar with ACH payments as an individual. But what about accepting ACH payments as a business?</p><p><em>Last updated May 8, 2026</em></p>`
+
+export const afterGuide = `<p><strong>stripe.com/au/resources/more/ach-payments-101</strong> (the Australian copy)</p><p>Menu: … no Financial Connections, Treasury, Crypto Onramp, Capital for platforms or Issuing … (the footer still lists three of them)</p><p>If you've ever received a paycheck through direct Deposit or paid a utility bill directly from your bank account using your account and routing numbers, you're already familiar with ACH payments as an Individual. But what about accepting ACH payments as a Business?</p><p><em>Last updated 8 May 2026</em></p>`
+
+export const beforeCase = `<pre>GET /ae/resources/more/ACH-payments-101
+200 OK
+&lt;link rel="canonical"
+  href="…/ae/resources/more/ACH-payments-101"&gt;
+&lt;link rel="alternate" hreflang="en-US"
+  href="…/resources/more/ACH-payments-101"&gt;
+… 88 more alternates, all with ACH in capitals</pre>`
+
+export const afterCase = `<pre>GET /ae/resources/more/ACH-payments-101
+301 Moved Permanently
+location: /ae/resources/more/ach-payments-101
+
+GET /ae/resources/more/ach-payments-101
+200 OK
+&lt;link rel="canonical"
+  href="…/resources/more/ach-payments-101"&gt;</pre>`
+
+export const beforeContact = `<p><strong>stripe.com/nz/contact/sales</strong>: first in US desktop results for "stripe customer service number"</p><p>A sales enquiry form for New Zealand businesses.</p><p><em>No phone number anywhere on the page.</em></p>`
+
+export const afterContact = `<p><strong>stripe.com/contact</strong>: the US page</p><p>Stripe | Contact Us</p><p>Need help with your Stripe account, have a media inquiry, or want to know more about a Stripe product? Contact us.</p><p><strong>+1 888 926 2289</strong></p>`
+
+export const beforeDocs = `GET /payments/accept-a-payment
+User-Agent: … OAI-SearchBot/1.0 …
+
+200 OK
+content-type: text/markdown
+x-robots-tag: none
+
+# Accept a payment
+This article has multiple variants. Fetch one
+of the following URLs to view specific content
+for your use case:
+- Stripe-hosted page (…md?payment-ui=checkout…)
+- Full embedded page (…)
+- Elements (…)
+(854 bytes)`
+
+export const afterDocs = `GET /payments/accept-a-payment
+User-Agent: … OAI-SearchBot/1.0 …
+
+200 OK
+content-type: text/markdown
+link: <https://docs.stripe.com/payments/
+  accept-a-payment>; rel="canonical"
+
+# Accept a payment
+Securely accept payments online. The fastest
+way is a Stripe-hosted Checkout page:
+
+1. Create a product and price …
+2. Create a Checkout Session …
+(the default variant, in full)
+
+## Other ways to build it
+- Full embedded page (…md?…)
+- Elements (…md?…)`
+
+export const beforeSchema = `{
+  "@type": ["Article"],
+  "headline": "What an ACH payment is and how
+    an ACH transfer works | Stripe",
+  "author": null,
+  "image": ["…/learning-center-stripe-default-social-card.png"],
+  "datePublished": "2025-01-21T00:00-07:00"
+}`
+
+export const afterSchema = `{
+  "@type": "Article",
+  "headline": "What an ACH payment is and how
+    an ACH transfer works",
+  "author": {
+    "@type": "Organization",
+    "name": "Stripe",
+    "url": "https://stripe.com"
+  },
+  "image": ["…/how-ach-payments-for-businesses-work.png"],
+  "datePublished": "2025-01-21T00:00-07:00",
+  "dateModified": "2026-05-08"
+}`
+
+Stripe is named in every AI answer about payments I checked, and cited far less often. On 6 November 2026 I asked ChatGPT search, Google AI Mode and Google's AI Overviews ten questions a buyer asks before choosing a payment provider. I ran them twice. All 59 answers that appeared named Stripe. Only 11, then 13, linked to a stripe.com page, and Google AI Mode linked to one in 1 of its 10 both times.
+
+Stripe is hiring someone to fix that. Its listing for a [Head of AEO & SEO](https://stripe.com/jobs/search?gh_jid=8128634) was posted on 13 August 2026 and was still open on 6 November 2026. A second listing, for an [AEO and GEO Marketing Manager](https://stripe.com/jobs/search?gh_jid=7844214), has been open since 23 April 2026.
+
+This is what I'd do in that job. It's built only from what anyone can see from outside: Stripe's public pages, search data and the two listings.
+
+Key findings:
+
+- Across two runs, 59 of 59 AI answers named Stripe, and 24 cited it. ChatGPT cited stripe.com in 8 of 10 answers both times, AI Overviews in 2 of 9 and then 4 of 10, and AI Mode in 1 of 10 both times (DataForSEO, US, 6 November 2026).
+- In live US Google results on 6 November 2026, another country's English copy of stripe.com showed for 12 of the 40 searches I checked, from the ACH and CVV guides to Stripe's phone number. DataForSEO's database lists 8,454 such US searches, but live results matched its page for only 3 of the 40, so treat 8,454 as an upper bound.
+- Seven US searches for Stripe's phone number, about 11,000 a month between them, show the New Zealand or Singapore sales form in Google's top four (live, 6 November 2026). Neither form has a phone number. The US contact page does.
+- YouTube was cited in 11 of 17 AI Overviews in one run and 11 of 18 in the next, more than stripe.com (7, then 8). None of the videos came from Stripe's two YouTube channels.
+- docs.stripe.com tells AI search crawlers not to index what it sends them. ChatGPT's, Claude's and Perplexity's crawlers get a Markdown copy with an `X-Robots-Tag: none` header.
+
+Stripe doesn't publish its search traffic, so every visit number here is a third-party estimate. Read them for proportions.
+
+## Stripe's listing asks for five things, and each one has a finding below
+
+The Head of AEO & SEO listing reads like a brief. These are the lines that map to this teardown, quoted from the listing on 6 November 2026.
+
+| The listing asks for | Where it is below |
+| --- | --- |
+| "visibility in general purpose assistants (ChatGPT, Google AI Overviews, Gemini, Perplexity, etc.) and coding assistants (e.g. Claude, Codex, etc.)" | AI answers name Stripe and cite others; docs for AI crawlers |
+| "Background in international SEO strategy, including managing organic growth across multiple markets and languages" | Other countries' copies show in US results |
+| "Stripe's web properties, documentation, and product surfaces" | docs.stripe.com and the Markdown it serves agents |
+| "content quality, website architecture, and structured data" | Technical fixes |
+| "programmatic or product-led SEO at scale (e.g., template pages…)" | Comparison pages and a fee calculator |
+
+The manager listing adds one more line I'd take literally: "Optimize Stripe.com so artificial intelligence agents can efficiently access and take action on behalf of users".
+
+## Brand searches bring about 69% of Stripe's US search visits, and the guides bring most of the rest
+
+DataForSEO estimates stripe.com and its subdomains get about 722,600 Google visits a month from the US, from 109,881 searches (November 2026). About 496,500 of those visits (69%) come from searches with "stripe" in them.
+
+<TrafficMap
+  caption="Estimated monthly US Google visits to stripe.com and its subdomains by kind of page (DataForSEO, November 2026). Brand means the search contains &quot;stripe&quot;. The guides are the US copies under /resources and /guides."
+  items={[
+    { label: "Brand searches", value: 496493, tone: "brand", note: "\"stripe\", \"stripe login\", \"stripe fees\" and other searches with Stripe's name in them" },
+    { label: "Guides, US copies", value: 158660, tone: "other", note: "About 70,700 non-brand searches, from \"what is ach payment\" to state sales tax rates" },
+    { label: "Product pages, docs, support and the rest", value: 54739, tone: "sells", note: "Non-brand searches landing anywhere else, including docs.stripe.com and support.stripe.com" },
+    { label: "Non-US English copies", value: 12718, tone: "waste", note: "Non-brand US searches that land on an /au/, /ae/, /in/ or other English copy, by DataForSEO's database. Live checks found a non-US copy for 12 of the top 40, so this is an upper bound" },
+  ]}
+/>
+
+Brand demand at this scale is the asset. Google already treats Stripe as the entity for online payments, which is why Google's AI Overview for "ach payment" (74,000 US searches a month) cited Stripe's US ACH guide in every live US run I made on 6 November 2026.
+
+The guides are the non-brand engine. DataForSEO's database estimates 67,933 non-brand US searches where a US copy of a Stripe guide ranks, worth about 152,500 visits a month (November 2026).
+
+So the job is making sure the right copy of each page wins, and that AI answers cite it.
+
+## Live US results showed another country's copy of stripe.com for 12 of 40 searches
+
+Each Stripe guide has 46 English addresses: the US page and 45 regional copies, plus translations. The ACH guide's 89 `hreflang` tags point to 77 addresses: 46 in English and 31 translations.
+
+DataForSEO's US database lists 8,454 searches where the ranking stripe.com page is an English copy from another region, across 41 of the 45 (November 2026). A database like this is a stored snapshot, so I checked its 40 biggest rows live. On 6 November 2026 I ran each one on google.com from a US location, on desktop and on mobile.
+
+Live results matched the database's exact page for 3 of the 40. But 12 of the 40 still showed a non-US English copy in the results or the AI Overview. The problem is real, and smaller and more changeable than the database says.
+
+<KeywordTable
+  caption="US searches where live Google results showed a non-US English copy of stripe.com (DataForSEO live results, google.com, US location, desktop and mobile, 6 November 2026). Position is the copy's best place on desktop or mobile; AIO means the AI Overview cited it. Volume is DataForSEO's US monthly estimate. Eight of the 12; the other four are smaller phone-number searches."
+  sortBy="volume"
+  columns={[{ key: 'keyword', label: 'Search', format: 'text' }, { key: 'volume', label: 'US searches', format: 'number' }, { key: 'position', label: 'Position', format: 'text', short: '#' }, { key: 'copy', label: 'Copy', format: 'text' }]}
+  rows={[
+    { keyword: 'ach payment', volume: 74000, position: '3', copy: 'Australia' },
+    { keyword: 'card verification value', volume: 22200, position: '2, AIO', copy: 'India' },
+    { keyword: 'one link', volume: 14800, position: '4', copy: 'UK' },
+    { keyword: 'stripe customer service number', volume: 6600, position: '1', copy: 'NZ sales form' },
+    { keyword: 'stripe phone number', volume: 2900, position: '2', copy: 'SG sales form' },
+    { keyword: 'transaction id', volume: 1600, position: '3', copy: 'Australia' },
+    { keyword: 'stripe support phone number', volume: 1000, position: '1', copy: 'NZ sales form' },
+    { keyword: 'stripe virtual terminal', volume: 110, position: '1, AIO', copy: 'Italy' },
+  ]}
+/>
+
+Four more searches from outside the database sample showed the same thing live. "how do I accept payments on my website" had the Indian copy second on mobile and cited in the AI Overview. "cvv number" had the Indian copy second on mobile. "open banking" had the Italian English copy fourth in one of three mobile runs. "delaware registered agent" had the Singapore copy fourth in two of three desktop runs, for a topic that only exists in the US.
+
+The copy Google picks also changes from run to run. "ach payment" showed the Australian copy third in 2 of 4 live US desktop runs on 6 November; the other runs showed the US copy or a different Stripe guide. "ach meaning bank" (9,900) showed the Australian copy fifth on desktop in two later runs the same day. Ahrefs' data for 1 November 2026 had the Australian copy first for "ach payment", and DataForSEO's database had the UAE copy third.
+
+The same thing happens in AI answers. Google's AI Overview for "how do I accept payments on my website" cited the Indian copy of Stripe's guide in 7 of 8 live US runs on 6 November 2026, and in a UK run too.
+
+### The copies are the same guide with British spelling and a shorter menu
+
+The tags are right. Every copy lists all 77 addresses, itself included, and the US copy is marked `en`, `en-US` and `x-default`.
+
+What's wrong is that the copies are nearly identical. The Australian ACH guide has 3,583 words to the US copy's 3,631. The body text is the same, with British spelling, a different date format and a header menu that drops US products such as Treasury and Issuing.
+
+<BeforeAfter
+  caption="The same paragraph of the ACH guide in the US copy and the Australian copy, 6 November 2026. The Australian copy's menu leaves out products a US business can buy, and its body capitalises words mid-sentence."
+  before={{ label: "US copy", html: beforeGuide }}
+  after={{ label: "Australian copy", html: afterGuide }}
+/>
+
+ACH is a US payment network. An Australian reader has no use for this guide, and a US reader who lands on the Australian copy gets a header menu without Treasury, Capital or Issuing, which are products they could buy.
+
+Google says `hreflang` suits ["small regional variations with similar content, in a single language"](https://developers.google.com/search/docs/specialty/international/localized-versions). The swap only works, though, when Google keeps each copy as its own page. When copies are this close, Google can fold them into one and pick which address to show. That would explain why a different copy wins for different searches.
+
+Stripe can confirm it in Search Console. In URL Inspection, if the Google-selected canonical for the US ACH guide is an `/au/` or `/ae/` address, that's the cause.
+
+### One capital letter creates a second set of 89 copies
+
+DataForSEO's database had `stripe.com/ae/resources/more/ACH-payments-101`, with "ACH" in capitals, ranking for 127 US ACH searches. I didn't see it in live results on 6 November 2026, but Google has found that address, and the real one is lowercase.
+
+Stripe's site answers any mix of capitals with a 200 and builds the whole page from the address it was asked for. The canonical, all 89 `hreflang` tags and the region switcher all come back in capitals.
+
+<BeforeAfter
+  caption="What stripe.com returns for the guide's address with capitals, today and after the fix (checked 6 November 2026)."
+  before={{ label: "Today", html: beforeCase }}
+  after={{ label: "After the fix", html: afterCase }}
+/>
+
+So one link with a capital letter anywhere on the web gives Google a complete, self-consistent second cluster of the guide to crawl and choose from.
+
+### Searches for Stripe's phone number land on another country's sales form
+
+Seven US searches ask for Stripe's phone number in some form, about 11,000 a month between them (DataForSEO). In live US results on 6 November 2026, each one showed the New Zealand or Singapore sales form in Google's top four. "stripe customer service number" (6,600) had the New Zealand form first on desktop, and "stripe phone number" (2,900) had the Singapore form second on desktop and mobile.
+
+<BeforeAfter
+  caption="What a US searcher gets for &quot;stripe customer service number&quot;, and the page they need (live US results, 6 November 2026)."
+  before={{ label: "Google's first result on desktop", html: beforeContact }}
+  after={{ label: "The US contact page", html: afterContact }}
+/>
+
+The US contact page has the number, +1 888 926 2289. The two sales forms have no phone number at all. These are people who already use Stripe or are about to, and the page they see doesn't answer them.
+
+### The fix: one English guide for topics that don't change by country
+
+**The fix:** sort the 3,566 guides into three kinds, and give each kind the right set of copies.
+
+1. Topics that only apply to one country (ACH, US state sales tax, Delaware companies, Australian GST). Keep that country's copy. Point every other English copy at it with a canonical tag, take them out of the `hreflang` set and the sitemap, and keep them reachable for the menu.
+2. Topics that are the same everywhere (CVV, the Luhn algorithm, digital wallets). Publish one English page, marked `hreflang="en"` and `x-default`, with the translations beside it. Drop the 45 regional English copies the same way.
+3. Topics that really differ by country (fees, local payment methods, tax registration). Keep the regional copies and make the difference visible in the body: local prices, local rules, local examples. That's the case `hreflang` was built for.
+
+<UrlMap
+  caption="The ACH guide under the fix. Translations stay, the English copies point at the US page, and the capitals redirect."
+  rows={[
+    { url: "stripe.com/resources/more/ach-payments-101", action: "Keep", tone: "keep", note: "The one English page for a US topic. hreflang en, en-US and x-default." },
+    { url: "stripe.com/de/, /fr/, /ja/ … (31 translations)", action: "Keep", tone: "keep", note: "Translated, so they stay in the hreflang set." },
+    { url: "stripe.com/au/, /ae/, /in/, /en-mx/ … (45 English copies)", action: "Canonical", tone: "change", to: "the US page", note: "Out of hreflang and the sitemap, still reachable from each region's menu." },
+    { url: "stripe.com/ae/resources/more/ACH-payments-101", action: "301", to: "the lowercase address", note: "Any path with capitals redirects to its lowercase form." },
+    { url: "stripe.com/nz/contact/sales, /en-sg/contact/sales", action: "Fix", tone: "change", note: "Link the support numbers from every sales form copy, and point US phone searches at /contact." },
+  ]}
+/>
+
+For the capitals, one rule at the edge does it: redirect any path with an uppercase letter to its lowercase form with a 301, and build canonical and `hreflang` links from the stored slug, never from the request.
+
+To confirm it worked, re-run the same 40 searches live from a US location after 30 days. The 12 that showed a non-US copy should fall toward the pricing and contact pages that really differ.
+
+## AI answers named Stripe in 59 of 59 answers, and AI Mode cited it in 2 of 20
+
+I asked ten questions a buyer asks before choosing a payment provider. Each went to ChatGPT search, Google AI Mode and Google's AI Overviews, through `seo research ai_answers` on 6 November 2026. One AI Overview didn't appear in the first run, so the table below has 29 answers. A second run the same day had all 30.
+
+<KeywordTable
+  caption="Ten payment questions and three AI engines, first run (DataForSEO, US, 6 November 2026). Cited means the answer links a stripe.com page. Named means it mentions Stripe without a link; for the two questions with Stripe in them, that's automatic."
+  sortBy="question"
+  columns={[{ key: 'question', label: 'Question', format: 'text' }, { key: 'chatgpt', label: 'ChatGPT', format: 'text', short: 'GPT' }, { key: 'mode', label: 'AI Mode', format: 'text', short: 'Mode' }, { key: 'overview', label: 'AI Overview', format: 'text', short: 'AIO' }]}
+  rows={[
+    { question: 'Best payment processor for SaaS startups', chatgpt: 'Cited', mode: 'Named', overview: 'None' },
+    { question: 'How do I accept payments on my website?', chatgpt: 'Cited', mode: 'Named', overview: 'Cited' },
+    { question: 'Best payment gateway for developers', chatgpt: 'Cited', mode: 'Named', overview: 'Named' },
+    { question: 'Best way to add subscription billing to my app', chatgpt: 'Cited', mode: 'Named', overview: 'Named' },
+    { question: 'Setting up a merchant of record for software', chatgpt: 'Named', mode: 'Named', overview: 'Named' },
+    { question: 'Stripe vs PayPal for small business', chatgpt: 'Cited', mode: 'Named', overview: 'Named' },
+    { question: 'Best Stripe alternatives', chatgpt: 'Named', mode: 'Named', overview: 'Named' },
+    { question: 'How to accept ACH payments online', chatgpt: 'Cited', mode: 'Cited', overview: 'Cited' },
+    { question: 'Best payment processor for online marketplaces', chatgpt: 'Cited', mode: 'Named', overview: 'Named' },
+    { question: 'Collecting sales tax on SaaS subscriptions', chatgpt: 'Cited', mode: 'Named', overview: 'Named' },
+  ]}
+/>
+
+ChatGPT links Stripe's product pages: the homepage, pricing, Billing, Tax, and Connect for marketplaces. Google's two engines name Stripe first and then link someone else's page about Stripe. In AI Mode that was ConnectPay in 3 answers, Reddit in 2, and NerdWallet, Numeral, Gartner and Postman's blog once each. The one AI Overview that cited Stripe for accepting payments on a website linked the Indian copy of the guide.
+
+Each answer is one sample, and the next run can differ. In the second run, ChatGPT cited stripe.com for the same 8 questions. AI Mode again cited it in 1 of 10, this time for the merchant of record question, with a link to the homepage. The AI Overviews cited stripe.com in 4 of 10, adding Stripe guides for the merchant of record question and the question about collecting tax on SaaS subscriptions; that second guide was the Indian copy. A separate AI Mode run of eight of the questions also cited stripe.com once, for the SaaS tax question, with Stripe's guide to nexus.
+
+### Stripe gets cited for definitions and loses the choices
+
+I also ran 18 payment questions through Google's results page and read the sources of every AI Overview. 17 of them showed one (DataForSEO, US, 6 November 2026). A second run the same day showed one for all 18, with YouTube cited in 11 and stripe.com in 8.
+
+<CompareBars
+  caption="YouTube was cited in more AI Overviews than stripe.com. Sites cited in at least two of 17 AI Overviews for 18 payment questions (DataForSEO, US, 6 November 2026). Google's own links are left out."
+  unit="AI Overviews"
+  highlight="stripe.com"
+  rows={[{"label": "youtube.com", "value": 11}, {"label": "stripe.com", "value": 7}, {"label": "reddit.com", "value": 4}, {"label": "squareup.com", "value": 3, "note": "Including Square's own Square vs Stripe page"}, {"label": "forbes.com", "value": 3}, {"label": "nerdwallet.com", "value": 2}, {"label": "chargebee.com", "value": 2}, {"label": "tipalti.com", "value": 2}, {"label": "acodei.com", "value": 2}, {"label": "solidgate.com", "value": 2}]}
+/>
+
+The seven Overviews that cite Stripe answer "what is" and "how does" questions: ACH payments, merchant of record, payment orchestration, usage-based billing and how Connect works. Stripe's guides own definitions.
+
+The ten that don't cite Stripe are choices: which processor, Stripe or PayPal, Stripe or Square, the alternatives, whether Stripe is safe. In the second run, one choice question cited Stripe: "best payment processor for online marketplaces", with the Connect product page. Stripe has no page built to answer any of them.
+
+### The pages AI Mode cites are dated comparisons with the answer first
+
+I pulled AI Mode's full answers for eight of the questions on 6 November 2026 and read the pages it linked. Three patterns repeat.
+
+1. The year in the title. ["9 Best SaaS Payment Gateways for Scaling Businesses (2026)"](https://connectpay.com/blog/best-saas-payment-gateway/) on ConnectPay, ["Stripe vs. PayPal: Which Is Right for Your Business in 2026?"](https://www.nerdwallet.com/business/software/learn/stripe-vs-paypal) on NerdWallet, ["Sales Tax on SaaS: State-by-State Guide (2026 Update)"](https://www.numeral.com/blog/sales-tax-on-saas) on Numeral.
+2. A comparison table near the top. AI Mode's own Stripe vs PayPal answer opens with an "At-a-Glance Comparison (2026)" table of fees, monthly cost and brand control.
+3. The competitor's own comparison page. The AI Overview for "stripe vs square" cites [Square's "Square vs. Stripe" page](https://squareup.com/us/en/compare/square-vs-stripe). Square answers the question about Stripe, on its own site.
+
+Stripe's ACH guide, by contrast, says "Last updated May 8, 2026" on the page but not in its structured data, which has only a 2025 publish date and `"author": null` (more in the technical section).
+
+### The fix: answer the choice questions on stripe.com
+
+**The fix:** publish the pages AI answers are looking for, and write each one to be quoted.
+
+- Comparison pages. Stripe vs PayPal, Stripe vs Square, Stripe vs Adyen, Stripe vs Paddle, and "Stripe alternatives". Each opens with a two-sentence answer and a fee table, says plainly when the other provider is the better choice, and carries a visible updated date. Square already does this about Stripe.
+- "Stripe for X" answer pages. One for each buyer question in the table: SaaS startups, marketplaces, subscription billing in an app, sales tax on SaaS. The question is the title, and the first paragraph is the answer.
+- A fee calculator. "stripe fee calculator" gets 1,600 US searches a month at a difficulty of 1 (DataForSEO, November 2026), and the results are third-party calculators. An official one at stripe.com/pricing would be the source every other calculator copies.
+- An "is Stripe safe" page. 3,600 US searches a month (difficulty 32). Stripe's best result is a general guide to secure payment systems in fourth place (live US results, 6 November 2026), and the AI Overview cites NerdWallet, Trustpilot, a security forum and a Merchant Maverick video.
+
+<KeywordTable
+  caption="Comparison and choice searches where stripe.com has no page built for the question (volumes from DataForSEO, US, November 2026; Stripe column from four live US checks on 6 November 2026). None means no stripe.com page in the top 10 (top 50 for &quot;stripe vs square&quot;). DataForSEO gives &quot;stripe vs paypal&quot; and &quot;paypal vs stripe&quot; one volume."
+  sortBy="volume"
+  columns={[{ key: 'keyword', label: 'Search', format: 'text' }, { key: 'volume', label: 'US searches', format: 'number' }, { key: 'difficulty', label: 'Difficulty', format: 'number', short: 'KD' }, { key: 'stripe', label: 'Best Stripe page', format: 'text', short: 'Stripe' }]}
+  rows={[
+    { keyword: 'is stripe safe', volume: 3600, difficulty: 32, stripe: 'Guide, 4th' },
+    { keyword: 'stripe vs square', volume: 2900, difficulty: 0, stripe: 'None' },
+    { keyword: 'best payment processor for small business', volume: 2400, difficulty: 8, stripe: 'Guide in 1 of 4' },
+    { keyword: 'stripe fee calculator', volume: 1600, difficulty: 1, stripe: 'Pricing page' },
+    { keyword: 'stripe vs paypal', volume: 1300, difficulty: 0, stripe: 'None' },
+    { keyword: 'stripe alternatives', volume: 1000, difficulty: 0, stripe: 'Off-topic guide' },
+    { keyword: 'stripe vs adyen', volume: 390, difficulty: 0, stripe: 'None' },
+    { keyword: 'stripe vs braintree', volume: 170, difficulty: 0, stripe: 'None' },
+  ]}
+/>
+
+"stripe alternatives" is the odd one. In four live US checks on 6 November 2026, Stripe ranked between first and tenth for it with a guide to alternative payment methods, which answers a different question. That page could link to an honest alternatives page, and the searcher would get what they came for from Stripe instead of from a rival's list.
+
+To confirm it worked, ask the same ten questions again after 30 days and count the AI Mode answers that cite stripe.com.
+
+## docs.stripe.com sends AI crawlers a page marked "none"
+
+Stripe's docs are ahead of most companies on agents. There's an llms.txt with 742 lines, a Markdown copy of every page, and a robots.txt line that says `ai-train=yes, search=yes, ai-input=yes`.
+
+The catch is in what the Markdown copy says about itself. When the docs see the user agent of ChatGPT's search crawler (OAI-SearchBot), GPTBot, ClaudeBot, PerplexityBot, ChatGPT-User or Claude-User, they answer the normal page address with Markdown and an `X-Robots-Tag: none` header. That header means noindex and nofollow. Googlebot and Bingbot get HTML with no such header, and a bigger page than a browser gets: about 1.84 MB and 2,800 words, against 1.68 MB and 1,469 words.
+
+<BeforeAfter
+  caption="What docs.stripe.com/payments/accept-a-payment sends to OAI-SearchBot's user agent today, and what I'd send instead (checked 6 November 2026). This is what the site serves to that user agent string, not proof of what OpenAI's verified crawler receives."
+  before={{ label: "Today", code: beforeDocs }}
+  after={{ label: "After the fix", code: afterDocs }}
+/>
+
+In the [robots rules Google documents](https://developers.google.com/search/docs/crawling-indexing/robots-meta-tag), `none` means noindex and nofollow. So the docs robots.txt says "search=yes" and the page says "none". At best that's a mixed signal to the crawlers the listing cares most about.
+
+The body is the second problem. "Accept a payment" is one of the most important pages in the docs, and an AI crawler gets 854 bytes: a list of six variants to fetch, and no steps. A browser gets about 1,469 words.
+
+**The fix:** send the `noindex` only on the `.md` addresses, where it stops duplicates in Google, and never on the page's own address. Add a `Link` header with `rel="canonical"` to every Markdown response. On pages with variants, send the default variant in full, with the others listed below it.
+
+To confirm it worked, request the page with OAI-SearchBot's user agent and check for no `X-Robots-Tag` and the full steps.
+
+## YouTube was cited in more AI Overviews than stripe.com, and none of the videos were Stripe's
+
+The AI Overviews for 18 payment questions cited 17 YouTube videos in one run and 15 in a second (DataForSEO, US, 6 November 2026). Stripe runs two channels, Stripe and Stripe Developers. Neither appears.
+
+| Question | Video cited in the AI Overview | Channel |
+| --- | --- | --- |
+| how does stripe connect work | [Stripe for Marketplaces (2026): The Right Way to Use Stripe Connect](https://www.youtube.com/watch?v=sRFtYp-ZXOs) | Rasmus \| The Marketplace Guy |
+| how to add apple pay to my website | [Developer Workshop: How to integrate Apple Pay](https://www.youtube.com/watch?v=lpP7mhtDPYg) | Paystack |
+| is stripe safe | [What Stripe Actually Does With Your SSN](https://www.youtube.com/watch?v=sv4-UGCFqnI) | Merchant Maverick |
+| stripe vs paypal for small business | [What Does Stripe Do That PayPal Can’t?](https://www.youtube.com/watch?v=LCZ6VBnB0_Q) | Merchant Maverick |
+| stripe vs square | [Square vs Stripe \| Which Payment Processor Wins?](https://www.youtube.com/watch?v=PguWsesa1Ec) | Merchant Maverick |
+| what are the best stripe alternatives | [6 Stripe Alternatives That Could Be Better for Your Business](https://www.youtube.com/watch?v=HjKzzTFPnR0) | Merchant Maverick |
+| what is a merchant of record | [What is a Merchant of Record (MoR)?](https://www.youtube.com/watch?v=HWpRcLt9vDE) | Cleverbridge |
+| what is ach payment | [What is an ACH payment? Meaning and how it works](https://www.youtube.com/watch?v=VehOHxV4-iM) | Intuit |
+| what is payment orchestration | [What is Payment Orchestration?](https://www.youtube.com/watch?v=soGqIo9KxsM) | Juspay Hyperswitch |
+
+Nine of the 17 YouTube videos cited in AI Overviews for payment questions, with the channel YouTube lists for each (DataForSEO, US, 6 November 2026).
+
+One reviewer channel, Merchant Maverick, has six of the 17 videos in the first run and six of 15 in the second, all about Stripe. Intuit, Cleverbridge, Juspay and Paystack each got their own explainer cited for a definition Stripe's guides already cover.
+
+Reddit was cited in 4 Overviews in each run, and Forbes in 3. LinkedIn turned up once in the 59 AI answers, in AI Mode's answer on merchants of record, so for payment questions video matters more than LinkedIn.
+
+### The fix: one message, published everywhere the answers look
+
+**The fix:** for each buyer question, decide the one answer Stripe wants repeated, then publish it in every format AI answers read.
+
+1. The page on stripe.com, with the question as the title and the answer in the first two sentences.
+2. A video on the Stripe channel with the same title, a five-minute walkthrough and the page linked in the description. "Stripe vs PayPal" and "Is Stripe safe?" first, since a reviewer currently owns both.
+3. The docs, where the question is a developer's: "how to add Apple Pay to my website" is an AI Overview built from three YouTube videos, and the Stripe docs have the steps.
+4. A LinkedIn and X post with the short version and the link, from the company account.
+5. Reddit, as Stripe, only in the threads AI answers already cite and only where there's a real question to answer.
+
+The order matters less than the sameness. When the page, the video and the post all say the same thing in the same words, the answer an AI writes from any of them says it too.
+
+## Technical fixes for a site with 429,500 addresses
+
+stripe.com's sitemap lists 7,279 addresses, and each comes with an average of 58 `hreflang` alternates: 422,256 more. That's about 429,500 addresses Stripe asks Google to keep track of (sitemap read 6 November 2026).
+
+The guides are most of it. 3,566 guides become 274,582 addresses, and 160,470 of those are English copies for other regions.
+
+### 1. Sitemap entries that redirect or say noindex
+
+Of the first 600 sitemap addresses my crawl read (`seo crawl`, 6 November 2026), 213 redirect and 106 carry a noindex. Most are legal and region pages, because those come first in the sitemap, so the share across all 7,279 will be lower.
+
+The docs sitemap has the same pattern. It lists 22 usage-based billing pages that carry `noindex`, including the [main usage-based billing page](https://docs.stripe.com/billing/subscriptions/usage-based), which now recommends Metronome for new integrations.
+
+**The fix:** a sitemap should list only addresses that return 200 and can be indexed. Generate it from the same data that sets the canonical and robots tags, so the two can't disagree. If the usage-based billing pages are meant to stay out of Google, take them out of the sitemap. If they're not, remove the noindex.
+
+### 2. Mixed-case addresses
+
+Covered above. Any capital letter in a path returns a 200 page with a matching canonical. One 301 rule to lowercase fixes every page at once.
+
+### 3. Structured data on the guides
+
+The ACH guide's `Article` markup has `"author": null`, a generic social card as its image, no `dateModified` and "| Stripe" inside the headline. The page itself shows "Last updated May 8, 2026", which is the freshness signal the cited pages carry.
+
+<BeforeAfter
+  caption="The ACH guide's Article markup today, and with the fields that match what the page already shows (6 November 2026)."
+  before={{ label: "Today", code: beforeSchema }}
+  after={{ label: "After the fix", code: afterSchema }}
+/>
+
+**The fix:** fill `dateModified` from the date the page already displays, set Stripe as the author organisation, use the guide's own diagram as the image and drop the brand from the headline. The docs have no structured data at all; a `TechArticle` with `dateModified` would do the same job there.
+
+### 4. Large pages and es-419
+
+A docs page is heavy. The HTML for "Accept a payment" is about 1.7 MB, and the crawl flagged six docs pages as large. Rendering isn't the problem: the text is in the HTML. Weight is, on a site with this many addresses.
+
+38 of the 402 docs pages my crawl read list an `es-419` alternate. Google [doesn't support](https://developers.google.com/search/docs/specialty/international/localized-versions) `es-419` and ignores that line, so Latin American Spanish readers get whichever Spanish copy Google picks. Listing `es-MX`, `es-AR` and the other countries it serves would fix that.
+
+### 5. Housekeeping
+
+A made-up guide address returns a 404, which is right. Its canonical points at the homepage, and under `/au/` it points at `stripe.com/en-gb-us`. A 404 page shouldn't carry a canonical.
+
+Some legal pages answer a US visitor with 26 words, "The content of this page is not applicable to the region where you are located", and a 200. Googlebot mostly crawls from the US, so that's the version Google sees. Those pages need a `noindex` for the regions they don't apply to, or to be out of the sitemap.
+
+## Ship it all today, then let it settle
+
+None of this needs a quarter-long roadmap. Each fix is a separate job with a clear end, so agents can run them in parallel:
+
+<PlanSteps
+  steps={[{"title": "Guide copies", "body": "Sort the 3,566 guides into one-country, same-everywhere and really-regional, then set canonicals, hreflang sets and sitemap entries for each kind."}, {"title": "Lowercase redirects", "body": "One edge rule: 301 any path with a capital letter to its lowercase form, and build canonicals from the stored slug."}, {"title": "Contact pages", "body": "Put the support number for each country in the HTML of every contact and sales page copy, so the page Google shows answers the search."}, {"title": "Docs for AI crawlers", "body": "Drop the noindex header on canonical addresses, add a canonical Link header to Markdown, and serve the default variant in full."}, {"title": "Comparison pages", "body": "Stripe vs PayPal, Square, Adyen and Paddle, and an alternatives page, each with a fee table and an updated date."}, {"title": "Answer pages", "body": "One page per buyer question, with the question as the title and the answer first, starting with SaaS startups and marketplaces."}, {"title": "Fee calculator", "body": "An official calculator on the pricing page, in every currency Stripe prices in."}, {"title": "Videos", "body": "Stripe vs PayPal, Is Stripe safe? and the top definition guides as short videos on the Stripe channel, each linking its page."}, {"title": "Structured data", "body": "dateModified, author and the real image on every guide, and TechArticle markup on the docs."}, {"title": "Sitemaps", "body": "Rebuild both sitemaps from the indexable set, so no redirects or noindex pages are listed."}]}
+/>
+
+The comparison pages need a person at Stripe to sign off every claim about a competitor. The redirects, canonicals and sitemaps need only a check that the right pages still return 200.
+
+Then I'd spend 30 days checking the results:
+
+<PlanSteps
+  steps={[{"marker": "Day 0", "title": "Ask Google to recrawl", "body": "Submit the US guides, the redirected capital addresses and every new page to Index My Site, so Google sees the changes now."}, {"marker": "Day 3", "title": "Check the canonicals", "body": "In URL Inspection, check that the Google-selected canonical for the ACH, CVV and contact pages is the US address."}, {"marker": "Day 7", "title": "Crawl the copies", "body": "Crawl the 46 English addresses of five guides in list mode and confirm each canonical, and that the capitals redirect."}, {"marker": "Day 14", "title": "Wrong-country searches", "body": "Count US searches landing on non-US English copies again. The phone number searches should be the first to move."}, {"marker": "Day 30", "title": "AI answers", "body": "Ask the same ten questions again and count the answers that cite stripe.com, by engine."}]}
+/>
+
+## Get the changes seen quickly
+
+Google comes back to most of these pages on its own schedule, and with 429,500 addresses that can take a while. I'd submit every changed and new URL to [Index My Site](https://indexmysite.app/) as it ships, starting with the US copies of the guides that rank in the wrong country. Until Google recrawls them, it can't see the new canonicals.
+
+## The lesson for any site with regional copies
+
+If you publish the same page for several English-speaking countries, search for your top guides from one of them and look at the address that ranks. When it's another country's copy, your `hreflang` tags are probably fine, and your copies are too alike.
+
+## How I ran this
+
+I build SEO Skill and Index My Site, and everything in this teardown came from SEO Skill, run by an agent. You can run the same audit on your own site.
+
+**1. Connect the hosted MCP server.** It's free. You sign in with Google, and there's no password and nothing to install. In Claude Code:
+
+```sh
+claude mcp add --transport http seoskill https://seoskill.dev/mcp
+```
+
+Codex, Cursor and Claude on the web work too. The [MCP guide](/docs/mcp) has the steps for each one.
+
+**2. Add a research key.** On your [account page](/account), save an Ahrefs or DataForSEO key. The key gives your agent search volumes, rankings and results pages, like the tables above. With DataForSEO it can also ask ChatGPT and Google's AI answers your questions and check who they cite.
+
+**3. Install the CLI for crawling.** The crawl runs on your machine, so it can read any site:
+
+```sh
+npm i -g seo
+seo login
+```
+
+To check a guide's regional copies, put their addresses in a file and crawl them as a list. On Stripe's ACH guide this flagged 45 of 46 English copies as duplicate content:
+
+```sh
+seo crawl --mode list --urls-file ach-copies.txt
+```
+
+**4. Ask your agent.** This is close to the prompt I used:
+
+```text
+Audit example.com for a US audience.
+List the searches where Google ranks one of our
+other countries' copies instead of the US page,
+then check each one live from a US location.
+Crawl the English copies of our top three guides
+with seo crawl --mode list and compare them.
+Request a page as OAI-SearchBot, ClaudeBot and
+PerplexityBot and show the headers.
+Ask ai_answers 10 buyer questions for us and our
+top competitor, and list who gets cited instead.
+Rank the fixes by how close each is to revenue.
+```
+
+On your own site, the hosted server adds the part I couldn't see from the outside: your real Search Console clicks and queries, and the canonical Google chose for each page. With those, you get measured numbers where this post has estimates.
+
+## Further reading
+
+- [Optimizing help center and developer documentation for AEO](https://x.com/chris_nectiv/status/2098135376447578187), Chris Long on why docs get cited, with clients where 40% or more of citations come from documentation.
+- [How to find out who Gemini cites for your query, and why it isn't you](https://suganthan.com/blog/gemini-citations), Suganthan Mohanadasan.
+- [AI SEO: writing that's specific may get cited more](https://www.searchenginejournal.com/ai-seo-writing-thats-specific-may-get-cited-more/582531), Search Engine Journal.
+- [The AEO guide](https://www.tryprofound.com/aeo-guide), Profound's six chapters from first audit to a running program.
+- [GEO is a distraction](https://www.mariehaynes.com/geo-is-a-distraction), Marie Haynes on why the fundamentals still decide it.
+
+If you're at Stripe, I'm happy to talk any of this through. And if you'd like the same teardown for your company, [SEO Skill](/) will run it for you.

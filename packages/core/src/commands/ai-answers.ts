@@ -171,22 +171,28 @@ const hostOf = (url: string) => {
   }
 }
 
+// Placeholder domains answers write into examples, such as
+// https://yourdomain.com/llms.txt. They are never a cited site, a citation
+// or a mention.
+const PLACEHOLDERS = ['example.com', 'example.org', 'example.net']
+const PLACEHOLDER = /^your-?(domain|site|url|website|company|blog)(\.[a-z]+)?$/
+const isPlaceholder = (host: string) =>
+  PLACEHOLDER.test(host) ||
+  PLACEHOLDERS.some((name) => host === name || host.endsWith(`.${name}`))
+
 // Hosts that show up in answers without being a source: DataForSEO's own
-// API, image hosts and CDNs, and placeholder domains written into examples.
+// API, image hosts and CDNs, and placeholder domains.
 const NOT_SOURCES = [
   'dataforseo.com',
   'images.openai.com',
   'gstatic.com',
   'googleusercontent.com',
   'ggpht.com',
-  'example.com',
-  'example.org',
-  'example.net',
 ]
 const IMAGE = /\.(png|jpe?g|gif|webp|avif|svg)(\?|#|$)/i
 const isSource = (url: string) => {
   const host = hostOf(url)
-  if (!host || IMAGE.test(url)) return false
+  if (!host || IMAGE.test(url) || isPlaceholder(host)) return false
   return !NOT_SOURCES.some((name) => host === name || host.endsWith(`.${name}`))
 }
 
@@ -211,10 +217,17 @@ function judge(
   const answered_at = String(task.result.datetime ?? '').slice(0, 10) || null
   const shown = engine.shown(task.result)
   if (!shown) return { result: 'no_answer', ...empty, answered_at }
-  // Links written into the answer count as sources too.
-  const linked = shown.markdown.match(/https?:\/\/[^\s)\]]+/g) ?? []
+  // Links written into the answer count as sources too, without the
+  // punctuation around them, such as a closing backtick or full stop.
+  const linked = (shown.markdown.match(/https?:\/\/[^\s)\]]+/g) ?? []).map(
+    (url) => url.replace(/[`'"‘’“”()[\]{}<>.,;:!?*]+$/, ''),
+  )
   const all = [...shown.sources, ...linked]
-  const cited = all.find((url) => onSite(url, site.domain)) ?? null
+  // A placeholder site, such as example.com, is never cited or mentioned.
+  const placeholder = isPlaceholder(site.domain)
+  const cited = placeholder
+    ? null
+    : (all.find((url) => onSite(url, site.domain)) ?? null)
   const sources = [
     ...new Set(
       all
@@ -227,7 +240,8 @@ function judge(
   if (cited) return { result: 'cited', ...base }
   const text = prose(shown.markdown)
   const mentioned =
-    text.toLowerCase().includes(site.domain) || isBrandQuery(text, site.terms)
+    !placeholder &&
+    (text.toLowerCase().includes(site.domain) || isBrandQuery(text, site.terms))
   return { result: mentioned ? 'mentioned' : 'neither', ...base }
 }
 
@@ -532,6 +546,11 @@ export async function runAiAnswers(
           ...(topCited.length
             ? [
                 `Other sites these answers cite: ${topCited.map(([host, n]) => `${host} (${n})`).join(', ')}.`,
+              ]
+            : []),
+          ...(isPlaceholder(domain)
+            ? [
+                `${domain} is a placeholder domain that answers write into examples, so no answer counts as citing or mentioning it.`,
               ]
             : []),
           'Each row is one sample of an answer that changes from run to run, not a ranking.',

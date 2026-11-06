@@ -8,12 +8,19 @@ export type LintFormat = (typeof LINT_FORMATS)[number]
 
 export type LintLevel = 'error' | 'warning'
 
+// What a rule or review lens looks for. ai: patterns common in AI-written
+// text. copy: weak copy and house style, such as dash punctuation. seo:
+// titles, descriptions and headings.
+export const LINT_CATEGORIES = ['ai', 'copy', 'seo'] as const
+export type LintCategory = (typeof LINT_CATEGORIES)[number]
+
 // The largest text one lint call reads: about 200 KB, a long blog post many
 // times over. Bigger input is refused before any work starts.
 export const LINT_MAX_CHARS = 200_000
 
 export type LintFinding = {
   rule: string
+  category: LintCategory
   level: LintLevel
   line: number
   column: number
@@ -28,6 +35,7 @@ export type LintFinding = {
 // only a reader can say whether they work.
 export type LintReview = {
   lens: string
+  category: LintCategory
   line: number
   column: number
   quote: string
@@ -40,6 +48,10 @@ export type LintResult = {
   words: number
   errors: number
   warnings: number
+  // Errors and warnings by category.
+  categories: Record<LintCategory, number>
+  // The categories checked, when the check was limited to some.
+  only?: LintCategory[]
   findings: LintFinding[]
   review: LintReview[]
 }
@@ -52,6 +64,9 @@ export type LintOptions = {
   // Findings and review items whose excerpt contains one of these phrases
   // (any case) are dropped.
   ignorePhrases?: string[]
+  // Check only these categories; findings and review items in others are
+  // not looked for.
+  only?: LintCategory[]
 }
 
 // What kind of text a block holds. Rules choose the kinds they read.

@@ -6,7 +6,9 @@ import { runStructureRules, STRUCTURE_RULES } from './rules-structure.js'
 import {
   type Block,
   type Doc,
+  LINT_CATEGORIES,
   LINT_MAX_CHARS,
+  type LintCategory,
   type LintFinding,
   type LintOptions,
   type LintResult,
@@ -43,6 +45,21 @@ export const LINT_REVIEW_LENSES: Record<string, string> = {
 const AI_RULES = new Set(
   LINT_RULES.filter((rule) => rule.family === 'ai').map((rule) => rule.id),
 )
+
+const RULE_CATEGORY = new Map<string, LintCategory>(
+  LINT_RULES.map((rule) => [rule.id, rule.family]),
+)
+
+// Each review lens's category. Lenses not listed are copy.
+const LENS_CATEGORY: Record<string, LintCategory> = {
+  contrast: 'ai',
+  metaphor: 'ai',
+  staccato: 'ai',
+  anaphora: 'ai',
+  'mic-drop': 'ai',
+}
+const lensCategory = (lens: string): LintCategory =>
+  LENS_CATEGORY[lens] ?? 'copy'
 
 function position(doc: Doc, block: Block, index: number) {
   const offset = block.map[Math.min(index, block.map.length - 1)] ?? 0
@@ -111,7 +128,11 @@ export function lintText(text: string, options: LintOptions = {}): LintResult {
     return !phrases.some((phrase) => lower.includes(phrase))
   }
 
-  const hits = dedupe(ctx.hits)
+  const only = options.only?.length ? new Set(options.only) : null
+  const checks = (category: LintCategory) => !only || only.has(category)
+  const ruleCategory = (rule: string) => RULE_CATEGORY.get(rule) ?? 'copy'
+
+  const hits = dedupe(ctx.hits).filter((hit) => checks(ruleCategory(hit.rule)))
   const findings: LintFinding[] = []
   for (const hit of hits) {
     const at = position(doc, hit.block, hit.start)
@@ -119,6 +140,7 @@ export function lintText(text: string, options: LintOptions = {}): LintResult {
     if (!allowed(hit.rule, at.line, quote)) continue
     findings.push({
       rule: hit.rule,
+      category: ruleCategory(hit.rule),
       level: hit.level,
       line: at.line,
       column: at.column,
@@ -127,12 +149,13 @@ export function lintText(text: string, options: LintOptions = {}): LintResult {
       fix: hit.fix,
     })
   }
-  for (const found of text.matchAll(RAW_LEAKS)) {
+  for (const found of checks('ai') ? text.matchAll(RAW_LEAKS) : []) {
     const offset = found.index ?? 0
     const line = lineOf(doc.lineStarts, offset)
     if (!allowed('chatbot-residue', line + 1, found[0])) continue
     findings.push({
       rule: 'chatbot-residue',
+      category: 'ai',
       level: 'error',
       line: line + 1,
       column: offset - (doc.lineStarts[line] ?? 0) + 1,
@@ -145,6 +168,7 @@ export function lintText(text: string, options: LintOptions = {}): LintResult {
   const review: LintReview[] = []
   const seen = new Set<string>()
   for (const item of ctx.reviews) {
+    if (!checks(lensCategory(item.lens))) continue
     if (hits.some((hit) => overlaps(item, hit))) continue
     const at = position(doc, item.block, item.start)
     const quote = excerpt(item.block, item.start, item.end)
@@ -153,6 +177,7 @@ export function lintText(text: string, options: LintOptions = {}): LintResult {
     seen.add(key)
     review.push({
       lens: item.lens,
+      category: lensCategory(item.lens),
       line: at.line,
       column: at.column,
       quote,
@@ -176,12 +201,22 @@ export function lintText(text: string, options: LintOptions = {}): LintResult {
       a.lens.localeCompare(b.lens) ||
       a.quote.localeCompare(b.quote),
   )
+  const categories = Object.fromEntries(
+    LINT_CATEGORIES.map((category) => [
+      category,
+      findings.filter((finding) => finding.category === category).length,
+    ]),
+  ) as Record<LintCategory, number>
   return {
     format,
     preset,
     words: ctx.words,
     errors: findings.filter((finding) => finding.level === 'error').length,
     warnings: findings.filter((finding) => finding.level === 'warning').length,
+    categories,
+    ...(only
+      ? { only: LINT_CATEGORIES.filter((category) => only.has(category)) }
+      : {}),
     findings,
     review,
   }
@@ -195,6 +230,12 @@ const plural = (count: number, word: string) =>
 export type LintFileResult =
   | { path: string; result: LintResult; note?: string; partial?: string }
   | { path: string; skipped: string }
+
+const CATEGORY_NAMES: Record<LintCategory, string> = {
+  ai: 'AI patterns',
+  copy: 'copy',
+  seo: 'SEO',
+}
 
 // The readable report for one or more files.
 export function lintReportText(files: LintFileResult[]): string {
@@ -211,8 +252,17 @@ export function lintReportText(files: LintFileResult[]): string {
     errors += result.errors
     warnings += result.warnings
     reviews += result.review.length
+    const only = result.only
+      ? `, only ${result.only.map((category) => CATEGORY_NAMES[category]).join(' and ')}`
+      : ''
+    const counted = LINT_CATEGORIES.filter(
+      (category) => result.categories[category] > 0,
+    )
+    const split = counted.length
+      ? ` (${counted.map((category) => `${category} ${result.categories[category].toLocaleString('en-US')}`).join(', ')})`
+      : ''
     lines.push(
-      `${file.path} (${result.preset}, ${plural(result.words, 'word')}): ${plural(result.errors, 'error')}, ${plural(result.warnings, 'warning')}, ${result.review.length.toLocaleString('en-US')} to review`,
+      `${file.path} (${result.preset}, ${plural(result.words, 'word')}${only}): ${plural(result.errors, 'error')}, ${plural(result.warnings, 'warning')}${split}, ${result.review.length.toLocaleString('en-US')} to review`,
     )
     if (file.note) lines.push(`  ${file.note}`)
     if (file.partial) lines.push(`  Partly checked: ${file.partial}`)

@@ -1,7 +1,9 @@
 import {
   defaultPreset,
   formatFromPath,
+  LINT_CATEGORIES,
   LINT_MAX_CHARS,
+  type LintCategory,
   type LintFileResult,
   type LintFormat,
   type LintPreset,
@@ -27,6 +29,8 @@ export type LintInput = {
   preset?: LintPreset
   ignoreRules?: string[]
   ignorePhrases?: string[]
+  // Check only these categories, such as ai for AI writing patterns.
+  only?: LintCategory[]
 }
 
 export async function runLint(
@@ -56,6 +60,9 @@ export async function runLint(
       `text is ${(input.text as string).length.toLocaleString('en-US')} characters; the most one check reads is ${LINT_MAX_CHARS.toLocaleString('en-US')}. Send one page at a time.`,
     )
   }
+  const only = input.only?.length
+    ? LINT_CATEGORIES.filter((category) => input.only?.includes(category))
+    : undefined
   const sources: LintSource[] = hasText
     ? [{ path: 'text', text: input.text as string }]
     : await (readFiles as NonNullable<typeof readFiles>)(input.paths ?? [])
@@ -72,6 +79,7 @@ export async function runLint(
         preset: input.preset ?? defaultPreset(format),
         ignoreRules: input.ignoreRules,
         ignorePhrases: input.ignorePhrases,
+        only,
       }),
     }
   })
@@ -97,6 +105,13 @@ export async function runLint(
       checked: checked.length,
       skipped: files.length - checked.length,
       partial: checked.filter((file) => file.partial).length,
+      categories: Object.fromEntries(
+        LINT_CATEGORIES.map((category) => [
+          category,
+          total((file) => file.result.categories[category]),
+        ]),
+      ),
+      ...(only ? { only } : {}),
     },
   }
 }

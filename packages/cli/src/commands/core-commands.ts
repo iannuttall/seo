@@ -16,8 +16,10 @@ import {
   ISSUE_MARKS,
   ISSUES_SECTION,
   type IssueMark,
+  LINT_CATEGORIES,
   LINT_FORMATS,
   LINT_PRESETS,
+  type LintCategory,
   type LintFormat,
   type LintPreset,
   MAX_INSPECT_LIMIT,
@@ -658,6 +660,10 @@ export const lintCommand = defineCommand({
       description:
         'Files, folders or globs: .md, .mdx, .html, .astro or .txt. Up to 100 files.',
     },
+    only: {
+      type: 'string',
+      description: `Check only these categories, comma-separated: ${LINT_CATEGORIES.join(', ')}. ai is patterns common in AI-written text; copy is weak copy and house style such as dashes; seo is titles, descriptions and headings.`,
+    },
     preset: {
       type: 'string',
       description: `${LINT_PRESETS.join(', ')}. Default blog for Markdown and text, landing for HTML and Astro. meta reads one title or description per line.`,
@@ -705,6 +711,16 @@ export const lintCommand = defineCommand({
     const paths = positionals.filter(
       (value): value is string => typeof value === 'string',
     )
+    const only = csvArg(args.only)
+    const unknown = only?.filter(
+      (value) => !LINT_CATEGORIES.includes(value as LintCategory),
+    )
+    if (unknown?.length) {
+      throw new SeoError(
+        'INVALID_INPUT',
+        `--only takes ${LINT_CATEGORIES.join(', ')}, comma-separated.`,
+      )
+    }
     const phrases = ([] as unknown[])
       .concat(args['ignore-phrase'] ?? [])
       .filter((value): value is string => typeof value === 'string')
@@ -716,6 +732,7 @@ export const lintCommand = defineCommand({
           format: format as LintFormat | undefined,
           ignoreRules: csvArg(args.ignore),
           ignorePhrases: phrases,
+          only: only as LintCategory[] | undefined,
         },
         (inputs) => readLintFiles(inputs),
       )

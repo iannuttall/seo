@@ -1,5 +1,10 @@
 import { z } from 'zod'
-import { LINT_FORMATS, LINT_MAX_CHARS, LINT_PRESETS } from '../lint/types.js'
+import {
+  LINT_CATEGORIES,
+  LINT_FORMATS,
+  LINT_MAX_CHARS,
+  LINT_PRESETS,
+} from '../lint/types.js'
 import { AI_ANSWER_TASK_PATTERN, runAiAnswers } from './ai-answers.js'
 import { analyticsSignIn, runAnalyticsRows } from './analytics.js'
 import { AUDIT_SECTION, AUDIT_SECTION_TEXT } from './audit.js'
@@ -204,6 +209,13 @@ const lintInput = {
     .max(50)
     .optional()
     .describe('Optional rule ids or review lenses to skip.'),
+  only: z
+    .array(z.enum(LINT_CATEGORIES))
+    .max(LINT_CATEGORIES.length)
+    .optional()
+    .describe(
+      'Optional categories to check: ai (patterns common in AI-written text), copy (weak copy and house style, such as dashes) or seo (titles, descriptions, headings). Default: all.',
+    ),
   ignore_phrases: z
     .array(z.string().min(1).max(200))
     .max(50)
@@ -628,7 +640,7 @@ export const SHARED_TOOLS: SharedTool[] = [
     command: 'lint',
     title: 'Check copy for AI writing patterns',
     description:
-      'Checks landing page copy, blog posts, titles and meta descriptions for patterns common in AI-written text (such as "isn\'t X, it\'s Y" reframes, ", not X" contrasts, two-beat fragments, stock idioms and kicker lines), weak copy (dash punctuation, buzzwords, vague link text) and SEO rules (title 30 to 60 characters, description 70 to 160, one H1). Each error and warning has a line, the words, and a concrete fix. Review items are judgement calls for you: read each quote and change it only when it fails the question. It runs offline and reads no accounts.',
+      'Checks landing page copy, blog posts, titles and meta descriptions for patterns common in AI-written text (such as "isn\'t X, it\'s Y" reframes, ", not X" contrasts, two-beat fragments, stock idioms and kicker lines), weak copy (dash punctuation, buzzwords, vague link text) and SEO rules (title 30 to 60 characters, description 70 to 160, one H1). Each error and warning has a line, the words, and a concrete fix. Each finding has a category (ai, copy or seo); only limits the check, such as only ["ai"] to leave out house style like dashes. Review items are judgement calls for you: read each quote and change it only when it fails the question. It runs offline and reads no accounts.',
     input: z.object(lintInput),
     localInput: z.object({
       ...lintInput,
@@ -649,6 +661,7 @@ export const SHARED_TOOLS: SharedTool[] = [
           preset: input.preset,
           ignoreRules: input.ignore_rules,
           ignorePhrases: input.ignore_phrases,
+          only: input.only,
         },
         surface.readFiles,
       ),

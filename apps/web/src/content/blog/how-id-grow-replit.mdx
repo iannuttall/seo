@@ -1,0 +1,508 @@
+---
+title: How I'd grow Replit with SEO and AI answers
+description: An SEO and AI search teardown of Replit, written as the job it's hiring for. A relaunch plan that keeps its rankings, and the answers it could win.
+heading: How I'd grow Replit
+lead: Google's AI Overviews for "ai website builder" and "ai app builder", searched 45,200 times a month in the US between them, both cite Replit. Replit is hiring someone to protect search equity like that through a site relaunch. This is what I'd do in that job.
+date: '2026-11-06'
+company: Replit
+x:
+  company: Replit
+draft: false
+cover:
+  alt: "Replit's orange mark stands on a step stool beside a signpost of arrows, guiding a crowd from an old shopfront under scaffolding to the open doors of a new building."
+  title: center
+---
+
+export const beforeReplIt = `<pre>GET repl.it/languages/python3
+  302 Found
+  → replit.com/languages/python3
+  301 Moved Permanently
+  → replit.com/</pre>`
+
+export const afterReplIt = `<pre>GET repl.it/languages/python3
+  301 Moved Permanently
+  → replit.com/languages/python3
+  200 OK (the page, or its closest
+  live replacement)</pre>`
+
+export const beforeSitemap = `<pre>replit.com/sitemaps/main.xml
+  105 addresses
+   57 /languages addresses:
+      55 → 301 to the homepage,
+      1 → /templates, 1 → 404
+   30 /@replit/… template repls,
+      each with a noindex tag
+
+repls-on-replit-sitemap-index
+  14 child sitemaps
+   3 return 404
+   5 return an HTML page
+   1 is an empty list (lp)</pre>`
+
+export const afterSitemap = `<pre>replit.com/sitemap.xml
+  one index, and every child
+  returns XML
+
+  only addresses that return 200,
+  carry a self canonical and are
+  meant to be indexed
+
+  retired /languages/… and noindex
+  template repls removed</pre>`
+
+export const beforeComparison = `<p><strong>Replit vs Lovable: AI Builder Comparison</strong> (replit.com/discover, 540 words)</p><p><em>What you get with Replit and with Others</em></p><p>Backend and APIs: Replit <strong>Yes</strong>, Others <strong>In part</strong></p><p>Connectors and integrations: Replit <strong>450+</strong>, Others <strong>Less than 100</strong></p><p>A second page, <strong>Replit vs. Lovable</strong> (replit.com/comparisons, 584 words), covers the same search.</p>`
+
+export const afterComparison = `<p><strong>Replit vs Lovable: which AI app builder fits your project?</strong></p><p><em>Short answer first:</em> Lovable is quicker for a front end you'll hand to a developer. Replit runs the whole app: database, sign-ins, hosting and publishing to the App Store.</p><p>A table that names Lovable in every row, with the source for each claim, a verdict per kind of builder, and an updated date. One page, at one address, with the other one redirected to it.</p>`
+
+export const beforeLlms = `# Replit Documentation
+
+> A comprehensive compilation of Replit
+> documentation covering getting started
+> guides, tutorials, workspace features…
+
+Total documents compiled: 228
+
+## Getting Started
+- [Introduction](https://docs.replit.com/…)
+…`
+
+export const afterLlms = `# Replit
+
+> Replit builds working apps and websites
+> from a description, with the database,
+> sign-ins and hosting included.
+
+## Product
+- [AI app builder](https://replit.com/usecases/ai-app-builder.md)
+- [AI website builder](https://replit.com/usecases/ai-website-builder.md)
+- [Pricing](https://replit.com/pricing.md)
+- [Replit vs Lovable](https://replit.com/compare/replit-vs-lovable.md)
+- [What is vibe coding?](https://replit.com/blog/what-is-vibe-coding.md)
+
+## Docs
+- [Full docs index](https://docs.replit.com/llms.txt)`
+
+Google's AI Overview for "ai website builder", a search made 33,100 times a month in the US, cites replit.com, and so does the one for "ai app builder" (12,100 searches). That held in every live check where I recorded the AI Overview's sources: three for "ai website builder" and two for "ai app builder" (DataForSEO, US, 6 November 2026). Ahrefs also had Replit's [AI website builder page](https://replit.com/usecases/ai-website-builder) second for "ai website", its top search, with about 22,060 visits a month (5 November 2026).
+
+Replit is now hiring an [AEO/GEO/SEO Lead](https://jobs.ashbyhq.com/replit/72866fb1-d377-4d3e-9851-f3d705449190), first posted on 20 August 2026 and still open on 6 November 2026. One line in the listing caught my eye: "Protect and grow search equity through a major site relaunch".
+
+So this teardown is written as the job. It's the plan I'd bring on day one, built from public data. I build SEO Skill and Index My Site. An agent ran the research with SEO Skill for keyword data and AI answers, Ahrefs for traffic estimates, and DataForSEO's API for live results pages and link counts.
+
+It covers only what anyone can see from outside: Replit's public pages, search data, AI answers and the listing itself.
+
+**Key findings**
+
+- 91% of Replit's estimated 1,143,578 monthly Google visits (1,035,555) come through brand searches and brand pages (Ahrefs, 5 November 2026). Its use-case and builder pages bring about 43,000 more, and that's the part a relaunch can lose.
+- Five compiler pages now redirect to the homepage, a change made after mid-October 2026. Ahrefs put four of them at about 172,000 visits a month in July 2025 and about 9,400 on 5 November 2026, and most of that fall came while they were still live. The main sitemap still lists 57 /languages addresses, and none of them returns a page.
+- 8,461 sites link to repl.it, Replit's old domain, and it redirects with a 302, the code for a temporary move, instead of a 301. That's a risk, and a one-line fix.
+- In one run of 30 AI answers to 10 buyer questions, Replit was cited or named in 18 and Lovable in 19. Google's AI Mode left Replit out of 5 of its 10 answers.
+- "vibe coding" gets 110,000 US searches a month, and no Replit page was in Google's top 25 in live US results on 6 November 2026. Replit's 3,185-word guide to it exists already.
+- Replit publishes 23 "Replit vs" pages in two sections. Lovable and Bolt get two each, and neither Lovable comparison page was in the top 27 for "replit vs lovable" (1,000 searches, difficulty 0) in live US results on 6 November 2026.
+
+## The listing asks for six things, and SEO Skill can show four of them
+
+The listing names the job in six parts. These are the ones that a search tool can test from outside, quoted from the listing:
+
+- "Own the AEO/GEO Strategy": "Define where Replit must show up across ChatGPT, Claude, Gemini, Perplexity, and Google AI Overviews, for which prompts and buyer intents".
+- "Win Citations Across the Open Web": "LLMs cite what they trust: Reddit threads, YouTube videos, high-authority publications, community content, and well-structured owned pages."
+- "Run SEO End to End": "Protect and grow search equity through a major site relaunch".
+- "Stand Up Measurement": "AI referral traffic, share of voice in AI answers, citation tracking".
+
+The other two, building the content engine and directing agencies, are judgement calls inside Replit. The sections below cover the four, starting with the relaunch, because that's where the existing rankings are at risk.
+
+## 91% of Replit's Google traffic is brand search, and that's the strength to build on
+
+Ahrefs estimates replit.com gets about 1,143,578 Google visits a month across all countries (5 November 2026). 931,754 of them (81%) land on the homepage from searches for Replit by name.
+
+That's brand demand. Google already treats Replit as an entity, which makes it easier to rank non-brand pages. The searches to win are from people who need what Replit does and don't know the name yet.
+
+<TrafficMap
+  caption="Where replit.com's estimated Google visits land, by kind of page (Ahrefs, all countries, top pages on 5 November 2026). The compiler pages now redirect to the homepage, and Ahrefs still credits them."
+  unit="visits"
+  items={[
+    { label: "Homepage, from brand searches", value: 931754, tone: "brand" },
+    { label: "Login, sign-up, pricing and other brand pages", value: 103801, tone: "brand", note: "Includes a sign-in address with a redirect parameter, at about 1,113 visits" },
+    { label: "Use-case and builder pages", value: 43234, tone: "sells", note: "AI website builder 22,060, AI app builder 14,746, AI game builder 2,769, ecommerce website builder 2,554" },
+    { label: "Retired compiler pages", value: 39500, tone: "other", note: "Python, C, HTML, Java, C++, Node.js. Each now redirects to the homepage" },
+    { label: "Vibe coding guide and Python how-tos", value: 1874, tone: "other" },
+    { label: "Every other page", value: 23415, tone: "other" },
+  ]}
+/>
+
+The use-case pages are the sellers: about 43,234 visits a month (3.8% of the total) to pages that answer a search like "ai website builder" with a sign-up box. Ahrefs had the [AI website builder page](https://replit.com/usecases/ai-website-builder) second for "ai website" and the [AI app builder page](https://replit.com/usecases/ai-app-builder) fourth for "ai app builder" on 5 November 2026.
+
+Live positions moved during the day. In a check at 09:58 UTC on 6 November 2026, the AI website builder page was 3rd for "ai website builder". In six checks between 11:30 and 11:33 UTC, desktop and mobile, it wasn't in the top 27. A Replit page was 3rd or 4th for "ai app builder" in 2 of 5 checks (DataForSEO, US).
+
+Replit publishes user numbers, not traffic. Its [Lovable comparison page](https://replit.com/discover/replit-vs-lovable) says more than 60 million people build on it. So these Ahrefs figures show the shape of Replit's search traffic, and Replit's own analytics hold the real counts.
+
+## Five compiler pages now redirect to the homepage, so the relaunch starts with a redirect map
+
+Most relaunches lose rankings in the same few ways: addresses change with no redirect, redirects go to the homepage, templates drop text or titles, and nobody compares before and after on the same pages. Each of those can be checked.
+
+### The compiler pages now redirect to the homepage
+
+Replit's compiler pages, such as the Python and Java ones, used to rank for searches like "online java compiler" and "c compiler online". The Wayback Machine still captured the live [Python page](https://web.archive.org/web/20261010220538/https://replit.com/languages/python3) on 10 October 2026 and the [C++ page](https://web.archive.org/web/20261013012012/https://replit.com/languages/cpp) on 13 October 2026. On 6 November 2026, all five that I checked (Python, C++, Java, C and HTML) redirect to the homepage.
+
+<VerticalBars
+  caption="Estimated monthly Google visits to replit.com, all countries, July 2025 to November 2026 (Ahrefs). The compiler pages were still live through the fall from April to September 2026, and brand search moves month to month."
+  unit="visits"
+  data={[{"label":"Jul 25","value":2469866},{"label":"Aug 25","value":2413727},{"label":"Sep 25","value":2282773},{"label":"Oct 25","value":1927228},{"label":"Nov 25","value":1932516},{"label":"Dec 25","value":1878340},{"label":"Jan 26","value":2187359},{"label":"Feb 26","value":2065648},{"label":"Mar 26","value":2082380},{"label":"Apr 26","value":2033910},{"label":"May 26","value":1662262},{"label":"Jun 26","value":1534477},{"label":"Jul 26","value":1494544},{"label":"Aug 26","value":1319944},{"label":"Sep 26","value":892330},{"label":"Oct 26","value":1119764},{"label":"Nov 26","value":1148739}]}
+  markers={[{"at":"Oct 26","text":"Compiler pages last captured live, 10 and 13 October 2026"}]}
+/>
+
+Ahrefs' estimate for the whole site fell from about 2.03 million visits in April 2026 to about 892,000 in September 2026. The redirects came later, so they don't explain that fall.
+
+Ahrefs estimated the C++, Java, C and HTML compiler pages at 172,471 visits a month in July 2025, and 9,434 on 5 November 2026. Most of that loss came while the pages were still live. What was left is now going to the homepage.
+
+Retiring them may well have been deliberate, since Replit now sells an agent rather than a browser editor. The lesson for the relaunch is in how they went. Google's [site move guidance](https://developers.google.com/search/docs/crawling-indexing/site-move-with-url-changes) says not to redirect many old addresses to one unrelated page such as the homepage, because it "might be treated as a soft 404".
+
+<UrlMap
+  caption="How the retired compiler pages redirect today, and where I'd send them. Replit's own Python templates and docs already cover these jobs."
+  rows={[
+    { url: "replit.com/languages/python3", action: "301", tone: "change", to: "a Python page that keeps the online editor job, or the Python template", note: "Redirects to the homepage today" },
+    { url: "replit.com/languages/java10", action: "301", tone: "change", to: "the Java template or a Java builder page", note: "12th for \"online java compiler\" (18,100 searches) in 2 of 5 live checks, with its old title" },
+    { url: "replit.com/languages/cpp, /c, /html", action: "301", tone: "change", to: "the matching template", note: "Redirect to the homepage today" },
+    { url: "replit.com/sitemaps/main.xml", action: "Fix", tone: "change", note: "Remove the 57 /languages addresses that redirect or return a 404" },
+  ]}
+/>
+
+Google showed the Java page 12th for "online java compiler" in 2 of 5 live checks on 6 November 2026, under its old title "Java Online Compiler & Interpreter" (DataForSEO, US). That's ranking equity that hasn't fully gone yet.
+
+### Step 1: list every address that matters, from five sources
+
+A sitemap alone misses most of what ranks and most of what's linked. I'd build one list from five places:
+
+1. The sitemaps. Replit's [robots.txt](https://replit.com/robots.txt) lists six sitemaps, and between them they hold about 1,768 addresses (6 November 2026).
+2. Pages with traffic: Search Console's top pages for the last 16 months, plus Ahrefs' top pages for anything Search Console anonymises.
+3. Pages with links: the target addresses from a backlink export. DataForSEO counts 58,574 referring domains to replit.com.
+4. Old domains: repl.it (8,461 referring domains) and blog.replit.com (2,466), which already redirects post by post to [replit.com/blog](https://replit.com/blog).
+5. Sections served from Replit apps. The careers, community and discover sections are served from Replit apps ([careers-site.replit.app](https://careers-site.replit.app/), [community-hub.replit.app](https://community-hub.replit.app/) and [discover-articles.replit.app](https://discover-articles.replit.app/discover/replit-vs-lovable)), each with a canonical pointing at replit.com. A relaunch that moves more sections this way needs the same canonical on each app.
+
+### Step 2: map every old address to its closest new one
+
+Every address on the list gets one of four outcomes: it stays, it gets a 301 to its closest new page, it returns a 404 on purpose, or it returns a 410 because it's gone for good. Nothing redirects to the homepage unless it was the homepage.
+
+<UrlMap
+  caption="The redirect map's rules, with an example of each from replit.com today."
+  rows={[
+    { url: "replit.com/usecases/ai-website-builder", action: "Keep", tone: "keep", note: "Cited in the AI Overview for \"ai website builder\". Keep the address, title and text through the relaunch" },
+    { url: "replit.com/discover/replit-vs-lovable", action: "301", tone: "change", to: "one comparison page per rival", note: "Two addresses cover the same search today" },
+    { url: "replit.com/languages/*", action: "301", tone: "change", to: "the closest template or builder page", note: "Not the homepage" },
+    { url: "repl.it/*", action: "301", tone: "change", to: "the same path on replit.com", note: "302 today" },
+    { url: "replit.com/talk/*", action: "301", tone: "change", to: "the community site or a docs page on the same topic", note: "The old forum. Threads still have links from github.blog" },
+    { url: "replit.com/@user/deleted-repl", action: "404", tone: "remove", note: "Correct today. User content that's gone should stay gone" },
+  ]}
+/>
+
+### Step 3: record the before numbers
+
+The week before launch, I'd save four things to compare against:
+
+- A full crawl with `seo crawl https://replit.com/ --max-pages 10000`, saved as JSON. It records each page's status, title, canonical, robots tags, word count and internal links.
+- Search Console clicks by page and query for the 28 days before launch.
+- AI answers to the same 10 buyer questions from this post, run through `seo research ai_answers`, so the AI citation count has a baseline too.
+- The top 200 pages by clicks, with their titles and H1s copied out. Titles change by accident in most redesigns.
+
+### Step 4: check on launch day and for 30 days after
+
+On launch day, every old address from step 1 goes through the crawler in list mode, and every redirect gets traced:
+
+```sh
+seo crawl --mode list --urls-file old-urls.txt --concurrency 2
+seo redirect-trace --url https://replit.com/languages/python3
+seo compare --site replit.com --date 2026-12-01
+```
+
+The list crawl shows every old address that now returns a 404 or a redirect chain. `seo redirect-trace` follows one address hop by hop and checks the final page is indexable. `seo compare --date` splits Search Console into equal periods before and after the launch date and lists the pages and queries that moved, so a lost page shows up by name instead of as a dip in a chart.
+
+## AI answers cite or name Replit in 18 of 30 buyer answers, and Lovable in 19
+
+I asked ChatGPT search, Google's AI Mode and Google's AI Overviews 10 questions a person asks before choosing an app builder, once each (DataForSEO through `seo research ai_answers`, US, 6 November 2026). The same 10 questions ran for Lovable.
+
+AI answers aren't deterministic. The same question can get a different answer, with different sources, the next time it's asked, so these counts are from a single run on that date.
+
+<KeywordTable
+  caption="10 questions, 3 AI engines each, one run (DataForSEO, US, 6 November 2026). The Replit and Lovable columns count the answers, out of 3, that cite or name each one. Cited instead lists the other sources the Replit answers used most."
+  sortBy="replit"
+  columns={[{ key: 'question', label: 'Question', format: 'text' }, { key: 'replit', label: 'Replit, of 3', short: 'Replit', format: 'number' }, { key: 'lovable', label: 'Lovable, of 3', short: 'Lov.', format: 'number' }, { key: 'who', label: 'Cited instead', short: 'Instead', format: 'text' }]}
+  rows={[
+    { question: 'What is the best AI app builder?', replit: 3, lovable: 3, who: 'Bolt, YouTube' },
+    { question: 'Replit vs Lovable: which is better?', replit: 3, lovable: 3, who: 'Superblocks, Reddit' },
+    { question: 'What is the best vibe coding tool?', replit: 3, lovable: 3, who: 'Zapier, YouTube' },
+    { question: 'What are the best Lovable alternatives?', replit: 2, lovable: 3, who: 'Cursor, Reddit' },
+    { question: 'Which AI app builder can deploy and host my app?', replit: 2, lovable: 2, who: 'Bolt, v0' },
+    { question: 'What is vibe coding?', replit: 2, lovable: 1, who: 'IBM, Google Cloud' },
+    { question: 'What is the best AI website builder?', replit: 1, lovable: 2, who: 'Zapier, Wix' },
+    { question: 'How do I build a mobile app with AI?', replit: 1, lovable: 1, who: 'YouTube, FlutterFlow' },
+    { question: 'How do I build an app without coding?', replit: 1, lovable: 0, who: 'Bubble, YouTube' },
+    { question: 'How can I build an internal tool for my business with AI?', replit: 0, lovable: 1, who: 'YouTube, Reddit' },
+  ]}
+/>
+
+ChatGPT included Replit in 7 of its 10 answers. Google's AI Overviews included it in 7 of 10, and Google's AI Mode in 5 of 10. AI Mode is the gap: it answered "What is the best AI website builder?" from YouTube and [Zapier's list](https://zapier.com/blog/best-ai-website-builder/), and left Replit out.
+
+The answers that cite Replit link to three pages: the [homepage](https://replit.com/) (7 answers), the [AI app builder page](https://replit.com/usecases/ai-app-builder) (2) and the [Lovable comparison on /comparisons](https://replit.com/comparisons/replit-vs-lovable) (1). The [AI website builder page](https://replit.com/usecases/ai-website-builder), the one Google's AI Overview cites for "ai website builder", wasn't cited by any of them.
+
+Access isn't the problem. The [AI app builder page](https://replit.com/usecases/ai-app-builder), the [vibe coding guide](https://replit.com/blog/what-is-vibe-coding) and the [Lovable comparison](https://replit.com/discover/replit-vs-lovable) returned a 200 with the same text to a browser, GPTBot, OAI-SearchBot, ClaudeBot and PerplexityBot user agents (15 requests, 6 November 2026), and [robots.txt](https://replit.com/robots.txt) blocks none of them. The gap is what the pages say.
+
+### ChatGPT's answer to "Replit vs Lovable" cites Lovable's comparison guide
+
+For "Replit vs Lovable: which is better?", ChatGPT named Replit but cited no Replit page. Its sources were [Lovable's comparison guide](https://lovable.dev/guides/lovable-vs-replit-platform-comparison), another Lovable guide and nine third-party comparisons. Google's AI Overview cited Replit's /comparisons page for the same question, so a Replit page can win the citation.
+
+Lovable's guide has about 2,900 words, a table with 26 rows, sections that name both products ("Backend and hosting", "Code ownership and portability", "Pricing and predictability") and a "Who should choose what" verdict.
+
+Replit's two pages on the same search have 540 words ([on /discover](https://replit.com/discover/replit-vs-lovable)) and 584 words ([on /comparisons](https://replit.com/comparisons/replit-vs-lovable)). The one on /discover compares Replit with "Others" in every row of its table, so a model reading it can't tell what Lovable does.
+
+<BeforeAfter
+  caption="Replit's comparison page as a crawler reads it today, and the page I'd publish instead. The current lines are quoted from replit.com/discover/replit-vs-lovable."
+  before={{ label: "Today", html: beforeComparison }}
+  after={{ label: "One page per rival", html: afterComparison }}
+/>
+
+**The fix:** one comparison page per rival, at one address. Open with a two-sentence answer, name the rival in every row of the table, link the source for each claim about the rival (its pricing page, its docs), and show an updated date. Add `SoftwareApplication` structured data for Replit that matches the visible pricing. To confirm it worked, ask the same 10 questions after 30 days and count the answers that cite a Replit comparison page.
+
+## "vibe coding" gets 110,000 searches a month, and Replit's guide isn't in Google's top 25
+
+"vibe coding" gets 110,000 US searches a month and "what is vibe coding" another 60,500 (DataForSEO, November 2026). Replit has a 3,185-word guide titled "[What Is Vibe Coding? Meaning & How to Vibe Code](https://replit.com/blog/what-is-vibe-coding)", and in DataForSEO's live results on 6 November 2026 it isn't in the top 25 for either.
+
+<SerpLadder
+  keyword="vibe coding"
+  volume={110000}
+  target="replit.com"
+  targetPosition={null}
+  caption="Organic results for &quot;vibe coding&quot; in one live check (DataForSEO, US, desktop, 11:30 UTC, 6 November 2026). Positions count organic results only. The AI Overview above them cites Wikipedia, IBM, Google Cloud and Google AI Studio."
+  rows={[
+    { position: 1, domain: 'news.ycombinator.com', tag: 'Forum thread' },
+    { position: 2, domain: 'substack.com', tag: 'Newsletter post' },
+    { position: 3, domain: 'galent.com', tag: 'Explainer' },
+    { position: 4, domain: 'medium.com', tag: 'Guide' },
+    { position: 5, domain: 'medium.com', tag: 'Opinion post' },
+    { position: 6, domain: 'testdevlab.com', tag: 'Explainer' },
+    { position: 16, domain: 'techradar.com', tag: 'News explainer' },
+  ]}
+/>
+
+The top results are a [Hacker News thread](https://news.ycombinator.com/item?id=43218410), a Substack post and Medium posts. None of them has Replit's data: how many apps people have built by describing them, what they built, and what happened when they published.
+
+Google's AI Overview for "vibe coding" cites [Wikipedia](https://en.wikipedia.org/wiki/Vibe_coding), [IBM](https://www.ibm.com/think/topics/vibe-coding), [Google Cloud](https://cloud.google.com/discover/what-is-vibe-coding) and [Google AI Studio](https://aistudio.google.com/vibe-code). ChatGPT cited [Replit's homepage](https://replit.com/) for "What is vibe coding?", so one engine already connects the two.
+
+**The fix:** make the guide the page only Replit could write. Put a two-sentence definition at the top, then the first-hand part: what people build on Replit by describing it, with numbers from Replit's own data and dated examples from its gallery. Retitle it "Vibe coding: what it is and what people build with it", link it from the homepage and the use-case pages, and add the publish and updated dates to the visible page. To confirm it worked, check Search Console impressions for "vibe coding" weekly, and the AI Overview's sources after 30 days.
+
+## Replit has 23 comparison pages, and two rivals get two each
+
+Replit already publishes the pages people compare tools with: 20 "Replit vs" pages and lists of alternatives to Lovable, Bolt, Cursor, v0 and others on /discover, plus 3 more comparisons on /comparisons. In a live check on 6 November 2026, neither Lovable comparison page was in the top 27 for "replit vs lovable", and the Lovable alternatives page wasn't in the top 27 for "lovable alternative".
+
+<KeywordTable
+  caption="Comparison and roundup searches, with US volume and difficulty (DataForSEO, November 2026). Who ranks is the top two organic results in one live check (DataForSEO, US, desktop, 11:30 UTC, 6 November 2026). In that check, Replit's AI website builder page was 5th for &quot;best ai website builder&quot; and its Lovable alternatives page 8th for &quot;replit vs lovable&quot;. No Replit page was in the top 27 for the others."
+  sortBy="volume"
+  columns={[{ key: 'keyword', label: 'Search', format: 'text' }, { key: 'volume', label: 'US searches', short: 'US', format: 'number' }, { key: 'difficulty', label: 'Difficulty', format: 'number', short: 'KD' }, { key: 'who', label: 'Who ranks', format: 'text' }]}
+  rows={[
+    { keyword: 'best ai website builder', volume: 3600, difficulty: 32, who: 'Reddit, Wix' },
+    { keyword: 'vibe coding platform', volume: 2400, difficulty: 41, who: 'Emergent, Manus' },
+    { keyword: 'best vibe coding tools', volume: 1600, difficulty: 6, who: 'Qodo, Reddit' },
+    { keyword: 'best ai app builder', volume: 1300, difficulty: 20, who: 'DronaHQ, Zapier' },
+    { keyword: 'replit vs lovable', volume: 1000, difficulty: 0, who: 'Tool Nerd, NoCode MBA' },
+    { keyword: 'replit alternatives', volume: 880, difficulty: 0, who: 'Vitara, Launchpad' },
+    { keyword: 'lovable alternative', volume: 590, difficulty: 0, who: 'eesel, Capacity' },
+  ]}
+/>
+
+"replit vs lovable" has a difficulty of 0. Replit's best result for it was 8th in live US results on 6 November 2026, and it's the [Lovable alternatives page](https://replit.com/discover/lovable-alternatives), not either comparison page. Two Replit pages for one search risk splitting the signals between them.
+
+<UrlMap
+  caption="Replit pages that cover the same search twice, and what I'd do with each pair. Both pages in each pair return 200 with a self canonical."
+  rows={[
+    { url: "replit.com/comparisons/replit-vs-lovable", action: "301", tone: "change", to: "replit.com/compare/replit-vs-lovable", note: "584 words" },
+    { url: "replit.com/discover/replit-vs-lovable", action: "301", tone: "change", to: "replit.com/compare/replit-vs-lovable", note: "540 words, compares with \"Others\"" },
+    { url: "replit.com/comparisons/replit-vs-bolt", action: "301", tone: "change", to: "replit.com/compare/replit-vs-bolt", note: "Covers the same search as /discover/replit-vs-bolt" },
+    { url: "replit.com/discover/ai-website-builder", action: "301", tone: "change", to: "replit.com/usecases/ai-website-builder", note: "1,418 words, competes with the use-case page" },
+    { url: "replit.com/discover/ai-app-builder-lp", action: "noindex", tone: "change", note: "A 325-word landing page, listed in the sitemap" },
+    { url: "replit.com/comparisons", action: "Add", tone: "change", note: "Returns 404. A hub that links every comparison" },
+  ]}
+/>
+
+The roundups need the same work as the Lovable page. "best vibe coding tools" has a difficulty of 6 and [Replit's page on it](https://replit.com/discover/best-vibe-coding-tools) has 4,360 words, but its structured data says it was published on 13 April 2026 at 17:52:34 and updated on 30 August 2026. Three other /discover pages I checked carry the same two timestamps, which reads as a bulk import.
+
+**The fix:** give each roundup a real updated date when someone edits it, and say how the tools were tested. That's the evidence AI answers and the people writing roundups look for. Then ask the authors of the pages that rank, starting with [Zapier's vibe coding tools list](https://zapier.com/blog/best-vibe-coding-tools/), to compare Replit on the same terms.
+
+## YouTube was a source in 15 of 30 AI answers, and Zapier in 9
+
+Replit's site makes the claim. What AI answers repeat comes from what other sites say about it. Across the 30 answers about Replit in the same run, YouTube was a source in 15, Zapier in 9, Lovable's site in 8, and Bolt's and Reddit in 6 each.
+
+LinkedIn was a source in none of them. That fits the published studies: [Semrush](https://www.semrush.com/blog/linkedin-ai-visibility-study) found LinkedIn in about 11% of AI answers across ChatGPT Search, Perplexity and AI Mode (January and February 2026), and [Profound](https://www.tryprofound.com/blog/linkedin-is-the-most-cited-domain-for-professional-queries-in-ai-search) found it the most cited domain for professional questions. Replit's business pitch, internal tools and company-wide agents, is the professional question, and that's where LinkedIn posts would count.
+
+### One message, repeated everywhere answers look
+
+AI answers repeat what many sources say in the same words. Replit's homepage title says "AI App and Website Builder". Two recent customer posts on its [X account](https://x.com/Replit), about [a support team's triage app](https://x.com/Replit/status/2117339099468341633) (2 November 2026) and [a Japanese leasing company](https://x.com/Replit/status/2118584164723331526) (6 November 2026), don't say "app builder", "website builder" or "vibe coding".
+
+I'd pick one line for each audience and use it on every surface for 90 days:
+
+- **For builders:** "Describe your app. Replit builds it, hosts it and publishes it." That's the homepage, the use-case pages, YouTube titles and X posts.
+- **For companies:** "Every team can build its own internal tools on Replit." That's the business pages, LinkedIn posts and the customer stories.
+
+Then each piece of work goes out five ways. One customer story, such as the support team that built its own ticket triage app, becomes a page on replit.com with numbers, a YouTube walkthrough with the same title, a LinkedIn post from the person who built it, an X thread that links the page, and an answer in the Reddit threads that ask how to build that tool.
+
+### The sources to earn a place in
+
+<KeywordTable
+  caption="Where the 30 AI answers about Replit got their sources in one run, and what I'd do on each (DataForSEO, US, 6 November 2026). Counts are answers that used the source at least once."
+  sortBy="answers"
+  columns={[{ key: 'source', label: 'Source', format: 'text' }, { key: 'answers', label: 'Answers', format: 'number' }, { key: 'action', label: 'What I would do', format: 'text' }]}
+  rows={[
+    { source: 'YouTube', answers: 15, action: 'One video per buyer question, titled with the question' },
+    { source: 'Zapier', answers: 9, action: 'Ask to be compared in its app builder and vibe coding lists' },
+    { source: 'Reddit', answers: 6, action: 'Answer r/nocode and r/vibecoding threads with a link to the page' },
+    { source: 'Superblocks', answers: 2, action: 'Ask for a named row in its comparison posts' },
+    { source: 'LinkedIn', answers: 0, action: 'Posts for the internal tools and enterprise questions' },
+  ]}
+/>
+
+Zapier's lists are the outreach target with the widest reach here: they were a source in 9 of the 30 answers, more than any rival's own site. The ones that fit are [the 5 best AI app builders](https://zapier.com/blog/best-ai-app-builder/), [the 3 best AI website builders](https://zapier.com/blog/best-ai-website-builder/), [the 6 best vibe coding tools](https://zapier.com/blog/best-vibe-coding-tools/) and [what is vibe coding](https://zapier.com/blog/vibe-coding/). Superblocks' [Replit vs Lovable comparison](https://www.superblocks.com/blog/lovable-vs-replit) is the next. Each list is one email to its author, with a test account and the specific claims Replit can back up.
+
+## Six technical fixes, closest to revenue first
+
+Replit already keeps user apps off its main domain. They're published on replit.app, its [template repls](https://replit.com/@replit/Python) carry a noindex tag, and a deleted user's repl returns a 404. That's the right split, and it means these fixes are all about Replit's own pages.
+
+### 1. repl.it redirects with a 302, and 8,461 sites link to it
+
+Replit [moved from repl.it to replit.com in March 2021](https://replit.com/blog/dotcom), and the old domain still has 8,461 referring domains (DataForSEO, 6 November 2026). Every address on it redirects to the same path on replit.com with a 302, the code for a temporary move. Google can come to treat a long-standing redirect as permanent, so I can't show from outside that any link value is lost. It's a risk, and removing it is a one-line change.
+
+<BeforeAfter
+  caption="One old repl.it address today, and after the fix. The chain today also ends on the homepage, because the compiler page redirects there."
+  before={{ label: "Today", html: beforeReplIt }}
+  after={{ label: "After the fix", html: afterReplIt }}
+/>
+
+**The fix:** change the rule at the edge from 302 to 301, keeping the path. To confirm it worked, run `seo redirect-trace --url https://repl.it/languages/python3` and check the first hop says 301.
+
+### 2. The sitemaps list 87 addresses Google can't index, and 9 of 14 child sitemaps list nothing
+
+The [main sitemap](https://replit.com/sitemaps/main.xml) lists 105 addresses. 57 are /languages addresses: 55 redirect to the homepage, /languages redirects to /templates and /templates/languages returns a 404. Another 30 are template repls that carry a noindex tag. In the second sitemap index, the careers, enterprise and partners children return a 404, and five more (growth-kit, startups, community, racetorevenue and industries/government) return an HTML page. Those 87 addresses add noise to the one file meant to say what should be indexed. I can't see from outside whether it slows Google's crawling, so it's a risk, not a measured loss.
+
+<BeforeAfter
+  caption="Replit's sitemaps on 6 November 2026, and what they should hold. Counts are from the live files."
+  before={{ label: "Today", html: beforeSitemap }}
+  after={{ label: "After the fix", html: afterSitemap }}
+/>
+
+**The fix:** generate the sitemaps from the same list as the redirect map, so only live, indexable, self-canonical pages go in. Remove the three 404 children and the empty one from the index, and serve XML for the five that return HTML. Joost de Valk found the same pattern on [most big sites he checked](https://joost.blog/broken-sitemaps): the sitemap is built by a different system from the pages. To confirm it worked, run `seo crawl --sitemap-url https://replit.com/sitemap.xml --health` and check that every listed address returns 200.
+
+### 3. 8,449 linking domains point at Replit pages that return a 404
+
+DataForSEO counts 8,449 referring domains whose link to replit.com lands on a 404 (6 November 2026). Most go to deleted user repls, which should stay gone. The rest go to sections Replit retired itself: the old forum at /talk, /repls addresses, /tutorials and old docs paths. A link from [a GitHub blog post on GitHub Classroom](https://github.blog/developer-skills/github-education/code-in-the-browser-with-github-classroom/) to a Git tutorial on the old forum is one of them.
+
+**The fix:** add the retired sections to the redirect map from step 2, by pattern: /talk threads to the community site or the docs page on the same topic, and old docs paths to their new docs pages. To confirm it worked, crawl the list of linked 404 targets in list mode and count the ones that now resolve.
+
+### 4. Sign-in addresses with parameters are indexed
+
+Ahrefs credits a sign-in address with about 1,113 visits a month for "replit login". The address carries a private deployment flag and a redirect to someone's app in its query string. The plain [login page](https://replit.com/login)'s title starts with "Sign Up", and it has no canonical tag.
+
+**The fix:** add a canonical on the login and sign-up pages that points to the address without parameters, and a noindex on any sign-in address that carries a redirect. Fix the login page title to say "Log in". To confirm it worked, inspect the parameter address in Search Console after a recrawl and check Google picked the plain address as canonical.
+
+### 5. llms.txt lists 228 docs pages and one product page
+
+[replit.com/llms.txt](https://replit.com/llms.txt) is a copy of the docs index: 228 docs pages and one product link, to Replit Slides. Nothing in it says what Replit is or links the use-case, pricing or comparison pages.
+
+<BeforeAfter
+  caption="The top of replit.com/llms.txt today, and with a product section above the docs. The docs index already lives at docs.replit.com/llms.txt."
+  before={{ label: "Today", code: beforeLlms }}
+  after={{ label: "With a product section", code: afterLlms }}
+/>
+
+How much AI crawlers read llms.txt is still unclear. It costs one file, so I'd give it a two-line description, the product pages as Markdown, and a link to the docs index.
+
+### 6. The docs speak five languages, and the marketing site speaks one
+
+Replit's docs serve English, French, Portuguese, Japanese and Korean with matching hreflang tags, as on the [Japanese Agent overview](https://docs.replit.com/ja/features/agent/overview). The marketing site has no localised pages: replit.com/ja and replit.com/es both return a 404, and the use-case pages carry no hreflang.
+
+Replit's latest customer story, [posted on X on 6 November 2026](https://x.com/Replit/status/2118584164723331526), is a Japanese leasing company. I'd start with Japanese copies of the two use-case pages and the pricing page, with hreflang between the English and Japanese versions, and measure them before doing more languages.
+
+## Ship it all today, then let it settle
+
+Each fix above is a separate job with a clear end, so agents can run them at once. Replit, of all companies, has the agents to do it.
+
+<PlanSteps
+  steps={[
+    {"title":"URL inventory","body":"One list of every address from the sitemaps, Search Console, Ahrefs top pages, backlink targets and repl.it."},
+    {"title":"Redirect map","body":"Every old address to its closest new page, with no redirects to the homepage, and the retired compiler pages sent to templates."},
+    {"title":"Before crawl","body":"A full seo crawl saved as JSON, plus Search Console clicks by page and query for the 28 days before launch."},
+    {"title":"repl.it","body":"Change the edge rule from 302 to 301, keeping the path."},
+    {"title":"Sitemaps","body":"Generate them from the inventory, remove the redirected and noindexed addresses, and fix the broken children."},
+    {"title":"One comparison per rival","body":"Merge the /discover and /comparisons pairs at /compare, name the rival in every row, and add a hub page."},
+    {"title":"Vibe coding guide","body":"A definition first, Replit's own build data, visible dates and links from the homepage and use-case pages."},
+    {"title":"Roundup dates and method","body":"Real updated dates and a short testing method on the /discover roundups."},
+    {"title":"Sign-in pages","body":"Canonicals, noindex on redirect parameters, and a login title that says log in."},
+    {"title":"llms.txt","body":"A product section and Markdown copies of the use-case, pricing and comparison pages."},
+    {"title":"One message","body":"The builder line and the company line on the homepage, YouTube titles, LinkedIn and X for 90 days."},
+    {"title":"Outreach","body":"Emails to the authors of the Zapier and Superblocks lists that AI answers cite."},
+  ]}
+/>
+
+Someone at Replit still needs to review the comparison pages, because they make claims about competitors. The redirects, sitemaps and canonicals need only a quick check against the inventory.
+
+Then I'd spend 30 days checking the results:
+
+<PlanSteps
+  steps={[
+    {"marker":"Day 0","title":"Ask Google to recrawl","body":"Submit every new and changed address to Index My Site, and run the list crawl over every old address."},
+    {"marker":"Day 3","title":"Check redirects and indexing","body":"Run seo compare with the launch date and look for pages that lost clicks by name."},
+    {"marker":"Day 7","title":"Use-case pages","body":"Check that the AI website builder and AI app builder pages kept their titles, their AI Overview citations and their Search Console clicks."},
+    {"marker":"Day 14","title":"New pages","body":"Look for impressions on \"vibe coding\", \"replit vs lovable\" and \"best vibe coding tools\"."},
+    {"marker":"Day 30","title":"AI answers","body":"Ask the same 10 questions for Replit and Lovable and count the answers that cite a Replit page."},
+    {"marker":"Day 30","title":"Sign-ups","body":"Compare sign-ups from search and from AI referrals with the 30 days before launch."},
+  ]}
+/>
+
+## Get the changes seen quickly
+
+A relaunch changes thousands of addresses at once, and Google gets round to them on its own schedule. I'd submit every new and changed address to [Index My Site](https://indexmysite.app/) on launch day, so Google is asked to crawl it straight away. That matters most for the merged comparison pages and the redirected compiler pages, where nothing settles until Google has seen the new version.
+
+## The lesson for any relaunch
+
+Write the redirect map before the new site, not after. The pages that rank are rarely the ones a redesign is planned around, and the cheapest fix in this teardown is a 302 that should have been a 301.
+
+## How I ran this
+
+I build SEO Skill and Index My Site. An agent ran this teardown with SEO Skill for keyword data and AI answers, Ahrefs for traffic estimates, and DataForSEO's API for the live results pages and link counts. Replit's Cloudflare setup challenges unknown crawlers, SEO Skill's included, so I checked its pages one request at a time. You can run the same checks on your own site.
+
+**1. Connect the hosted MCP server.** It's free. You sign in with Google, and there's no password and nothing to install. In Claude Code:
+
+```sh
+claude mcp add --transport http seoskill https://seoskill.dev/mcp
+```
+
+Codex, Cursor and Claude on the web work too. The [MCP guide](/docs/mcp) has the steps for each one.
+
+**2. Add a research key.** On your [account page](/account), save an Ahrefs or DataForSEO key. The key gives your agent search volumes, results pages and AI answers, like the tables above.
+
+**3. Install the CLI for crawling.** The crawl runs on your machine, so it can read any site:
+
+```sh
+npm i -g seo
+seo login
+```
+
+**4. Ask your agent.** This is close to the prompt I used:
+
+```text
+We're relaunching example.com. Build a URL inventory
+from our sitemaps, our top pages and our backlink
+targets, and check each one with seo crawl in list mode.
+Trace every redirect with seo redirect-trace and flag
+any that end on the homepage.
+Ask ai_answers ten buyer questions for us and for our
+biggest competitor, and list the pages each answer cites.
+After launch, run seo compare with the launch date.
+```
+
+On your own site, the hosted server adds what I couldn't see from outside: your real Search Console clicks by page, before and after the launch date.
+
+If you're at Replit, I'm happy to talk any of this through. And if you'd like the same teardown for your company, [SEO Skill](/) will run it for you.
+
+## Further reading
+
+- [How to win search in 2026 (Google, AI and everywhere else)](https://x.com/i/article/2093291732741873664) by Jake Ward, on building a map of the sources that already shape an AI answer.
+- [Almost nobody gets XML sitemaps right](https://joost.blog/broken-sitemaps) by Joost de Valk, with examples of sitemaps that list redirected and noindexed pages.
+- [The three lives of schema markup](https://suganthan.com/blog/three-lives-of-schema-markup) by Suganthan Mohanadasan, on how Google and language models each use structured data.
+- [How to find out who Gemini cites for your query](https://suganthan.com/blog/gemini-citations), also by Suganthan Mohanadasan.
+- [GEO is a distraction](https://www.mariehaynes.com/geo-is-a-distraction) by Marie Haynes, on why Google still sends most of the traffic and conversions.

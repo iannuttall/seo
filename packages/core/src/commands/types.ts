@@ -76,7 +76,14 @@ export type PageFacts = {
   description: string | null
   h1: string | null
   canonical: string | null
+  // The X-Robots-Tag header, then each robots meta tag. A crawler's own tag
+  // is named, such as "googlebot: noindex" or "bingbot: noindex".
   robots: string | null
+  // Whether the robots meta tag, the googlebot meta tag or the X-Robots-Tag
+  // header (unscoped or for googlebot) says noindex. Only the header is read
+  // when the status is not 200 or the body is not HTML. Null when the fetch
+  // failed.
+  google_noindex: boolean | null
   // The WWW-Authenticate header, sent when the server asks for sign-in.
   www_authenticate?: string
   error?: string

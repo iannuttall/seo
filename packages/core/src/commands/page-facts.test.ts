@@ -19,5 +19,26 @@ test('reads the first title, description, H1, canonical and robots', () => {
     h1: 'Big heading',
     canonical: 'https://example.com/a',
     robots: 'noindex',
+    google_noindex: true,
   })
+})
+
+test('a googlebot noindex is a noindex for Google; other crawlers are named', () => {
+  const facts = headFacts(
+    `<head><meta name="bingbot" content="noindex">
+    <meta name="robots" content="max-snippet:50">
+    <meta name="Googlebot" content="noindex, nofollow"></head>`,
+    'https://example.com/page',
+  )
+  assert.equal(
+    facts.robots,
+    'bingbot: noindex, max-snippet:50, googlebot: noindex, nofollow',
+  )
+  assert.equal(facts.google_noindex, true)
+  const news = headFacts(
+    '<meta name="googlebot-news" content="noindex">',
+    'https://example.com/page',
+  )
+  assert.equal(news.robots, 'googlebot-news: noindex')
+  assert.equal(news.google_noindex, false)
 })

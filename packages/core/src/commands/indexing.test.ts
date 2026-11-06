@@ -25,6 +25,7 @@ const page = (url: string, extra: Partial<PageFacts> = {}): PageFacts => ({
   h1: null,
   canonical: url,
   robots: null,
+  google_noindex: false,
   ...extra,
 })
 

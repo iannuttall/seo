@@ -1,5 +1,9 @@
 import { Parser } from 'htmlparser2'
 import { SEO_CRAWLER_USER_AGENT } from '../fetch/crawler-identity.js'
+import {
+  hasMetaRobotsDirective,
+  hasXRobotsDirective,
+} from '../robots-directives.js'
 import type { PageFacts } from './types.js'
 
 // Live facts for report URLs: status, redirect target, title, meta
@@ -13,6 +17,10 @@ const MAX_BYTES = 1_000_000
 
 const clean = (value: string | null | undefined) =>
   value?.trim().replace(/\s+/g, ' ') || null
+
+// A robots meta tag for one crawler, such as googlebot, googlebot-news or
+// bingbot. Only robots and googlebot apply to Google Search.
+const BOT_META = /^([a-z][a-z0-9_-]*bot(-[a-z]+)?|slurp|yandex|baiduspider)$/
 
 // Reads at most maxBytes of the body as text.
 export async function boundedText(
@@ -37,7 +45,10 @@ export async function boundedText(
 export function headFacts(
   html: string,
   url: string,
-): Pick<PageFacts, 'title' | 'description' | 'h1' | 'canonical' | 'robots'> {
+): Pick<
+  PageFacts,
+  'title' | 'description' | 'h1' | 'canonical' | 'robots' | 'google_noindex'
+> {
   let title = ''
   let h1 = ''
   let inTitle = false
@@ -47,18 +58,26 @@ export function headFacts(
   let description: string | null = null
   let canonical: string | null = null
   const robots: string[] = []
+  const google: string[] = []
   const parser = new Parser(
     {
       onopentag(name, attributes) {
         if (name === 'title' && !titleDone) inTitle = true
         if (name === 'h1' && !h1Done) inH1 = true
         if (name === 'meta') {
-          const metaName = attributes.name?.toLowerCase()
+          const metaName = attributes.name?.trim().toLowerCase() ?? ''
+          const content = attributes.content?.trim()
           if (metaName === 'description' && description === null) {
             description = attributes.content ?? null
           }
-          if (metaName === 'robots' && attributes.content) {
-            robots.push(attributes.content)
+          if (content && (metaName === 'robots' || BOT_META.test(metaName))) {
+            // A crawler's own tag is shown with its name.
+            robots.push(
+              metaName === 'robots' ? content : `${metaName}: ${content}`,
+            )
+            if (metaName === 'robots' || metaName === 'googlebot') {
+              google.push(content)
+            }
           }
         }
         if (
@@ -99,6 +118,7 @@ export function headFacts(
     h1: clean(h1),
     canonical,
     robots: robots.length ? robots.join(', ') : null,
+    google_noindex: hasMetaRobotsDirective(google, 'noindex'),
   }
 }
 
@@ -112,6 +132,7 @@ async function facts(url: string): Promise<PageFacts> {
     h1: null,
     canonical: null,
     robots: null,
+    google_noindex: null,
   }
   try {
     const response = await fetch(url, {
@@ -123,6 +144,11 @@ async function facts(url: string): Promise<PageFacts> {
     const location = response.headers.get('location')
     if (location) out.redirects_to = new URL(location, url).toString()
     const headerRobots = response.headers.get('x-robots-tag')
+    // Scoped by crawler: "bingbot: noindex" is not a noindex for Google.
+    const headerNoindex = hasXRobotsDirective(
+      headerRobots ?? undefined,
+      'noindex',
+    )
     const auth = response.headers.get('www-authenticate')
     if (auth) out.www_authenticate = auth.slice(0, 200)
     if (
@@ -130,12 +156,14 @@ async function facts(url: string): Promise<PageFacts> {
       !response.headers.get('content-type')?.includes('html')
     ) {
       out.robots = headerRobots
+      out.google_noindex = headerNoindex
       await response.body?.cancel()
       return out
     }
     const head = headFacts(await boundedText(response), url)
     Object.assign(out, head)
     out.robots = [headerRobots, head.robots].filter(Boolean).join(', ') || null
+    out.google_noindex = headerNoindex || head.google_noindex
   } catch (error) {
     out.error = error instanceof Error ? error.message : 'fetch failed'
   }

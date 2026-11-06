@@ -25,7 +25,7 @@ Add `--start-date` and `--end-date` for other dates, `--detail rows` for more qu
 
 ## What comes back
 
-- **Live page facts.** The HTTP status, any redirect, the title, meta description, H1, canonical and robots tags as the page serves them now.
+- **Live page facts.** The HTTP status, any redirect, the title, meta description, H1, canonical and robots tags as the page serves them now. Robots tags for one crawler, such as `googlebot`, are named, and a `googlebot` noindex counts as noindex for Google. An empty title or description shows as empty, apart from a missing one.
 - **Google index status.** What Search Console URL Inspection reports for the URL.
 - **Queries.** The page's Search Console queries for the last 28 days against the previous period.
 - **Main content as Markdown,** with `--detail full`. The page's main text, without the menus, sidebars and footer, read live. It stops at 20,000 characters and says so when it cuts. Your agent can read or rewrite the page from it without fetching the page again.

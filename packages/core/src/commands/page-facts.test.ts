@@ -42,3 +42,17 @@ test('a googlebot noindex is a noindex for Google; other crawlers are named', ()
   assert.equal(news.robots, 'googlebot-news: noindex')
   assert.equal(news.google_noindex, false)
 })
+
+test('an empty title, description or H1 is empty, not missing', () => {
+  const empty = headFacts(
+    '<title> </title><meta name="description" content=""><h1></h1>',
+    'https://example.com/page',
+  )
+  assert.equal(empty.title, '')
+  assert.equal(empty.description, '')
+  assert.equal(empty.h1, '')
+  const missing = headFacts('<p>Text</p>', 'https://example.com/page')
+  assert.equal(missing.title, null)
+  assert.equal(missing.description, null)
+  assert.equal(missing.h1, null)
+})

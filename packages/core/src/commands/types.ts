@@ -72,6 +72,8 @@ export type PageFacts = {
   url: string
   status: number | null
   redirects_to: string | null
+  // '' when the tag is there but empty; null when there is no tag or the
+  // page was not read.
   title: string | null
   description: string | null
   h1: string | null

@@ -15,8 +15,9 @@ const MAX_PAGES = 20
 const TIMEOUT_MS = 6000
 const MAX_BYTES = 1_000_000
 
-const clean = (value: string | null | undefined) =>
-  value?.trim().replace(/\s+/g, ' ') || null
+// Null stays null (no tag); an empty tag stays ''.
+const clean = (value: string | null) =>
+  value === null ? null : value.trim().replace(/\s+/g, ' ')
 
 // A robots meta tag for one crawler, such as googlebot, googlebot-news or
 // bingbot. Only robots and googlebot apply to Google Search.
@@ -49,8 +50,8 @@ export function headFacts(
   PageFacts,
   'title' | 'description' | 'h1' | 'canonical' | 'robots' | 'google_noindex'
 > {
-  let title = ''
-  let h1 = ''
+  let title: string | null = null
+  let h1: string | null = null
   let inTitle = false
   let inH1 = false
   let titleDone = false
@@ -62,13 +63,19 @@ export function headFacts(
   const parser = new Parser(
     {
       onopentag(name, attributes) {
-        if (name === 'title' && !titleDone) inTitle = true
-        if (name === 'h1' && !h1Done) inH1 = true
+        if (name === 'title' && !titleDone) {
+          inTitle = true
+          title ??= ''
+        }
+        if (name === 'h1' && !h1Done) {
+          inH1 = true
+          h1 ??= ''
+        }
         if (name === 'meta') {
           const metaName = attributes.name?.trim().toLowerCase() ?? ''
           const content = attributes.content?.trim()
           if (metaName === 'description' && description === null) {
-            description = attributes.content ?? null
+            description = attributes.content ?? ''
           }
           if (content && (metaName === 'robots' || BOT_META.test(metaName))) {
             // A crawler's own tag is shown with its name.
@@ -94,8 +101,8 @@ export function headFacts(
         }
       },
       ontext(text) {
-        if (inTitle) title += text
-        if (inH1) h1 += text
+        if (inTitle) title = (title ?? '') + text
+        if (inH1) h1 = (h1 ?? '') + text
       },
       onclosetag(name) {
         if (name === 'title' && inTitle) {

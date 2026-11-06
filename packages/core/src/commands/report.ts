@@ -496,8 +496,16 @@ export function pageFactsTable(
   checked: PageFacts[],
   origin: string | null,
 ): string {
+  // An empty tag reads "(empty)"; a missing one stays blank.
+  const shown = checked.map((page) => {
+    const row: Record<string, unknown> = { ...page }
+    for (const key of ['title', 'description', 'h1'] as const) {
+      if (page[key] === '') row[key] = '(empty)'
+    }
+    return row
+  })
   const rows = table(
-    checked as unknown as Record<string, unknown>[],
+    shown,
     [
       'url',
       'status',

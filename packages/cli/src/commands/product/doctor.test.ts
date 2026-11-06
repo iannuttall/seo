@@ -28,6 +28,8 @@ async function runDoctor(json = false): Promise<{
           SEO_CACHE_DIR: join(root, 'cache'),
           SEO_CONFIG_DIR: join(root, 'config'),
           SEO_LOG_DIR: join(root, 'logs'),
+          // Not linked to a seoskill.dev account.
+          SEO_TOKEN: '',
         },
         timeout: 10_000,
       },

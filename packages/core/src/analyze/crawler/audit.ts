@@ -680,8 +680,10 @@ export function auditCrawlPages(
     const title = page.title?.trim()
     const titleWidth = title ? estimateSerpTitleWidth(title) : undefined
     const duplicateTitle = duplicateTitles.get(normalizedMetadata(title) ?? '')
-    if (!title) {
+    if (title === undefined) {
       issues.push(issue('missing_title', page))
+    } else if (!title) {
+      issues.push(issue('empty_title', page))
     } else if (titleWidth?.status === 'over-reference') {
       issues.push(
         issue('title_too_wide', page, `${titleWidth.estimatedPixels}px`, {
@@ -704,8 +706,10 @@ export function auditCrawlPages(
     const duplicateDescription = duplicateDescriptions.get(
       normalizedMetadata(metaDescription) ?? '',
     )
-    if (!metaDescription) {
+    if (metaDescription === undefined) {
       issues.push(issue('missing_meta_description', page))
+    } else if (!metaDescription) {
+      issues.push(issue('empty_meta_description', page))
     }
     if (metaDescription && duplicateDescription?.urls.has(page.url)) {
       issues.push(

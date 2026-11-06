@@ -23,9 +23,11 @@ export type SiteCheckRule = {
 // time, redirects) are left to `seo crawl` after launch.
 export const CRAWLER_RULES: Record<string, SiteCheckRule> = {
   missing_title: page('fail', 'Give the page a title.'),
+  empty_title: page('fail', 'Fill in the empty title.'),
   title_duplicate: page('fail', 'Give every page its own title.'),
   title_too_wide: page('warn', 'Put the important words first in the title.'),
   missing_meta_description: page('fail', 'Give the page a meta description.'),
+  empty_meta_description: page('fail', 'Fill in the empty meta description.'),
   meta_description_duplicate: page(
     'fail',
     'Give every page its own meta description.',

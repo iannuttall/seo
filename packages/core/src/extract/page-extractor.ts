@@ -164,6 +164,15 @@ function safeText(value?: string | null): string | undefined {
   return trimmed ? trimmed : undefined
 }
 
+// '' for a tag that is there but empty, undefined when there is no tag.
+function tagText<T extends { length: number }>(
+  element: T,
+  read: (element: T) => string | undefined,
+): string | undefined {
+  if (!element.length) return undefined
+  return read(element)?.replace(/\s+/g, ' ').trim() ?? ''
+}
+
 function headerValue(
   headers: Record<string, string>,
   name: string,
@@ -667,7 +676,7 @@ export async function extractPage(
           dependencies,
         )
   const { text, excerpt } = content
-  const title = safeText($('title').first().text())
+  const title = tagText($('title').first(), (element) => element.text())
   const crawlerMetaRefresh =
     extractor === 'crawler' ? metaRefresh($, fetchResult.finalUrl) : undefined
   if (
@@ -681,7 +690,9 @@ export async function extractPage(
     url: fetchResult.url,
     finalUrl: fetchResult.finalUrl,
     title,
-    metaDescription: safeText($('meta[name="description"]').attr('content')),
+    metaDescription: tagText($('meta[name="description"]').first(), (element) =>
+      element.attr('content'),
+    ),
     metaRobots,
     xRobotsTag: safeText(headerValue(fetchResult.headers, 'x-robots-tag')),
     canonical: canonicalEvidence.selectedRaw,

@@ -58,6 +58,23 @@ const RULE_DEFINITIONS = [
     },
   },
   {
+    id: 'empty_title',
+    title: 'Title empty',
+    category: 'metadata',
+    defaultSeverity: 'high',
+    whyItMatters:
+      'The page has a <title> element with no text. Search engines treat it like a missing title and write their own headline for the result.',
+    howToFix:
+      'Fill the title element with a descriptive title that names the page topic. An empty title usually means a template field or CMS value is blank.',
+    impactIfIgnored:
+      'The page can look vague in search results, earn lower CTR, and send weaker relevance signals.',
+    howToVerify: 'Re-run the crawl and confirm the title element has text.',
+    agentHints: {
+      evidenceFields: ['page.title'],
+      suggestedCommands: ['seo crawl <url> --max-pages 1 --json'],
+    },
+  },
+  {
     id: 'title_too_wide',
     title: 'Title may truncate on some devices',
     category: 'metadata',
@@ -697,6 +714,20 @@ const RULE_DEFINITIONS = [
       'Search snippets may be generic or less persuasive, especially on pages that already rank.',
     howToVerify:
       'Re-run the crawl and confirm the page has a meta description.',
+  },
+  {
+    id: 'empty_meta_description',
+    title: 'Meta description empty',
+    category: 'metadata',
+    defaultSeverity: 'medium',
+    whyItMatters:
+      'The page has a meta description tag with no content, so search engines choose their own snippet. An empty tag usually means a template field or CMS value is blank.',
+    howToFix:
+      'Fill the content attribute with a concise, unique description, or fix the template value that leaves it blank.',
+    impactIfIgnored:
+      'Search snippets may be generic or less persuasive, especially on pages that already rank.',
+    howToVerify:
+      'Re-run the crawl and confirm the meta description has content.',
   },
   {
     id: 'meta_description_duplicate',

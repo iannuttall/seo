@@ -1,8 +1,13 @@
 import assert from 'node:assert/strict'
 import { test } from 'node:test'
-import { Response } from 'undici'
+import { Response, type ResponseInit } from 'undici'
 import { crawlSite } from './site-crawl.js'
 import { withServer } from './site-crawl.test-fixtures.js'
+import {
+  checkSites,
+  type SiteFactsDependencies,
+  type SiteFactsRow,
+} from './site-facts.js'
 
 test('crawlSite reports redirected URLs with final target evidence', async () => {
   const fixture = await withServer((req, res) => {
@@ -388,4 +393,89 @@ test('crawlSite flags an HTML robots.txt and llms.txt, soft 404s and a localhost
   } finally {
     await fixture.close()
   }
+})
+
+test('checkSites keeps failed fetches apart from missing files and reads robots.txt across a host redirect', async () => {
+  const fetch = (async (url: string) => {
+    const host = new URL(url).hostname
+    if (host === 'down.example') {
+      throw new TypeError('fetch failed', {
+        cause: Object.assign(new Error('getaddrinfo ENOTFOUND down.example'), {
+          code: 'ENOTFOUND',
+        }),
+      })
+    }
+    const response = (body: string, init: ResponseInit, finalUrl = url) =>
+      Object.defineProperty(new Response(body, init), 'url', {
+        value: finalUrl,
+      })
+    if (url === 'https://apex.example/robots.txt') {
+      return response(
+        'User-agent: GPTBot\nDisallow: /\n\nUser-agent: *\nAllow: /\nSitemap: https://www.apex.example/sitemap.xml\n',
+        { headers: { 'content-type': 'text/plain' } },
+        'https://www.apex.example/robots.txt',
+      )
+    }
+    if (url === 'https://apex.example/') {
+      return response('', {
+        status: 301,
+        headers: { location: 'https://www.apex.example/' },
+      })
+    }
+    if (url === 'https://www.apex.example/') {
+      return response(
+        '<html><head><title>Apex</title><meta name="robots" content="noindex"><link rel="canonical" href="https://www.apex.example/"></head><body><h1>Apex</h1></body></html>',
+        { headers: { 'content-type': 'text/html', 'x-robots-tag': 'noai' } },
+      )
+    }
+    return response('# Apex\n\n- [Docs](https://apex.example/docs)\n', {
+      headers: { 'content-type': 'text/plain' },
+    })
+  }) as unknown as NonNullable<SiteFactsDependencies['fetch']>
+  const rows: SiteFactsRow[] = []
+  const summary = await checkSites(
+    {
+      sites: [
+        'apex.example',
+        'not a site!!',
+        'down.example',
+        'https://apex.example/blog',
+      ],
+      onRow: (row) => {
+        rows.push(row)
+      },
+    },
+    { fetch },
+  )
+
+  assert.deepEqual(
+    rows.map((row) => row.input),
+    ['apex.example', 'not a site!!', 'down.example'],
+  )
+  const [apex, invalid, down] = rows
+  const bot = (name: string) =>
+    apex?.robotsTxt?.botAccess.find((item) => item.userAgent === name)?.allowed
+  assert.equal(bot('GPTBot'), false)
+  assert.equal(bot('ClaudeBot'), true)
+  assert.deepEqual(apex?.robotsTxt?.sitemapUrls, [
+    'https://www.apex.example/sitemap.xml',
+  ])
+  assert.equal(apex?.homepage?.finalUrl, 'https://www.apex.example/')
+  assert.equal(apex?.homepage?.title, 'Apex')
+  assert.equal(apex?.homepage?.metaRobots, 'noindex')
+  assert.equal(apex?.homepage?.xRobotsTag, 'noai')
+  assert.equal(apex?.homepage?.indexable, false)
+  assert.equal(apex?.llmsTxt?.startsWithH1, true)
+  assert.equal(apex?.llmsTxt?.sameSiteLinks, 1)
+  assert.equal(invalid?.error, 'Not an http or https site.')
+  assert.equal(down?.robotsTxt?.availability, 'unreachable')
+  assert.equal(down?.robotsTxt?.errorKind, 'dns')
+  assert.equal(down?.homepage?.outcome, 'skipped')
+  assert.equal(down?.homepage?.skipReason, 'robots-unknown')
+  assert.equal(down?.llmsTxt?.exists, false)
+  assert.equal(down?.llmsTxt?.availability, 'unreachable')
+  assert.equal(summary.duplicatesRemoved, 1)
+  assert.equal(summary.invalid, 1)
+  assert.equal(summary.llmsTxt.absent, 0)
+  assert.equal(summary.llmsTxt.failed, 1)
 })

@@ -31,6 +31,7 @@ import {
   analyticsConnectionArgs,
   analyticsConnectionFromArgs,
 } from './analytics/connection.js'
+import { runCrawlSites } from './crawl-sites.js'
 import { startUrlForSite } from './shared.js'
 
 type Severity = 'low' | 'medium' | 'high'
@@ -64,7 +65,7 @@ export const crawlCommand = defineCommand({
     mode: {
       type: 'string',
       description:
-        'Crawl mode: site, page, list, or sitemap. Start with sitemap --health for large sites.',
+        'Crawl mode: site, page, list, sitemap, or sites. Start with sitemap --health for large sites. sites checks robots.txt, the home page and llms.txt for up to 1,000 sites from --urls or --urls-file.',
     },
     health: {
       type: 'boolean',
@@ -79,11 +80,13 @@ export const crawlCommand = defineCommand({
     },
     urls: {
       type: 'string',
-      description: 'Comma-separated URLs for list mode.',
+      description:
+        'Comma-separated URLs for list mode, or sites for sites mode.',
     },
     'urls-file': {
       type: 'string',
-      description: 'File with one URL per line for list mode.',
+      description:
+        'File with one URL per line for list mode, or one site per line for sites mode.',
     },
     'max-pages': {
       type: 'string',
@@ -96,7 +99,7 @@ export const crawlCommand = defineCommand({
     concurrency: {
       type: 'string',
       description:
-        'Parallel page fetches, up to 16. Defaults to 8, or progressively up to 4 with --health.',
+        'Parallel page fetches, up to 16. Defaults to 8, or progressively up to 4 with --health. In sites mode, sites checked at once.',
     },
     'fetch-interval-cap': {
       type: 'string',
@@ -148,12 +151,13 @@ export const crawlCommand = defineCommand({
     json: {
       type: 'boolean',
       default: false,
-      description: 'Print machine-readable JSON. Alias for --format json.',
+      description:
+        'Print machine-readable JSON. Alias for --format json, or --format jsonl in sites mode.',
     },
     format: {
       type: 'string',
       description:
-        'Output format: pretty, json, csv, html, markdown, or junit. JUnit requires --health.',
+        'Output format: pretty, json, csv, html, markdown, or junit. JUnit requires --health. Sites mode takes jsonl or pretty.',
     },
     output: {
       type: 'string',
@@ -173,6 +177,11 @@ export const crawlCommand = defineCommand({
     },
   },
   run: async ({ args }) => {
+    const explicitMode = crawlModeArg(args.mode)
+    if (explicitMode === 'sites') {
+      await runCrawlSites(args, await urlListArgs(args))
+      return
+    }
     const json = jsonFlag(args)
     const format = crawlFormatArg(args.format, json)
     const output = stringArg(args.output)
@@ -183,7 +192,6 @@ export const crawlCommand = defineCommand({
     const explicitUrl = crawlUrlArg(args)
     const sitemapUrl = stringArg(args['sitemap-url'])
     const health = booleanArg(args.health)
-    const explicitMode = crawlModeArg(args.mode)
     if (format === 'junit' && !health) {
       throw new SeoError('INVALID_INPUT', '--format junit requires --health.')
     }
@@ -317,12 +325,12 @@ export const crawlCommand = defineCommand({
 function crawlModeArg(value: unknown) {
   const mode = stringArg(value)
   if (!mode) return undefined
-  if (['site', 'page', 'list', 'sitemap'].includes(mode)) {
-    return mode as 'site' | 'page' | 'list' | 'sitemap'
+  if (['site', 'page', 'list', 'sitemap', 'sites'].includes(mode)) {
+    return mode as 'site' | 'page' | 'list' | 'sitemap' | 'sites'
   }
   throw new SeoError(
     'INVALID_INPUT',
-    'Mode must be one of: site, page, list, sitemap.',
+    'Mode must be one of: site, page, list, sitemap, sites.',
   )
 }
 

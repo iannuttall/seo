@@ -117,7 +117,7 @@ Sections, in this order, adjusted to the company:
 7. Technical fixes, closest to revenue first. Each gets an `###` subsection: what it is in plain words, an exhibit that shows it, **The fix:** with best practice, and how to confirm it worked.
 8. "Ship it all today, then let it settle": the fixes as parallel agent jobs (`PlanSteps`, numbered, no "Agent 1" labels), then 30 days of checks (`PlanSteps` with `marker: "Day 0"` and so on). Never a week-by-week sprint.
 9. Get the changes seen quickly: Index My Site for every changed and new URL.
-10. How I ran this: the hosted MCP first (free, Google sign-in, research key on the account page), then the CLI for crawling, then the prompt.
+10. How I ran this: the hosted MCP first (free, Google sign-in, research key on the account page), then the CLI for crawling, then the prompt. Say here, once, that we build SEO Skill and Index My Site; nowhere else in the post or the X Article.
 
 Rules that came from Ian's reviews:
 
@@ -207,4 +207,4 @@ Only after Ian approves the post:
 1. Before merging, re-pull the headline numbers and recheck that the issues are still live. Update anything that changed.
 2. Publish as soon as it's approved: set `date` to today and `draft: false`, run all four repo gates, and ship through a PR to `main`. Don't hold a ready post for a later date; only the X posts are spaced out.
 3. Submit the post URL to Index My Site once it's live.
-4. Draft the X Article in Typefully as a plain `x_article` draft (no `plan_at` or `publish_at`), with the cover cropped to 1500x600. Title: "How I'd grow <Company> with SEO". The first line tags the company with the upside, then the main findings in an informal voice, then the post link at the end. One mention only: `x.company`. The post link is the only URL or domain in the text, so X builds the card from our post; describe other sites in words ("a second domain", "the main site"). Put `seo` commands in backticks. Run `seo lint` on the text with `--preset landing`. Ian schedules it himself, for 13:15 UK time on the next free day in the X queue (one teardown a day).
+4. Draft the X Article in Typefully as a plain `x_article` draft (no `plan_at` or `publish_at`), with the cover cropped to 1500x600. Title: "How I'd grow <Company> with SEO". The first line tags the company with the upside, then the main findings in an informal voice, then the post link at the end. One mention only: `x.company`. The post link is the only URL or domain in the text, so X builds the card from our post; describe other sites in words ("a second domain", "the main site"). Write it for people: no tool plug, no disclosure line and no commands. Run `seo lint` on the text with `--preset landing`. Ian schedules it himself, for 13:15 UK time on the next free day in the X queue (one teardown a day).

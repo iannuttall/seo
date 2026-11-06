@@ -3,6 +3,7 @@ import {
   LINT_CATEGORIES,
   LINT_FORMATS,
   LINT_MAX_CHARS,
+  LINT_META_KINDS,
   LINT_PRESETS,
 } from '../lint/types.js'
 import { AI_ANSWER_TASK_PATTERN, runAiAnswers } from './ai-answers.js'
@@ -212,7 +213,13 @@ const lintInput = {
     .enum(LINT_PRESETS)
     .optional()
     .describe(
-      'Optional. blog (default for Markdown), landing (default for HTML: stricter on buzzwords, weak links and claims with no number), docs, or meta (one title or description per line).',
+      'Optional. blog (default for Markdown), landing (default for HTML: stricter on buzzwords, weak links and claims with no number), docs, or meta (one title or description per line; start a line with "title:" or "description:" to say which).',
+    ),
+  meta_kind: z
+    .enum(LINT_META_KINDS)
+    .optional()
+    .describe(
+      'Optional, with the meta preset: title or description, what a line with no "title:" or "description:" label is. Default: a line up to 70 characters is a title, a longer one a description.',
     ),
   ignore_rules: z
     .array(z.string().min(1).max(60))
@@ -684,6 +691,7 @@ export const SHARED_TOOLS: SharedTool[] = [
           ignoreRules: input.ignore_rules,
           ignorePhrases: input.ignore_phrases,
           only: input.only,
+          metaKind: input.meta_kind,
         },
         surface.readFiles,
         pageMarkdown && ((url) => pageMarkdown(url, LINT_MAX_CHARS)),

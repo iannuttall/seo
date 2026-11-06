@@ -20,9 +20,11 @@ import {
   LINT_CATEGORIES,
   LINT_FORMATS,
   LINT_MAX_CHARS,
+  LINT_META_KINDS,
   LINT_PRESETS,
   type LintCategory,
   type LintFormat,
+  type LintMetaKind,
   type LintPreset,
   MAX_INSPECT_LIMIT,
   RESEARCH_ACTIONS,
@@ -690,7 +692,12 @@ export const lintCommand = defineCommand({
     },
     preset: {
       type: 'string',
-      description: `${LINT_PRESETS.join(', ')}. Default blog for Markdown and text, landing for HTML and Astro. meta reads one title or description per line.`,
+      description: `${LINT_PRESETS.join(', ')}. Default blog for Markdown and text, landing for HTML and Astro. meta reads one title or description per line of a .txt file; start a line with "title:" or "description:" to say which.`,
+    },
+    'meta-kind': {
+      type: 'string',
+      description:
+        'With --preset meta: title or description, what a line with no "title:" or "description:" label is. Default: a line up to 70 characters is a title, a longer one a description.',
     },
     format: {
       type: 'string',
@@ -718,6 +725,13 @@ export const lintCommand = defineCommand({
       throw new SeoError(
         'INVALID_INPUT',
         `--preset is one of ${LINT_PRESETS.join(', ')}.`,
+      )
+    }
+    const metaKind = stringArg(args['meta-kind'])
+    if (metaKind && !LINT_META_KINDS.includes(metaKind as LintMetaKind)) {
+      throw new SeoError(
+        'INVALID_INPUT',
+        `--meta-kind is ${LINT_META_KINDS.join(' or ')}.`,
       )
     }
     const format = stringArg(args.format)
@@ -766,6 +780,7 @@ export const lintCommand = defineCommand({
           ignoreRules: csvArg(args.ignore),
           ignorePhrases: phrases,
           only: only as LintCategory[] | undefined,
+          metaKind: metaKind as LintMetaKind | undefined,
         },
         (inputs) => readLintFiles(inputs),
         pageMarkdown && ((page) => pageMarkdown(page, LINT_MAX_CHARS)),

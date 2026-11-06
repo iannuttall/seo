@@ -100,3 +100,29 @@ test('a file too big to read is counted, so the totals never read as clean', asy
   assert.match(result.text, /1 not checked/)
   assert.match(result.text, /Not an all-clear/)
 })
+
+// Text checked with the meta preset was read as Markdown, so even a
+// "title:" line got no length check, and the width Google cuts by was
+// missing.
+test('the meta preset checks each labelled line of text, with its width', async () => {
+  const title =
+    'The complete beginner guide to checking backlinks with free tools in 2026'
+  const out = await runLint({
+    text: `title: ${title}\n${title}`,
+    preset: 'meta',
+    metaKind: 'title',
+  })
+  const findings = (
+    out.data as {
+      files: { findings: { rule: string; line: number; message: string }[] }[]
+    }
+  ).files[0]?.findings.filter((finding) => finding.rule === 'title-length')
+  assert.deepEqual(
+    findings?.map(({ line, message }) => ({ line, message })),
+    [1, 2].map((line) => ({
+      line,
+      message:
+        'The title is 73 characters, about 654 pixels wide. Aim for 30 to 60 characters; Google shows about 600 pixels of a title on desktop.',
+    })),
+  )
+})

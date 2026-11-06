@@ -20,6 +20,7 @@ import type {
   Doc,
   LinkSpan,
   LintFormat,
+  LintMetaKind,
   LintPreset,
 } from './types.js'
 
@@ -577,9 +578,10 @@ function extractText(source: string): Extracted {
 }
 
 // One title or description per line, for the meta preset. A line can start
-// with "title:" or "description:"; otherwise a line up to 70 characters is
-// read as a title and a longer one as a description.
-function extractMetaLines(source: string): Extracted {
+// with "title:" or "description:"; otherwise it is metaKind, or without one
+// a line up to 70 characters is read as a title and a longer one as a
+// description.
+function extractMetaLines(source: string, metaKind?: LintMetaKind): Extracted {
   const x = new Extractor(source)
   const blocks: Block[] = []
   for (let line = 0; line < x.starts.length; line++) {
@@ -593,9 +595,11 @@ function extractMetaLines(source: string): Extracted {
     const value = source.slice(from, end).trim()
     const kind: BlockKind = label
       ? (label[1]?.toLowerCase() as BlockKind)
-      : value.length <= 70
-        ? 'title'
-        : 'description'
+      : metaKind
+        ? metaKind
+        : value.length <= 70
+          ? 'title'
+          : 'description'
     const block = makeBlock(kind, built, { field: kind })
     if (block) blocks.push(block)
   }
@@ -650,10 +654,11 @@ export function extract(
   source: string,
   format: LintFormat,
   preset: LintPreset,
+  metaKind?: LintMetaKind,
 ): Doc {
   const extracted =
     preset === 'meta' && format === 'text'
-      ? extractMetaLines(source)
+      ? extractMetaLines(source, metaKind)
       : format === 'md' || format === 'mdx'
         ? extractMarkdown(source, format === 'mdx')
         : format === 'html' || format === 'astro'

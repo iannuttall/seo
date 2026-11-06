@@ -3,6 +3,10 @@
 export const LINT_PRESETS = ['blog', 'landing', 'docs', 'meta'] as const
 export type LintPreset = (typeof LINT_PRESETS)[number]
 
+// What a meta preset line with no "title:" or "description:" label is.
+export const LINT_META_KINDS = ['title', 'description'] as const
+export type LintMetaKind = (typeof LINT_META_KINDS)[number]
+
 export const LINT_FORMATS = ['md', 'mdx', 'html', 'astro', 'text'] as const
 export type LintFormat = (typeof LINT_FORMATS)[number]
 
@@ -67,6 +71,9 @@ export type LintOptions = {
   // Check only these categories; findings and review items in others are
   // not looked for.
   only?: LintCategory[]
+  // With the meta preset on text: what an unlabelled line is. Unset, a line
+  // up to 70 characters is a title and a longer one a description.
+  metaKind?: LintMetaKind
 }
 
 // What kind of text a block holds. Rules choose the kinds they read.

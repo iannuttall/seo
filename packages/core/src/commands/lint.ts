@@ -6,6 +6,7 @@ import {
   type LintCategory,
   type LintFileResult,
   type LintFormat,
+  type LintMetaKind,
   type LintPreset,
   lintReportText,
   lintText,
@@ -33,6 +34,9 @@ export type LintInput = {
   ignorePhrases?: string[]
   // Check only these categories, such as ai for AI writing patterns.
   only?: LintCategory[]
+  // With the meta preset: what a line with no "title:" or "description:"
+  // label is.
+  metaKind?: LintMetaKind
 }
 
 // One live page's main content as a lint source. A page that cannot be read
@@ -129,8 +133,14 @@ export async function runLint(
       : await (readFiles as NonNullable<typeof readFiles>)(input.paths ?? [])
   const files: LintFileResult[] = sources.map((source) => {
     if ('skipped' in source) return source
+    // Text given with the meta preset is one title or description a line.
     const format =
-      input.format ?? (hasPaths ? formatFromPath(source.path) : 'md')
+      input.format ??
+      (hasPaths
+        ? formatFromPath(source.path)
+        : hasText && input.preset === 'meta'
+          ? 'text'
+          : 'md')
     return {
       path: source.path,
       ...(source.note ? { note: source.note } : {}),
@@ -143,6 +153,7 @@ export async function runLint(
         ignoreRules: input.ignoreRules,
         ignorePhrases: input.ignorePhrases,
         only,
+        metaKind: input.metaKind,
       }),
     }
   })

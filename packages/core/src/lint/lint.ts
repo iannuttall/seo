@@ -109,7 +109,7 @@ export function lintText(text: string, options: LintOptions = {}): LintResult {
   }
   const format = options.format ?? 'md'
   const preset = options.preset ?? defaultPreset(format)
-  const doc = extract(text, format, preset)
+  const doc = extract(text, format, preset, options.metaKind)
   const ctx = new Context(doc, preset, LINT_RULES)
   runStructureRules(ctx)
   runPhraseRules(ctx)

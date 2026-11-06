@@ -25,6 +25,7 @@ import {
   RESEARCH_ACTIONS,
   RESEARCH_HELP,
   RESEARCH_PROVIDERS,
+  RESEARCH_SCOPES,
   runResearch,
 } from './research.js'
 import { DIMENSIONS, runRows } from './rows.js'
@@ -435,10 +436,26 @@ export const SHARED_TOOLS: SharedTool[] = [
     title: 'Keyword, competitor, backlink and AI answer data',
     description: `Data from the person’s own DataForSEO or Ahrefs account, which costs them credits. It uses the key the person saved on their seoskill.dev account (or on this machine for the CLI). Actions: ${RESEARCH_HELP}`,
     input: z.object({
-      provider: z.enum(RESEARCH_PROVIDERS),
+      provider: z
+        .enum(RESEARCH_PROVIDERS)
+        .optional()
+        .describe(
+          'Optional. Without it, the saved key; DataForSEO when both are saved.',
+        ),
       action: z.enum(RESEARCH_ACTIONS),
       keywords: z.array(z.string().min(1)).max(100).default([]),
-      target: z.string().default('').describe('Domain or URL.'),
+      target: z
+        .string()
+        .default('')
+        .describe(
+          'Domain (the whole site), a path ending in / for every URL under it, such as example.com/blog/, or one page.',
+        ),
+      scope: z
+        .enum(RESEARCH_SCOPES)
+        .optional()
+        .describe(
+          'Optional: domain, prefix or exact, to read the target another way than its shape says.',
+        ),
       competitors: z
         .array(z.string().min(1))
         .max(5)
@@ -462,7 +479,7 @@ export const SHARED_TOOLS: SharedTool[] = [
       const more = (offset: number) =>
         `seo_research with the same input, detail "rows", offset ${offset}`
       if (input.action === 'ai_answers') {
-        if (input.provider !== 'dataforseo') {
+        if (input.provider === 'ahrefs') {
           throw new CommandError('INVALID_INPUT', 'ai_answers uses dataforseo.')
         }
         return runAiAnswers(

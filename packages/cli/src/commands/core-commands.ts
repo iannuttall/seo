@@ -23,8 +23,10 @@ import {
   MAX_INSPECT_LIMIT,
   RESEARCH_ACTIONS,
   RESEARCH_PROVIDERS,
+  RESEARCH_SCOPES,
   type ResearchAction,
   type ResearchProvider,
+  type ResearchScope,
   runAiAnswers,
   runAllSites,
   runBingReport,
@@ -519,7 +521,11 @@ export const researchCommand = defineCommand({
     },
     provider: {
       type: 'string',
-      description: `${RESEARCH_PROVIDERS.join(', ')}. Default: the first one with a saved key.`,
+      description: `${RESEARCH_PROVIDERS.join(', ')}. Default: the saved key, DataForSEO when both are saved.`,
+    },
+    scope: {
+      type: 'string',
+      description: `${RESEARCH_SCOPES.join(', ')}. Default: from the target. A domain is the whole site, a path ending in / is every URL under it (example.com/blog/), any other path is one page.`,
     },
     keywords: { type: 'string', description: 'Comma-separated keywords.' },
     tasks: {
@@ -527,7 +533,10 @@ export const researchCommand = defineCommand({
       description:
         'ai_answers only: comma-separated tasks an earlier run returned as not ready.',
     },
-    target: { type: 'string', description: 'Domain or URL.' },
+    target: {
+      type: 'string',
+      description: 'Domain, subfolder ending in / or page URL.',
+    },
     competitors: {
       type: 'string',
       description: 'link_gap only: 2 to 5 comma-separated competitor domains.',
@@ -549,26 +558,18 @@ export const researchCommand = defineCommand({
       )
     }
     const keys = await localResearchKeys()
-    const header: Record<ResearchProvider, string> = {
-      dataforseo: 'x-dataforseo-login',
-      ahrefs: 'x-ahrefs-key',
-    }
-    const chosen = stringArg(args.provider)
-    const provider = (chosen ??
-      (action === 'ai_answers'
-        ? 'dataforseo'
-        : RESEARCH_PROVIDERS.find((name) => keys.has(header[name]))) ??
-      'dataforseo') as ResearchProvider
-    if (!RESEARCH_PROVIDERS.includes(provider)) {
+    const provider = stringArg(args.provider) as ResearchProvider | undefined
+    if (provider && !RESEARCH_PROVIDERS.includes(provider)) {
       throw new SeoError(
         'INVALID_INPUT',
         `--provider is one of ${RESEARCH_PROVIDERS.join(', ')}.`,
       )
     }
-    if (!keys.has(header[provider])) {
+    const scope = stringArg(args.scope) as ResearchScope | undefined
+    if (scope && !RESEARCH_SCOPES.includes(scope)) {
       throw new SeoError(
-        'AUTH_CONFIG_REQUIRED',
-        `No ${provider} key. Save it at https://seoskill.dev/account#keys and run \`seo login\`, or run \`seo providers ${provider} connect\` to keep it on this machine only.`,
+        'INVALID_INPUT',
+        `--scope is one of ${RESEARCH_SCOPES.join(', ')}.`,
       )
     }
     const keywords = csvArg(args.keywords) ?? []
@@ -576,7 +577,7 @@ export const researchCommand = defineCommand({
     const competitors = csvArg(args.competitors) ?? []
     const country = stringArg(args.country)
     if (action === 'ai_answers') {
-      if (provider !== 'dataforseo') {
+      if (provider === 'ahrefs') {
         throw new SeoError('INVALID_INPUT', 'ai_answers uses dataforseo.')
       }
       const tasks = csvArg(args.tasks) ?? []
@@ -615,6 +616,7 @@ export const researchCommand = defineCommand({
       runResearch(
         {
           provider,
+          scope,
           action,
           keywords,
           target,
@@ -629,6 +631,7 @@ export const researchCommand = defineCommand({
             cliCall('research', {
               action,
               provider,
+              scope,
               keywords: keywords.join(',') || undefined,
               target,
               competitors: competitors.join(',') || undefined,

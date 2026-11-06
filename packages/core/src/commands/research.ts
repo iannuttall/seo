@@ -10,7 +10,10 @@ import {
   dataForSeoLanguage,
   type ResearchAction,
   type ResearchProvider,
+  type ResearchScope,
   research,
+  researchScope,
+  type SiteTotal,
 } from './research-providers.js'
 import { PAGE_SIZE, rowsText } from './rows.js'
 import { CommandError, type CommandResult } from './types.js'
@@ -18,7 +21,9 @@ import { CommandError, type CommandResult } from './types.js'
 export type {
   ResearchAction,
   ResearchProvider,
+  ResearchScope,
 } from './research-providers.js'
+export { RESEARCH_SCOPES } from './research-providers.js'
 
 export const RESEARCH_ACTIONS = [
   'keyword_metrics',
@@ -28,6 +33,8 @@ export const RESEARCH_ACTIONS = [
   'backlinks',
   'link_gap',
   'ai_answers',
+  'top_pages',
+  'pages_by_backlinks',
 ] as const satisfies readonly ResearchAction[]
 
 export const RESEARCH_PROVIDERS = [
@@ -35,7 +42,7 @@ export const RESEARCH_PROVIDERS = [
   'ahrefs',
 ] as const satisfies readonly ResearchProvider[]
 
-export const RESEARCH_HELP = `keyword_metrics (keywords: volume, difficulty, CPC), ranked_keywords (target: keywords a domain or URL ranks for), serp (keywords, up to 5: the ranking pages), competitors (target: domains that share keywords), backlinks (target: referring domains), link_gap (target and 2 to 5 competitors: referring domains that link to two or more competitors and not the target, highest authority first, from each site's top 1,000 referring domains; costs one backlinks call per site), ai_answers (DataForSEO only; target: the site. Without keywords it takes the site’s top ${AI_ANSWER_QUESTIONS} chat-style and long questions from Search Console’s AI-shaped queries itself. With up to ${AI_ANSWER_QUESTIONS} questions in keywords it asks those instead, and the target can be any domain, such as a competitor's. Each answer row also lists the other sites it cites, and the notes rank them. Answers come from DataForSEO's queue: answers not ready after about 40 seconds are returned as tasks, already paid for; call again with the same target and those tasks to read them at no cost. It asks ChatGPT search, Google AI Mode and Google AI Overviews each one and says whether the answer cites or mentions the site. DataForSEO’s queue prices are about $0.0072 a question across the three engines, so about $0.07 a run: tell the person before running it). Rows with a domain, and the target, get a free Ahrefs domain_rating column. Numbers are provider estimates, not Search Console data.`
+export const RESEARCH_HELP = `provider is optional: without it the call uses the saved key, DataForSEO when both are saved. The target is a domain (the whole site), a path ending in / such as example.com/blog/ (every URL under it), or one page; scope overrides that. keyword_metrics (keywords: volume, difficulty, CPC), ranked_keywords (target: keywords a site, subfolder or page ranks for, with the provider's traffic total for the whole target), top_pages (target: the pages with the most estimated organic traffic), serp (keywords, up to 5: the ranking pages, each with its domain's authority: DataForSEO domain_rank 0 to 100, Ahrefs domain_rating), competitors (target: domains that share keywords), backlinks (target: referring domains), pages_by_backlinks (target: the pages with the most referring domains), link_gap (target and 2 to 5 competitors: referring domains that link to two or more competitors and not the target, highest authority first, from each site's top 1,000 referring domains; costs one backlinks call per site), ai_answers (DataForSEO only; target: the site. Without keywords it takes the site’s top ${AI_ANSWER_QUESTIONS} chat-style and long questions from Search Console’s AI-shaped queries itself. With up to ${AI_ANSWER_QUESTIONS} questions in keywords it asks those instead, and the target can be any domain, such as a competitor's. Each answer row also lists the other sites it cites, and the notes rank them. Answers come from DataForSEO's queue: answers not ready after about 40 seconds are returned as tasks, already paid for; call again with the same target and those tasks to read them at no cost. It asks ChatGPT search, Google AI Mode and Google AI Overviews each one and says whether the answer cites or mentions the site. DataForSEO’s queue prices are about $0.0072 a question across the three engines, so about $0.07 a run: tell the person before running it). Rows with a domain, and the target, get a free Ahrefs domain_rating column. Numbers are provider estimates, not Search Console data.`
 
 // Platforms that share keywords with almost every site. Competitor lists
 // leave them out, with the target itself, and say how many rows went.
@@ -91,8 +98,41 @@ function realCompetitors(
   }
 }
 
+// The header each provider's key arrives under.
+const KEY_HEADER: Record<ResearchProvider, string> = {
+  dataforseo: 'x-dataforseo-login',
+  ahrefs: 'x-ahrefs-key',
+}
+
+// The provider to use: the one asked for, else the one with a saved key,
+// DataForSEO when both are saved. A provider asked for without its key, or
+// no key at all, fails in the call with how to add the key.
+function chooseProvider(
+  asked: ResearchProvider | undefined,
+  keys: Headers,
+): ResearchProvider {
+  return (
+    asked ??
+    RESEARCH_PROVIDERS.find((name) => keys.has(KEY_HEADER[name])) ??
+    'dataforseo'
+  )
+}
+
+// How each provider estimates organic traffic, so totals from two providers
+// are never read as the same measure.
+const TRAFFIC_MODEL: Record<ResearchProvider, string> = {
+  dataforseo:
+    "DataForSEO etv (estimated traffic volume): each keyword's monthly search volume times DataForSEO's click-through rate for the ranking position, summed over the keywords in DataForSEO's database for this country",
+  ahrefs:
+    "Ahrefs organic traffic (sum_traffic, org_traffic): Ahrefs' estimate of monthly organic visits from its own keyword database, volumes and click-through model, for this country",
+}
+
+const PROVIDERS_DIFFER =
+  'Providers track different keywords and use different click models, so their traffic for the same site or page can differ tenfold or more. Compare a site with itself in one provider, not across providers.'
+
 export type ResearchInput = {
-  provider: ResearchProvider
+  provider?: ResearchProvider
+  scope?: ResearchScope
   action: ResearchAction
   keywords?: string[]
   target?: string
@@ -115,11 +155,19 @@ export async function runResearch(
   const country = input.country ?? 'us'
   const target = input.target ?? ''
   const offset = input.offset ?? 0
-  const language =
-    input.provider === 'dataforseo' ? dataForSeoLanguage(country) : null
   if (input.action === 'ai_answers') {
     throw new CommandError('INVALID_INPUT', 'ai_answers runs on its own.')
   }
+  const provider = chooseProvider(input.provider, keys)
+  const language =
+    provider === 'dataforseo' ? dataForSeoLanguage(country) : null
+  const scoped = [
+    'ranked_keywords',
+    'top_pages',
+    'backlinks',
+    'pages_by_backlinks',
+  ].includes(input.action)
+  const scope = scoped && target ? researchScope(target, input.scope) : null
   const {
     rows: found,
     costUsd,
@@ -128,10 +176,14 @@ export async function runResearch(
     noData,
     floor,
     leftOut,
-  } = await research(input.provider, keys, {
+    available,
+    siteTotal,
+    rankFailed,
+  } = await research(provider, keys, {
     action: input.action,
     keywords: input.keywords ?? [],
     target,
+    ...(scope ? { scope } : {}),
     competitors: input.competitors ?? [],
     country,
     limit: Math.min(1000, Math.max(100, offset + PAGE_SIZE)),
@@ -144,8 +196,7 @@ export async function runResearch(
     (row) => row.url === null && row.url_hint !== undefined,
   ).length
   const drKey = keys.get('x-ahrefs-key') ?? options.drKey
-  const byDr =
-    input.action === 'link_gap' && input.provider === 'dataforseo' && drKey
+  const byDr = input.action === 'link_gap' && provider === 'dataforseo' && drKey
   const rated = byDr
     ? await sortedByDomainRating(rows, drKey)
     : await withDomainRating(rows, drKey, offset)
@@ -155,13 +206,32 @@ export async function runResearch(
   const hasTargetDr = targetDr !== undefined && targetDr !== null
   return {
     text: rowsText({
-      title: `${input.provider} ${input.action}${target ? ` for ${target}` : ''}, ${country}${language ? `, language ${language}` : ''}.`,
+      title: `${provider} ${input.action}${target ? ` for ${target}` : ''}${scope ? ` (${SCOPE_TEXT[scope]})` : ''}${LINK_ACTIONS.includes(input.action) ? ', all countries' : `, ${country}${language ? `, language ${language}` : ''}`}.`,
       rows: rated.rows,
       offset,
       limit: PAGE_SIZE,
       detail: input.detail ?? 'summary',
       notes: [
-        `${input.provider} estimates, in the provider’s own units.`,
+        `${provider} estimates, in the provider’s own units.`,
+        ...(siteTotal ? [siteTotalNote(provider, siteTotal, rows.length)] : []),
+        ...(available !== undefined && available > found.length
+          ? [
+              `Capped: ${provider} has ${available.toLocaleString('en-US')} rows for this; this read the first ${found.length.toLocaleString('en-US')} in its order.`,
+            ]
+          : []),
+        ...(!found.length && scope ? [emptyNote(provider, input.action)] : []),
+        ...(input.action === 'serp' && provider === 'dataforseo'
+          ? [
+              rankFailed
+                ? 'domain_rank is missing: the DataForSEO rank call failed, so it is unknown, not zero.'
+                : "domain_rank is DataForSEO's own authority score for the domain, 0 to 100. It is not Ahrefs' Domain Rating.",
+            ]
+          : []),
+        ...(input.action === 'serp' && !drKey && provider === 'dataforseo'
+          ? [
+              'No domain_rating column: Domain Rating by Ahrefs needs an Ahrefs key (or the hosted MCP at https://seoskill.dev/mcp, which adds it).',
+            ]
+          : []),
         ...(costUsd !== null ? [`DataForSEO cost: $${costUsd}.`] : []),
         ...(partial
           ? [
@@ -170,10 +240,10 @@ export async function runResearch(
           : []),
         ...(missed.length
           ? [
-              `Partial: ${input.provider} failed for ${missed.join(', ')}, so those keywords have no rows. Ask for them again.`,
+              `Partial: ${provider} failed for ${missed.join(', ')}, so those keywords have no rows. Ask for them again.`,
             ]
           : []),
-        ...(noData.length ? [noDataNote(input, noData)] : []),
+        ...(noData.length ? [noDataNote(provider, input.action, noData)] : []),
         ...(byDr
           ? [
               rows.length > GAP_RATED
@@ -191,7 +261,9 @@ export async function runResearch(
               `Cut at ${floor.field} ${floor.value}: at least one site has more than 1,000 referring domains, and only its top 1,000 were read, so domains below ${floor.field} ${floor.value} are left out rather than guessed.`,
             ]
           : []),
-        ...(unresolved ? [unresolvedNote(input, unresolved, rows.length)] : []),
+        ...(unresolved
+          ? [unresolvedNote(provider, unresolved, rows.length)]
+          : []),
         ...(note ? [note] : []),
         ...(hasTargetDr
           ? [`${bareDomain(target)} domain_rating: ${targetDr}.`]
@@ -201,9 +273,14 @@ export async function runResearch(
       more: options.call,
     }),
     data: {
-      provider: input.provider,
+      provider,
       action: input.action,
       target: target || null,
+      scope,
+      siteTotal: siteTotal
+        ? { ...siteTotal, model: TRAFFIC_MODEL[provider] }
+        : null,
+      available: available ?? null,
       country,
       language,
       targetDomainRating: hasTargetDr ? targetDr : null,
@@ -227,24 +304,65 @@ export async function runResearch(
   }
 }
 
+// Link data has no country: the provider counts links from everywhere.
+const LINK_ACTIONS: ResearchAction[] = [
+  'backlinks',
+  'pages_by_backlinks',
+  'link_gap',
+]
+
+const SCOPE_TEXT: Record<ResearchScope, string> = {
+  domain: 'the whole site with its subdomains',
+  prefix: 'every URL under this path',
+  exact: 'this page only',
+}
+
+// The provider's traffic total for the whole target, named in its own
+// metric and model, beside the rows.
+function siteTotalNote(
+  provider: ResearchProvider,
+  total: SiteTotal,
+  shown: number,
+): string {
+  const keywords =
+    total.keywords !== null
+      ? ` from ${total.keywords.toLocaleString('en-US')} keywords`
+      : ''
+  return `Total for the whole target: ${total.metric} ${total.traffic.toLocaleString('en-US')} a month${keywords} (the rows below are ${shown.toLocaleString('en-US')} of them). Model: ${TRAFFIC_MODEL[provider]}. ${PROVIDERS_DIFFER}`
+}
+
+// An empty list for a site, subfolder or page: the provider has no rows for
+// it, which is not the same as no traffic or no links.
+function emptyNote(provider: ResearchProvider, action: ResearchAction): string {
+  const what =
+    action === 'backlinks' || action === 'pages_by_backlinks'
+      ? 'links'
+      : 'rankings'
+  return `No rows: ${provider} has no ${what} for this target in its database. That does not show the target has none; check the target and scope, or ask the other provider.`
+}
+
 // Why some keywords have no rows: the provider has no data for them, or
 // Google showed no results, which is not the same as nobody ranking.
-function noDataNote(input: ResearchInput, keywords: string[]): string {
+function noDataNote(
+  provider: ResearchProvider,
+  action: ResearchAction,
+  keywords: string[],
+): string {
   const list = keywords.join(', ')
-  if (input.action === 'serp') {
-    return `No results: ${input.provider} got an empty results page for ${list}${input.provider === 'dataforseo' ? ', twice' : ''}. Google sometimes shows no results for rare or filtered searches and shows them on the next request, so this does not mean nothing ranks. Ask again later${input.provider === 'dataforseo' ? ', or use provider ahrefs' : ''}.`
+  if (action === 'serp') {
+    return `No results: ${provider} got an empty results page for ${list}${provider === 'dataforseo' ? ', twice' : ''}. Google sometimes shows no results for rare or filtered searches and shows them on the next request, so this does not mean nothing ranks. Ask again later${provider === 'dataforseo' ? ', or use provider ahrefs' : ''}.`
   }
-  return `No data: ${input.provider} has no metrics for ${keywords.length} of the keywords asked for (${list}). Their volume is unknown, not zero.`
+  return `No data: ${provider} has no metrics for ${keywords.length} of the keywords asked for (${list}). Their volume is unknown, not zero.`
 }
 
 // Results whose page is unknown because the provider returned a Google
 // redirect link instead of the page.
 function unresolvedNote(
-  input: ResearchInput,
+  provider: ResearchProvider,
   count: number,
   total: number,
 ): string {
-  return `${count} of ${total} results have no exact page: ${input.provider} returned Google redirect links for them. Their domain and url_hint come from Google's breadcrumb, which is shortened.${input.provider === 'dataforseo' ? ' For exact pages, use provider ahrefs.' : ''}`
+  return `${count} of ${total} results have no exact page: ${provider} returned Google redirect links for them. Their domain and url_hint come from Google's breadcrumb, which is shortened.${provider === 'dataforseo' ? ' For exact pages, use provider ahrefs.' : ''}`
 }
 
 // How many link_gap rows get a Domain Rating to sort by when the gap comes

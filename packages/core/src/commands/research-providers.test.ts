@@ -57,7 +57,8 @@ test('serp asks again after an empty results page and names keywords still empty
     [['flaky search', 1, 'https://example.com/links']],
   )
   assert.deepEqual(out.noData, ['empty search'])
-  assert.equal(out.costUsd, 0.008)
+  // Four SERP tasks and the one domain_rank call.
+  assert.equal(out.costUsd, 0.01)
 })
 
 // The link gap is the referring domains of two or more competitors minus
@@ -125,4 +126,37 @@ test('link_gap keeps domains linking to two competitors and not the target, down
   ])
   assert.deepEqual(out.floor, { field: 'domain_rating', value: 30 })
   assert.deepEqual(out.leftOut, ['best-coupons.example', 'bit.ly'])
+})
+
+// DataForSEO reads a target without its scheme as the whole domain (ranked
+// keywords) or finds no links (backlinks), so a page used to come back as
+// the site's keywords or a false zero.
+test('dataforseo reads a page as its absolute URL and a subfolder as a filter', async () => {
+  const sent: Record<string, unknown>[] = []
+  globalThis.fetch = (async (input: Request) => {
+    const [task] = (await input.json()) as Record<string, unknown>[]
+    sent.push(task ?? {})
+    return Response.json({
+      tasks: [{ status_code: 20000, cost: 0, result: [{ items: [] }] }],
+    })
+  }) as typeof fetch
+  const ask = (action: 'ranked_keywords' | 'backlinks', target: string) =>
+    research('dataforseo', dataForSeo, {
+      action,
+      keywords: [],
+      target,
+      country: 'us',
+      limit: 100,
+    })
+  await ask('ranked_keywords', 'example.com/tools/checker')
+  await ask('backlinks', 'example.com/tools/checker')
+  await ask('ranked_keywords', 'https://example.com/blog/')
+  assert.equal(sent[0]?.target, 'https://example.com/tools/checker')
+  assert.equal(sent[1]?.target, 'https://example.com/tools/checker')
+  assert.equal(sent[2]?.target, 'example.com')
+  assert.deepEqual(sent[2]?.filters, [
+    'ranked_serp_element.serp_item.relative_url',
+    'like',
+    '/blog/%',
+  ])
 })

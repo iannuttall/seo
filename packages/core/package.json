@@ -35,6 +35,11 @@
       "types": "./src/updates/browser.ts",
       "browser": "./src/updates/browser.ts",
       "import": "./dist/updates/browser.js"
+    },
+    "./serp/browser": {
+      "types": "./src/serp/browser.ts",
+      "browser": "./src/serp/browser.ts",
+      "import": "./dist/serp/browser.js"
     }
   },
   "files": [

@@ -44,4 +44,15 @@ The crawl also checks how AI agents get to your site:
 
 None of these change your Google rankings. They decide how easily ChatGPT, Claude and other agents can read and quote you. If a file could not be fetched, the crawl says so instead of calling it missing.
 
+## Check many sites at once
+
+To compare robots.txt, home pages and llms.txt across many sites, such as a list of competitors, use sites mode. It reads up to 1,000 sites a run, eight at a time, with three requests per site: robots.txt, the home page (unless robots.txt disallows it), then llms.txt.
+
+```sh
+seo crawl --mode sites --urls-file sites.txt --json --output sites.jsonl
+seo crawl --mode sites --urls example.com,example.org
+```
+
+Each site is one JSON line with its robots.txt rules for each AI bot, the home page's status, title, canonical and robots tags, and whether llms.txt exists and starts with a heading. A last line sums the run. Without `--json` you get the counts, such as how many sites block GPTBot. A site that timed out, failed DNS or served a challenge page says so, so an unreachable llms.txt is never counted as missing.
+
 To see which pages lost search clicks rather than which pages have issues, use [`seo index`](/docs/indexing).

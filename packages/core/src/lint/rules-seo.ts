@@ -1,3 +1,4 @@
+import { SERP_PIXEL_BUDGETS, serpTextWidth } from '../serp/browser.js'
 import { ALL, type Context, PROSE, type RuleInfo } from './engine.js'
 import { quoted } from './rules-phrases.js'
 import { sentenceAt, words } from './text.js'
@@ -130,12 +131,15 @@ function lengths(ctx: Context) {
     const length = block.text.length
     if (length >= low && length <= high) continue
     const what = title ? 'title' : 'description'
+    // Google cuts by width, so the width (an estimate from Arial's letter
+    // widths) shows beside the count.
+    const pixels = Math.ceil(serpTextWidth(block.text, what))
     ctx.hit(
       rule,
       block,
       0,
       block.text.length,
-      `The ${what} is ${length} characters. Aim for ${low} to ${high}.`,
+      `The ${what} is ${length} characters, about ${pixels} pixels wide. Aim for ${low} to ${high} characters; Google shows about ${SERP_PIXEL_BUDGETS[what].desktop} pixels of a ${what} on desktop.`,
       length < low
         ? title
           ? 'Add the words people search for, or one true reason to click, such as "free" or "for any site".'

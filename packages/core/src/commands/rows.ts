@@ -28,7 +28,14 @@ export function rowsText(input: {
 }): string {
   const total = input.rows.length
   if (input.detail === 'full') {
-    return `${input.title}\n\n${JSON.stringify(input.rows.slice(input.offset, input.offset + input.limit))}`
+    const page = input.rows.slice(input.offset, input.offset + input.limit)
+    const end = input.offset + page.length
+    // Say when the JSON is one page of more, and how to get the next.
+    const cut =
+      end < total
+        ? `\n\nRows ${input.offset + 1} to ${end} of ${total}. More: ${input.more ? input.more(end).replace('detail "rows"', 'detail "full"').replace('--detail rows', '--detail full') : `detail "full", offset ${end}`}.`
+        : ''
+    return `${input.title}\n\n${JSON.stringify(page)}${cut}`
   }
   const size =
     input.detail === 'summary' ? Math.min(input.limit, 25) : input.limit
@@ -47,6 +54,23 @@ export function rowsText(input: {
   ]
     .filter(Boolean)
     .join('\n\n')
+}
+
+// Queries that look like spam or tool noise rather than people searching.
+// A heuristic over the query text only, so it labels and never drops.
+const SPAM_TLDS = /\.(xyz|top|click|buzz|icu|cfd|sbs|monster|rest|lol)$/
+export function spamHint(query: string): string | null {
+  const text = query.trim().toLowerCase()
+  if (/^[a-z0-9-]+(\.[a-z0-9-]+)+$/.test(text) && SPAM_TLDS.test(text)) {
+    return 'host name on a TLD common in referral spam'
+  }
+  if (/^\d+: /.test(text) || /\btest keyword\b/.test(text)) {
+    return 'rank tracker test query'
+  }
+  if ((text.match(/[=,]/g) ?? []).length >= 6 && /"/.test(text)) {
+    return 'pasted spreadsheet or tool export'
+  }
+  return null
 }
 
 export const DIMENSIONS = [
@@ -168,6 +192,22 @@ export async function runRows(
       : Number(b.clicks ?? 0) - Number(a.clicks ?? 0),
   )
   const notes: string[] = []
+  // Spam-looking queries keep their numbers and get a label, so totals stay
+  // Search Console's own.
+  const queryAt = dimensions.indexOf('query')
+  if (queryAt >= 0) {
+    const flagged = rows.filter((row) => spamHint(String(row.query ?? '')))
+    if (flagged.length) {
+      for (const row of rows) row.spam_hint = spamHint(String(row.query ?? ''))
+      const impressions = flagged.reduce(
+        (sum, row) => sum + Number(row.impressions ?? 0),
+        0,
+      )
+      notes.push(
+        `${flagged.length} of ${rows.length} queries look like spam or tool noise (spam_hint, a heuristic over the query text: host names on spam-heavy TLDs, rank tracker test queries, pasted exports), with ${impressions} impressions. They stay in the rows and the totals; Google may or may not count them as real searches.`,
+      )
+    }
+  }
   // Rows split only by date, device, country or appearance add up to the
   // property totals; query and page rows do not.
   if (!dimensions.includes('query') && !dimensions.includes('page')) {

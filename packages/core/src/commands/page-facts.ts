@@ -1,5 +1,10 @@
 import { Parser } from 'htmlparser2'
 import { SEO_CRAWLER_USER_AGENT } from '../fetch/crawler-identity.js'
+import {
+  hasMetaRobotsDirective,
+  hasXRobotsDirective,
+} from '../robots-directives.js'
+import { traceRedirects } from './redirect-chain.js'
 import type { PageFacts } from './types.js'
 
 // Live facts for report URLs: status, redirect target, title, meta
@@ -11,8 +16,13 @@ const MAX_PAGES = 20
 const TIMEOUT_MS = 6000
 const MAX_BYTES = 1_000_000
 
-const clean = (value: string | null | undefined) =>
-  value?.trim().replace(/\s+/g, ' ') || null
+// Null stays null (no tag); an empty tag stays ''.
+const clean = (value: string | null) =>
+  value === null ? null : value.trim().replace(/\s+/g, ' ')
+
+// A robots meta tag for one crawler, such as googlebot, googlebot-news or
+// bingbot. Only robots and googlebot apply to Google Search.
+const BOT_META = /^([a-z][a-z0-9_-]*bot(-[a-z]+)?|slurp|yandex|baiduspider)$/
 
 // Reads at most maxBytes of the body as text.
 export async function boundedText(
@@ -37,9 +47,12 @@ export async function boundedText(
 export function headFacts(
   html: string,
   url: string,
-): Pick<PageFacts, 'title' | 'description' | 'h1' | 'canonical' | 'robots'> {
-  let title = ''
-  let h1 = ''
+): Pick<
+  PageFacts,
+  'title' | 'description' | 'h1' | 'canonical' | 'robots' | 'google_noindex'
+> {
+  let title: string | null = null
+  let h1: string | null = null
   let inTitle = false
   let inH1 = false
   let titleDone = false
@@ -47,18 +60,32 @@ export function headFacts(
   let description: string | null = null
   let canonical: string | null = null
   const robots: string[] = []
+  const google: string[] = []
   const parser = new Parser(
     {
       onopentag(name, attributes) {
-        if (name === 'title' && !titleDone) inTitle = true
-        if (name === 'h1' && !h1Done) inH1 = true
+        if (name === 'title' && !titleDone) {
+          inTitle = true
+          title ??= ''
+        }
+        if (name === 'h1' && !h1Done) {
+          inH1 = true
+          h1 ??= ''
+        }
         if (name === 'meta') {
-          const metaName = attributes.name?.toLowerCase()
+          const metaName = attributes.name?.trim().toLowerCase() ?? ''
+          const content = attributes.content?.trim()
           if (metaName === 'description' && description === null) {
-            description = attributes.content ?? null
+            description = attributes.content ?? ''
           }
-          if (metaName === 'robots' && attributes.content) {
-            robots.push(attributes.content)
+          if (content && (metaName === 'robots' || BOT_META.test(metaName))) {
+            // A crawler's own tag is shown with its name.
+            robots.push(
+              metaName === 'robots' ? content : `${metaName}: ${content}`,
+            )
+            if (metaName === 'robots' || metaName === 'googlebot') {
+              google.push(content)
+            }
           }
         }
         if (
@@ -75,8 +102,8 @@ export function headFacts(
         }
       },
       ontext(text) {
-        if (inTitle) title += text
-        if (inH1) h1 += text
+        if (inTitle) title = (title ?? '') + text
+        if (inH1) h1 = (h1 ?? '') + text
       },
       onclosetag(name) {
         if (name === 'title' && inTitle) {
@@ -99,10 +126,12 @@ export function headFacts(
     h1: clean(h1),
     canonical,
     robots: robots.length ? robots.join(', ') : null,
+    google_noindex: hasMetaRobotsDirective(google, 'noindex'),
   }
 }
 
-async function facts(url: string): Promise<PageFacts> {
+// Facts for one URL. With a response, reads that one instead of fetching.
+async function facts(url: string, given?: Response): Promise<PageFacts> {
   const out: PageFacts = {
     url,
     status: null,
@@ -112,17 +141,25 @@ async function facts(url: string): Promise<PageFacts> {
     h1: null,
     canonical: null,
     robots: null,
+    google_noindex: null,
   }
   try {
-    const response = await fetch(url, {
-      redirect: 'manual',
-      headers: { 'user-agent': SEO_CRAWLER_USER_AGENT, accept: 'text/html' },
-      signal: AbortSignal.timeout(TIMEOUT_MS),
-    })
+    const response =
+      given ??
+      (await fetch(url, {
+        redirect: 'manual',
+        headers: { 'user-agent': SEO_CRAWLER_USER_AGENT, accept: 'text/html' },
+        signal: AbortSignal.timeout(TIMEOUT_MS),
+      }))
     out.status = response.status
     const location = response.headers.get('location')
     if (location) out.redirects_to = new URL(location, url).toString()
     const headerRobots = response.headers.get('x-robots-tag')
+    // Scoped by crawler: "bingbot: noindex" is not a noindex for Google.
+    const headerNoindex = hasXRobotsDirective(
+      headerRobots ?? undefined,
+      'noindex',
+    )
     const auth = response.headers.get('www-authenticate')
     if (auth) out.www_authenticate = auth.slice(0, 200)
     if (
@@ -130,12 +167,14 @@ async function facts(url: string): Promise<PageFacts> {
       !response.headers.get('content-type')?.includes('html')
     ) {
       out.robots = headerRobots
+      out.google_noindex = headerNoindex
       await response.body?.cancel()
       return out
     }
     const head = headFacts(await boundedText(response), url)
     Object.assign(out, head)
     out.robots = [headerRobots, head.robots].filter(Boolean).join(', ') || null
+    out.google_noindex = headerNoindex || head.google_noindex
   } catch (error) {
     out.error = error instanceof Error ? error.message : 'fetch failed'
   }
@@ -143,10 +182,8 @@ async function facts(url: string): Promise<PageFacts> {
 }
 
 export function checkPages(urls: string[]): Promise<PageFacts[]> {
-  return Promise.all(urls.slice(0, MAX_PAGES).map(facts))
+  return Promise.all(urls.slice(0, MAX_PAGES).map((url) => facts(url)))
 }
-
-const MAX_HOPS = 5
 
 export type RedirectKind = 'permanent' | 'temporary'
 
@@ -156,7 +193,7 @@ export type LiveCheck = {
   // Each redirect followed, in order, with its status.
   hops: { from: string; status: number; to: string; kind: RedirectKind }[]
   // The last response: the URL itself when it does not redirect. Null when
-  // the redirects loop or go past MAX_HOPS.
+  // the redirects loop or go past MAX_REDIRECT_HOPS.
   last: PageFacts | null
 }
 
@@ -168,26 +205,48 @@ export const redirectKind = (status: number | null): RedirectKind | null =>
       : null
 
 // One URL fetched live from this machine or server, following up to
-// MAX_HOPS redirects one request at a time. These are the redirects the
-// server sends; a browser's HSTS upgrade (shown as "307 Internal Redirect")
-// never reaches a server-side fetch.
+// MAX_REDIRECT_HOPS redirects one request at a time. These are the redirects
+// the server sends; a browser's HSTS upgrade (shown as "307 Internal
+// Redirect") never reaches a server-side fetch.
 export async function liveCheck(url: string): Promise<LiveCheck> {
-  const first = await facts(url)
-  const hops: LiveCheck['hops'] = []
-  const seen = new Set([url])
-  let last = first
-  while (last.redirects_to && last.status !== null) {
-    const kind = redirectKind(last.status)
-    if (!kind) break
-    const to = last.redirects_to
-    hops.push({ from: last.url, status: last.status, to, kind })
-    if (seen.has(to) || hops.length > MAX_HOPS) {
-      return { first, hops, last: null }
-    }
-    seen.add(to)
-    last = await facts(to)
+  const pages: PageFacts[] = []
+  const trace = await traceRedirects(url, {
+    timeoutMs: TIMEOUT_MS,
+    onResponse: async (response, at) => {
+      pages.push(await facts(at, response))
+    },
+  })
+  const hops = trace.steps.flatMap((step) => {
+    const kind = redirectKind(step.status)
+    return step.location && kind
+      ? [{ from: step.url, status: step.status, to: step.location, kind }]
+      : []
+  })
+  if (trace.outcome === 'loop' || trace.outcome === 'too_many') {
+    return { first: pages[0] as PageFacts, hops, last: null }
   }
-  return { first, hops, last }
+  let last = pages.at(-1)
+  if (trace.error) {
+    last =
+      trace.final_status !== null && last
+        ? { ...last, error: trace.error }
+        : {
+            url: trace.final_url,
+            status: null,
+            redirects_to: null,
+            title: null,
+            description: null,
+            h1: null,
+            canonical: null,
+            robots: null,
+            google_noindex: null,
+            error: trace.error,
+          }
+  }
+  const lastPage = last as PageFacts
+  // A failure on the URL's own request is the first response's failure.
+  const first = pages.length > 1 || !trace.error ? pages[0] : lastPage
+  return { first: first as PageFacts, hops, last: lastPage }
 }
 
 // A note, not a defect: same-site 302 and 307 redirects are temporary, and a

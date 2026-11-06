@@ -1,5 +1,6 @@
 import assert from 'node:assert/strict'
 import { test } from 'node:test'
+import { runResearch } from './research.js'
 import { research } from './research-providers.js'
 
 const dataForSeo = new Headers({
@@ -57,7 +58,8 @@ test('serp asks again after an empty results page and names keywords still empty
     [['flaky search', 1, 'https://example.com/links']],
   )
   assert.deepEqual(out.noData, ['empty search'])
-  assert.equal(out.costUsd, 0.008)
+  // Four SERP tasks and the one domain_rank call.
+  assert.equal(out.costUsd, 0.01)
 })
 
 // The link gap is the referring domains of two or more competitors minus
@@ -125,4 +127,120 @@ test('link_gap keeps domains linking to two competitors and not the target, down
   ])
   assert.deepEqual(out.floor, { field: 'domain_rating', value: 30 })
   assert.deepEqual(out.leftOut, ['best-coupons.example', 'bit.ly'])
+})
+
+// DataForSEO reads a target without its scheme as the whole domain (ranked
+// keywords) or finds no links (backlinks), so a page used to come back as
+// the site's keywords or a false zero.
+test('dataforseo reads a page as its absolute URL and a subfolder as a filter', async () => {
+  const sent: Record<string, unknown>[] = []
+  globalThis.fetch = (async (input: Request) => {
+    const [task] = (await input.json()) as Record<string, unknown>[]
+    sent.push(task ?? {})
+    return Response.json({
+      tasks: [{ status_code: 20000, cost: 0, result: [{ items: [] }] }],
+    })
+  }) as typeof fetch
+  const ask = (action: 'ranked_keywords' | 'backlinks', target: string) =>
+    research('dataforseo', dataForSeo, {
+      action,
+      keywords: [],
+      target,
+      country: 'us',
+      limit: 100,
+    })
+  await ask('ranked_keywords', 'example.com/tools/checker')
+  await ask('backlinks', 'example.com/tools/checker')
+  await ask('ranked_keywords', 'https://example.com/blog/')
+  assert.equal(sent[0]?.target, 'https://example.com/tools/checker')
+  assert.equal(sent[1]?.target, 'https://example.com/tools/checker')
+  assert.equal(sent[2]?.target, 'example.com')
+  assert.deepEqual(sent[2]?.filters, [
+    'ranked_serp_element.serp_item.relative_url',
+    'like',
+    '/blog/%',
+  ])
+})
+
+// A keyword DataForSEO answered with a null volume was shown as a row and
+// never listed as no data, so it read like a known number.
+test('keyword_metrics lists a keyword with a null volume as no data', async () => {
+  globalThis.fetch = (async () =>
+    Response.json({
+      tasks: [
+        {
+          status_code: 20000,
+          cost: 0.01,
+          result: [
+            {
+              items: [
+                { keyword: 'known', keyword_info: { search_volume: 90 } },
+                { keyword: 'unknown', keyword_info: { search_volume: null } },
+              ],
+            },
+          ],
+        },
+      ],
+    })) as typeof fetch
+  const out = await research('dataforseo', dataForSeo, {
+    action: 'keyword_metrics',
+    keywords: ['known', 'unknown'],
+    target: '',
+    country: 'us',
+    limit: 100,
+  })
+  assert.deepEqual(out.noData, ['unknown'])
+})
+
+// Reading the next page, or the same rows in full, asked the provider again
+// and paid again.
+test('paging a research result reads the saved rows at no new cost', async () => {
+  let calls = 0
+  globalThis.fetch = (async () => {
+    calls += 1
+    return Response.json({
+      tasks: [
+        {
+          status_code: 20000,
+          cost: 0.05,
+          result: [
+            {
+              items: Array.from({ length: 80 }, (_, index) => ({
+                keyword: `keyword ${index}`,
+                keyword_info: { search_volume: 100 - index },
+              })),
+            },
+          ],
+        },
+      ],
+    })
+  }) as typeof fetch
+  const saved = new Map<string, string>()
+  const store = {
+    get: async (key: string) => saved.get(key) ?? null,
+    put: async (key: string, value: string) => {
+      saved.set(key, value)
+    },
+  }
+  const ask = (offset: number, detail: 'rows' | 'full') =>
+    runResearch(
+      {
+        action: 'keyword_ideas',
+        keywords: ['seed'],
+        offset,
+        detail,
+      },
+      dataForSeo,
+      { call: () => '', store },
+    )
+  const first = (await ask(0, 'rows')).data as Record<string, unknown>
+  const second = (await ask(50, 'rows')).data as Record<string, unknown>
+  const full = (await ask(0, 'full')).data as Record<string, unknown>
+  assert.equal(calls, 1)
+  assert.deepEqual([first.costUsd, first.next], [0.05, 50])
+  assert.deepEqual([second.costUsd, second.next], [0, null])
+  assert.deepEqual(
+    [(full.rows as unknown[]).length, full.next, full.rowsLeftOut],
+    [80, null, 0],
+  )
 })

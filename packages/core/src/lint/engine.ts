@@ -3,6 +3,7 @@ import type {
   Block,
   BlockKind,
   Doc,
+  LintCategory,
   LintLevel,
   LintPreset,
   Sentence,
@@ -14,7 +15,7 @@ export type RuleInfo = {
   id: string
   // ai: a pattern common in AI-written text. copy: a weak-copy or house
   // style rule. seo: titles, descriptions and headings.
-  family: 'ai' | 'copy' | 'seo'
+  family: LintCategory
   level: RuleLevel
   presets?: Partial<Record<LintPreset, RuleLevel>>
   description: string

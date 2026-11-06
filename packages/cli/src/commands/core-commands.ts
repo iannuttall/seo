@@ -3,6 +3,7 @@ import {
   localError,
   localRefreshClicky,
   localResearchKeys,
+  localResearchStore,
   nodeCommandDeps,
   readLintFiles,
   SeoError,
@@ -16,15 +17,22 @@ import {
   ISSUE_MARKS,
   ISSUES_SECTION,
   type IssueMark,
+  LINT_CATEGORIES,
   LINT_FORMATS,
+  LINT_MAX_CHARS,
+  LINT_META_KINDS,
   LINT_PRESETS,
+  type LintCategory,
   type LintFormat,
+  type LintMetaKind,
   type LintPreset,
   MAX_INSPECT_LIMIT,
   RESEARCH_ACTIONS,
   RESEARCH_PROVIDERS,
+  RESEARCH_SCOPES,
   type ResearchAction,
   type ResearchProvider,
+  type ResearchScope,
   runAiAnswers,
   runAllSites,
   runBingReport,
@@ -43,6 +51,7 @@ import {
 } from '@seo/core/commands'
 import { defineCommand } from 'citty'
 import { booleanArg, csvArg, jsonFlag, numberArg, stringArg } from '../args.js'
+import { createProgressReporter } from '../progress.js'
 import { requireSite, resolveProperty } from '../selection.js'
 import { printJson } from '../utils.js'
 
@@ -129,13 +138,15 @@ export async function run(
   task: (deps: ReturnType<typeof nodeCommandDeps>) => Promise<CommandResult>,
 ) {
   try {
-    const result = await task(
-      nodeCommandDeps({
+    const result = await task({
+      ...nodeCommandDeps({
         call: cliCall,
         account: stringArg(args.account),
         refresh: booleanArg(args.refresh),
       }),
-    )
+      // On stderr, TTY or not: agents run without one and wait the longest.
+      progress: createProgressReporter(!jsonFlag(args)),
+    })
     if (jsonFlag(args)) printJson(result.data)
     else process.stdout.write(`${result.text}\n`)
   } catch (error) {
@@ -519,7 +530,11 @@ export const researchCommand = defineCommand({
     },
     provider: {
       type: 'string',
-      description: `${RESEARCH_PROVIDERS.join(', ')}. Default: the first one with a saved key.`,
+      description: `${RESEARCH_PROVIDERS.join(', ')}. Default: the saved key, DataForSEO when both are saved.`,
+    },
+    scope: {
+      type: 'string',
+      description: `${RESEARCH_SCOPES.join(', ')}. Default: from the target. A domain is the whole site, a path ending in / is every URL under it (example.com/blog/), any other path is one page.`,
     },
     keywords: { type: 'string', description: 'Comma-separated keywords.' },
     tasks: {
@@ -527,7 +542,20 @@ export const researchCommand = defineCommand({
       description:
         'ai_answers only: comma-separated tasks an earlier run returned as not ready.',
     },
-    target: { type: 'string', description: 'Domain or URL.' },
+    also: {
+      type: 'string',
+      description:
+        "ai_answers only: the brand's other domains, comma-separated, such as claude.ai beside claude.com. A citation to any of them counts as citing the target.",
+    },
+    brand: {
+      type: 'string',
+      description:
+        "ai_answers only: comma-separated brand names that count as a mention, such as Datadog for datadoghq.com. Default: each domain's name.",
+    },
+    target: {
+      type: 'string',
+      description: 'Domain, subfolder ending in / or page URL.',
+    },
     competitors: {
       type: 'string',
       description: 'link_gap only: 2 to 5 comma-separated competitor domains.',
@@ -536,9 +564,20 @@ export const researchCommand = defineCommand({
       type: 'string',
       description: 'Two-letter country code. Default us.',
     },
+    depth: {
+      type: 'string',
+      description:
+        'serp only: results per keyword, 1 to 100. Default 20. Deeper costs more.',
+    },
     ...detail,
     account: common.account,
     json: common.json,
+    refresh: {
+      type: 'boolean',
+      default: false,
+      description:
+        'Ask the provider again instead of reading the result saved in the last day.',
+    },
   },
   run: async ({ args }) => {
     const action = stringArg(args.action) as ResearchAction
@@ -549,26 +588,18 @@ export const researchCommand = defineCommand({
       )
     }
     const keys = await localResearchKeys()
-    const header: Record<ResearchProvider, string> = {
-      dataforseo: 'x-dataforseo-login',
-      ahrefs: 'x-ahrefs-key',
-    }
-    const chosen = stringArg(args.provider)
-    const provider = (chosen ??
-      (action === 'ai_answers'
-        ? 'dataforseo'
-        : RESEARCH_PROVIDERS.find((name) => keys.has(header[name]))) ??
-      'dataforseo') as ResearchProvider
-    if (!RESEARCH_PROVIDERS.includes(provider)) {
+    const provider = stringArg(args.provider) as ResearchProvider | undefined
+    if (provider && !RESEARCH_PROVIDERS.includes(provider)) {
       throw new SeoError(
         'INVALID_INPUT',
         `--provider is one of ${RESEARCH_PROVIDERS.join(', ')}.`,
       )
     }
-    if (!keys.has(header[provider])) {
+    const scope = stringArg(args.scope) as ResearchScope | undefined
+    if (scope && !RESEARCH_SCOPES.includes(scope)) {
       throw new SeoError(
-        'AUTH_CONFIG_REQUIRED',
-        `No ${provider} key. Save it at https://seoskill.dev/account#keys and run \`seo login\`, or run \`seo providers ${provider} connect\` to keep it on this machine only.`,
+        'INVALID_INPUT',
+        `--scope is one of ${RESEARCH_SCOPES.join(', ')}.`,
       )
     }
     const keywords = csvArg(args.keywords) ?? []
@@ -576,10 +607,12 @@ export const researchCommand = defineCommand({
     const competitors = csvArg(args.competitors) ?? []
     const country = stringArg(args.country)
     if (action === 'ai_answers') {
-      if (provider !== 'dataforseo') {
+      if (provider === 'ahrefs') {
         throw new SeoError('INVALID_INPUT', 'ai_answers uses dataforseo.')
       }
       const tasks = csvArg(args.tasks) ?? []
+      const also = csvArg(args.also)
+      const brand = csvArg(args.brand)
       const site =
         keywords.length || tasks.length
           ? (target ?? '')
@@ -593,6 +626,8 @@ export const researchCommand = defineCommand({
             offset: numberArg(args.offset) ?? 0,
             questions: keywords,
             tasks,
+            also,
+            brand,
             // No MCP client to time out, so wait for the queue.
             waitSeconds: 240,
           },
@@ -602,6 +637,8 @@ export const researchCommand = defineCommand({
             cliCall('research', {
               action,
               target,
+              also: also?.join(','),
+              brand: brand?.join(','),
               tasks: answered.join(',') || undefined,
               country,
               detail: 'rows',
@@ -615,6 +652,8 @@ export const researchCommand = defineCommand({
       runResearch(
         {
           provider,
+          scope,
+          depth: numberArg(args.depth),
           action,
           keywords,
           target,
@@ -625,10 +664,13 @@ export const researchCommand = defineCommand({
         },
         keys,
         {
+          store: localResearchStore(booleanArg(args.refresh)),
           call: (offset) =>
             cliCall('research', {
               action,
               provider,
+              scope,
+              depth: numberArg(args.depth),
               keywords: keywords.join(',') || undefined,
               target,
               competitors: competitors.join(',') || undefined,
@@ -651,13 +693,27 @@ export const lintCommand = defineCommand({
   args: {
     paths: {
       type: 'positional',
-      required: true,
+      required: false,
       description:
         'Files, folders or globs: .md, .mdx, .html, .astro or .txt. Up to 100 files.',
     },
+    url: {
+      type: 'string',
+      description:
+        'Instead of files: a live page. Checks its main content as Markdown (what seo page --detail full shows), with the blog preset unless you set one.',
+    },
+    only: {
+      type: 'string',
+      description: `Check only these categories, comma-separated: ${LINT_CATEGORIES.join(', ')}. ai is patterns common in AI-written text; copy is weak copy and house style such as dashes; seo is titles, descriptions and headings.`,
+    },
     preset: {
       type: 'string',
-      description: `${LINT_PRESETS.join(', ')}. Default blog for Markdown and text, landing for HTML and Astro. meta reads one title or description per line.`,
+      description: `${LINT_PRESETS.join(', ')}. Default blog for Markdown and text, landing for HTML and Astro. meta reads one title or description per line of a .txt file; start a line with "title:" or "description:" to say which.`,
+    },
+    'meta-kind': {
+      type: 'string',
+      description:
+        'With --preset meta: title or description, what a line with no "title:" or "description:" label is. Default: a line up to 70 characters is a title, a longer one a description.',
     },
     format: {
       type: 'string',
@@ -666,7 +722,7 @@ export const lintCommand = defineCommand({
     'fail-on': {
       type: 'string',
       description:
-        'error (default) or warning: exit with code 1 when a finding at that level or above is found.',
+        'error (default) or warning: exit with code 1 when a finding at that level or above is found. A file or page that could not be checked in full also exits with code 1.',
     },
     ignore: {
       type: 'string',
@@ -687,6 +743,13 @@ export const lintCommand = defineCommand({
         `--preset is one of ${LINT_PRESETS.join(', ')}.`,
       )
     }
+    const metaKind = stringArg(args['meta-kind'])
+    if (metaKind && !LINT_META_KINDS.includes(metaKind as LintMetaKind)) {
+      throw new SeoError(
+        'INVALID_INPUT',
+        `--meta-kind is ${LINT_META_KINDS.join(' or ')}.`,
+      )
+    }
     const format = stringArg(args.format)
     if (format && !LINT_FORMATS.includes(format as LintFormat)) {
       throw new SeoError(
@@ -702,27 +765,58 @@ export const lintCommand = defineCommand({
     const paths = positionals.filter(
       (value): value is string => typeof value === 'string',
     )
+    const url = stringArg(args.url)
+    if (Boolean(url) === paths.length > 0) {
+      throw new SeoError(
+        'INVALID_INPUT',
+        'Give files, folders or globs to check, or --url with a live page, but not both.',
+      )
+    }
+    const only = csvArg(args.only)
+    const unknown = only?.filter(
+      (value) => !LINT_CATEGORIES.includes(value as LintCategory),
+    )
+    if (unknown?.length) {
+      throw new SeoError(
+        'INVALID_INPUT',
+        `--only takes ${LINT_CATEGORIES.join(', ')}, comma-separated.`,
+      )
+    }
     const phrases = ([] as unknown[])
       .concat(args['ignore-phrase'] ?? [])
       .filter((value): value is string => typeof value === 'string')
     try {
+      const { pageMarkdown } = nodeCommandDeps({ call: cliCall })
       const result = await runLint(
         {
-          paths,
+          paths: url ? undefined : paths,
+          url,
           preset: preset as LintPreset | undefined,
           format: format as LintFormat | undefined,
           ignoreRules: csvArg(args.ignore),
           ignorePhrases: phrases,
+          only: only as LintCategory[] | undefined,
+          metaKind: metaKind as LintMetaKind | undefined,
         },
         (inputs) => readLintFiles(inputs),
+        pageMarkdown && ((page) => pageMarkdown(page, LINT_MAX_CHARS)),
       )
       if (jsonFlag(args)) printJson(result.data)
       else process.stdout.write(`${result.text}\n`)
-      const { errors, warnings } = result.data as {
+      const { errors, warnings, skipped, partial } = result.data as {
         errors: number
         warnings: number
+        skipped: number
+        partial: number
       }
-      if (errors > 0 || (failOn === 'warning' && warnings > 0)) {
+      // Text that was not checked cannot pass: a skipped file or a cut
+      // page fails the run like an error does.
+      if (
+        errors > 0 ||
+        (failOn === 'warning' && warnings > 0) ||
+        skipped > 0 ||
+        partial > 0
+      ) {
         process.exitCode = 1
       }
     } catch (error) {

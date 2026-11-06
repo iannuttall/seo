@@ -8,6 +8,7 @@ type RedirectHop = NonNullable<
 export async function fetchWithRedirectChain(
   url: string,
   signal: AbortSignal,
+  fetch: typeof publicHttpFetch = publicHttpFetch,
 ): Promise<{
   response: Awaited<ReturnType<typeof publicHttpFetch>>
   redirectChain: RedirectHop[]
@@ -16,7 +17,7 @@ export async function fetchWithRedirectChain(
   let currentUrl = url
 
   for (let redirectCount = 0; redirectCount <= 10; redirectCount += 1) {
-    const response = await publicHttpFetch(currentUrl, {
+    const response = await fetch(currentUrl, {
       redirect: 'manual',
       signal,
     })

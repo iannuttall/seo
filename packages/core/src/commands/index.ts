@@ -23,8 +23,10 @@ export * from './linked.js'
 export * from './lint.js'
 export * from './page-facts.js'
 export * from './present.js'
+export * from './redirect-chain.js'
 export * from './report.js'
 export * from './research.js'
+export type { ResearchStore } from './research-cache.js'
 export {
   dataForSeoLanguage,
   dataForSeoMarket,

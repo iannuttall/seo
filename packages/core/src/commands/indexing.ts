@@ -1,5 +1,6 @@
 import type { LiveCheck } from './page-facts.js'
 import { table } from './present.js'
+import { MAX_REDIRECT_HOPS } from './redirect-chain.js'
 import type { SitemapUrls } from './sitemap-urls.js'
 import type { CommandDeps, IndexStatus } from './types.js'
 
@@ -163,7 +164,7 @@ export function labelOf(e: Evidence): { label: IndexingLabel; why: string } {
   if (!last) {
     return {
       label: 'fix',
-      why: `The redirects loop or pass 5 hops (${hops.map((hop) => hop.status).join(' > ')}).`,
+      why: `The redirects loop or pass ${MAX_REDIRECT_HOPS} hops (${hops.map((hop) => hop.status).join(' > ')}).`,
     }
   }
   if (last.error) {
@@ -266,7 +267,7 @@ export function labelOf(e: Evidence): { label: IndexingLabel; why: string } {
   const robots = last.robots
     ? ` with robots "${last.robots}"`
     : ' with no robots meta tag or X-Robots-Tag header'
-  if (/noindex/i.test(coverage) && !/noindex/i.test(last.robots ?? '')) {
+  if (/noindex/i.test(coverage) && last.google_noindex === false) {
     return {
       label: 'check',
       why: `Google saw noindex when it last crawled${status.last_crawl ? ` (${status.last_crawl.slice(0, 10)})` : ''}, but it ${now}${robots}, so Google's reason may be out of date.${e.inSitemap ? ' The sitemap lists it.' : ''}`,
@@ -306,7 +307,7 @@ export function labelOf(e: Evidence): { label: IndexingLabel; why: string } {
   }
   return {
     label: 'check',
-    why: /noindex/i.test(last.robots ?? '')
+    why: last.google_noindex
       ? `${via}${robots} and the sitemap does not list it. Whether it should be indexed is the site's call.`
       : `${via}${robots}. No rule here settles this reason.`,
   }

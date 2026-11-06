@@ -43,6 +43,7 @@ export type {
   CrawlAiLinkCheck,
   CrawlAiResourceSignal,
   CrawlAiSignals,
+  CrawlFetchErrorKind,
 } from './site-crawl-ai-types.js'
 
 export type CrawlMode = 'site' | 'page' | 'list' | 'sitemap'

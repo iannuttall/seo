@@ -1,4 +1,5 @@
 import { existsSync } from 'node:fs'
+import { CLOUD_URL, cloudGoogleEmails, cloudLinked } from './cloud.js'
 import {
   getAuthModeStatus,
   getClientConfig,
@@ -72,6 +73,15 @@ export async function runDoctor(
       ? undefined
       : 'Run `seo start` or `seo auth setup-client`.',
   })
+
+  // A machine linked to a seoskill.dev account (`seo login` or SEO_TOKEN)
+  // gets its Google sign-ins from the account, so no local client, token or
+  // scopes are needed. Check the account answers instead.
+  if (cloudLinked() && !serviceAccount.configured) {
+    checks.push(await accountCheck())
+    const ok = checks.every((check) => check.status !== 'fail')
+    return { ok, generatedAt: new Date().toISOString(), checks }
+  }
 
   checks.push({
     id: 'oauth-client',
@@ -167,5 +177,38 @@ export async function runDoctor(
     ok,
     generatedAt: new Date().toISOString(),
     checks,
+  }
+}
+
+// The seoskill.dev account link and the Google sign-ins it holds.
+async function accountCheck(): Promise<DoctorCheck> {
+  const via = process.env.SEO_TOKEN?.trim() ? 'SEO_TOKEN' : '`seo login`'
+  try {
+    const emails = await cloudGoogleEmails()
+    return emails.length
+      ? {
+          id: 'google-login',
+          label: 'Google login',
+          status: 'pass',
+          detail: `Linked to a ${CLOUD_URL} account through ${via}, with Google sign-ins for ${emails.join(', ')}. The local Google client, token and scopes are not used.`,
+        }
+      : {
+          id: 'google-login',
+          label: 'Google login',
+          status: 'fail',
+          detail: `Linked to a ${CLOUD_URL} account through ${via}, but the account has no Google sign-in.`,
+          fix: `Connect Google at ${CLOUD_URL}/account, then run \`seo doctor\` again.`,
+        }
+  } catch (error) {
+    return {
+      id: 'google-login',
+      label: 'Google login',
+      status: 'fail',
+      detail: `Linked to a ${CLOUD_URL} account through ${via}, but the account could not be read: ${error instanceof Error ? error.message : String(error)}`,
+      fix:
+        via === 'SEO_TOKEN'
+          ? `Make a new token at ${CLOUD_URL}/account and set SEO_TOKEN again.`
+          : 'Run `seo login` again.',
+    }
   }
 }

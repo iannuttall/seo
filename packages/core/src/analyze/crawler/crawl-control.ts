@@ -1,5 +1,8 @@
 export const CRAWL_CANCELLED = Symbol('crawl-cancelled')
 
+// The longest one request may take, whatever timeout the caller asks for.
+export const REQUEST_TIMEOUT_CAP_MS = 5_000
+
 export function abortController(input: {
   timeoutMs: number
   signal?: AbortSignal
@@ -9,7 +12,10 @@ export function abortController(input: {
 } {
   const controller = new AbortController()
   const abort = () => controller.abort()
-  const timer = setTimeout(abort, Math.min(input.timeoutMs, 5_000))
+  const timer = setTimeout(
+    abort,
+    Math.min(input.timeoutMs, REQUEST_TIMEOUT_CAP_MS),
+  )
   if (input.signal?.aborted) {
     controller.abort()
   } else {

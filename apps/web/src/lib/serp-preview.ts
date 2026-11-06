@@ -1,10 +1,18 @@
+import { type MeasureText, SERP_PIXEL_BUDGETS } from '@seo/core/serp/browser'
+
+export {
+  type MeasureText,
+  type SerpWidthStatus,
+  serpWidthStatus,
+} from '@seo/core/serp/browser'
+
 export const SERP_PREVIEW_LIMITS = {
   titleCharacters: 300,
   descriptionCharacters: 1_000,
   urlCharacters: 2_048,
   queryCharacters: 120,
-  titlePixels: { desktop: 600, mobile: 560 },
-  descriptionPixels: { desktop: 920, mobile: 680 },
+  titlePixels: SERP_PIXEL_BUDGETS.title,
+  descriptionPixels: SERP_PIXEL_BUDGETS.description,
 } as const
 
 export const SERP_PREVIEW_DEVICES = [
@@ -64,37 +72,8 @@ export type SerpPreviewInput = {
   addition: SerpAddition
 }
 
-export type SerpWidthStatus = {
-  characters: number
-  pixels: number
-  budget: number
-  status: 'empty' | 'fits' | 'may-truncate'
-}
-
-export type MeasureText = (value: string) => number
-
 function bounded(value: string, limit: number): string {
   return value.slice(0, limit)
-}
-
-export function serpWidthStatus(
-  value: string,
-  device: SerpDevice,
-  kind: 'title' | 'description',
-  measure: MeasureText,
-): SerpWidthStatus {
-  const budget =
-    kind === 'title'
-      ? SERP_PREVIEW_LIMITS.titlePixels[device]
-      : SERP_PREVIEW_LIMITS.descriptionPixels[device]
-  const pixels = Math.ceil(measure(value))
-  return {
-    characters: [...value].length,
-    pixels,
-    budget,
-    status:
-      value.length === 0 ? 'empty' : pixels <= budget ? 'fits' : 'may-truncate',
-  }
 }
 
 export function truncateSerpText(

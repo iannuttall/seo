@@ -2,14 +2,17 @@ import robotsParserModule from 'robots-parser'
 import { SEO_CRAWLER_USER_AGENT } from '../../fetch/crawler-identity.js'
 import {
   type publicHttpFetch,
+  ResponseSizeLimitError,
   readBoundedResponseText,
 } from '../../fetch/http-client.js'
-import { abortController } from './crawl-control.js'
+import { fetchFailureKind } from '../monitoring/crawl-page.js'
+import { abortController, REQUEST_TIMEOUT_CAP_MS } from './crawl-control.js'
 import type {
   CrawlAiAvailability,
   CrawlAiBotAccess,
   CrawlAiLinkCheck,
   CrawlAiSignals,
+  CrawlFetchErrorKind,
 } from './report.js'
 
 const MAX_AUXILIARY_RESPONSE_BYTES = 2 * 1024 * 1024
@@ -67,8 +70,40 @@ function availabilityOf(status: number): CrawlAiAvailability {
   return 'unreachable'
 }
 
+// The error message, with its cause when the message alone says only that
+// the fetch failed.
 function errorText(error: unknown): string {
-  return error instanceof Error ? error.message : String(error)
+  if (!(error instanceof Error)) return String(error)
+  const cause = error.cause instanceof Error ? error.cause.message : ''
+  return cause && !error.message.includes(cause)
+    ? `${error.message}: ${cause}`
+    : error.message
+}
+
+// The error for a request that got no response. A timeout says so.
+export function requestError(
+  error: unknown,
+  timeoutMs: number,
+  signal?: AbortSignal,
+): { error: string; errorKind: CrawlFetchErrorKind } {
+  const errorKind = fetchErrorKind(error, signal)
+  return {
+    error:
+      errorKind === 'timeout'
+        ? `No response within ${Math.min(timeoutMs, REQUEST_TIMEOUT_CAP_MS) / 1_000} seconds.`
+        : errorText(error),
+    errorKind,
+  }
+}
+
+// Why a request failed: a timeout, DNS or TLS failure, a body over the size
+// cap, or a cancelled run.
+export function fetchErrorKind(
+  error: unknown,
+  signal?: AbortSignal,
+): CrawlFetchErrorKind {
+  if (error instanceof ResponseSizeLimitError) return 'too-large'
+  return fetchFailureKind(error, signal)
 }
 
 // One bounded GET. A thrown fetch becomes an unreachable result, never a
@@ -86,6 +121,7 @@ async function get(
   headers?: Headers
   text: string
   error?: string
+  errorKind?: CrawlFetchErrorKind
 }> {
   const controller = abortController({
     timeoutMs: input.timeoutMs,
@@ -122,7 +158,7 @@ async function get(
       availability: 'unreachable',
       contentType: '',
       text: '',
-      error: errorText(error),
+      ...requestError(error, input.timeoutMs, input.signal),
     }
   } finally {
     controller.cleanup()
@@ -151,7 +187,7 @@ function brokenLink(
 }
 
 // Same-site link targets in llms.txt, in file order.
-function llmsLinks(text: string, base: string): string[] {
+export function llmsLinks(text: string, base: string): string[] {
   const origin = new URL(base).origin
   const links: string[] = []
   for (const match of text.matchAll(/\]\(\s*<?([^)\s>]+)>?/g)) {
@@ -167,9 +203,11 @@ function llmsLinks(text: string, base: string): string[] {
   return links
 }
 
-async function checkLlmsTxt(
-  input: SignalInput,
-): Promise<NonNullable<CrawlAiSignals['llmsTxt']>> {
+// One request for /llms.txt. The text is empty unless the file exists.
+export async function readLlmsTxt(input: SignalInput): Promise<{
+  llmsTxt: NonNullable<CrawlAiSignals['llmsTxt']>
+  text: string
+}> {
   const result = await get(input, new URL('/llms.txt', input.url).toString())
   // A site that serves its HTML shell for every path has no llms.txt.
   const servesHtml =
@@ -184,9 +222,17 @@ async function checkLlmsTxt(
     ...(result.contentType ? { contentType: result.contentType } : {}),
     ...(servesHtml ? { servesHtml } : {}),
     ...(result.error ? { error: result.error } : {}),
+    ...(result.errorKind ? { errorKind: result.errorKind } : {}),
   }
-  if (!exists) return base
-  const found = llmsLinks(result.text, result.url)
+  return { llmsTxt: base, text: exists ? result.text : '' }
+}
+
+async function checkLlmsTxt(
+  input: SignalInput,
+): Promise<NonNullable<CrawlAiSignals['llmsTxt']>> {
+  const { llmsTxt: base, text } = await readLlmsTxt(input)
+  if (!base.exists) return base
+  const found = llmsLinks(text, base.url)
   const broken: CrawlAiLinkCheck[] = []
   let checked = 0
   for (const url of found.slice(0, LLMS_LINK_LIMIT)) {
@@ -248,11 +294,12 @@ function sitemapUrlsFromRobots(text: string): string[] {
 // could not be read.
 export type RobotsGate = (url: string) => boolean | null
 
-async function checkRobotsAiAccess(input: SignalInput): Promise<{
+export async function checkRobotsAiAccess(input: SignalInput): Promise<{
   robotsTxt: NonNullable<CrawlAiSignals['robotsTxt']>
   allows: RobotsGate
 }> {
-  const result = await get(input, new URL('/robots.txt', input.url).toString())
+  const robotsUrl = new URL('/robots.txt', input.url).toString()
+  const result = await get(input, robotsUrl)
   // An HTML page holds no robots rules, so crawlers treat it as no file.
   const servesHtml =
     result.availability === 'available' && isHtml(result.contentType)
@@ -262,7 +309,18 @@ async function checkRobotsAiAccess(input: SignalInput): Promise<{
     result.availability === 'rate-limited' ||
     result.availability === 'unreachable'
   const declared = exists ? declaredUserAgents(result.text) : new Set<string>()
-  const parsed = parseRobots(result.url, exists ? result.text : '')
+  const parsed = parseRobots(robotsUrl, exists ? result.text : '')
+  // robots-parser answers only for its own origin. robots.txt often
+  // redirects between a site's hosts, such as example.com to www.example.com,
+  // and its rules then cover both, so URLs on either host match by path.
+  const ruleHosts = new Set([new URL(robotsUrl).host, new URL(result.url).host])
+  const isAllowed = (url: string, userAgent: string) => {
+    const target = new URL(url)
+    const local = ruleHosts.has(target.host)
+      ? new URL(`${target.pathname}${target.search}`, robotsUrl).toString()
+      : url
+    return parsed.isAllowed(local, userAgent) ?? true
+  }
   const robotsTxt: NonNullable<CrawlAiSignals['robotsTxt']> = {
     url: result.url,
     exists,
@@ -275,6 +333,7 @@ async function checkRobotsAiAccess(input: SignalInput): Promise<{
           error: result.error ?? `robots.txt returned HTTP ${result.status}.`,
         }
       : {}),
+    ...(result.errorKind ? { errorKind: result.errorKind } : {}),
     sitemapUrls: exists ? sitemapUrlsFromRobots(result.text) : [],
     ...(unknown
       ? {}
@@ -284,17 +343,14 @@ async function checkRobotsAiAccess(input: SignalInput): Promise<{
     botAccess: AI_BOTS.map(([userAgent, purpose]) => ({
       userAgent,
       purpose,
-      allowed: unknown
-        ? null
-        : (parsed.isAllowed(input.url, userAgent) ?? true),
+      allowed: unknown ? null : isAllowed(input.url, userAgent),
       declared: declared.has(userAgent.toLowerCase()),
       coveredByWildcard: declared.has('*'),
     })),
   }
   return {
     robotsTxt,
-    allows: (url) =>
-      unknown ? null : (parsed.isAllowed(url, SEO_CRAWLER_USER_AGENT) ?? true),
+    allows: (url) => (unknown ? null : isAllowed(url, SEO_CRAWLER_USER_AGENT)),
   }
 }
 

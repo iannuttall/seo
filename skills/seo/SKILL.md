@@ -23,11 +23,11 @@ link for them to approve, then run it again.
 | `seo page --url <url>` | `seo_page` | One URL: live page, index status, queries |
 | `seo compare --site <site> --date <date>` | `seo_compare` | Before and after a date, with Google updates |
 | `seo index --site <site>` | `seo_index` | Google's indexing reasons, labelled, and pages that lost their clicks |
-| `seo research <action>` | `seo_research` | Keywords, SERP, competitors, backlinks, link gaps, AI answer citations |
+| `seo research <action>` | `seo_research` | Keywords, keyword ideas, SERP and SERP overlap, top pages, competitors, backlinks, pages by backlinks, link gaps, AI answer citations, for a site, subfolder (`example.com/blog/`) or page; provider optional; next pages are free for a day |
 | `seo data --site <site>` | `seo_data` | Raw Search Console, Bing, Clicky or Google Analytics rows |
 | `seo crawl --url <url>` | `seo_crawl` | Technical issues across a site |
 | `seo internal-links --site <site>` or `--url <url>` | `seo_internal_links` | Links to add across a site, or to one page |
-| `seo lint <files>` | `seo_lint` | Lines in a draft, title or description that read as AI-written, each with a fix; no sign-in |
+| `seo lint <files>` or `--url <url>` | `seo_lint` | Lines in a draft, title, description or live page that read as AI-written, each with a fix; `--only ai` for AI patterns alone; no sign-in |
 | `seo sites` | `seo_sites` | The properties the person can read |
 | `seo site new <folder>`, then `seo site guide <step>` | CLI only | Build a new data-driven site on Astro and Cloudflare, one step at a time. Its build runs `seo site check` |
 

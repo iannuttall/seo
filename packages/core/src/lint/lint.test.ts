@@ -1,6 +1,7 @@
 import assert from 'node:assert/strict'
 import { readFileSync } from 'node:fs'
 import { test } from 'node:test'
+import { runLint } from '../commands/lint.js'
 import { lintText } from './index.js'
 import type { LintFormat, LintPreset } from './types.js'
 
@@ -84,4 +85,44 @@ test('findings point at the source line and column through markup', () => {
   assert.deepEqual(at('contrast-reframe'), [
     [11, 23, 'The fix is in the template, not in 600 posts.'],
   ])
+})
+
+test('a file too big to read is counted, so the totals never read as clean', async () => {
+  const result = await runLint({ paths: ['big.html', 'post.md'] }, async () => [
+    { path: 'big.html', skipped: 'It has 540,000 characters.' },
+    { path: 'post.md', text: 'Notes on example.com and its sitemap.' },
+  ])
+  const data = result.data as Record<string, unknown>
+  assert.deepEqual(
+    [data.errors, data.warnings, data.checked, data.skipped],
+    [0, 0, 1, 1],
+  )
+  assert.match(result.text, /1 not checked/)
+  assert.match(result.text, /Not an all-clear/)
+})
+
+// Text checked with the meta preset was read as Markdown, so even a
+// "title:" line got no length check, and the width Google cuts by was
+// missing.
+test('the meta preset checks each labelled line of text, with its width', async () => {
+  const title =
+    'The complete beginner guide to checking backlinks with free tools in 2026'
+  const out = await runLint({
+    text: `title: ${title}\n${title}`,
+    preset: 'meta',
+    metaKind: 'title',
+  })
+  const findings = (
+    out.data as {
+      files: { findings: { rule: string; line: number; message: string }[] }[]
+    }
+  ).files[0]?.findings.filter((finding) => finding.rule === 'title-length')
+  assert.deepEqual(
+    findings?.map(({ line, message }) => ({ line, message })),
+    [1, 2].map((line) => ({
+      line,
+      message:
+        'The title is 73 characters, about 654 pixels wide. Aim for 30 to 60 characters; Google shows about 600 pixels of a title on desktop.',
+    })),
+  )
 })

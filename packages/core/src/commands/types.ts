@@ -1,6 +1,7 @@
 import type { BingCall } from '../bing/api.js'
 import { SeoError, type SeoErrorCode } from '../errors.js'
 import type { SearchAnalyticsQuery } from '../gsc/client/types.js'
+import type { ProgressReporter } from '../progress.js'
 import type { AnalyticsAccess } from './analytics-site.js'
 import type { AuditAccess } from './audit.js'
 import type { IssueStore } from './issues.js'
@@ -71,11 +72,20 @@ export type PageFacts = {
   url: string
   status: number | null
   redirects_to: string | null
+  // '' when the tag is there but empty; null when there is no tag or the
+  // page was not read.
   title: string | null
   description: string | null
   h1: string | null
   canonical: string | null
+  // The X-Robots-Tag header, then each robots meta tag. A crawler's own tag
+  // is named, such as "googlebot: noindex" or "bingbot: noindex".
   robots: string | null
+  // Whether the robots meta tag, the googlebot meta tag or the X-Robots-Tag
+  // header (unscoped or for googlebot) says noindex. Only the header is read
+  // when the status is not 200 or the body is not HTML. Null when the fetch
+  // failed.
+  google_noindex: boolean | null
   // The WWW-Authenticate header, sent when the server asks for sign-in.
   www_authenticate?: string
   error?: string
@@ -125,8 +135,13 @@ export type CommandDeps = {
   // One URL live, following up to 5 redirects one request at a time.
   liveCheck: (url: string) => Promise<LiveCheck>
   // Google's index status for one URL. Throws when it cannot be read; a
-  // RATE_LIMITED error means the URL Inspection quota stopped it.
-  inspect: (site: string, url: string) => Promise<IndexStatus>
+  // RATE_LIMITED error means the URL Inspection quota stopped it. The
+  // signal, where a surface uses it, stops a request nobody waits for.
+  inspect: (
+    site: string,
+    url: string,
+    signal?: AbortSignal,
+  ) => Promise<IndexStatus>
   // URL Inspections used today for a property and the daily limit, where
   // this surface counts them (the CLI and the local MCP).
   inspectionQuota?: (site: string) => Promise<{ used: number; limit: number }>
@@ -140,9 +155,10 @@ export type CommandDeps = {
     ) => Map<string, { status: IndexStatus; inspectedAt: string }>
     save: (site: string, url: string, status: IndexStatus) => void
   }
-  // One page's main content as Markdown, read live. Only where the
-  // extraction packages run (the CLI and the local MCP server).
-  pageMarkdown?: (url: string) => Promise<PageMarkdown>
+  // One page's main content as Markdown, read live, cut to limit
+  // characters (20,000 by default). Only where the extraction packages run
+  // (the CLI and the local MCP server).
+  pageMarkdown?: (url: string, limit?: number) => Promise<PageMarkdown>
   call: Caller
   // Bing Webmaster calls, or null when Bing is not connected here. Each
   // surface returns the same call each time.
@@ -165,6 +181,9 @@ export type CommandDeps = {
   // Each site's list of issues and what the person marked them: a file on
   // this machine, or the hosted account.
   issues?: IssueStore
+  // Short lines while a command waits on slow calls. The CLI prints them to
+  // stderr; MCP surfaces leave it unset.
+  progress?: ProgressReporter
   now?: () => Date
 }
 

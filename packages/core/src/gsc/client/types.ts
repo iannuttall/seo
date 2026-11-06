@@ -53,6 +53,8 @@ export interface UrlInspectionRequest {
   accountEmail?: string
   languageCode?: string
   quotaLimit?: number
+  // Stops the request, such as when the caller stops waiting.
+  signal?: AbortSignal
 }
 
 export interface UrlInspectionResult {

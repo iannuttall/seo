@@ -303,7 +303,7 @@ repository.
 | `seo_page` | One URL: live page facts, Google index status and its queries against the previous period. The page's main content as Markdown is CLI and local server only; with detail `full` this server says how to get it. |
 | `seo_compare` | Equal periods before and after a date, for the site or URLs that contain some text, with Google updates |
 | `seo_index` | Google's indexing reasons for 100 known URLs a run, checked live and labelled, and pages that lost most of their clicks |
-| `seo_research` | Keyword metrics, ranked keywords, SERPs, competitors and backlinks from DataForSEO or Ahrefs, with a free Ahrefs Domain Rating column |
+| `seo_research` | Keyword metrics, ranked keywords, top pages, SERPs, competitors, backlinks and pages by backlinks for a site, subfolder or page, from whichever DataForSEO or Ahrefs key is saved (DataForSEO when both are), with a free Ahrefs Domain Rating column |
 | `seo_data` | Raw Search Console rows, search landing pages from Google Analytics, or Clicky visits by landing page with traffic sources and search engines. |
 | `seo_lint` | Checks copy sent as text (up to 200,000 characters) for patterns common in AI-written text, weak copy and title and description length, with a fix for each finding and a list of lines to judge. Reads no account data. |
 

@@ -1,6 +1,16 @@
 import { z } from 'zod'
-import { LINT_FORMATS, LINT_MAX_CHARS, LINT_PRESETS } from '../lint/types.js'
-import { AI_ANSWER_TASK_PATTERN, runAiAnswers } from './ai-answers.js'
+import {
+  LINT_CATEGORIES,
+  LINT_FORMATS,
+  LINT_MAX_CHARS,
+  LINT_META_KINDS,
+  LINT_PRESETS,
+} from '../lint/types.js'
+import {
+  AI_ANSWER_DOMAINS,
+  AI_ANSWER_TASK_PATTERN,
+  runAiAnswers,
+} from './ai-answers.js'
 import { analyticsSignIn, runAnalyticsRows } from './analytics.js'
 import { AUDIT_SECTION, AUDIT_SECTION_TEXT } from './audit.js'
 import {
@@ -25,8 +35,11 @@ import {
   RESEARCH_ACTIONS,
   RESEARCH_HELP,
   RESEARCH_PROVIDERS,
+  RESEARCH_SCOPES,
   runResearch,
+  SERP_DEPTH,
 } from './research.js'
+import type { ResearchStore } from './research-cache.js'
 import { DIMENSIONS, runRows } from './rows.js'
 import {
   INDEXING_RULE,
@@ -60,6 +73,8 @@ export type ToolSurface = {
   // Reads the saved Clicky account's sites again and returns the new keys,
   // or null when no Clicky account is saved.
   refreshClicky?: () => Promise<Headers | null>
+  // Where research results are kept for a day; the Workers cache if unset.
+  researchStore?: ResearchStore
   // The Ahrefs key for the free Domain Rating column, when there is one.
   drKey?: string | null
   // Every Google sign-in on this surface, for listing and Google Analytics.
@@ -186,6 +201,12 @@ const lintInput = {
     .describe(
       `The copy to check: a page, post, title or description, up to ${LINT_MAX_CHARS.toLocaleString('en-US')} characters. Markdown, MDX or HTML as written, so line numbers match.`,
     ),
+  url: z
+    .url()
+    .optional()
+    .describe(
+      'Optional instead of text: a live page. Its main content is extracted as Markdown (as seo_page with detail full shows it) and checked with the blog preset. Only the CLI and the local MCP server read pages.',
+    ),
   format: z
     .enum(LINT_FORMATS)
     .optional()
@@ -196,13 +217,26 @@ const lintInput = {
     .enum(LINT_PRESETS)
     .optional()
     .describe(
-      'Optional. blog (default for Markdown), landing (default for HTML: stricter on buzzwords, weak links and claims with no number), docs, or meta (one title or description per line).',
+      'Optional. blog (default for Markdown), landing (default for HTML: stricter on buzzwords, weak links and claims with no number), docs, or meta (one title or description per line; start a line with "title:" or "description:" to say which).',
+    ),
+  meta_kind: z
+    .enum(LINT_META_KINDS)
+    .optional()
+    .describe(
+      'Optional, with the meta preset: title or description, what a line with no "title:" or "description:" label is. Default: a line up to 70 characters is a title, a longer one a description.',
     ),
   ignore_rules: z
     .array(z.string().min(1).max(60))
     .max(50)
     .optional()
     .describe('Optional rule ids or review lenses to skip.'),
+  only: z
+    .array(z.enum(LINT_CATEGORIES))
+    .max(LINT_CATEGORIES.length)
+    .optional()
+    .describe(
+      'Optional categories to check: ai (patterns common in AI-written text), copy (weak copy and house style, such as dashes) or seo (titles, descriptions, headings). Default: all.',
+    ),
   ignore_phrases: z
     .array(z.string().min(1).max(200))
     .max(50)
@@ -435,10 +469,26 @@ export const SHARED_TOOLS: SharedTool[] = [
     title: 'Keyword, competitor, backlink and AI answer data',
     description: `Data from the person’s own DataForSEO or Ahrefs account, which costs them credits. It uses the key the person saved on their seoskill.dev account (or on this machine for the CLI). Actions: ${RESEARCH_HELP}`,
     input: z.object({
-      provider: z.enum(RESEARCH_PROVIDERS),
+      provider: z
+        .enum(RESEARCH_PROVIDERS)
+        .optional()
+        .describe(
+          'Optional. Without it, the saved key; DataForSEO when both are saved.',
+        ),
       action: z.enum(RESEARCH_ACTIONS),
       keywords: z.array(z.string().min(1)).max(100).default([]),
-      target: z.string().default('').describe('Domain or URL.'),
+      target: z
+        .string()
+        .default('')
+        .describe(
+          'Domain (the whole site), a path ending in / for every URL under it, such as example.com/blog/, or one page.',
+        ),
+      scope: z
+        .enum(RESEARCH_SCOPES)
+        .optional()
+        .describe(
+          'Optional: domain, prefix or exact, to read the target another way than its shape says.',
+        ),
       competitors: z
         .array(z.string().min(1))
         .max(5)
@@ -451,18 +501,41 @@ export const SHARED_TOOLS: SharedTool[] = [
         .describe(
           'ai_answers only: the tasks an earlier run returned as not ready, to read back at no cost.',
         ),
+      also: z
+        .array(z.string().min(1))
+        .max(AI_ANSWER_DOMAINS - 1)
+        .default([])
+        .describe(
+          "ai_answers only: the brand's other domains, such as claude.ai beside claude.com. A citation to any of them counts as citing the target.",
+        ),
+      brand: z
+        .array(z.string().min(1).max(60))
+        .max(10)
+        .default([])
+        .describe(
+          "ai_answers only: the brand names that count as a mention, such as Datadog for datadoghq.com. Default: each domain's name.",
+        ),
       country: z
         .string()
         .regex(/^[a-z]{2}$/)
         .default('us')
         .describe('Two-letter country code.'),
+      depth: z
+        .number()
+        .int()
+        .min(1)
+        .max(100)
+        .optional()
+        .describe(
+          `serp only: results per keyword, default ${SERP_DEPTH}. Deeper costs more.`,
+        ),
       ...detail,
     }),
     run: async (surface, input) => {
       const more = (offset: number) =>
         `seo_research with the same input, detail "rows", offset ${offset}`
       if (input.action === 'ai_answers') {
-        if (input.provider !== 'dataforseo') {
+        if (input.provider === 'ahrefs') {
           throw new CommandError('INVALID_INPUT', 'ai_answers uses dataforseo.')
         }
         return runAiAnswers(
@@ -476,15 +549,18 @@ export const SHARED_TOOLS: SharedTool[] = [
             offset: input.offset,
             questions: input.keywords,
             tasks: input.tasks,
+            also: input.also,
+            brand: input.brand,
           },
           await surface.keys(),
           surface.deps,
           (offset, tasks) =>
-            `seo_research with the same provider, action and target, tasks ${JSON.stringify(tasks)}, detail "rows", offset ${offset}. Passing the tasks reads these answers back at no cost; without them every question is asked and paid for again`,
+            `seo_research with the same provider, action, target, also and brand, tasks ${JSON.stringify(tasks)}, detail "rows", offset ${offset}. Passing the tasks reads these answers back at no cost; without them every question is asked and paid for again`,
         )
       }
       return runResearch(input, await surface.keys(), {
         drKey: surface.drKey,
+        store: surface.researchStore,
         call: more,
       })
     },
@@ -611,7 +687,7 @@ export const SHARED_TOOLS: SharedTool[] = [
     command: 'lint',
     title: 'Check copy for AI writing patterns',
     description:
-      'Checks landing page copy, blog posts, titles and meta descriptions for patterns common in AI-written text (such as "isn\'t X, it\'s Y" reframes, ", not X" contrasts, two-beat fragments, stock idioms and kicker lines), weak copy (dash punctuation, buzzwords, vague link text) and SEO rules (title 30 to 60 characters, description 70 to 160, one H1). Each error and warning has a line, the words, and a concrete fix. Review items are judgement calls for you: read each quote and change it only when it fails the question. It runs offline and reads no accounts.',
+      'Checks landing page copy, blog posts, titles and meta descriptions for patterns common in AI-written text (such as "isn\'t X, it\'s Y" reframes, ", not X" contrasts, two-beat fragments, stock idioms and kicker lines), weak copy (dash punctuation, buzzwords, vague link text) and SEO rules (title 30 to 60 characters, description 70 to 160, one H1). Each error and warning has a line, the words, and a concrete fix. Each finding has a category (ai, copy or seo); only limits the check, such as only ["ai"] to leave out house style like dashes. Review items are judgement calls for you: read each quote and change it only when it fails the question. A url checks the main content of a live page (CLI and local MCP only). It reads no accounts.',
     input: z.object(lintInput),
     localInput: z.object({
       ...lintInput,
@@ -623,18 +699,24 @@ export const SHARED_TOOLS: SharedTool[] = [
           'Optional instead of text: files, folders or globs on this machine (.md, .mdx, .html, .astro, .txt). The format comes from each file name.',
         ),
     }),
-    run: async (surface, input) =>
-      runLint(
+    run: async (surface, input) => {
+      const pageMarkdown = surface.deps.pageMarkdown
+      return runLint(
         {
           text: input.text,
           paths: (input as { paths?: string[] }).paths,
+          url: input.url,
           format: input.format,
           preset: input.preset,
           ignoreRules: input.ignore_rules,
           ignorePhrases: input.ignore_phrases,
+          only: input.only,
+          metaKind: input.meta_kind,
         },
         surface.readFiles,
-      ),
+        pageMarkdown && ((url) => pageMarkdown(url, LINT_MAX_CHARS)),
+      )
+    },
   }),
 ]
 

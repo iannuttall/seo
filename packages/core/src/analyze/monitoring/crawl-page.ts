@@ -87,7 +87,7 @@ function isHtmlContentType(value?: string): boolean {
   return /^\s*(?:text\/html|application\/xhtml\+xml)\b/i.test(value ?? '')
 }
 
-function fetchFailureKind(
+export function fetchFailureKind(
   error: unknown,
   signal?: AbortSignal,
 ): Extract<CrawlRequestObservation, { outcome: 'failure' }>['failureKind'] {

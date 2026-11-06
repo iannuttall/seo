@@ -69,6 +69,16 @@ Research needs a provider key. Keys saved on your [account page](https://seoskil
 seo providers dataforseo connect
 ```
 
+## Check a redirect map after a migration
+
+Before and after a site move, check every old URL lands where you planned. Put one `old_url,new_url` pair per line in a CSV file (a header line is fine), up to 1,000 rows:
+
+```sh
+seo redirect-trace --map redirects.csv
+```
+
+Each row gets a verdict: it matches, it reaches the right page through a chain of redirects, it lands on the wrong page, it doesn't redirect, it loops, or it didn't answer. A line with only an old URL just shows where it ends up. Add `--json` for one row per line.
+
 ## Coming from an older version
 
 Saved projects are gone, so pass `--site` instead of `--project`. Commands that saved history between runs, such as `seo change-log`, `seo technical-watch` and `seo crawl-reports`, were removed (your agent keeps its own notes now). Removed commands and flags stop with a short message that names what to use instead.

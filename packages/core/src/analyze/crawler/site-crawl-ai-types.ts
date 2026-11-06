@@ -5,6 +5,16 @@ export type CrawlAiAvailability =
   | 'rate-limited'
   | 'unreachable'
 
+// Why a request got no response. A failed request is never a missing file.
+export type CrawlFetchErrorKind =
+  | 'dns'
+  | 'tls'
+  | 'timeout'
+  | 'redirect-limit'
+  | 'too-large'
+  | 'aborted'
+  | 'unknown'
+
 export type CrawlAiBotAccess = {
   userAgent: string
   // search: fetches pages to answer a person's question or show them in AI
@@ -41,6 +51,7 @@ export type CrawlAiSignals = {
     // home page for every path. That is not a robots.txt file.
     servesHtml?: boolean
     error?: string
+    errorKind?: CrawlFetchErrorKind
     sitemapUrls: string[]
     // Distinct robots.txt Content-Signal directive values. undefined means the
     // directives were not collected; [] means robots.txt declared none.
@@ -56,6 +67,7 @@ export type CrawlAiSignals = {
     // The server answered with an HTML page, not a text file.
     servesHtml?: boolean
     error?: string
+    errorKind?: CrawlFetchErrorKind
     // Same-site links in llms.txt, checked up to the limit in file order.
     links?: {
       found: number

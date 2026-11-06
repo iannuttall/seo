@@ -29,7 +29,9 @@ import { sitemapUrls } from './sitemap-urls.js'
 import {
   type CommandDeps,
   CommandError,
+  type CommandErrorCode,
   type CommandResult,
+  commandErrorFrom,
   type IndexStatus,
   type PageMarkdown,
 } from './types.js'
@@ -95,20 +97,74 @@ export async function runPage(
       ],
     })
   const full = input.detail === 'full'
-  const [live, indexed, sitemap, now, then, markdown] = await Promise.all([
-    deps.liveCheck(input.url),
-    deps.inspect(input.site, input.url).catch(() => null),
-    sitemapUrls(input.site),
-    query(range),
-    query(before),
+  // Each part reports when it finishes and what is still running, so a
+  // slow call shows which one it is.
+  const pending = new Set<string>()
+  const leg = <T>(
+    name: string,
+    work: Promise<T>,
+    done: (value: T) => string,
+  ): Promise<T> => {
+    const report = deps.progress
+    if (!report) return work
+    pending.add(name)
+    const finish = (line: string) => {
+      pending.delete(name)
+      report(
+        `${line}.${pending.size ? ` Waiting on ${[...pending].join(', ')}.` : ''}`,
+      )
+    }
+    return work.then(
+      (value) => {
+        finish(done(value))
+        return value
+      },
+      (error: unknown) => {
+        finish(`${name} failed`)
+        throw error
+      },
+    )
+  }
+  deps.progress?.(
+    `Checking ${input.url}: the live page, Google index status, sitemaps and Search Console queries.`,
+  )
+  const [live, inspection, sitemap, [now, then], markdown] = await Promise.all([
+    leg(
+      'live page',
+      deps.liveCheck(input.url),
+      (value) =>
+        `Live page: ${value.first.status ?? value.first.error ?? 'no answer'}${value.hops.length ? ` and ${value.hops.length} redirects` : ''}`,
+    ),
+    leg('Google index status', inspectWithin(deps, input), (value) =>
+      value.index
+        ? `Google index status: ${value.index.coverage ?? value.index.verdict ?? 'no reason returned'}`
+        : `Google index status: not available (${value.error?.code})`,
+    ),
+    leg(
+      'sitemaps',
+      sitemapUrls(input.site),
+      (value) =>
+        `Sitemaps: ${value.urls.length} URLs from ${value.files} ${value.files === 1 ? 'file' : 'files'}${value.partial ? ' (partial)' : ''}`,
+    ),
+    leg(
+      'Search Console queries',
+      Promise.all([query(range), query(before)]),
+      ([current]) => `Search Console: ${current.rows.length} queries`,
+    ),
     full && deps.pageMarkdown
-      ? deps.pageMarkdown(input.url).catch(
-          (error: unknown): PageMarkdown => ({
-            error: error instanceof Error ? error.message : String(error),
-          }),
+      ? leg(
+          'main content',
+          deps.pageMarkdown(input.url).catch(
+            (error: unknown): PageMarkdown => ({
+              error: error instanceof Error ? error.message : String(error),
+            }),
+          ),
+          () => 'Main content read',
         )
       : null,
   ])
+  const indexed = inspection.index
+  const indexError = inspection.error
   const facts = live.first
   const reason = indexed
     ? indexingRow(
@@ -166,11 +222,14 @@ export async function runPage(
       `Live page (fetched now):\n${pageFactsTable([facts], null)}${live.hops.length ? `\nRedirects: ${live.hops.map((hop) => `${hop.status} to ${hop.to}`).join(', ')}${live.last ? `, which returns ${live.last.status ?? live.last.error}` : ', then loop or pass 5 hops'}.` : ''}`,
       indexed
         ? `Google index status:\n${table([indexed], Object.keys(indexed), null)}`
-        : 'Google index status: not available for this URL.',
+        : indexErrorText(indexError, input, deps),
       ...(reason
         ? [
             `Google's reason: ${reason.reason}. Label: ${reason.label}. ${reason.why} (Labels are rules over this evidence, not Google's; ${deps.call('index')} explains them.)`,
           ]
+        : []),
+      ...(indexed && /^URL is unknown to Google$/i.test(indexed.coverage ?? '')
+        ? [unknownNext(input, sitemap.urls.includes(input.url), deps)]
         : []),
       `Query totals: clicks ${sum(now.rows, 'clicks')} (was ${sum(then.rows, 'clicks')}), impressions ${sum(now.rows, 'impressions')} (was ${sum(then.rows, 'impressions')}). Search Console hides rare queries, so these can be lower than the page total.`,
       deps.pageMarkdown
@@ -197,12 +256,93 @@ export async function runPage(
       comparisonRange: before,
       page: facts,
       index: indexed,
+      // Why index is null: { code, message }, else null.
+      indexError,
       reason,
       totalQueries: rows.length,
       queries: rows.slice(offset, offset + PAGE_SIZE),
       ...(full ? { markdown } : {}),
     },
   }
+}
+
+// URL Inspection can take a minute (answers of 12 to 66 seconds were seen
+// on one day). Past this the page report goes on without it, says so, and
+// stops the request where the surface can.
+const INSPECT_TIMEOUT_MS = 60_000
+
+type IndexError = {
+  code: CommandErrorCode | 'TIMEOUT'
+  message: string
+}
+
+// Google's index status for the page, or why it could not be read.
+async function inspectWithin(
+  deps: CommandDeps,
+  input: PageInput,
+): Promise<{ index: IndexStatus | null; error: IndexError | null }> {
+  let timer: ReturnType<typeof setTimeout> | undefined
+  const stop = new AbortController()
+  const timeout = new Promise<IndexError>((resolve) => {
+    timer = setTimeout(() => {
+      resolve({
+        code: 'TIMEOUT',
+        message: `URL Inspection did not answer within ${INSPECT_TIMEOUT_MS / 1000} seconds.`,
+      })
+      stop.abort()
+    }, INSPECT_TIMEOUT_MS)
+  })
+  try {
+    return await Promise.race([
+      deps
+        .inspect(input.site, input.url, stop.signal)
+        .then((index) => ({ index, error: null })),
+      timeout.then((error) => ({ index: null, error })),
+    ])
+  } catch (error) {
+    const known = commandErrorFrom(error)
+    return {
+      index: null,
+      error: {
+        code: known instanceof CommandError ? known.code : 'GOOGLE_ERROR',
+        message: known instanceof Error ? known.message : String(known),
+      },
+    }
+  } finally {
+    clearTimeout(timer)
+  }
+}
+
+// Why the index status is missing, and what to do about it.
+function indexErrorText(
+  error: IndexError | null,
+  input: PageInput,
+  deps: CommandDeps,
+): string {
+  const again = deps.call('page', { url: input.url })
+  const message = error?.message ?? 'No reason was returned.'
+  const why: Partial<Record<IndexError['code'], string>> = {
+    RATE_LIMITED: `Google's URL Inspection quota for ${input.site} stopped the check. ${message} Next: run ${again} again once the quota resets, or inspect the URL by hand in Search Console's URL Inspection tool.`,
+    TIMEOUT: `${message} The rest of this report went ahead without it. Next: run ${again} again later, or inspect the URL by hand in Search Console's URL Inspection tool.`,
+    NO_ACCESS: `The connected Google account cannot inspect URLs in ${input.site}. ${message} Next: check the account's access under Settings, Users and permissions in Search Console, or sign in with an account that has the property.`,
+    NOT_CONNECTED: `The Google sign-in did not work. ${message} Next: sign in again, then run ${again}.`,
+    NO_KEY: `Google sign-in is not set up here. ${message}`,
+    INVALID_INPUT: `Google refused the request. ${message} Next: check that the URL belongs to ${input.site}.`,
+  }
+  return `Google index status: not available. ${
+    (error && why[error.code]) ??
+    `URL Inspection failed. ${message} Next: run ${again} again later.`
+  }`
+}
+
+// A page Google has never seen. seo cannot submit URLs, so the next steps
+// are the ones Search Console offers, and finding out how far it goes.
+function unknownNext(
+  input: PageInput,
+  inSitemap: boolean,
+  deps: CommandDeps,
+): string {
+  return `Next for a page Google does not know: seo cannot submit URLs to Google. Use Request indexing in Search Console's URL Inspection tool for this URL, and ${inSitemap ? 'check that the Sitemaps report in Search Console has the sitemap that lists it, with a recent read date' : 'add the URL to a sitemap and submit that sitemap in Search Console'}. Google finds pages through links, so ${deps.call('internal-links', { url: input.url })} lists pages that could link here. To see whether other URLs on the site are unknown too, run ${deps.call('index', { site: input.site })}.`
 }
 
 // The page's main content, or why it is missing. A surface without the

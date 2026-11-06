@@ -1,4 +1,5 @@
 import { readJson } from '../http/read-json.js'
+import { ahrefs } from './research-ahrefs.js'
 import { CommandError } from './types.js'
 
 // Keyword, competitor and backlink data from the person's own DataForSEO,
@@ -16,11 +17,27 @@ export type ResearchAction =
   | 'backlinks'
   | 'link_gap'
   | 'ai_answers'
+  | 'top_pages'
+  | 'pages_by_backlinks'
+  | 'keyword_ideas'
+  | 'serp_overlap'
+
+// What a target covers: the whole site with its subdomains, every URL under
+// a path (a subfolder such as example.com/blog/), or one page.
+export const RESEARCH_SCOPES = ['domain', 'prefix', 'exact'] as const
+export type ResearchScope = (typeof RESEARCH_SCOPES)[number]
 
 export type ResearchInput = {
   action: Exclude<ResearchAction, 'ai_answers'>
   keywords: string[]
   target: string
+  // Without it the target decides: a bare domain is the site, a path that
+  // ends in / is a prefix, any other path is one page.
+  scope?: ResearchScope
+  // serp: how many results to read per keyword, up to 100.
+  depth?: number
+  // serp: leave out DataForSEO's paid domain_rank lookup.
+  noRank?: boolean
   // link_gap only: the sites to compare the target with.
   competitors?: string[]
   country: string
@@ -59,7 +76,7 @@ const retryStatus = (status: number) => status === 429 || status >= 500
 // A DataForSEO task (POST) is charged once the provider takes it, so it is
 // retried only when the provider refused it with a 429 or a 5xx, never
 // after a timeout that may have been charged.
-async function call(
+export async function call(
   provider: ResearchProvider,
   request: Request,
 ): Promise<Response> {
@@ -105,9 +122,25 @@ async function call(
 
 const wait = (ms: number) => new Promise((done) => setTimeout(done, ms))
 
+// Actions that take keywords instead of a target.
+const KEYWORD_ACTIONS: ResearchAction[] = [
+  'keyword_metrics',
+  'keyword_ideas',
+  'serp',
+  'serp_overlap',
+]
+
+// The default SERP depth, and how many keywords one call reads: serp reads
+// up to 5 at any depth, serp_overlap up to 10 at depth 10.
+export const SERP_DEPTH = 20
+const SERP_KEYWORDS = 5
+const OVERLAP_KEYWORDS = 10
+const OVERLAP_DEPTH = 10
+// keyword_ideas reads ideas for up to this many seed keywords.
+export const IDEA_SEEDS = 5
+
 function requireInput(input: ResearchInput) {
-  const needsKeywords =
-    input.action === 'keyword_metrics' || input.action === 'serp'
+  const needsKeywords = KEYWORD_ACTIONS.includes(input.action)
   if (needsKeywords && input.keywords.length === 0) {
     throw new CommandError('INVALID_INPUT', `${input.action} needs keywords.`)
   }
@@ -139,12 +172,30 @@ export type ResearchRows = {
   floor?: { field: string; value: number }
   // link_gap: link lists, shorteners and directories left out.
   leftOut?: string[]
+  // How many rows the provider has in all, when it says.
+  available?: number
+  // ranked_keywords: the provider's own estimate for the whole target.
+  siteTotal?: SiteTotal
+  // serp from DataForSEO: its domain_rank call failed, so the column is
+  // missing, not zero.
+  rankFailed?: boolean
+  // serp_overlap: the top results read, and how many had a page and a site
+  // to compare.
+  compared?: { results: number; withPage: number; withSite: number }
+}
+
+// A provider's monthly organic traffic estimate for the whole target, in
+// its own metric, with the keywords it counts.
+export type SiteTotal = {
+  metric: 'etv' | 'org_traffic'
+  traffic: number
+  keywords: number | null
 }
 
 // Each keyword's rows in order. A keyword that fails is listed in missed
 // and the others still count; it throws only when every keyword failed, or
 // at once when the key is missing or rejected.
-async function eachKeyword(
+export async function eachKeyword(
   keywords: string[],
   missed: string[],
   rowsFor: (keyword: string) => Promise<Row[]>,
@@ -171,16 +222,21 @@ export async function research(
 ): Promise<ResearchRows> {
   requireInput(input)
   if (input.action === 'link_gap') return linkGap(provider, headers, input)
+  if (input.action === 'serp_overlap') {
+    return serpOverlap(provider, headers, input)
+  }
   const keys = need(headers, provider)
   if (provider === 'dataforseo') return dataForSeo(keys, input)
   const missed: string[] = []
-  const rows = await ahrefs(keys[0] ?? '', input, missed)
+  const totals: { siteTotal?: SiteTotal } = {}
+  const rows = await ahrefs(keys[0] ?? '', input, missed, totals)
   return {
     rows,
     costUsd: null,
     partial: false,
     missed,
     noData: withoutData(input, rows, missed, 100),
+    ...totals,
   }
 }
 
@@ -399,7 +455,7 @@ async function dataForSeo(
   keys: string[],
   input: ResearchInput,
 ): Promise<ResearchRows> {
-  const spent = { cost: 0, partial: false, missed: [] as string[] }
+  const spent: Spent = { cost: 0, partial: false, missed: [] }
   const rows = await dataForSeoRows(keys, input, spent)
   return {
     rows,
@@ -407,6 +463,9 @@ async function dataForSeo(
     partial: spent.partial,
     missed: spent.missed,
     noData: withoutData(input, rows, spent.missed, 700),
+    ...(spent.available !== undefined ? { available: spent.available } : {}),
+    ...(spent.siteTotal ? { siteTotal: spent.siteTotal } : {}),
+    ...(spent.rankFailed ? { rankFailed: true } : {}),
   }
 }
 
@@ -419,9 +478,17 @@ function withoutData(
   keywordLimit: number,
 ): string[] {
   if (input.action === 'keyword_metrics' || input.action === 'serp') {
-    const max = input.action === 'serp' ? 5 : keywordLimit
+    const max = input.action === 'serp' ? serpKeywords(input) : keywordLimit
+    // A keyword_metrics row with no volume is no data too: the volume is
+    // unknown, not zero.
     const answered = new Set(
-      rows.map((row) => String(row.keyword ?? '').toLowerCase()),
+      rows
+        .filter(
+          (row) =>
+            input.action === 'serp' ||
+            (row.search_volume ?? row.volume ?? null) !== null,
+        )
+        .map((row) => String(row.keyword ?? '').toLowerCase()),
     )
     const failed = new Set(missed)
     return input.keywords
@@ -434,19 +501,34 @@ function withoutData(
   return []
 }
 
+type Spent = {
+  cost: number
+  partial: boolean
+  missed: string[]
+  available?: number
+  siteTotal?: SiteTotal
+  // serp: the domain_rank call failed.
+  rankFailed?: boolean
+}
+
 async function dataForSeoRows(
   keys: string[],
   input: ResearchInput,
-  spent: { cost: number; partial: boolean; missed: string[] },
+  spent: Spent,
 ): Promise<Row[]> {
   const language = dataForSeoLanguage(input.country)
-  if (!language && input.action !== 'serp' && input.action !== 'backlinks') {
+  // The Backlinks API and live SERPs work for any country; Labs does not.
+  const anyCountry = ['serp', 'backlinks', 'pages_by_backlinks']
+  if (!language && !anyCountry.includes(input.action)) {
     throw new CommandError(
       'INVALID_INPUT',
       `DataForSEO has no ${input.action} data for country "${input.country}".`,
     )
   }
   const market = dataForSeoMarket(input.country, language)
+  const where = targetParts(input)
+  // The last task's result without its items, for totals.
+  let header: Record<string, unknown> | null = null
   const post = async (
     path: string,
     task: Record<string, unknown>,
@@ -461,6 +543,9 @@ async function dataForSeoRows(
     })
     spent.cost += done.cost
     spent.partial ||= done.partial
+    header = done.result
+    const total = done.result?.total_count
+    if (typeof total === 'number') spent.available = total
     // Google sometimes shows DataForSEO no results for a search that has
     // them; a second request usually gets the page.
     if (done.noResults && attempts > 1) return post(path, task, attempts - 1)
@@ -500,12 +585,61 @@ async function dataForSeoRows(
       }),
     )
   }
+  if (input.action === 'keyword_ideas') {
+    // Keyword suggestions contain the seed, as Ahrefs' matching terms do.
+    // DataForSEO's keyword_ideas, by category, drifts to unrelated searches.
+    return eachKeyword(
+      input.keywords.slice(0, IDEA_SEEDS),
+      spent.missed,
+      async (seed) => {
+        const items = await post(
+          'v3/dataforseo_labs/google/keyword_suggestions/live',
+          {
+            keyword: seed,
+            include_seed_keyword: true,
+            limit: input.limit,
+            order_by: ['keyword_info.search_volume,desc'],
+          },
+        )
+        return items.map((item) => ({
+          seed,
+          ...pick(item, {
+            keyword: 'keyword',
+            search_volume: 'keyword_info.search_volume',
+            keyword_difficulty: 'keyword_properties.keyword_difficulty',
+            cpc: 'keyword_info.cpc',
+            main_intent: 'search_intent_info.main_intent',
+          }),
+        }))
+      },
+    )
+  }
   if (input.action === 'ranked_keywords') {
     const items = await post('v3/dataforseo_labs/google/ranked_keywords/live', {
-      target: bareTarget(input.target),
+      target: where.scope === 'exact' ? where.page : where.host,
       limit: input.limit,
       order_by: ['ranked_serp_element.serp_item.etv,desc'],
+      ...(where.scope === 'prefix'
+        ? {
+            filters: [
+              'ranked_serp_element.serp_item.relative_url',
+              'like',
+              `${where.path}%`,
+            ],
+          }
+        : {}),
     })
+    // The totals cover the whole target (or prefix), not only these rows.
+    const organic = get(header, 'metrics.organic')
+    const etv = get(organic, 'etv')
+    if (typeof etv === 'number') {
+      const count = get(organic, 'count')
+      spent.siteTotal = {
+        metric: 'etv',
+        traffic: Math.round(etv),
+        keywords: typeof count === 'number' ? count : null,
+      }
+    }
     return items.map((item) =>
       pick(item, {
         keyword: 'keyword_data.keyword',
@@ -520,13 +654,13 @@ async function dataForSeoRows(
     )
   }
   if (input.action === 'serp') {
-    return eachKeyword(
-      input.keywords.slice(0, 5),
+    const rows = await eachKeyword(
+      input.keywords.slice(0, serpKeywords(input)),
       spent.missed,
       async (keyword) => {
         const items = await post(
           'v3/serp/google/organic/live/advanced',
-          { keyword, depth: Math.min(input.limit, 100) },
+          { keyword, depth: serpDepth(input) },
           2,
         )
         return items
@@ -557,12 +691,73 @@ async function dataForSeoRows(
           })
       },
     )
+    return input.noRank ? rows : withDomainRank(keys, rows, spent)
+  }
+  if (input.action === 'top_pages') {
+    const items = await post('v3/dataforseo_labs/google/relevant_pages/live', {
+      target: where.host,
+      limit: input.limit,
+      order_by: ['metrics.organic.etv,desc'],
+      ...(where.scope === 'domain'
+        ? {}
+        : {
+            filters:
+              where.scope === 'prefix'
+                ? ['page_address', 'like', likePrefix(where.host, where.path)]
+                : ['page_address', '=', where.page],
+          }),
+    })
+    return items.map((item) =>
+      pick(item, {
+        url: 'page_address',
+        etv: 'metrics.organic.etv',
+        keywords: 'metrics.organic.count',
+        pos_1: 'metrics.organic.pos_1',
+        pos_2_3: 'metrics.organic.pos_2_3',
+        pos_4_10: 'metrics.organic.pos_4_10',
+      }),
+    )
+  }
+  if (input.action === 'pages_by_backlinks') {
+    const items = await post('v3/backlinks/domain_pages/live', {
+      target: where.host,
+      limit: input.limit,
+      order_by: ['page_summary.referring_domains,desc'],
+      ...(where.scope === 'domain'
+        ? {}
+        : {
+            filters:
+              where.scope === 'prefix'
+                ? ['page', 'like', likePrefix(where.host, where.path)]
+                : ['page', '=', where.page],
+          }),
+    })
+    return items.map((item) =>
+      pick(item, {
+        url: 'page',
+        status: 'status_code',
+        title: 'meta.title',
+        referring_domains: 'page_summary.referring_domains',
+        backlinks: 'page_summary.backlinks',
+        rank: 'page_summary.rank',
+        first_seen: 'page_summary.first_seen',
+      }),
+    )
   }
   if (input.action === 'backlinks') {
     const items = await post('v3/backlinks/referring_domains/live', {
-      target: bareTarget(input.target),
+      target: where.scope === 'exact' ? where.page : where.host,
       limit: input.limit,
       order_by: ['rank,desc'],
+      ...(where.scope === 'prefix'
+        ? {
+            backlinks_filters: [
+              'url_to',
+              'like',
+              likePrefix(where.host, where.path),
+            ],
+          }
+        : {}),
     })
     return items.map((item) =>
       pick(item, {
@@ -590,6 +785,147 @@ async function dataForSeoRows(
       organic_etv: 'full_domain_metrics.organic.etv',
     }),
   )
+}
+
+// DataForSEO's own authority score for each result's domain, 0 to 100, as
+// domain_rank right after domain: one bulk_ranks call for every domain in
+// the SERPs (at most 5 searches of 100 results). It is not Ahrefs' Domain
+// Rating. When the call fails the rows stay, with domain_rank null.
+async function withDomainRank(
+  keys: string[],
+  rows: Row[],
+  spent: Spent,
+): Promise<Row[]> {
+  const domains = [
+    ...new Set(rows.map((row) => String(row.domain ?? '')).filter(Boolean)),
+  ].slice(0, 1000)
+  const ranks = new Map<string, number | null>()
+  if (domains.length) {
+    try {
+      const done = await dataForSeoTask(keys, 'v3/backlinks/bulk_ranks/live', {
+        targets: domains,
+        rank_scale: 'one_hundred',
+      })
+      spent.cost += done.cost
+      const items = (done.result?.items ?? []) as {
+        target?: string
+        rank?: number
+      }[]
+      for (const item of items) {
+        if (item.target) ranks.set(item.target, item.rank ?? null)
+      }
+    } catch (error) {
+      spent.cost += (error as { cost?: number }).cost ?? 0
+      spent.rankFailed = true
+    }
+  }
+  return rows.map((row) => {
+    const next: Row = {}
+    for (const [name, value] of Object.entries(row)) {
+      next[name] = value
+      if (name === 'domain') {
+        next.domain_rank = ranks.get(String(value ?? '')) ?? null
+      }
+    }
+    return next
+  })
+}
+
+const siteOf = (url: unknown) => {
+  try {
+    return new URL(String(url)).hostname
+  } catch {
+    return ''
+  }
+}
+
+export const serpKeywords = (input: ResearchInput) =>
+  input.action === 'serp_overlap' ? OVERLAP_KEYWORDS : SERP_KEYWORDS
+export const serpDepth = (input: ResearchInput) =>
+  Math.max(1, Math.min(input.depth ?? SERP_DEPTH, 100))
+
+// For each pair of keywords, how many of their top 10 results are the same
+// page and the same site: one SERP per keyword at depth 10. A result whose
+// page the provider did not return (a Google redirect link) cannot be
+// compared by page, so each keyword says how many pages it compared.
+async function serpOverlap(
+  provider: ResearchProvider,
+  headers: Headers,
+  input: ResearchInput,
+): Promise<ResearchRows> {
+  const serps = await research(provider, headers, {
+    ...input,
+    action: 'serp',
+    depth: OVERLAP_DEPTH,
+    limit: OVERLAP_DEPTH,
+    noRank: true,
+  })
+  const keywords = [
+    ...new Set(input.keywords.slice(0, OVERLAP_KEYWORDS)),
+  ].filter(
+    (keyword) =>
+      !serps.missed.includes(keyword) && !serps.noData.includes(keyword),
+  )
+  const host = (value: unknown) =>
+    String(value ?? '')
+      .toLowerCase()
+      .replace(/^www\./, '')
+  const top = new Map(
+    keywords.map((keyword) => {
+      // The first ten organic results; rank_absolute also counts ads and
+      // other features, so it is not used to cut.
+      const rows = serps.rows
+        .filter((row) => row.keyword === keyword)
+        .slice(0, OVERLAP_DEPTH)
+      const pages = new Set(
+        rows
+          .map((row) => row.url)
+          .filter((url): url is string => typeof url === 'string' && url !== '')
+          .map((url) => url.replace(/\/$/, '').toLowerCase()),
+      )
+      const sites = new Set(
+        rows.map((row) => host(row.domain ?? siteOf(row.url))).filter(Boolean),
+      )
+      return [keyword, { results: rows.length, pages, sites }] as const
+    }),
+  )
+  const rows: Row[] = []
+  for (const [i, a] of keywords.entries()) {
+    for (const b of keywords.slice(i + 1)) {
+      const left = top.get(a)
+      const right = top.get(b)
+      if (!left || !right) continue
+      rows.push({
+        keyword_a: a,
+        keyword_b: b,
+        shared_pages: [...left.pages].filter((url) => right.pages.has(url))
+          .length,
+        shared_sites: [...left.sites].filter((site) => right.sites.has(site))
+          .length,
+        pages_compared_a: left.pages.size,
+        pages_compared_b: right.pages.size,
+        results_a: left.results,
+        results_b: right.results,
+      })
+    }
+  }
+  rows.sort(
+    (x, y) =>
+      Number(y.shared_pages) - Number(x.shared_pages) ||
+      Number(y.shared_sites) - Number(x.shared_sites) ||
+      String(x.keyword_a).localeCompare(String(y.keyword_a)) ||
+      String(x.keyword_b).localeCompare(String(y.keyword_b)),
+  )
+  const results = [...top.values()]
+  return {
+    ...serps,
+    rows,
+    compared: {
+      results: results.reduce((sum, item) => sum + item.results, 0),
+      withPage: results.reduce((sum, item) => sum + item.pages.size, 0),
+      withSite: results.reduce((sum, item) => sum + item.sites.size, 0),
+    },
+  }
 }
 
 // How many referring domains link_gap reads per site, highest authority
@@ -660,6 +996,7 @@ async function linkGap(
       ...input,
       action: 'backlinks',
       target: site,
+      scope: 'domain',
       limit: GAP_DOMAINS,
     })
     cost += got.costUsd ?? 0
@@ -722,98 +1059,47 @@ async function linkGap(
   }
 }
 
-// A target with a path is one page; otherwise it is a whole site.
-function isPage(target: string): boolean {
-  return /\/./.test(bareTarget(target))
-}
-
 function bareTarget(target: string): string {
   return target.replace(/^https?:\/\//, '').replace(/\/$/, '')
 }
 
-// Ahrefs API v3
-
-async function ahrefs(
-  key: string,
-  input: ResearchInput,
-  missed: string[],
-): Promise<Row[]> {
-  const get = async (path: string, params: Record<string, string>) => {
-    const url = new URL(`https://api.ahrefs.com/v3/${path}`)
-    for (const [name, value] of Object.entries(params)) {
-      url.searchParams.set(name, value)
-    }
-    const response = await call(
-      'ahrefs',
-      new Request(url, {
-        headers: { authorization: `Bearer ${key}`, accept: 'application/json' },
-      }),
-    )
-    return readJson<Record<string, Row[] | undefined>>(response, 'Ahrefs')
-  }
-  const today = new Date().toISOString().slice(0, 10)
-  if (input.action === 'keyword_metrics') {
-    const data = await get('keywords-explorer/overview', {
-      select: 'keyword,volume,difficulty,cpc,traffic_potential,intents',
-      country: input.country,
-      keywords: input.keywords.slice(0, 100).join(','),
-    })
-    return (data.keywords ?? []).map(flattenIntents)
-  }
-  if (input.action === 'ranked_keywords') {
-    const data = await get('site-explorer/organic-keywords', {
-      select:
-        'keyword,best_position,best_position_url,volume,sum_traffic,keyword_difficulty,cpc',
-      target: input.target,
-      country: input.country,
-      date: today,
-      mode: isPage(input.target) ? 'exact' : 'subdomains',
-      limit: String(input.limit),
-      order_by: 'sum_traffic:desc',
-    })
-    return data.keywords ?? []
-  }
-  if (input.action === 'serp') {
-    return eachKeyword(input.keywords.slice(0, 5), missed, async (keyword) => {
-      const data = await get('serp-overview/serp-overview', {
-        select: 'position,type,url,title,domain_rating,traffic,keywords',
-        keyword,
-        country: input.country,
-        top_positions: String(Math.min(input.limit, 100)),
-      })
-      return (data.positions ?? []).map((row) => ({ keyword, ...row }))
-    })
-  }
-  if (input.action === 'backlinks') {
-    const data = await get('site-explorer/refdomains', {
-      select:
-        'domain,domain_rating,links_to_target,dofollow_links,first_seen,last_seen',
-      target: input.target,
-      mode: isPage(input.target) ? 'exact' : 'subdomains',
-      history: 'live',
-      limit: String(input.limit),
-      order_by: 'domain_rating:desc',
-    })
-    return data.refdomains ?? []
-  }
-  const data = await get('site-explorer/organic-competitors', {
-    select:
-      'competitor_domain,keywords_common,keywords_competitor,keywords_target,share,traffic,domain_rating',
-    target: input.target,
-    country: input.country,
-    date: today,
-    mode: 'subdomains',
-    limit: String(input.limit),
-    order_by: 'keywords_common:desc',
-  })
-  return data.competitors ?? []
+// The scope a target is read in: the one asked for, else a bare domain is
+// the site, a path that ends in / is a prefix and any other path one page.
+export function researchScope(
+  target: string,
+  scope?: ResearchScope,
+): ResearchScope {
+  if (scope) return scope
+  const bare = target.trim().replace(/^https?:\/\//, '')
+  if (!/\/./.test(bare)) return 'domain'
+  return bare.endsWith('/') ? 'prefix' : 'exact'
 }
 
-function flattenIntents(row: Row): Row {
-  const intents = (row as Record<string, unknown>).intents
-  if (!intents || typeof intents !== 'object') return row
-  const names = Object.entries(intents as Record<string, unknown>)
-    .filter(([, value]) => value === true)
-    .map(([name]) => name.replace(/^is_/, ''))
-  return { ...row, intents: names.join(' ') || null }
+// The target's host, its path (ending in / for a prefix) and the page as an
+// absolute URL, which DataForSEO needs to read one page: without the scheme
+// it answers for the whole domain, or with no rows.
+export function targetParts(input: ResearchInput) {
+  const scope = researchScope(input.target, input.scope)
+  const bare = input.target.trim().replace(/^https?:\/\//, '')
+  const slash = bare.indexOf('/')
+  const host = (slash === -1 ? bare : bare.slice(0, slash)).toLowerCase()
+  let path = slash === -1 ? '/' : bare.slice(slash)
+  if (scope === 'prefix' && !path.endsWith('/')) path += '/'
+  const scheme = /^http:\/\//.test(input.target.trim()) ? 'http' : 'https'
+  return {
+    scope,
+    host,
+    path,
+    page: `${scheme}://${host}${path}`,
+    // Ahrefs reads a target in one of its own modes.
+    ahrefs:
+      scope === 'domain'
+        ? { target: host, mode: 'subdomains' }
+        : scope === 'prefix'
+          ? { target: `${host}${path}`, mode: 'prefix' }
+          : { target: `${host}${path}`, mode: 'exact' },
+  }
 }
+
+// A DataForSEO "like" pattern for every URL under the prefix.
+const likePrefix = (host: string, path: string) => `%${host}${path}%`

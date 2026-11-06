@@ -8,6 +8,16 @@ const crawlAiAvailabilitySchema = z.enum([
   'unreachable',
 ])
 
+const crawlFetchErrorKindSchema = z.enum([
+  'dns',
+  'tls',
+  'timeout',
+  'redirect-limit',
+  'too-large',
+  'aborted',
+  'unknown',
+])
+
 const crawlAiLinkCheckSchema = z.object({
   url: z.string().url(),
   status: z.number().int().optional(),
@@ -25,6 +35,7 @@ export const crawlAiSignalsSchema = z.object({
       contentType: z.string().optional(),
       servesHtml: z.boolean().optional(),
       error: z.string().optional(),
+      errorKind: crawlFetchErrorKindSchema.optional(),
       sitemapUrls: z.array(z.string().url()),
       contentSignals: z.array(z.string()).optional(),
       botAccess: z.array(
@@ -47,6 +58,7 @@ export const crawlAiSignalsSchema = z.object({
       contentType: z.string().optional(),
       servesHtml: z.boolean().optional(),
       error: z.string().optional(),
+      errorKind: crawlFetchErrorKindSchema.optional(),
       links: z
         .object({
           found: z.number().int().nonnegative(),

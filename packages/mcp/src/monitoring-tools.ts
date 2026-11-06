@@ -84,7 +84,7 @@ export function registerMonitoringTools(server: McpServer): void {
           js: resolveJsOption(js, 'auto'),
         })
         return toolSuccess(
-          `Traced ${result.summary.hops} hops. Final status ${result.summary.finalStatus}. ${result.summary.issues.length} issues.`,
+          `Traced ${result.summary.hops} hops. ${result.summary.finalStatus === null ? `No final response (${result.summary.outcome}: ${result.summary.error ?? 'unknown'}).` : `Final status ${result.summary.finalStatus}.`} ${result.summary.issues.length} issues.`,
           result,
         )
       } catch (error) {

@@ -1,3 +1,4 @@
+import { z } from 'zod'
 import type { InternalLinksDependencies } from './analyze/internal-links.js'
 import { type BingCall, bingCall } from './bing/api.js'
 import { readClickySiteKeys } from './clicky/credentials.js'
@@ -25,6 +26,7 @@ import {
   matchProperty,
   readable,
 } from './commands/index.js'
+import type { ResearchStore } from './commands/research-cache.js'
 import { typesafeDecisionModel } from './decision-model.js'
 import { SeoError, type SeoErrorCode } from './errors.js'
 import { extractMainMarkdown } from './extract/main-content.js'
@@ -44,6 +46,7 @@ import { querySearchAnalytics } from './gsc/client/search-analytics.js'
 import { listSites } from './gsc/client/sites.js'
 import { readAhrefsApiKey } from './providers/ahrefs/credentials.js'
 import { readBingApiKey } from './providers/bing/credentials.js'
+import { readProviderCache, writeProviderCache } from './providers/cache.js'
 import { readDataForSeoCredentials } from './providers/dataforseo/credentials.js'
 import { localIssues } from './storage/issues.js'
 
@@ -64,12 +67,13 @@ export function nodeCommandDeps(options: {
       }),
     checkPages,
     liveCheck,
-    inspect: async (site, url) =>
+    inspect: async (site, url, signal) =>
       indexStatusFrom(
         await inspectUrl({
           siteUrl: site,
           inspectionUrl: url,
           accountEmail: options.account,
+          signal,
         }),
       ),
     inspectionQuota: (site) =>
@@ -80,14 +84,52 @@ export function nodeCommandDeps(options: {
         options.refresh ? new Map() : readSavedInspections(site, urls),
       save: saveInspection,
     },
-    pageMarkdown: async (url) =>
-      extractMainMarkdown(await fetchPage(url, { refresh: options.refresh })),
+    pageMarkdown: async (url, limit) =>
+      extractMainMarkdown(
+        await fetchPage(url, { refresh: options.refresh }),
+        limit,
+      ),
     call: options.call,
     bing: localBing,
     bingConnect: LOCAL_BING_CONNECT,
     analytics: { accounts: localAccounts, signIn: LOCAL_SIGN_IN.signIn },
     issues: localIssues,
     ...(cloudLinked() ? { week: cloudWeek } : {}),
+  }
+}
+
+// Research results kept on this machine for a day, so paging through rows
+// does not pay the provider again. The key already holds a hash of the
+// provider key. With refresh, saved results are not read.
+export function localResearchStore(refresh = false): ResearchStore {
+  const at = (key: string) => ({
+    provider: 'research',
+    credentialScope: '-',
+    operation: 'research',
+    request: key,
+  })
+  return {
+    get: async (key) => {
+      if (refresh) return null
+      try {
+        return readProviderCache(at(key), z.string())?.data ?? null
+      } catch {
+        return null
+      }
+    },
+    put: async (key, value, ttlSeconds) => {
+      try {
+        writeProviderCache(at(key), {
+          data: value,
+          ttlMs: ttlSeconds * 1000,
+          rowCount: null,
+          sourceCostMicros: null,
+          taskIds: [],
+        })
+      } catch {
+        // Not saved: the next page asks the provider again.
+      }
+    },
   }
 }
 

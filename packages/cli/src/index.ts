@@ -217,6 +217,8 @@ const main = defineCommand({
     auth: authCommand,
     mcp: mcpCommand,
     doctor: doctorCommand,
+    // People guess `seo status` for the setup check.
+    status: doctorCommand,
     privacy: privacyCommand,
     telemetry: telemetryCommand,
     reset: resetCommand,
@@ -283,6 +285,7 @@ const reportAliases: Record<string, string> = {
   'crawl-queue': 'top-fixes',
   decaying: 'decaying-pages',
   doctor: 'setup-check',
+  status: 'setup-check',
   explain: 'explain-crawl-issue',
   'link-recover': 'link-recovery',
   'query-cluster': 'query-clusters',

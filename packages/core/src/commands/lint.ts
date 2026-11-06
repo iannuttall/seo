@@ -3,12 +3,14 @@ import {
   formatFromPath,
   LINT_CATEGORIES,
   LINT_MAX_CHARS,
+  LINT_RULES,
   type LintCategory,
   type LintFileResult,
   type LintFormat,
   type LintMetaKind,
   type LintPreset,
   lintReportText,
+  lintRulesText,
   lintText,
 } from '../lint/index.js'
 import { CommandError, type CommandResult, type PageMarkdown } from './types.js'
@@ -37,6 +39,8 @@ export type LintInput = {
   // With the meta preset: what a line with no "title:" or "description:"
   // label is.
   metaKind?: LintMetaKind
+  // List the rules instead of checking text; only limits the list.
+  rules?: boolean
 }
 
 // One live page's main content as a lint source. A page that cannot be read
@@ -75,6 +79,23 @@ export async function runLint(
   // Reads a live page's main content. Only the CLI and the local MCP have it.
   readPage?: (url: string) => Promise<PageMarkdown>,
 ): Promise<CommandResult> {
+  if (input.rules) {
+    const only = input.only?.length ? input.only : undefined
+    return {
+      text: lintRulesText(only),
+      data: {
+        rules: LINT_RULES.filter(
+          (rule) => !only || only.includes(rule.family),
+        ).map(({ id, family, level, presets, description }) => ({
+          id,
+          category: family,
+          level,
+          ...(presets ? { presets } : {}),
+          description,
+        })),
+      },
+    }
+  }
   const hasText = typeof input.text === 'string' && input.text.length > 0
   const hasPaths = Boolean(input.paths?.length)
   const hasUrl = typeof input.url === 'string' && input.url.length > 0

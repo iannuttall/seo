@@ -55,6 +55,8 @@ export const ALL: BlockKind[] = [
   'description',
 ]
 
+// True when start..end sits inside a quoted span: "...", or '...' opened
+// at a word start, as when a writer mentions a phrase instead of using it.
 export function insideQuotes(
   text: string,
   start: number,
@@ -69,6 +71,25 @@ export function insideQuotes(
     }
     if (open <= start && i >= end - 1) return true
     open = -1
+  }
+  // Single quotes double as apostrophes, so only a quote at a word start
+  // opens and only one before a non-letter closes.
+  const opener = text.lastIndexOf("'", start)
+  if (
+    opener >= 0 &&
+    start - opener <= 80 &&
+    (opener === 0 || /[\s([]/.test(text[opener - 1] ?? '')) &&
+    /[A-Za-z]/.test(text[opener + 1] ?? '')
+  ) {
+    const closer = /'(?![A-Za-z])/g
+    closer.lastIndex = Math.max(end - 1, opener + 1)
+    const found = closer.exec(text)
+    if (found && found.index - end <= 80) {
+      const between = text.slice(opener + 1, found.index)
+      if (!/'\s/.test(between.slice(0, Math.max(0, start - opener - 1)))) {
+        return true
+      }
+    }
   }
   return false
 }

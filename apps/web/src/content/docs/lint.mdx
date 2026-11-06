@@ -61,6 +61,18 @@ seo lint --only ai --url https://example.com/blog/launch-post
 
 The summary also counts findings by category, so you can see the split without filtering.
 
+To list every rule with its id, category, level and what it looks for, run `seo lint rules`. Add `--only ai` to list only the AI writing rules:
+
+```sh
+seo lint rules --only ai
+```
+
+One AI word on its own, such as a single "delve", is a warning. Two or more in a piece are errors, because the pile-up is the signal.
+
+## Fix a finding without adding facts
+
+Each fix asks you to cut the words or to use a fact the text already gives. When you rewrite a flagged line, don't add a number, name or customer story to make it concrete. If the text has no fact to use, cut the line. Then run `seo lint` again until it reports no errors.
+
 ## Pick a preset for the kind of copy
 
 | Preset | Use it for |

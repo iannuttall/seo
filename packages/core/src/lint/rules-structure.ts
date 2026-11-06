@@ -38,7 +38,7 @@ export const STRUCTURE_RULES: Record<string, RuleInfo> = {
     family: 'ai',
     level: 'error',
     description:
-      'A verbless two-beat fragment: "Same essay, two titles." "Simple, but powerful."',
+      'Verbless slogan fragments: "Same essay, two titles.", "Every month. No exceptions.", "$299 per month. That\'s it."',
   },
   stockCloser: {
     id: 'stock-closer',
@@ -65,7 +65,7 @@ export const STRUCTURE_RULES: Record<string, RuleInfo> = {
     family: 'ai',
     level: 'error',
     description:
-      'Three or more very short sentences in a row that start with "No", "It\'s", "They", "We" or "You": "No cookies. No tracking. No banners."',
+      'Short sentences in a row that start with the same word: two or more "No ..." sentences, or three or more starting "It\'s", "They", "We" or "You".',
   },
   vocabularyCluster: {
     id: 'ai-vocabulary-cluster',
@@ -80,7 +80,7 @@ export const STRUCTURE_RULES: Record<string, RuleInfo> = {
     level: 'warning',
     presets: { docs: 'off' },
     description:
-      'Lists of three, more often than about one per 100 words, or three abstract nouns in a row.',
+      'Formula triads: three parallel clauses ("It is cheap, it is reversible, and it works"), three items that open with the same word, three adjectives after "is", or three abstract nouns. Plain lists of three are left alone.',
   },
   inventedLabel: {
     id: 'invented-label',
@@ -95,6 +95,14 @@ export const STRUCTURE_RULES: Record<string, RuleInfo> = {
     level: 'warning',
     description:
       'Repeated "What makes this work is ..." or "The problem is that ..." setups.',
+  },
+  boldEmphasis: {
+    id: 'bold-emphasis',
+    family: 'ai',
+    level: 'warning',
+    presets: { docs: 'off', meta: 'off' },
+    description:
+      'Bold used for emphasis more than about once per 100 words of prose.',
   },
   boldLabels: {
     id: 'bold-label-bullets',
@@ -177,6 +185,23 @@ function negativeParallelism(ctx: Context) {
         const fix = second
           ? `Drop the "isn't" half and state the claim: "${second.charAt(0).toUpperCase()}${second.slice(1)}"`
           : 'Drop the "isn\'t" half and state the claim once.'
+        // The looser shapes, and a concession joined by "but" ("It's not
+        // their only offering, but it is the first"), are often a real
+        // correction: a reader judges.
+        const concession =
+          (/,\s*but\s+(?:[\w']+\s*){1,3}$/i.test(found[0]) ||
+            /^(?:while|although|though|even though)\b/i.test(subject)) &&
+          kind !== 'reveal'
+        if ((level === 'warning' && firstWords > 12) || concession) {
+          ctx.review(
+            'contrast',
+            block,
+            sentence.start,
+            Math.max(after.end, end),
+            'Does this "isn\'t X ... it\'s Y" correct something a reader would really think? If not, state the claim once.',
+          )
+          continue
+        }
         ctx.hit(
           rule,
           block,
@@ -225,15 +250,52 @@ function gerund(word: string | undefined): boolean {
   return lower.length > 4 && lower.endsWith('ing') && !NOT_GERUND.has(lower)
 }
 
+// "Made for dentistry, not just any business", "not just my skills, but
+// my understanding". "Not only ... but also" is ordinary English and left
+// alone.
+const NOT_JUST =
+  /,\s+not (?:just|merely|simply) [^,.;:!?]{1,50}[.!?]?$|\bnot (?:just|merely|simply) [^,.;:!?]{1,50},? but\b/i
+
 function contrastReframe(ctx: Context) {
   const rule = STRUCTURE_RULES.contrastReframe as RuleInfo
   if (ctx.level(rule) === 'off') return
   for (const block of ctx.blocks([...SENTENCE_KINDS, 'heading'])) {
     for (const sentence of ctx.sentences(block)) {
       const text = sentence.text
+      const just = NOT_JUST.exec(text)
+      if (
+        just &&
+        // A long sentence with "not just ... but" is usually a correction
+        // with its reasons, not a slogan.
+        (just[0].startsWith(',') || words(text).length <= 16) &&
+        !insideQuotes(
+          block.norm,
+          sentence.start + just.index,
+          sentence.start + just.index + just[0].length,
+        )
+      ) {
+        ctx.hit(
+          rule,
+          block,
+          sentence.start,
+          sentence.end,
+          'A "not just X" contrast inflates the claim instead of stating it.',
+          'Say what it is or does in one plain clause, and drop the "not just" half.',
+        )
+        continue
+      }
       const re = /,\s+not\s+|\s+rather than\s+/gi
       for (const found of text.matchAll(re)) {
         const at = found.index ?? 0
+        if (
+          insideQuotes(
+            block.norm,
+            sentence.start + at,
+            sentence.start + at + found[0].length,
+          )
+        ) {
+          continue
+        }
         const rather = /rather/i.test(found[0])
         const left = text.slice(0, at)
         const rightAll = text.slice(at + found[0].length)
@@ -326,8 +388,24 @@ function heresAnnouncement(ctx: Context) {
       }
       const count = words(text).length
       const colon = text.endsWith(':')
+      // "Here's a specific example." right before a screenshot, quote or
+      // table points at it, which a reader needs.
+      const sentences = ctx.sentences(block)
+      if (sentence === sentences[sentences.length - 1]) {
+        const after = ctx.doc.source
+          .slice((block.map[block.map.length - 1] ?? 0) + 1)
+          .replace(/^[^\n]*\n/, '')
+          .trimStart()
+        if (
+          /^(?:!\[|<(?:img|figure|picture|video|iframe|blockquote|table)\b|>|\|)/i.test(
+            after,
+          )
+        ) {
+          continue
+        }
+      }
       let level: 'error' | 'warning' | null = null
-      if (colon && count <= 4) level = 'error'
+      if (colon && count <= 5) level = 'error'
       else if (!colon && !text.endsWith('?')) {
         if (count <= 9) level = 'error'
         else if (count <= 16) level = 'warning'
@@ -359,9 +437,55 @@ const LEADING_CLAUSE =
 const MONTH =
   /\b(?:january|february|march|april|may|june|july|august|september|october|november|december|monday|tuesday|wednesday|thursday|friday|saturday|sunday)\b/i
 
+// A one-beat kicker after a short line: "$299 per month. That's it."
+const KICKER =
+  /^(?:That's it|That's all|No exceptions|No catch|No strings attached|No surprises|No asterisks|Period|Full stop|Simple as that|It's that simple|That simple|Nothing more|Nothing else)[.!]$/i
+
+// A short verbless sentence, such as "Every month." or "No exceptions."
+function slogan(text: string): boolean {
+  const list = words(text)
+  return (
+    /[.!]$/.test(text) &&
+    // "Not X. Not Y." is the negation rules' to report.
+    !/^Not\b/.test(text) &&
+    list.length >= 1 &&
+    list.length <= 4 &&
+    !GREETING.test(text) &&
+    !MONTH.test(text) &&
+    !list.every((word) => /^[A-Z0-9]/.test(word)) &&
+    verbless(text)
+  )
+}
+
+function fragmentRuns(ctx: Context, rule: RuleInfo) {
+  for (const block of ctx.blocks(RHYTHM_KINDS)) {
+    const sentences = ctx.sentences(block)
+    for (let i = 1; i < sentences.length; i++) {
+      const before = sentences[i - 1] as Sentence
+      const sentence = sentences[i] as Sentence
+      const kicker =
+        KICKER.test(sentence.text) && words(before.text).length <= 8
+      const pair = slogan(before.text) && slogan(sentence.text)
+      if (!kicker && !pair) continue
+      ctx.hit(
+        rule,
+        block,
+        before.start,
+        sentence.end,
+        kicker
+          ? `"${sentence.text}" is a kicker added for rhythm after a short line.`
+          : 'Two verbless fragments in a row read as a slogan, not a sentence.',
+        'Join them into one plain sentence with a verb, such as "Books close within 48 hours of month end, every month," or cut the kicker.',
+      )
+      i++
+    }
+  }
+}
+
 function pithyFragment(ctx: Context) {
   const rule = STRUCTURE_RULES.pithyFragment as RuleInfo
   if (ctx.level(rule) === 'off') return
+  fragmentRuns(ctx, rule)
   for (const block of ctx.blocks(RHYTHM_KINDS)) {
     for (const sentence of ctx.sentences(block)) {
       const text = sentence.text
@@ -444,7 +568,7 @@ function figurativeWorth(ctx: Context) {
   const rule = STRUCTURE_RULES.figurativeWorth as RuleInfo
   const strong = new RegExp(`\\b(?:${FIGURATIVE_NOUNS}) worth \\w+ing\\b`, 'gi')
   const reader =
-    /\bworth (?:noting|mentioning|knowing|highlighting|calling out|pointing out|flagging|a (?:closer |second )?look|your time|the (?:wait|hype|effort|read))\b/gi
+    /\bworth (?:noting|mentioning|knowing|highlighting|calling out|pointing out|flagging|a (?:closer |second )?look)\b/gi
   const any = /\b(\w+) worth (\w+ing)\b/gi
   for (const block of ctx.blocks([...RHYTHM_KINDS, 'list', 'heading'])) {
     const taken: number[] = []
@@ -527,16 +651,36 @@ function anaphora(ctx: Context) {
       ) {
         j++
       }
-      if (
+      const run = sentences.slice(i, j)
+      // "No surprise fees. No hourly billing that creeps higher." Two
+      // are enough when each is a "No" + noun line.
+      const noRun =
+        first === 'no' &&
+        j - i >= 2 &&
+        run.every(
+          (sentence) =>
+            /^No (?!one\b|matter\b|doubt\b|longer\b|way\b|wonder\b)[a-z$\d]/.test(
+              sentence.text,
+            ) && words(sentence.text).length <= 12,
+        )
+      if (noRun) {
+        ctx.hit(
+          rule,
+          block,
+          (sentences[i] as Sentence).start,
+          (sentences[j - 1] as Sentence).end,
+          `${j - i} sentences in a row start with "No", a drumbeat of things the product is not.`,
+          'Say what it is in one sentence, and keep only the one "no" a reader needs, such as "One flat monthly fee with no tiers."',
+        )
+      } else if (
         j - i >= 3 &&
         first &&
         !['the', 'a', 'an', 'i', 'in', 'on', 'for', 'it', 'this'].includes(
           first,
         )
       ) {
-        const run = sentences.slice(i, j)
         const short = run.every((sentence) => words(sentence.text).length <= 7)
-        if (short && /^(?:it's|no|they|we|you)$/.test(first)) {
+        if (short && /^(?:it's|they|we|you)$/.test(first)) {
           ctx.hit(
             rule,
             block,
@@ -611,47 +755,128 @@ function vocabularyCluster(ctx: Context) {
   }
 }
 
-const TRIAD =
-  /\b[\w'-]+(?: [\w'-]+){0,2}, [\w'-]+(?: [\w'-]+){0,2},? and [\w'-]+\b/g
+// A series of three or more: "A, B, and C", with up to six words an item.
+const SERIES =
+  /\b[\w'$-]+(?: [\w'$-]+){0,5}(?:, [\w'$-]+(?: [\w'$-]+){0,5}){1,3},? (?:and|or) [\w'$-]+(?: [\w'$-]+){0,5}/g
 const ABSTRACT_TRIAD =
   /\b[a-z]+(?:tion|sion|ity|ness|ment|ence|ance|ism), (?:and )?[a-z]+(?:tion|sion|ity|ness|ment|ence|ance|ism),? and [a-z]+(?:tion|sion|ity|ness|ment|ence|ance|ism)\b/gi
+// Words that, opening every item, make a list a chant: "every project,
+// every challenge, and every collaboration".
+const ECHO = new Set(
+  'to our your their my his her its every each more less no it they we you'.split(
+    ' ',
+  ),
+)
+const COPULA =
+  /\b(?:is|are|was|were|'s|feels?|felt|looks?|stays?|remains?|seems?)\s+$/i
+
+// Why a series of three or more reads as a formula, or null for a plain
+// list such as "engineers, data scientists, and designers".
+function formulaTriad(items: string[], before: string): string | null {
+  const firsts = items.map((item) => words(item)[0]?.toLowerCase() ?? '')
+  const echo = firsts[0] ?? ''
+  if (ECHO.has(echo) && firsts.every((first) => first === echo)) {
+    return `Each item opens with "${echo}".`
+  }
+  // "the process is simple, the numbers are accurate, and their
+  // questions get answered": short clauses, each with its own subject.
+  if (
+    items.every(
+      (item) =>
+        /^(?:the|their|our|your|its|it|they|we|you|he|she)\b/i.test(item) &&
+        words(item).length >= 3 &&
+        words(item).length <= 7 &&
+        !verbless(item),
+    )
+  ) {
+    return 'Three parallel clauses in a row.'
+  }
+  const adjectives = items.every(
+    (item) =>
+      /^[a-z]/.test(item) &&
+      words(item).length <= 2 &&
+      !PREPOSITIONS.has(words(item)[0] ?? ''),
+  )
+  if (adjectives && COPULA.test(before)) {
+    return 'A string of adjectives after "is".'
+  }
+  if (
+    items.every((item) => /^\w+ed\b/i.test(item) && words(item).length <= 3)
+  ) {
+    return 'A string of past participles.'
+  }
+  return null
+}
 
 function triads(ctx: Context) {
   const rule = STRUCTURE_RULES.triad as RuleInfo
   if (ctx.level(rule) === 'off') return
-  const found: Array<{ block: Block; start: number; end: number }> = []
-  for (const block of ctx.blocks(['paragraph', 'quote', 'prop'])) {
-    TRIAD.lastIndex = 0
-    for (const match of block.norm.matchAll(TRIAD)) {
-      found.push({
-        block,
-        start: match.index ?? 0,
-        end: (match.index ?? 0) + match[0].length,
-      })
-    }
+  for (const block of ctx.blocks(['paragraph', 'quote', 'prop', 'list'])) {
+    const taken: Array<[number, number]> = []
     ABSTRACT_TRIAD.lastIndex = 0
     for (const match of block.norm.matchAll(ABSTRACT_TRIAD)) {
+      const start = match.index ?? 0
+      taken.push([start, start + match[0].length])
       ctx.hit(
         rule,
         block,
-        match.index ?? 0,
-        (match.index ?? 0) + match[0].length,
+        start,
+        start + match[0].length,
         'Three abstract nouns in a row sound weighty but say little.',
         'Keep the one that matters and give an example of it.',
       )
     }
-  }
-  const limit = Math.max(3, Math.ceil(ctx.proseWords / 100))
-  if (found.length > limit) {
-    const third = found[limit] as (typeof found)[number]
-    ctx.hit(
-      rule,
-      third.block,
-      third.start,
-      third.end,
-      `${found.length} lists of three in ${ctx.proseWords.toLocaleString('en-US')} words of prose. More than about one per 100 words sounds formulaic.`,
-      'Turn some of them into two items, four items or a sentence that ranks them.',
-    )
+    for (const sentence of ctx.sentences(block)) {
+      // Clauses split at commas, so series inside each clause are found.
+      SERIES.lastIndex = 0
+      for (const match of sentence.text.matchAll(SERIES)) {
+        let from = match.index ?? 0
+        const raw = match[0].split(
+          /,\s*(?:(?:and|or)\s+)?|\s+(?:and|or)\s+(?=[^,]*$)/,
+        )
+        if (raw.length < 3) continue
+        // The first item runs back to the sentence or clause start, so trim
+        // it to the words after a leading verb or preposition.
+        const items = [...raw]
+        const head = raw[0] ?? ''
+        const lead =
+          /^.*\b(?:is|are|was|were|'s|feels?|looks?|stays?|remains?|seems?|of|for|to|with|by|from|on|in|like|including|as)\s+/i.exec(
+            head,
+          )
+        if (lead && words(head.slice(lead[0].length)).length) {
+          items[0] = head.slice(lead[0].length)
+          from += lead[0].length
+        }
+        const end = sentence.start + (match.index ?? 0) + match[0].length
+        const before = block.norm.slice(sentence.start, sentence.start + from)
+        // "thank our customers, our community, and our planet": the echo
+        // word starts inside the first item.
+        const echo = words(raw[1] ?? '')[0]?.toLowerCase() ?? ''
+        const inFirst = new RegExp(
+          `\\b${echo}\\b(?!.*\\b${echo}\\b)`,
+          'i',
+        ).exec(head)
+        if (ECHO.has(echo) && inFirst && inFirst.index > 0) {
+          items[0] = head.slice(inFirst.index)
+          from = (match.index ?? 0) + inFirst.index
+        }
+        const plain = formulaTriad(raw, '')
+        const why = plain ?? formulaTriad(items, before)
+        if (!why) continue
+        if (plain) from = match.index ?? 0
+        const start = sentence.start + from
+        if (taken.some(([a, b]) => start < b && end > a)) continue
+        taken.push([start, end])
+        ctx.hit(
+          rule,
+          block,
+          start,
+          end,
+          `A list of ${items.length} that reads as a formula. ${why}`,
+          'Keep the items the reader needs. If all of them are needed, write them plainly or as two sentences; if one was added for rhythm, cut it.',
+        )
+      }
+    }
   }
 }
 
@@ -730,6 +955,50 @@ function boldLabels(ctx: Context) {
   report()
 }
 
+// Bold spans in prose: Markdown ** or __, and HTML <strong> or <b>.
+function boldEmphasis(ctx: Context) {
+  const rule = STRUCTURE_RULES.boldEmphasis as RuleInfo
+  if (ctx.level(rule) === 'off') return
+  const markdown = ctx.doc.format === 'md' || ctx.doc.format === 'mdx'
+  const re = markdown
+    ? /(\*\*|__)(?=\S)[^*_\n]+?\1/g
+    : /<(strong|b)\b[^>]*>[^<]{1,200}<\/\1>/gi
+  const prose = ctx.blocks(['paragraph', 'list', 'quote', 'prop'])
+  const spans: Array<{ block: Block; start: number; end: number }> = []
+  for (const found of ctx.doc.source.matchAll(re)) {
+    const open = markdown ? 2 : found[0].indexOf('>') + 1
+    const from = (found.index ?? 0) + open
+    const to =
+      (found.index ?? 0) +
+      found[0].length -
+      (markdown ? 2 : found[0].length - found[0].lastIndexOf('<'))
+    for (const block of prose) {
+      const first = block.map[0] ?? 0
+      const last = block.map[block.map.length - 1] ?? 0
+      if (from < first || from > last) continue
+      const start = block.map.indexOf(from)
+      // A bold label opening a list item is bold-label-bullets' to judge.
+      if (start <= 0 && block.kind === 'list') break
+      if (start < 0) break
+      let end = start
+      while (end < block.map.length && (block.map[end] ?? 0) < to) end++
+      spans.push({ block, start, end })
+      break
+    }
+  }
+  if (spans.length < 3 || spans.length * 100 <= ctx.proseWords) return
+  for (const span of spans) {
+    ctx.hit(
+      rule,
+      span.block,
+      span.start,
+      span.end,
+      `${spans.length} bold phrases in ${ctx.proseWords.toLocaleString('en-US')} words of prose. Bold this often stops meaning "important".`,
+      'Remove the bold here. Keep bold, if any, for the one thing a skimming reader must not miss.',
+    )
+  }
+}
+
 export function runStructureRules(ctx: Context) {
   negativeParallelism(ctx)
   contrastReframe(ctx)
@@ -743,4 +1012,5 @@ export function runStructureRules(ctx: Context) {
   triads(ctx)
   countedPatterns(ctx)
   boldLabels(ctx)
+  boldEmphasis(ctx)
 }

@@ -104,7 +104,7 @@ export const renderOgCoverCard = (input: {
     element('div', {
       style: {
         ...full,
-        backgroundImage: `radial-gradient(ellipse ${left ? '440px' : '540px'} 220px at ${left ? '30%' : '50%'} 50%, rgba(0,0,0,0.78) 0%, rgba(0,0,0,0.6) 45%, rgba(0,0,0,0) 100%)`,
+        backgroundImage: `radial-gradient(ellipse ${left ? '560px' : '680px'} 320px at ${left ? '30%' : '50%'} 50%, rgba(0,0,0,0.4) 0%, rgba(0,0,0,0.22) 55%, rgba(0,0,0,0) 100%)`,
       },
     }),
     element(
@@ -116,7 +116,7 @@ export const renderOgCoverCard = (input: {
           ...(left ? { width: 660 } : {}),
           maxWidth: left ? 660 : 880,
           color: '#ffffff',
-          textShadow: '0 2px 18px rgba(0,0,0,0.55)',
+          textShadow: '0 1px 3px rgba(0,0,0,0.6), 0 2px 24px rgba(0,0,0,0.65)',
           fontSize: ogTitleSize(title),
           fontWeight: 600,
           lineHeight: 1.08,

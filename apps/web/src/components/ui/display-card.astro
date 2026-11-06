@@ -11,8 +11,14 @@ type DisplayCardProps = HTMLAttributes<'div'> & {
 }
 
 const displayCardVariants = {
-  default: 'border border-border bg-card shadow-sm',
+  default: 'border border-border bg-card text-foreground shadow-sm',
   primary: 'bg-primary text-primary-foreground shadow-lg',
+}
+
+// The description is quieter than the title on every variant.
+const displayCardDescription = {
+  default: 'text-foreground-muted',
+  primary: 'text-primary-foreground/80',
 }
 
 const displayCardPadding = {
@@ -45,8 +51,8 @@ const {
 >
   {(title || description) && (
     <div>
-      {title && <h3 class="tracking-tight text-foreground">{title}</h3>}
-      {description && <p class="mt-1 text-sm text-foreground-muted">{description}</p>}
+      {title && <h3 class="tracking-tight">{title}</h3>}
+      {description && <p class={cn('mt-1 text-sm', displayCardDescription[variant])}>{description}</p>}
     </div>
   )}
   <slot />

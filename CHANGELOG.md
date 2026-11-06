@@ -1,5 +1,52 @@
 # Changelog
 
+## 0.17.0
+
+### Added
+
+- `seo research` reads a whole site, a subfolder (a target ending in `/`,
+  such as `example.com/blog/`) or one page, with `--scope` to override.
+  New actions: `top_pages` (pages with the most estimated search traffic)
+  and `pages_by_backlinks` (pages with the most referring domains), on
+  DataForSEO's Labs and Backlinks endpoints and on Ahrefs.
+- `serp` with DataForSEO gives each result `domain_rank`, DataForSEO's own
+  0 to 100 authority score, labelled as not Domain Rating.
+- `ranked_keywords` gives the provider's traffic total for the whole
+  target and names its traffic model, and says that providers can differ
+  tenfold. A list cut at the rows read says how many the provider has.
+- `seo lint --url <url>` checks a live page's main content, the same text
+  `seo page --detail full` reads. `--only ai,copy,seo` checks one category
+  of rules; every finding has a category and the summary counts them.
+- `seo crawl --mode sites` reads robots.txt, the home page and llms.txt for
+  up to 1,000 sites a run and streams one JSON line per site.
+- `seo data` labels spam-looking queries with `spam_hint`, a heuristic.
+  The rows and totals stay unchanged.
+- `seo page` prints what it is waiting on, and for a page Google does not
+  know, says how to get it found.
+- `seo status` runs the same setup check as `seo doctor`.
+
+### Changed
+
+- `provider` is optional in `seo research` and both MCP servers. Without
+  it the saved key is used, DataForSEO when both are saved.
+
+### Fixed
+
+- `seo lint` counts files and pages it could not check, or checked only in
+  part, in the totals and the summary, and exits 1, so a skipped file never
+  reads as clean. HTML over the size limit is checked without its scripts
+  and styles first.
+- `seo doctor` passes a machine linked to a seoskill.dev account (`seo
+  login` or `SEO_TOKEN`) and names its Google accounts, instead of failing
+  the local Google checks.
+- `seo page` says why Google index status is missing (quota, no access,
+  sign-in, or no answer within 60 seconds) with the next step, instead of
+  "not available".
+- DataForSEO research on one page uses the page's full URL. Before, a page
+  could come back with the whole site's keywords or no links at all.
+- When robots.txt redirects to another host, the crawl reads its rules for
+  AI bots. Before, every bot was reported as allowed.
+
 ## 0.16.1
 
 ### Fixed

@@ -113,11 +113,11 @@
     "@types/node": "^22.20.5",
     "citty": "^0.2.2",
     "cli-table3": "^0.6.5",
-    "defuddle": "^0.19.5",
+    "defuddle": "^0.19.6",
     "htmlparser2": "10.1.0",
     "jsonc-parser": "^3.3.1",
     "libsql": "^0.5.29",
-    "lighthouse": "13.5.0",
+    "lighthouse": "13.6.0",
     "linkedom": "^0.18.14",
     "open": "^11.0.4",
     "p-queue": "^9.3.5",
@@ -136,7 +136,7 @@
   },
   "devDependencies": {
     "@biomejs/biome": "^2.6.2",
-    "@modelcontextprotocol/sdk": "^1.32.1",
+    "@modelcontextprotocol/sdk": "^1.32.2",
     "tsdown": "^0.23.2",
     "turbo": "^2.11.10",
     "typescript": "^6.0.3"

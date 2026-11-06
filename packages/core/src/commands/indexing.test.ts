@@ -1,8 +1,9 @@
 import assert from 'node:assert/strict'
 import { test } from 'node:test'
+import { SeoError } from '../errors.js'
 import { indexingRow, labelOf, sortRows } from './indexing.js'
 import type { LiveCheck } from './page-facts.js'
-import { indexStatusFrom } from './site.js'
+import { indexStatusFrom, runPage } from './site.js'
 import type { PageFacts } from './types.js'
 
 // URL Inspection responses shaped like the API's, with the live responses
@@ -213,4 +214,38 @@ test('labels Google reasons from the URL Inspection payload and live checks', ()
       'Submitted and indexed https://example.com/docs',
     ],
   )
+})
+
+// seo page once said only "not available" when URL Inspection failed, on a
+// page with thousands of impressions. The reason has to reach the person.
+test('seo page keeps why the index status is missing', async (t) => {
+  t.mock.method(
+    globalThis,
+    'fetch',
+    async () => new Response('', { status: 404 }),
+  )
+  const url = 'https://example.com/a'
+  const result = await runPage(
+    { site: 'sc-domain:example.com', url },
+    {
+      searchAnalytics: async () => ({ rows: [], calls: 1, rowsFetched: 0 }),
+      checkPages: async () => [],
+      liveCheck: async () => still(page(url)),
+      inspect: async () => {
+        throw new SeoError(
+          'RATE_LIMITED',
+          'URL Inspection daily quota is blocked for sc-domain:example.com.',
+        )
+      },
+      call: (command) => `seo ${command}`,
+      now: () => new Date('2026-10-22T08:00:00.000Z'),
+    },
+  )
+  const data = result.data as { index: unknown; indexError: unknown }
+  assert.equal(data.index, null)
+  assert.deepEqual(data.indexError, {
+    code: 'RATE_LIMITED',
+    message: 'URL Inspection daily quota is blocked for sc-domain:example.com.',
+  })
+  assert.match(result.text, /daily quota is blocked/)
 })

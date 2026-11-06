@@ -1,6 +1,7 @@
 import type { BingCall } from '../bing/api.js'
 import { SeoError, type SeoErrorCode } from '../errors.js'
 import type { SearchAnalyticsQuery } from '../gsc/client/types.js'
+import type { ProgressReporter } from '../progress.js'
 import type { AnalyticsAccess } from './analytics-site.js'
 import type { AuditAccess } from './audit.js'
 import type { IssueStore } from './issues.js'
@@ -171,6 +172,9 @@ export type CommandDeps = {
   // Each site's list of issues and what the person marked them: a file on
   // this machine, or the hosted account.
   issues?: IssueStore
+  // Short lines while a command waits on slow calls. The CLI prints them to
+  // stderr; MCP surfaces leave it unset.
+  progress?: ProgressReporter
   now?: () => Date
 }
 

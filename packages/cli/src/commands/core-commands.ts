@@ -48,6 +48,7 @@ import {
 } from '@seo/core/commands'
 import { defineCommand } from 'citty'
 import { booleanArg, csvArg, jsonFlag, numberArg, stringArg } from '../args.js'
+import { createProgressReporter } from '../progress.js'
 import { requireSite, resolveProperty } from '../selection.js'
 import { printJson } from '../utils.js'
 
@@ -134,13 +135,15 @@ export async function run(
   task: (deps: ReturnType<typeof nodeCommandDeps>) => Promise<CommandResult>,
 ) {
   try {
-    const result = await task(
-      nodeCommandDeps({
+    const result = await task({
+      ...nodeCommandDeps({
         call: cliCall,
         account: stringArg(args.account),
         refresh: booleanArg(args.refresh),
       }),
-    )
+      // On stderr, TTY or not: agents run without one and wait the longest.
+      progress: createProgressReporter(!jsonFlag(args)),
+    })
     if (jsonFlag(args)) printJson(result.data)
     else process.stdout.write(`${result.text}\n`)
   } catch (error) {

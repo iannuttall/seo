@@ -538,7 +538,7 @@ function stockCloser(ctx: Context) {
           sentence.start,
           sentence.end,
           'A stock kicker that tells the reader how to feel about the last point.',
-          'Cut it. If the point needs support, give the number or fact that makes it true.',
+          'Cut it. If the text already has the number or fact that makes the point, end on that.',
         )
         continue
       }
@@ -554,7 +554,7 @@ function stockCloser(ctx: Context) {
           sentence.start,
           sentence.end,
           'A short "That\'s not ..." line dismisses a view instead of stating one.',
-          'Say what is true instead, such as "Agents can do this work in a day."',
+          'Cut it, or say what is true with a fact the text already gives.',
         )
       }
     }

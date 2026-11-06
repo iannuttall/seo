@@ -205,6 +205,15 @@ export const tools = [
     kind: 'browser',
   },
   {
+    id: 'ai-humanizer',
+    path: '/tools/ai-humanizer',
+    title: 'AI humanizer',
+    action: 'Open the AI humanizer',
+    description:
+      "Find the AI writing patterns that get in the reader's way, marked in place with a clearer fix that keeps to your facts.",
+    kind: 'browser',
+  },
+  {
     id: 'title-and-meta-description-checker',
     path: '/tools/title-and-meta-description-checker',
     title: 'Title tag and meta description checker',

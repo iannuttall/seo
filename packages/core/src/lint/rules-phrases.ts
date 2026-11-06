@@ -93,6 +93,22 @@ function plainFor(word: string): string {
   return 'a plain word'
 }
 
+// The fix for a word with a plainer swap, such as Use "look at" or "dig
+// into". A word with no swap (stunning, world-class) is cut or replaced
+// with a detail the text already gives, so the fix never asks for a fact
+// the writer did not supply.
+function swapFix(word: string): string {
+  const plain = plainFor(word).replace(/\s*\([^)]*\)/g, '')
+  if (plain === 'a plain word') return 'Use a plain word.'
+  if (/^(?:say|name|give)\b/.test(plain)) {
+    return `Cut "${word}", or swap it for a detail the text already gives.`
+  }
+  return `Use ${plain
+    .split(', ')
+    .map((swap) => `"${swap}"`)
+    .join(' or ')}.`
+}
+
 export const PHRASE_RULES: PhraseRule[] = [
   {
     id: 'chatbot-residue',
@@ -284,7 +300,7 @@ export const PHRASE_RULES: PhraseRule[] = [
     ],
     message: (match) =>
       `"${match.text}" is far more common in AI text than in human writing.`,
-    fix: (match) => `Use ${plainFor(match.text.replace(/^(?:rich|a) /i, ''))}.`,
+    fix: (match) => swapFix(match.text.replace(/^(?:rich|a) /i, '')),
   },
   {
     id: 'banned-word',
@@ -310,7 +326,7 @@ export const PHRASE_RULES: PhraseRule[] = [
         ? 'Name the actual file, field or result.'
         : /hype|everything you need|next fix/i.test(match.text)
           ? 'Say what the page or tool actually gives the reader.'
-          : `Use ${plainFor(match.text)}.`,
+          : swapFix(match.text),
   },
   {
     id: 'buzzword',
@@ -574,7 +590,7 @@ export const PHRASE_RULES: PhraseRule[] = [
       /(?:^|[.!?:]\s+)(?:But|And) only (?:part|half|some|partly)\.(?=\s|$)/g,
     ],
     message: 'A two-word denial used for rhythm. It makes the reader wait.',
-    fix: 'Join it to the sentence before, such as "Nothing technical was holding these pages back."',
+    fix: 'Join it to the sentence before, so the point is stated once.',
   },
   {
     id: 'strawman',

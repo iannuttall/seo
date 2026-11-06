@@ -1,0 +1,359 @@
+---
+title: How I'd grow PostHog with SEO and AI answers
+description: An SEO and AI search teardown of PostHog. AI answers already name it, and the next wins are pages Googlebot can read to the end and answers it can cite.
+heading: How I'd grow PostHog
+lead: "AI answers named PostHog in 24 of 30 answers to ten buyer questions, and PostHog's handbook says AI is already its biggest source of sign-ups. The cheapest next win is a lighter page: a typical posthog.com page sends 857 KB of styling before its first sentence, and 81 of 1,174 pages I checked run past the 2 MB Googlebot reads."
+date: '2026-11-07'
+company: PostHog
+x:
+  company: posthog
+draft: false
+cover:
+  alt: "PostHog's hedgehog drives a pixel-art steam train out of a hillside tunnel along a curving track, its front wagons piled with paint pots, wallpaper and picture frames, and the wagons of books still coming out of the dark."
+  title: left
+---
+
+export const beforeBytes = `GET /hogpedia/feature-flags
+2,403,464 bytes of HTML
+
+        0 <head>
+    2,598 <style>: Gatsby's
+          global CSS, 857,504
+          bytes, inline
+  862,104 <body>
+1,357,711 <h1>Feature flags
+1,357,954 infobox hedgehog:
+          an inline SVG of
+          1,004,282 bytes,
+          drawn 150px wide
+2,097,152 Googlebot stops
+          reading (2 MB)
+2,363,382 "A feature flag is
+          a condition in
+          code that decides
+          whether a person
+          sees a feature."`
+
+export const afterBytes = `GET /hogpedia/feature-flags
+about 542,000 bytes of HTML
+
+        0 <head>
+          <link rel=stylesheet
+          href=/styles.48cd….css>
+   ~4,700 <body>
+ ~500,200 <h1>Feature flags
+          <img src=hog.svg
+          width=150>
+ ~501,600 "A feature flag is
+          a condition in
+          code that decides
+          whether a person
+          sees a feature."
+ ~541,900 end of page, 1.5 MB
+          inside the limit`
+
+export const beforeMd = `GET /feature-flags.md
+200 OK (95 words)
+
+# Feature flags
+How agents roll a change out and roll
+it back.
+
+Feature flags is one of PostHog's tools,
+the functional capabilities that make
+your product self-driving.
+
+- Full page: https://posthog.com/feature-flags
+- All products and tools: …/platform.md
+- Pricing: …/pricing.md
+
+For features, screenshots, and details,
+see https://posthog.com/feature-flags.`
+
+export const afterMd = `GET /feature-flags.md
+200 OK
+
+# Feature flags
+PostHog Feature Flags turns a feature on
+or off for chosen users without a deploy:
+percentage rollouts, cohorts, multivariate
+flags, payloads and local evaluation.
+
+## Pricing
+First 1,000,000 requests a month free,
+then from $0.0001 a request.
+
+## Who it's for / How it works
+(the same sections the HTML page has)
+
+## Compared with LaunchDarkly, Statsig …
+→ /compare/posthog-vs-launchdarkly.md`
+
+AI answers already put PostHog on the shortlist. On 6 November 2026 I asked ChatGPT search, Google AI Mode and Google's AI Overviews ten questions a buyer asks before choosing analytics, session replay, flags or LLM tooling. PostHog was named or cited in 24 of the 30 answers.
+
+That matters more to PostHog than to most companies. Its own [handbook page on answer engine optimization](https://posthog.com/handbook/content/aeo-guide) says AI is "already our biggest acquisition channel by self-reported attribution", bigger than Google, YouTube, Reddit and social combined.
+
+So this teardown is about turning mentions into citations and non-brand searches into visits. The brand, the docs, the handbook, the newsletter and the open source repo are already there. Most of the wins are about letting search engines and AI read what PostHog has written.
+
+Key findings:
+
+- Brand search brings about 8,700 of PostHog's estimated 10,700 monthly US Google visits (81%). Non-brand pages bring the rest, mostly from the blog and newsletter (DataForSEO estimate, November 2026).
+- Every posthog.com page I fetched carries at least 857 KB of inline CSS before its body. The first heading starts after 1.2 MB on all 1,107 pages with one, and 81 of 1,174 pages run past the first 2 MB, which is all Googlebot reads.
+- Google's AI Overviews for "session replay" and "web analytics" cited PostHog's product pages in 4 of 4 live checks each. In the organic results below them, the session replay page was missing every time and the web analytics page showed only on mobile.
+- For "best llm observability tool", none of three AI answers named PostHog, and PostHog had no page in the top 26 for six LLM evaluation searches worth about 2,300 US searches a month.
+- 69 of the 98 newsletter posts on newsletter.posthog.com also live on posthog.com/newsletter, and both copies point their canonical at themselves.
+
+PostHog doesn't publish its search traffic, so every visit number here is a third-party estimate. Read them for proportions.
+
+## Brand search brings 81% of PostHog's estimated US Google visits
+
+DataForSEO's database lists 5,437 searches where posthog.com ranks in US Google, worth about 10,662 visits a month (November 2026). The 160 searches with "posthog" in them bring 8,672 of those visits (81%). "posthog" alone gets 33,100 US searches a month.
+
+<TrafficMap
+  caption="Estimated monthly US Google visits to posthog.com and its subdomains by kind of page (DataForSEO, November 2026). Brand means the search contains &quot;posthog&quot;. Editorial means articles: the blog, the newsletter and the sections like them."
+  items={[
+    { label: "Brand searches", value: 8672, tone: "brand", note: "\"posthog\", \"posthog login\", \"posthog mcp\", \"posthog pricing\" and 156 more" },
+    { label: "Editorial", value: 1110, tone: "other", note: "Non-brand searches landing on the blog, newsletter, product engineers, founders and handbook pages" },
+    { label: "Docs and tutorials", value: 436, tone: "other", note: "Non-brand searches landing on /docs and /tutorials" },
+    { label: "Product, pricing and comparison pages", value: 270, tone: "sells", note: "Non-brand searches landing on pages that sell PostHog" },
+    { label: "Everything else", value: 174, tone: "other", note: "Careers, legal pages and other hosts" },
+  ]}
+/>
+
+Brand demand at this level is the asset.
+
+The gap is the 2.5% landing on pages that sell: about 270 estimated visits a month from non-brand searches. A third-party panel put all posthog.com traffic at about 3.3 million visits in September 2026 (Semrush, through [Exploding Topics](https://analytics.explodingtopics.com/website/posthog.com)), so the search estimate above is small next to the whole site and should be read for its shape.
+
+## AI answers named PostHog in 24 of 30 answers, and linked a page past the homepage in 5
+
+ChatGPT linked posthog.com in 9 of its 10 answers. Eight of those nine linked the homepage, and seven linked nothing else on posthog.com. Google's two engines named PostHog in most answers and linked it in 4 of 20.
+
+<KeywordTable
+  caption="Ten buyer questions and three AI engines, one run (DataForSEO, US, 6 November 2026). Cited means the answer links a posthog.com page. Named means it mentions PostHog without a link."
+  sortBy="question"
+  columns={[{ key: 'question', label: 'Question', format: 'text' }, { key: 'chatgpt', label: 'ChatGPT', format: 'text', short: 'GPT' }, { key: 'mode', label: 'AI Mode', format: 'text', short: 'Mode' }, { key: 'overview', label: 'AI Overview', format: 'text', short: 'AIO' }]}
+  rows={[
+    { question: 'Amplitude alternatives', chatgpt: 'Cited', mode: 'Cited', overview: 'Cited' },
+    { question: 'Best error tracking tool for startups', chatgpt: 'Cited', mode: 'None', overview: 'None' },
+    { question: 'Best feature flag tools', chatgpt: 'Cited', mode: 'None', overview: 'Named' },
+    { question: 'Best LLM observability tool', chatgpt: 'None', mode: 'None', overview: 'None' },
+    { question: 'Best open source product analytics', chatgpt: 'Cited', mode: 'Named', overview: 'Cited' },
+    { question: 'Best product analytics tool for startups', chatgpt: 'Cited', mode: 'Named', overview: 'Named' },
+    { question: 'Best session replay tool', chatgpt: 'Cited', mode: 'Named', overview: 'Named' },
+    { question: 'Google Analytics alternatives for SaaS', chatgpt: 'Cited', mode: 'Named', overview: 'Named' },
+    { question: 'How do I run an A/B test in Next.js?', chatgpt: 'Cited', mode: 'Named', overview: 'Named' },
+    { question: 'Mixpanel alternatives', chatgpt: 'Cited', mode: 'Cited', overview: 'Named' },
+  ]}
+/>
+
+AI answers aren't deterministic, and the same question can get a different answer on the next run, so these counts are one run on 6 November 2026.
+
+The five answers that linked past the homepage went to the Amplitude alternatives comparison (AI Mode and the AI Overview), the open source analytics and web analytics comparisons, and the Experiments docs. Each is a page built to answer the question asked.
+
+PostHog's handbook draws the same line between mention rate and citation rate. On this run the mention rate was 24 of 30 and the citation rate 13 of 30, with 8 of the 13 going to the homepage.
+
+### YouTube and Reddit were the sources Google's engines cited most
+
+Across the 30 answers, YouTube was cited in 8 and Reddit in 7, more than any vendor except PostHog. Two of the YouTube videos were PostHog's own: [The top session recording and replay tools (open source)](https://www.youtube.com/watch?v=mWW3lJw81LE), cited in both Google answers for session replay, and [How to set up Next.js A/B tests](https://www.youtube.com/watch?v=QfTMREUEc18), cited in the AI Overview for the Next.js question.
+
+I'd copy that: a video for each comparison and docs topic, with the page linked in its description.
+
+## Google's AI Overviews cite PostHog's product pages for searches where they don't rank
+
+For "session replay" (1,000 US searches a month), Google's AI Overview cited posthog.com/session-replay in 4 of 4 live checks on 6 November 2026. In the organic results below it, the product page wasn't in the top 26 in any of them.
+
+<KeywordTable
+  caption="PostHog's best organic position in live US Google results, desktop and mobile, in two or four checks per search (DataForSEO, 6 November 2026). Positions count organic results only; AI Overviews aren't positions. None means no posthog.com page in the 26 organic results returned. The 26th place for &quot;session replay&quot; was the Hogpedia article, not the product page. Volumes are DataForSEO US monthly estimates."
+  sortBy="volume"
+  columns={[{ key: 'keyword', label: 'Search', format: 'text' }, { key: 'volume', label: 'US searches', format: 'number', short: 'US' }, { key: 'position', label: 'PostHog position', format: 'text', short: 'Pos.' }, { key: 'aio', label: 'AI Overview cites', format: 'text', short: 'AIO' }]}
+  rows={[
+    { keyword: 'ab testing', volume: 6600, position: 'None', aio: 'No' },
+    { keyword: 'feature flags', volume: 2400, position: 'None', aio: 'No' },
+    { keyword: 'product engineer', volume: 2400, position: '1 (1 of 4)', aio: '1 of 4' },
+    { keyword: 'web analytics', volume: 1300, position: '4 mobile', aio: '4 of 4' },
+    { keyword: 'session replay', volume: 1000, position: '26 (1 of 4)', aio: '4 of 4' },
+    { keyword: 'ai observability', volume: 1000, position: '6, 3 mobile', aio: 'No' },
+    { keyword: 'product analytics', volume: 590, position: '9 mobile', aio: '2 of 2' },
+  ]}
+/>
+
+The session replay page is indexed: a `site:` search for posthog.com/session-replay returned it on desktop and mobile on 7 November 2026. These checks don't show why the AI Overview quotes it while the organic results leave it out of the top 26.
+
+## Every posthog.com page sends 857 KB of CSS before its first word
+
+posthog.com is built with Gatsby, and every page I fetched inlines Gatsby's whole global stylesheet into the HTML: 857,296 bytes at the least. After it come about 300 KB of inline SVG icons for the desktop-style menus and windows. Only then does the page start.
+
+I fetched 1,174 posthog.com addresses from the sitemap as Googlebot's smartphone user agent on 6 November 2026: all 320 API reference pages and a sample of every other section. The median page was 1,348,769 bytes. On all 1,107 pages with an H1, the H1 started between 1,219,664 and 1,765,118 bytes into the file.
+
+That matters because [Google's Googlebot documentation](https://developers.google.com/search/docs/crawling-indexing/googlebot) says Googlebot "crawls the first 2MB of a supported file type", that the limit "is applied on the uncompressed data", and that at the cutoff it "only sends the already downloaded part of the file for indexing consideration". 81 of the 1,174 pages run past 2 MB: 77 API reference pages, the changelog, the Learn page, the main feature flags docs page and the Hogpedia feature flags article.
+
+<BeforeAfter
+  caption="Where the words sit in posthog.com/hogpedia/feature-flags today, and with the stylesheet linked and the hedgehog served as an image file (byte offsets in the uncompressed HTML, fetched 6 November 2026)."
+  before={{ label: "Today", code: beforeBytes }}
+  after={{ label: "After the fix", code: afterBytes }}
+/>
+
+The Hogpedia article is the clearest case. Its first sentence starts at byte 2,363,382, past the cut. The markup without the CSS and SVGs is 111,293 bytes.
+
+### Live searches don't show whether the 2 MB cut costs PostHog anything
+
+I tested it with live US Google searches on 6 and 7 November 2026, desktop and mobile. The results don't line up with the 2 MB line, so the cut is a risk, not a known loss.
+
+- Both Hogpedia articles are indexed. On 7 November, `site:` searches for posthog.com/hogpedia/feature-flags and posthog.com/hogpedia/session-replay returned each article on desktop and mobile. Hogpedia went live on 2 October 2026, and both articles came in the [same commit](https://github.com/PostHog/posthog.com/commit/dbfd3fd0) with no edits since.
+- None of the feature flags article's own text came back, and all of it sits past 2 MB. Exact sentences from it (6 and 7 November), and three words and phrases that appear only in its text searched within its address (7 November), returned no posthog.com page in any check.
+- All of the session replay article's text sits inside the limit, from byte 1,472,236. Its opening sentence returned the article first on mobile on 6 November, when the AI Overview also cited it. On 7 November its text brought the article back in 4 of 6 mobile checks and none of 7 desktop checks.
+- The feature flags docs page points the other way. Two code names that appear only past byte 2.4 million in its HTML, searched within its address, returned the page in 5 of 6 checks on 7 November. Two that appear only inside the limit returned it in none of 4.
+
+So Google holds some text from past 2 MB on at least one page, and the feature flags article's missing text may have another cause. The fix costs little either way.
+
+### Link the Gatsby stylesheet to take 857 KB off every posthog.com page
+
+**The fix:** in `gatsby-ssr.js`, which already uses `onPreRenderHTML`, replace the inline `<style data-identity="gatsby-global-css">` element with a `<link rel="stylesheet">` to the file Gatsby already serves at the same address (856,571 bytes, `/styles.48cdbcddf4d2a16b1b37.css`). Then move inline SVGs over about 20 KB, such as the 1 MB infobox hedgehog, into image files.
+
+That takes about 857 KB off every page and puts the H1 near byte 390,000 on a typical page. 69 of the 81 pages over 2 MB would come back inside the limit. The 12 that wouldn't are ten API reference pages, the changelog and the feature flags docs page.
+
+A linked stylesheet costs a browser one more request. posthog.com already serves that file with an ETag and `must-revalidate`, so on later pages the browser checks it is unchanged instead of downloading 857 KB again.
+
+To confirm it worked, fetch the 81 pages again and check each is under 2 MB with its H1 in the first 500 KB. After Google recrawls, search the Hogpedia feature flags sentence again.
+
+## AI answers skipped PostHog for LLM observability, a product it sells
+
+PostHog sells [AI observability](https://posthog.com/ai-observability) as one of its products. For "best llm observability tool", none of the three AI answers named PostHog. ChatGPT linked Langfuse, LangSmith, Arize Phoenix, Braintrust and Datadog instead.
+
+Google search shows the same gap. For six LLM evaluation and tracing searches, PostHog had no page in the top 26 on desktop or mobile on 6 November 2026.
+
+<KeywordTable
+  caption="LLM evaluation and observability searches (volumes and difficulty from DataForSEO, US, November 2026; positions from live US results, desktop and mobile, 6 November 2026). Two names per row from the top three organic results. PostHog had no page in the top 26 for any of them on desktop or mobile, except &quot;llm observability&quot;, where it was 11th on desktop and 23rd on mobile."
+  sortBy="volume"
+  columns={[{ key: 'keyword', label: 'Search', format: 'text' }, { key: 'volume', label: 'US searches', format: 'number', short: 'US' }, { key: 'difficulty', label: 'Difficulty', format: 'number', short: 'KD' }, { key: 'who', label: 'Who ranks', format: 'text', short: 'Top' }]}
+  rows={[
+    { keyword: 'llm evaluation', volume: 1000, difficulty: 23, who: 'Confident, Evidently' },
+    { keyword: 'llm observability', volume: 590, difficulty: 19, who: 'Dynatrace, Confident' },
+    { keyword: 'llm evals', volume: 480, difficulty: 29, who: 'Evidently, Confident' },
+    { keyword: 'ai agent observability', volume: 320, difficulty: 22, who: 'Zenity, Braintrust' },
+    { keyword: 'ai agent evaluation', volume: 260, difficulty: 27, who: 'Fiddler, Anthropic' },
+    { keyword: 'llm tracing', volume: 140, difficulty: 13, who: 'Monte Carlo, LangChain' },
+    { keyword: 'langsmith alternatives', volume: 140, difficulty: 0, who: 'ZenML, Lunary' },
+  ]}
+/>
+
+PostHog has the material for this already. On 4 November 2026 it posted [a thread on benchmarking its own agents](https://x.com/posthog/status/2118040832544768386), which opens with "We spend 2 trillion+ LLM tokens a month". It had 40,134 views and 582 bookmarks two days later, and it ends with a link to [How to benchmark AI agents at scale against real data](https://posthog.com/blog/how-to-benchmark-ai-agents). That post wasn't in the top 26 for "ai agent evaluation".
+
+### An LLM evaluation guide built from PostHog's own agent benchmarks
+
+**The fix:** publish a guide at posthog.com/docs/ai-observability/evaluation titled "How to evaluate LLMs and AI agents", and link the benchmark post, the thread and the product page to it.
+
+| Section | Searches it answers |
+| --- | --- |
+| What LLM evaluation is, in two sentences | llm evaluation, llm evals |
+| Offline and online evals, with PostHog's frozen-environment setup | ai agent evaluation, how to evaluate ai agents |
+| Tracing an agent run, with a real trace | llm tracing, ai agent observability |
+| What 2 trillion tokens a month taught us | the thread's own findings, quoted with the numbers |
+| How PostHog compares with LangSmith, Langfuse and Braintrust | langsmith alternatives, langfuse alternatives |
+
+The thread already works as the short version. Reply under it with a link to the guide once it's live, and the people who bookmarked it get the long version.
+
+## PostHog has 81 comparison pages, and five of the six I checked missed page one
+
+PostHog's sitemap lists 81 comparison pages under posthog.com/compare, from Amplitude alternatives to PostHog vs LaunchDarkly. The one that ranks is the one AI answers cite: the Amplitude alternatives page was fifth on desktop and mobile, and the AI Overview cited it in both live checks.
+
+The other five I checked didn't reach page one. In live US results on 6 November 2026, PostHog's comparison page for Mixpanel alternatives was 12th on mobile and missing on desktop. The pages for Sentry, LaunchDarkly and Langfuse alternatives weren't in the top 26, and "google analytics alternatives" (590 US searches a month) showed no posthog.com page, though PostHog has a page called Google Analytics alternative.
+
+None of the 81 has a Markdown copy (all 81 `.md` addresses returned a 404), and PostHog's llms.txt links none of them. It has 4,616 links to docs pages and none to a comparison, blog, newsletter, handbook or Hogpedia page at all. ChatGPT found the open source analytics comparison anyway, once. An agent that only reads llms.txt won't find it there.
+
+**The fix:** add Markdown copies and llms.txt entries for the comparison pages first, then the blog and newsletter. Put a dated two-sentence answer at the top of each comparison page, the way the Amplitude page already opens.
+
+## A PostHog significance calculator could rank for 2,900 searches a month
+
+"statistical significance calculator" gets 2,900 US searches a month at a difficulty of 26, and "ab test calculator" 480 more (DataForSEO, November 2026). The results are calculator sites and a few testing tools; Statsig was third on desktop for "ab test calculator". PostHog was in neither.
+
+PostHog already runs the maths. Its Experiments product computes significance, and its docs explain [sample size and running time](https://posthog.com/docs/experiments/sample-size-running-time). A free calculator at posthog.com/experiments/significance-calculator, using the same engine, with a "run this test in PostHog" link under the result, turns a docs page into a tool people link to.
+
+## 69 newsletter posts live on two PostHog domains
+
+PostHog's newsletter goes out on Substack at newsletter.posthog.com, which shows "Over 83,000 subscribers". Most posts are also published on posthog.com/newsletter. Of 98 Substack posts, 69 have a posthog.com copy with the same title, often at a different address.
+
+Both copies point their canonical tag at themselves, so Google picks, and on 6 November 2026 it picked both. For "43 things we've learned about hiring", the Substack copy was first on mobile and the AI Overview's first source. For "40 things we've learned about marketing for developers", the AI Overview cited both copies.
+
+<UrlMap
+  caption="Two of the 69 newsletter posts with a copy on each domain, and what I'd do with each copy (checked 6 November 2026)."
+  rows={[
+    { url: "posthog.com/newsletter/marketing-for-devs", action: "Keep", tone: "keep", note: "The one web copy. Gets the Markdown copy and the llms.txt entry" },
+    { url: "newsletter.posthog.com/p/40-things-weve-learned-about-marketing", action: "Email only", tone: "change", to: "a short post that links to posthog.com", note: "The AI Overview cites both copies today" },
+    { url: "posthog.com/newsletter/43-lessons-about-hiring-for-startups", action: "Keep", tone: "keep", note: "The copy every link and citation should go to" },
+    { url: "newsletter.posthog.com/p/43-things-weve-learned-about-hiring", action: "Email only", tone: "change", to: "a short post that links to posthog.com", note: "First on mobile and first AI Overview source today" },
+  ]}
+/>
+
+**The fix:** publish on posthog.com first. Send the Substack issue to subscribers by email and, on the Substack web archive, publish a short version with the opening and a link to the posthog.com post. For old posts, a link at the top of each Substack copy points readers to the posthog.com version.
+
+## Housekeeping: shared titles, Article markup and nine README redirects
+
+Thirteen newsletter category pages, such as posthog.com/newsletter/engineering, share one title: the word "Posts" and the brand name. My crawl of 201 pages found 110 with a title another page also uses. Each category page should name its category.
+
+199 of those 201 pages had no structured data. I'd add `Article` markup to blog and newsletter posts, with the author, publish date and `dateModified`.
+
+PostHog's GitHub README, on a repo with 40,675 stars, links nine posthog.com addresses that now redirect, such as /about to /why and /data-pipelines to /cdp. Pointing them at the final address saves a hop on every visit and every crawl.
+
+## 7 changes to win PostHog more non-brand searches and AI answer citations
+
+Here's every change I'd make:
+
+<PlanSteps
+  steps={[{"title": "Link the stylesheet", "body": "Replace the inline Gatsby global CSS with a link in gatsby-ssr.js, and move inline SVGs over 20 KB into image files."}, {"title": "Evaluation guide", "body": "Publish How to evaluate LLMs and AI agents from the benchmark post and thread, and link it from the AI observability page."}, {"title": "Comparison pages for agents", "body": "Markdown copies and llms.txt entries for all 81 comparison pages, each with a dated answer at the top."}, {"title": "Product page Markdown", "body": "Turn each 95-word product Markdown copy into the full page: what it does, pricing and comparisons."}, {"title": "Significance calculator", "body": "A free calculator on the Experiments engine, with a link to run the test in PostHog."}, {"title": "Newsletter on one domain", "body": "Publish on posthog.com first and send Substack as email with a short web post that links back."}, {"title": "Housekeeping", "body": "Category page titles, Article markup on posts, and the nine README links that redirect."}]}
+/>
+
+Then check the results:
+
+<PlanSteps
+  steps={[{"marker": "Day 0", "title": "Ask Google to recrawl", "body": "Submit the 81 pages that were over 2 MB and every new page to Index My Site."}, {"marker": "Day 3", "title": "Check the bytes", "body": "Fetch the 81 pages again and confirm each is under 2 MB with its H1 in the first 500 KB."}, {"marker": "Day 7", "title": "Search the sentences", "body": "Search the Hogpedia feature flags opening sentence and check the article comes back."}, {"marker": "Day 14", "title": "Head terms", "body": "Check feature flags, session replay and web analytics live on desktop and mobile."}, {"marker": "Day 30", "title": "AI answers", "body": "Ask the same ten questions and count the answers that cite a posthog.com page other than the homepage."}]}
+/>
+
+## Get the 81 heavy pages recrawled once the stylesheet ships
+
+Google comes back to most of these pages on its own schedule, and the 81 heavy pages are the ones that matter. I'd submit each one to [Index My Site](https://indexmysite.app/) as soon as the stylesheet change ships, then every new page as it goes live.
+
+## The lesson for Gatsby and other static sites: check where your first heading starts
+
+Open your biggest page, view the source and search for your first heading. If it starts more than a megabyte in, the framework is putting its styling ahead of your words, and Googlebot reads only the first 2 MB.
+
+## How I ran this
+
+I build SEO Skill and Index My Site, and everything in this teardown came from SEO Skill, run by an agent, plus direct DataForSEO calls for the live results. You can run the same audit on your own site.
+
+**1. Connect the hosted MCP server.** It's free. You sign in with Google, and there's no password and nothing to install. In Claude Code:
+
+```sh
+claude mcp add --transport http seoskill https://seoskill.dev/mcp
+```
+
+Codex, Cursor and Claude on the web work too. The [MCP guide](/docs/mcp) has the steps for each one.
+
+**2. Add a research key.** On your [account page](/account), save an Ahrefs or DataForSEO key. The key gives your agent search volumes, rankings and results pages, like the tables above. With DataForSEO it can also ask ChatGPT and Google's AI answers your questions and check who they cite.
+
+**3. Install the CLI for crawling.** The crawl runs on your machine, so it can read any site:
+
+```sh
+npm i -g seo
+seo login
+seo crawl https://example.com/ --max-pages 600
+```
+
+**4. Ask your agent.** This is close to the prompt I used:
+
+```text
+Audit example.com for US search and AI answers.
+Fetch our 500 biggest pages as Googlebot and report
+where the first heading starts and how many pages
+run past 2 MB.
+Ask ai_answers 10 buyer questions and list which
+of our pages get cited, and who is cited instead.
+Check our product pages live for their head terms,
+desktop and mobile, and note when the AI Overview
+cites a page that doesn't rank.
+Rank the fixes by how close each is to revenue.
+```
+
+On your own site, the hosted server adds what I couldn't see from outside: your real Search Console clicks and queries, and the canonical Google chose for each page.
+
+If you're at PostHog, I'm happy to talk any of this through. And if you'd like the same teardown for your company, [SEO Skill](/) will run it for you.

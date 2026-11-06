@@ -1,4 +1,5 @@
 import { SEO_CRAWLER_USER_AGENT } from '../fetch/crawler-identity.js'
+import { CommandError } from './types.js'
 
 // The one redirect tracer: `seo page`, `seo index`, reports, the hosted MCP
 // and `seo redirect-trace` all follow redirects here. Plain fetch with
@@ -8,6 +9,10 @@ import { SEO_CRAWLER_USER_AGENT } from '../fetch/crawler-identity.js'
 
 export const MAX_REDIRECT_HOPS = 10
 export const REDIRECT_HOP_TIMEOUT_MS = 10_000
+export const REDIRECT_MAP_MAX_ROWS = 1_000
+export const REDIRECT_MAP_CONCURRENCY = 5
+// A map file larger than this cannot hold 1,000 sensible rows.
+export const REDIRECT_MAP_MAX_BYTES = 2_000_000
 
 const REDIRECT_STATUSES = new Set([301, 302, 303, 307, 308])
 
@@ -153,4 +158,232 @@ export async function traceRedirects(
     }
     current = location
   }
+}
+
+// Map mode: old URL, optional expected new URL.
+
+export type RedirectMapRow = { line: number; url: string; expected?: string }
+
+export type RedirectVerdict =
+  // Ends on the expected URL in one hop (or none, when it is the same URL).
+  | 'matches'
+  // Ends on the expected URL after more than one hop: right, but slower.
+  // Without an expected URL: more than one hop.
+  | 'chain'
+  // Without an expected URL: one hop.
+  | 'redirects'
+  | 'wrong_target'
+  | 'not_redirected'
+  | 'loop'
+  | 'too_many_hops'
+  | 'timeout'
+  | 'error'
+
+export type RedirectMapResult = {
+  type: 'row'
+  line: number
+  url: string
+  expected: string | null
+  verdict: RedirectVerdict
+  hops: number
+  final_url: string
+  final_status: number | null
+  chain: { url: string; status: number; location: string | null }[]
+  error?: string
+}
+
+function csvFields(line: string): string[] {
+  const fields: string[] = []
+  let field = ''
+  let quoted = false
+  for (let index = 0; index < line.length; index += 1) {
+    const char = line[index]
+    if (quoted) {
+      if (char === '"' && line[index + 1] === '"') {
+        field += '"'
+        index += 1
+      } else if (char === '"') quoted = false
+      else field += char
+    } else if (char === '"') quoted = true
+    else if (char === ',') {
+      fields.push(field.trim())
+      field = ''
+    } else field += char
+  }
+  fields.push(field.trim())
+  return fields
+}
+
+// Reads `old_url,expected_new_url` lines, or one URL per line. A first line
+// that is not a URL is a header. Empty lines and lines starting with # are
+// skipped. Refuses the whole file, before any request, when it has more
+// than REDIRECT_MAP_MAX_ROWS rows or a row it cannot read.
+export function parseRedirectMap(text: string): RedirectMapRow[] {
+  const rows: RedirectMapRow[] = []
+  const problems: string[] = []
+  const lines = text.replace(/^\uFEFF/, '').split(/\r?\n/)
+  lines.forEach((raw, index) => {
+    const line = index + 1
+    const value = raw.trim()
+    if (!value || value.startsWith('#')) return
+    const [first = '', second = '', ...rest] = csvFields(value)
+    const url = httpUrl(first)
+    if (!url && !rows.length && !problems.length) return
+    if (!url) {
+      problems.push(
+        `line ${line}: "${first.slice(0, 80)}" is not an http or https URL`,
+      )
+      return
+    }
+    if (rest.some(Boolean)) {
+      problems.push(`line ${line}: more than two columns`)
+      return
+    }
+    if (second && !httpUrl(second)) {
+      problems.push(
+        `line ${line}: "${second.slice(0, 80)}" is not an http or https URL`,
+      )
+      return
+    }
+    rows.push({ line, url: first, ...(second ? { expected: second } : {}) })
+  })
+  if (rows.length + problems.length > REDIRECT_MAP_MAX_ROWS) {
+    throw new CommandError(
+      'INVALID_INPUT',
+      `The map has ${(rows.length + problems.length).toLocaleString('en-US')} rows. Map mode traces up to ${REDIRECT_MAP_MAX_ROWS.toLocaleString('en-US')} per run, so split the file and run each part.`,
+    )
+  }
+  if (problems.length) {
+    throw new CommandError(
+      'INVALID_INPUT',
+      `The map has ${problems.length} ${problems.length === 1 ? 'row' : 'rows'} it cannot read, so nothing was traced: ${problems.slice(0, 5).join('; ')}${problems.length > 5 ? '; and more' : ''}.`,
+    )
+  }
+  if (!rows.length) {
+    throw new CommandError(
+      'INVALID_INPUT',
+      'The map has no URLs. Write one old_url,expected_new_url pair per line, or one URL per line.',
+    )
+  }
+  return rows
+}
+
+// Same URL apart from host case, a default port, a fragment or a trailing
+// slash on the path.
+export function sameTarget(a: string, b: string): boolean {
+  const key = (value: string) => {
+    const url = new URL(value)
+    url.hash = ''
+    url.pathname = url.pathname.replace(/\/+$/, '') || '/'
+    return url.toString()
+  }
+  try {
+    return key(a) === key(b)
+  } catch {
+    return false
+  }
+}
+
+export function redirectVerdict(
+  trace: RedirectTrace,
+  expected?: string,
+): RedirectVerdict {
+  if (trace.outcome === 'loop') return 'loop'
+  if (trace.outcome === 'too_many') return 'too_many_hops'
+  if (trace.outcome === 'timeout') return 'timeout'
+  if (trace.outcome === 'error') return 'error'
+  if (!expected) {
+    return trace.hops === 0
+      ? 'not_redirected'
+      : trace.hops === 1
+        ? 'redirects'
+        : 'chain'
+  }
+  if (sameTarget(trace.final_url, expected)) {
+    return trace.hops > 1 ? 'chain' : 'matches'
+  }
+  return trace.hops === 0 ? 'not_redirected' : 'wrong_target'
+}
+
+export type RedirectMapSummary = {
+  type: 'summary'
+  rows: number
+  verdicts: Partial<Record<RedirectVerdict, number>>
+  // Rows whose last response was a status other than 200 (not counting
+  // rows with no response).
+  final_not_200: number
+  max_hops: number
+  concurrency: number
+  timeout_ms: number
+}
+
+// Traces every row with a fixed number of requests in flight. Rows reach
+// onRow in input order as they finish; at most a few rows wait in memory.
+export async function traceRedirectMap(
+  rows: RedirectMapRow[],
+  onRow: (row: RedirectMapResult) => Promise<void> | void,
+  options: { fetch?: Fetch } = {},
+): Promise<RedirectMapSummary> {
+  if (rows.length > REDIRECT_MAP_MAX_ROWS) {
+    throw new CommandError(
+      'INVALID_INPUT',
+      `Map mode traces up to ${REDIRECT_MAP_MAX_ROWS.toLocaleString('en-US')} rows per run.`,
+    )
+  }
+  const summary: RedirectMapSummary = {
+    type: 'summary',
+    rows: rows.length,
+    verdicts: {},
+    final_not_200: 0,
+    max_hops: MAX_REDIRECT_HOPS,
+    concurrency: REDIRECT_MAP_CONCURRENCY,
+    timeout_ms: REDIRECT_HOP_TIMEOUT_MS,
+  }
+  let active = 0
+  const waiting: Array<() => void> = []
+  const run = async (row: RedirectMapRow): Promise<RedirectMapResult> => {
+    while (active >= REDIRECT_MAP_CONCURRENCY) {
+      await new Promise<void>((resolve) => waiting.push(resolve))
+    }
+    active += 1
+    try {
+      const trace = await traceRedirects(row.url, { fetch: options.fetch })
+      return {
+        type: 'row',
+        line: row.line,
+        url: row.url,
+        expected: row.expected ?? null,
+        verdict: redirectVerdict(trace, row.expected),
+        hops: trace.hops,
+        final_url: trace.final_url,
+        final_status: trace.final_status,
+        chain: trace.steps.map(({ url, status, location }) => ({
+          url,
+          status,
+          location,
+        })),
+        ...(trace.error ? { error: trace.error } : {}),
+      }
+    } finally {
+      active -= 1
+      waiting.shift()?.()
+    }
+  }
+
+  const window: Promise<RedirectMapResult>[] = []
+  let next = 0
+  while (next < rows.length || window.length) {
+    while (next < rows.length && window.length < REDIRECT_MAP_CONCURRENCY * 4) {
+      window.push(run(rows[next] as RedirectMapRow))
+      next += 1
+    }
+    const result = await (window.shift() as Promise<RedirectMapResult>)
+    summary.verdicts[result.verdict] =
+      (summary.verdicts[result.verdict] ?? 0) + 1
+    if (result.final_status !== null && result.final_status !== 200) {
+      summary.final_not_200 += 1
+    }
+    await onRow(result)
+  }
+  return summary
 }

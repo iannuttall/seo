@@ -8,6 +8,7 @@ import {
   localInternalLinksDependencies,
   localRefreshClicky,
   localResearchKeys,
+  localResearchStore,
   MAX_MAX_PAGES,
   nodeCommandDeps,
   readLintFiles,
@@ -106,6 +107,7 @@ export function registerSharedTools(
     keys: localResearchKeys,
     refreshClicky: localRefreshClicky,
     drKey: null,
+    researchStore: localResearchStore(),
     accounts: localAccounts,
     signIn: LOCAL_SIGN_IN.signIn,
     connect:

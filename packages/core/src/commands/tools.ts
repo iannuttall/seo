@@ -32,7 +32,9 @@ import {
   RESEARCH_PROVIDERS,
   RESEARCH_SCOPES,
   runResearch,
+  SERP_DEPTH,
 } from './research.js'
+import type { ResearchStore } from './research-cache.js'
 import { DIMENSIONS, runRows } from './rows.js'
 import {
   INDEXING_RULE,
@@ -66,6 +68,8 @@ export type ToolSurface = {
   // Reads the saved Clicky account's sites again and returns the new keys,
   // or null when no Clicky account is saved.
   refreshClicky?: () => Promise<Headers | null>
+  // Where research results are kept for a day; the Workers cache if unset.
+  researchStore?: ResearchStore
   // The Ahrefs key for the free Domain Rating column, when there is one.
   drKey?: string | null
   // Every Google sign-in on this surface, for listing and Google Analytics.
@@ -491,6 +495,15 @@ export const SHARED_TOOLS: SharedTool[] = [
         .regex(/^[a-z]{2}$/)
         .default('us')
         .describe('Two-letter country code.'),
+      depth: z
+        .number()
+        .int()
+        .min(1)
+        .max(100)
+        .optional()
+        .describe(
+          `serp only: results per keyword, default ${SERP_DEPTH}. Deeper costs more.`,
+        ),
       ...detail,
     }),
     run: async (surface, input) => {
@@ -520,6 +533,7 @@ export const SHARED_TOOLS: SharedTool[] = [
       }
       return runResearch(input, await surface.keys(), {
         drKey: surface.drKey,
+        store: surface.researchStore,
         call: more,
       })
     },

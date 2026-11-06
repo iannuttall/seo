@@ -3,6 +3,7 @@ import {
   localError,
   localRefreshClicky,
   localResearchKeys,
+  localResearchStore,
   nodeCommandDeps,
   readLintFiles,
   SeoError,
@@ -551,9 +552,20 @@ export const researchCommand = defineCommand({
       type: 'string',
       description: 'Two-letter country code. Default us.',
     },
+    depth: {
+      type: 'string',
+      description:
+        'serp only: results per keyword, 1 to 100. Default 20. Deeper costs more.',
+    },
     ...detail,
     account: common.account,
     json: common.json,
+    refresh: {
+      type: 'boolean',
+      default: false,
+      description:
+        'Ask the provider again instead of reading the result saved in the last day.',
+    },
   },
   run: async ({ args }) => {
     const action = stringArg(args.action) as ResearchAction
@@ -623,6 +635,7 @@ export const researchCommand = defineCommand({
         {
           provider,
           scope,
+          depth: numberArg(args.depth),
           action,
           keywords,
           target,
@@ -633,11 +646,13 @@ export const researchCommand = defineCommand({
         },
         keys,
         {
+          store: localResearchStore(booleanArg(args.refresh)),
           call: (offset) =>
             cliCall('research', {
               action,
               provider,
               scope,
+              depth: numberArg(args.depth),
               keywords: keywords.join(',') || undefined,
               target,
               competitors: competitors.join(',') || undefined,

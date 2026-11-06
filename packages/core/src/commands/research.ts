@@ -8,6 +8,7 @@ import {
 import type { Detail } from './present.js'
 import {
   dataForSeoLanguage,
+  SERP_DEPTH,
   type ResearchAction,
   type ResearchProvider,
   type ResearchScope,
@@ -16,6 +17,13 @@ import {
   type SiteTotal,
 } from './research-providers.js'
 import { PAGE_SIZE, rowsText } from './rows.js'
+import {
+  type ResearchStore,
+  readResearch,
+  researchKey,
+  saveResearch,
+  workersResearchStore,
+} from './research-cache.js'
 import { CommandError, type CommandResult } from './types.js'
 
 export type {
@@ -23,7 +31,7 @@ export type {
   ResearchProvider,
   ResearchScope,
 } from './research-providers.js'
-export { RESEARCH_SCOPES } from './research-providers.js'
+export { RESEARCH_SCOPES, SERP_DEPTH } from './research-providers.js'
 
 export const RESEARCH_ACTIONS = [
   'keyword_metrics',
@@ -35,6 +43,8 @@ export const RESEARCH_ACTIONS = [
   'ai_answers',
   'top_pages',
   'pages_by_backlinks',
+  'keyword_ideas',
+  'serp_overlap',
 ] as const satisfies readonly ResearchAction[]
 
 export const RESEARCH_PROVIDERS = [
@@ -42,7 +52,7 @@ export const RESEARCH_PROVIDERS = [
   'ahrefs',
 ] as const satisfies readonly ResearchProvider[]
 
-export const RESEARCH_HELP = `provider is optional: without it the call uses the saved key, DataForSEO when both are saved. The target is a domain (the whole site), a path ending in / such as example.com/blog/ (every URL under it), or one page; scope overrides that. keyword_metrics (keywords: volume, difficulty, CPC), ranked_keywords (target: keywords a site, subfolder or page ranks for, with the provider's traffic total for the whole target), top_pages (target: the pages with the most estimated organic traffic), serp (keywords, up to 5: the ranking pages, each with its domain's authority: DataForSEO domain_rank 0 to 100, Ahrefs domain_rating), competitors (target: domains that share keywords), backlinks (target: referring domains), pages_by_backlinks (target: the pages with the most referring domains), link_gap (target and 2 to 5 competitors: referring domains that link to two or more competitors and not the target, highest authority first, from each site's top 1,000 referring domains; costs one backlinks call per site), ai_answers (DataForSEO only; target: the site. Without keywords it takes the site’s top ${AI_ANSWER_QUESTIONS} chat-style and long questions from Search Console’s AI-shaped queries itself. With up to ${AI_ANSWER_QUESTIONS} questions in keywords it asks those instead, and the target can be any domain, such as a competitor's. Each answer row also lists the other sites it cites, and the notes rank them. Answers come from DataForSEO's queue: answers not ready after about 40 seconds are returned as tasks, already paid for; call again with the same target and those tasks to read them at no cost. It asks ChatGPT search, Google AI Mode and Google AI Overviews each one and says whether the answer cites or mentions the site. DataForSEO’s queue prices are about $0.0072 a question across the three engines, so about $0.07 a run: tell the person before running it). Rows with a domain, and the target, get a free Ahrefs domain_rating column. Numbers are provider estimates, not Search Console data.`
+export const RESEARCH_HELP = `provider is optional: without it the call uses the saved key, DataForSEO when both are saved. The target is a domain (the whole site), a path ending in / such as example.com/blog/ (every URL under it), or one page; scope overrides that. keyword_metrics (keywords: volume, difficulty, CPC), keyword_ideas (up to 5 seed keywords: searches that contain each seed, by volume), ranked_keywords (target: keywords a site, subfolder or page ranks for, with the provider's traffic total for the whole target), top_pages (target: the pages with the most estimated organic traffic), serp (keywords, up to 5: the ranking pages, each with its domain's authority: DataForSEO domain_rank 0 to 100, Ahrefs domain_rating; depth sets results per keyword, default ${SERP_DEPTH}; rows run position by position across the keywords), serp_overlap (2 to 10 keywords: for each pair, how many of their top 10 pages and sites are the same, to decide one page or several; results without a real page are counted, not compared), competitors (target: domains that share keywords), backlinks (target: referring domains), pages_by_backlinks (target: the pages with the most referring domains), link_gap (target and 2 to 5 competitors: referring domains that link to two or more competitors and not the target, highest authority first, from each site's top 1,000 referring domains; costs one backlinks call per site), ai_answers (DataForSEO only; target: the site. Without keywords it takes the site’s top ${AI_ANSWER_QUESTIONS} chat-style and long questions from Search Console’s AI-shaped queries itself. With up to ${AI_ANSWER_QUESTIONS} questions in keywords it asks those instead, and the target can be any domain, such as a competitor's. Each answer row also lists the other sites it cites, and the notes rank them. Answers come from DataForSEO's queue: answers not ready after about 40 seconds are returned as tasks, already paid for; call again with the same target and those tasks to read them at no cost. It asks ChatGPT search, Google AI Mode and Google AI Overviews each one and says whether the answer cites or mentions the site. DataForSEO’s queue prices are about $0.0072 a question across the three engines, so about $0.07 a run: tell the person before running it). Rows with a domain, and the target, get a free Ahrefs domain_rating column. Numbers are provider estimates, not Search Console data.`
 
 // Platforms that share keywords with almost every site. Competitor lists
 // leave them out, with the target itself, and say how many rows went.
@@ -118,6 +128,17 @@ function chooseProvider(
   )
 }
 
+// Actions whose rows carry a search volume, and how each provider gets it.
+const VOLUME_ACTIONS: ResearchAction[] = ['keyword_metrics', 'keyword_ideas']
+const VOLUME_MODEL: Record<ResearchProvider, string> = {
+  dataforseo:
+    "DataForSEO search_volume is Google Ads' average monthly searches over the last 12 months, rounded into Google's bands.",
+  ahrefs:
+    "Ahrefs volume is Ahrefs' own estimate of average monthly searches, from clickstream data and its keyword database.",
+}
+const VOLUMES_DIFFER =
+  'The two providers can differ two to eight times for the same keyword, so compare keywords within one provider. A null volume is unknown, not zero.'
+
 // How each provider estimates organic traffic, so totals from two providers
 // are never read as the same measure.
 const TRAFFIC_MODEL: Record<ResearchProvider, string> = {
@@ -131,6 +152,7 @@ const PROVIDERS_DIFFER =
   'Providers track different keywords and use different click models, so their traffic for the same site or page can differ tenfold or more. Compare a site with itself in one provider, not across providers.'
 
 export type ResearchInput = {
+  depth?: number
   provider?: ResearchProvider
   scope?: ResearchScope
   action: ResearchAction
@@ -150,6 +172,8 @@ export async function runResearch(
   options: {
     drKey?: string | null
     call: (offset: number) => string
+    // Where results are kept for a day; the Workers cache when unset.
+    store?: ResearchStore | null
   },
 ): Promise<CommandResult> {
   const country = input.country ?? 'us'
@@ -168,9 +192,35 @@ export async function runResearch(
     'pages_by_backlinks',
   ].includes(input.action)
   const scope = scoped && target ? researchScope(target, input.scope) : null
+  const limit = Math.min(1000, Math.max(100, offset + PAGE_SIZE))
+  const request = {
+    action: input.action,
+    keywords: input.keywords ?? [],
+    target,
+    ...(scope ? { scope } : {}),
+    competitors: input.competitors ?? [],
+    country,
+    ...(input.action === 'serp' ? { depth: input.depth ?? SERP_DEPTH } : {}),
+  }
+  const store = options.store ?? workersResearchStore()
+  const credential =
+    provider === 'dataforseo'
+      ? keys.get('x-dataforseo-login')
+      : keys.get('x-ahrefs-key')
+  const key = await researchKey([provider, credential, request])
+  const saved = await readResearch(store, key, limit)
+  const result =
+    saved?.result ?? (await research(provider, keys, { ...request, limit }))
+  if (!saved) {
+    await saveResearch(store, key, {
+      limit,
+      savedAt: new Date().toISOString(),
+      result,
+    })
+  }
   const {
-    rows: found,
-    costUsd,
+    rows: fetched,
+    costUsd: paid,
     partial,
     missed,
     noData,
@@ -179,15 +229,22 @@ export async function runResearch(
     available,
     siteTotal,
     rankFailed,
-  } = await research(provider, keys, {
-    action: input.action,
-    keywords: input.keywords ?? [],
-    target,
-    ...(scope ? { scope } : {}),
-    competitors: input.competitors ?? [],
-    country,
-    limit: Math.min(1000, Math.max(100, offset + PAGE_SIZE)),
-  })
+    compared,
+  } = result
+  // A saved result costs nothing now; its first cost is in the note.
+  const costUsd = saved ? 0 : paid
+  // Several SERPs read best side by side: every keyword's first result,
+  // then every second result, so each page shows all the keywords.
+  const order = new Map(request.keywords.map((word, index) => [word, index]))
+  const found =
+    input.action === 'serp' && request.keywords.length > 1
+      ? [...fetched].sort(
+          (a, b) =>
+            Number(a.position ?? 1e9) - Number(b.position ?? 1e9) ||
+            (order.get(String(a.keyword)) ?? 0) -
+              (order.get(String(b.keyword)) ?? 0),
+        )
+      : fetched
   const { rows, note } =
     input.action === 'competitors'
       ? realCompetitors(found, target)
@@ -204,15 +261,47 @@ export async function runResearch(
     ? (await domainRatings([target], drKey)).get(bareDomain(target))
     : undefined
   const hasTargetDr = targetDr !== undefined && targetDr !== null
+  // full means every row read; summary and rows go a page at a time.
+  const detail = input.detail ?? 'summary'
+  const size = detail === 'full' ? Math.max(rated.rows.length, 1) : PAGE_SIZE
+  const shown = rated.rows.slice(offset, offset + size)
+  const next =
+    offset + shown.length < rated.rows.length ? offset + shown.length : null
+  const perKeyword =
+    input.action === 'serp'
+      ? Object.fromEntries(
+          request.keywords.map((word) => [
+            word,
+            rated.rows.filter((row) => row.keyword === word).length,
+          ]),
+        )
+      : null
   return {
     text: rowsText({
       title: `${provider} ${input.action}${target ? ` for ${target}` : ''}${scope ? ` (${SCOPE_TEXT[scope]})` : ''}${LINK_ACTIONS.includes(input.action) ? ', all countries' : `, ${country}${language ? `, language ${language}` : ''}`}.`,
       rows: rated.rows,
       offset,
-      limit: PAGE_SIZE,
-      detail: input.detail ?? 'summary',
+      limit: size,
+      detail,
       notes: [
         `${provider} estimates, in the provider’s own units.`,
+        ...(compared
+          ? [
+              `Compared: ${compared.withPage} of ${compared.results} top results had a real page, so shared_pages counts only those; ${compared.results - compared.withPage} came back as Google redirect links and could not be compared by page. ${compared.withSite} had a known site for shared_sites. Unique pages and sites are counted per keyword.${compared.withPage < compared.results / 2 && provider === 'dataforseo' ? ' With this few pages, shared_pages cannot settle one page or several; provider ahrefs returns real pages.' : ''}`,
+            ]
+          : []),
+        ...(VOLUME_ACTIONS.includes(input.action)
+          ? [`Volume model: ${VOLUME_MODEL[provider]} ${VOLUMES_DIFFER}`]
+          : []),
+        ...(perKeyword
+          ? [
+              `Results per keyword: ${Object.entries(perKeyword)
+                .map(([word, count]) => `${word} ${count}`)
+                .join(
+                  ', ',
+                )}. Rows run position by position across the keywords.`,
+            ]
+          : []),
         ...(siteTotal ? [siteTotalNote(provider, siteTotal, rows.length)] : []),
         ...(available !== undefined && available > found.length
           ? [
@@ -232,7 +321,18 @@ export async function runResearch(
               'No domain_rating column: Domain Rating by Ahrefs needs an Ahrefs key (or the hosted MCP at https://seoskill.dev/mcp, which adds it).',
             ]
           : []),
-        ...(costUsd !== null ? [`DataForSEO cost: $${costUsd}.`] : []),
+        ...(store && rated.rows.length > PAGE_SIZE
+          ? [
+              'The result is kept for a day, so the next pages, and the same rows in full, cost nothing more.',
+            ]
+          : []),
+        ...(saved
+          ? [
+              `Read from the result saved at ${saved.savedAt}, at no new cost${paid ? ` (it cost $${paid} then)` : ''}. Results are kept for a day.`,
+            ]
+          : costUsd !== null
+            ? [`DataForSEO cost: $${costUsd}.`]
+            : []),
         ...(partial
           ? [
               'Partial: DataForSEO could not fetch some pages of results, so rows may be missing.',
@@ -261,9 +361,7 @@ export async function runResearch(
               `Cut at ${floor.field} ${floor.value}: at least one site has more than 1,000 referring domains, and only its top 1,000 were read, so domains below ${floor.field} ${floor.value} are left out rather than guessed.`,
             ]
           : []),
-        ...(unresolved
-          ? [unresolvedNote(provider, unresolved, rows.length)]
-          : []),
+        ...(unresolved ? [unresolvedNote(unresolved, rows.length)] : []),
         ...(note ? [note] : []),
         ...(hasTargetDr
           ? [`${bareDomain(target)} domain_rating: ${targetDr}.`]
@@ -287,6 +385,7 @@ export async function runResearch(
       attribution: rated.added || hasTargetDr ? DR_ATTRIBUTION : null,
       leftOut: note,
       costUsd,
+      savedAt: saved?.savedAt ?? null,
       partial,
       missedKeywords: missed,
       noDataKeywords: noData,
@@ -297,9 +396,14 @@ export async function runResearch(
             leftOut: leftOut ?? [],
           }
         : {}),
+      ...(perKeyword ? { resultsPerKeyword: perKeyword } : {}),
+      ...(compared ? { compared } : {}),
       total: rated.rows.length,
       offset,
-      rows: rated.rows.slice(offset, offset + PAGE_SIZE),
+      // The first row after these, or null when these are the last.
+      next,
+      rowsLeftOut: rated.rows.length - shown.length,
+      rows: shown,
     },
   }
 }
@@ -357,12 +461,8 @@ function noDataNote(
 
 // Results whose page is unknown because the provider returned a Google
 // redirect link instead of the page.
-function unresolvedNote(
-  provider: ResearchProvider,
-  count: number,
-  total: number,
-): string {
-  return `${count} of ${total} results have no exact page: ${provider} returned Google redirect links for them. Their domain and url_hint come from Google's breadcrumb, which is shortened.${provider === 'dataforseo' ? ' For exact pages, use provider ahrefs.' : ''}`
+function unresolvedNote(count: number, total: number): string {
+  return `${count} of ${total} results have no exact page: DataForSEO returned Google redirect links for them. Their domain and url_hint come from Google's breadcrumb, which is shortened. For exact pages, use provider ahrefs.`
 }
 
 // How many link_gap rows get a Domain Rating to sort by when the gap comes

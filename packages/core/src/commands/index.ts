@@ -9,6 +9,7 @@ export type {
 } from '../gsc/client/types.js'
 export * from '../lint/index.js'
 export * from './ai-answers.js'
+export type { ResearchStore } from './research-cache.js'
 export * from './analytics.js'
 export * from './analytics-site.js'
 export * from './audit.js'

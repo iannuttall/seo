@@ -28,7 +28,14 @@ export function rowsText(input: {
 }): string {
   const total = input.rows.length
   if (input.detail === 'full') {
-    return `${input.title}\n\n${JSON.stringify(input.rows.slice(input.offset, input.offset + input.limit))}`
+    const page = input.rows.slice(input.offset, input.offset + input.limit)
+    const end = input.offset + page.length
+    // Say when the JSON is one page of more, and how to get the next.
+    const cut =
+      end < total
+        ? `\n\nRows ${input.offset + 1} to ${end} of ${total}. More: ${input.more ? input.more(end).replace('detail "rows"', 'detail "full"').replace('--detail rows', '--detail full') : `detail "full", offset ${end}`}.`
+        : ''
+    return `${input.title}\n\n${JSON.stringify(page)}${cut}`
   }
   const size =
     input.detail === 'summary' ? Math.min(input.limit, 25) : input.limit

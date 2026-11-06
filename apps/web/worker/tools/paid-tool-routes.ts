@@ -258,6 +258,7 @@ async function researchRows(
     target?: string
     keywords?: string[]
     country: string
+    depth?: number
   },
 ) {
   const { data } = await runResearch(
@@ -266,7 +267,8 @@ async function researchRows(
       'x-dataforseo-login': env.DATAFORSEO_LOGIN,
       'x-dataforseo-password': env.DATAFORSEO_PASSWORD,
     }),
-    { drKey: env.AHREFS_API_KEY, call: () => '' },
+    // The free tools show live results, so nothing is read from a saved run.
+    { drKey: env.AHREFS_API_KEY, call: () => '', store: null },
   )
   const result = data as Record<string, unknown>
   return {
@@ -309,6 +311,11 @@ export function handleSerpChecker(
     allowLocalhostTurnstileForTests: allowLocalTurnstileTest(request),
     parse: parseSerp,
     provider: ({ keyword, country }) =>
-      researchRows(env, { action: 'serp', keywords: [keyword], country }),
+      researchRows(env, {
+        action: 'serp',
+        keywords: [keyword],
+        country,
+        depth: 30,
+      }),
   })
 }

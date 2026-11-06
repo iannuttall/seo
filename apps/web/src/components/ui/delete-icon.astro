@@ -1,0 +1,7 @@
+---
+import { Trash2 } from 'lucide'
+import Icon from './icon.astro'
+
+const { class: className, ...props } = Astro.props
+---
+<Icon iconNode={Trash2} class={className} {...props} />

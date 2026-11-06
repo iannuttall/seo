@@ -1,0 +1,58 @@
+---
+import type { HTMLAttributes } from 'astro/types'
+import { cn } from '@/lib/cn'
+
+type SelectProps = Omit<HTMLAttributes<'select'>, 'size'> & {
+  size?: 'default' | 'sm'
+  fullWidth?: boolean
+}
+
+const {
+  size = 'default',
+  fullWidth = false,
+  class: className,
+  ...props
+} = Astro.props as SelectProps
+---
+
+<div
+  data-slot="select-wrapper"
+  class={cn(
+    'group/select relative has-[select:disabled]:opacity-50',
+    fullWidth ? 'w-full' : 'w-fit',
+  )}
+>
+  <select
+    data-slot="select"
+    data-size={size}
+    class={cn(
+      'w-full min-w-0 appearance-none rounded-lg border border-input bg-card px-3 text-sm text-foreground',
+      size === 'sm' ? 'h-8 py-1 pr-7' : 'h-10 py-2 pr-9',
+      'placeholder:text-foreground-muted',
+      'focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/20',
+      'disabled:pointer-events-none disabled:cursor-not-allowed',
+      'transition-[color,box-shadow]',
+      className,
+    )}
+    {...props}
+  >
+    <slot />
+  </select>
+  <svg
+    class={cn(
+      'pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-foreground-muted opacity-60',
+      size === 'sm' ? 'size-3.5' : 'size-4',
+    )}
+    xmlns="http://www.w3.org/2000/svg"
+    viewBox="0 0 24 24"
+    fill="none"
+    stroke="currentColor"
+    stroke-width="2"
+    stroke-linecap="round"
+    stroke-linejoin="round"
+    aria-hidden="true"
+    data-slot="select-icon"
+  >
+    <path d="m6 9 6 6 6-6"></path>
+  </svg>
+</div>

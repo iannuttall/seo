@@ -1,0 +1,7 @@
+---
+import { LayoutGrid } from 'lucide'
+import Icon from './icon.astro'
+
+const { class: className, ...props } = Astro.props
+---
+<Icon iconNode={LayoutGrid} class={className} {...props} />

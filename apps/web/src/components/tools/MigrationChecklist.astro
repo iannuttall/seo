@@ -1,0 +1,75 @@
+---
+import Checkbox from '@/components/ui/checkbox.astro'
+
+// An interactive checklist: each tick is saved in this browser only.
+export type ChecklistItem = { id: string; title: string; detail: string }
+export type ChecklistPhase = { id: string; title: string; when: string; items: ChecklistItem[] }
+
+interface Props {
+  phases: ChecklistPhase[]
+  storageKey: string
+}
+
+const { phases, storageKey } = Astro.props
+const total = phases.reduce((sum, phase) => sum + phase.items.length, 0)
+---
+
+<div data-migration-checklist data-storage-key={storageKey} class="space-y-8">
+  <div class="flex flex-col gap-3 rounded-lg bg-muted p-4 sm:flex-row sm:items-center sm:justify-between">
+    <p class="text-sm"><span data-done class="font-medium">0</span> of {total} done. Ticks are saved in this browser.</p>
+    <button data-clear type="button" class="self-start text-xs text-foreground-muted underline underline-offset-2 hover:text-foreground sm:self-auto">Clear ticks</button>
+  </div>
+  {phases.map((phase) => (
+    <section class="space-y-3">
+      <div>
+        <h3 id={phase.id} class="text-lg font-medium">{phase.title}</h3>
+        <p class="text-sm text-foreground-muted">{phase.when}</p>
+      </div>
+      <ul class="space-y-2">
+        {phase.items.map((item) => (
+          <li class="rounded-lg bg-muted">
+            <label class="flex cursor-pointer items-start gap-3 p-4">
+              <Checkbox data-item={item.id} class="mt-1" />
+              <span class="min-w-0 space-y-1">
+                <span class="block text-sm font-medium">{item.title}</span>
+                <span class="block text-sm leading-6 text-foreground-muted [&_a]:text-foreground [&_a]:underline [&_a]:underline-offset-2 [&_code]:text-foreground" set:html={item.detail} />
+              </span>
+            </label>
+          </li>
+        ))}
+      </ul>
+    </section>
+  ))}
+</div>
+
+<script>
+  for (const root of document.querySelectorAll<HTMLElement>('[data-migration-checklist]')) {
+    const key = root.dataset.storageKey ?? 'seo:migration-checklist'
+    const boxes = [...root.querySelectorAll<HTMLInputElement>('[data-item]')]
+    const done = root.querySelector<HTMLElement>('[data-done]')
+    let saved: string[] = []
+    try {
+      saved = JSON.parse(localStorage.getItem(key) ?? '[]') as string[]
+    } catch {
+      saved = []
+    }
+    const update = () => {
+      const ticked = boxes.filter((box) => box.checked).map((box) => box.dataset.item ?? '')
+      if (done) done.textContent = String(ticked.length)
+      try {
+        localStorage.setItem(key, JSON.stringify(ticked))
+      } catch {
+        // Private browsing can refuse storage. The ticks still work.
+      }
+    }
+    for (const box of boxes) {
+      box.checked = saved.includes(box.dataset.item ?? '')
+      box.addEventListener('change', update)
+    }
+    root.querySelector('[data-clear]')?.addEventListener('click', () => {
+      for (const box of boxes) box.checked = false
+      update()
+    })
+    if (done) done.textContent = String(boxes.filter((box) => box.checked).length)
+  }
+</script>

@@ -17,6 +17,7 @@ import {
   ListViewIcon,
   RankingIcon,
   Robot01Icon,
+  Route01Icon,
   Search01Icon,
   SecurityCheckIcon,
   ServerStack01Icon,
@@ -25,6 +26,7 @@ import {
   StarIcon,
   TranslateIcon,
   UserGroupIcon,
+  ViewOffIcon,
 } from '@hugeicons/core-free-icons'
 
 // One icon per free tool, keyed by the tool id in tools/manifest.mjs.
@@ -52,7 +54,9 @@ export const toolIcons = {
   'schema-markup-generator': CodeIcon,
   'schema-markup-validator': CheckListIcon,
   'hreflang-generator': TranslateIcon,
-  'serp-preview': Search01Icon,
+  'title-and-meta-description-checker': Search01Icon,
+  'noindex-checker': ViewOffIcon,
+  'seo-migration-checklist': Route01Icon,
   'canonical-checker': LinkSquare01Icon,
 } as const
 

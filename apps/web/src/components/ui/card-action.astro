@@ -1,0 +1,18 @@
+---
+import { cn } from "@/lib/cn";
+import type { HTMLAttributes } from 'astro/types'
+
+type CardProps = HTMLAttributes<'div'>;
+
+const {
+  class: className,
+  ...props
+} = Astro.props as CardProps
+---
+<div
+    data-slot="card-action"
+    class={cn("col-start-2 row-start-1 justify-self-end", className)}
+    {...props}
+  >
+    <slot />
+  </div>

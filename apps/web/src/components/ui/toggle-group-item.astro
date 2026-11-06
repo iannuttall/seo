@@ -1,0 +1,40 @@
+---
+import type { HTMLAttributes } from 'astro/types'
+import { cn } from '@/lib/cn'
+
+type ToggleGroupItemProps = HTMLAttributes<'button'> & {
+  value: string
+  variant?: 'default' | 'outline'
+  'data-state'?: string
+  'aria-pressed'?: string | boolean
+}
+
+const {
+  value,
+  variant = 'default',
+  class: className,
+  'data-state': dataState = 'off',
+  'aria-pressed': ariaPressed = 'false',
+  ...props
+} = Astro.props as ToggleGroupItemProps
+---
+
+<button
+  data-toggle-item={value}
+  data-state={dataState}
+  aria-pressed={ariaPressed}
+  class={cn(
+    'inline-flex items-center justify-center gap-2 rounded-md border border-transparent text-sm font-medium',
+    'transition-colors outline-none',
+    'hover:bg-secondary hover:text-foreground',
+    'focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/20',
+    'disabled:pointer-events-none disabled:opacity-50',
+    variant === 'default'
+      ? 'data-[state=on]:bg-card data-[state=on]:text-foreground data-[state=on]:shadow-xs'
+      : 'data-[state=on]:bg-secondary data-[state=on]:text-foreground',
+    className,
+  )}
+  {...props}
+>
+  <slot />
+</button>

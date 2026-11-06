@@ -1,0 +1,7 @@
+---
+import { ExternalLink } from 'lucide'
+import Icon from './icon.astro'
+
+const { class: className, ...props } = Astro.props
+---
+<Icon iconNode={ExternalLink} class={className} {...props} />

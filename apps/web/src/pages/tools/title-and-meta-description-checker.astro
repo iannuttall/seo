@@ -1,0 +1,219 @@
+---
+import Breadcrumbs from '@/components/Breadcrumbs.astro'
+import CodeBlock from '@/components/CodeBlock.astro'
+import FaqAccordion from '@/components/FaqAccordion.astro'
+import PageHeader from '@/components/PageHeader.astro'
+import SetupCommands from '@/components/SetupCommands.astro'
+import SerpPreview from '@/components/tools/SerpPreview.astro'
+import BaseLayout from '@/layouts/BaseLayout.astro'
+import type { SchemaBreadcrumb } from '@/lib/schema'
+
+const breadcrumbs: SchemaBreadcrumb[] = [
+  { label: 'Home', href: '/' },
+  { label: 'Tools', href: '/tools' },
+  { label: 'Title and meta description checker' },
+]
+
+const faq = [
+  {
+    question: 'How long should a title tag be?',
+    answer:
+      'Short enough to fit about 600 pixels on desktop and 560 on mobile, which is usually 50 to 60 characters. Google sets no limit. It cuts the title to fit the screen, so measure width, not characters.',
+  },
+  {
+    question: 'How long should a meta description be?',
+    answer:
+      'About 920 pixels shows on desktop and about 680 on mobile, roughly 150 to 160 characters on desktop. Google sets no limit, and it rewrites most descriptions anyway, so put the useful part first.',
+  },
+  {
+    question: 'Is an empty meta description the same as a missing one?',
+    answer:
+      'Google treats both the same way: it builds the snippet from page text. They are different problems to fix. A missing tag needs writing. An empty tag usually means a template or SEO plugin field that never got filled, which often affects every page of that type.',
+  },
+  {
+    question: 'Does the meta description affect rankings?',
+    answer:
+      'No. Google said so in 2009 and John Mueller repeated it in 2022: Google uses the description for the snippet only. It can still change whether people click.',
+  },
+  {
+    question: 'Does the title tag affect rankings?',
+    answer:
+      'Yes, a little. Mueller has said Google uses it for ranking but that it is not the most critical part of a page, so there is no point stuffing it with keywords.',
+  },
+  {
+    question: 'Why did Google change my title?',
+    answer:
+      'Google writes its own title link when the title is missing, empty, too long, stuffed with keywords, the same as other pages, half empty or does not match the page. It often uses the H1 instead. Make the title a short, accurate name for the page that matches the main heading.',
+  },
+  {
+    question: 'Can I check titles for my whole site?',
+    answer:
+      'Not on this page, which checks one URL at a time. Run seo crawl to list missing, empty, repeated and long titles and descriptions across a site, or ask your agent to do it.',
+  },
+]
+---
+
+<BaseLayout
+  title="Free title tag and meta description checker"
+  description="Check a page's title tag and meta description in pixels on desktop and mobile, see the Google preview, and find the problems that make Google rewrite them."
+  canonicalPath="/tools/title-and-meta-description-checker"
+  {breadcrumbs}
+>
+  <main data-agent-content>
+    <Breadcrumbs {breadcrumbs} />
+    <PageHeader
+      title="Title and meta description checker"
+      description="Enter a URL to load its title and meta description, or type your own. The checker measures both in pixels for desktop and mobile, shows the Google result, and flags what Google is likely to rewrite."
+    />
+
+    <SerpPreview />
+
+    <div class="docs-prose mt-16">
+      <h2>Google rewrites about 6 in 10 titles and descriptions</h2>
+      <p>
+        That is the number to keep in mind before you polish a title for an
+        hour. Zyppy checked 80,959 titles on 2,370 sites in early 2022 and
+        found Google showed a different title for 61.6% of them. Ahrefs
+        found Google rewrote 62.78% of meta descriptions in 2020. Google's
+        own figure is kinder: in September 2021 it said it uses the title
+        element about 87% of the time.
+      </p>
+      <p>
+        The studies disagree on the rate. They agree on the cause: Google
+        replaces text that does not describe the page well enough for the
+        search. A character count does not fix that. Write a title and
+        description Google has no reason to replace.
+      </p>
+
+      <h2>Measure width in pixels, not characters</h2>
+      <p>
+        Google's{' '}
+        <a href="https://developers.google.com/search/docs/appearance/title-link" target="_blank" rel="noreferrer">title link guide</a>{' '}
+        says "there's no limit on how long a title element can be". The
+        title is "truncated in Google Search results as needed, typically to
+        fit the device width". Width depends on the letters. Sixty lowercase
+        i's are about 270 pixels wide at Google's title size. Sixty capital
+        W's are over 1,100.
+      </p>
+      <table>
+        <thead>
+          <tr>
+            <th></th>
+            <th>Desktop</th>
+            <th>Mobile</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>Title (Arial 20px)</td>
+            <td>about 600px</td>
+            <td>about 560px</td>
+          </tr>
+          <tr>
+            <td>Description (Arial 14px)</td>
+            <td>about 920px</td>
+            <td>about 680px</td>
+          </tr>
+        </tbody>
+      </table>
+      <p>
+        These are the widths the checker uses. Nobody outside Google knows
+        the exact figure: published measurements put the desktop title
+        between 580 and 600 pixels and the mobile description anywhere from
+        680 to 985. Treat the line as a guide and keep the important words
+        well inside it.
+      </p>
+
+      <h2>Seven title problems that make Google write its own</h2>
+      <p>
+        Google lists these in its{' '}
+        <a href="https://developers.google.com/search/docs/appearance/title-link" target="_blank" rel="noreferrer">title link guide</a>.
+        The checker flags the ones it can see from one page.
+      </p>
+      <ul>
+        <li><strong>Missing or empty.</strong> No title, or <code>&lt;title&gt;&lt;/title&gt;</code>. Google builds one from the headings and links.</li>
+        <li><strong>Half empty.</strong> <code>&lt;title&gt; | Site Name&lt;/title&gt;</code>, where a template field printed nothing.</li>
+        <li><strong>Too long.</strong> Zyppy saw titles over 70 characters rewritten 99.9% of the time.</li>
+        <li><strong>Keyword stuffing.</strong> The same word three times. Google says "there's no reason to have the same words or phrases appear multiple times".</li>
+        <li><strong>Boilerplate.</strong> Hundreds of titles that differ by one word, such as a city name.</li>
+        <li><strong>Out of date.</strong> "Best laptops 2024" on a page you updated in 2026.</li>
+        <li><strong>No clear main title.</strong> When the H1 says something else, Google often uses the H1. The checker flags a title and H1 that share no words.</li>
+      </ul>
+
+      <h2>Missing, empty and blocked descriptions are three problems</h2>
+      <p>
+        Most checkers say "no description" for all three. The fix is
+        different for each, so this one keeps them apart.
+      </p>
+      <table>
+        <thead>
+          <tr>
+            <th>What the page has</th>
+            <th>What Google does</th>
+            <th>Fix</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>No description tag</td>
+            <td>Builds a snippet from the page text.</td>
+            <td>Write one for pages that matter. Fine to skip on thin utility pages.</td>
+          </tr>
+          <tr>
+            <td>An empty tag, <code>content=""</code></td>
+            <td>The same as missing.</td>
+            <td>Look at the template or SEO plugin field. It is usually empty on every page of that type.</td>
+          </tr>
+          <tr>
+            <td><code>nosnippet</code> or <code>max-snippet:0</code></td>
+            <td>Shows no snippet at all, and keeps the page out of AI Overviews and AI Mode as a source.</td>
+            <td>Remove it unless you meant it.</td>
+          </tr>
+        </tbody>
+      </table>
+      <p>
+        A good description does not stop a rewrite. Ahrefs found Google
+        rewrote 61.46% of too-long descriptions and 63.69% of the rest, so
+        length barely changed the odds. Google picks text that matches each
+        search, and a description that answers the main search is the one it
+        keeps.
+      </p>
+
+      <h2>Write a title and description Google keeps</h2>
+      <ul>
+        <li>Lead with the words people search for. Search Console shows them for every page.</li>
+        <li>Match the H1. They do different jobs, but they should name the same thing.</li>
+        <li>Give one true reason to click: free, a number, a date, a price.</li>
+        <li>Make every title on the site different. Twenty pages called "Products" look the same in results.</li>
+        <li>Cut stock marketing phrases that would fit any product. They say nothing about yours, and the checker flags them.</li>
+      </ul>
+
+      <h2>Rewrite titles from your own search data with your agent</h2>
+      <p>
+        Start with the titles people already see and skip.
+        The <a href="/docs/report">SEO report</a> lists the quick wins: pages
+        ranking 4 to 10 for searches with real impressions. Your agent can
+        read each page's own queries from Search Console, draft a new title
+        and description from them, and check the words with{' '}
+        <code>seo lint</code> before anything ships. Ask:
+      </p>
+      <CodeBlock value="Find my quick wins for example.com, read the Search Console queries for each page, then write a new title and meta description for each and lint them with seo lint --preset meta" wrap />
+      <p>
+        To check titles across a whole site, <a href="/docs/crawl">seo crawl</a>{' '}
+        lists every missing, empty, repeated and long title and description.
+        Install the CLI and run setup:
+      </p>
+      <CodeBlock value="npm i -g seo && seo start" wrap />
+      <p>Or add the hosted MCP server to your agent and sign in with Google:</p>
+    </div>
+
+    <SetupCommands id="title-meta-setup" class="mt-6" />
+
+    <div class="docs-prose mt-16">
+      <h2>Title and meta description questions</h2>
+    </div>
+    <div class="mt-6">
+      <FaqAccordion id="title-meta-faq" items={faq} />
+    </div>
+  </main>
+</BaseLayout>

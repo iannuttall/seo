@@ -19,6 +19,7 @@ import { applyDailyToolQuota } from './tools/daily-tool-quota.ts'
 import { handleDomainAge } from './tools/domain-age.ts'
 import { handleFaviconCheck } from './tools/favicon-checker.ts'
 import { handleLlmsTxtFetch } from './tools/llms-txt.ts'
+import { handleNoindexCheck } from './tools/noindex-checker.ts'
 import { handleOpenGraphCheck } from './tools/open-graph.ts'
 import {
   handleBacklinks,
@@ -28,6 +29,7 @@ import {
   handleSpamScore,
   handleWebsiteTraffic,
 } from './tools/paid-tool-routes.ts'
+import { handleRedirectMap } from './tools/redirect-map.ts'
 import { handleRobotsTxtFetch } from './tools/robots-txt.ts'
 import { handleSerpPreviewFetch } from './tools/serp-preview.ts'
 import { handleSitemapImport } from './tools/sitemap.ts'
@@ -879,6 +881,12 @@ app.all('/api/tools/open-graph', (context) =>
   handleOpenGraphCheck(context.req.raw),
 )
 app.all('/api/tools/domain-age', (context) => handleDomainAge(context.req.raw))
+app.all('/api/tools/noindex-checker', (context) =>
+  handleNoindexCheck(context.req.raw),
+)
+app.all('/api/tools/redirect-map', (context) =>
+  handleRedirectMap(context.req.raw),
+)
 app.all('/api/tools/spam-score', (context) =>
   handleSpamScore(context.req.raw, context.env),
 )

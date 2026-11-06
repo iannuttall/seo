@@ -1,0 +1,14 @@
+---
+import { cn } from "@/lib/cn";
+import type { HTMLAttributes } from 'astro/types'
+
+type CardProps = HTMLAttributes<'div'>;
+
+const {
+  class: className,
+  ...props
+} = Astro.props as CardProps
+---
+<div data-slot="card-content" class={cn("px-6", className)} {...props}>
+    <slot />
+  </div>

@@ -1,0 +1,7 @@
+---
+import { CircleHelp } from 'lucide'
+import Icon from './icon.astro'
+
+const { class: className, ...props } = Astro.props
+---
+<Icon iconNode={CircleHelp} class={className} {...props} />

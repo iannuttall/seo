@@ -1,0 +1,11 @@
+---
+import type { HTMLAttributes } from 'astro/types'
+
+type SelectOptionProps = HTMLAttributes<'option'>
+
+const props = Astro.props as SelectOptionProps
+---
+
+<option {...props}>
+  <slot />
+</option>

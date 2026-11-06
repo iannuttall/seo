@@ -174,6 +174,9 @@ importers:
       '@iannuttall/seo-graph-core':
         specifier: ^0.0.5
         version: 0.0.5(typescript@6.0.3)
+      '@kiwa-ui/enhance':
+        specifier: ^2.1.0
+        version: 2.1.0
       '@seo/core':
         specifier: workspace:*
         version: link:../../packages/core
@@ -189,6 +192,9 @@ importers:
       hono:
         specifier: 4.13.13
         version: 4.13.13
+      lucide:
+        specifier: ^1.69.0
+        version: 1.69.0
       saxes:
         specifier: ^6.0.0
         version: 6.0.0
@@ -1129,6 +1135,23 @@ packages:
 
   '@jridgewell/trace-mapping@0.3.9':
     resolution: {integrity: sha512-3Belt6tdc8bPgAtbcmdtNJlirVoTmEb5e2gC94PnkwEW9jI6CAHUeoG85tjWP5WquqfavoMtMwiG4P926ZKKuQ==}
+
+  '@kiwa-ui/enhance@2.1.0':
+    resolution: {integrity: sha512-6fgmUkT/+zUnJX0Sb/tdLBUwac8zdfdj1TbGc+xWF0dCT8oPiR/MT38WT9FlbG/TstBWChJdT2hYRMpRg37UVQ==}
+    peerDependencies:
+      '@tiptap/core': ^2.0.0
+      '@tiptap/extension-placeholder': ^2.0.0
+      '@tiptap/pm': ^2.0.0
+      '@tiptap/starter-kit': ^2.0.0
+    peerDependenciesMeta:
+      '@tiptap/core':
+        optional: true
+      '@tiptap/extension-placeholder':
+        optional: true
+      '@tiptap/pm':
+        optional: true
+      '@tiptap/starter-kit':
+        optional: true
 
   '@libsql/darwin-arm64@0.5.29':
     resolution: {integrity: sha512-K+2RIB1OGFPYQbfay48GakLhqf3ArcbHqPFu7EZiaUcRgFcdw8RoltsMyvbj5ix2fY0HV3Q3Ioa/ByvQdaSM0A==}
@@ -3306,6 +3329,9 @@ packages:
   lru-cache@11.5.3:
     resolution: {integrity: sha512-U4N8FgzmWxc8k1VH8Kr6lQg18U7Fjvby6wXHVRX/ZZ7IwWbRMgrRbP0Wrb5q5NVinryp4SQampHKdvtecItxUg==}
     engines: {node: 20 || >=22}
+
+  lucide@1.69.0:
+    resolution: {integrity: sha512-0i7rhzoeiE7rAB6w0Jb/2Gb2qlC6xezen4wStLEY8thp+nhGef1iM7Ulh0YfGkPjp02gY/D88UWYDg3uMsat4A==}
 
   magic-string@0.30.21:
     resolution: {integrity: sha512-vd2F4YUyEXKGcLHoq+TEyCjxueSeHnFxyyjNp80yg0XV4vUhnDer/lvvlqM/arB5bXQN5K2/3oinyCRyx8T2CQ==}
@@ -5526,6 +5552,8 @@ snapshots:
       '@jridgewell/resolve-uri': 3.1.2
       '@jridgewell/sourcemap-codec': 1.6.0
 
+  '@kiwa-ui/enhance@2.1.0': {}
+
   '@libsql/darwin-arm64@0.5.29':
     optional: true
 
@@ -7585,6 +7613,8 @@ snapshots:
   lookup-closest-locale@6.2.0: {}
 
   lru-cache@11.5.3: {}
+
+  lucide@1.69.0: {}
 
   magic-string@0.30.21:
     dependencies:

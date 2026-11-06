@@ -1,0 +1,7 @@
+---
+import { Kanban } from 'lucide'
+import Icon from './icon.astro'
+
+const { class: className, ...props } = Astro.props
+---
+<Icon iconNode={Kanban} class={className} {...props} />

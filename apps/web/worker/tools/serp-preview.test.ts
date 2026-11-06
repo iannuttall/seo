@@ -138,3 +138,30 @@ test('rejects unsafe redirects, non-HTML pages, and oversized HTML', async () =>
     /size limit/u,
   )
 })
+
+test('keeps an empty meta description apart from a missing one', async () => {
+  const load = async (head: string) => {
+    const response = await handleSerpPreviewFetch(
+      request({ url: 'https://example.com/page' }),
+      async (input) =>
+        input.toString() === 'https://example.com/page'
+          ? new Response(
+              `<html><head><title>Page</title>${head}</head></html>`,
+              {
+                headers: { 'content-type': 'text/html' },
+              },
+            )
+          : new Response('', { status: 404 }),
+    )
+    return (await response.json()) as SerpPreviewFetchResult
+  }
+  const empty = await load('<meta name="description" content="  ">')
+  const missing = await load(
+    '<meta property="og:description" content="Shared text">',
+  )
+  assert.deepEqual(empty.page.description, { count: 1, value: '' })
+  assert.deepEqual(missing.page.description, { count: 0, value: null })
+  assert.equal(missing.metadata.description, '')
+  assert.ok(empty.warnings.includes('The page has an empty meta description.'))
+  assert.ok(missing.warnings.includes('The page has no meta description.'))
+})

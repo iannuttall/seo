@@ -205,13 +205,31 @@ export const tools = [
     kind: 'browser',
   },
   {
-    id: 'serp-preview',
-    path: '/tools/serp-preview',
-    title: 'SERP preview',
-    action: 'Open the SERP preview',
+    id: 'title-and-meta-description-checker',
+    path: '/tools/title-and-meta-description-checker',
+    title: 'Title tag and meta description checker',
+    action: 'Open the title and meta description checker',
     description:
-      'Preview title and meta description width on desktop or mobile, then copy the finished HTML tags.',
-    kind: 'browser',
+      'Check a page title and meta description in pixels on desktop and mobile, with a Google preview and the problems that make Google rewrite them.',
+    kind: 'hybrid',
+  },
+  {
+    id: 'noindex-checker',
+    path: '/tools/noindex-checker',
+    title: 'Noindex checker',
+    action: 'Open the noindex checker',
+    description:
+      'Check a URL for noindex in meta tags, the X-Robots-Tag header and robots.txt, and see which rule Google follows.',
+    kind: 'worker',
+  },
+  {
+    id: 'seo-migration-checklist',
+    path: '/tools/seo-migration-checklist',
+    title: 'SEO migration checklist',
+    action: 'Open the SEO migration checklist',
+    description:
+      'Plan a site move step by step and check your redirect map for chains, loops, 404s and homepage redirects.',
+    kind: 'hybrid',
   },
   {
     id: 'canonical-checker',

@@ -59,10 +59,17 @@ export const auditPageCommand = defineCommand({
           : 'No page issues were found by the available checks.',
       metrics: [
         { label: 'Final URL', value: report.page.finalUrl },
-        { label: 'Title', value: report.page.title ?? 'Missing' },
+        {
+          label: 'Title',
+          value:
+            report.page.title ||
+            (report.page.title === '' ? 'Empty' : 'Missing'),
+        },
         {
           label: 'Meta description',
-          value: report.page.metaDescription ?? 'Missing',
+          value:
+            report.page.metaDescription ||
+            (report.page.metaDescription === '' ? 'Empty' : 'Missing'),
         },
         { label: 'Words', value: report.page.wordCount },
         {

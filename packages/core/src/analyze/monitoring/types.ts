@@ -32,6 +32,7 @@ export type CrawlPageSnapshot = {
       | 'access-blocked'
       | 'rate-limited'
       | 'unreachable'
+      | 'unreadable'
     status?: number
     error?: string
     matchedLine?: string
@@ -255,6 +256,7 @@ export type CrawlRequestObservation =
         | 'tls'
         | 'timeout'
         | 'redirect-limit'
+        | 'redirect-loop'
         | 'aborted'
         | 'unknown'
       error: string

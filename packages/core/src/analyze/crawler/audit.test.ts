@@ -161,6 +161,19 @@ test('none creates noindex and nofollow findings while other-bot headers do not'
   )
 })
 
+test('empty title and description tags are not reported as missing', () => {
+  const ruleIds = (title?: string, metaDescription?: string) =>
+    auditCrawlPages([page({ title, metaDescription })])
+      .map((issue) => issue.ruleId)
+      .filter((ruleId) => /title|meta_description/.test(ruleId))
+
+  assert.deepEqual(ruleIds('', ''), ['empty_title', 'empty_meta_description'])
+  assert.deepEqual(ruleIds(undefined, undefined), [
+    'missing_title',
+    'missing_meta_description',
+  ])
+})
+
 test('auditCrawlPages has issue-producing coverage for every rule family', () => {
   // Agent rules come from site-wide checks, not the page audit.
   const registryFamilies = [

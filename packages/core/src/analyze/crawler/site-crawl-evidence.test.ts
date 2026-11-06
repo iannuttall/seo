@@ -378,6 +378,10 @@ test('crawlSite flags an HTML robots.txt and llms.txt, soft 404s and a localhost
 
     assert.equal(byRule('robots_txt_html').length, 1)
     assert.equal(report.ai?.robotsTxt?.exists, false)
+    assert.equal(report.ai?.robotsTxt?.availability, 'unreadable')
+    assert.ok(
+      report.ai?.robotsTxt?.botAccess.every((bot) => bot.allowed === null),
+    )
     assert.equal(report.ai?.llmsTxt?.servesHtml, true)
     assert.match(byRule('llms_txt_missing')[0]?.detail ?? '', /HTML page/)
     assert.equal(byRule('soft_404').length, 1)

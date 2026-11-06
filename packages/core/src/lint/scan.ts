@@ -156,7 +156,13 @@ export class Builder {
 export function makeBlock(
   kind: BlockKind,
   built: Builder,
-  extra: { level?: number; field?: string; links?: LinkSpan[] } = {},
+  extra: {
+    level?: number
+    field?: string
+    links?: LinkSpan[]
+    // Where an empty title or description sits, so it is still reported.
+    at?: number
+  } = {},
 ): Block | null {
   const text: string[] = []
   const map: number[] = []
@@ -179,7 +185,24 @@ export function makeBlock(
     text.pop()
     map.pop()
   }
-  if (!text.length) return null
+  if (!text.length) {
+    if (
+      extra.at === undefined ||
+      (kind !== 'title' && kind !== 'description')
+    ) {
+      return null
+    }
+    map.push(extra.at)
+    return {
+      kind,
+      text: '',
+      norm: '',
+      map,
+      field: extra.field,
+      section: 0,
+      links: [],
+    }
+  }
   const joined = text.join('')
   // Link ranges arrive as source offsets; find them in the text.
   const links: LinkSpan[] = []

@@ -1,6 +1,6 @@
 import { ALL, type Context, PROSE, type RuleInfo } from './engine.js'
 import { sentenceAt } from './text.js'
-import type { BlockKind, LintLevel } from './types.js'
+import type { Block, BlockKind, LintLevel } from './types.js'
 
 // Fixed phrases: one match is enough. Many patterns are adapted from MIT and
 // Apache-2.0 sources: conorbronsdon/avoid-ai-writing (detector/patterns.js),
@@ -76,6 +76,11 @@ const PLAIN: Record<string, string> = {
   robust: 'reliable, strong (or say what it survives)',
   holistic: 'whole, complete',
   utilize: 'use',
+  breathtaking: 'say what you see',
+  stunning: 'say what you see',
+  enchanting: 'say what you see',
+  'must-visit': 'say why to go',
+  unforgettable: 'say what stays with you',
 }
 
 function plainFor(word: string): string {
@@ -164,7 +169,7 @@ export const PHRASE_RULES: PhraseRule[] = [
     family: 'ai',
     level: 'error',
     description:
-      'Openers that announce a point instead of making it: "Here\'s the thing", "The truth is", "Let that sink in".',
+      'Openers that announce a point instead of making it: "Here\'s the thing", "The truth is", "The real question is", "Let that sink in".',
     patterns: [
       /\bhere's the (?:thing|deal|kicker|catch|twist|truth|secret|reality)\b/gi,
       // After "what", "how" or "whether" the phrase is a clause ("ask what
@@ -172,6 +177,7 @@ export const PHRASE_RULES: PhraseRule[] = [
       /(?<!\b(?:what|how|whatever|whether|where|why|who|if)\s)\b(?:the (?:uncomfortable |honest |hard |brutal |simple |real )?truth is|the reality is(?: that)?|the thing is|the honest answer(?: is)?)\b/gi,
       /\b(?:let me be (?:clear|honest|blunt)|let's be (?:clear|honest|real)|real talk|make no mistake|let that sink in|read that again)\b/gi,
       /\bfull stop\.\s*$/gim,
+      /\bthe (?:real|bigger|more interesting|only|big) question (?:now )?is\b|\bthe question now is\b/gi,
     ],
     message: 'This announces a point instead of making it.',
     fix: cut,
@@ -190,7 +196,7 @@ export const PHRASE_RULES: PhraseRule[] = [
       /\b(?:a problem nobody talks about|the insight everyone's missing|most people don't reali[sz]e)\b/gi,
     ],
     message: 'It claims a hidden insight instead of showing the finding.',
-    fix: 'Lead with the finding itself and the number behind it.',
+    fix: 'Cut the setup and state the finding itself.',
   },
   {
     id: 'significance-inflation',
@@ -211,9 +217,15 @@ export const PHRASE_RULES: PhraseRule[] = [
       /\bwatershed moment\b/gi,
       /\bhas emerged as (?:a|the|one of) (?:leading|key|major|critical|essential|pivotal|prominent|dominant)\b/gi,
       /\bextends? far beyond\b/gi,
+      /\b(?:is|are|was) (?:just|only|merely) the (?:beginning|start)\b/gi,
+      /\bmakes? (?:a|the) (?:real|big|huge|meaningful|lasting|tangible|world of) difference\b/gi,
+      /\b(?:a|another) (?:major|key|significant|important|huge|big|proud) milestone\b/gi,
+      /\bbuilding a better (?:future|world|tomorrow)\b/gi,
+      /\bthe implications are (?:profound|significant|enormous|huge|far-reaching)\b/gi,
+      /\b(?:is|was) an (?:event|experience|attraction) in itself\b/gi,
     ],
     message: 'It inflates importance without saying what changed.',
-    fix: 'Name the concrete effect: what changed, for whom, and by how much.',
+    fix: 'Cut it, or name the concrete effect the text already states. Do not add a number that is not there.',
   },
   {
     id: 'participle-tail',
@@ -224,9 +236,12 @@ export const PHRASE_RULES: PhraseRule[] = [
     kinds: PROSE,
     patterns: [
       /,\s+(?:highlighting|underscoring|emphasi[sz]ing|showcasing|symboli[sz]ing|solidifying|cementing|signall?ing|reinforcing|fostering|cultivating|paving the way|setting the stage|demonstrating|illustrating|reflecting|ensuring|marking|contributing to)\b[^.!?]{0,120}[.!?]?/gi,
+      // A rider that sells the benefit of the fact before it: ", giving
+      // small teams a powerful new way to ...", ", freeing them to focus".
+      /,\s+(?:giving (?:users|teams|customers|small teams|every \w+|people) (?:a|an|the|more)\b|freeing (?:you|them|up)\b|making it (?:easy|easier|simple|simpler|effortless|possible) (?:for|to)\b|creating an? (?:[\w-]+ )?(?:experience|panorama|atmosphere|sense)\b|delivering (?:real-time|accurate|predictions|reliable|a seamless|an intuitive)\b)[^.!?]{0,120}[.!?]?/gi,
     ],
     levelFor: (match) =>
-      /^,\s+(?:reflecting|ensuring|marking|contributing|demonstrating|illustrating)/i.test(
+      /^,\s+(?:reflecting|ensuring|marking|contributing|demonstrating|illustrating|giving|freeing|making|creating|delivering)/i.test(
         match.text,
       )
         ? 'warning'
@@ -240,7 +255,7 @@ export const PHRASE_RULES: PhraseRule[] = [
     family: 'ai',
     level: 'error',
     description:
-      'Words far more common in AI text than in human writing: delve, tapestry, testament, showcase, meticulous, realm.',
+      'Words far more common in AI text than in human writing: delve, tapestry, testament, showcase, meticulous, realm. One alone is a warning; two or more in a piece are errors.',
     patterns: [
       /\bdelv(?:e|es|ed|ing)\b/gi,
       /\b(?:rich )?tapestry\b/gi,
@@ -264,6 +279,8 @@ export const PHRASE_RULES: PhraseRule[] = [
       /\bsynerg(?:y|ies)\b/gi,
       /\brevolutioni[sz](?:e|es|ed|ing)\b/gi,
       /\bnavigat(?:e|ing) the complexit(?:y|ies)\b/gi,
+      /\bbreathtaking(?:ly)?\b|\bmust-visit\b|\bunforgettable\b/gi,
+      /\bstunning(?:ly)?\b|\benchanting\b/gi,
     ],
     message: (match) =>
       `"${match.text}" is far more common in AI text than in human writing.`,
@@ -310,7 +327,8 @@ export const PHRASE_RULES: PhraseRule[] = [
       /\bbattle-tested\b|\bbulletproof\b|\bunparalleled\b|\bunmatched\b/gi,
     ],
     message: (match) => `"${match.text}" claims quality without showing it.`,
-    fix: (match) => `Replace it with the proof: ${plainFor(match.text)}.`,
+    fix: (match) =>
+      `Cut it, or use what the text already shows (${plainFor(match.text)}). Do not add a claim the text does not make.`,
   },
   {
     id: 'cliche',
@@ -345,12 +363,14 @@ export const PHRASE_RULES: PhraseRule[] = [
       /\bpaves? the way\b/gi,
       /\bnorth star\b|\btable stakes\b|\bneedle in a haystack\b/gi,
       /\bnot a rounding error\b/gi,
+      /\bpunch(?:es|ing)? (?:well )?above (?:its|their|his|her) weight\b/gi,
+      /\b(?:thrilled|delighted) to (?:announce|share|introduce|unveil)\b/gi,
       /\bthe (?:whole|entire) point\b/gi,
       /,? which is (?:the (?:whole |real |entire )?point|exactly the point|kind of the point)\b/gi,
     ],
     message: (match) =>
       `"${match.text}" is a stock phrase that would fit any page.`,
-    fix: 'Say the specific thing in literal words, with the number or name that makes it true here.',
+    fix: 'Say the specific thing in literal words, using a fact the text already gives, or cut it.',
   },
   {
     id: 'filler',
@@ -399,7 +419,7 @@ export const PHRASE_RULES: PhraseRule[] = [
     family: 'ai',
     level: 'error',
     description:
-      'Tidy endings: "In conclusion", "the future looks bright", "only time will tell".',
+      'Tidy endings: "In conclusion", "the future looks bright", "Here\'s to the next chapter", "Let\'s build something extraordinary".',
     patterns: [
       /\bthe future (?:of \w+ )?(?:looks bright|is here|is now|starts now|is bright)\b/gi,
       /\bonly time will tell\b|\bone thing is (?:certain|clear)\b/gi,
@@ -407,6 +427,11 @@ export const PHRASE_RULES: PhraseRule[] = [
       /(?:^|[.!?]\s)(?:In conclusion|In summary|To sum (?:it )?up|To summari[sz]e|All in all|In closing)\b/gi,
       /\bthe possibilities are endless\b|\bthe rest is history\b/gi,
       /\bbecause (?:you|your team) deserves? (?:better|more|the best)\b/gi,
+      /(?:^|[.!?]\s)Here's to (?:the|what|a|an|our|your|many|more|another|new)\b[^.!?]{0,60}[.!?]/g,
+      /\blet's (?:build|make|create|shape) something (?:extraordinary|remarkable|amazing|great|special|incredible|beautiful|meaningful)\b/gi,
+      /\bwe'd love (?:to hear )?your (?:feedback|thoughts)\b/gi,
+      /\bthe way it (?:should|was meant to) (?:be|work)\b/gi,
+      /(?:^|[.!?]\s)See you (?:there|soon|at the \w+|on the \w+)[.!]/g,
     ],
     message: 'A stock closing line that adds nothing the page has not said.',
     fix: 'End on the next step, or on the last concrete fact.',
@@ -422,6 +447,7 @@ export const PHRASE_RULES: PhraseRule[] = [
       /\bthat's when (?:everything|it all) changed\b/gi,
       /\b(?:then )?something (?:interesting|unexpected) happened\b/gi,
       /\b(?:this|here) is where (?:things|it) gets? (?:interesting|tricky|fun)\b|\bhere's where it gets (?:interesting|tricky)\b/gi,
+      /\b(?:this|that) is where (?:[\w-]+ ){1,3}(?:shines?|excels?|stands? out)\b/gi,
       /\bflipped the script\b|\brewrote the playbook\b|\bchanged the game\b|\bplot twist\b/gi,
     ],
     message: 'A staged turn that tells the reader to feel surprised.',
@@ -459,8 +485,10 @@ export const PHRASE_RULES: PhraseRule[] = [
       /\b(?:studies|research|surveys) (?:show|shows|suggest|suggests|indicate|indicates|proves?)\b/gi,
       /\bit is (?:widely|generally|commonly) (?:believed|accepted|known|agreed)\b/gi,
     ],
+    // "Our Research Shows" in Title Case is a heading or a name.
+    skip: (match) => /^[A-Z]\w* [A-Z]/.test(match.text),
     message: 'A claim credited to nobody in particular.',
-    fix: 'Name the source and link it, or cut the claim.',
+    fix: 'Name the source if the text has one. Otherwise cut the claim or say it as your own view.',
   },
   {
     id: 'hedge-stack',
@@ -483,6 +511,9 @@ export const PHRASE_RULES: PhraseRule[] = [
       'A label and colon used as a drumroll: "The best part: it learns."',
     patterns: [
       /(?:^|[.!?]\s+)(?:The|One|My|Here's the|And the|But the)\s+(?:\w+\s+){0,3}(?:part|thing|secret|trick|catch|kicker|truth|twist|takeaway|lesson|upshot|irony|punchline):\s+\S/g,
+      // "The idea is simple:", "Within three months, the results were clear:"
+      /\bthe (?:idea|answer|fix|plan|rule|math|process|premise|concept) is simple:/gi,
+      /\bthe (?:results?|answer|choice|difference) (?:was|were|became) (?:clear|obvious|striking)\b/gi,
     ],
     message: 'A colon reveal builds suspense the content does not need.',
     fix: 'Say it straight: drop the label and keep what follows the colon.',
@@ -492,12 +523,13 @@ export const PHRASE_RULES: PhraseRule[] = [
     family: 'ai',
     level: 'error',
     description:
-      '"Serves as", "stands as", "boasts" where "is" or "has" would do.',
+      '"Serves as", "stands as", "boasts", "represents a significant" where "is" or "has" would do.',
     patterns: [
       /\bstands? as (?:a|an|the)\b/gi,
       /\bboasts? (?:a|an|the|over|more|\d)/gi,
       /\bholds? the distinction of\b/gi,
       /\bserves? as (?:a|an|the)\b/gi,
+      /\brepresents? (?:a|an) (?:significant|major|big|huge|real|smart|key|mature|important|meaningful|proven)\b|\brepresents? (?:our|their|its|a) (?:commitment|dedication)\b/gi,
     ],
     levelFor: (match) => (/^serves?/i.test(match.text) ? 'warning' : undefined),
     message: (match) => `"${match.text.trim()}" dodges a plain "is" or "has".`,
@@ -517,7 +549,7 @@ export const PHRASE_RULES: PhraseRule[] = [
       /\ball-in-one\b/gi,
       /\bin (?:just )?a few (?:clicks|minutes|seconds)\b/gi,
       /\bjoin (?:thousands|millions|hundreds) of (?:happy|satisfied|other)?\b/gi,
-      /\bin seconds,? not (?:hours|days|weeks)\b/gi,
+      /\bin (?:seconds|minutes|hours|days),? not (?:minutes|hours|days|weeks|months)\b/gi,
       /\bmore than just an?\b/gi,
       /\bthat's where \w+ comes? in\b/gi,
       /\btrusted by (?:industry leaders|thousands|teams worldwide|the best)\b/gi,
@@ -527,7 +559,7 @@ export const PHRASE_RULES: PhraseRule[] = [
       /the power of/i.test(match.text) ? 'warning' : undefined,
     message: (match) =>
       `"${match.text}" is a stock landing-page line that fits any product.`,
-    fix: 'Say what the product does for this reader, with a number or an example.',
+    fix: 'Cut the phrase, or replace it with a fact the text already gives, such as a number or a feature named elsewhere on the page. Do not add a new claim.',
   },
   {
     id: 'stranded-negation',
@@ -544,7 +576,70 @@ export const PHRASE_RULES: PhraseRule[] = [
     message: 'A two-word denial used for rhythm. It makes the reader wait.',
     fix: 'Join it to the sentence before, such as "Nothing technical was holding these pages back."',
   },
+  {
+    id: 'strawman',
+    family: 'ai',
+    level: 'error',
+    kinds: PROSE,
+    description:
+      'An answer to an objection nobody raised: "It isn\'t perfect.", "doesn\'t have to be stressful", "None of this means", "This isn\'t about".',
+    patterns: [
+      /(?:^|[.!?:]\s+)(?:It|This|That|Nothing|No \w+)(?:'s| is|'s not| isn't| is not| wasn't| was not) (?:not )?perfect\.(?=\s|$)/g,
+      /\b(?:doesn't|does not|don't|do not|needn't|need not) (?:have to |need to )?be (?:so )?(?:stressful|hard|complicated|difficult|painful|expensive|overwhelming|a chore|scary|intimidating|daunting|confusing|a headache)\b/gi,
+      /(?:^|[.!?]\s)None of this means\b/g,
+      /(?:^|[.!?]\s)(?:This|That|It)(?: isn't| is not|'s not) (?:just |really |only )?about\b/g,
+      /\b(?:isn't|is not|ain't) rocket science\b/gi,
+    ],
+    message: 'It answers a doubt the reader did not raise.',
+    fix: 'Cut it, or state the limit or the point plainly as a fact.',
+  },
+  {
+    id: 'cta-question',
+    family: 'ai',
+    level: 'error',
+    kinds: ['heading', 'paragraph', 'prop', 'label'],
+    description:
+      'A sales question used as a heading or closing line: "Ready to Simplify Your Practice Finances?", "Tired of spreadsheets?".',
+    patterns: [
+      /(?:^|[.!?]\s+)(?:Ready (?:to|for)|Tired of|Struggling (?:to|with)|Sick of|Fed up with)\b[^.!?]{1,80}\?/g,
+    ],
+    message:
+      'A sales question that asks the reader something only to answer it with a pitch.',
+    fix: 'Say the offer or the next step as a plain statement, such as "Start a free trial" or the price.',
+  },
 ]
+
+// ", allowing the practice to..." riders. One is ordinary; two or more at
+// one per 250 words or denser is the AI habit.
+const RIDER =
+  /,\s+(?:allowing|making|leaving|turning|giving|creating|delivering|letting|enabling|helping|offering|providing|bringing|adding|keeping|drifting|tumbling|converting|resulting|saving|freeing|ensuring|reflecting)\s[^.!?;]{0,120}/gi
+
+function riderDensity(ctx: Context) {
+  const rule = PHRASE_RULES.find(
+    (entry) => entry.id === 'participle-tail',
+  ) as PhraseRule
+  if (ctx.level(rule) === 'off') return
+  const found: Array<{ block: Block; start: number; end: number }> = []
+  for (const block of ctx.blocks(PROSE)) {
+    RIDER.lastIndex = 0
+    for (const match of block.norm.matchAll(RIDER)) {
+      const start = match.index ?? 0
+      found.push({ block, start, end: start + match[0].length })
+    }
+  }
+  if (found.length < 2 || found.length * 250 < ctx.proseWords) return
+  for (const item of found) {
+    ctx.hit(
+      rule,
+      item.block,
+      item.start,
+      item.end,
+      `${found.length} ", -ing" riders in ${ctx.proseWords.toLocaleString('en-US')} words. Tacking a result onto each fact is a common AI habit.`,
+      'End the sentence at the comma. If the rider holds a fact the text needs, give it its own sentence with a subject and verb.',
+      'warning',
+    )
+  }
+}
 
 // A phrase in quotes is mentioned, not used: 'link text such as "click
 // here"' is fine.
@@ -556,6 +651,7 @@ export function quoted(text: string, start: number, end: number): boolean {
 }
 
 export function runPhraseRules(ctx: Context) {
+  const before = ctx.hits.length
   for (const rule of PHRASE_RULES) {
     if (ctx.level(rule) === 'off') continue
     for (const block of ctx.blocks(rule.kinds ?? ALL)) {
@@ -601,5 +697,13 @@ export function runPhraseRules(ctx: Context) {
         }
       }
     }
+  }
+  riderDensity(ctx)
+  // One AI word in a piece is weak evidence; the pile-up is the signal.
+  const vocabulary = ctx.hits
+    .slice(before)
+    .filter((hit) => hit.rule === 'ai-vocabulary')
+  if (vocabulary.length === 1) {
+    for (const hit of vocabulary) hit.level = 'warning'
   }
 }

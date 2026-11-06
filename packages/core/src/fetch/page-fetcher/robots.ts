@@ -7,6 +7,7 @@ import {
 } from '../../storage/database.js'
 import { SEO_CRAWLER_USER_AGENT } from '../crawler-identity.js'
 import { publicHttpFetch, readBoundedResponseText } from '../http-client.js'
+import { ROBOTS_TXT_HTML_ERROR, robotsTxtIsHtml } from './robots-evidence.js'
 import type { RobotsResolver, RobotsResult } from './types.js'
 
 const MAX_ROBOTS_RESPONSE_BYTES = 1024 * 1024
@@ -49,10 +50,25 @@ function resultFromResponse(input: {
   robotsUrl: string
   targetUrl: string
   status: number
+  contentType: string
   text: string
   cache: RobotsResult['cache']
 }): RobotsResult {
-  if (input.status >= 200 && input.status < 300) {
+  const ok = input.status >= 200 && input.status < 300
+  // A web page, such as a bot challenge, is not a robots.txt file, so the
+  // site's rules are unknown. Google treats it as a file with no valid
+  // rules, so this crawler fetches as Google would.
+  if (ok && robotsTxtIsHtml(input.contentType, input.text)) {
+    return {
+      allowed: true,
+      availability: 'unreadable',
+      status: input.status,
+      error: ROBOTS_TXT_HTML_ERROR,
+      cache: input.cache,
+      url: input.robotsUrl,
+    }
+  }
+  if (ok) {
     const parsed = parseRobots(input.robotsUrl, input.text)
     const lineNumber = parsed.getMatchingLineNumber?.(
       input.targetUrl,
@@ -96,6 +112,7 @@ type RobotsSource = {
   robotsUrl: string
   cache: RobotsResult['cache']
   status?: number
+  contentType?: string
   text?: string
   error?: string
 }
@@ -115,6 +132,7 @@ function resultFromSource(
       robotsUrl: source.robotsUrl,
       targetUrl,
       status: source.status,
+      contentType: source.contentType ?? '',
       text: source.text,
       cache: source.cache,
     })
@@ -175,7 +193,17 @@ async function fetchRobotsSource(
       MAX_ROBOTS_RESPONSE_BYTES,
       'robots.txt response',
     )
-    if (options.writeCache !== false && cacheableStatus(response.status)) {
+    const contentType = response.headers.get('content-type') ?? ''
+    // A web page is often a passing bot challenge, so it is not cached.
+    if (
+      options.writeCache !== false &&
+      cacheableStatus(response.status) &&
+      !(
+        response.status >= 200 &&
+        response.status < 300 &&
+        robotsTxtIsHtml(contentType, text)
+      )
+    ) {
       writeToCache((database) => {
         database
           .prepare(
@@ -199,6 +227,7 @@ async function fetchRobotsSource(
     return {
       robotsUrl,
       status: response.status,
+      contentType,
       text,
       cache: refresh ? 'bypass' : 'miss',
     }

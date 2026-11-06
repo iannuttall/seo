@@ -17,7 +17,9 @@ function bots(ai: Ai, purpose: 'search' | 'training'): SemanticDiagnostic {
     return {
       status: 'unknown',
       title: `${label}: unknown`,
-      explanation: `robots.txt could not be read (${robots?.availability ?? 'not checked'}).`,
+      explanation: robots?.servesHtml
+        ? 'robots.txt returned a web page, such as a bot challenge, not a robots.txt file.'
+        : `robots.txt could not be read (${robots?.availability ?? 'not checked'}).`,
     }
   }
   const blocked = group.filter((bot) => bot.allowed === false)

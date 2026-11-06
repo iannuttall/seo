@@ -250,3 +250,42 @@ test('seo page keeps why the index status is missing', async (t) => {
   })
   assert.match(result.text, /daily quota is blocked/)
 })
+
+// seo page asked Google every run, spending quota and waiting up to a
+// minute, though seo index had saved a fresh inspection of the same URL.
+test('seo page reuses a saved inspection instead of asking Google again', async (t) => {
+  t.mock.method(
+    globalThis,
+    'fetch',
+    async () => new Response('', { status: 404 }),
+  )
+  const url = 'https://example.com/saved'
+  const status = inspection({
+    verdict: 'PASS',
+    coverageState: 'Submitted and indexed',
+  })
+  let asked = 0
+  const result = await runPage(
+    { site: 'sc-domain:example.com', url },
+    {
+      searchAnalytics: async () => ({ rows: [], calls: 1, rowsFetched: 0 }),
+      checkPages: async () => [],
+      liveCheck: async () => still(page(url)),
+      inspect: async () => {
+        asked += 1
+        return status
+      },
+      savedInspections: {
+        read: () =>
+          new Map([[url, { status, inspectedAt: '2026-10-20T08:00:00.000Z' }]]),
+        save: () => {},
+      },
+      call: (command) => `seo ${command}`,
+      now: () => new Date('2026-10-22T08:00:00.000Z'),
+    },
+  )
+  const data = result.data as { index: unknown; indexInspectedAt: unknown }
+  assert.equal(asked, 0)
+  assert.deepEqual(data.index, status)
+  assert.equal(data.indexInspectedAt, '2026-10-20T08:00:00.000Z')
+})

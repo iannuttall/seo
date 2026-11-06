@@ -31,6 +31,43 @@ export class GoogleApiError extends SeoError {
   }
 }
 
+// How long one Google API request, from token to parsed body, may take.
+// URL Inspection gets longer because Google itself often takes a minute.
+export const GOOGLE_TIMEOUT_MS = 30_000
+export const URL_INSPECTION_TIMEOUT_MS = 60_000
+
+// Runs one Google API request within timeoutMs, so a stuck call cannot hang
+// a whole run. The caller's signal still stops it sooner. The timer races
+// the request too, so a fetch that ignores its signal is still bounded.
+export async function withinGoogleTimeout<T>(
+  what: string,
+  timeoutMs: number,
+  signal: AbortSignal | undefined,
+  run: (signal: AbortSignal) => Promise<T>,
+): Promise<T> {
+  const controller = new AbortController()
+  const fromCaller = () => controller.abort(signal?.reason)
+  if (signal?.aborted) fromCaller()
+  else signal?.addEventListener('abort', fromCaller, { once: true })
+  let timer: ReturnType<typeof setTimeout> | undefined
+  const timedOut = new Promise<never>((_, reject) => {
+    timer = setTimeout(() => {
+      const error = new SeoError(
+        'PROVIDER_UNAVAILABLE',
+        `${what} did not answer within ${timeoutMs / 1000} seconds, so the request was stopped. Try again later.`,
+      )
+      reject(error)
+      controller.abort(error)
+    }, timeoutMs)
+  })
+  try {
+    return await Promise.race([run(controller.signal), timedOut])
+  } finally {
+    clearTimeout(timer)
+    signal?.removeEventListener('abort', fromCaller)
+  }
+}
+
 // A fetch that adds a bearer token and a JSON content type.
 export function bearerFetch(
   token: () => Promise<string> | string,
@@ -113,16 +150,25 @@ export async function googleJson<T>(
     label: string
     subject?: string
     maxBytes?: number
+    timeoutMs?: number
   } & GoogleCallOptions,
 ): Promise<T> {
-  const response = await gfetch(url, {
-    method: input.body === undefined ? 'GET' : 'POST',
-    body: input.body === undefined ? undefined : JSON.stringify(input.body),
-  })
-  if (!response.ok) {
-    throw await failure(response, input.label, input.subject, input)
-  }
-  return readJson<T>(response, input.label, { maxBytes: input.maxBytes })
+  return withinGoogleTimeout(
+    input.subject ? `${input.label} for ${input.subject}` : input.label,
+    input.timeoutMs ?? GOOGLE_TIMEOUT_MS,
+    undefined,
+    async (signal) => {
+      const response = await gfetch(url, {
+        method: input.body === undefined ? 'GET' : 'POST',
+        body: input.body === undefined ? undefined : JSON.stringify(input.body),
+        signal,
+      })
+      if (!response.ok) {
+        throw await failure(response, input.label, input.subject, input)
+      }
+      return readJson<T>(response, input.label, { maxBytes: input.maxBytes })
+    },
+  )
 }
 
 const GSC = 'https://www.googleapis.com/webmasters/v3'
@@ -209,6 +255,7 @@ export async function inspectSearchConsoleUrl(
       ...options,
       label: 'URL Inspection',
       subject: url,
+      timeoutMs: URL_INSPECTION_TIMEOUT_MS,
       body: {
         siteUrl: site,
         inspectionUrl: url,

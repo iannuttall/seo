@@ -113,7 +113,7 @@ export type AuditAccess = {
 export const AUDIT_SECTION = 'weekly-audit'
 
 export const AUDIT_SECTION_TEXT =
-  'What the weekly crawl of the site found (broken and redirected internal links, missing or duplicate titles, descriptions and H1s, noindex, canonicals to another page, sitemap URLs that do not return 200, thin pages, tags that JavaScript changes), with what is new, back or resolved since the crawl before. Only for sites added to the weekly site audit beta.'
+  'What the weekly crawl of the site found (broken and redirected internal links, missing, empty or duplicate titles and descriptions, missing H1s, noindex for Google, canonicals to another page, sitemap URLs that do not return 200, thin pages, tags that JavaScript changes), with what is new, back or resolved since the crawl before. Only for sites added to the weekly site audit beta.'
 
 // Plain names for each rule. Heuristics say so.
 export const AUDIT_RULES: Record<string, string> = {
@@ -121,10 +121,12 @@ export const AUDIT_RULES: Record<string, string> = {
   link_to_redirect: 'Internal links to a redirect',
   link_failed: 'Internal links to a page that could not be fetched',
   title_missing: 'Pages with no title',
+  title_empty: 'Pages with an empty title',
   title_duplicate: 'Titles used by more than one page',
   description_missing: 'Pages with no meta description',
+  description_empty: 'Pages with an empty meta description',
   h1_missing: 'Pages with no H1',
-  noindex: 'Pages that ask not to be indexed',
+  noindex: 'Pages that ask Google not to index them',
   canonical_elsewhere: 'Pages whose canonical is another URL',
   sitemap_url_not_ok: 'Sitemap URLs that do not return 200',
   sitemap_page_unlinked:

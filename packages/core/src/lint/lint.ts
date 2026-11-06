@@ -40,6 +40,46 @@ export const LINT_REVIEW_LENSES: Record<string, string> = {
   'swap-test':
     'A headline or description that could sit on a competitor’s page unchanged.',
   proof: 'A customer count or percentage that needs a source.',
+  staccato:
+    'Three or more very short sentences in a row that may be a drumbeat.',
+  anaphora:
+    'Several sentences in a row that open with the same word, for rhythm.',
+}
+
+// The rules and review lenses as a readable list, optionally limited to
+// some categories, for `seo lint rules`.
+export function lintRulesText(only?: LintCategory[]): string {
+  const keep = (category: LintCategory) =>
+    !only?.length || only.includes(category)
+  const lines: string[] = []
+  for (const category of LINT_CATEGORIES) {
+    if (!keep(category)) continue
+    lines.push(`${CATEGORY_NAMES[category]} (${category})`)
+    for (const rule of LINT_RULES) {
+      if (rule.family !== category) continue
+      const presets = Object.entries(rule.presets ?? {})
+        .map(([preset, level]) => `${preset} ${level}`)
+        .join(', ')
+      lines.push(
+        `  ${rule.id}  ${rule.level}${presets ? ` (${presets})` : ''}`,
+        `      ${rule.description}`,
+      )
+    }
+    const lenses = Object.entries(LINT_REVIEW_LENSES).filter(
+      ([lens]) => lensCategory(lens) === category,
+    )
+    if (lenses.length) {
+      lines.push('  Review lenses (judgement calls, never errors):')
+      for (const [lens, description] of lenses) {
+        lines.push(`  ${lens}`, `      ${description}`)
+      }
+    }
+    lines.push('')
+  }
+  lines.push(
+    'Skip a rule with --ignore <id>, or one line with a <!-- seo-lint-ignore <id> --> comment above it.',
+  )
+  return lines.join('\n')
 }
 
 const AI_RULES = new Set(

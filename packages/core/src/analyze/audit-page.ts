@@ -8,6 +8,7 @@ import { estimateSerpTitleWidth } from './title-width.js'
 
 export const AUDIT_PAGE_RULE_IDS = [
   'missing_title',
+  'empty_title',
   'title_too_wide',
   'h1_missing',
   'canonical_invalid',
@@ -37,7 +38,10 @@ function buildRecommendations(report: AuditPageReport): Recommendation[] {
   if (!page.title) {
     recommendations.push({
       principle: 'C.2',
-      evidenceRef: 'The HTML document has no title element.',
+      evidenceRef:
+        page.title === ''
+          ? 'The HTML document has an empty title element.'
+          : 'The HTML document has no title element.',
       action: 'Add a concise, descriptive title that identifies this page.',
       effort: 'S',
       confidence: 'high',
@@ -89,7 +93,16 @@ export async function auditPage(
   const h1s = page.headings.filter((heading) => heading.level === 1)
   const issues: AuditPageReport['issues'] = []
 
-  if (!page.title) {
+  if (page.title === '') {
+    issues.push({
+      code: 'empty_title',
+      title: 'Title empty',
+      detail: 'The <title> element has no text.',
+      principle: 'C.2',
+      evidenceRef: 'HTML document has an empty <title> element.',
+      severity: 'high',
+    })
+  } else if (!page.title) {
     issues.push({
       code: 'missing_title',
       title: 'Title missing',

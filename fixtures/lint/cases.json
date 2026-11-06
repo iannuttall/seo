@@ -2602,6 +2602,107 @@
       "id": "control-221",
       "text": "We moved the docs, then fixed the links that broke.",
       "expect": null
+    },
+    {
+      "id": "tell-288",
+      "text": "Books closed within 48 hours of month end. Every month. No exceptions.",
+      "expect": ["pithy-fragment"]
+    },
+    {
+      "id": "tell-289",
+      "text": "**$299 per month.** That's it.",
+      "expect": ["pithy-fragment"]
+    },
+    {
+      "id": "tell-290",
+      "text": "## Ready to Simplify Your Practice Finances?",
+      "expect": ["cta-question"]
+    },
+    {
+      "id": "tell-291",
+      "text": "Here's to the next chapter.",
+      "expect": ["generic-closer"]
+    },
+    {
+      "id": "tell-292",
+      "text": "No surprise fees. No hourly billing that creeps higher each month.",
+      "expect": ["anaphora"]
+    },
+    {
+      "id": "tell-293",
+      "text": "Shared budgets are just the beginning.",
+      "expect": ["significance-inflation"]
+    },
+    {
+      "id": "tell-294",
+      "text": "It isn't perfect. The foam firms up after 300 miles.",
+      "expect": ["strawman"]
+    },
+    {
+      "id": "tell-295",
+      "text": "Repotting a fig doesn't have to be stressful.",
+      "expect": ["strawman"]
+    },
+    {
+      "id": "tell-296",
+      "text": "Thanks to every project, every challenge, and every collaboration along the way.",
+      "expect": ["triad"]
+    },
+    {
+      "id": "tell-297",
+      "text": "It is cheap, it is reversible, and it produces evidence.",
+      "expect": ["triad"]
+    },
+    {
+      "id": "tell-298",
+      "text": "The Kestrel 2 punches well above its weight class.",
+      "expect": ["cliche"]
+    },
+    {
+      "id": "tell-299",
+      "text": "Made for dentistry, not just any business.",
+      "expect": ["contrast-reframe"]
+    },
+    {
+      "id": "control-510",
+      "text": "Kobak counted how often words such as \"delve\" appeared in abstracts after 2022.",
+      "expect": null
+    },
+    {
+      "id": "control-511",
+      "text": "We delve into the server logs once a week.",
+      "expect": null
+    },
+    {
+      "id": "control-512",
+      "text": "Avoid lines like 'It's not a tool, it's a teammate.' in a launch post.",
+      "expect": null
+    },
+    {
+      "id": "control-513",
+      "text": "The tool reads Search Console data, not Google Analytics data.",
+      "expect": null
+    },
+    {
+      "id": "control-514",
+      "text": "It's not their only offering, but it is the first service they mention on their homepage.",
+      "expect": null
+    },
+    {
+      "id": "control-515",
+      "text": "We hired engineers, data scientists, and designers in March.",
+      "expect": null
+    },
+    {
+      "id": "control-516",
+      "text": "This is our research, and it shows what we found: 4,210 pages had no title.",
+      "expect": null
+    },
+    {
+      "id": "control-517",
+      "text": "---\ntitle: \"Pricing - Example | Example Co\"\n---\n\nPlans start at $9 a month.",
+      "expect": null,
+      "format": "md"
     }
   ]
 }

@@ -244,6 +244,12 @@ const lintInput = {
     .describe(
       'Optional phrases to allow, such as a product name a rule keeps matching.',
     ),
+  rules: z
+    .boolean()
+    .optional()
+    .describe(
+      'Optional. true lists every rule with its id, category, level and description instead of checking text; only limits the list, such as only ["ai"].',
+    ),
 }
 
 export const SHARED_TOOLS: SharedTool[] = [
@@ -712,6 +718,7 @@ export const SHARED_TOOLS: SharedTool[] = [
           ignorePhrases: input.ignore_phrases,
           only: input.only,
           metaKind: input.meta_kind,
+          rules: input.rules,
         },
         surface.readFiles,
         pageMarkdown && ((url) => pageMarkdown(url, LINT_MAX_CHARS)),

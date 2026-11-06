@@ -163,6 +163,7 @@ function emptyCounts(): AvailabilityCounts {
     'access-blocked': 0,
     'rate-limited': 0,
     unreachable: 0,
+    unreadable: 0,
     failed: 0,
   }
 }
@@ -190,6 +191,7 @@ async function readHomepage(
       url,
       controller.signal,
       fetch,
+      { timeoutMs: SITE_FACTS_TIMEOUT_MS },
     )
     const finalUrl = redirectChain.at(-1)?.location ?? url
     const accessBlock = detectAccessBlock({
@@ -314,15 +316,18 @@ async function checkSite(
     signal: input.signal,
   }
   const robots = await checkRobotsAiAccess(signalInput)
-  const homepageAllowed = robots.allows(home)
+  const fetchAllowed = robots.allows(home)
   const { sitemapUrls, ...robotsTxt } = robots.robotsTxt
+  // A web page at /robots.txt: the rules are unknown, but the home page is
+  // fetched as Google would.
+  const homepageAllowed = robotsTxt.servesHtml ? null : fetchAllowed
   const homepage: SiteHomepageFacts =
-    input.respectRobots !== false && homepageAllowed !== true
+    input.respectRobots !== false && fetchAllowed !== true
       ? {
           url: home,
           outcome: 'skipped',
           skipReason:
-            homepageAllowed === false ? 'robots-disallowed' : 'robots-unknown',
+            fetchAllowed === false ? 'robots-disallowed' : 'robots-unknown',
         }
       : await readHomepage(home, fetch, input.signal)
   const llms = await readLlmsTxt(signalInput)

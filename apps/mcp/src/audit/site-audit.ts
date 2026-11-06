@@ -7,6 +7,7 @@ import {
   MAX_DROPPED_PAGES,
   type WeekSite,
 } from '@seo/core/commands'
+import { hasXRobotsDirective } from '@seo/core/hosted'
 import robotsParser from 'robots-parser'
 import { betaFlags } from '../beta.ts'
 import { directory } from '../google.ts'
@@ -783,23 +784,28 @@ export class SiteAudit extends DurableObject<Env> {
       : null
     if (rendered?.kind === 'busy') return rendered
     const facts = rendered?.facts ?? rawFacts
+    const xRobots = response.headers.get('x-robots-tag') ?? undefined
 
     meter.transaction(() => {
       if (rendered) saveRendering(meter, run)
       meter.run(
         `UPDATE pages SET state = 'fetched', status = ?, location = ?, content_type = ?,
            x_robots = ?, title = ?, description = ?, h1 = ?, canonical = ?, robots = ?,
-           words = ?, bytes = ?, ms = ?, links = ?, external = ?,
+           google_noindex = ?, words = ?, bytes = ?, ms = ?, links = ?, external = ?,
            render = ?, render_error = ?, raw = ? WHERE url = ?`,
         response.status,
         target?.href ?? location,
         contentType,
-        response.headers.get('x-robots-tag'),
+        xRobots ?? null,
         facts?.title ?? null,
         facts?.description ?? null,
         facts?.h1 ?? null,
         facts?.canonical ?? null,
         facts?.robots ?? null,
+        Number(
+          Boolean(facts?.google_noindex) ||
+            hasXRobotsDirective(xRobots, 'noindex'),
+        ),
         facts?.words ?? null,
         facts?.bytes ?? null,
         ms,
@@ -816,7 +822,7 @@ export class SiteAudit extends DurableObject<Env> {
         this.enqueue(wake, run, site, robots, [target.href], page.depth)
       }
       // Pages that ask not to be followed add no new URLs.
-      if (!/nofollow/.test(facts?.robots ?? '')) {
+      if (!facts?.nofollow) {
         this.enqueue(wake, run, site, robots, found, page.depth + 1)
       }
       this.flush(wake, run)

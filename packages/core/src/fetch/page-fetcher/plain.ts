@@ -15,7 +15,7 @@ import {
   retryAfterMs,
   waitForHostBackpressure,
 } from './rate-controls.js'
-import { fetchWithRedirectChain } from './redirects.js'
+import { fetchWithRedirectChain, redirectsWillRepeat } from './redirects.js'
 import { fetchRobots, RobotsAccessError } from './robots.js'
 import {
   diagnosticRobotsEvidence,
@@ -159,8 +159,11 @@ export async function fetchPlain(
         signal?.addEventListener('abort', abort, { once: true })
       }
       try {
-        return await fetchWithRedirectChain(url, controller.signal)
+        return await fetchWithRedirectChain(url, controller.signal, undefined, {
+          timeoutMs,
+        })
       } catch (error) {
+        if (redirectsWillRepeat(error)) throw new AbortError(error)
         if (error instanceof Error && /4\d\d/.test(error.message)) {
           throw new AbortError(error)
         }

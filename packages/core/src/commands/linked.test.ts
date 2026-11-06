@@ -67,6 +67,36 @@ test('each site goes to the linked Google account with the most access to it', a
   )
 })
 
+test('a Google call that never answers stops at its timeout', async (t) => {
+  t.mock.timers.enable({ apis: ['setTimeout'] })
+  let stopped: AbortSignal | undefined
+  globalThis.fetch = (async (input: string | URL, init?: RequestInit) => {
+    if (String(input).endsWith('/webmasters/v3/sites')) {
+      return Response.json({ siteEntry: SITES['Bearer two'] })
+    }
+    stopped = init?.signal ?? undefined
+    t.mock.timers.tick(30_000)
+    return new Promise<Response>(() => {})
+  }) as typeof fetch
+
+  const directory = new LinkedAccounts(
+    { google: [account('b@example.com', 'two')], bing: [] },
+    { signIn: 'Sign in again.', addGoogle: 'Add the Google account.' },
+  )
+  await assert.rejects(
+    directory.searchAnalytics()('sc-domain:example.org', {
+      startDate: '2026-09-01',
+      endDate: '2026-09-02',
+    }),
+    {
+      code: 'PROVIDER_UNAVAILABLE',
+      message:
+        /^Search Console for sc-domain:example\.org did not answer within 30 seconds/,
+    },
+  )
+  assert.equal(stopped?.aborted, true)
+})
+
 test('a site, host or URL finds the property that covers it', () => {
   const names = [
     'sc-domain:example.com',

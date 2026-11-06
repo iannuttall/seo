@@ -7,6 +7,7 @@ export {
   LINT_RULES,
   type LintFileResult,
   lintReportText,
+  lintRulesText,
   lintText,
 } from './lint.js'
 export * from './types.js'

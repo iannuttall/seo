@@ -6,6 +6,7 @@ const crawlAiAvailabilitySchema = z.enum([
   'access-blocked',
   'rate-limited',
   'unreachable',
+  'unreadable',
 ])
 
 const crawlFetchErrorKindSchema = z.enum([
@@ -13,6 +14,7 @@ const crawlFetchErrorKindSchema = z.enum([
   'tls',
   'timeout',
   'redirect-limit',
+  'redirect-loop',
   'too-large',
   'aborted',
   'unknown',

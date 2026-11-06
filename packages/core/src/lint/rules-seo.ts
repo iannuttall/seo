@@ -13,7 +13,7 @@ export const SEO_RULES: Record<string, RuleInfo> = {
     family: 'copy',
     level: 'error',
     description:
-      'Em dashes, en dashes and spaced hyphens used as dashes in copy.',
+      'Em dashes, en dashes and spaced hyphens used as dashes in copy. A separator in a title, such as "Pricing - Example", is left alone.',
   },
   titleLength: {
     id: 'title-length',
@@ -54,7 +54,8 @@ export const SEO_RULES: Record<string, RuleInfo> = {
     id: 'emoji',
     family: 'copy',
     level: 'warning',
-    description: 'Emoji at the start of headings or list items.',
+    description:
+      'Emoji at the start of headings or list items, and decorative emoji such as 🎉 or 🚀 anywhere.',
   },
   exclamation: {
     id: 'exclamation',
@@ -94,6 +95,13 @@ function dash(ctx: Context) {
   for (const block of ctx.blocks(ALL)) {
     re.lastIndex = 0
     for (const found of block.norm.matchAll(re)) {
+      // "Pricing | Example" style separators in a title tag or label.
+      if (
+        (block.kind === 'title' || block.kind === 'label') &&
+        /^\s+\S*\s+$/.test(found[0])
+      ) {
+        continue
+      }
       const start = (found.index ?? 0) + (found[1] ? 1 : 0)
       const end = (found.index ?? 0) + found[0].length
       const range = Boolean(found[1])
@@ -131,6 +139,20 @@ function lengths(ctx: Context) {
     const length = block.text.length
     if (length >= low && length <= high) continue
     const what = title ? 'title' : 'description'
+    if (!length) {
+      ctx.hit(
+        rule,
+        block,
+        0,
+        0,
+        `The ${what} is empty.`,
+        title
+          ? 'Write a title that names the page, in 30 to 60 characters.'
+          : 'Write one or two sentences that say what the page contains and who it is for, in 70 to 160 characters.',
+        'error',
+      )
+      continue
+    }
     // Google cuts by width, so the width (an estimate from Arial's letter
     // widths) shows beside the count.
     const pixels = Math.ceil(serpTextWidth(block.text, what))
@@ -152,7 +174,7 @@ function lengths(ctx: Context) {
 }
 
 const HEADING_CLICHE =
-  /^(?:a )?(?:deep dive|under the hood|demystifying\b|why (?:it|this|that) matters|a closer look|the ultimate guide|everything you need to know|mastering\b|unlocking\b|the power of\b|the future of\b|what you'll learn|key takeaways|final thoughts|wrapping up|conclusion|in conclusion|tl;?dr|overview|introduction|the road ahead|looking ahead|challenges and (?:legacy|opportunities|future)|future outlook|the bottom line|let's dive in|get started today)/i
+  /^(?:a )?(?:deep dive|under the hood|demystifying\b|why (?:it|this|that) matters|a closer look|the ultimate guide|everything you need to know|mastering\b|unlocking\b|the power of\b|the future of\b|what you'll learn|key takeaways|final thoughts|wrapping up|conclusion|in conclusion|tl;?dr|overview|introduction|the road ahead|looking ahead|challenges and (?:legacy|opportunities|future)|future outlook|the bottom line|let's dive in|get started today|(?:the )?(?:challenge|solution|results?)$|at a glance$|first impressions$|a note of thanks$)/i
 
 function headings(ctx: Context) {
   const list = ctx.blocks(['heading'])
@@ -197,8 +219,27 @@ function headings(ctx: Context) {
 }
 
 const EMOJI = /^\p{Extended_Pictographic}/u
+// Party and rocket emoji used as decoration anywhere in the text.
+const DECORATION =
+  /[\u{1F389}\u{1F680}\u{2728}\u{1F525}\u{1F4A1}\u{1F64C}\u{1F44F}\u{1F4AA}\u{1F3AF}\u{1F449}]/gu
 
 function emoji(ctx: Context) {
+  for (const block of ctx.blocks(ALL)) {
+    if (block.kind === 'heading' || block.kind === 'list') {
+      if (EMOJI.test(block.text)) continue
+    }
+    for (const found of block.text.matchAll(DECORATION)) {
+      const at = found.index ?? 0
+      ctx.hit(
+        SEO_RULES.emoji as RuleInfo,
+        block,
+        at,
+        at + found[0].length,
+        `A decorative ${found[0]} emoji.`,
+        'Remove it. The words should carry the point.',
+      )
+    }
+  }
   for (const block of ctx.blocks(['heading', 'list'])) {
     if (EMOJI.test(block.text)) {
       ctx.hit(
@@ -373,7 +414,11 @@ function reviews(ctx: Context) {
       block.kind === 'paragraph' &&
       block.endsSection &&
       sentences.length === 1 &&
-      words(block.text).length <= 10
+      words(block.text).length <= 10 &&
+      // A line such as "#1" or "4,210" is a label or a number, not a
+      // closing line.
+      words(block.text).filter((word) => /[a-z]/i.test(word)).length >= 3 &&
+      /[.!?]["')]?$/.test(block.text)
     ) {
       ctx.review(
         'mic-drop',
@@ -387,6 +432,7 @@ function reviews(ctx: Context) {
   if (ctx.preset === 'landing' || ctx.preset === 'meta') {
     for (const block of ctx.blocks(['title', 'description', 'heading'])) {
       if (block.kind === 'heading' && block.level !== 1) continue
+      if (!block.text) continue
       const later = words(block.text).slice(1)
       if (/\d/.test(block.text) || later.some((word) => /^[A-Z]/.test(word))) {
         continue

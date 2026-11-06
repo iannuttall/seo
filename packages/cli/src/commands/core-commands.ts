@@ -1,3 +1,4 @@
+import { existsSync } from 'node:fs'
 import {
   cloudLinked,
   localError,
@@ -695,7 +696,7 @@ export const lintCommand = defineCommand({
       type: 'positional',
       required: false,
       description:
-        'Files, folders or globs: .md, .mdx, .html, .astro or .txt. Up to 100 files.',
+        'Files, folders or globs: .md, .mdx, .html, .astro or .txt. Up to 100 files. `seo lint rules` lists the rules instead (add --only ai for the AI-pattern rules).',
     },
     url: {
       type: 'string',
@@ -766,7 +767,10 @@ export const lintCommand = defineCommand({
       (value): value is string => typeof value === 'string',
     )
     const url = stringArg(args.url)
-    if (Boolean(url) === paths.length > 0) {
+    // `seo lint rules` lists the rules, unless a file named rules exists.
+    const listRules =
+      !url && paths.length === 1 && paths[0] === 'rules' && !existsSync('rules')
+    if (!listRules && Boolean(url) === paths.length > 0) {
       throw new SeoError(
         'INVALID_INPUT',
         'Give files, folders or globs to check, or --url with a live page, but not both.',
@@ -786,6 +790,15 @@ export const lintCommand = defineCommand({
       .concat(args['ignore-phrase'] ?? [])
       .filter((value): value is string => typeof value === 'string')
     try {
+      if (listRules) {
+        const listed = await runLint({
+          rules: true,
+          only: only as LintCategory[] | undefined,
+        })
+        if (jsonFlag(args)) printJson(listed.data)
+        else process.stdout.write(`${listed.text}\n`)
+        return
+      }
       const { pageMarkdown } = nodeCommandDeps({ call: cliCall })
       const result = await runLint(
         {

@@ -3,6 +3,7 @@ import { extractHttpCanonicalEvidence } from '../../extract/canonical.js'
 import { selectGoogleRichResultAssessments } from '../../extract/google-rich-results.js'
 import { extractPage } from '../../extract/page-extractor.js'
 import { OriginBackpressureError } from '../../fetch/page-fetcher/rate-controls.js'
+import { RedirectChainError } from '../../fetch/page-fetcher/redirects.js'
 import { RobotsAccessError } from '../../fetch/page-fetcher/robots.js'
 import {
   type FetchPageOptions,
@@ -95,6 +96,14 @@ export function fetchFailureKind(
   const code = String(record?.code ?? record?.cause?.code ?? '').toUpperCase()
   const message = error instanceof Error ? error.message : String(error)
   if (signal?.aborted) return 'aborted'
+  if (error instanceof RedirectChainError) {
+    if (error.kind === 'loop') return 'redirect-loop'
+    if (error.kind === 'too_many') return 'redirect-limit'
+    if (error.kind === 'timeout') return 'timeout'
+    return error.cause === undefined
+      ? 'unknown'
+      : fetchFailureKind(error.cause, signal)
+  }
   if (/TOO MANY REDIRECTS/i.test(message)) return 'redirect-limit'
   if (['ENOTFOUND', 'EAI_AGAIN', 'EAI_FAIL'].includes(code)) return 'dns'
   if (

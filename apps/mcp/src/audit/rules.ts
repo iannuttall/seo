@@ -88,6 +88,11 @@ function htmlOk(rendering: Run['render']): string {
     : base
 }
 
+// Whether Google is asked not to index the page. Pages fetched before the
+// google_noindex column existed fall back to the old text match.
+const NOINDEX = `coalesce(google_noindex,
+  lower(coalesce(robots, '') || ' ' || coalesce(x_robots, '')) LIKE '%noindex%')`
+
 // Every rule, as SQL that returns rule, subject and a JSON details string,
 // ordered by subject so the cap keeps the same rows each week.
 function rules(rendering: Run['render']): { rule: string; sql: string }[] {
@@ -113,20 +118,30 @@ function rules(rendering: Run['render']): { rule: string; sql: string }[] {
     {
       rule: 'title_missing',
       sql: `SELECT url AS subject, '{}' AS details FROM pages
-        WHERE ${HTML_OK} AND coalesce(title, '') = '' ORDER BY url`,
+        WHERE ${HTML_OK} AND title IS NULL ORDER BY url`,
+    },
+    {
+      rule: 'title_empty',
+      sql: `SELECT url AS subject, '{}' AS details FROM pages
+        WHERE ${HTML_OK} AND title = '' ORDER BY url`,
     },
     {
       rule: 'title_duplicate',
       sql: `SELECT title AS subject, json_object('pages', count(*),
           'examples', json_group_array(url)) AS details
         FROM pages WHERE ${HTML_OK} AND coalesce(title, '') != ''
-          AND coalesce(robots, '') NOT LIKE '%noindex%'
+          AND NOT ${NOINDEX}
         GROUP BY title HAVING count(*) > 1 ORDER BY title`,
     },
     {
       rule: 'description_missing',
       sql: `SELECT url AS subject, '{}' AS details FROM pages
-        WHERE ${HTML_OK} AND coalesce(description, '') = '' ORDER BY url`,
+        WHERE ${HTML_OK} AND description IS NULL ORDER BY url`,
+    },
+    {
+      rule: 'description_empty',
+      sql: `SELECT url AS subject, '{}' AS details FROM pages
+        WHERE ${HTML_OK} AND description = '' ORDER BY url`,
     },
     {
       rule: 'h1_missing',
@@ -137,8 +152,7 @@ function rules(rendering: Run['render']): { rule: string; sql: string }[] {
       rule: 'noindex',
       sql: `SELECT url AS subject, json_object('meta', robots, 'header', x_robots,
           'in_sitemap', in_sitemap) AS details FROM pages
-        WHERE ${HTML_OK} AND (coalesce(robots, '') LIKE '%noindex%'
-          OR coalesce(x_robots, '') LIKE '%noindex%') ORDER BY url`,
+        WHERE ${HTML_OK} AND ${NOINDEX} ORDER BY url`,
     },
     {
       rule: 'canonical_elsewhere',
@@ -177,7 +191,7 @@ function rules(rendering: Run['render']): { rule: string; sql: string }[] {
     {
       rule: 'thin_page',
       sql: `SELECT url AS subject, json_object('words', words) AS details FROM pages
-        WHERE ${HTML_OK} AND words < 100 AND coalesce(robots, '') NOT LIKE '%noindex%'
+        WHERE ${HTML_OK} AND words < 100 AND NOT ${NOINDEX}
         ORDER BY url`,
     },
   ]

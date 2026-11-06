@@ -137,7 +137,7 @@ export async function runPage(
     ),
     leg('Google index status', inspectWithin(deps, input), (value) =>
       value.index
-        ? `Google index status: ${value.index.coverage ?? value.index.verdict ?? 'no reason returned'}`
+        ? `Google index status: ${value.index.coverage ?? value.index.verdict ?? 'no reason returned'}${value.savedAt ? ` (saved from ${value.savedAt})` : ''}`
         : `Google index status: not available (${value.error?.code})`,
     ),
     leg(
@@ -165,6 +165,7 @@ export async function runPage(
   ])
   const indexed = inspection.index
   const indexError = inspection.error
+  const savedAt = inspection.savedAt
   const facts = live.first
   const reason = indexed
     ? indexingRow(
@@ -221,7 +222,7 @@ export async function runPage(
     notes: [
       `Live page (fetched now):\n${pageFactsTable([facts], null)}${live.hops.length ? `\nRedirects: ${live.hops.map((hop) => `${hop.status} to ${hop.to}`).join(', ')}${live.last ? `, which returns ${live.last.status ?? live.last.error}` : ', then loop or pass 5 hops'}.` : ''}`,
       indexed
-        ? `Google index status:\n${table([indexed], Object.keys(indexed), null)}`
+        ? `Google index status${savedAt ? ` (from the inspection saved at ${savedAt}, within the last 7 days, so no quota was used; in the CLI, add --refresh to ask Google again)` : ''}:\n${table([indexed], Object.keys(indexed), null)}`
         : indexErrorText(indexError, input, deps),
       ...(reason
         ? [
@@ -258,6 +259,8 @@ export async function runPage(
       index: indexed,
       // Why index is null: { code, message }, else null.
       indexError,
+      // When the index status came from a saved inspection: when it ran.
+      indexInspectedAt: savedAt,
       reason,
       totalQueries: rows.length,
       queries: rows.slice(offset, offset + PAGE_SIZE),
@@ -280,7 +283,21 @@ type IndexError = {
 async function inspectWithin(
   deps: CommandDeps,
   input: PageInput,
-): Promise<{ index: IndexStatus | null; error: IndexError | null }> {
+): Promise<{
+  index: IndexStatus | null
+  error: IndexError | null
+  savedAt: string | null
+}> {
+  // A fresh inspection saved by this command or `seo index` (the CLI and
+  // the local MCP, within 7 days) answers without quota or waiting.
+  try {
+    const saved = deps.savedInspections
+      ?.read(input.site, [input.url])
+      .get(input.url)
+    if (saved) {
+      return { index: saved.status, error: null, savedAt: saved.inspectedAt }
+    }
+  } catch {}
   let timer: ReturnType<typeof setTimeout> | undefined
   const stop = new AbortController()
   const timeout = new Promise<IndexError>((resolve) => {
@@ -294,15 +311,19 @@ async function inspectWithin(
   })
   try {
     return await Promise.race([
-      deps
-        .inspect(input.site, input.url, stop.signal)
-        .then((index) => ({ index, error: null })),
-      timeout.then((error) => ({ index: null, error })),
+      deps.inspect(input.site, input.url, stop.signal).then((index) => {
+        try {
+          deps.savedInspections?.save(input.site, input.url, index)
+        } catch {}
+        return { index, error: null, savedAt: null }
+      }),
+      timeout.then((error) => ({ index: null, error, savedAt: null })),
     ])
   } catch (error) {
     const known = commandErrorFrom(error)
     return {
       index: null,
+      savedAt: null,
       error: {
         code: known instanceof CommandError ? known.code : 'GOOGLE_ERROR',
         message: known instanceof Error ? known.message : String(known),

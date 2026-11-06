@@ -60,6 +60,13 @@ test('fetchRobots classifies Google robots response states exactly', async () =>
       assert.equal(result.allowed, allowed)
       assert.equal(result.status, responseStatus)
     }
+
+    // A bot challenge or HTML shell served with 200 is not a robots.txt file.
+    status = 200
+    body = '<!doctype html><html><title>Security check</title></html>'
+    const page = await fetchRobots(fixture.origin, target, true)
+    assert.equal(page.availability, 'unreadable')
+    assert.equal(page.allowed, true)
   } finally {
     await fixture.close()
   }

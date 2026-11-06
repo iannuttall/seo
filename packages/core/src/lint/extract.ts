@@ -110,7 +110,7 @@ class Extractor {
       const block = makeBlock(
         kind,
         decodeValue(source, at, at + value.length, Boolean(quoted)),
-        { field: key, level: kind === 'heading' ? 1 : undefined },
+        { field: key, level: kind === 'heading' ? 1 : undefined, at },
       )
       if (block) this.props.push({ at, block })
     }
@@ -446,7 +446,7 @@ function extractHtml(source: string, astro: boolean): Extracted {
           const block = makeBlock(
             'description',
             decodeValue(source, content.start, content.end, false),
-            { field: 'description' },
+            { field: 'description', at: content.start },
           )
           if (block) x.props.push({ at: content.start, block })
         }
@@ -457,7 +457,7 @@ function extractHtml(source: string, astro: boolean): Extracted {
         const block = makeBlock(
           'title',
           decodeValue(source, tag.end, stop, false),
-          { field: 'title' },
+          { field: 'title', at: tag.end },
         )
         if (block) x.props.push({ at: tag.end, block })
         i = close < 0 ? n : source.indexOf('>', close) + 1
@@ -600,7 +600,11 @@ function extractMetaLines(source: string, metaKind?: LintMetaKind): Extracted {
         : value.length <= 70
           ? 'title'
           : 'description'
-    const block = makeBlock(kind, built, { field: kind })
+    // A labelled line with nothing after it is an empty tag.
+    const block = makeBlock(kind, built, {
+      field: kind,
+      ...(label ? { at: from } : {}),
+    })
     if (block) blocks.push(block)
   }
   return finish(x, blocks)

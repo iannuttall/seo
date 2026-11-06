@@ -1,6 +1,10 @@
 import { createHash } from 'node:crypto'
 import { cloudAccountFor } from '../../cloud.js'
 import { SeoError } from '../../errors.js'
+import {
+  URL_INSPECTION_TIMEOUT_MS,
+  withinGoogleTimeout,
+} from '../../google/api.js'
 import { readJson } from '../../http/read-json.js'
 import { assertUrlMatchesGscProperty } from '../property-url.js'
 import { authedFetch, getAuthorized } from './fetch.js'
@@ -127,50 +131,59 @@ export async function inspectUrl(
     limit: input.quotaLimit,
   })
 
-  let response: Response
-  try {
-    response = await authedFetch(
-      client,
-      'https://searchconsole.googleapis.com/v1/urlInspection/index:inspect',
-      {
-        method: 'POST',
-        body: JSON.stringify({
-          siteUrl: input.siteUrl,
-          inspectionUrl,
-          ...(input.languageCode ? { languageCode: input.languageCode } : {}),
-        }),
-        signal: input.signal,
-      },
-    )
-  } catch (error) {
-    finalize(reservation, 'consumed')
-    if (error instanceof SeoError) throw error
-    throw new SeoError(
-      'PROVIDER_UNAVAILABLE',
-      `URL Inspection request failed: ${error instanceof Error ? error.message : String(error)}`,
-    )
-  }
+  return withinGoogleTimeout(
+    `URL Inspection for ${inspectionUrl}`,
+    URL_INSPECTION_TIMEOUT_MS,
+    input.signal,
+    async (signal) => {
+      let response: Response
+      try {
+        response = await authedFetch(
+          client,
+          'https://searchconsole.googleapis.com/v1/urlInspection/index:inspect',
+          {
+            method: 'POST',
+            body: JSON.stringify({
+              siteUrl: input.siteUrl,
+              inspectionUrl,
+              ...(input.languageCode
+                ? { languageCode: input.languageCode }
+                : {}),
+            }),
+            signal,
+          },
+        )
+      } catch (error) {
+        finalize(reservation, 'consumed')
+        if (error instanceof SeoError) throw error
+        throw new SeoError(
+          'PROVIDER_UNAVAILABLE',
+          `URL Inspection request failed: ${error instanceof Error ? error.message : String(error)}`,
+        )
+      }
 
-  if (response.status === 429) {
-    const now = new Date()
-    const blockedUntil = retryAfter(response, now)
-    finalize(reservation, 'exhausted', blockedUntil, now)
-    throw new UrlInspectionQuotaError({
-      property: input.siteUrl,
-      resetAt: (
-        blockedUntil ??
-        (reservation
-          ? new Date(reservation.resetAt)
-          : urlInspectionQuotaResetAt(now))
-      ).toISOString(),
-      used: reservation ? reservation.used + reservation.count : 0,
-      limit: reservation?.limit ?? URL_INSPECTION_DAILY_LIMIT,
-      reason: 'provider',
-      requestSent: true,
-    })
-  }
+      if (response.status === 429) {
+        const now = new Date()
+        const blockedUntil = retryAfter(response, now)
+        finalize(reservation, 'exhausted', blockedUntil, now)
+        throw new UrlInspectionQuotaError({
+          property: input.siteUrl,
+          resetAt: (
+            blockedUntil ??
+            (reservation
+              ? new Date(reservation.resetAt)
+              : urlInspectionQuotaResetAt(now))
+          ).toISOString(),
+          used: reservation ? reservation.used + reservation.count : 0,
+          limit: reservation?.limit ?? URL_INSPECTION_DAILY_LIMIT,
+          reason: 'provider',
+          requestSent: true,
+        })
+      }
 
-  finalize(reservation, 'consumed')
-  if (!response.ok) throw inspectionResponseError(response, input)
-  return (await readJson(response, 'URL Inspection')) as UrlInspectionResult
+      finalize(reservation, 'consumed')
+      if (!response.ok) throw inspectionResponseError(response, input)
+      return (await readJson(response, 'URL Inspection')) as UrlInspectionResult
+    },
+  )
 }

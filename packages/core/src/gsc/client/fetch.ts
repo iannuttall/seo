@@ -22,6 +22,7 @@ export async function authedFetch(
   return fetch(url, {
     method: init?.method,
     body: init?.body,
+    signal: init?.signal,
     headers: {
       ...(init?.headers as Record<string, string> | undefined),
       authorization: `Bearer ${accessToken}`,

@@ -139,6 +139,7 @@ export async function inspectUrl(
           inspectionUrl,
           ...(input.languageCode ? { languageCode: input.languageCode } : {}),
         }),
+        signal: input.signal,
       },
     )
   } catch (error) {

@@ -125,8 +125,13 @@ export type CommandDeps = {
   // One URL live, following up to 5 redirects one request at a time.
   liveCheck: (url: string) => Promise<LiveCheck>
   // Google's index status for one URL. Throws when it cannot be read; a
-  // RATE_LIMITED error means the URL Inspection quota stopped it.
-  inspect: (site: string, url: string) => Promise<IndexStatus>
+  // RATE_LIMITED error means the URL Inspection quota stopped it. The
+  // signal, where a surface uses it, stops a request nobody waits for.
+  inspect: (
+    site: string,
+    url: string,
+    signal?: AbortSignal,
+  ) => Promise<IndexStatus>
   // URL Inspections used today for a property and the daily limit, where
   // this surface counts them (the CLI and the local MCP).
   inspectionQuota?: (site: string) => Promise<{ used: number; limit: number }>

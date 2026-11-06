@@ -64,12 +64,13 @@ export function nodeCommandDeps(options: {
       }),
     checkPages,
     liveCheck,
-    inspect: async (site, url) =>
+    inspect: async (site, url, signal) =>
       indexStatusFrom(
         await inspectUrl({
           siteUrl: site,
           inspectionUrl: url,
           accountEmail: options.account,
+          signal,
         }),
       ),
     inspectionQuota: (site) =>

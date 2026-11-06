@@ -119,6 +119,14 @@ Answers come from DataForSEO's queue and usually take about 15 seconds. Through 
 
 To see more rows, use the next-page command the result gives you. It passes every answer's task, so the answers are read back at no cost instead of asked again.
 
+The check looks for your site's name in each answer, taken from the domain unless you give it. When the brand name differs from the domain, or a brand uses several domains, say so:
+
+```sh
+seo research ai_answers --target claude.com --also claude.ai --brand Claude --keywords "what is claude code"
+```
+
+A citation to any of the domains counts as cited, and the result names the domains and the brand names it matched. Placeholder sites in an answer, such as yourdomain.com, and images in ChatGPT's answers are never counted as citations.
+
 Treat each row as one sample. Ask the same question tomorrow and the answer can change, so a "neither" today is not proof you will never be cited.
 
 ## Authority columns

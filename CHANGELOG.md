@@ -24,6 +24,19 @@
 - `seo page` prints what it is waiting on, and for a page Google does not
   know, says how to get it found.
 - `seo status` runs the same setup check as `seo doctor`.
+- `seo research keyword_ideas` lists searches that contain each seed
+  keyword, and `serp_overlap` counts the top 10 pages and sites each pair
+  of keywords shares, saying how many results it could compare.
+- `serp` takes `--depth` (default 20; the site's SERP checker reads 30).
+- Research results are kept for a day, so the next page and `--detail
+  full` cost nothing more; `--refresh` asks again. Full detail returns
+  every row read, and the JSON gives `next` and `rowsLeftOut`.
+- `ai_answers` takes `--also` for a brand's other domains and `--brand`
+  for the names that count as a mention, and names what it matched.
+- `seo redirect-trace --map redirects.csv` checks up to 1,000 old and new
+  URL pairs and gives each a verdict.
+- `seo lint --meta-kind title|description` says what plain meta lines are,
+  and length findings give an estimated pixel width.
 
 ### Changed
 
@@ -46,6 +59,15 @@
   could come back with the whole site's keywords or no links at all.
 - When robots.txt redirects to another host, the crawl reads its rules for
   AI bots. Before, every bot was reported as allowed.
+- `keyword_metrics` lists a keyword with no volume as no data, and names
+  each provider's volume model.
+- Page facts read robots tags for one crawler, such as `googlebot`, and
+  keep an empty title, description or H1 apart from a missing one.
+- `seo page`, reports and `seo redirect-trace` share one redirect tracer
+  with loop detection, a 10-hop cap and a timeout on every hop.
+- `ai_answers` no longer counts placeholder domains such as yourdomain.com,
+  or images in ChatGPT answers, as cited sites.
+- The meta preset checks titles and descriptions sent as MCP text.
 
 ## 0.16.1
 

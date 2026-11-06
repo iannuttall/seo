@@ -74,6 +74,8 @@ The summary also counts findings by category, so you can see the split without f
 seo lint --preset meta titles.txt
 ```
 
+Start a line with `title:` or `description:` to say which it is. For a file of plain lines, add `--meta-kind title` or `--meta-kind description`; without it, a line up to 70 characters is read as a title. Each length finding also gives an estimate of the width in pixels, the same measure the [SERP preview tool](/tools/serp-preview) uses.
+
 Titles are checked for 30 to 60 characters and descriptions for 70 to 160, when the page has them in frontmatter or in its HTML head. These are rules of thumb for what fits in a search result, not limits Google enforces.
 
 ## Keep a line the check flags

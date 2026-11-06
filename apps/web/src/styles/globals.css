@@ -190,6 +190,7 @@
     --success-soft: oklch(28% 0.07 145);
     --warning: oklch(80% 0.16 80);
     --warning-soft: oklch(30% 0.08 80);
+    --warning-foreground: oklch(88% 0.12 80);
     --info: oklch(72% 0.13 240);
     --info-soft: oklch(28% 0.07 240);
   }
@@ -234,6 +235,7 @@
   --success-soft: oklch(28% 0.07 145);
   --warning: oklch(80% 0.16 80);
   --warning-soft: oklch(30% 0.08 80);
+  --warning-foreground: oklch(88% 0.12 80);
   --info: oklch(72% 0.13 240);
   --info-soft: oklch(28% 0.07 240);
 }

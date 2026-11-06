@@ -30,11 +30,13 @@
     "@hugeicons/core-free-icons": "4.3.5",
     "@iannuttall/seo-graph-astro": "^0.0.11",
     "@iannuttall/seo-graph-core": "^0.0.5",
+    "@kiwa-ui/enhance": "^2.1.0",
     "@seo/core": "workspace:*",
     "@tailwindcss/vite": "^4.3.3",
     "alpinejs": "^3.17.5",
     "astro": "^7.4.2",
     "hono": "^4.13.1",
+    "lucide": "^1.69.0",
     "saxes": "^6.0.0"
   },
   "devDependencies": {

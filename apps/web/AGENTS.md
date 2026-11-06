@@ -21,6 +21,9 @@ write any site copy, metadata included.
   case. Card grids have two columns at most. Linked cards end with a label
   that says where they go. Reuse the components in
   `src/components` (and `docs-prose` for docs) before writing new markup.
+  `src/components/ui` is ilo's Kiwa UI kit (checkbox, input, select,
+  badge, card, accordion, toggle group, lucide icons); use it for new
+  controls instead of hand-styled elements.
 - Docs order, index, breadcrumbs, sitemap and llms.txt all come from
   `src/content/docs-nav.mjs`. The `seo index` page is
   `/docs/commands/indexing` because Cloudflare folds `/index` paths.

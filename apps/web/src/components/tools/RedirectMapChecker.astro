@@ -1,0 +1,335 @@
+---
+import Button from '@/components/Button.astro'
+import Card from '@/components/Card.astro'
+import FormInput from '@/components/FormInput.astro'
+import FormTextarea from '@/components/FormTextarea.astro'
+import { REDIRECT_MAP_ROWS } from '@/lib/redirect-map'
+---
+
+<section data-redirect-map class="space-y-6">
+  <Card>
+    <form data-map-form class="space-y-5 p-5 sm:p-6" novalidate>
+      <div class="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+        <div class="space-y-1">
+          <h3 class="text-lg font-medium">Check your redirect map</h3>
+          <p class="text-sm leading-6 text-foreground-muted">
+            One row a line: the old URL, then the new URL it should land on. Paste it, or upload a CSV from your spreadsheet.
+          </p>
+        </div>
+        <Button data-example type="button" class="shrink-0 px-3 py-2 text-xs">Use example</Button>
+      </div>
+      <label class="block space-y-2 text-sm font-medium">
+        <span>Old URL, new URL</span>
+        <FormTextarea
+          data-map-text
+          class="min-h-48 font-mono text-xs"
+          spellcheck="false"
+          placeholder={'https://old.example.com/about-us, https://example.com/about\nhttps://old.example.com/blog/post-1, https://example.com/blog/post-1'}
+        />
+      </label>
+      <div class="grid gap-4 sm:grid-cols-2">
+        <label class="block space-y-2 text-sm font-medium">
+          <span>Site for paths <span class="text-foreground-muted">(optional)</span></span>
+          <FormInput data-map-site type="text" inputmode="url" autocapitalize="off" spellcheck="false" placeholder="https://example.com" />
+        </label>
+        <label class="block space-y-2 text-sm font-medium">
+          <span>Or upload a CSV or text file</span>
+          <input data-map-file type="file" accept=".csv,.tsv,.txt,text/csv,text/plain" class="block w-full text-xs text-foreground-muted file:mr-3 file:rounded-md file:border-0 file:bg-muted file:px-3 file:py-2 file:text-xs file:font-medium file:text-foreground" />
+        </label>
+      </div>
+      <div class="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+        <p data-map-count class="text-xs leading-5 text-foreground-muted">Free, {REDIRECT_MAP_ROWS} rows a check and 10 checks a day. Rows are traced from this server, five at a time.</p>
+        <Button data-map-run type="submit" class="min-h-10 shrink-0 px-5 text-xs">Check redirects</Button>
+      </div>
+      <p data-map-error hidden class="text-sm leading-6 text-red-700 dark:text-red-400" role="alert"></p>
+    </form>
+  </Card>
+
+  <div data-map-issues-card hidden>
+    <Card>
+      <div class="space-y-3 p-5 sm:p-6">
+        <h3 class="text-sm font-medium">Problems in the map itself</h3>
+        <p class="text-xs leading-5 text-foreground-muted">Found by reading the rows, before any URL is fetched.</p>
+        <ul data-map-issues class="divide-y divide-border text-sm"></ul>
+      </div>
+    </Card>
+  </div>
+
+  <div data-map-results hidden class="space-y-6">
+    <Card inverted>
+      <div class="space-y-4 p-5 sm:p-6">
+        <div class="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
+          <div class="min-w-0">
+            <p data-map-headline class="text-2xl font-medium text-primary"></p>
+            <p data-map-subline class="mt-1 text-sm leading-6 text-foreground-muted" aria-live="polite"></p>
+          </div>
+          <Button data-map-download type="button" class="min-h-10 shrink-0 px-4 text-xs">Download CSV</Button>
+        </div>
+        <dl data-map-counts class="grid grid-cols-2 gap-2 text-sm sm:grid-cols-4"></dl>
+      </div>
+    </Card>
+    <Card>
+      <div class="overflow-x-auto p-5 sm:p-6">
+        <table class="w-full text-left text-xs">
+          <thead class="border-b border-border text-foreground-muted">
+            <tr>
+              <th class="py-2 pr-3 font-normal">Result</th>
+              <th class="py-2 pr-3 font-normal">Old URL and path</th>
+              <th class="hidden py-2 font-normal sm:table-cell">Lands on</th>
+            </tr>
+          </thead>
+          <tbody data-map-rows class="divide-y divide-border align-top"></tbody>
+        </table>
+      </div>
+    </Card>
+  </div>
+</section>
+
+<script>
+  import { mapIssues, parseRedirectMap, REDIRECT_MAP_ROWS, type MapRow } from '@/lib/redirect-map'
+
+  type Verdict = 'matches' | 'chain' | 'redirects' | 'wrong_target' | 'not_redirected' | 'loop' | 'too_many_hops' | 'timeout' | 'error'
+  type Row = {
+    type: 'row'
+    index: number
+    from: string
+    to: string | null
+    verdict: Verdict
+    hops: Array<{ url: string; status: number }>
+    finalUrl: string
+    finalStatus: number | null
+    temporary: boolean
+    noindex: boolean | null
+    canonical: string | null
+    homepage: boolean
+    error?: string
+  }
+  type Summary = { type: 'summary'; rows: number; verdicts: Partial<Record<Verdict, number>>; milliseconds: number }
+
+  const example = `old url,new url
+http://example.com/about-us,https://example.com/about
+https://example.com/blog/2019/old-post,https://example.com/blog/new-post
+https://example.com/services/seo,https://example.com/
+https://example.com/pricing.html,https://example.com/pricing`
+
+  // A row passes only when every hop is permanent, it lands where the map
+  // says, and the page it lands on returns 200 and can be indexed.
+  function grade(row: Row): { level: 'pass' | 'warn' | 'fail'; label: string; notes: string[] } {
+    const notes: string[] = []
+    const landed = row.finalStatus
+    if (row.error) notes.push(row.error)
+    if (row.temporary) notes.push('Uses a temporary redirect (302 or 307). Use 301 or 308 for a move.')
+    if (row.homepage && row.verdict !== 'wrong_target') notes.push('Lands on the homepage. Google may treat this as a soft 404.')
+    if (landed !== null && landed !== 200 && !['loop', 'too_many_hops', 'timeout', 'error', 'not_redirected'].includes(row.verdict)) {
+      notes.push(landed === 404 || landed === 410 ? `The new page returns ${landed}.` : landed === 403 || landed === 401 || landed === 429 ? `The new page refused this checker with ${landed}. Check it in a browser.` : `The new page returns ${landed}, not 200.`)
+    }
+    if (row.noindex) notes.push('The new page has noindex.')
+    if (row.canonical) notes.push(`The new page's canonical points to ${row.canonical}.`)
+    const labels: Record<Verdict, string> = {
+      matches: 'One hop, right page',
+      redirects: 'Redirects',
+      chain: `Chain, ${row.hops.length - 1} hops`,
+      wrong_target: 'Wrong page',
+      not_redirected: 'No redirect',
+      loop: 'Loop',
+      too_many_hops: 'Too many hops',
+      timeout: 'Timed out',
+      error: 'Could not check',
+    }
+    const bad = ['wrong_target', 'loop', 'too_many_hops', 'error'].includes(row.verdict) || (landed !== null && landed >= 400 && landed !== 401 && landed !== 403 && landed !== 429) || row.noindex === true
+    const ok = row.verdict === 'matches' && !notes.length
+    if (row.verdict === 'not_redirected') {
+      notes.unshift(landed === 200 ? 'The old URL still loads a page. Fine if it is meant to stay, otherwise add the redirect.' : `The old URL returns ${landed ?? 'no response'} and does not redirect.`)
+    }
+    if (row.verdict === 'wrong_target' && row.to) notes.unshift(`Expected ${row.to}.`)
+    return { level: ok || (row.verdict === 'redirects' && !notes.length) ? 'pass' : bad || row.verdict === 'not_redirected' && landed !== 200 ? 'fail' : 'warn', label: labels[row.verdict], notes }
+  }
+
+  const LEVEL_CLASS = {
+    pass: 'bg-primary-soft text-foreground',
+    warn: 'bg-warning-soft text-foreground',
+    fail: 'bg-destructive-soft text-destructive',
+  }
+
+  function el<K extends keyof HTMLElementTagNameMap>(tag: K, className = '', text = ''): HTMLElementTagNameMap[K] {
+    const node = document.createElement(tag)
+    if (className) node.className = className
+    if (text) node.textContent = text
+    return node
+  }
+
+  function csvCell(value: string): string {
+    return /[",\n]/u.test(value) ? `"${value.replaceAll('"', '""')}"` : value
+  }
+
+  for (const root of document.querySelectorAll<HTMLElement>('[data-redirect-map]')) {
+    const $ = <T extends Element>(selector: string) => root.querySelector<T>(selector) as T
+    const form = $<HTMLFormElement>('[data-map-form]')
+    const text = $<HTMLTextAreaElement>('[data-map-text]')
+    const site = $<HTMLInputElement>('[data-map-site]')
+    const file = $<HTMLInputElement>('[data-map-file]')
+    const run = $<HTMLButtonElement>('[data-map-run]')
+    const error = $<HTMLElement>('[data-map-error]')
+    const count = $<HTMLElement>('[data-map-count]')
+    const issuesCard = $<HTMLElement>('[data-map-issues-card]')
+    const issuesList = $<HTMLElement>('[data-map-issues]')
+    const results = $<HTMLElement>('[data-map-results]')
+    const tbody = $<HTMLElement>('[data-map-rows]')
+    const headline = $<HTMLElement>('[data-map-headline]')
+    const subline = $<HTMLElement>('[data-map-subline]')
+    const counts = $<HTMLElement>('[data-map-counts]')
+    let parsed: { rows: MapRow[]; skipped: number[] } = { rows: [], skipped: [] }
+    let done: Row[] = []
+    const defaultCount = count.textContent ?? ''
+
+    const preview = () => {
+      parsed = parseRedirectMap(text.value, site.value)
+      const issues = mapIssues(parsed.rows)
+      issuesList.replaceChildren(
+        ...issues.map((issue) => {
+          const row = el('li', 'flex items-start gap-3 py-2.5')
+          const fail = issue.kind === 'loop' || issue.kind === 'duplicate'
+          row.append(
+            el('span', `mt-0.5 inline-flex w-12 shrink-0 justify-center rounded px-1.5 py-0.5 text-xs font-medium ${fail ? LEVEL_CLASS.fail : LEVEL_CLASS.warn}`, fail ? 'Fix' : 'Check'),
+            el('span', 'min-w-0 break-words leading-6 text-foreground-muted [overflow-wrap:anywhere]', `${issue.message} Line${issue.lines.length === 1 ? '' : 's'} ${issue.lines.slice(0, 8).join(', ')}${issue.lines.length > 8 ? ' and more' : ''}.`),
+          )
+          return row
+        }),
+      )
+      issuesCard.hidden = issues.length === 0
+      count.textContent = parsed.rows.length
+        ? `${parsed.rows.length} ${parsed.rows.length === 1 ? 'row' : 'rows'}${parsed.rows.length > REDIRECT_MAP_ROWS ? `, over the ${REDIRECT_MAP_ROWS} a check limit` : ''}${parsed.skipped.length ? `. Skipped line${parsed.skipped.length === 1 ? '' : 's'} ${parsed.skipped.slice(0, 5).join(', ')}${parsed.skipped.some((line) => text.value.split(/\r?\n/u)[line - 1]?.trim().startsWith('/')) && !site.value.trim() ? ': add the site for paths' : ', not a URL'}` : ''}.`
+        : defaultCount
+    }
+
+    const renderSummary = (summary?: Summary) => {
+      const total = parsed.rows.length
+      const graded = done.map(grade)
+      const pass = graded.filter((item) => item.level === 'pass').length
+      const fail = graded.filter((item) => item.level === 'fail').length
+      const warn = graded.filter((item) => item.level === 'warn').length
+      headline.textContent = summary ? (fail ? `${fail} of ${total} ${fail === 1 ? 'redirect needs' : 'redirects need'} fixing` : warn ? `${warn} of ${total} to check` : `All ${total} redirects look right`) : `Checked ${done.length} of ${total}`
+      subline.textContent = summary ? `Traced in ${(summary.milliseconds / 1_000).toFixed(1)} seconds from this server. A row passes when it takes one permanent redirect to the page in your map, and that page returns 200 and can be indexed.` : 'Tracing each old URL hop by hop...'
+      counts.replaceChildren(
+        ...([['Pass', pass], ['Check', warn], ['Fix', fail], ['Chains', done.filter((row) => row.verdict === 'chain').length]] as const).map(([label, value]) => {
+          const box = el('div', 'rounded-lg bg-muted px-3 py-2')
+          box.append(el('dt', 'text-xs text-foreground-muted', label), el('dd', 'text-lg font-medium', String(value)))
+          return box
+        }),
+      )
+    }
+
+    const addRow = (row: Row) => {
+      done.push(row)
+      const g = grade(row)
+      const tr = el('tr')
+      tr.dataset.index = String(row.index)
+      const status = el('td', 'py-2.5 pr-3')
+      status.append(el('span', `inline-flex rounded px-1.5 py-0.5 font-medium sm:whitespace-nowrap ${LEVEL_CLASS[g.level]}`, g.label))
+      const path = el('td', 'py-2.5 pr-3')
+      path.append(el('p', 'break-all font-mono text-foreground', row.from))
+      if (row.hops.length > 1) {
+        path.append(el('p', 'mt-1 break-all font-mono text-foreground-muted', row.hops.slice(0, -1).map((hop) => hop.status).join(' → ') + ` → ${row.finalStatus ?? '?'}`))
+      }
+      if (row.finalUrl !== row.from) path.append(el('p', 'mt-1 break-all font-mono text-foreground sm:hidden', `Lands on ${row.finalUrl}`))
+      for (const note of g.notes) path.append(el('p', 'mt-1 break-words text-foreground-muted', note))
+      const final = el('td', 'hidden py-2.5 sm:table-cell')
+      final.append(el('p', 'break-all font-mono text-foreground', row.finalUrl))
+      tr.append(status, path, final)
+      const rows = [...tbody.children] as HTMLElement[]
+      const after = rows.find((item) => Number(item.dataset.index) > row.index)
+      tbody.insertBefore(tr, after ?? null)
+    }
+
+    text.addEventListener('input', preview)
+    site.addEventListener('input', preview)
+    file.addEventListener('change', async () => {
+      const chosen = file.files?.[0]
+      if (!chosen) return
+      if (chosen.size > 1_000_000) {
+        error.textContent = 'Upload a file under 1 MB.'
+        error.hidden = false
+        return
+      }
+      text.value = await chosen.text()
+      preview()
+    })
+    $<HTMLButtonElement>('[data-example]').addEventListener('click', () => {
+      text.value = example
+      site.value = ''
+      preview()
+    })
+
+    form.addEventListener('submit', async (event) => {
+      event.preventDefault()
+      error.hidden = true
+      preview()
+      if (!parsed.rows.length) {
+        error.textContent = 'Add at least one old URL.'
+        error.hidden = false
+        return
+      }
+      if (parsed.rows.length > REDIRECT_MAP_ROWS) {
+        error.textContent = `Check up to ${REDIRECT_MAP_ROWS} rows at a time. Start with the old URLs that get the most clicks.`
+        error.hidden = false
+        return
+      }
+      done = []
+      tbody.replaceChildren()
+      results.hidden = false
+      renderSummary()
+      run.disabled = true
+      run.textContent = 'Checking…'
+      try {
+        const response = await fetch('/api/tools/redirect-map', {
+          method: 'POST',
+          headers: { 'content-type': 'application/json' },
+          body: JSON.stringify({ rows: parsed.rows.map((row) => ({ from: row.from, to: row.to })) }),
+        })
+        if (!response.ok || !response.body) {
+          const body = (await response.json().catch(() => ({}))) as { error?: string }
+          throw new Error(body.error || 'The redirect map could not be checked.')
+        }
+        const reader = response.body.pipeThrough(new TextDecoderStream()).getReader()
+        let buffer = ''
+        let summary: Summary | undefined
+        while (true) {
+          const chunk = await reader.read()
+          if (chunk.done) break
+          buffer += chunk.value
+          const lines = buffer.split('\n')
+          buffer = lines.pop() ?? ''
+          for (const line of lines) {
+            if (!line.trim()) continue
+            const item = JSON.parse(line) as Row | Summary
+            if (item.type === 'row') addRow(item)
+            else summary = item
+          }
+          renderSummary(summary)
+        }
+        if (!summary) throw new Error(`The check stopped after ${done.length} of ${parsed.rows.length} rows. Try again with fewer rows.`)
+        renderSummary(summary)
+      } catch (caught) {
+        error.textContent = caught instanceof Error ? caught.message : 'The redirect map could not be checked.'
+        error.hidden = false
+        if (!done.length) results.hidden = true
+      } finally {
+        run.disabled = false
+        run.textContent = 'Check redirects'
+      }
+    })
+
+    $<HTMLButtonElement>('[data-map-download]').addEventListener('click', () => {
+      const header = ['old_url', 'expected_url', 'result', 'final_url', 'final_status', 'hops', 'statuses', 'notes']
+      const lines = [...done].sort((a, b) => a.index - b.index).map((row) => {
+        const g = grade(row)
+        return [row.from, row.to ?? '', g.label, row.finalUrl, String(row.finalStatus ?? ''), String(Math.max(0, row.hops.length - 1)), row.hops.map((hop) => hop.status).join(' > '), g.notes.join(' ')].map(csvCell).join(',')
+      })
+      const link = document.createElement('a')
+      link.href = URL.createObjectURL(new Blob([[header.join(','), ...lines].join('\n')], { type: 'text/csv' }))
+      link.download = 'redirect-map-check.csv'
+      link.click()
+      URL.revokeObjectURL(link.href)
+    })
+  }
+</script>

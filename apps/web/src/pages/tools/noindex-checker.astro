@@ -1,0 +1,253 @@
+---
+import Breadcrumbs from '@/components/Breadcrumbs.astro'
+import CodeBlock from '@/components/CodeBlock.astro'
+import FaqAccordion from '@/components/FaqAccordion.astro'
+import PageHeader from '@/components/PageHeader.astro'
+import SetupCommands from '@/components/SetupCommands.astro'
+import NoindexChecker from '@/components/tools/NoindexChecker.astro'
+import BaseLayout from '@/layouts/BaseLayout.astro'
+import type { SchemaBreadcrumb } from '@/lib/schema'
+
+const breadcrumbs: SchemaBreadcrumb[] = [
+  { label: 'Home', href: '/' },
+  { label: 'Tools', href: '/tools' },
+  { label: 'Noindex checker' },
+]
+
+const faq = [
+  {
+    question: 'What does a noindex tag do?',
+    answer:
+      'It tells search engines not to show the page in their results. Google drops the page the next time it crawls it and reads the tag, even if other sites link to it.',
+  },
+  {
+    question: 'How do I check if a page is noindex?',
+    answer:
+      'Enter the URL above. The checker reads the robots and googlebot meta tags in the HTML, the X-Robots-Tag header the server sends, and robots.txt, then says whether Google may index the page. In Search Console, URL Inspection shows the same thing as Google saw it.',
+  },
+  {
+    question: 'Can I block a page with robots.txt instead of noindex?',
+    answer:
+      'Not if you want it out of Google. robots.txt controls crawling. It does not keep a URL out of the index: Google can still list a blocked URL from links to it, and it never sees a noindex on a page it is not allowed to crawl.',
+  },
+  {
+    question: 'How long does Google take to drop a noindex page?',
+    answer:
+      'As long as it takes Googlebot to recrawl the page. Google says that can be months for a page it rarely visits. Request indexing in URL Inspection to ask for a recrawl. The Removals tool hides a URL faster, but only for about six months.',
+  },
+  {
+    question: 'Is noindex, follow still useful?',
+    answer:
+      'For a while. John Mueller said in 2017 that Google stops following the links on a page that has been noindex for a long time, so over time noindex, follow behaves like noindex, nofollow.',
+  },
+  {
+    question: 'Does Bing read the noindex tag?',
+    answer:
+      'Yes. Bing reads the robots meta tag, a bingbot meta tag and the X-Robots-Tag header. The checker shows Bing separately, because a bingbot tag does not apply to Google and a googlebot tag does not apply to Bing.',
+  },
+  {
+    question: 'What does "URL marked noindex" mean in Search Console?',
+    answer:
+      'Google tried to index the page and found a noindex rule, so it left the page out. Older reports called it "Excluded by noindex tag" or "Submitted URL marked noindex". If you want the page indexed, remove the rule, then use Test live URL and Request indexing in URL Inspection.',
+  },
+]
+---
+
+<BaseLayout
+  title="Free noindex checker for meta tags and headers"
+  description="Check any URL for noindex in meta tags, the X-Robots-Tag header and robots.txt. See which rule Google follows and how to fix it."
+  canonicalPath="/tools/noindex-checker"
+  {breadcrumbs}
+>
+  <main data-agent-content>
+    <Breadcrumbs {breadcrumbs} />
+    <PageHeader
+      title="Noindex checker"
+      description="Enter a URL to see whether Google is allowed to index it, which rule says so and how to change it. It checks the robots meta tag, googlebot tags, the X-Robots-Tag header, robots.txt, redirects, the status code and the canonical."
+    />
+
+    <NoindexChecker />
+
+    <div class="docs-prose mt-16">
+      <h2>Five places a noindex can hide</h2>
+      <p>
+        Most noindex checkers read one meta tag. Google reads five things
+        before it decides, and a page is out of the index if any one of them
+        says so. The most restrictive rule wins.
+      </p>
+      <table>
+        <thead>
+          <tr>
+            <th>Where</th>
+            <th>What it looks like</th>
+            <th>Who sets it</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>Robots meta tag</td>
+            <td><code>&lt;meta name="robots" content="noindex"&gt;</code></td>
+            <td>The template, CMS or SEO plugin</td>
+          </tr>
+          <tr>
+            <td>Googlebot meta tag</td>
+            <td><code>&lt;meta name="googlebot" content="noindex"&gt;</code></td>
+            <td>The same, aimed at Google only</td>
+          </tr>
+          <tr>
+            <td>X-Robots-Tag header</td>
+            <td><code>X-Robots-Tag: noindex</code></td>
+            <td>The server, CDN or hosting platform</td>
+          </tr>
+          <tr>
+            <td>unavailable_after</td>
+            <td><code>unavailable_after: 2026-12-31</code></td>
+            <td>Anyone who set an expiry and forgot it</td>
+          </tr>
+          <tr>
+            <td>robots.txt</td>
+            <td><code>Disallow: /blog/</code></td>
+            <td>Not a noindex, but it hides one from Google</td>
+          </tr>
+        </tbody>
+      </table>
+      <p>
+        The header is the one people miss. It never shows in view source, so
+        a page can look clean and still be out of Google. Vercel, for
+        example, adds <code>X-Robots-Tag: noindex</code> to every preview
+        deployment.
+      </p>
+
+      <h2>robots.txt hides the noindex from Google</h2>
+      <p>
+        This is the mistake that keeps pages in Google after someone tries to
+        remove them. Google's{' '}
+        <a href="https://developers.google.com/search/docs/crawling-indexing/block-indexing" target="_blank" rel="noreferrer">noindex documentation</a>{' '}
+        says the page "must not be blocked by a robots.txt file", because a
+        crawler that cannot fetch the page "will never see the noindex rule,
+        and the page can still appear in search results".
+      </p>
+      <p>
+        In Search Console that shows up as{' '}
+        <strong>Indexed, though blocked by robots.txt</strong>. The fix runs
+        in an order that feels backwards: allow crawling, let Google see the
+        noindex and drop the page, and only then block it in robots.txt if
+        you still want to save crawling.
+      </p>
+
+      <h2>Read the result</h2>
+      <table>
+        <thead>
+          <tr>
+            <th>Result</th>
+            <th>What it means</th>
+            <th>What to do</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>No noindex found</td>
+            <td>Google is allowed to index the page.</td>
+            <td>If it is still missing from Google, check URL Inspection. Allowed is not the same as indexed.</td>
+          </tr>
+          <tr>
+            <td>Noindex found</td>
+            <td>Google will drop the page when it next crawls it.</td>
+            <td>Keep it if the page should stay out. Otherwise remove the rule the checker names.</td>
+          </tr>
+          <tr>
+            <td>Blocked by robots.txt</td>
+            <td>Google cannot crawl the page, but can still list the URL from links.</td>
+            <td>Remove the rule if the page should rank. Use noindex if it should not.</td>
+          </tr>
+          <tr>
+            <td>Noindex found, but Google cannot see it</td>
+            <td>The noindex never takes effect.</td>
+            <td>Remove the robots.txt rule first, so Google can read the noindex.</td>
+          </tr>
+          <tr>
+            <td>The page returns 404, 410 or 5xx</td>
+            <td>Google drops it for the status, noindex or not.</td>
+            <td>Restore the page or redirect it if it should exist.</td>
+          </tr>
+        </tbody>
+      </table>
+      <p>
+        A noindex is not a fault on its own. Login pages, internal search
+        results, thank you pages and filtered lists often should be out of
+        Google. The question is whether you meant it.
+      </p>
+
+      <h2>Find where an accidental noindex comes from</h2>
+      <p>
+        The value tells you which layer wrote it. When the checker can tell
+        the platform from the page, it names the setting to change.
+      </p>
+      <ul>
+        <li><strong>WordPress.</strong> Settings, then Reading, then "Discourage search engines from indexing this site". It prints <code>noindex, nofollow</code> on every page, and it travels with a staging database copied to production.</li>
+        <li><strong>SEO plugins.</strong> Yoast and Rank Math noindex whole content types and archives from one setting, and drop them from the sitemap at the same time.</li>
+        <li><strong>Shopify.</strong> A conditional noindex in <code>theme.liquid</code>, the <code>seo.hidden</code> metafield, or an Unlisted product.</li>
+        <li><strong>Webflow.</strong> The Sitemap indexing toggle in page settings adds the meta tag.</li>
+        <li><strong>Next.js.</strong> A page that calls <code>notFound()</code> after streaming starts keeps a 200 status and gets a noindex tag.</li>
+        <li><strong>Servers and CDNs.</strong> A header rule in nginx, Apache, <code>.htaccess</code>, Netlify's <code>_headers</code> or a CDN. Only the header shows it.</li>
+      </ul>
+
+      <h2>Noindex and canonical ask for different things</h2>
+      <p>
+        A noindex says leave this page out. A canonical pointing at another
+        URL says this is a copy, index that one instead. Google's{' '}
+        <a href="https://developers.google.com/search/docs/crawling-indexing/consolidate-duplicate-urls" target="_blank" rel="noreferrer">duplicate URL guide</a>{' '}
+        advises against noindex for choosing a canonical, "because it will
+        completely block the page from Search". For a duplicate, use the
+        canonical alone. For a page that should not be in Google at all, use
+        noindex and let the canonical point at the page itself.
+      </p>
+
+      <h2>JavaScript can add a noindex but not reliably remove one</h2>
+      <p>
+        The checker reads the HTML your server sends, before any script
+        runs. Google's{' '}
+        <a href="https://developers.google.com/search/docs/crawling-indexing/javascript/javascript-seo-basics" target="_blank" rel="noreferrer">JavaScript guide</a>{' '}
+        says a script can add a robots tag, but when the first HTML already
+        says noindex, Google "may skip rendering", so a script that removes
+        it may never run. Put the right value in the server HTML.
+      </p>
+
+      <h2>Get a noindexed page back into Google</h2>
+      <ol>
+        <li>Remove the rule the checker names, and check again here until it says no noindex found.</li>
+        <li>Make sure the URL is in your XML sitemap and linked from a page Google already visits.</li>
+        <li>In Search Console, open URL Inspection, run Test live URL, and check "Indexing allowed?" says yes.</li>
+        <li>Press Request indexing. A page Google crawls often can come back within days. One it rarely visits can take weeks.</li>
+      </ol>
+
+      <h2>Check every page and Google's own index with your agent</h2>
+      <p>
+        This page checks one URL from the outside. Two questions it cannot
+        answer: which other pages carry a noindex, and whether Google has
+        actually dropped them. The{' '}
+        <a href="/docs/crawl">seo crawl</a> command lists every noindex,
+        robots.txt block and canonical on a site from your own machine. The{' '}
+        <a href="/docs/page">seo page</a> command adds Google's own URL
+        Inspection result for a page, through your Search Console. Ask:
+      </p>
+      <CodeBlock value="Crawl example.com and list every page that has noindex or is blocked by robots.txt, then check which of them still get impressions in Search Console" wrap />
+      <p>Install the CLI and run setup:</p>
+      <CodeBlock value="npm i -g seo && seo start" wrap />
+      <p>Or add the hosted MCP server to your agent and sign in with Google:</p>
+    </div>
+
+    <SetupCommands id="noindex-checker-setup" class="mt-6" />
+
+    <div class="docs-prose mt-16">
+      <p>
+        Once a page is indexable again, <a href="https://indexmysite.app" target="_blank" rel="noreferrer">Index My Site</a>{' '}
+        can submit it to Google for you. We build it too.
+      </p>
+      <h2>Noindex checker questions</h2>
+    </div>
+    <div class="mt-6">
+      <FaqAccordion id="noindex-checker-faq" items={faq} />
+    </div>
+  </main>
+</BaseLayout>

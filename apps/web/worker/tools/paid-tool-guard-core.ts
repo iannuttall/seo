@@ -22,6 +22,8 @@ export const PUBLIC_WORKER_TOOLS = [
   'favicon-checker',
   'domain-age',
   'open-graph',
+  'noindex-checker',
+  'redirect-map',
 ] as const
 
 export type PaidToolId = keyof typeof PAID_TOOL_PROVIDERS

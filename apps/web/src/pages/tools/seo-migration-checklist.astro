@@ -1,0 +1,268 @@
+---
+import Breadcrumbs from '@/components/Breadcrumbs.astro'
+import CodeBlock from '@/components/CodeBlock.astro'
+import FaqAccordion from '@/components/FaqAccordion.astro'
+import PageHeader from '@/components/PageHeader.astro'
+import SetupCommands from '@/components/SetupCommands.astro'
+import MigrationChecklist, { type ChecklistPhase } from '@/components/tools/MigrationChecklist.astro'
+import RedirectMapChecker from '@/components/tools/RedirectMapChecker.astro'
+import BaseLayout from '@/layouts/BaseLayout.astro'
+import type { SchemaBreadcrumb } from '@/lib/schema'
+
+const breadcrumbs: SchemaBreadcrumb[] = [
+  { label: 'Home', href: '/' },
+  { label: 'Tools', href: '/tools' },
+  { label: 'SEO migration checklist' },
+]
+
+const phases: ChecklistPhase[] = [
+  {
+    id: 'before-launch',
+    title: 'Before launch',
+    when: 'Start four to eight weeks out. Most migrations that lose traffic lose it here.',
+    items: [
+      { id: 'one-change', title: 'Change one thing at a time', detail: 'Move the domain, then redesign, not both on the same day. Google asks for this, and when traffic drops you will know which change caused it.' },
+      { id: 'list-urls', title: 'List every old URL that matters', detail: 'Start with the pages that get clicks in Search Console, then add the sitemap, pages with backlinks and URLs from server logs. Include PDFs and images that rank or get linked.' },
+      { id: 'baseline', title: 'Save a baseline', detail: 'Export Search Console clicks and impressions by page and query for the last 16 months, and crawl the old site. After launch, every comparison starts from this.' },
+      { id: 'map', title: 'Map each old URL to its closest new page', detail: 'One old URL to one new URL with the same content. Content you are dropping should return 404 or 410, not redirect to the homepage.' },
+      { id: 'check-map', title: 'Check the map for chains, loops and homepage redirects', detail: 'Paste it into the <a href="#redirect-map-checker">redirect map checker</a> below. It finds problems in the map itself before anything is live.' },
+      { id: 'keep-content', title: 'Keep titles, headings and content on moved pages', detail: 'Unless changing them is the point of the project. Every difference gives Google one more thing to reassess.' },
+      { id: 'staging', title: 'Crawl the staging site', detail: 'Check for broken internal links, missing titles and canonicals that point at the old domain. Keep staging out of Google with a password, not just robots.txt.' },
+      { id: 'ttl', title: 'Lower the DNS TTL a week before a hosting move', detail: 'Google suggests a few hours, so the switch reaches everyone quickly on launch day.' },
+    ],
+  },
+  {
+    id: 'launch-day',
+    title: 'Launch day',
+    when: 'Allow a full working day, with someone who can change server rules on hand.',
+    items: [
+      { id: 'remove-blocks', title: 'Remove the staging noindex and robots.txt block', detail: 'This is the most common launch mistake, and it can take a whole site out of Google. Run the homepage and a few templates through the <a href="/tools/noindex-checker">noindex checker</a>.' },
+      { id: 'redirects-live', title: 'Put the redirects live as 301 or 308', detail: 'Server-side and permanent. A 302 or 307 tells Google the move is temporary, so it may keep the old URL indexed.' },
+      { id: 'run-checker', title: 'Run the redirect map checker against the live site', detail: 'Every row should take one hop to the right page, and that page should return 200 and be indexable.' },
+      { id: 'canonicals', title: 'Point canonicals, hreflang and internal links at the new URLs', detail: 'Each new page needs a self-referencing canonical. Internal links that go through a redirect waste a hop on every crawl.' },
+      { id: 'robots', title: 'Check robots.txt on the new site', detail: 'Use the <a href="/tools/robots-txt-validator">robots.txt validator</a> on the new domain. Leave the old domain\'s robots.txt open so Google can follow its redirects.' },
+      { id: 'sitemaps', title: 'Submit the new sitemap and keep the old one for a while', detail: 'The old sitemap helps Google find the redirects sooner. Search Console warnings about redirecting URLs in it are expected.' },
+      { id: 'change-address', title: 'Use the Change of Address tool for a domain move', detail: 'In the old domain\'s Search Console property. It is only for moving domains, not for http to https or a path change.' },
+    ],
+  },
+  {
+    id: 'after-launch',
+    title: 'After launch',
+    when: 'Watch daily for the first week, then weekly for three months.',
+    items: [
+      { id: 'compare', title: 'Compare clicks before and after the launch date', detail: 'By page and by query, in equal periods, so a drop points at the pages that lost it. <code>seo compare --date</code> does this from Search Console.' },
+      { id: 'errors', title: 'Fix new 404s and soft 404s', detail: 'Check the Pages report in Search Console and crawl the new site. Old URLs you missed in the map show up here first.' },
+      { id: 'backlinks', title: 'Update your best backlinks', detail: 'Ask the sites that send the most links or traffic to point at the new URL. The redirect works without it, but a direct link is one hop less.' },
+      { id: 'keep-redirects', title: 'Keep the redirects for at least a year', detail: 'Google says at least one year and suggests keeping them for good. Keep paying for the old domain too.' },
+      { id: 'weekly', title: 'Set a weekly check until traffic settles', detail: 'The same comparison and the same redirect check each week, so a regression after a later deploy gets caught.' },
+    ],
+  },
+]
+
+const faq = [
+  {
+    question: 'How long does an SEO migration take to recover?',
+    answer:
+      'For a domain move, longer than most guides say. SALT.agency tracked 1,052 domain migrations in June 2026: 22.8% recovered traffic within 90 days, 59.5% within a year, and the median took 304 days. Those are third-party traffic estimates for domain moves, so a redesign on the same domain usually settles faster.',
+  },
+  {
+    question: 'Should I use 301 or 302 redirects for a site migration?',
+    answer:
+      'Use 301 or 308. Google treats them as a strong signal that the new URL is the one to index. A 302 or 307 is a weak signal, so Google may keep showing the old URL.',
+  },
+  {
+    question: 'Can I redirect old pages to the homepage?',
+    answer:
+      'Only if the homepage really replaces them. Google says redirecting many old URLs to one irrelevant page such as the homepage might be treated as a soft 404. Redirect each page to its closest match, and let pages with no replacement return 404 or 410.',
+  },
+  {
+    question: 'How many redirects in a chain is too many?',
+    answer:
+      'Googlebot follows up to 10 hops, but Google advises redirecting straight to the final URL, and if you cannot, keeping chains to no more than 3 and fewer than 5. One hop is the target.',
+  },
+  {
+    question: 'How long should I keep redirects after a migration?',
+    answer:
+      'At least a year, and for good if you can. Google needs to recrawl every old URL to move it, and backlinks to the old URLs keep working only while the redirects do.',
+  },
+  {
+    question: 'Is a drop in traffic after a migration normal?',
+    answer:
+      "Some movement is. Google says visibility may fluctuate during a move and that a small to medium site can take a few weeks for most pages to move. A drop concentrated on certain pages or templates is not normal: check those pages' redirects, status and noindex first.",
+  },
+  {
+    question: 'Does the redirect map checker follow redirects like Google?',
+    answer:
+      'It follows server redirects hop by hop from this site, up to 10, the same limit Google documents. It does not run JavaScript redirects. A server that blocks unknown bots may answer it differently from Googlebot, and the result says so when that happens.',
+  },
+]
+---
+
+<BaseLayout
+  title="SEO migration checklist with a redirect checker"
+  description="A site migration checklist for before, during and after launch, with a free redirect checker that flags chains, loops, 404s and homepage redirects."
+  canonicalPath="/tools/seo-migration-checklist"
+  {breadcrumbs}
+>
+  <main data-agent-content>
+    <Breadcrumbs {breadcrumbs} />
+    <PageHeader
+      title="SEO migration checklist"
+      description="Twenty checks for moving a site without losing search traffic, in the order you do them, with a redirect map checker that tests every old URL against the live site."
+    />
+
+    <div class="docs-prose">
+      <p>
+        Most site migrations lose traffic for longer than the people running
+        them expect. SALT.agency tracked 1,052 domain migrations and
+        published the results in June 2026: 22.8% had recovered their
+        traffic after 90 days, 59.5% after a year, and the median took 304
+        days. Those numbers come from third-party traffic estimates of domain
+        moves, so a redesign that keeps its URLs usually does better.
+      </p>
+      <p>
+        The pattern behind the slow ones is the same: old URLs that redirect
+        to the wrong place, through a chain, to the homepage or to nothing.
+        So this checklist has a redirect checker built in. Tick the steps as
+        you go (ticks stay in this browser), and run your redirect map
+        through the checker before and after launch.
+      </p>
+    </div>
+
+    <div class="mt-10">
+      <MigrationChecklist {phases} storageKey="seo:migration-checklist" />
+    </div>
+
+    <div class="docs-prose mt-16">
+      <h2 id="redirect-map-checker">Check a redirect map before and after launch</h2>
+      <p>
+        Paste old and new URL pairs, or upload the CSV from your mapping
+        spreadsheet. First the checker reads the map itself and flags old
+        URLs listed twice, rows that point at another old URL, three or more
+        pages sent to one place, and pages sent to the homepage. Then it
+        traces each old URL on the live site, hop by hop, and checks where it
+        lands.
+      </p>
+    </div>
+
+    <div class="mt-6">
+      <RedirectMapChecker />
+    </div>
+
+    <div class="docs-prose mt-16">
+      <h2>Six redirect results and what to do about each</h2>
+      <table>
+        <thead>
+          <tr>
+            <th>Result</th>
+            <th>What happened</th>
+            <th>Fix</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>One hop, right page</td>
+            <td>A single permanent redirect to the URL in your map, which returns 200 and can be indexed.</td>
+            <td>Nothing.</td>
+          </tr>
+          <tr>
+            <td>Chain</td>
+            <td>Two or more hops, often http to https, then a trailing slash, then the new page.</td>
+            <td>Point the old URL straight at the final URL. Map to the exact final form, slash and all.</td>
+          </tr>
+          <tr>
+            <td>Wrong page</td>
+            <td>It lands somewhere other than your map says. Often a catch-all rule that runs before the specific one.</td>
+            <td>Check the order of the server rules. Specific rules go first.</td>
+          </tr>
+          <tr>
+            <td>No redirect</td>
+            <td>The old URL still loads, or returns 404.</td>
+            <td>Add the rule. A 404 on an old URL with links or traffic is lost value.</td>
+          </tr>
+          <tr>
+            <td>Loop or too many hops</td>
+            <td>The redirects never reach a page, or take more than 10 hops.</td>
+            <td>Find the two rules that point at each other and replace both with one.</td>
+          </tr>
+          <tr>
+            <td>Lands on a 404, noindex or another canonical</td>
+            <td>The redirect works but the new page cannot rank.</td>
+            <td>Fix the new page. A redirect only passes signals to a page Google can index.</td>
+          </tr>
+        </tbody>
+      </table>
+
+      <h2>Google's redirect rules, in its own words</h2>
+      <p>
+        Every number in the checker comes from Google's{' '}
+        <a href="https://developers.google.com/search/docs/crawling-indexing/site-move-with-url-changes" target="_blank" rel="noreferrer">site move guide</a>{' '}
+        and its{' '}
+        <a href="https://developers.google.com/search/docs/crawling-indexing/301-redirects" target="_blank" rel="noreferrer">redirects guide</a>.
+      </p>
+      <ul>
+        <li><strong>Permanent redirects keep link value.</strong> "301 and other permanent redirects don't cause a loss in PageRank."</li>
+        <li><strong>Chains.</strong> "While Googlebot can follow up to 10 hops ... we advise redirecting to the final destination directly. If this is not possible, keep the number of redirects in the chain low, ideally no more than 3 and fewer than 5."</li>
+        <li><strong>Homepage redirects.</strong> "Don't redirect many old URLs to one irrelevant single URL destination, such as the home page of the new site. This can confuse users and might be treated as a soft 404 error."</li>
+        <li><strong>How long to keep them.</strong> "Keep the redirects for as long as possible, generally at least 1 year."</li>
+        <li><strong>The most common mistake.</strong> "We frequently see people redirecting to the wrong (non-existent) URLs on the new site."</li>
+      </ul>
+
+      <h2>Find the URLs that matter from Search Console</h2>
+      <p>
+        A redirect map built from the new site's sitemap misses the old URLs
+        that earn traffic. Build it the other way round, from the pages
+        Google sends visitors to. With SEO Skill your agent pulls every page
+        with clicks from Search Console for the last 16 months, before you
+        touch anything:
+      </p>
+      <CodeBlock value="seo data --site example.com --dimensions page --detail full --json" wrap />
+      <p>
+        Save that list. It is your baseline, and the top of it is the part of
+        the redirect map you cannot afford to get wrong. After launch, trace
+        the whole map from your own machine, up to 1,000 rows at a time. Each
+        line is an old URL and the new URL it should land on, the same file
+        you paste above:
+      </p>
+      <CodeBlock value="seo redirect-trace --map redirects.csv" wrap />
+
+      <h2>Compare before and after the launch date</h2>
+      <p>
+        After launch, the question is which pages lost clicks, not whether
+        the total dipped. The compare command takes the launch date and
+        splits Search Console into equal periods before and after it, with
+        the pages and queries that moved most:
+      </p>
+      <CodeBlock value="seo compare --site example.com --date 2026-11-02" wrap />
+      <p>
+        A drop spread evenly across the site in week one is Google moving
+        URLs. A drop concentrated on one folder or template is a redirect,
+        noindex or canonical problem on those pages, and it will not fix
+        itself.
+      </p>
+
+      <h2>Run the checks weekly with your agent</h2>
+      <p>
+        This is one of the few SEO jobs where a scheduled task pays for
+        the setup. For the first three months, ask your agent to run the same
+        comparison against the launch date each week, trace the top old URLs
+        again, and report only what changed. A later deploy that breaks a
+        redirect rule gets caught in days instead of at the next quarterly
+        review. Ask:
+      </p>
+      <CodeBlock value="Every Monday until February, compare example.com before and after 2026-11-02, run seo redirect-trace --map redirects.csv, and tell me only what got worse" wrap />
+      <p>Install the CLI and run setup:</p>
+      <CodeBlock value="npm i -g seo && seo start" wrap />
+      <p>Or add the hosted MCP server to your agent and sign in with Google:</p>
+    </div>
+
+    <SetupCommands id="migration-setup" class="mt-6" />
+
+    <div class="docs-prose mt-16">
+      <h2>SEO migration questions</h2>
+    </div>
+    <div class="mt-6">
+      <FaqAccordion id="migration-faq" items={faq} />
+    </div>
+  </main>
+</BaseLayout>

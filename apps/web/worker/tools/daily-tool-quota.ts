@@ -29,6 +29,8 @@ const PUBLIC_TOOL_BY_PATH = new Map<string, PublicWorkerToolId>([
   ['/api/tools/favicon-checker', 'favicon-checker'],
   ['/api/tools/domain-age', 'domain-age'],
   ['/api/tools/open-graph', 'open-graph'],
+  ['/api/tools/noindex-checker', 'noindex-checker'],
+  ['/api/tools/redirect-map', 'redirect-map'],
 ])
 
 const JSON_HEADERS = {

@@ -39,6 +39,7 @@ export const pageRedirects = {
   // Merged into the tools that now cover the same searches.
   '/features/google-updates': '/tools/google-algorithm-update-checker',
   '/tools/seo-report-template': '/tools/monthly-seo-report',
+  '/tools/serp-preview': '/tools/title-and-meta-description-checker',
   // The command pages moved up a level after the redesign preview.
   '/docs/commands': '/docs',
   ...Object.fromEntries(

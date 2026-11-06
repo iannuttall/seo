@@ -8,6 +8,7 @@ export type {
   SearchAnalyticsRequest,
 } from '../gsc/client/types.js'
 export * from '../lint/index.js'
+export * from '../robots-directives.js'
 export * from './ai-answers.js'
 export * from './analytics.js'
 export * from './analytics-site.js'

@@ -1,0 +1,53 @@
+---
+import type { HTMLAttributes } from 'astro/types'
+import { cn } from '@/lib/cn'
+
+type DisplayCardProps = HTMLAttributes<'div'> & {
+  title?: string
+  description?: string
+  tall?: boolean
+  variant?: keyof typeof displayCardVariants
+  padding?: keyof typeof displayCardPadding
+}
+
+const displayCardVariants = {
+  default: 'border border-border bg-card shadow-sm',
+  primary: 'bg-primary text-primary-foreground shadow-lg',
+}
+
+const displayCardPadding = {
+  xs: 'p-1.5',
+  sm: 'p-3',
+  md: 'p-5 sm:p-6',
+  lg: 'p-8',
+}
+
+const {
+  title,
+  description,
+  tall = false,
+  variant = 'default',
+  padding = 'md',
+  class: className,
+  ...props
+} = Astro.props as DisplayCardProps
+---
+
+<div
+  class={cn(
+    'flex flex-col rounded-2xl',
+    displayCardPadding[padding],
+    displayCardVariants[variant],
+    tall && 'h-[320px]',
+    className,
+  )}
+  {...props}
+>
+  {(title || description) && (
+    <div>
+      {title && <h3 class="tracking-tight text-foreground">{title}</h3>}
+      {description && <p class="mt-1 text-sm text-foreground-muted">{description}</p>}
+    </div>
+  )}
+  <slot />
+</div>

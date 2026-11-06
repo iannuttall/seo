@@ -1,0 +1,7 @@
+---
+import { Terminal } from 'lucide'
+import Icon from './icon.astro'
+
+const { class: className, ...props } = Astro.props
+---
+<Icon iconNode={Terminal} class={className} {...props} />

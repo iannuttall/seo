@@ -1,0 +1,252 @@
+---
+import Button from '@/components/Button.astro'
+import Card from '@/components/Card.astro'
+import FormInput from '@/components/FormInput.astro'
+---
+
+<section data-noindex-checker class="space-y-6">
+  <Card>
+    <form data-noindex-form class="space-y-5 p-5 sm:p-6" novalidate>
+      <div class="space-y-1">
+        <h2 class="text-lg font-medium">Check a URL for noindex</h2>
+        <p class="text-sm leading-6 text-foreground-muted">
+          The checker follows the redirects, reads the robots meta tags and the X-Robots-Tag header, and tests the URL against robots.txt for Googlebot.
+        </p>
+      </div>
+      <label class="block space-y-2 text-sm font-medium">
+        <span>Page URL</span>
+        <FormInput
+          data-noindex-url
+          type="text"
+          inputmode="url"
+          autocomplete="url"
+          autocapitalize="off"
+          spellcheck="false"
+          maxlength="2048"
+          placeholder="https://example.com/blog/post"
+        />
+      </label>
+      <div class="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+        <p class="text-xs leading-5 text-foreground-muted">Free, 10 checks a day. The page must be public.</p>
+        <Button data-check type="submit" class="min-h-10 shrink-0 px-5 text-xs">Check noindex</Button>
+      </div>
+      <p data-error hidden class="text-sm leading-6 text-red-700 dark:text-red-400" role="alert"></p>
+    </form>
+  </Card>
+
+  <div data-results hidden class="space-y-6">
+    <Card inverted>
+      <div class="space-y-5 p-5 sm:p-6">
+        <div class="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
+          <div class="min-w-0">
+            <p data-headline class="text-2xl font-medium text-primary"></p>
+            <p data-summary class="mt-1 text-sm leading-6 text-foreground"></p>
+            <p data-subline class="mt-1 break-words text-xs leading-5 text-foreground-muted"></p>
+          </div>
+          <div class="grid shrink-0 gap-2 sm:grid-cols-2">
+            <Button data-copy type="button" class="min-h-10 px-4 text-xs">Copy findings</Button>
+            <Button data-download type="button" class="min-h-10 px-4 text-xs">Download JSON</Button>
+          </div>
+        </div>
+        <p data-action-status class="text-xs text-foreground-muted" aria-live="polite"></p>
+      </div>
+    </Card>
+
+    <Card>
+      <div class="space-y-4 p-5 sm:p-6">
+        <h3 class="text-sm font-medium">What each signal says</h3>
+        <dl data-signals class="grid grid-cols-[minmax(0,8rem)_minmax(0,1fr)] gap-x-4 gap-y-3 text-sm sm:grid-cols-[minmax(0,12rem)_minmax(0,1fr)] sm:gap-x-6"></dl>
+      </div>
+    </Card>
+
+    <Card>
+      <div class="space-y-4 p-5 sm:p-6">
+        <h3 class="text-sm font-medium">Checks and fixes</h3>
+        <ul data-checks class="divide-y divide-border text-sm"></ul>
+      </div>
+    </Card>
+
+    <div data-hops-card>
+      <Card>
+        <div class="space-y-4 p-5 sm:p-6">
+          <h3 class="text-sm font-medium">Every response on the way</h3>
+          <ol data-hops class="space-y-2 text-xs"></ol>
+        </div>
+      </Card>
+    </div>
+  </div>
+</section>
+
+<script>
+  type Check = { id: string; level: 'pass' | 'warn' | 'fail' | 'info'; message: string; fix?: string }
+  type Rule = { source: 'meta' | 'header'; name: string; value: string; audience: 'all' | 'google' | 'google-news' | 'bing' | 'other'; inHead: boolean; directives: string[] }
+  type Result = {
+    checkedAt: string
+    requestedUrl: string
+    finalUrl: string
+    status: number | null
+    verdict: string
+    headline: string
+    summary: string
+    hops: Array<{ url: string; status: number; location: string | null; robotsHeader: string | null; robotsTxt: string | null }>
+    robots: Rule[]
+    robotsTxt: { url: string; state: string; message: string } | null
+    canonical: { href: string | null; header: string | null; count: number; relation: 'self' | 'other' | 'none' }
+    google: { noindex: boolean; nofollow: boolean }
+    bingNoindex: boolean
+    checks: Check[]
+  }
+
+  const LEVELS: Record<Check['level'], { label: string; className: string }> = {
+    fail: { label: 'Fix', className: 'bg-destructive-soft text-destructive' },
+    warn: { label: 'Check', className: 'bg-warning-soft text-foreground' },
+    info: { label: 'Note', className: 'bg-muted text-foreground-muted' },
+    pass: { label: 'OK', className: 'bg-primary-soft text-foreground' },
+  }
+
+  function el<K extends keyof HTMLElementTagNameMap>(tag: K, className = '', text = ''): HTMLElementTagNameMap[K] {
+    const node = document.createElement(tag)
+    if (className) node.className = className
+    if (text) node.textContent = text
+    return node
+  }
+
+  function initialise(root: HTMLElement): void {
+    if (root.dataset.initialised === 'true') return
+    root.dataset.initialised = 'true'
+    const $ = <T extends Element>(selector: string) => root.querySelector<T>(selector) as T
+    const form = $<HTMLFormElement>('[data-noindex-form]')
+    const input = $<HTMLInputElement>('[data-noindex-url]')
+    const button = $<HTMLButtonElement>('[data-check]')
+    const error = $<HTMLElement>('[data-error]')
+    const status = $<HTMLElement>('[data-action-status]')
+    let result: Result | undefined
+
+    const rulesFor = (test: (rule: Rule) => boolean) => {
+      const found = result?.robots.filter(test) ?? []
+      return found.length ? found.map((rule) => `"${rule.value}"${rule.source === 'meta' && !rule.inHead ? ' (outside the head)' : ''}`).join(', ') : 'None'
+    }
+
+    function render(): void {
+      if (!result) return
+      const r = result
+      $<HTMLElement>('[data-headline]').textContent = r.headline
+      $<HTMLElement>('[data-summary]').textContent = r.summary
+      const redirects = Math.max(0, r.hops.length - 1)
+      $<HTMLElement>('[data-subline]').textContent = `${r.finalUrl}${redirects ? `, reached after ${redirects} ${redirects === 1 ? 'redirect' : 'redirects'}` : ''}. Checked ${new Date(r.checkedAt).toLocaleString()}.`
+
+      const signals = $<HTMLElement>('[data-signals]')
+      const reached = r.verdict !== 'redirect-failed' && r.status === 200
+      const rows: Array<[string, string]> = [
+        ['Status', r.status === null ? 'No response' : String(r.status)],
+        ['robots.txt for Googlebot', r.robotsTxt ? { allowed: 'Allowed', blocked: 'Blocked', 'no-file': 'No rules (allowed)', unknown: 'Could not tell' }[r.robotsTxt.state] ?? r.robotsTxt.state : reached ? 'Not checked' : 'Not checked, the page was not reached'],
+        ['Meta robots', reached ? rulesFor((rule) => rule.source === 'meta' && rule.name === 'robots') : 'Not read'],
+        ['Meta googlebot', reached ? rulesFor((rule) => rule.source === 'meta' && rule.name === 'googlebot') : 'Not read'],
+        ['X-Robots-Tag header', rulesFor((rule) => rule.source === 'header')],
+        ['Other crawlers', reached ? rulesFor((rule) => rule.source === 'meta' && !['robots', 'googlebot'].includes(rule.name)) : 'Not read'],
+        ['Canonical', r.canonical.relation === 'none' ? (reached ? 'None' : 'Not read') : `${r.canonical.relation === 'self' ? 'Points to itself' : 'Points elsewhere'}: ${r.canonical.href ?? r.canonical.header}`],
+        ['Google may index it', r.verdict === 'indexable' ? 'Yes' : r.verdict === 'error-status' && [401, 403, 429].includes(r.status ?? 0) ? 'Unknown' : 'No'],
+        ['Noindex for Bing', reached ? (r.bingNoindex ? 'Yes' : 'No') : 'Not read'],
+      ]
+      signals.replaceChildren(
+        ...rows.flatMap(([term, value]) => [
+          el('dt', 'text-foreground-muted', term),
+          el('dd', 'min-w-0 break-words text-foreground [overflow-wrap:anywhere]', value),
+        ]),
+      )
+
+      $<HTMLElement>('[data-checks]').replaceChildren(
+        ...r.checks.map((item) => {
+          const row = el('li', 'flex items-start gap-3 py-3')
+          const level = LEVELS[item.level]
+          const body = el('div', 'min-w-0 space-y-1')
+          body.append(el('p', 'break-words leading-6 text-foreground [overflow-wrap:anywhere]', item.message))
+          if (item.fix) body.append(el('p', 'break-words leading-6 text-foreground-muted', `Fix: ${item.fix}`))
+          row.append(el('span', `mt-0.5 inline-flex w-12 shrink-0 justify-center rounded px-1.5 py-0.5 text-xs font-medium ${level.className}`, level.label), body)
+          return row
+        }),
+      )
+
+      const hops = $<HTMLElement>('[data-hops]')
+      hops.replaceChildren(
+        ...r.hops.map((hop, index) => {
+          const row = el('li', 'flex items-start gap-3 rounded-md bg-muted px-3 py-2')
+          row.append(el('span', 'w-10 shrink-0 font-mono font-medium text-foreground', String(hop.status)))
+          const text = el('div', 'min-w-0 space-y-0.5')
+          text.append(el('p', 'break-all font-mono text-foreground', hop.url))
+          const notes = [
+            hop.location && index < r.hops.length - 1 ? `Redirects to ${hop.location}` : '',
+            hop.robotsHeader ? `X-Robots-Tag: ${hop.robotsHeader}` : '',
+            hop.robotsTxt === 'blocked' ? 'Blocked by robots.txt' : '',
+          ].filter(Boolean)
+          if (notes.length) text.append(el('p', 'break-all text-foreground-muted', notes.join('. ')))
+          row.append(text)
+          return row
+        }),
+      )
+      $<HTMLElement>('[data-hops-card]').hidden = r.hops.length === 0
+      $<HTMLElement>('[data-results]').hidden = false
+    }
+
+    form.addEventListener('submit', async (event) => {
+      event.preventDefault()
+      error.hidden = true
+      const url = input.value.trim()
+      if (!url) {
+        error.textContent = 'Enter a page URL.'
+        error.hidden = false
+        return
+      }
+      button.disabled = true
+      button.textContent = 'Checking…'
+      try {
+        const response = await fetch('/api/tools/noindex-checker', {
+          method: 'POST',
+          headers: { 'content-type': 'application/json' },
+          body: JSON.stringify({ url }),
+        })
+        const data = (await response.json().catch(() => ({}))) as Result & { error?: string }
+        if (!response.ok) throw new Error(data.error || 'The page could not be checked.')
+        result = data
+        status.textContent = ''
+        render()
+        $<HTMLElement>('[data-results]').scrollIntoView({ behavior: 'smooth', block: 'start' })
+      } catch (caught) {
+        error.textContent = caught instanceof Error ? caught.message : 'The page could not be checked.'
+        error.hidden = false
+      } finally {
+        button.disabled = false
+        button.textContent = 'Check noindex'
+      }
+    })
+
+    $<HTMLButtonElement>('[data-copy]').addEventListener('click', async () => {
+      if (!result) return
+      const lines = [
+        `Noindex check for ${result.finalUrl}: ${result.headline}. ${result.summary}`,
+        ...result.checks.map((item) => `${LEVELS[item.level].label}: ${item.message}${item.fix ? ` Fix: ${item.fix}` : ''}`),
+      ]
+      try {
+        await navigator.clipboard.writeText(lines.join('\n'))
+        status.textContent = 'Findings copied.'
+      } catch {
+        status.textContent = 'The findings could not be copied.'
+      }
+    })
+
+    $<HTMLButtonElement>('[data-download]').addEventListener('click', () => {
+      if (!result) return
+      const link = document.createElement('a')
+      link.href = URL.createObjectURL(new Blob([JSON.stringify(result, null, 2)], { type: 'application/json' }))
+      link.download = 'noindex-check.json'
+      link.click()
+      URL.revokeObjectURL(link.href)
+      status.textContent = 'JSON downloaded.'
+    })
+
+    const preset = new URLSearchParams(location.search).get('url')
+    if (preset) input.value = preset
+  }
+
+  for (const root of document.querySelectorAll<HTMLElement>('[data-noindex-checker]')) initialise(root)
+</script>

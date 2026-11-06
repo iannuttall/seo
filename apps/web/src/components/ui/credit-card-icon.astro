@@ -1,0 +1,7 @@
+---
+import { CreditCard } from 'lucide'
+import Icon from './icon.astro'
+
+const { class: className, ...props } = Astro.props
+---
+<Icon iconNode={CreditCard} class={className} {...props} />

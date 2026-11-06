@@ -4,6 +4,7 @@ import {
   parseAttributes,
   previewContentType,
 } from './favicon-image.ts'
+import { type PageSignals, readPageSignals } from './page-signals.ts'
 import { safePublicFetchMessage } from './public-fetch-errors.ts'
 import {
   isBrowserRequestFromSameSite,
@@ -42,6 +43,21 @@ export type SerpPreviewFetchResult = {
       dataUrl?: string
     }
   }
+  // What the page itself says, for the title and description checks. A
+  // null title or description means no tag; an empty string means an
+  // empty tag.
+  page: {
+    title: PageSignals['title']
+    description: PageSignals['description']
+    h1: string | null
+    canonical: string | null
+    noindex: boolean
+    snippet: {
+      status: PageSignals['google']['snippet']['status']
+      maxCharacters?: number
+      rules: string[]
+    }
+  }
   warnings: string[]
 }
 
@@ -65,13 +81,14 @@ export type FetchedResource = {
   finalUrl: URL
   status: number
   redirects: Array<{ from: string; to: string; status: number }>
+  headers: Headers
 }
 
 function jsonResponse(value: unknown, status = 200): Response {
   return Response.json(value, { status, headers: JSON_HEADERS })
 }
 
-async function readBounded(
+export async function readBounded(
   body: ReadableStream<Uint8Array> | null,
   maximumBytes: number,
 ): Promise<Uint8Array> {
@@ -236,6 +253,7 @@ export async function fetchBounded(
       finalUrl: current,
       status: response.status,
       redirects,
+      headers: response.headers,
     }
   }
   throw new ToolLimitError('The URL redirected too many times.')
@@ -295,7 +313,6 @@ function metadataFromHtml(
   finalUrl: URL,
 ): {
   title: string
-  description: string
   siteName: string
   iconUrls: URL[]
 } {
@@ -342,10 +359,6 @@ function metadataFromHtml(
       head.match(/<title\b[^>]*>([\s\S]*?)<\/title\s*>/iu)?.[1],
       300,
     ),
-    description: cleanText(
-      meta.get('description') ?? meta.get('og:description'),
-      1_000,
-    ),
     siteName: cleanText(
       meta.get('og:site_name') ?? meta.get('application-name'),
       100,
@@ -371,13 +384,21 @@ export async function fetchSerpPreviewMetadata(
   if (!/^(?:text\/html|application\/xhtml\+xml)$/iu.test(page.contentType)) {
     throw new ToolFetchError('The URL did not return an HTML page.')
   }
-  const metadata = metadataFromHtml(
-    new TextDecoder().decode(page.bytes),
-    page.finalUrl,
-  )
-  if (!metadata.title) warnings.push('The fetched page has no title element.')
-  if (!metadata.description) {
-    warnings.push('The fetched page has no meta description.')
+  const html = new TextDecoder().decode(page.bytes)
+  const metadata = metadataFromHtml(html, page.finalUrl)
+  const signals = readPageSignals(html, page.finalUrl.toString(), {
+    robots: page.headers.get('x-robots-tag'),
+    link: page.headers.get('link'),
+  })
+  if (signals.title.value === null) {
+    warnings.push('The page has no title tag.')
+  } else if (!signals.title.value) {
+    warnings.push('The page has an empty title tag.')
+  }
+  if (signals.description.value === null) {
+    warnings.push('The page has no meta description.')
+  } else if (!signals.description.value) {
+    warnings.push('The page has an empty meta description.')
   }
 
   let favicon: SerpPreviewFetchResult['metadata']['favicon'] = {
@@ -422,10 +443,26 @@ export async function fetchSerpPreviewMetadata(
     },
     metadata: {
       title: metadata.title,
-      description: metadata.description,
+      description: cleanText(signals.description.value ?? '', 1_000),
       siteName:
         metadata.siteName || page.finalUrl.hostname.replace(/^www\./u, ''),
       favicon,
+    },
+    page: {
+      title: signals.title,
+      description: signals.description,
+      h1: signals.h1,
+      canonical: signals.canonical.href ?? signals.canonical.header,
+      noindex: signals.google.noindex,
+      snippet: {
+        status: signals.google.snippet.status,
+        maxCharacters: signals.google.snippet.maxCharacters,
+        rules: signals.google.snippet.evidence.map((item) =>
+          item.source === 'x-robots-tag'
+            ? `X-Robots-Tag: ${item.raw}`
+            : `robots meta: ${item.raw}`,
+        ),
+      },
     },
     warnings,
   }

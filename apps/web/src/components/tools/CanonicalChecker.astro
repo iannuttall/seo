@@ -157,7 +157,7 @@ import { CANONICAL_CHECKER_LIMITS } from '@/lib/canonical-checker'
     })
     openSerp.addEventListener('click', () => {
       localStorage.setItem(transferKey, JSON.stringify({ html: htmlInput.value, url: pageUrl.value }))
-      location.href = '/tools/serp-preview?source=canonical'
+      location.href = '/tools/title-and-meta-description-checker?source=canonical'
     })
   }
 </script>

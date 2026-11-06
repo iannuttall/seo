@@ -1,0 +1,7 @@
+---
+import { LogOut } from 'lucide'
+import Icon from './icon.astro'
+
+const { class: className, ...props } = Astro.props
+---
+<Icon iconNode={LogOut} class={className} {...props} />

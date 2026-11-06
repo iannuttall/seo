@@ -1,0 +1,7 @@
+---
+import { Paperclip } from 'lucide'
+import Icon from './icon.astro'
+
+const { class: className, ...props } = Astro.props
+---
+<Icon iconNode={Paperclip} class={className} {...props} />

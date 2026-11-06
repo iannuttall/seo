@@ -180,14 +180,14 @@ export const suiteTools: Record<string, string[]> = {
   'surfer-seo': [
     'serp-checker',
     'competitor-keyword-research',
-    'serp-preview',
+    'title-and-meta-description-checker',
     'schema-markup-generator',
   ],
   answerthepublic: [
     'word-combiner',
     'competitor-keyword-research',
     'serp-checker',
-    'serp-preview',
+    'title-and-meta-description-checker',
   ],
   'se-ranking': [
     'competitor-keyword-research',

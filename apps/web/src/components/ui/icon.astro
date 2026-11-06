@@ -1,0 +1,44 @@
+---
+import type { IconNode } from 'lucide'
+
+type IconProps = {
+  iconNode: IconNode
+  class?: string
+  [key: string]: unknown
+}
+
+const { iconNode, class: className, ...props } = Astro.props as IconProps
+
+function escapeHtml(value: string) {
+  return value
+    .replace(/&/g, '&amp;')
+    .replace(/"/g, '&quot;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+}
+
+function attrsToString(attrs: Record<string, string | number | undefined>) {
+  return Object.entries(attrs)
+    .filter((entry): entry is [string, string | number] => entry[1] !== undefined)
+    .map(([key, value]) => `${key}="${escapeHtml(String(value))}"`)
+    .join(' ')
+}
+
+const innerHTML = (iconNode as [string, Record<string, string | number | undefined>][])
+  .map(([tag, attrs]) => `<${tag} ${attrsToString(attrs)}></${tag}>`)
+  .join('')
+---
+<svg
+  xmlns="http://www.w3.org/2000/svg"
+  width="24"
+  height="24"
+  viewBox="0 0 24 24"
+  fill="none"
+  stroke="currentColor"
+  stroke-width="2"
+  stroke-linecap="round"
+  stroke-linejoin="round"
+  class={className}
+  {...props}
+  set:html={innerHTML}
+/>

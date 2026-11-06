@@ -17,8 +17,8 @@ import {
     <form data-serp-form class="space-y-6 p-5 sm:p-6">
       <div class="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
         <div class="space-y-1">
-          <h2 class="text-lg font-medium">Draft the search result</h2>
-          <p class="text-sm leading-6 text-foreground-muted">The preview measures rendered text width. Google can still create a different title link or snippet for a specific search.</p>
+          <h2 class="text-lg font-medium">Check a title and description</h2>
+          <p class="text-sm leading-6 text-foreground-muted">Load a live page or type your own. The checks measure rendered width in pixels and update as you edit.</p>
         </div>
         <div class="flex gap-2">
           <Button data-use-example type="button" class="px-3 py-2 text-xs">Use example</Button>
@@ -67,8 +67,19 @@ import {
         </label>
       </div>
 
-      <p class="text-xs leading-5 text-foreground-muted">Your edits stay in this browser tab. Loading a page sends its URL to this server so it can read the public HTML and favicon. Pixel budgets are preview guides, not limits published by Google.</p>
+      <p class="text-xs leading-5 text-foreground-muted">Your edits stay in this browser tab. Loading a page sends its URL to this server so it can read the public HTML and favicon (free, 10 pages a day). Pixel budgets are preview guides, not limits published by Google.</p>
     </form>
+  </Card>
+
+  <Card>
+    <div class="space-y-4 p-5 sm:p-6">
+      <div class="flex flex-col gap-1 sm:flex-row sm:items-baseline sm:justify-between">
+        <h2 class="text-lg font-medium">Checks</h2>
+        <p data-check-summary class="text-sm text-foreground-muted" aria-live="polite"></p>
+      </div>
+      <dl data-measures class="grid gap-2 text-sm sm:grid-cols-2"></dl>
+      <ul data-checks class="divide-y divide-border text-sm"></ul>
+    </div>
   </Card>
 
   <Card>
@@ -400,8 +411,141 @@ import {
     type SerpPreviewInput,
   } from '@/lib/serp-preview'
   import { defaultToolUrlToHttps } from '@/lib/tool-url'
+  import { lintText } from '@seo/core/lint/browser'
+
+  type Check = { level: 'pass' | 'warn' | 'fail' | 'info'; message: string }
+  type PageFacts = {
+    title: { count: number; value: string | null }
+    description: { count: number; value: string | null }
+    h1: string | null
+    noindex: boolean
+    snippet: { status: 'not-restricted' | 'limited' | 'blocked'; maxCharacters?: number; rules: string[] }
+  }
+  const LEVELS: Record<Check['level'], { label: string; className: string }> = {
+    fail: { label: 'Fix', className: 'bg-destructive-soft text-destructive' },
+    warn: { label: 'Check', className: 'bg-warning-soft text-foreground' },
+    info: { label: 'Note', className: 'bg-muted text-foreground-muted' },
+    pass: { label: 'OK', className: 'bg-primary-soft text-foreground' },
+  }
+  const SEPARATOR = /^[\s|·•:\-–—»›/]+|[\s|·•:\-–—»›/]+$/u
+
+  // Checks on the words themselves, from the text in the fields. Checks on
+  // the page (missing, empty or repeated tags, snippet rules) need a loaded
+  // page and apply only while the field still holds the loaded text.
+  function titleAndDescriptionChecks(
+    title: string,
+    description: string,
+    page: PageFacts | null,
+    loaded: { title: string; description: string } | null,
+    widths: { title: Record<SerpDevice, ReturnType<typeof serpWidthStatus>>; description: Record<SerpDevice, ReturnType<typeof serpWidthStatus>> },
+  ): Check[] {
+    const checks: Check[] = []
+    const titleFromPage = page && loaded && title === loaded.title
+    const descriptionFromPage = page && loaded && description === loaded.description
+    const t = title.trim()
+    const d = description.trim()
+
+    if (titleFromPage && page.title.value === null) {
+      checks.push({ level: 'fail', message: 'The page has no title tag. Google will write a title link from the headings and links instead.' })
+    } else if (titleFromPage && page.title.value === '') {
+      checks.push({ level: 'fail', message: 'The title tag is there but empty. Google treats that like a missing title and writes its own.' })
+    } else if (!t) {
+      checks.push({ level: 'info', message: 'Add a title to check it.' })
+    }
+    if (titleFromPage && page.title.count > 1) {
+      checks.push({ level: 'warn', message: `The page head has ${page.title.count} title tags. Browsers and Google use the first one, so the others are dead weight or a template bug.` })
+    }
+    if (t) {
+      const desktop = widths.title.desktop
+      const mobile = widths.title.mobile
+      checks.push(desktop.status === 'fits' && mobile.status === 'fits'
+        ? { level: 'pass', message: `The title is about ${desktop.pixels}px wide, so it fits on desktop (${desktop.budget}px) and mobile (${mobile.budget}px).` }
+        : { level: 'warn', message: `The title is about ${desktop.pixels}px wide. Google cuts it ${desktop.status === 'may-truncate' ? `on desktop (about ${desktop.budget}px) and on mobile` : `on mobile (about ${mobile.budget}px)`}. Put the words that earn the click first.` })
+      if ([...t].length < 15) {
+        checks.push({ level: 'warn', message: `The title is ${[...t].length} characters. Google often rewrites very short titles, because they do not say enough about the page.` })
+      }
+      if (SEPARATOR.test(t)) {
+        checks.push({ level: 'warn', message: 'The title starts or ends with a separator, as if part of it is missing. Google calls this a half-empty title and often rewrites it.' })
+      }
+      const counts = new Map<string, number>()
+      const common = new Set(['the', 'and', 'for', 'with', 'you', 'your', 'how'])
+      for (const word of t.toLocaleLowerCase().match(/[\p{L}\p{N}]{3,}/gu) ?? []) if (!common.has(word)) counts.set(word, (counts.get(word) ?? 0) + 1)
+      const repeated = [...counts].filter(([, count]) => count >= 3).map(([word]) => word)
+      if (repeated.length) {
+        checks.push({ level: 'warn', message: `"${repeated[0]}" appears ${counts.get(repeated[0] as string)} times in the title. Google treats repeated words as keyword stuffing and rewrites the title.` })
+      }
+      if (titleFromPage && page.h1 && page.h1.trim().toLocaleLowerCase() !== t.toLocaleLowerCase()) {
+        const shared = (page.h1.toLocaleLowerCase().match(/[\p{L}\p{N}]{3,}/gu) ?? []).filter((word) => t.toLocaleLowerCase().includes(word))
+        if (!shared.length) {
+          checks.push({ level: 'warn', message: `The title and the H1 ("${page.h1.slice(0, 80)}") share no words. Google may use the H1 as the title link when the two disagree.` })
+        }
+      }
+    }
+
+    if (descriptionFromPage && page.description.value === null) {
+      checks.push({ level: 'warn', message: 'The page has no meta description. Google will build a snippet from the page text, which is fine for some pages. Write one for pages that matter.' })
+    } else if (descriptionFromPage && page.description.value === '') {
+      checks.push({ level: 'warn', message: 'The meta description tag is there but empty, so Google has nothing to use and builds the snippet from page text. Fill it in or remove the tag.' })
+    } else if (!d) {
+      checks.push({ level: 'info', message: 'Add a description to check it.' })
+    }
+    if (descriptionFromPage && page.description.count > 1) {
+      checks.push({ level: 'warn', message: `The page head has ${page.description.count} meta descriptions. Keep one.` })
+    }
+    if (d) {
+      const desktop = widths.description.desktop
+      const mobile = widths.description.mobile
+      checks.push(desktop.status === 'fits' && mobile.status === 'fits'
+        ? { level: 'pass', message: `The description is about ${desktop.pixels}px wide and fits on desktop (${desktop.budget}px) and mobile (${mobile.budget}px).` }
+        : { level: desktop.status === 'fits' ? 'info' : 'warn', message: `The description is about ${desktop.pixels}px wide. Google cuts it ${desktop.status === 'may-truncate' ? `on desktop (about ${desktop.budget}px) and on mobile` : `on mobile (about ${mobile.budget}px), where it shows less`}. Say the useful part early.` })
+      if ([...d].length < 70) {
+        checks.push({ level: 'info', message: `The description is ${[...d].length} characters. Short is fine if it says what the page gives. Google fills a thin one from the page text.` })
+      }
+      if (t && d.toLocaleLowerCase() === t.toLocaleLowerCase()) {
+        checks.push({ level: 'warn', message: 'The description repeats the title word for word, so the snippet adds nothing.' })
+      }
+    }
+
+    if (page && (titleFromPage || descriptionFromPage)) {
+      if (page.snippet.status === 'blocked') {
+        checks.push({ level: 'warn', message: `${page.snippet.rules.join(', ')} stops Google showing any snippet, so the description is never shown. It also keeps the page out of AI Overviews and AI Mode as a source.` })
+      } else if (page.snippet.status === 'limited') {
+        checks.push({ level: 'info', message: `${page.snippet.rules.join(', ')} limits the snippet to ${page.snippet.maxCharacters} characters.` })
+      }
+      if (page.noindex) {
+        checks.push({ level: 'warn', message: 'The page has a noindex rule, so it will not show in Google at all. The noindex checker shows which rule.' })
+      }
+    }
+
+    const lines = [t ? `title: ${t}` : '', d ? `description: ${d.replace(/\s+/gu, ' ')}` : ''].filter(Boolean)
+    if (lines.length) {
+      try {
+        const result = lintText(lines.join('\n'), {
+          preset: 'meta',
+          format: 'text',
+          // Width is measured in pixels above, and a spaced hyphen is the
+          // usual separator before a brand name in a title.
+          ignoreRules: ['title-length', 'description-length', 'dash'],
+        })
+        for (const finding of result.findings) {
+          const field = lines[finding.line - 1]?.startsWith('title:') ? 'Title' : 'Description'
+          // The linter speaks to writers who know its word list. Say why
+          // the word costs a click instead.
+          const message = finding.message.replace(/ is on the house list of words to cut\./u, ' is a stock word that says nothing about this page.')
+          checks.push({ level: 'warn', message: `${field}: "${finding.excerpt}". ${message}${finding.fix ? ` ${finding.fix}` : ''}` })
+        }
+        if (!result.findings.length) {
+          checks.push({ level: 'pass', message: 'No stock marketing phrases, buzzwords or AI-sounding words.' })
+        }
+      } catch {
+        // The fields are capped well below the linter's limit.
+      }
+    }
+    return checks
+  }
 
   type LoadedPage = {
+    page?: PageFacts
     source: { finalUrl: string }
     metadata: {
       title: string
@@ -461,6 +605,11 @@ import {
     const loadStatus = root.querySelector<HTMLElement>('[data-load-status]')
     if (!form || !previewFrame || !previewSite || !previewUrl || !previewFavicon || !previewFaviconImage || !previewFaviconFallback || !previewTitle || !previewDescription || !previewDate || !previewImage || !previewStars || !previewExtra || searchQueries.length === 0 || !titleStatus || !descriptionStatus || !metaOutput || !copy || !loadPageButton || !loadStatus) continue
     let loadedFavicon = ''
+    let loadedPage: PageFacts | null = null
+    let loadedText: { title: string; description: string } | null = null
+    const checksList = root.querySelector<HTMLElement>('[data-checks]')
+    const measures = root.querySelector<HTMLElement>('[data-measures]')
+    const checkSummary = root.querySelector<HTMLElement>('[data-check-summary]')
     const input = (selector: string) => form.querySelector<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>(selector)
     const canvas = document.createElement('canvas')
     const context = canvas.getContext('2d')
@@ -538,6 +687,47 @@ import {
       previewExtra.textContent = additionProduct ?? ''
       previewExtra.hidden = !additionProduct
       metaOutput.textContent = generateSerpMetaHtml(value)
+
+      const widths = {
+        title: { desktop: serpWidthStatus(value.title.trim(), 'desktop', 'title', measureTitle), mobile: serpWidthStatus(value.title.trim(), 'mobile', 'title', measureTitle) },
+        description: { desktop: serpWidthStatus(value.description.trim(), 'desktop', 'description', measureDescription), mobile: serpWidthStatus(value.description.trim(), 'mobile', 'description', measureDescription) },
+      }
+      if (measures) {
+        const cell = (label: string, status: ReturnType<typeof serpWidthStatus>, other: ReturnType<typeof serpWidthStatus>) => {
+          const box = document.createElement('div')
+          box.className = 'rounded-lg bg-muted px-4 py-3'
+          const term = document.createElement('dt')
+          term.className = 'text-xs text-foreground-muted'
+          term.textContent = label
+          const detail = document.createElement('dd')
+          detail.className = 'mt-1 font-medium'
+          detail.textContent = status.status === 'empty' ? 'Empty' : `${status.pixels}px, ${status.characters} characters`
+          const note = document.createElement('dd')
+          note.className = 'text-xs text-foreground-muted'
+          note.textContent = status.status === 'empty' ? '' : `Desktop ${status.status === 'fits' ? 'fits' : 'cut'} (${status.budget}px), mobile ${other.status === 'fits' ? 'fits' : 'cut'} (${other.budget}px)`
+          box.append(term, detail, note)
+          return box
+        }
+        measures.replaceChildren(cell('Title width', widths.title.desktop, widths.title.mobile), cell('Description width', widths.description.desktop, widths.description.mobile))
+      }
+      if (checksList && checkSummary) {
+        const checks = titleAndDescriptionChecks(value.title, value.description, loadedPage, loadedText, widths)
+        checksList.replaceChildren(...checks.map((item) => {
+          const row = document.createElement('li')
+          row.className = 'flex items-start gap-3 py-2.5'
+          const badge = document.createElement('span')
+          badge.className = `mt-0.5 inline-flex w-12 shrink-0 justify-center rounded px-1.5 py-0.5 text-xs font-medium ${LEVELS[item.level].className}`
+          badge.textContent = LEVELS[item.level].label
+          const text = document.createElement('span')
+          text.className = 'min-w-0 break-words leading-6 text-foreground-muted'
+          text.textContent = item.message
+          row.append(badge, text)
+          return row
+        }))
+        const fixes = checks.filter((item) => item.level === 'fail').length
+        const reviews = checks.filter((item) => item.level === 'warn').length
+        checkSummary.textContent = fixes || reviews ? [fixes ? `${fixes} to fix` : '', reviews ? `${reviews} to check` : ''].filter(Boolean).join(', ') : value.title || value.description ? 'Nothing to fix' : ''
+      }
     }
 
     form.addEventListener('input', render)
@@ -555,8 +745,8 @@ import {
       keyboardEvent.preventDefault()
       loadPageButton.click()
     })
-    root.querySelector('[data-use-example]')?.addEventListener('click', () => { loadedFavicon = ''; hideLoadStatus(); fill(example); render() })
-    root.querySelector('[data-reset]')?.addEventListener('click', () => { loadedFavicon = ''; hideLoadStatus(); form.reset(); render() })
+    root.querySelector('[data-use-example]')?.addEventListener('click', () => { loadedFavicon = ''; loadedPage = null; loadedText = null; hideLoadStatus(); fill(example); render() })
+    root.querySelector('[data-reset]')?.addEventListener('click', () => { loadedFavicon = ''; loadedPage = null; loadedText = null; hideLoadStatus(); form.reset(); render() })
     loadPageButton.addEventListener('click', async () => {
       const urlField = input('[data-url]')
       const submittedUrl = defaultToolUrlToHttps(urlField?.value ?? '')
@@ -592,6 +782,8 @@ import {
           throw new Error('The preview server returned an invalid response. Try again.')
         }
         loadedFavicon = body.metadata.favicon.dataUrl ?? ''
+        loadedPage = body.page ?? null
+        loadedText = { title: body.metadata.title, description: body.metadata.description }
         fill({
           url: body.source.finalUrl,
           siteName: body.metadata.siteName,
@@ -606,6 +798,8 @@ import {
         render()
       } catch (error) {
         loadedFavicon = ''
+        loadedPage = null
+        loadedText = null
         setLoadStatus(
           error instanceof Error
             ? error.message

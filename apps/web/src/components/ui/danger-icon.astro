@@ -1,0 +1,7 @@
+---
+import { TriangleAlert } from 'lucide'
+import Icon from './icon.astro'
+
+const { class: className, ...props } = Astro.props
+---
+<Icon iconNode={TriangleAlert} class={className} {...props} />

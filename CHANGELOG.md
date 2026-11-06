@@ -1,5 +1,55 @@
 # Changelog
 
+## 0.17.1
+
+### Added
+
+- `seo lint` finds more AI writing tells: slogan fragments and kickers
+  ("Every month. No exceptions.", "$299 per month. That's it."), two or
+  more "No ..." sentences in a row, sales questions as headings ("Ready to
+  ...?"), answers to doubts nobody raised ("It isn't perfect."), "Here's
+  to ..." closers, formula triads, stacked ", allowing ..." riders, heavy
+  bold and decorative emoji.
+- `seo lint rules` lists every rule with its category, level and what it
+  looks for; `--only ai` lists the AI-pattern rules. `seo_lint` takes
+  `rules: true`.
+
+### Changed
+
+- One AI word on its own, such as a single "delve", is a warning; two or
+  more in a piece are errors.
+- `seo lint` fixes say to use a fact already in the text or cut the
+  phrase, so a rewrite does not add claims.
+- Triads flag only formula lists: parallel clauses, items that open with
+  the same word or strings of adjectives. Plain lists of three pass.
+- `seo page` reuses a URL Inspection result saved in the last 7 days;
+  `--refresh` asks Google again.
+- The hosted site audit reports an empty title or description
+  (`title_empty`, `description_empty`) apart from a missing one. On the
+  first run after this release, open `title_missing` or
+  `description_missing` findings on pages whose tag is empty close and
+  come back once under the new ids.
+
+### Fixed
+
+- `seo lint` false positives: the mic-drop review skips "#1" and lone
+  numbers, single-quoted examples are skipped, factual corrections and
+  concessions go to review instead of errors, title separators such as
+  "Pricing - Example" are not dashes, and empty title and description
+  tags are errors in every preset.
+- Every Google API request has a timeout (60 seconds for URL Inspection,
+  30 for the rest), so a stuck call cannot hang a run.
+- The crawler reports an empty title or description apart from a missing
+  one (`empty_title`, `empty_meta_description`). A saved monitoring
+  snapshot may show one title change for a page whose title is empty.
+- The hosted site audit reads googlebot meta tags and counts an
+  X-Robots-Tag noindex only when it applies to Google. A robots meta of
+  `none` now stops link-following there.
+- The crawler follows redirects with the shared tracer: loop detection, a
+  10-hop cap, a timeout on every hop and no retries of a loop.
+- A robots.txt that answers with a web page reads as `unreadable`, with
+  every AI bot's access unknown, and the crawl goes ahead as Google would.
+
 ## 0.17.0
 
 ### Added

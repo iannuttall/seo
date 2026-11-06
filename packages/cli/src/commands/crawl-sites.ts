@@ -119,6 +119,11 @@ function counts(
       `${facts['access-blocked']} access blocked`,
       `${facts['rate-limited']} rate limited`,
       `${facts.unreachable} unreachable (${facts.failed} with no response)`,
+      ...(facts.unreadable
+        ? [
+            `${facts.unreadable} answered with a web page, so the rules are unknown`,
+          ]
+        : []),
     ].join(', '),
   ]
 }

@@ -76,7 +76,7 @@ export function agentReadyIssues(input: {
       issue(
         'robots_txt_html',
         ai.robotsTxt.url,
-        `/robots.txt returned an HTML page (HTTP ${ai.robotsTxt.status}, ${ai.robotsTxt.contentType}), so it has no rules or sitemap lines.`,
+        `/robots.txt returned an HTML page (HTTP ${ai.robotsTxt.status}, ${ai.robotsTxt.contentType}), not a robots.txt file, so its rules for crawlers are unknown. Google treats it as a file with no valid rules, so the crawl went ahead as Google would.`,
         { status: ai.robotsTxt.status, contentType: ai.robotsTxt.contentType },
       ),
     )

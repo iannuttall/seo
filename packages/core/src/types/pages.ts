@@ -47,6 +47,7 @@ export interface PageFetchResult {
       | 'access-blocked'
       | 'rate-limited'
       | 'unreachable'
+      | 'unreadable'
     status?: number
     error?: string
     matchedLine?: string
@@ -89,6 +90,7 @@ export interface PageFetchDiagnostics {
       | 'access-blocked'
       | 'rate-limited'
       | 'unreachable'
+      | 'unreadable'
     status?: number
     error?: string
   }

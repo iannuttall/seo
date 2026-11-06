@@ -32,6 +32,7 @@ export type CrawlPageSnapshot = {
       | 'access-blocked'
       | 'rate-limited'
       | 'unreachable'
+      | 'unreadable'
     status?: number
     error?: string
     matchedLine?: string

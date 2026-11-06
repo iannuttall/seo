@@ -4,6 +4,9 @@ export type CrawlAiAvailability =
   | 'access-blocked'
   | 'rate-limited'
   | 'unreachable'
+  // robots.txt only: a 2xx answer that is a web page, such as a bot
+  // challenge or the site's HTML shell, so its rules are unknown.
+  | 'unreadable'
 
 // Why a request got no response. A failed request is never a missing file.
 export type CrawlFetchErrorKind =

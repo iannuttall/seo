@@ -65,6 +65,8 @@ export type RobotsResult = {
     | 'access-blocked'
     | 'rate-limited'
     | 'unreachable'
+    // A 2xx answer that is a web page, not a robots.txt file. Rules unknown.
+    | 'unreadable'
   status?: number
   error?: string
   matchedLine?: string

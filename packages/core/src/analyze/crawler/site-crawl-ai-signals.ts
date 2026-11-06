@@ -5,6 +5,10 @@ import {
   ResponseSizeLimitError,
   readBoundedResponseText,
 } from '../../fetch/http-client.js'
+import {
+  ROBOTS_TXT_HTML_ERROR,
+  robotsTxtIsHtml,
+} from '../../fetch/page-fetcher/robots-evidence.js'
 import { fetchFailureKind } from '../monitoring/crawl-page.js'
 import { abortController, REQUEST_TIMEOUT_CAP_MS } from './crawl-control.js'
 import type {
@@ -291,7 +295,9 @@ function sitemapUrlsFromRobots(text: string): string[] {
 }
 
 // Whether robots.txt lets this crawler fetch a URL; null when robots.txt
-// could not be read.
+// could not be read. A web page at /robots.txt has no valid rules, so the
+// crawler fetches as Google would, though the rules each bot gets stay
+// unknown.
 export type RobotsGate = (url: string) => boolean | null
 
 export async function checkRobotsAiAccess(input: SignalInput): Promise<{
@@ -300,14 +306,17 @@ export async function checkRobotsAiAccess(input: SignalInput): Promise<{
 }> {
   const robotsUrl = new URL('/robots.txt', input.url).toString()
   const result = await get(input, robotsUrl)
-  // An HTML page holds no robots rules, so crawlers treat it as no file.
+  // A web page, such as a bot challenge or the site's HTML shell, is not a
+  // robots.txt file, so the rules every bot gets are unknown.
   const servesHtml =
-    result.availability === 'available' && isHtml(result.contentType)
-  const availability = servesHtml ? 'absent' : result.availability
+    result.availability === 'available' &&
+    robotsTxtIsHtml(result.contentType, result.text)
+  const availability = servesHtml ? 'unreadable' : result.availability
   const exists = availability === 'available'
   const unknown =
-    result.availability === 'rate-limited' ||
-    result.availability === 'unreachable'
+    availability === 'rate-limited' ||
+    availability === 'unreachable' ||
+    availability === 'unreadable'
   const declared = exists ? declaredUserAgents(result.text) : new Set<string>()
   const parsed = parseRobots(robotsUrl, exists ? result.text : '')
   // robots-parser answers only for its own origin. robots.txt often
@@ -330,7 +339,9 @@ export async function checkRobotsAiAccess(input: SignalInput): Promise<{
     ...(servesHtml ? { servesHtml } : {}),
     ...(unknown
       ? {
-          error: result.error ?? `robots.txt returned HTTP ${result.status}.`,
+          error: servesHtml
+            ? ROBOTS_TXT_HTML_ERROR
+            : (result.error ?? `robots.txt returned HTTP ${result.status}.`),
         }
       : {}),
     ...(result.errorKind ? { errorKind: result.errorKind } : {}),
@@ -350,7 +361,12 @@ export async function checkRobotsAiAccess(input: SignalInput): Promise<{
   }
   return {
     robotsTxt,
-    allows: (url) => (unknown ? null : isAllowed(url, SEO_CRAWLER_USER_AGENT)),
+    allows: (url) =>
+      servesHtml
+        ? true
+        : unknown
+          ? null
+          : isAllowed(url, SEO_CRAWLER_USER_AGENT),
   }
 }
 

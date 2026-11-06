@@ -140,9 +140,10 @@ export type CommandDeps = {
     ) => Map<string, { status: IndexStatus; inspectedAt: string }>
     save: (site: string, url: string, status: IndexStatus) => void
   }
-  // One page's main content as Markdown, read live. Only where the
-  // extraction packages run (the CLI and the local MCP server).
-  pageMarkdown?: (url: string) => Promise<PageMarkdown>
+  // One page's main content as Markdown, read live, cut to limit
+  // characters (20,000 by default). Only where the extraction packages run
+  // (the CLI and the local MCP server).
+  pageMarkdown?: (url: string, limit?: number) => Promise<PageMarkdown>
   call: Caller
   // Bing Webmaster calls, or null when Bing is not connected here. Each
   // surface returns the same call each time.

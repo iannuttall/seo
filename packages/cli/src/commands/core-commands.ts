@@ -18,6 +18,7 @@ import {
   type IssueMark,
   LINT_CATEGORIES,
   LINT_FORMATS,
+  LINT_MAX_CHARS,
   LINT_PRESETS,
   type LintCategory,
   type LintFormat,
@@ -656,9 +657,14 @@ export const lintCommand = defineCommand({
   args: {
     paths: {
       type: 'positional',
-      required: true,
+      required: false,
       description:
         'Files, folders or globs: .md, .mdx, .html, .astro or .txt. Up to 100 files.',
+    },
+    url: {
+      type: 'string',
+      description:
+        'Instead of files: a live page. Checks its main content as Markdown (what seo page --detail full shows), with the blog preset unless you set one.',
     },
     only: {
       type: 'string',
@@ -675,7 +681,7 @@ export const lintCommand = defineCommand({
     'fail-on': {
       type: 'string',
       description:
-        'error (default) or warning: exit with code 1 when a finding at that level or above is found. A file that could not be checked in full also exits with code 1.',
+        'error (default) or warning: exit with code 1 when a finding at that level or above is found. A file or page that could not be checked in full also exits with code 1.',
     },
     ignore: {
       type: 'string',
@@ -711,6 +717,13 @@ export const lintCommand = defineCommand({
     const paths = positionals.filter(
       (value): value is string => typeof value === 'string',
     )
+    const url = stringArg(args.url)
+    if (Boolean(url) === paths.length > 0) {
+      throw new SeoError(
+        'INVALID_INPUT',
+        'Give files, folders or globs to check, or --url with a live page, but not both.',
+      )
+    }
     const only = csvArg(args.only)
     const unknown = only?.filter(
       (value) => !LINT_CATEGORIES.includes(value as LintCategory),
@@ -725,9 +738,11 @@ export const lintCommand = defineCommand({
       .concat(args['ignore-phrase'] ?? [])
       .filter((value): value is string => typeof value === 'string')
     try {
+      const { pageMarkdown } = nodeCommandDeps({ call: cliCall })
       const result = await runLint(
         {
-          paths,
+          paths: url ? undefined : paths,
+          url,
           preset: preset as LintPreset | undefined,
           format: format as LintFormat | undefined,
           ignoreRules: csvArg(args.ignore),
@@ -735,6 +750,7 @@ export const lintCommand = defineCommand({
           only: only as LintCategory[] | undefined,
         },
         (inputs) => readLintFiles(inputs),
+        pageMarkdown && ((page) => pageMarkdown(page, LINT_MAX_CHARS)),
       )
       if (jsonFlag(args)) printJson(result.data)
       else process.stdout.write(`${result.text}\n`)

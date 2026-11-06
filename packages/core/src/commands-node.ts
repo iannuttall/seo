@@ -80,8 +80,11 @@ export function nodeCommandDeps(options: {
         options.refresh ? new Map() : readSavedInspections(site, urls),
       save: saveInspection,
     },
-    pageMarkdown: async (url) =>
-      extractMainMarkdown(await fetchPage(url, { refresh: options.refresh })),
+    pageMarkdown: async (url, limit) =>
+      extractMainMarkdown(
+        await fetchPage(url, { refresh: options.refresh }),
+        limit,
+      ),
     call: options.call,
     bing: localBing,
     bingConnect: LOCAL_BING_CONNECT,

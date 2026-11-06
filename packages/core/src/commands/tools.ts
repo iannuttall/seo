@@ -192,6 +192,12 @@ const lintInput = {
     .describe(
       `The copy to check: a page, post, title or description, up to ${LINT_MAX_CHARS.toLocaleString('en-US')} characters. Markdown, MDX or HTML as written, so line numbers match.`,
     ),
+  url: z
+    .url()
+    .optional()
+    .describe(
+      'Optional instead of text: a live page. Its main content is extracted as Markdown (as seo_page with detail full shows it) and checked with the blog preset. Only the CLI and the local MCP server read pages.',
+    ),
   format: z
     .enum(LINT_FORMATS)
     .optional()
@@ -640,7 +646,7 @@ export const SHARED_TOOLS: SharedTool[] = [
     command: 'lint',
     title: 'Check copy for AI writing patterns',
     description:
-      'Checks landing page copy, blog posts, titles and meta descriptions for patterns common in AI-written text (such as "isn\'t X, it\'s Y" reframes, ", not X" contrasts, two-beat fragments, stock idioms and kicker lines), weak copy (dash punctuation, buzzwords, vague link text) and SEO rules (title 30 to 60 characters, description 70 to 160, one H1). Each error and warning has a line, the words, and a concrete fix. Each finding has a category (ai, copy or seo); only limits the check, such as only ["ai"] to leave out house style like dashes. Review items are judgement calls for you: read each quote and change it only when it fails the question. It runs offline and reads no accounts.',
+      'Checks landing page copy, blog posts, titles and meta descriptions for patterns common in AI-written text (such as "isn\'t X, it\'s Y" reframes, ", not X" contrasts, two-beat fragments, stock idioms and kicker lines), weak copy (dash punctuation, buzzwords, vague link text) and SEO rules (title 30 to 60 characters, description 70 to 160, one H1). Each error and warning has a line, the words, and a concrete fix. Each finding has a category (ai, copy or seo); only limits the check, such as only ["ai"] to leave out house style like dashes. Review items are judgement calls for you: read each quote and change it only when it fails the question. A url checks the main content of a live page (CLI and local MCP only). It reads no accounts.',
     input: z.object(lintInput),
     localInput: z.object({
       ...lintInput,
@@ -652,11 +658,13 @@ export const SHARED_TOOLS: SharedTool[] = [
           'Optional instead of text: files, folders or globs on this machine (.md, .mdx, .html, .astro, .txt). The format comes from each file name.',
         ),
     }),
-    run: async (surface, input) =>
-      runLint(
+    run: async (surface, input) => {
+      const pageMarkdown = surface.deps.pageMarkdown
+      return runLint(
         {
           text: input.text,
           paths: (input as { paths?: string[] }).paths,
+          url: input.url,
           format: input.format,
           preset: input.preset,
           ignoreRules: input.ignore_rules,
@@ -664,7 +672,9 @@ export const SHARED_TOOLS: SharedTool[] = [
           only: input.only,
         },
         surface.readFiles,
-      ),
+        pageMarkdown && ((url) => pageMarkdown(url, LINT_MAX_CHARS)),
+      )
+    },
   }),
 ]
 

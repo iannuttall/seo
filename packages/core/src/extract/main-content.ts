@@ -228,8 +228,10 @@ export interface MainContentMarkdown {
 
 // The page's main content as Markdown, from the same Defuddle extraction.
 // Links are made absolute. Nothing is fetched beyond the given HTML.
+// limit is the most Markdown kept, such as more for seo lint.
 export async function extractMainMarkdown(
   fetchResult: PageFetchResult,
+  limit = MARKDOWN_LIMIT,
 ): Promise<MainContentMarkdown> {
   const document = parseDocument(fetchResult.html)
   resolveDocumentUrls(document, fetchResult.finalUrl)
@@ -239,13 +241,13 @@ export async function extractMainMarkdown(
     useAsync: false,
   })
   const markdown = (result.content ?? '').trim()
-  if (markdown.length <= MARKDOWN_LIMIT) {
+  if (markdown.length <= limit) {
     return { markdown, characters: markdown.length, truncated: false }
   }
-  const cut = markdown.slice(0, MARKDOWN_LIMIT)
+  const cut = markdown.slice(0, limit)
   const end = cut.lastIndexOf('\n')
   return {
-    markdown: (end > MARKDOWN_LIMIT / 2 ? cut.slice(0, end) : cut).trimEnd(),
+    markdown: (end > limit / 2 ? cut.slice(0, end) : cut).trimEnd(),
     characters: markdown.length,
     truncated: true,
   }

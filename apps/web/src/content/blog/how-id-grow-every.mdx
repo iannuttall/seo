@@ -492,11 +492,9 @@ Each of these posts has a twin: the same address with a long ID on the end. Both
 
 **The fix:** a permanent (301) redirect from every ID address to the clean one, set up as one pattern rule on the server or CDN. The sitemap and internal links should list only the clean addresses. If the CMS needs the ID addresses for previews, they can stay, as long as each one redirects for everyone else. Some republished posts also have "-rerun" copies. For those, I'd update the original post and its date, or point the rerun's canonical tag at the original.
 
-## Ship it all today, then let it settle
+## 10 changes that send searchers to what Every sells
 
-Teardowns like this usually end with a four-week plan, with the links in week one, the consulting pages in week two and so on. With coding agents, I'd start all of it on the same day.
-
-Each fix above is a separate job with a clear end, so ten agents can work on them at once:
+Here's every change I'd make:
 
 <PlanSteps
   steps={[{"title": "Product links", "body": "Change the newsletter template so each product mention links to the page that sells it, with descriptive link text. Fix the monologue.co links."}, {"title": "Guide canonicals", "body": "Make guides send the canonical in the head, like posts already do."}, {"title": "Consulting hub", "body": "Draft strategy, implementation and team training pages from the existing consulting page and client stories, for the team to edit."}, {"title": "Course page", "body": "One permanent Claude Code course page that past and future cohorts point to, plus a courses hub."}, {"title": "Model reviews", "body": "Model-first title tags on Vibe Checks, and a hub page per model family."}, {"title": "Duplicates", "body": "Redirect the ID-suffixed copies and merge the Compound Engineering versions."}, {"title": "Comparison pages", "body": "Draft Claude vs ChatGPT from the existing Vibe Checks, with the verdict on top, then the same template for Gemini, Codex and Cursor."}, {"title": "Claude Code guide", "body": "Draft the guide from the engineers' own CLAUDE.md files, hooks and monthly spend, linking to the course page."}, {"title": "Free tools", "body": "Build the AI readiness assessment from the eight levels guide, and publish the AI policy template."}, {"title": "AI search", "body": "Add a free verdict block to each Vibe Check, a Markdown copy and service markup for the consulting page, and a clearer top to the newsletter page."}]}
@@ -504,7 +502,7 @@ Each fix above is a separate job with a clear end, so ten agents can work on the
 
 Someone at Every still needs to review the consulting copy, the course page, the client stories and each verdict, because they know the business and the models. The link, canonical, title and redirect changes need only a quick check.
 
-Then I'd spend 30 days checking the results:
+Then check the results:
 
 <PlanSteps
   steps={[{"marker": "Day 0", "title": "Ask Google to recrawl", "body": "Submit every new and changed URL to Index My Site, so Google recrawls them now instead of on its own schedule."}, {"marker": "Day 3", "title": "Check indexing", "body": "Confirm the new pages are indexed and the guides now send the canonical in the head."}, {"marker": "Day 7", "title": "First impressions", "body": "Look for impressions on \"ai strategy consulting\", \"claude code course\" and \"claude vs chatgpt\" in Search Console."}, {"marker": "Day 14", "title": "Product clicks", "body": "Check clicks from every.to links to the product pages in analytics. Those clicks are the first sign of new revenue."}, {"marker": "Day 30", "title": "Enquiries, sign-ups and AI answers", "body": "Compare consulting enquiries and course sign-ups from search with the month before, and ask the AI answers the same 10 questions again to see which ones now cite Every."}]}

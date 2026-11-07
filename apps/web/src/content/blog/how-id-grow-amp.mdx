@@ -562,11 +562,9 @@ Amp's news section already gets this right: an unknown news address returns a 40
 
 **The fix:** return a 404 for any address that isn't a real page or app route, and only redirect real app routes (such as threads and settings) to sign-in. For a retired address that had links or rankings, add a 301 to the nearest live page instead. While they're in there, the docs link to the orbs profiles page is broken and needs pointing at the right page. To confirm it worked, request a made-up address and check for a 404, then check that Search Console's soft 404 count stops growing.
 
-## Ship it all today, then let it settle
+## 14 changes to win the searches for coding agents
 
-Teardowns like this usually end with a four-week plan. With coding agents, I'd start all of it on the same day, and Amp, of all companies, has the orbs to run it.
-
-Each fix above is a separate job with a clear end, so these can run at once:
+Here's every change I'd make:
 
 <PlanSteps
   steps={[{"title": "Comparison pages", "body": "Amp vs Claude Code, Cursor, Codex and OpenCode, plus Claude Code and Cursor alternatives pages, honest about where each tool wins."}, {"title": "Coding agent guide", "body": "One guide to what a coding agent is and how to choose one, linked from the homepage and the footer."}, {"title": "Orbs for search", "body": "A new title tag on the orbs page, and a page for running Claude Code or Codex in an orb."}, {"title": "Model database", "body": "Sitemap entries, a menu link, self canonicals and descriptions for all 109 model pages, plus a \"use it in Amp\" block on each."}, {"title": "One domain", "body": "Redirect ampcode.app to ampcode.com and add a canonical tag to the pricing page."}, {"title": "Real 404s", "body": "Return 404 for unknown addresses, keep sign-in redirects for app routes, and fix the orbs profiles docs link."}, {"title": "Moving from Cody", "body": "A page for Cody Free and Pro users, and a note to Sourcegraph asking for one line on the Cody docs page."}, {"title": "Codex and Cursor comparisons", "body": "Codex vs Claude Code and Cursor vs Claude Code, each with three real tasks run in both and the threads linked."}, {"title": "Pricing guide", "body": "What coding agents cost, with Claude Code, Codex, Cursor and coding plans, and a dated last section on bringing your own plan to Amp."}, {"title": "Parallel agents guide", "body": "Worktrees, orbs and subagents in one guide that answers how to run several agents at once."}, {"title": "Model pairs and token counter", "body": "A page for each model pair people search for, and a token counter that shows which models the text fits."}, {"title": "AI readiness", "body": "Pricing answers in the HTML, a product section in llms.txt, and Markdown copies of the product pages."}, {"title": "Answer pages", "body": "One page each for using your ChatGPT or Claude subscription in Amp and running Claude Code in the cloud, titled with the question."}, {"title": "The lists", "body": "Emails to the authors of the Zapier, Builder.io, Faros and Built In lists that AI answers cite and that leave Amp out."}]}
@@ -574,7 +572,7 @@ Each fix above is a separate job with a clear end, so these can run at once:
 
 Someone at Amp still needs to review the comparison pages and the guides, because they make claims about competitors. The redirects, titles, sitemap and canonical changes need only a quick check.
 
-Then I'd spend 30 days checking the results:
+Then check the results:
 
 <PlanSteps
   steps={[{"marker": "Day 0", "title": "Ask Google to recrawl", "body": "Submit every new and changed URL to Index My Site, so Google recrawls them now instead of on its own schedule."}, {"marker": "Day 3", "title": "Check indexing", "body": "Confirm the comparison pages and model pages are indexed, and that ampcode.app now redirects."}, {"marker": "Day 7", "title": "First impressions", "body": "Look for impressions on \"claude code alternative\", \"coding agent\" and \"claude code sandbox\" in Search Console."}, {"marker": "Day 14", "title": "Model pages", "body": "Check how many model pages have impressions, and which models people search for most."}, {"marker": "Day 30", "title": "Sign-ups", "body": "Compare sign-ups and paid plans that started from search with the month before."}, {"marker": "Day 30", "title": "AI answers", "body": "Ask ChatGPT, AI Mode and AI Overviews the same ten questions for Amp and for Cursor, and count the answers that cite or name Amp."}]}

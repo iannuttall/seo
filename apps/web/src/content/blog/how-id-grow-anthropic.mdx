@@ -354,15 +354,15 @@ claude.com marks up WebSite, Organization and Brand on every page, and FAQPage o
 - anthropic.com's context engineering article links to /effective-context-engineering-for-ai-agents (the "Sonnet 4.5 launch" link), which 404s. The article itself lives at /research/effective-context-engineering-for-ai-agents.
 - 84 of the 600 claude.com pages I crawled share a title with another page, mostly Code with Claude session pages that appear under three addresses.
 
-## Ship it all today, then let it settle
+## The plan
 
-Each fix above is a separate job with a clear end, so these can run in parallel with agents, with Anthropic's team approving each change:
+Here's every change I'd make:
 
 <PlanSteps
   steps={[{"title": "Head tags", "body": "Make metadata blocking for search crawlers on claude.com so title, canonical and hreflang ship in the head."}, {"title": "Redirect map", "body": "Export every linked address on docs.anthropic.com, docs.claude.com and support.anthropic.com and point each at its current page with one 301."}, {"title": "Docs 404s", "body": "Return a 404 status for unknown paths on platform.claude.com/docs."}, {"title": "Answer blocks", "body": "Add a what-it-is, best-for and price block with a date to the overview, pricing and solutions pages, and retitle the solutions pages for their searches."}, {"title": "Switching page", "body": "Turn the import memory page into the ChatGPT alternative page, with an is-Claude-free section."}, {"title": "Comparison pages", "body": "Draft Claude vs ChatGPT, Claude Code vs Codex, Claude Code vs Cursor and Claude vs Gemini, each with the verdict first and a date."}, {"title": "Video and LinkedIn", "body": "Script one YouTube video and one LinkedIn post per comparison page, titled like the search."}, {"title": "AI-readable copies", "body": "Publish claude.com/llms.txt, Markdown copies of the selling pages and SoftwareApplication markup."}]}
 />
 
-Then 30 days of checks:
+Then check the results:
 
 <PlanSteps
   steps={[{"marker": "Day 0", "title": "Ask Google to recrawl", "body": "Submit every changed and new URL to Index My Site."}, {"marker": "Day 3", "title": "Check the head and redirects", "body": "URL Inspection shows the canonical on claude.com/pricing; the 900 old addresses each end in one 301 and a 200."}, {"marker": "Day 7", "title": "First impressions", "body": "Search Console impressions for chatgpt alternative, claude vs chatgpt and is claude free on the new pages."}, {"marker": "Day 14", "title": "Sign-ups from the new pages", "body": "Free and Pro sign-ups that started on a comparison, switching or solutions page."}, {"marker": "Day 30", "title": "Ask the same 20 questions", "body": "Rerun the AI answers and compare: how many of the 60 link a Claude page, and how many of Google's 40."}]}

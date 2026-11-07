@@ -461,9 +461,9 @@ A login page for a staff support tool, on its own subdomain, ranks fifth for "sh
 
 The 529 college cost section is 79% of the sitemap and brings about 505 visits a month, about 5% of the total, from parents pricing colleges. It doesn't have to go, but it shouldn't be what Google spends its time on before the mileage and tax pages.
 
-## Ship it all today, then let it settle
+## The plan
 
-None of this needs a sprint. Each fix is a separate job, so coding agents can work on all of them at once:
+Here's every change I'd make:
 
 <PlanSteps
   steps={[{"title": "Mileage hub", "body": "Link the IRS mileage rate calculator from the mileage tracker, gig driver, owner-operator, mileage log and Canadian rate pages with the words \"2026 IRS mileage rate\". Keep one address for every year."}, {"title": "Schedule C index", "body": "Build \"Schedule C line by line (2026)\" at /schedule-c, linking all 12 line pages, the mileage and home office calculators and the meals page, then write the missing lines."}, {"title": "Per diem links", "body": "Link the per diem index from the truck owner-operator page and the truck driver worksheet."}, {"title": "Comparison pages", "body": "Expensify alternatives, Dext alternatives, Shoeboxed vs QuickBooks receipt capture and a page for Neat scanner owners, each with a comparison table near the top."}, {"title": "Receipt scanning and business cards", "body": "Retitle the receipt scanning page for the mail-in service, and build /business-card-scanner with the export steps from the help center."}, {"title": "Help center", "body": "Remove noindex from the help articles, add canonicals, and link the integration articles from features and pricing."}, {"title": "Blog redirects", "body": "Restore the construction bookkeeping and cash receipts journal posts. Give the other unrelated redirects a 410."}, {"title": "Markup, links and sitemap", "body": "Fix the FAQ JSON-LD on 23 pages, remove utm tags from internal links, 301 /home, add Open Graph tags, and split the sitemap by section with lastmod."}, {"title": "Listings and outreach", "body": "Apply for listings on Xero's app store, Pipedream, Zapier and PricingSaaS, and draft the note to Bill.com and the writers who cover the mileage rate."}]}
@@ -471,7 +471,7 @@ None of this needs a sprint. Each fix is a separate job, so coding agents can wo
 
 Someone at Shoeboxed needs to review the comparison pages and approve each outreach email. The titles, redirects and markup need only a quick look.
 
-Then I'd spend 30 days watching:
+Then check the results:
 
 <PlanSteps
   steps={[{"marker": "Day 0", "title": "Ask Google to recrawl", "body": "Submit every new and changed URL to Index My Site, so Google recrawls them now instead of on its own schedule."}, {"marker": "Day 3", "title": "Check indexing", "body": "Confirm the Schedule C index, the comparison pages and the help articles are indexed, and the old redirects return 410."}, {"marker": "Day 7", "title": "First impressions", "body": "Look for impressions on \"irs mileage rate 2026\", \"schedule c\" and \"expensify alternatives\" in Search Console."}, {"marker": "Day 14", "title": "The 2027 rate", "body": "When the IRS announces the 2027 rate, update the calculator that day, submit it again, and send the mileage report to the writers covering it."}, {"marker": "Day 30", "title": "Sign-ups", "body": "Compare trials started from search with the month before, split by landing page."}, {"marker": "Day 30", "title": "AI answers", "body": "Ask the same ten questions with ai_answers, for Shoeboxed and Expensify, and compare."}]}

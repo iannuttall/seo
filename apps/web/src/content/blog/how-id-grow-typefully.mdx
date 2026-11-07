@@ -349,9 +349,9 @@ The crawl turned up one more problem I'd fix. Typefully's AI writing assistant p
 
 **The fix:** render the AI page and the homepage's navigation and footer links on the server, as the scheduler and tool pages already are. Then request typefully.com/ai with curl and check that the headline and the feature text are in the response.
 
-## Ship it all today, then let it settle
+## The plan
 
-None of this needs a sprint plan. Each fix is a separate job with a clear end, so agents can work on all of them at once:
+Here's every change I'd make:
 
 <PlanSteps
   steps={[{"title": "Best time to post study", "body": "Pull a year of scheduled posts and their impressions by platform, day and hour, and draft the LinkedIn, X, Threads and Bluesky pages with the numbers and the method."}, {"title": "Best time to post tool", "body": "A free tool built on the same data: pick a platform and a time zone, get the best hours, then schedule in Typefully."}, {"title": "Scheduler pages", "body": "New titles, a how-to section and a best-times section on the LinkedIn and Threads pages."}, {"title": "Tool links", "body": "Point the LinkedIn formatter's text links at the LinkedIn page, and the X tools at the X page."}, {"title": "MCP pages", "body": "An MCP and API hub at /mcp, then a page each for LinkedIn and X, with the setup steps moved from the help centre."}, {"title": "Homepage and About page", "body": "Add the one-sentence definition under the homepage headline, and publish an About page that opens with it."}, {"title": "Outreach drafts", "body": "Draft an email for each site linking to the older best-time studies, for someone at Typefully to approve."}, {"title": "Profile settings", "body": "Noindex profiles and shared posts by default, ugc nofollow on every user link, and a 404 for unknown usernames."}, {"title": "Spam accounts", "body": "Delete the spam accounts, starting with the 24 that rank, and add a sign-up check for gambling and escort terms."}, {"title": "Server rendering", "body": "Render the AI writing page and the homepage links in the HTML."}]}
@@ -359,7 +359,7 @@ None of this needs a sprint plan. Each fix is a separate job with a clear end, s
 
 Someone at Typefully still needs to check the study's numbers and approve each outreach email. The link and robots changes need only a quick check.
 
-Then I'd spend 30 days checking the results:
+Then check the results:
 
 <PlanSteps
   steps={[{"marker": "Day 0", "title": "Ask Google to recrawl", "body": "Submit every new and changed URL, and the old profile addresses, to Index My Site, so Google sees the changes now instead of on its own schedule."}, {"marker": "Day 3", "title": "Check the profiles", "body": "Crawl the spam addresses in list mode and confirm each returns a 404 or carries noindex."}, {"marker": "Day 7", "title": "First impressions", "body": "Look for impressions on \"schedule linkedin posts\", \"threads scheduler\", \"linkedin mcp\" and \"best time to post on linkedin\" in Search Console."}, {"marker": "Day 14", "title": "Clicks from the tools", "body": "Check how many formatter visitors click through to the LinkedIn page, and how many of those sign up."}, {"marker": "Day 30", "title": "Sign-ups, links and AI answers", "body": "Compare sign-ups from search with the month before, count the sites linking to the study, and ask the same ten AI questions again."}]}

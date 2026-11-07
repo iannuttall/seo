@@ -420,9 +420,9 @@ A made-up guide address returns a 404, which is right. Its canonical points at t
 
 Some legal pages answer a US visitor with 26 words, "The content of this page is not applicable to the region where you are located", and a 200. Googlebot mostly crawls from the US, so that's the version Google sees. Those pages need a `noindex` for the regions they don't apply to, or to be out of the sitemap.
 
-## Ship it all today, then let it settle
+## The plan
 
-None of this needs a quarter-long roadmap. Each fix is a separate job with a clear end, so agents can run them in parallel:
+Here's every change I'd make:
 
 <PlanSteps
   steps={[{"title": "Guide copies", "body": "Sort the 3,566 guides into one-country, same-everywhere and really-regional, then set canonicals, hreflang sets and sitemap entries for each kind."}, {"title": "Lowercase redirects", "body": "One edge rule: 301 any path with a capital letter to its lowercase form, and build canonicals from the stored slug."}, {"title": "Contact pages", "body": "Put the support number for each country in the HTML of every contact and sales page copy, so the page Google shows answers the search."}, {"title": "Docs for AI crawlers", "body": "Drop the noindex header on canonical addresses, add a canonical Link header to Markdown, and serve the default variant in full."}, {"title": "Comparison pages", "body": "Stripe vs PayPal, Square, Adyen and Paddle, and an alternatives page, each with a fee table and an updated date."}, {"title": "Answer pages", "body": "One page per buyer question, with the question as the title and the answer first, starting with SaaS startups and marketplaces."}, {"title": "Fee calculator", "body": "An official calculator on the pricing page, in every currency Stripe prices in."}, {"title": "Videos", "body": "Stripe vs PayPal, Is Stripe safe? and the top definition guides as short videos on the Stripe channel, each linking its page."}, {"title": "Structured data", "body": "dateModified, author and the real image on every guide, and TechArticle markup on the docs."}, {"title": "Sitemaps", "body": "Rebuild both sitemaps from the indexable set, so no redirects or noindex pages are listed."}]}
@@ -430,7 +430,7 @@ None of this needs a quarter-long roadmap. Each fix is a separate job with a cle
 
 The comparison pages need a person at Stripe to sign off every claim about a competitor. The redirects, canonicals and sitemaps need only a check that the right pages still return 200.
 
-Then I'd spend 30 days checking the results:
+Then check the results:
 
 <PlanSteps
   steps={[{"marker": "Day 0", "title": "Ask Google to recrawl", "body": "Submit the US guides, the redirected capital addresses and every new page to Index My Site, so Google sees the changes now."}, {"marker": "Day 3", "title": "Check the canonicals", "body": "In URL Inspection, check that the Google-selected canonical for the ACH, CVV and contact pages is the US address."}, {"marker": "Day 7", "title": "Crawl the copies", "body": "Crawl the 46 English addresses of five guides in list mode and confirm each canonical, and that the capitals redirect."}, {"marker": "Day 14", "title": "Wrong-country searches", "body": "Count US searches landing on non-US English copies again. The phone number searches should be the first to move."}, {"marker": "Day 30", "title": "AI answers", "body": "Ask the same ten questions again and count the answers that cite stripe.com, by engine."}]}

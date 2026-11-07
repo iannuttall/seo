@@ -456,15 +456,15 @@ Ahrefs estimates 12,521 visits a month to sign-in, referral, profile and app pag
 
 **The fix:** add `noindex` to every app and account page, serve a real robots.txt on app.devin.ai, and send the referral and login searches to the pricing page.
 
-## Ship it all today, then let it settle
+## The plan
 
-The listing wants someone who'd "use AI aggressively". Each of these is a separate job with a clear end, so coding agents can run them in parallel, with the team approving each one:
+Here's every change I'd make:
 
 <PlanSteps
   steps={[{"title": "URL map", "body": "Every old URL on docs.devin.ai, windsurf.com, docs.windsurf.com, codeium.com and learndevin.com, with one final devin.ai address, plus the product launch posts on cognition.com."}, {"title": "Two domains", "body": "Move the Windsurf hosts and docs onto devin.ai, switch on one-hop 301s per host, and file Change of Address in Search Console. cognition.com stays the company site."}, {"title": "Windsurf landing", "body": "Windsurf vs Cursor rewritten for Devin Desktop at devin.ai, with Windsurf in the title, and one line on devin.ai/desktop."}, {"title": "Migration pages", "body": "COBOL, .NET, mainframe, monolith and Angular pages, answer first, with customer numbers and a comparison table. Fix the Nubank 8x and 12x figures."}, {"title": "Category guide", "body": "\"AI coding agent\" on the homepage, and a guide at devin.ai/ai-coding-agent."}, {"title": "Comparison pages", "body": "Devin vs Cursor, Devin vs Claude Code, Codex vs Claude Code and a Cursor alternatives page, with real tasks run in each."}, {"title": "Leaderboard", "body": "FrontierCode retitled for best LLM for coding, with a dated top model."}, {"title": "Technical cleanup", "body": "Real 404s on windsurf.com, the localized docs moved, University lessons moved, noindex on app pages and a real robots.txt."}, {"title": "Structured data", "body": "Every profile in sameAs, and Devin Desktop named as the IDE formerly called Windsurf."}, {"title": "Three messages, five channels", "body": "A page, a video, a LinkedIn post, an X post and a docs page for each of the three sentences."}]}
 />
 
-Then 30 days of checks:
+Then check the results:
 
 <PlanSteps
   steps={[{"marker": "Day 0", "title": "Ask Google to recrawl", "body": "Submit every new and changed URL, and the old URLs that now redirect, to Index My Site."}, {"marker": "Day 3", "title": "Redirects", "body": "Crawl the URL map with seo crawl --mode list. Every old address should give one 301 to a 200 page."}, {"marker": "Day 7", "title": "Search Console", "body": "Check the Change of Address status and impressions for \"windsurf\", \"ai coding agent\" and \"devin vs cursor\"."}, {"marker": "Day 14", "title": "Indexing", "body": "Check the migration and comparison pages are indexed, and the old hosts are dropping out."}, {"marker": "Day 30", "title": "AI answers", "body": "Ask the same 16 questions for Devin and Cursor, and count the answers that name or cite Devin."}, {"marker": "Day 30", "title": "Pipeline", "body": "Compare demo requests and sign-ups from organic search with the month before, as the listing asks: pipeline, not traffic."}]}

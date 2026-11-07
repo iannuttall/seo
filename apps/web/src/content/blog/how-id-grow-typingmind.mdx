@@ -423,9 +423,9 @@ TypingMind runs on www, docs, custom (Teams), feedback (changelog) and typingmin
 
 The price pages are the move that matters. Under www they'd share the main site's links; on the Teams site they get a third as many.
 
-## Ship it all today, then let it settle
+## The plan
 
-None of this needs a four-week sprint. Each fix is a separate job, so coding agents can work on all of them at once:
+Here's every change I'd make:
 
 <PlanSteps
   steps={[{"title": "Price pages", "body": "Retitle the provider pages for \"Claude API pricing\" and the rest, put the table first, merge each model's provider pages into one with a row per provider, and move the tool to www.typingmind.com/pricing."}, {"title": "Subscription or API", "body": "A section on the Claude and OpenAI price pages, and a page for \"is chatgpt plus worth it\", built on the calculator."}, {"title": "API key guides", "body": "One guide per provider, titled \"How to get a <provider> API key\", opening with a one-sentence answer. 301 the old guide addresses, and link the docs pages to them."}, {"title": "Comparison pages", "body": "Claude vs ChatGPT, DeepSeek vs ChatGPT, Gemini vs ChatGPT, Grok vs ChatGPT, Claude vs Gemini and Opus vs Sonnet, each with the side-by-side answers and their cost."}, {"title": "Teams comparisons", "body": "TypingMind Teams vs ChatGPT Business and vs Claude Team, with the cost for 20 seats, and 301s from the old docs addresses."}, {"title": "Sitemap and homepage", "body": "A sitemap index on www, the menu and footer as plain links in the HTML, canonicals on the homepage and both pricing pages, and /home redirected."}, {"title": "Old docs redirects", "body": "Map the 342 old docs addresses to their new pages in Mintlify."}, {"title": "llms.txt and About", "body": "Links to the price pages, guides and comparisons in llms.txt, and an About page that opens with what TypingMind is and who it's for."}, {"title": "Integration listings", "body": "Request a listing on OpenRouter's Works with OpenRouter page, and draft a short note to each list in the links table and to the ChatGPT alternatives lists."}]}
@@ -433,7 +433,7 @@ None of this needs a four-week sprint. Each fix is a separate job, so coding age
 
 Someone at TypingMind still needs to check the comparison pages and approve each outreach email. The titles, redirects and sitemap need only a quick review.
 
-Then I'd spend 30 days checking the results:
+Then check the results:
 
 <PlanSteps
   steps={[{"marker": "Day 0", "title": "Ask Google to recrawl", "body": "Submit every new and changed URL to Index My Site, so Google recrawls them now instead of on its own schedule."}, {"marker": "Day 3", "title": "Check indexing", "body": "Confirm the merged price pages, the key guides and the comparison pages are indexed, and the old addresses redirect."}, {"marker": "Day 7", "title": "First impressions", "body": "Look for impressions on \"claude api pricing\", \"anthropic api key\" and \"claude vs chatgpt\" in Search Console."}, {"marker": "Day 14", "title": "One page per model", "body": "Check that a single Opus 5.5 address shows for \"claude opus pricing\", and that the redirected copies have dropped out."}, {"marker": "Day 30", "title": "Licences and trials", "body": "Compare licence sales and Teams trials that started from search with the month before."}, {"marker": "Day 30", "title": "AI answers", "body": "Ask the same ten questions with ai_answers, for TypingMind and LibreChat, and compare."}]}

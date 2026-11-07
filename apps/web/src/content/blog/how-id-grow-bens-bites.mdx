@@ -547,9 +547,9 @@ The crawl found 26 addresses on www.bensbites.com, linked from older issues, tha
 
 **The fix:** point each link to those 26 addresses at the original post, or remove it when the original has gone. It's a small job, and it stops readers who click through from an old issue hitting a 404.
 
-## Ship it all today, then let it settle
+## The plan
 
-None of this needs a sprint plan. Each fix is a separate job with a clear end, so coding agents can work on all of them at once:
+Here's every change I'd make:
 
 <PlanSteps
   steps={[{"title": "Catalog redirects", "body": "Export every catalog URL from Webflow or the Wayback Machine, on both catalog.bensbites.com and the old bensbites.com paths. Point the 95 articles at their newsletter copies, the name searches at the homepage, and return 410 for the rest. One Cloudflare bulk redirect list does it."}, {"title": "Restore the tutorials that ranked", "body": "Rebuild the 32 catalog pages that still had search traffic as posts on bensbites.com, and redirect each old address to its new one."}, {"title": "Old domains", "body": "Map bensbites.co and news.bensbites.com addresses to their exact new pages in one hop, and return 410 for the spam profiles."}, {"title": "Broken links in old issues", "body": "Find every link in the archive that points at a bensbites.com address that 404s, and point it at the original source."}, {"title": "Fold in the cookbook", "body": "Republish the cookbook guides and glossary pages as posts on bensbites.com, and redirect each cookbook page to its copy. Do the same for the sessions site."}, {"title": "Guides from X", "body": "Split Become Technical in 1 Day into one post per question, starting with what a terminal and Bash are, and keep the full guide as the hub that links to them."}, {"title": "List outreach", "body": "Draft a short, accurate pitch for each best AI newsletter list that ranks and leaves Ben's Bites out."}, {"title": "Comparison pages", "body": "Turn the Vibe Coding Deathmatch into the best vibe coding tools hub and the five pair pages, each from Ben's own test, with his Factory role stated at the top."}, {"title": "Search titles on the posts that have them", "body": "Retitle How I code with agents and What is vibe coding for the searches above, add a two-sentence answer at the top of each, and link every section to its own page."}, {"title": "Tool pages and free tools", "body": "Write one page per coding agent from the archive, starting with Codex, and one post per free tool on Ben's personal site, plus his AGENTS.md as a template."}]}
@@ -557,7 +557,7 @@ None of this needs a sprint plan. Each fix is a separate job with a clear end, s
 
 Someone at Ben's Bites still needs to pick which tutorials to restore and write the guides in Ben's voice, because that's the part readers subscribe for. The redirects and link fixes need only a quick check.
 
-Then I'd spend 30 days checking the results:
+Then check the results:
 
 <PlanSteps
   steps={[{"marker": "Day 0", "title": "Ask Google to recrawl", "body": "Submit every redirected, restored and new URL to Index My Site, so Google sees the changes now instead of on its own schedule."}, {"marker": "Day 3", "title": "Check the redirects", "body": "Crawl the old catalog, cookbook, bensbites.co and news.bensbites.com addresses again. Each should answer in one hop with a 301 to a real page, or a 410."}, {"marker": "Day 7", "title": "First impressions", "body": "Look for the restored guides in Search Console, and impressions on \"how to use claude cowork\" and \"claude code tutorial\"."}, {"marker": "Day 14", "title": "Sign-ups from search", "body": "Check Substack's subscriber sources for sign-ups from Google."}, {"marker": "Day 30", "title": "New readers", "body": "Compare free sign-ups from search with the month before. Those readers are what sponsors pay for."}, {"marker": "Day 30", "title": "Ask the AI questions again", "body": "Ask the same 10 questions for bensbites.com and therundown.ai with SEO Skill's AI answers research, and compare with today's 4 and 5 citations."}]}

@@ -1,0 +1,167 @@
+---
+import Breadcrumbs from '@/components/Breadcrumbs.astro'
+import CodeBlock from '@/components/CodeBlock.astro'
+import FaqAccordion from '@/components/FaqAccordion.astro'
+import PageHeader from '@/components/PageHeader.astro'
+import SetupCommands from '@/components/SetupCommands.astro'
+import AiHumanizer from '@/components/tools/AiHumanizer.astro'
+import BaseLayout from '@/layouts/BaseLayout.astro'
+import type { SchemaBreadcrumb } from '@/lib/schema'
+
+const breadcrumbs: SchemaBreadcrumb[] = [
+  { label: 'Home', href: '/' },
+  { label: 'Tools', href: '/tools' },
+  { label: 'AI humanizer' },
+]
+
+const faq = [
+  {
+    question: 'What does an AI humanizer do?',
+    answer:
+      'This one makes AI-assisted writing clear and direct for the person reading it. It finds the sentence patterns that get in the reader\'s way, such as padded lists of three, drama nobody needs and closing lines that repeat the point, and shows how to fix each one with the facts already in your text.',
+  },
+  {
+    question: 'Will this get my text past an AI detector?',
+    answer:
+      'That is not what it is for, and it makes no promise about detector scores. It is for the reader. Every fix makes a sentence plainer or shorter, so the point arrives sooner.',
+  },
+  {
+    question: 'Is my text sent anywhere?',
+    answer:
+      'No. The check runs in your browser with the same rules as seo lint. Nothing you paste leaves the tab, and there is no account or daily limit.',
+  },
+  {
+    question: 'Why does it not rewrite the text for me?',
+    answer:
+      'A rewrite that only asks for a human voice tends to invent one: an experience, a name, a reason or a number the draft never had. The tool lists each line and its fix instead. Copy the rewrite prompt to give the same list to ChatGPT, Claude or Gemini, asking for clearer, more direct sentences that keep to facts already in your text.',
+  },
+  {
+    question: 'What is the difference between a fix and your call?',
+    answer:
+      'A fix is a pattern that almost always reads as AI, such as "It isn\'t X, it\'s Y". Your call is a line a pattern can find but only a reader can judge, such as three short sentences in a row. Change it only when it fails the question beside it.',
+  },
+  {
+    question: 'Does it work on writing that is not from ChatGPT?',
+    answer:
+      'Yes. The rules look for sentence patterns, not one model\'s fingerprint, and Wikipedia\'s editors list the same patterns in their guide to signs of AI writing. Five texts written before ChatGPT came out got no AI pattern errors from these rules.',
+  },
+  {
+    question: 'Can I run the same checks on files in my project?',
+    answer:
+      'Yes. Install the CLI with npm i -g seo and run seo lint on any Markdown, MDX, HTML or Astro file. Your agent can run it too, and fix every line until the check comes back clean.',
+  },
+]
+---
+
+<BaseLayout
+  title="Free AI humanizer that keeps your facts"
+  description="Paste a draft to find the AI writing patterns that get in the reader's way, each marked in place with a clearer fix that uses only your facts. Free, no sign-up, runs in your browser."
+  canonicalPath="/tools/ai-humanizer"
+  {breadcrumbs}
+>
+  <main data-agent-content>
+    <Breadcrumbs {breadcrumbs} />
+    <PageHeader
+      title="AI humanizer"
+      description="Make AI-assisted writing clear and direct for your reader. Paste a draft to find the patterns that get in the way, each marked in your text with a fix that keeps to the facts you already wrote."
+    />
+
+    <AiHumanizer />
+
+    <div class="docs-prose mt-16">
+      <h2>8 sentence patterns give most AI drafts away</h2>
+      <p>
+        A blind judge read 24 drafts written by Claude and counted 212 AI
+        writing tells. 187 of them came from 8 patterns. Overused words such
+        as "delve" and "testament" made up only 4, so a word list on its own
+        misses most of what readers notice.
+      </p>
+      <table>
+        <thead>
+          <tr>
+            <th>Tell</th>
+            <th>An example from the drafts</th>
+            <th>Tells counted</th>
+          </tr>
+        </thead>
+        <tbody>
+          <!-- seo-lint-ignore -->
+          <tr><td>Forced triads</td><td>It is cheap, it is reversible, and it produces evidence rather than opinions.</td><td>63</td></tr>
+          <!-- seo-lint-ignore -->
+          <tr><td>Not X but Y</td><td>Four Days Is Not a Perk. It's a Strategy.</td><td>27</td></tr>
+          <!-- seo-lint-ignore -->
+          <tr><td>Bold labels on list items</td><td><strong>Better forecasts.</strong> We're investing in improved wave and tide modeling.</td><td>27</td></tr>
+          <!-- seo-lint-ignore -->
+          <tr><td>One-line closers and fragments</td><td>$299 per month. That's it.</td><td>26</td></tr>
+          <!-- seo-lint-ignore -->
+          <tr><td>Comment tails ending in -ing</td><td>Chair utilization improved dramatically, allowing the practice to serve 15% more patients without extending hours.</td><td>14</td></tr>
+          <!-- seo-lint-ignore -->
+          <tr><td>Inflated significance</td><td>I haven't experienced any hot spots or blisters across all those miles, a testament to the thoughtful design.</td><td>12</td></tr>
+          <!-- seo-lint-ignore -->
+          <tr><td>Sales words</td><td>Fiddle-leaf figs are stunning houseplants that require periodic repotting.</td><td>9</td></tr>
+          <!-- seo-lint-ignore -->
+          <tr><td>Arguing with no one</td><td>It isn't perfect. The tongue is slightly thin and can shift if you don't lace carefully.</td><td>9</td></tr>
+        </tbody>
+      </table>
+      <p>
+        The humanizer files each line it marks under one of these, and puts
+        the rest (dashes, emoji, stock openers, chatbot leftovers) under
+        other AI patterns. Counts are the mean of three judge runs, rounded.
+      </p>
+
+      <h2>Every fix keeps to the facts in your text</h2>
+      <p>
+        Ask a model to make a draft sound human and it adds what a human
+        would have written: a story, a customer name, a reason, a number.
+        In the same test, a plain "make it sound like a person wrote it"
+        prompt added 54 claims the drafts never made.
+      </p>
+      <p>
+        So the fixes here never ask you for something new. A sales word gets
+        a plainer swap or a cut. Inflated significance gets cut, or replaced
+        with a fact the text already states. When a fix needs a fact you do
+        not have, delete the phrase. The draft is usually better for it.
+      </p>
+
+      <h2>Rewrite the marked lines yourself or with your AI</h2>
+      <p>
+        Most drafts need a handful of edits, and doing them by hand takes a
+        few minutes. Start with the lines marked as a fix, then read each
+        line marked as your call and change it only if it fails the question.
+      </p>
+      <p>
+        To hand the job to a chat assistant, use <strong>Copy rewrite
+        prompt</strong>. It asks the model to make each marked line clearer
+        and more direct, to leave other lines alone, and to add no new
+        names, numbers, dates or quotes. Paste the result back here to check it again.
+      </p>
+
+      <h2>Run the same checks in your agent with seo lint</h2>
+      <p>
+        This page runs the AI pattern rules from <code>seo lint</code>, the
+        writing check in the SEO Skill CLI. Your agent can run it on a draft,
+        fix each finding and check again until nothing is left. Install the
+        CLI and run setup:
+      </p>
+      <CodeBlock value="npm i -g seo && seo start" wrap />
+      <p>Then ask your agent:</p>
+      <CodeBlock value="Check drafts/launch-post.md with seo lint and fix every error and warning. Use only facts already in the text. Run seo lint again until it reports 0 errors and 0 warnings." wrap />
+      <p>
+        The <a href="/docs/lint">seo lint docs</a> cover presets for blog
+        posts, landing pages and meta descriptions, and how to keep a flagged
+        line on purpose. <a href="/blog/ai-slop">What AI slop is and how to
+        remove it</a> explains the research behind the patterns. You can also
+        add the hosted MCP server to your agent and sign in with Google:
+      </p>
+    </div>
+
+    <SetupCommands id="ai-humanizer-setup" class="mt-6" />
+
+    <div class="docs-prose mt-16">
+      <h2>AI humanizer questions</h2>
+    </div>
+    <div class="mt-6">
+      <FaqAccordion id="ai-humanizer-faq" items={faq} />
+    </div>
+  </main>
+</BaseLayout>

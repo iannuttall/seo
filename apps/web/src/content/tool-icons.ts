@@ -1,4 +1,5 @@
 import {
+  AiMagicIcon,
   Analytics02Icon,
   Calendar03Icon,
   ChartLineData01Icon,
@@ -55,6 +56,7 @@ export const toolIcons = {
   'schema-markup-validator': CheckListIcon,
   'hreflang-generator': TranslateIcon,
   'title-and-meta-description-checker': Search01Icon,
+  'ai-humanizer': AiMagicIcon,
   'noindex-checker': ViewOffIcon,
   'seo-migration-checklist': Route01Icon,
   'canonical-checker': LinkSquare01Icon,

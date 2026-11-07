@@ -1,0 +1,297 @@
+---
+import Button from '@/components/Button.astro'
+import Card from '@/components/Card.astro'
+import FormTextarea from '@/components/FormTextarea.astro'
+import Badge from '@/components/ui/badge.astro'
+import { HUMANIZER_MAX_CHARS } from '@/lib/ai-humanizer'
+---
+
+<section data-ai-humanizer class="space-y-6">
+  <Card>
+    <form data-humanizer-form class="space-y-4 p-5 sm:p-6">
+      <div class="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+        <div class="space-y-1">
+          <h2 class="text-lg font-medium">Paste your draft</h2>
+          <p class="text-sm leading-6 text-foreground-muted">Plain text or Markdown. The check runs in your browser as you type.</p>
+        </div>
+        <div class="flex shrink-0 gap-2">
+          <Button data-use-example type="button" class="px-3 py-2 text-xs">Use an AI draft</Button>
+          <Button data-clear type="button" class="px-3 py-2 text-xs">Clear</Button>
+        </div>
+      </div>
+      <label class="block">
+        <span class="sr-only">Text to check</span>
+        <FormTextarea data-text class="min-h-56 font-sans sm:min-h-72" maxlength={HUMANIZER_MAX_CHARS} placeholder="Paste an AI draft, a blog post or an email here." spellcheck="false" />
+      </label>
+      <p data-limit class="text-xs leading-5 text-foreground-muted">Up to about 8,000 words. Your text stays in this browser tab.</p>
+    </form>
+  </Card>
+
+  <div data-results hidden class="space-y-6">
+    <div class="flex flex-col gap-3 sm:flex-row sm:items-baseline sm:justify-between">
+      <h2 data-summary class="text-lg font-medium" aria-live="polite"></h2>
+      <div class="flex flex-wrap gap-3 text-xs text-foreground">
+        <span class="inline-flex items-center gap-1.5"><span class="humanizer-key humanizer-error" aria-hidden="true"></span> Fix</span>
+        <span class="inline-flex items-center gap-1.5"><span class="humanizer-key humanizer-warning" aria-hidden="true"></span> Likely fix</span>
+        <span class="inline-flex items-center gap-1.5"><span class="humanizer-key humanizer-review" aria-hidden="true"></span> Your call</span>
+      </div>
+    </div>
+
+    <div class="grid gap-6 lg:grid-cols-[minmax(0,1fr)_minmax(0,1fr)] lg:items-start">
+      <Card inverted class="lg:sticky lg:top-6">
+        <div class="space-y-3 p-5 sm:p-6">
+          <h3 class="text-sm font-medium">Your text with each tell marked</h3>
+          <div data-marked class="humanizer-text lg:max-h-[70vh] lg:overflow-y-auto whitespace-pre-wrap break-words text-sm leading-7"></div>
+        </div>
+      </Card>
+
+      <div class="space-y-4">
+        <div data-groups class="space-y-4"></div>
+        <Card inverted>
+          <div class="space-y-3 p-5 sm:p-6">
+            <h3 class="text-sm font-medium">Make it clearer with your own AI</h3>
+            <p class="text-sm leading-6 text-foreground-muted">Copy a prompt that asks for clearer, more direct versions of the marked lines, using only facts already in your text. Paste it into ChatGPT, Claude or Gemini.</p>
+            <Button data-copy-prompt type="button" variant="default" class="px-4 py-2.5 text-xs">Copy rewrite prompt</Button>
+          </div>
+        </Card>
+      </div>
+    </div>
+  </div>
+
+  <template data-badge="error"><Badge variant="destructive" class="mt-0.5">Fix</Badge></template>
+  <template data-badge="warning"><Badge variant="warning" class="mt-0.5">Likely fix</Badge></template>
+  <template data-badge="review"><Badge variant="outline-info" class="mt-0.5">Your call</Badge></template>
+
+  <p data-clean hidden class="rounded-lg bg-muted p-5 text-sm leading-6" role="status"></p>
+</section>
+
+<style is:global>
+  .humanizer-key {
+    display: inline-block;
+    width: 0.75rem;
+    height: 0.75rem;
+    border-radius: 0.2rem;
+  }
+
+  .humanizer-text mark {
+    color: inherit;
+    border-radius: 0.2rem;
+    padding: 0.1em 0.15em;
+    box-decoration-break: clone;
+    -webkit-box-decoration-break: clone;
+    text-decoration-line: underline;
+    text-decoration-thickness: 2px;
+    text-underline-offset: 0.3em;
+    text-decoration-skip-ink: none;
+    cursor: pointer;
+  }
+
+  .humanizer-error,
+  .humanizer-text mark[data-level='error'] {
+    background: var(--destructive-soft);
+    text-decoration-color: color-mix(in oklch, var(--destructive) 70%, transparent);
+  }
+
+  .humanizer-warning,
+  .humanizer-text mark[data-level='warning'] {
+    background: var(--warning-soft);
+    text-decoration-color: color-mix(in oklch, var(--warning) 70%, transparent);
+  }
+
+  .humanizer-review,
+  .humanizer-text mark[data-level='review'] {
+    background: var(--info-soft);
+    text-decoration-color: color-mix(in oklch, var(--info) 60%, transparent);
+  }
+
+  .humanizer-error { box-shadow: inset 0 -2px 0 var(--destructive); }
+  .humanizer-warning { box-shadow: inset 0 -2px 0 var(--warning); }
+  .humanizer-review { box-shadow: inset 0 -2px 0 var(--info); }
+
+  .humanizer-text mark[data-active],
+  [data-ai-humanizer] [data-tell-item][data-active] {
+    outline: 2px solid var(--ring);
+    outline-offset: 1px;
+  }
+</style>
+
+<script>
+  import {
+    findTells,
+    HUMANIZER_MAX_CHARS,
+    rewritePrompt,
+    TELL_GROUPS,
+    type Tell,
+  } from '@/lib/ai-humanizer'
+
+  // A real draft from the 24-draft test: Claude Sonnet 5.5, asked for an
+  // opinion piece with three facts.
+  const example = `# Four Days Is Not a Perk. It's a Strategy.
+
+For decades, we've treated the five-day week as a law of nature. It isn't. It's a habit, inherited from factory floors and defended mostly by people who have never measured whether it works.
+
+Harbor Labs did measure. Over six months, the company ran a four-day week trial with 24 staff. At the end, output had risen 9%. Not held steady. Not "only dipped slightly." Risen.
+
+Skeptics will say 24 people is a small sample, and they're right. This is not a peer-reviewed study of the global economy. But a small trial is exactly what a sensible company should run before changing how it operates. It is cheap, it is reversible, and it produces evidence rather than opinions. The more interesting question is why anyone would be surprised by the result.
+
+Most of us know how a typical Wednesday goes. A meeting that could have been an email. A status update about a status update. An afternoon spent looking busy because leaving would look lazy. When you take away a fifth of the week, something has to give, and what gives is the waste. People decline pointless meetings. They protect their focus. They get on with the work because they have a reason to: Friday is theirs.
+
+That is the real lesson. The four-day week works not because people secretly have an extra day of productivity hidden in them, but because scarcity sharpens attention. Give someone less time and a clear goal, and they will often find a smarter route.
+
+There is a human argument too, and it shouldn't be dismissed as soft. Rested people make fewer mistakes, stay longer, and don't spend their evenings quietly updating their résumés. Retention is a cost. Burnout is a cost. A longer weekend is, among other things, a cheap way to reduce both.
+
+None of this means every business can copy Harbor Labs tomorrow. Hospitals, shops and support desks face real scheduling constraints. But "it's complicated" is a reason to design carefully, not a reason to refuse to look.
+
+If a company can do 9% more with a day less, the burden of proof has shifted. It's now the five-day week that needs to justify itself.`
+
+  const plural = (count: number, word: string) => `${count.toLocaleString('en-US')} ${word}${count === 1 ? '' : 's'}`
+
+  for (const root of document.querySelectorAll<HTMLElement>('[data-ai-humanizer]')) {
+    const form = root.querySelector<HTMLFormElement>('[data-humanizer-form]')
+    const field = root.querySelector<HTMLTextAreaElement>('[data-text]')
+    const limit = root.querySelector<HTMLElement>('[data-limit]')
+    const results = root.querySelector<HTMLElement>('[data-results]')
+    const summary = root.querySelector<HTMLElement>('[data-summary]')
+    const marked = root.querySelector<HTMLElement>('[data-marked]')
+    const groups = root.querySelector<HTMLElement>('[data-groups]')
+    const clean = root.querySelector<HTMLElement>('[data-clean]')
+    const copy = root.querySelector<HTMLButtonElement>('[data-copy-prompt]')
+    if (!form || !field || !limit || !results || !summary || !marked || !groups || !clean || !copy) continue
+    let tells: Tell[] = []
+    let timer = 0
+
+    const activate = (index: number, scroll: 'mark' | 'item') => {
+      for (const node of root.querySelectorAll('[data-active]')) node.removeAttribute('data-active')
+      const mark = marked.querySelector<HTMLElement>(`mark[data-tells~="${index}"]`)
+      const item = groups.querySelector<HTMLElement>(`[data-tell-item="${index}"]`)
+      mark?.setAttribute('data-active', '')
+      item?.setAttribute('data-active', '')
+      const target = scroll === 'mark' ? mark : item
+      target?.scrollIntoView({ behavior: matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth', block: 'nearest' })
+    }
+
+    // Split the text at every highlight edge, so overlapping tells each
+    // keep their own mark and a click finds every tell on those words.
+    const renderMarked = (text: string) => {
+      const edges = new Set([0, text.length])
+      for (const tell of tells) { edges.add(tell.start); edges.add(Math.min(tell.end, text.length)) }
+      const points = [...edges].sort((a, b) => a - b)
+      const fragment = document.createDocumentFragment()
+      const rank = { error: 0, warning: 1, review: 2 }
+      for (let i = 0; i < points.length - 1; i++) {
+        const from = points[i] as number
+        const to = points[i + 1] as number
+        const piece = text.slice(from, to)
+        const covering = tells.flatMap((tell, index) => (tell.start <= from && tell.end >= to ? [index] : []))
+        if (!covering.length) { fragment.append(piece); continue }
+        const mark = document.createElement('mark')
+        const level = covering.map((index) => (tells[index] as Tell).level).sort((a, b) => rank[a] - rank[b])[0] as Tell['level']
+        mark.dataset.level = level
+        mark.dataset.tells = covering.join(' ')
+        mark.title = covering.map((index) => TELL_GROUPS.find((group) => group.id === (tells[index] as Tell).group)?.name).join(', ')
+        mark.textContent = piece
+        fragment.append(mark)
+      }
+      marked.replaceChildren(fragment)
+    }
+
+    const renderGroups = () => {
+      groups.replaceChildren(...TELL_GROUPS.flatMap((group) => {
+        const items = tells.map((tell, index) => ({ tell, index })).filter(({ tell }) => tell.group === group.id)
+        if (!items.length) return []
+        const box = document.createElement('section')
+        box.className = 'space-y-3 rounded-lg bg-muted p-5 sm:p-6'
+        const head = document.createElement('div')
+        head.className = 'space-y-1'
+        const title = document.createElement('h3')
+        title.className = 'flex items-baseline justify-between gap-3 text-sm font-medium'
+        const name = document.createElement('span')
+        name.textContent = group.name
+        const count = document.createElement('span')
+        count.className = 'shrink-0 text-xs font-normal text-foreground-muted'
+        count.textContent = plural(items.length, 'line')
+        title.append(name, count)
+        const about = document.createElement('p')
+        about.className = 'text-xs leading-5 text-foreground-muted'
+        about.textContent = group.about
+        head.append(title, about)
+        const list = document.createElement('ul')
+        list.className = 'space-y-2'
+        for (const { tell, index } of items) {
+          const row = document.createElement('li')
+          const button = document.createElement('button')
+          button.type = 'button'
+          button.dataset.tellItem = String(index)
+          button.className = 'block w-full space-y-1.5 rounded-lg border border-transparent bg-card p-3 text-left text-sm leading-6 outline-none transition-colors hover:bg-secondary focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/20'
+          const top = document.createElement('span')
+          top.className = 'flex items-start gap-2'
+          const badge = root.querySelector<HTMLTemplateElement>(`template[data-badge="${tell.level}"]`)?.content.firstElementChild?.cloneNode(true) ?? document.createTextNode('')
+          const quote = document.createElement('span')
+          quote.className = 'min-w-0 break-words font-medium'
+          quote.textContent = `"${tell.excerpt}"`
+          top.append(badge, quote)
+          button.append(top)
+          if (tell.message) {
+            const why = document.createElement('span')
+            why.className = 'block text-foreground-muted'
+            why.textContent = tell.message
+            button.append(why)
+          }
+          const fix = document.createElement('span')
+          fix.className = 'block'
+          fix.textContent = tell.fix
+          button.append(fix)
+          button.addEventListener('click', () => activate(index, 'mark'))
+          row.append(button)
+          list.append(row)
+        }
+        box.append(head, list)
+        return [box]
+      }))
+    }
+
+    const run = () => {
+      const text = field.value
+      tells = text.trim() ? findTells(text).tells : []
+      const words = text.trim() ? text.trim().split(/\s+/u).length : 0
+      limit.textContent = text.length >= HUMANIZER_MAX_CHARS
+        ? 'That is the limit. Text past this point is not checked.'
+        : 'Up to about 8,000 words. Your text stays in this browser tab.'
+      if (!text.trim()) {
+        results.hidden = true
+        clean.hidden = true
+        return
+      }
+      const fixes = tells.filter((tell) => tell.level !== 'review').length
+      const calls = tells.length - fixes
+      if (!tells.length) {
+        results.hidden = true
+        clean.hidden = false
+        clean.textContent = `No AI writing tells found in ${plural(words, 'word')}. The check looks for sentence patterns, so read it once more for anything a reader would trip over.`
+        return
+      }
+      clean.hidden = true
+      results.hidden = false
+      summary.textContent = `${plural(fixes, 'tell')} to fix${calls ? ` and ${plural(calls, 'line')} to judge` : ''} in ${plural(words, 'word')}`
+      renderMarked(text)
+      renderGroups()
+    }
+
+    const schedule = () => { window.clearTimeout(timer); timer = window.setTimeout(run, 120) }
+    form.addEventListener('submit', (event) => event.preventDefault())
+    field.addEventListener('input', schedule)
+    marked.addEventListener('click', (event) => {
+      const mark = (event.target as HTMLElement).closest<HTMLElement>('mark[data-tells]')
+      const first = mark?.dataset.tells?.split(' ')[0]
+      if (first !== undefined) activate(Number(first), 'item')
+    })
+    root.querySelector('[data-use-example]')?.addEventListener('click', () => { field.value = example; run() })
+    root.querySelector('[data-clear]')?.addEventListener('click', () => { field.value = ''; run(); field.focus() })
+    copy.addEventListener('click', async () => {
+      await navigator.clipboard.writeText(rewritePrompt(field.value, tells))
+      copy.textContent = 'Copied'
+      window.setTimeout(() => { copy.textContent = 'Copy rewrite prompt' }, 1_500)
+    })
+    run()
+  }
+</script>

@@ -8,6 +8,7 @@ import Fix from './Fix.astro'
 import KeywordTable from './KeywordTable.astro'
 import PageGrid from './PageGrid.astro'
 import PlanSteps from './PlanSteps.astro'
+import RewriteExplorer from './RewriteExplorer.astro'
 import SearchResult from './SearchResult.astro'
 import SerpLadder from './SerpLadder.astro'
 import SlopDemo from './SlopDemo.astro'
@@ -29,6 +30,7 @@ export const blogMdxComponents = {
   KeywordTable,
   PageGrid,
   PlanSteps,
+  RewriteExplorer,
   SearchResult,
   SerpLadder,
   SlopDemo,

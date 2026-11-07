@@ -1,0 +1,292 @@
+---
+title: 'Humanizer skill: how to build your own'
+description: How to build your own humanizer skill. The AI writing tells to check for, a rewrite rule for each, and the rule that stops your agent inventing facts.
+heading: How to build your own humanizer skill
+lead: A humanizer skill makes your agent's writing clear and direct for the reader. It finds the sentence patterns that bury the point and rewrites them without inventing facts. These are the checks and rewrite rules to put in yours, with real lines from 24 Claude drafts and a template to copy.
+date: '2026-11-07'
+cover:
+  alt: "A Victorian testing laboratory where scientists weigh lime green printed pages on a brass balance and study them with magnifying glasses, beside six stacks of pages on a long bench."
+  title: left
+---
+
+I use a humanizer skill for one reason: to make the idea and the message in a piece as clear and direct as they can be for the person reading it. Getting past an AI detector was never the goal, and neither was sounding human.
+
+I still do the human part myself: the plan, the angle, the idea and the story behind a piece, and the taste to know when it's right. When an agent writes 10 times faster than I can, I see no reason to type the words by hand, any more than I'd hand-code software or design a UI by hand.
+
+The AI writing tells matter because they get in the way. A forced triad, a slogan fragment or a puffed-up claim makes the reader work harder to find the point.
+
+In 24 drafts written by Claude, a blind judge found 212 of these tells, about 24 per 1,000 words. 187 of the 212 (88%) came from just 8 sentence patterns.
+
+A humanizer skill is a file that teaches your agent to find those patterns and rewrite them. You can build one in an afternoon: a check for each tell, a rewrite rule for each check, and one rule about facts that matters more than all of them.
+
+Key findings:
+
+- Forced triads were the most common tell: 63 of 212 (30%), in all 24 drafts.
+- The famous AI words such as "delve" and "testament" were only 4 of 212 tells (2%). The tells in Claude's drafts are sentence shapes.
+- A plain "make it sound like a person wrote it" prompt cut the tells from 212 to 134 but added 54 claims the drafts never made, in 18 of 24 rewrites.
+- Rewriting with fix rules that forbid new facts cut the tells to 139 and added 5 flagged claims in 4 rewrites. A hand check found all 5 were rewordings or judge errors.
+- An AI detector scored 22 of 24 drafts as AI before the rewrite and 22 of 24 after it. That doesn't matter, because the goal is a clearer page for the reader.
+
+## 8 patterns made up 88% of the tells in 24 drafts
+
+The judge counted 21 patterns from Wikipedia's [Signs of AI writing](https://en.wikipedia.org/wiki/Wikipedia:Signs_of_AI_writing) guide, three times per draft. These 8 came up most.
+
+<CompareBars
+  caption="Forced triads were the most common tell by a distance. Tells a blind Claude Sonnet 5.5 judge counted in 24 Claude drafts (8,948 words), mean of three runs, November 2026. The note gives the number of drafts with at least one."
+  unit="tells"
+  rows={[
+    { label: 'Forced triads', value: 63, note: 'In 24 of 24 drafts' },
+    { label: 'Not X but Y', value: 27.3, note: 'In 13 of 24' },
+    { label: 'Bold labels on list items', value: 27, note: 'In 11 of 24' },
+    { label: 'One-line closers and fragments', value: 26.3, note: 'In 15 of 24' },
+    { label: 'Comment tails ending in -ing', value: 14.3, note: 'In 10 of 24' },
+    { label: 'Inflated significance', value: 11.7, note: 'In 9 of 24' },
+    { label: 'Sales words', value: 9, note: 'In 4 of 24' },
+    { label: 'Arguing with no one', value: 8.7, note: 'In 6 of 24' },
+  ]}
+/>
+
+The other 13 patterns added 24 tells between them. Overused AI words such as "delve", "pivotal" and "testament" came to 3.7, the same as "Let's dive in" run-ups. A humanizer built around a banned word list would have missed 98% of what the judge found.
+
+Each section below shows real lines from the drafts, why each one gets in the reader's way, and the check and rewrite rule to put in your skill. The "after" lines come from the same drafts, rewritten by Claude Code against those rules.
+
+## Forced triads: 63 of 212 tells, in all 24 drafts
+
+A forced triad is three items or three clauses where the meaning needs fewer. Models reach for three because it sounds complete, so the third item is often filler.
+
+| In the draft | After the rewrite |
+| --- | --- |
+| It is cheap, it is reversible, and it produces evidence rather than opinions. | It is cheap and reversible, and it produces evidence rather than opinions. |
+| Porto is compact, friendly, and deeply atmospheric. | Porto is compact and friendly. |
+
+**Check:** three parallel clauses in a row, three adjectives after "is", three items that open with the same word, or three abstract nouns.
+
+**Rewrite rule:** keep the items that carry a fact and cut the one that only adds rhythm. Leave plain lists alone. "Surfers, anglers and kayakers" is a list of real users, and people write lists of three all the time.
+
+The plain list rule is why this check flags far fewer triads than the judge counts. Of the 63 triads the judge found in the drafts, 53 were still there after the rewrite, because the check leaves plain lists alone on purpose.
+
+## Not X but Y: 27 tells in 13 drafts
+
+The pattern sets up a claim nobody made so the real one can knock it down: "It isn't X, it's Y", or a ", not X" tail for drama. One in a piece reads as emphasis. Models use it in every second paragraph.
+
+| In the draft | After the rewrite |
+| --- | --- |
+| Four Days Is Not a Perk. It's a Strategy. | The Four-Day Week Is a Strategy |
+| Every pixel should serve a person, not just a screen. | Every pixel should serve a person. |
+| This is one step, not the finish line. | (cut) |
+
+**Check:** "isn't X, it's Y" and "not just X, it's Y" across one or two sentences, and sentences that end on ", not X" or "rather than X".
+
+**Rewrite rule:** state the claim on its own. Keep the contrast only when a reader would really assume the opposite.
+
+## Bold labels on list items: 27 tells in 11 drafts
+
+A list where every item opens with a bolded phrase and a full stop or colon is the format of a chat answer. In a newsletter or announcement it reads like a slide.
+
+| In the draft | After the rewrite |
+| --- | --- |
+| **Better forecasts.** We're investing in improved wave and tide modeling. | We're investing in improved wave and tide modeling. |
+| **Craft with purpose.** Every pixel should serve a person. | Craft with purpose: Every pixel should serve a person. |
+
+**Check:** three or more list items in a row that open with a bold label, and bold used for emphasis more than about once per 100 words.
+
+**Rewrite rule:** drop the label when the sentence already says it. Keep bold for the one thing a skimming reader must not miss.
+
+## One-line closers and fragments: 26 tells in 15 drafts
+
+These are the short lines that end a paragraph or a post with a flourish: a slogan fragment, a sign-off or a sales question. They restate the point instead of adding to it.
+
+| In the draft | After the rewrite |
+| --- | --- |
+| Books closed within 48 hours of month end. Every month. No exceptions. | Books close within 48 hours of month end, every month. |
+| $299 per month. That's it. | Toothbook costs $299 per month. |
+| At the end, output had risen 9%. Not held steady. Not "only dipped slightly." Risen. | At the end, output had risen 9%, a clear gain. |
+| Ready to Simplify Your Practice Finances? | Start Your Free Trial |
+
+**Check:** verbless fragments of a few words, two or more short sentences in a row that start with "No", a heading or last line that asks "Ready to...?", and stock sign-offs such as "See you there.", "Here's to what's next." and "Let's build something extraordinary."
+
+**Rewrite rule:** fold the fact in the fragment into the sentence before it, or cut the line. A closing line has to add something the paragraph didn't say.
+
+## Comment tails ending in -ing: 14 tells in 10 drafts
+
+A comment tail is a clause such as ", allowing...", ", ensuring..." or ", highlighting..." added to the end of a fact. [Reinhart and colleagues](https://www.pnas.org/doi/10.1073/pnas.2422455122) found instruction-tuned models use these present participle clauses at 2 to 5 times the rate of human writers.
+
+| In the draft | After the rewrite |
+| --- | --- |
+| Chair utilization improved dramatically, allowing the practice to serve 15% more patients without extending hours. | Chair use improved dramatically. The practice now serves 15% more patients without extending hours. |
+| We're thrilled to announce that shared budgets are coming to Ledgerly on March 3, giving small teams a powerful new way to plan, track, and manage finances together. | Shared budgets come to Ledgerly on March 3. Small teams can plan, track, and manage finances together. |
+
+**Check:** a sentence that ends on a comma and a word ending in -ing that comments on the sentence before it.
+
+**Rewrite rule:** if the tail holds a fact, give it its own sentence with a subject. If it only says why the fact matters, cut it.
+
+## Inflated significance: 12 tells in 9 drafts
+
+Models tell the reader something matters instead of showing it: "a major milestone", "a testament to", "the implications are profound". The claim is bigger than anything in the draft supports.
+
+| In the draft | After the rewrite |
+| --- | --- |
+| I haven't experienced any hot spots or blisters across all those miles, a testament to the thoughtful design. | I haven't experienced any hot spots or blisters across all those miles, which says the design works. |
+| Overall, heat pumps represent mature, proven technology that delivers both comfort and efficiency for most homeowners. | Overall, heat pumps are mature, proven technology that delivers both comfort and efficiency for most homeowners. |
+
+**Check:** a list of puffery phrases ("plays a crucial role", "marks a pivotal moment", "a testament to", "serves as") plus a warning when two or more overused AI words share a paragraph.
+
+**Rewrite rule:** replace the claim with the fact that would prove it, if the text already has one. Otherwise cut it.
+
+## Sales words and arguing with no one: 18 tells in 9 drafts
+
+Sales words such as "stunning", "magical" and "nestled" made up 9 tells, almost all of them in the two travel posts. Arguing with no one made up 8.7: an answer to an objection nobody raised.
+
+| In the draft | After the rewrite |
+| --- | --- |
+| Fiddle-leaf figs are stunning houseplants that require periodic repotting. | Fiddle-leaf figs are popular houseplants that require periodic repotting. |
+| This isn't magic. It's what happens when companies recognize that exhausted employees aren't productive employees. | It's what happens when companies recognize that exhausted employees aren't productive employees. |
+| It isn't perfect. The tongue is slightly thin and can shift if you don't lace carefully. | A "Downsides" heading over the same points |
+
+**Check:** a word list for travel and product copy, and short denials such as "It isn't perfect.", "This isn't about..." and "None of this means...".
+
+**Rewrite rule:** cut the denial and start with the point. Swap a sales word for the detail that earned it: a price, a size, a date.
+
+## The fact rule: a plain prompt added 54 claims, fix rules added 5
+
+The rule that matters most in a humanizer skill is about facts. Ask an agent to make text sound human and it adds what a human would have: an experience, a name, a reason, a number.
+
+A plain prompt, "Rewrite the prose in draft.md so it sounds like a person wrote it", cut the tells from 212 to 134. It also added 54 claims the drafts never made, in 18 of the 24 rewrites. In one LinkedIn post it said "the people made it hard to leave", which the draft never said.
+
+The rewrite that followed fix rules cut the tells to 139 and the judge flagged 5 added claims in 4 rewrites. I read all 5. Two were judge errors, such as "four things" for a product whose four features the draft listed. The other three reworded the draft, such as "one flat fee covers everything" for "no surprise fees".
+
+Two things separate the two rewrites. The plain prompt asked for a voice, so the agent supplied one. The fix rules named each line to change, and the rules most likely to tempt an agent say where the words must come from. The fix for inflated significance reads: "Cut it, or name the concrete effect the text already states. Do not add a number that is not there."
+
+Put that rule in your skill once, then repeat it in each rule an agent is most tempted to fill in: closers, significance and sales words.
+
+## Write the skill as checks, rules and a loop
+
+A skill is a folder with a `SKILL.md` file that your agent loads when the task matches its description. In Claude Code it lives at `.claude/skills/humanizer/SKILL.md`. Here is a starting point built from the 8 tells above:
+
+```markdown
+---
+name: humanizer
+description: Rewrites prose so the idea and message are clear and direct, without adding facts. Use when asked to humanize, de-AI or edit a draft for tone.
+---
+
+# Humanizer
+
+Fix only the lines that match a check below. Leave every other line
+alone.
+
+## The fact rule
+
+Use only facts the text already gives. When a fix needs a fact the
+text does not have, cut the phrase instead. Never add a name, number,
+date, quote, experience or reason.
+
+## Checks and rewrite rules
+
+1. Forced triads: three parallel clauses, three adjectives after "is",
+   three items opening with the same word. Keep the items that carry a
+   fact. Plain lists of three are fine.
+2. Not X but Y: "isn't X, it's Y", a ", not X" tail. State the claim
+   alone.
+3. Bold labels: three or more list items opening with bold. Drop the
+   label when the sentence says it.
+4. Closers and fragments: verbless fragments, "No X. No Y." runs,
+   "Ready to...?" lines, stock sign-offs. Fold the fact into the
+   sentence before, or cut.
+5. Comment tails: ", allowing/ensuring/highlighting ..." after a fact.
+   Give a fact its own sentence; cut commentary.
+6. Inflated significance: "a testament to", "a pivotal moment",
+   "serves as". Replace with the fact that proves it, or cut.
+7. Sales words: stunning, magical, nestled, unforgettable. Swap for
+   the detail that earned the word.
+8. Arguing with no one: "It isn't perfect.", "This isn't about...".
+   Cut the denial and start with the point.
+
+## Loop
+
+After editing, check the whole text against the list again. Repeat
+until no line matches. Then reread every changed line against the
+original and undo any change that added a claim.
+```
+
+Some checks are patterns a script can find every time, such as bold labels, "No..." runs and comment tails. Others, such as forced triads and inflated significance, need judgement. An agent that only rereads its own work misses some of both, which is why the loop works best with a checker that gives the same answer every time.
+
+## Test your checks on human writing first
+
+A check that fires on good human writing teaches your agent to rewrite good sentences. Before you trust a rule, run it on text you know a person wrote, from before November 2022 when ChatGPT came out.
+
+I ran the checks behind this post on 5 texts written before ChatGPT: two Wikipedia articles from 2021, two Paul Graham essays and a 2000 post by Joel Spolsky, 1,871 words in all. They got 0 AI pattern errors and 1 warning, on Spolsky's "And here is the interesting observation".
+
+Any rule that flags your own old writing should become a question for the agent to judge, and never an error it must fix. That is also why the triad check above leaves plain lists alone.
+
+## seo lint runs these checks for your agent
+
+`seo lint` is a ready-made version of the checks in this post. It has 36 AI pattern rules, and every finding quotes the words, says why they stand out and gives a fix. The fixes for inflated significance, clichés and stock landing page lines tell the agent to use a fact the text already gives or cut the phrase.
+
+To find the tells in one draft for free, paste it into the [AI humanizer](/tools/ai-humanizer). It runs the same AI pattern rules in your browser, with no sign-up.
+
+The rewrites in this post came from Claude Code with Claude Sonnet 5.5, `seo` 0.17.1 and this prompt, one draft at a time:
+
+```text
+Check draft.md with seo lint and fix every error and warning. For each review item, change the line only when it fails the question. Run seo lint again until it reports 0 errors and 0 warnings. Edit the file in place.
+```
+
+On the 24 drafts, `seo lint` flagged 97 AI pattern lines, at least one in every draft. All 24 rewrites ended at 0 errors and 0 warnings, at about 15 seconds and $0.05 a draft. The judge counted fewer tells in 22 of the 24 rewrites, and 139 in all against 212 in the drafts.
+
+To use it as your humanizer, install the CLI. `seo start` installs the SEO Skill in your agents, and the skill already knows to run `seo lint` on a draft:
+
+```sh
+npm i -g seo
+seo start
+```
+
+`seo lint` runs offline with no account. Point it at a file, or see every AI rule with its fix:
+
+```sh
+seo lint drafts/launch-post.md
+seo lint rules --only ai
+```
+
+Or add the hosted MCP server and ask your agent to check a draft with `seo_lint`. It signs you in with Google the first time, because its other tools read Search Console. In Claude Code:
+
+```sh
+claude mcp add --transport http seoskill https://seoskill.dev/mcp
+```
+
+The [`seo lint` docs](/docs/lint) cover presets for landing pages and meta descriptions, and how to keep a flagged line on purpose. You can also copy rules from `seo lint rules` into your own skill and leave out the rest.
+
+## Do AI humanizers work? A detector flagged 22 of 24 rewrites, and that's fine
+
+If "work" means getting past an AI detector, the answer in this test was no for both rewrites.
+
+An open detector, [desklib/ai-text-detector-v1.01](https://huggingface.co/desklib/ai-text-detector-v1.01), scored 22 of the 24 drafts at 50% AI or higher. It scored 22 of the 24 rewrites made with `seo lint` the same way, and 20 of the 24 plain prompt rewrites. It scored all 5 human texts at 4% or lower.
+
+A [September 2026 test by aidetectors.io](https://www.aidetectors.io/blog/do-ai-humanizers-work) found the same with commercial detectors: GPTZero and Pangram scored every humanized text it tried as 100% AI.
+
+That result doesn't matter to me, because detection was never the goal. I don't hide that an agent wrote the words. I check that they say what I mean as clearly and directly as they can, and that is the job a humanizer skill does.
+
+Pick any draft below to read it next to both rewrites, with the tells marked.
+
+<RewriteExplorer
+  src="/blog/data/humanizer-skill-test.json"
+  caption="All 24 drafts from the November 2026 test, each next to its seo lint rewrite and its plain prompt rewrite, with each version's scores. The texts load from the test data file."
+/>
+
+## How I ran the test
+
+| Step | What I did |
+| --- | --- |
+| Drafts | Claude wrote 24 pieces of about 350 words on 6 November 2026, 12 with Claude Sonnet 4.5 and 12 with Claude Sonnet 5.5: a launch post, landing page, how-to guide, case study, LinkedIn post, travel post, review, explainer, opinion piece, newsletter item, funding announcement and company news post. Each prompt named four facts, such as a price or a date. |
+| Rewrites | Each draft was rewritten once in an empty folder by Claude Code with Claude Sonnet 5.5. One set used `seo` 0.17.1 from npm and the `seo lint` prompt above. The other used the plain prompt "Rewrite the prose in draft.md so it sounds like a person wrote it." |
+| Judge | Claude Sonnet 5.5 counted every instance of 21 patterns from Wikipedia's Signs of AI writing, three times per text, without knowing which version it was reading. Counts are the mean of the three runs. Added claims are the median, after dropping lines the judge itself called supported. |
+| Title Case | The judge also counted decorative headings, mostly Title Case. I left them out of every score because Title Case is a style choice, not an AI tell. With them, the drafts had 242 tells. |
+| Detector | desklib/ai-text-detector-v1.01, on the first 768 tokens of each text with the Markdown removed. |
+
+The judge and the drafts come from the same model family, so its counts are better for comparing versions than as absolute numbers. Each rewrite ran once, and a second run would give slightly different text.
+
+The [test data](/blog/data/humanizer-skill-test.json) has every prompt, draft, rewrite, judge run, `seo lint` finding and detector score, so you can check any number in this post.
+
+## Start with the three tells your drafts use most
+
+You don't need all 21 patterns on day one. Run 10 of your own AI drafts past the 8 checks above, count which tells come up most, and write rewrite rules for those first, each ending with the fact rule.
+
+[What AI slop is and how to remove it](/blog/ai-slop) covers the research behind these patterns and how to read a flagged line.

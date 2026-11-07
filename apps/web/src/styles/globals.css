@@ -426,6 +426,13 @@
     font-size: inherit;
   }
 
+  /* Markdown samples are prose, so long lines wrap instead of scrolling.
+     Copying still gives the original lines. */
+  .docs-prose pre:has(> code.language-markdown, > code.language-md) {
+    white-space: pre-wrap;
+    overflow-wrap: break-word;
+  }
+
   .docs-prose pre span {
     color: var(--foreground) !important;
   }

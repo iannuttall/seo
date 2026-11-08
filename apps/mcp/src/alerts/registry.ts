@@ -3,6 +3,7 @@ import {
   siteName,
   type UpdateImpact,
   type WeekData,
+  weekLabel,
   weekMarkdown,
   weekTitle,
 } from '@seo/core/commands'
@@ -181,7 +182,9 @@ const autopilot = (account: string) =>
 // weekly-summary: every audited site's last full week, Monday to Sunday,
 // sent on Monday morning (audit/week.ts). The same Markdown as seo report
 // with no site, then Monday's index roundup (pages that dropped out of or
-// got into Google's index since Sunday's), then how to automate it.
+// got into Google's index since Sunday's), then how to automate it. An
+// account's first one goes out once its first results are in, for the 7
+// days to then, with first set and no index roundup.
 export type WeeklySummary = WeekData & { index_changes?: IndexSiteChanges[] }
 
 const weeklySummary: AlertType<WeeklySummary> = {
@@ -205,10 +208,16 @@ const weeklySummary: AlertType<WeeklySummary> = {
           ...INDEX_NOTE,
         ].join('\n')
       : ''
-    const markdown = `${weekMarkdown(data)}${index}${data.sites.length ? autopilot(data.account) : ''}`
+    const first = data.first
+      ? '\n\nThis first report covers the 7 days to today, so you see your results straight away. From now on it comes every Monday morning, for the week before.'
+      : ''
+    const markdown = `${weekMarkdown(data)}${index}${first}${data.sites.length ? autopilot(data.account) : ''}`
     // The verdict line, for the inbox preview.
     const verdict = markdown.split('\n')[2] ?? ''
-    return { subject: weekTitle(data), preview: verdict, markdown }
+    const subject = data.first
+      ? `Your first SEO Skill report, ${weekLabel(data.start, data.end)}`
+      : weekTitle(data)
+    return { subject, preview: verdict, markdown }
   },
 }
 

@@ -1,7 +1,6 @@
 import {
   asImpactUpdate,
   impactReady,
-  previousWeek,
   rankingUpdates,
   type UpdateImpact,
   updateImpact,
@@ -221,7 +220,7 @@ export async function withWeekUpdates(
 ): Promise<WeekData> {
   const updates = await rankingUpdates().catch(() => 'unread')
   if (typeof updates === 'string') return data
-  const week = previousWeek(now)
+  const week = { start: data.start, end: data.end }
   const weekAgo = new Date(now - 7 * 86_400_000)
   const chosen = updates
     .map(asImpactUpdate)

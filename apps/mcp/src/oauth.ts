@@ -142,23 +142,24 @@ export async function authorize(request: Request, env: Env): Promise<Response> {
       400,
     )
   }
-  const fail = (error: string, description: string) => {
-    const url = new URL(redirectUri)
-    url.searchParams.set('error', error)
-    url.searchParams.set('error_description', description)
-    const state = params.get('state')
-    if (state) url.searchParams.set('state', state)
-    return Response.redirect(url.toString(), 302)
-  }
+  // Anyone can register a client with any redirect URI, so a bad request
+  // shows an error here instead of redirecting. A redirect would make
+  // seoskill.dev an open redirect that spam can link through.
+  const fail = (text: string) =>
+    view(
+      env,
+      { view: 'notice', notice: { title: 'Sign-in link not valid', text } },
+      400,
+    )
   if (params.get('response_type') !== 'code') {
-    return fail('unsupported_response_type', 'Use response_type=code.')
+    return fail('This sign-in link must use response_type=code.')
   }
   const challengeValue = params.get('code_challenge') ?? ''
   if (
     params.get('code_challenge_method') !== 'S256' ||
     !/^[A-Za-z0-9_-]{43}$/.test(challengeValue)
   ) {
-    return fail('invalid_request', 'PKCE with S256 is required.')
+    return fail('This sign-in link must use PKCE with S256.')
   }
   const flow = await seal(env.SEAL_KEY, {
     k: 'flow',

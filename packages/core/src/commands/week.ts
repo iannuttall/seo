@@ -104,6 +104,9 @@ export type WeekData = {
   // The account page, for adding sites.
   account: string
   sites: WeekSite[]
+  // An account's first summary, sent once its first results are in, for
+  // the 7 days to then. Its crawl findings read as open, not new.
+  first?: boolean
 }
 
 export const MAX_DROPPED_PAGES = 5
@@ -228,7 +231,12 @@ type Issue = {
 
 // What changed on one site that is worth a look, most urgent first. Only
 // facts: what to do about them is for the person or their agent.
-function issues(site: WeekSite, startMs: number, endMs: number): Issue[] {
+function issues(
+  site: WeekSite,
+  startMs: number,
+  endMs: number,
+  first = false,
+): Issue[] {
   const found: Issue[] = []
   if (site.index?.dropped) {
     found.push({
@@ -248,7 +256,10 @@ function issues(site: WeekSite, startMs: number, endMs: number): Issue[] {
     found.push({ rank: 2, heading: `clicks down ${percent(site)}%` })
   }
   if (crawled && crawl.new_issues > 0) {
-    found.push({ rank: 3, heading: plural(crawl.new_issues, 'new issue') })
+    found.push({
+      rank: 3,
+      heading: plural(crawl.new_issues, first ? 'open finding' : 'new issue'),
+    })
   }
   return found
 }
@@ -256,7 +267,12 @@ function issues(site: WeekSite, startMs: number, endMs: number): Issue[] {
 // One site's week as facts: Google's index, the weekly crawl and search
 // clicks, each said even when nothing changed, so a quiet week reads as
 // checked rather than missing.
-function siteLines(site: WeekSite, startMs: number, endMs: number): string[] {
+function siteLines(
+  site: WeekSite,
+  startMs: number,
+  endMs: number,
+  first = false,
+): string[] {
   const lines: string[] = []
   const index = site.index
   if (!index) {
@@ -287,7 +303,7 @@ function siteLines(site: WeekSite, startMs: number, endMs: number): string[] {
     const rule = crawl.top_rule ? AUDIT_RULES[crawl.top_rule] : undefined
     lines.push(
       crawl.new_issues
-        ? `Weekly crawl: ${plural(crawl.pages, 'page')}, ${plural(crawl.new_issues, 'new issue')}${rule ? `, most of them ${rule.charAt(0).toLowerCase()}${rule.slice(1)}` : ''}.`
+        ? `Weekly crawl: ${plural(crawl.pages, 'page')}, ${plural(crawl.new_issues, first ? 'open finding' : 'new issue')}${rule ? `, most of them ${rule.charAt(0).toLowerCase()}${rule.slice(1)}` : ''}.`
         : `Weekly crawl: ${plural(crawl.pages, 'page')}, no new issues.`,
     )
   } else if (site.added_at < startMs) {
@@ -440,7 +456,7 @@ export function weekMarkdown(data: WeekData): string {
     a.property.localeCompare(b.property)
   const rows = data.sites.map((site) => ({
     site,
-    found: issues(site, startMs, endMs),
+    found: issues(site, startMs, endMs, data.first),
     waiting: !site.crawl || !site.index,
   }))
   const attention = rows.filter((row) => row.found.length)
@@ -470,7 +486,7 @@ export function weekMarkdown(data: WeekData): string {
       '',
       `## ${siteName(site.property)}${found.length ? `: ${list(found.map((item) => item.heading))}` : ''}`,
       '',
-      ...siteLines(site, startMs, endMs).map((line) => `- ${line}`),
+      ...siteLines(site, startMs, endMs, data.first).map((line) => `- ${line}`),
       ...opportunityLines(site),
       ...measuredLines(site),
       ...updateLines(site),

@@ -8,7 +8,7 @@ import { sendDueAlerts } from './alerts/deliver.ts'
 import { sendGoogleUpdateAlerts } from './audit/google-updates.ts'
 import { sendIndexRoundups } from './audit/index-roundup.ts'
 import { startDue } from './audit/schedule.ts'
-import { sendWeeklySummaries } from './audit/week.ts'
+import { sendFirstSummaries, sendWeeklySummaries } from './audit/week.ts'
 import { betaFlags } from './beta.ts'
 import { stripeWebhook } from './billing.ts'
 import { cliWeek, credentials, finishLogin, logout, startLogin } from './cli.ts'
@@ -204,6 +204,7 @@ export default {
       ctx.waitUntil(startDue(env, controller.scheduledTime))
       ctx.waitUntil(sendDueAlerts(env, controller.scheduledTime))
       ctx.waitUntil(sendWeeklySummaries(env, controller.scheduledTime))
+      ctx.waitUntil(sendFirstSummaries(env, controller.scheduledTime))
       ctx.waitUntil(sendIndexRoundups(env, controller.scheduledTime))
       ctx.waitUntil(sendGoogleUpdateAlerts(env, controller.scheduledTime))
       return

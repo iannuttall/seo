@@ -232,6 +232,10 @@ that ran that week or whose result became ready in the last 7 days, each
 with `ready` and a `result` (`verdict`, `clicks`, `previous`, `days`) for
 up to 20 sites once final data covers it, else `null`. `index_changes` is Monday's daily roundup, the same
 list as `index-changes` `data.sites`, empty when nothing changed.
+An account's first `weekly-summary` does not wait for Monday: it goes out
+within the hour once a site's first crawl and competitor check are done
+(at most a day after the site was added), for the 7 days to then, with
+`first: true` and an empty `index_changes`. The Monday summaries start after it.
 
 `google-update` goes out within the hour of Google's
 [Search Status Dashboard](https://status.search.google.com/) posting that a
@@ -378,7 +382,8 @@ A small Cloudflare D1 database (`migrations/`) keeps only:
   Every alert email uses one plain layout (`src/alerts/email.ts`), HTML and
   text drawn from the same Markdown, with no tracking. The Monday weekly
   summary (`src/audit/week.ts`) records each account's week for 90 days
-  (`weekly_summaries`) so it is sent once.
+  (`weekly_summaries`) so it is sent once, and keeps a `first` row for the
+  account's first report.
 - for the Sites tab: after each run of a site's index checks, its object
   pushes counts to D1 (`audit_sites.monitor`): checks used today, pages
   known, covered, indexed and waiting, the newest and oldest check, and

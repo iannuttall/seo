@@ -1,5 +1,23 @@
 # Changelog
 
+## 0.17.3
+
+### Added
+
+- `seo research serp --provider <id>` reads live search results from an
+  installed provider package that supplies them, in the CLI and the local
+  MCP server. Rows match DataForSEO's, with the organic `position`,
+  `rank_absolute` and `type`, and the result shows the package's own
+  warnings, partial results and the cost it reports. A package reads up to
+  its own depth limit, and the result says when that is less than asked.
+  Build one from the
+  [provider template](https://github.com/iannuttall/seo-provider-template).
+
+### Changed
+
+- `ai_answers` stops with an error for any provider other than DataForSEO,
+  instead of only for Ahrefs.
+
 ## 0.17.2
 
 ### Added

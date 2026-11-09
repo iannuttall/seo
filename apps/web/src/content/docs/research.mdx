@@ -60,6 +60,18 @@ seo research ranked_keywords --provider ahrefs --target competitor.com --country
 
 Add `--provider` (or `provider` in the MCP tools) to choose one when you saved both keys. Asking for a provider you have no key for stops with how to add it.
 
+## Use another source for search results
+
+`serp` can also come from a provider package you installed, such as one built from the [provider template](https://github.com/iannuttall/seo-provider-template) for a search results API. Install and connect the package, then pass its name as the provider:
+
+```sh
+seo providers install <package-name>
+seo providers connect <provider-id>
+seo research serp --provider <provider-id> --keywords "seo audit"
+```
+
+The rows look the same as DataForSEO's, and the result shows the cost the package reports. Packages run in the CLI and the local MCP server (`seo mcp serve`), not on the hosted server, and they answer `serp` only.
+
 ## Find a link gap
 
 `link_gap` lists the sites that link to at least two of your competitors and not to you, with the highest authority first. These are the sites most likely to link to you too.

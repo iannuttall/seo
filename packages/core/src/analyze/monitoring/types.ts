@@ -4,6 +4,7 @@ import type {
   ContentExtractionDiagnostics,
   PageFetchDiagnostics,
 } from '../../types.js'
+import type { GooglebotCutEvidence } from '../crawler/html-size.js'
 
 export type CrawlPageSnapshot = {
   url: string
@@ -13,6 +14,8 @@ export type CrawlPageSnapshot = {
   responseHeaders?: Record<string, string>
   responseTimeMs?: number
   sizeBytes?: number
+  /** Set only when the HTML is over Googlebot's 2MB limit. */
+  googlebotCut?: GooglebotCutEvidence
   usedJs?: boolean
   fetchSource?: 'cache' | 'network' | 'rendered'
   cacheState?: 'hit' | 'miss' | 'bypass'

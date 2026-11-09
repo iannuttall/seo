@@ -51,3 +51,27 @@ export function isCdnUtilityUrl(value: string): boolean {
     return false
   }
 }
+
+function globMatch(pattern: string, value: string): boolean {
+  if (!pattern.includes('*')) return value.includes(pattern)
+  const parts = pattern.split('*')
+  let position = 0
+  for (const part of parts) {
+    if (!part) continue
+    const found = value.slice(position).indexOf(part)
+    if (found === -1) return false
+    position += found + part.length
+  }
+  return true
+}
+
+export function passesFilters(
+  url: string,
+  include: string[],
+  exclude: string[],
+): boolean {
+  return (
+    (!include.length || include.some((pattern) => globMatch(pattern, url))) &&
+    !exclude.some((pattern) => globMatch(pattern, url))
+  )
+}

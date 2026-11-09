@@ -3,6 +3,7 @@ import { test } from 'node:test'
 import { listRules } from '../../rules.js'
 import { auditCrawlPages, auditCrawlRequests } from './audit.js'
 import { crawlPage as page } from './audit.test-fixtures.js'
+import { googlebotCutEvidence } from './html-size.js'
 
 test('auditCrawlRequests preserves failures and redirect request identity', () => {
   const issues = auditCrawlRequests([
@@ -465,4 +466,23 @@ test('duplicate checks ignore pages that canonicalise to another page in the gro
     'https://example.com/z',
   ])
   assert.deepEqual(urlsFor('duplicate_content'), [])
+})
+
+test('large_html places the main content against the 2MB Googlebot cut', () => {
+  const html = `<html><head><style>${'a{}'.repeat(650_000)}</style></head><body><main><h1>Feature flags</h1><p>${'word '.repeat(10)}</p><svg>${'x'.repeat(200_000)}</svg><p>${'body '.repeat(30)}</p></main></body></html>`
+  const sizeBytes = Buffer.byteLength(html)
+  const cut = googlebotCutEvidence(html)
+  const mainAt = html.indexOf('<main>')
+  assert.equal(cut?.mainContentStartBytes, mainAt)
+  assert.equal(cut?.mainContentStart, 'near-limit')
+  assert.equal(cut?.bytesAfterLimit, sizeBytes - 2_097_152)
+  assert.equal(
+    (cut?.visibleWordsBeforeLimit ?? 0) + (cut?.visibleWordsAfterLimit ?? 0),
+    42,
+  )
+  const [issue] = auditCrawlPages([
+    page({ url: 'https://example.com/flags', sizeBytes, googlebotCut: cut }),
+  ]).filter((item) => item.ruleId === 'large_html')
+  assert.equal(issue?.severity, 'high')
+  assert.equal(issue?.evidence?.indexingRisk, 'main-content-past-limit')
 })

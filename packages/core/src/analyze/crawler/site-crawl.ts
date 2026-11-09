@@ -20,7 +20,7 @@ import {
 } from './crawl-url-queue.js'
 import { verifyExternalLinks } from './external-link-checks.js'
 import { resolveLinkCountAliases } from './link-graph.js'
-import { isCdnUtilityUrl } from './page-eligibility.js'
+import { isCdnUtilityUrl, passesFilters } from './page-eligibility.js'
 import type {
   CrawlConfigInput,
   CrawlReport,
@@ -48,7 +48,13 @@ import {
   type CrawlSiteDependencies,
   resolveCrawlSiteDependencies,
 } from './site-crawl-dependencies.js'
-import { sitemapHostIssues, sitemapSeeds } from './sitemap-discovery.js'
+import {
+  type SitemapSampleCaveat,
+  sitemapCrawlSample,
+  sitemapHostIssues,
+  sitemapReadLimit,
+  sitemapSeeds,
+} from './sitemap-discovery.js'
 
 type CrawlTask = CrawlUrlQueueItem & {
   promise: Promise<{
@@ -82,30 +88,6 @@ function isLikelyAsset(url: string): boolean {
   const path = new URL(url).pathname.toLowerCase()
   return /\.(avif|bmp|css|csv|dmg|eot|gif|gz|ico|jpeg|jpg|js|json|map|mov|mp3|mp4|ogg|otf|pdf|png|svg|tar|ttf|wav|webm|webp|woff|woff2|zip)$/.test(
     path,
-  )
-}
-
-function globMatch(pattern: string, value: string): boolean {
-  if (!pattern.includes('*')) return value.includes(pattern)
-  const parts = pattern.split('*')
-  let position = 0
-  for (const part of parts) {
-    if (!part) continue
-    const found = value.slice(position).indexOf(part)
-    if (found === -1) return false
-    position += found + part.length
-  }
-  return true
-}
-
-function passesFilters(
-  url: string,
-  include: string[],
-  exclude: string[],
-): boolean {
-  return (
-    (!include.length || include.some((pattern) => globMatch(pattern, url))) &&
-    !exclude.some((pattern) => globMatch(pattern, url))
   )
 }
 
@@ -179,6 +161,7 @@ export async function crawlSite(
     })
   }
   let sitemapDiscovery: CrawlSitemapDiscovery | undefined
+  let sitemapSample: SitemapSampleCaveat | undefined
   let externalLinkVerification:
     | CrawlReport['externalLinkVerification']
     | undefined
@@ -247,7 +230,7 @@ export async function crawlSite(
         : undefined
     cancelled = isCancelled()
 
-    const enqueue = (value: string, depth: number): void => {
+    const enqueue = (value: string, depth: number, rank?: number): void => {
       const normalized = normalizeUrl(value, config.url)
       if (!normalized) {
         recordSkip('invalid-url')
@@ -344,7 +327,7 @@ export async function crawlSite(
       }
       discovered.add(normalized)
       queuedUrls += 1
-      queue.push({ url: normalized, depth })
+      queue.push({ url: normalized, depth, rank })
       emitStatus('url_queued', { url: normalized, depth })
     }
 
@@ -367,15 +350,23 @@ export async function crawlSite(
       const sitemap = await sitemapSeeds({
         url: config.url,
         sitemapUrl: config.sitemapUrl,
-        maxPages: config.maxPages,
+        maxPages: sitemapReadLimit(config.maxPages),
         declaredSitemapUrls:
           aiSignals?.signals.robotsTxt?.sitemapUrls ?? healthSitemapUrls ?? [],
         warnings,
         fetchSitemapUrls: deps.fetchSitemapUrls,
       })
-      for (const url of sitemap.urls) {
-        enqueue(url, 0)
-      }
+      // Spread the checked sample across sections, not sitemap order.
+      const sample = sitemapCrawlSample(
+        sitemap.urls,
+        config.maxPages,
+        seedUrls,
+        (url) => normalizeUrl(url, config.url),
+      )
+      sitemapSample = sample.caveat
+      sample.urls.forEach((url, index) => {
+        enqueue(url, 0, index + 1)
+      })
       sitemapDiscovery = sitemap.discovery
     }
 
@@ -587,7 +578,9 @@ export async function crawlSite(
         })
         continue
       }
-      const page = result.page
+      // Extracted strings can be V8 slices that pin the whole HTML body. A
+      // copy keeps only the summary, so memory follows pages in flight.
+      const page = structuredClone(result.page)
       const rendering = page.fetchDiagnostics?.rendering
       if (rendering?.status === 'unavailable' && config.js === 'on') {
         // An explicit request for rendering must not quietly become raw HTML.
@@ -1013,6 +1006,7 @@ export async function crawlSite(
           config,
           sitemapDiscovery,
           input.maxPages === undefined,
+          sitemapSample,
         ),
         memoryPressureSkippedUrls,
         queryVariantSkippedUrls: queryVariantSkipped.size,

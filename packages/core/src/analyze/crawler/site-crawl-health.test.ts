@@ -193,3 +193,43 @@ test('health strategy backs off on 429 and names the sitemap page limit', async 
     /Checked only the first 3 sitemap URLs because the page limit is 3.*seo crawl https:\/\/example\.com\/ --health --max-pages 10000/,
   )
 })
+
+test('a capped sitemap crawl spreads its sample across sections', async () => {
+  const forum = Array.from(
+    { length: 20 },
+    (_, index) => `https://example.com/forum/topic-${index}`,
+  )
+  const urls = [
+    ...forum,
+    'https://example.com/docs/setup',
+    'https://example.com/docs/api/flags',
+    'https://example.com/blog/launch',
+  ]
+  const report = await crawlSite(
+    {
+      url: 'https://example.com/',
+      strategy: 'health',
+      sitemapUrl: 'https://example.com/sitemap.xml',
+      maxPages: 6,
+    },
+    {
+      // Like a real sitemap read, return URLs in sitemap order up to the limit.
+      fetchSitemapUrls: async (input) =>
+        completeSitemapResult(input.sitemapUrl, urls.slice(0, input.limit)),
+      fetchStatusPage: async (url) => statusResult(url),
+    },
+  )
+
+  assert.deepEqual(report.pages.map((page) => page.url).sort(), [
+    'https://example.com/blog/launch',
+    'https://example.com/docs/api/flags',
+    'https://example.com/docs/setup',
+    'https://example.com/forum/topic-0',
+    'https://example.com/forum/topic-1',
+    'https://example.com/forum/topic-10',
+  ])
+  assert.match(
+    report.caveats.join('\n'),
+    /Checked a sample of 6 of the 23 sitemap URLs read.*each of 3 sections/,
+  )
+})

@@ -1,5 +1,43 @@
 # Changelog
 
+## 0.17.2
+
+### Added
+
+- `seo research index_check --target <url>` checks whether Google returns a
+  page. It runs a `site:` search and exact-phrase searches from the page on
+  desktop and mobile through DataForSEO, spots when Google falls back to
+  unrelated results, and answers indexed, not found or unknown with the
+  searches as evidence.
+- `seo research serp --device mobile` reads mobile results (DataForSEO).
+- `serp` lists the sites an AI Overview cites, in the notes and as
+  `aiOverviews` in the JSON.
+
+### Changed
+
+- `serp` and `ranked_keywords` rows have `position` as the organic
+  position, with DataForSEO's `rank_absolute` and the result `type` beside
+  it. `rank_absolute` counts AI Overviews, People Also Ask and other blocks,
+  so a third organic link could read as position 7. When an AI Overview
+  takes the first slot, organic results no longer seem to start at 2.
+- DataForSEO searches that fail on Google's side (40101, 50000) are retried
+  up to three times before the keyword is listed as failed.
+- A crawl capped by `--max-pages` now samples sitemap URLs from every
+  section in turn, shortest paths first, instead of the first URLs in
+  sitemap order. The caveat says how the sample was chosen.
+- `large_html` says where the main content starts against Googlebot's
+  2 MB cut, how many bytes and visible words sit past it, and is high when
+  the content is past or near the cut. Pages over the crawler's own 5 MB
+  read limit get a partial `large_html` finding instead of a connection
+  error.
+
+### Fixed
+
+- Crawls no longer run out of memory on sites with large pages. Each kept
+  page summary held on to the whole HTML body, so memory grew by about
+  2.6 MB a page; a 600-page posthog.com crawl stopped at 200 pages and now
+  finishes.
+
 ## 0.17.1
 
 ### Added

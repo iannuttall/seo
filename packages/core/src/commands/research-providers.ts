@@ -1,5 +1,6 @@
 import { readJson } from '../http/read-json.js'
 import { ahrefs } from './research-ahrefs.js'
+import { type AiOverview, dataForSeoSerp } from './research-serp.js'
 import { CommandError } from './types.js'
 
 // Keyword, competitor and backlink data from the person's own DataForSEO,
@@ -7,6 +8,8 @@ import { CommandError } from './types.js'
 // headers in the hosted MCP, from the local secret store in the CLI) and are
 // used for this one call only. Each function returns plain rows with the provider's own metric
 // names, so numbers from different providers are never mixed.
+
+export type { AiOverview } from './research-serp.js'
 
 export type ResearchProvider = 'dataforseo' | 'ahrefs'
 export type ResearchAction =
@@ -21,6 +24,12 @@ export type ResearchAction =
   | 'pages_by_backlinks'
   | 'keyword_ideas'
   | 'serp_overlap'
+  | 'index_check'
+
+// The device a live SERP is read as. Google shows desktop and mobile
+// different results, so a SERP check names the one it read.
+export const RESEARCH_DEVICES = ['desktop', 'mobile'] as const
+export type ResearchDevice = (typeof RESEARCH_DEVICES)[number]
 
 // What a target covers: the whole site with its subdomains, every URL under
 // a path (a subfolder such as example.com/blog/), or one page.
@@ -38,6 +47,8 @@ export type ResearchInput = {
   depth?: number
   // serp: leave out DataForSEO's paid domain_rank lookup.
   noRank?: boolean
+  // serp from DataForSEO: desktop (default) or mobile.
+  device?: ResearchDevice
   // link_gap only: the sites to compare the target with.
   competitors?: string[]
   country: string
@@ -182,6 +193,9 @@ export type ResearchRows = {
   // serp_overlap: the top results read, and how many had a page and a site
   // to compare.
   compared?: { results: number; withPage: number; withSite: number }
+  // serp from DataForSEO: each keyword whose page showed an AI Overview,
+  // with the pages it cites.
+  aiOverviews?: AiOverview[]
 }
 
 // A provider's monthly organic traffic estimate for the whole target, in
@@ -318,17 +332,45 @@ export async function dataForSeoList(
   return task.result ?? []
 }
 
-// One DataForSEO task: its first result and what it cost, in USD.
-export async function dataForSeoTask(
-  [login, password]: string[],
-  path: string,
-  task: Record<string, unknown>,
-): Promise<{
+type TaskDone = {
   cost: number
   result: Record<string, unknown> | null
   partial: boolean
   noResults?: boolean
-}> {
+}
+
+// One DataForSEO task: its first result and what it cost, in USD. A task
+// Google's side failed to read (40101) is tried up to SE_TRIES times; the
+// cost of every try goes with the answer or the error.
+export async function dataForSeoTask(
+  keys: string[],
+  path: string,
+  task: Record<string, unknown>,
+): Promise<TaskDone> {
+  let spent = 0
+  for (let attempt = 1; ; attempt += 1) {
+    try {
+      const done = await dataForSeoTaskOnce(keys, path, task)
+      return { ...done, cost: done.cost + spent }
+    } catch (error) {
+      const failed = error as { cost?: number; status?: number }
+      spent += failed.cost ?? 0
+      if (!SE_ERRORS.has(failed.status ?? 0) || attempt >= SE_TRIES) {
+        throw Object.assign(error as Error, {
+          cost: spent,
+          ...(attempt > 1 ? { tries: attempt } : {}),
+        })
+      }
+      await wait(SE_RETRY_MS[attempt - 1] ?? 3_000)
+    }
+  }
+}
+
+async function dataForSeoTaskOnce(
+  [login, password]: string[],
+  path: string,
+  task: Record<string, unknown>,
+): Promise<TaskDone> {
   const response = await call(
     'dataforseo',
     new Request(`https://api.dataforseo.com/${path}`, {
@@ -369,7 +411,7 @@ export async function dataForSeoTask(
         'PROVIDER_ERROR',
         `dataforseo: ${result?.status_message ?? 'no task result'}`,
       ),
-      { cost: result?.cost ?? 0 },
+      { cost: result?.cost ?? 0, status: result?.status_code ?? 0 },
     )
   }
   return {
@@ -381,6 +423,14 @@ export async function dataForSeoTask(
 
 const NO_RESULTS = 40102
 const PARTIAL = 40106
+// "Internal SE Server Error": Google's page could not be read this time.
+// It is not charged and usually works on the next try. 50000 is
+// DataForSEO's own internal error.
+const SE_ERRORS = new Set([40101, 50000])
+// Tries for a task that failed with SE_ERRORS, and the wait before each
+// retry. Bounded, so a search that keeps failing is reported as missed.
+const SE_TRIES = 3
+const SE_RETRY_MS = [1_000, 3_000]
 
 // One DataForSEO task in the queue: what task_post or task_get said about it.
 export type DataForSeoQueued = {
@@ -465,6 +515,7 @@ async function dataForSeo(
     noData: withoutData(input, rows, spent.missed, 700),
     ...(spent.available !== undefined ? { available: spent.available } : {}),
     ...(spent.siteTotal ? { siteTotal: spent.siteTotal } : {}),
+    ...(spent.aiOverviews ? { aiOverviews: spent.aiOverviews } : {}),
     ...(spent.rankFailed ? { rankFailed: true } : {}),
   }
 }
@@ -509,6 +560,7 @@ type Spent = {
   siteTotal?: SiteTotal
   // serp: the domain_rank call failed.
   rankFailed?: boolean
+  aiOverviews?: AiOverview[]
 }
 
 async function dataForSeoRows(
@@ -643,7 +695,11 @@ async function dataForSeoRows(
     return items.map((item) =>
       pick(item, {
         keyword: 'keyword_data.keyword',
-        position: 'ranked_serp_element.serp_item.rank_absolute',
+        // Organic links only; rank_absolute also counts AI Overviews, People
+        // Also Ask, videos and other blocks above the link.
+        position: 'ranked_serp_element.serp_item.rank_group',
+        rank_absolute: 'ranked_serp_element.serp_item.rank_absolute',
+        type: 'ranked_serp_element.serp_item.type',
         url: 'ranked_serp_element.serp_item.url',
         search_volume: 'keyword_data.keyword_info.search_volume',
         etv: 'ranked_serp_element.serp_item.etv',
@@ -660,35 +716,17 @@ async function dataForSeoRows(
       async (keyword) => {
         const items = await post(
           'v3/serp/google/organic/live/advanced',
-          { keyword, depth: serpDepth(input) },
+          {
+            keyword,
+            depth: serpDepth(input),
+            device: input.device ?? 'desktop',
+          },
           2,
         )
-        return items
-          .filter((item) => item.type === 'organic')
-          .map((item) => {
-            const row: Row = pick(item, {
-              position: 'rank_absolute',
-              url: 'url',
-              domain: 'domain',
-              title: 'title',
-            })
-            // DataForSEO leaves most of Google's goto redirects unresolved,
-            // and they resolve only in a browser. The page is then unknown,
-            // but Google's breadcrumb still shows the site and the start of
-            // the path.
-            if (
-              /^https?:\/\/(www\.)?google\.[a-z.]+\/goto\b/.test(
-                String(row.url),
-              )
-            ) {
-              const crumb = String(item.breadcrumb ?? '')
-              const site = /^https?:\/\/([^/\s›]+)/.exec(crumb)
-              row.url = null
-              row.domain = site?.[1] ?? null
-              row.url_hint = site ? crumb.replace(/^https?:\/\//, '') : null
-            }
-            return { keyword, ...row }
-          })
+        const { rows, overview } = dataForSeoSerp(keyword, items)
+        if (overview)
+          spent.aiOverviews = [...(spent.aiOverviews ?? []), overview]
+        return rows
       },
     )
     return input.noRank ? rows : withDomainRank(keys, rows, spent)
@@ -875,7 +913,9 @@ async function serpOverlap(
       // The first ten organic results; rank_absolute also counts ads and
       // other features, so it is not used to cut.
       const rows = serps.rows
-        .filter((row) => row.keyword === keyword)
+        .filter(
+          (row) => row.keyword === keyword && row.type !== 'featured_snippet',
+        )
         .slice(0, OVERLAP_DEPTH)
       const pages = new Set(
         rows

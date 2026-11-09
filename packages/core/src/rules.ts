@@ -549,16 +549,23 @@ const RULE_DEFINITIONS = [
     category: 'performance',
     defaultSeverity: 'low',
     whyItMatters:
-      'Large HTML takes longer to download and parse before the browser can even start the rest of the page.',
+      'Googlebot reads only the first 2MB of uncompressed HTML for Google Search and indexes the page as if the file ended there. When the h1 or main element, or most of the visible text, sits past that cut, Google may index the page without its main content. Large HTML is also slow to download and parse.',
     howToFix:
-      'Trim duplicated markup, remove heavy inline data, split non-critical content, and move large scripts or styles out of the HTML response.',
+      'Move the main content earlier and trim what comes before it: large inline CSS, inline SVG, JSON data and duplicated markup. Load non-critical styles and scripts as separate files.',
     impactIfIgnored:
-      'Pages can feel slow on mobile connections and crawlers spend more time processing each URL.',
+      'Content past the 2MB cut is not indexed, and every page of the template carries the same weight on slow connections.',
     howToVerify:
-      'Re-run the crawl and confirm sizeBytes is below the large HTML threshold for normal pages.',
+      'Re-run the crawl and confirm sizeBytes is under 2,097,152, or that mainContentStartBytes is well before it and few visible words sit after it. The word split is a heuristic from the raw HTML.',
     agentHints: {
-      evidenceFields: ['page.sizeBytes', 'issue.evidence.thresholdBytes'],
-      suggestedCommands: ['seo crawl <url> --json'],
+      evidenceFields: [
+        'page.sizeBytes',
+        'issue.evidence.thresholdBytes',
+        'issue.evidence.mainContentStartBytes',
+        'issue.evidence.bytesAfterLimit',
+        'issue.evidence.visibleWordsAfterLimit',
+        'issue.evidence.indexingRisk',
+      ],
+      suggestedCommands: ['seo crawl <url> --mode page --json'],
     },
   },
   {

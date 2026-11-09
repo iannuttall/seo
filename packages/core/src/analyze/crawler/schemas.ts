@@ -220,6 +220,22 @@ export const crawlPageSnapshotSchema = z.object({
   responseHeaders: z.record(z.string(), z.string()).optional(),
   responseTimeMs: z.number().optional(),
   sizeBytes: z.number().int().optional(),
+  googlebotCut: z
+    .object({
+      limitBytes: z.number().int().positive(),
+      bytesAfterLimit: z.number().int().nonnegative(),
+      mainContentStartBytes: z.number().int().nonnegative().optional(),
+      mainContentMarker: z.enum(['h1', 'main']).optional(),
+      mainContentStart: z.enum([
+        'before-limit',
+        'near-limit',
+        'after-limit',
+        'not-found',
+      ]),
+      visibleWordsBeforeLimit: z.number().int().nonnegative(),
+      visibleWordsAfterLimit: z.number().int().nonnegative(),
+    })
+    .optional(),
   usedJs: z.boolean().optional(),
   fetchSource: z.enum(['cache', 'network', 'rendered']).optional(),
   cacheState: z.enum(['hit', 'miss', 'bypass']).optional(),

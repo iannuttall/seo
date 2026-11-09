@@ -76,16 +76,20 @@
   "browser": { "binding": "BROWSER" },
   // No Workers Logs: the server keeps no logs of requests or user data.
   "observability": { "enabled": false },
-  // Mondays 08:00 UTC: the week's sign-up and failure counts to Telegram.
-  // Hourly at :17: start the weekly audits that are due, and retry alerts.
+  // Mondays 08:00 UTC: the week's sign-up, failure and cost reports to
+  // Telegram. Hourly at :17: start the weekly audits that are due, retry
+  // alerts, and check the DataForSEO balance and Cloudflare cost estimate.
   "triggers": { "crons": ["0 8 * * 1", "17 * * * *"] }
   // Secrets: GOOGLE_CLIENT_ID, GOOGLE_CLIENT_SECRET, SEAL_KEY, AHREFS_DR_KEY,
   // BING_CLIENT_ID, BING_CLIENT_SECRET, and optionally TELEGRAM_BOT_TOKEN and
-  // TELEGRAM_CHAT_ID for the weekly sign-up and failure counts, and
+  // TELEGRAM_CHAT_ID for the weekly sign-up, failure and cost reports and
+  // the cost alerts, and optionally CLOUDFLARE_ANALYTICS_TOKEN (Account
+  // Analytics: Read) for the cost report's Cloudflare estimate, and
   // optionally POSTSHIBA_API_KEY for alert email and ALERT_REPLY_TO for its
   // Reply-To address, and optionally STRIPE_SECRET_KEY and
   // STRIPE_WEBHOOK_SECRET for the paid weekly audit, and optionally
   // DATAFORSEO_LOGIN, DATAFORSEO_PASSWORD and TYPESAFE_API_KEY for its
-  // competitor check on SEO Skill's own accounts. TYPESAFE_API_KEY also
+  // competitor check on SEO Skill's own accounts. The DataForSEO keys also
+  // give the cost report its balance and spend. TYPESAFE_API_KEY also
   // judges links for the internal linking tool page.
 }

@@ -12,6 +12,7 @@ import { sendFirstSummaries, sendWeeklySummaries } from './audit/week.ts'
 import { betaFlags } from './beta.ts'
 import { stripeWebhook } from './billing.ts'
 import { cliWeek, credentials, finishLogin, logout, startLogin } from './cli.ts'
+import { checkCosts, sendCostReport } from './cost-report.ts'
 import { failureReport } from './failure-report.ts'
 import { directory } from './google.ts'
 import { serveMcp, serverCard } from './mcp.ts'
@@ -197,8 +198,8 @@ export default {
     })
     return api ? withCors(response) : response
   },
-  // The weekly sign-up and failure counts for Ian's Telegram
-  // (wrangler.jsonc triggers).
+  // The weekly sign-up, failure and cost reports for Ian's Telegram, and
+  // the hourly jobs (wrangler.jsonc triggers).
   async scheduled(controller, env, ctx) {
     if (controller.cron === '17 * * * *') {
       ctx.waitUntil(startDue(env, controller.scheduledTime))
@@ -207,10 +208,12 @@ export default {
       ctx.waitUntil(sendFirstSummaries(env, controller.scheduledTime))
       ctx.waitUntil(sendIndexRoundups(env, controller.scheduledTime))
       ctx.waitUntil(sendGoogleUpdateAlerts(env, controller.scheduledTime))
+      ctx.waitUntil(checkCosts(env, controller.scheduledTime))
       return
     }
     const now = new Date(controller.scheduledTime)
     ctx.waitUntil(sendSignupReport(env, now))
     ctx.waitUntil(sendTelegram(env, () => failureReport(env.TELEMETRY_DB, now)))
+    ctx.waitUntil(sendCostReport(env, now))
   },
 } satisfies ExportedHandler<Env>

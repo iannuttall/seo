@@ -7,9 +7,13 @@ AHREFS_DR_KEY=
 # Bing Webmaster OAuth client, from Bing Webmaster Tools Settings > API access.
 BING_CLIENT_ID=
 BING_CLIENT_SECRET=
-# Optional. Telegram bot and chat for the weekly sign-up count (cron).
+# Optional. Telegram bot and chat for the weekly sign-up, failure and cost
+# reports and the cost alerts (cron).
 TELEGRAM_BOT_TOKEN=
 TELEGRAM_CHAT_ID=
+# Optional. Cloudflare API token with Account Analytics: Read, for the
+# account's cost estimate in the cost report.
+CLOUDFLARE_ANALYTICS_TOKEN=
 # Optional. PostShiba API key for alert email; without it email is skipped.
 POSTSHIBA_API_KEY=
 # Optional. Reply-To address for alert email.

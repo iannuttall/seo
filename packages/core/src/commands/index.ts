@@ -30,6 +30,7 @@ export * from './research.js'
 export type { ResearchStore } from './research-cache.js'
 export {
   dataForSeoLanguage,
+  dataForSeoList,
   dataForSeoMarket,
   dataForSeoTask,
 } from './research-providers.js'

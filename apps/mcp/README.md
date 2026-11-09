@@ -424,7 +424,13 @@ than three sign-ups counted as Other (`apps/web/worker/discovery.ts`). The same 
 anonymous usage events (the `seo-telemetry` D1, SELECT only) and sends the
 week's failed runs as totals by version, split into expected states, network
 or provider trouble and errors, plus the week's installs and first audits
-and day 7 retention by install week (`src/failure-report.ts`). **Delete everything** on the account page
+and day 7 retention by install week (`src/failure-report.ts`). It also
+sends a cost report: SEO Skill's DataForSEO balance and spend, the week's
+metered use as totals, the paid weekly audit's accounts and sites, and the
+Cloudflare account's month-to-date cost estimate when
+`CLOUDFLARE_ANALYTICS_TOKEN` is set. An hourly check sends an alert when
+the DataForSEO balance is under $100 or the Cloudflare estimate is over $25,
+at most once a day each (`src/cost-report.ts`). **Delete everything** on the account page
 removes every row for you and revokes the Google sign-ins, so your agents
 ask you to sign in again. You can also remove access in your
 [Google account](https://myaccount.google.com/connections).

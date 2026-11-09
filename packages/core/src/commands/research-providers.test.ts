@@ -1,5 +1,6 @@
 import assert from 'node:assert/strict'
-import { test } from 'node:test'
+import { mock, test } from 'node:test'
+import { runIndexCheck } from './index-check.js'
 import { runResearch } from './research.js'
 import { research } from './research-providers.js'
 
@@ -32,6 +33,7 @@ test('serp asks again after an empty results page and names keywords still empty
                     items: [
                       {
                         type: 'organic',
+                        rank_group: 1,
                         rank_absolute: 1,
                         url: 'https://example.com/links',
                         domain: 'example.com',
@@ -60,6 +62,122 @@ test('serp asks again after an empty results page and names keywords still empty
   assert.deepEqual(out.noData, ['empty search'])
   // Four SERP tasks and the one domain_rank call.
   assert.equal(out.costUsd, 0.01)
+})
+
+// Teardowns reported rank_absolute as the position, so a third organic link
+// under an AI Overview and People Also Ask read as "position 7", and about
+// a third of searches failed with 40101 and were never asked again.
+test('serp gives the organic position beside rank_absolute and retries 40101', async () => {
+  const statuses = [40101, 20000]
+  globalThis.fetch = (async (input: Request) => {
+    const [task] = (await input.json()) as { device?: string }[]
+    const status = input.url.includes('bulk_ranks') ? 20000 : statuses.shift()
+    const items = [
+      {
+        type: 'ai_overview',
+        rank_group: 1,
+        rank_absolute: 1,
+        references: [
+          { domain: 'example.org', url: 'https://example.org/flags' },
+        ],
+      },
+      {
+        type: 'organic',
+        rank_group: 1,
+        rank_absolute: 2,
+        url: 'https://example.net/a',
+        domain: 'example.net',
+      },
+      { type: 'people_also_ask', rank_group: 1, rank_absolute: 3 },
+      {
+        type: 'organic',
+        rank_group: 2,
+        rank_absolute: 4,
+        url: 'https://example.com/b',
+        domain: 'example.com',
+      },
+    ]
+    return Response.json({
+      tasks: [
+        {
+          status_code: status,
+          status_message:
+            status === 40101 ? 'Internal SE Server Error.' : 'Ok.',
+          cost: status === 40101 ? 0 : 0.002,
+          result:
+            status === 20000
+              ? [{ items: task?.device === 'mobile' ? items : [] }]
+              : null,
+        },
+      ],
+    })
+  }) as typeof fetch
+  mock.timers.enable({ apis: ['setTimeout'] })
+  try {
+    const pending = research('dataforseo', dataForSeo, {
+      action: 'serp',
+      keywords: ['feature flags'],
+      target: '',
+      country: 'us',
+      device: 'mobile',
+      noRank: true,
+      limit: 100,
+    })
+    for (let i = 0; i < 20 && statuses.length; i++) {
+      await new Promise((done) => setImmediate(done))
+      mock.timers.tick(1_000)
+    }
+    const out = await pending
+    assert.deepEqual(
+      out.rows.map((row) => [row.position, row.rank_absolute, row.domain]),
+      [
+        [1, 2, 'example.net'],
+        [2, 4, 'example.com'],
+      ],
+    )
+    assert.deepEqual(out.missed, [])
+    assert.deepEqual(out.aiOverviews?.[0]?.references[0]?.domain, 'example.org')
+  } finally {
+    mock.timers.reset()
+  }
+})
+
+// When nothing matches a site: search, Google drops the filter and shows
+// unrelated sites. The PostHog teardown read that as a missing page for the
+// wrong reason; it must be no match, and a failed search makes it unknown.
+test("index_check treats Google's site: fallback as no match", async () => {
+  globalThis.fetch = (async (input: Request) => {
+    await input.json()
+    const unrelated = [
+      {
+        type: 'organic',
+        rank_group: 1,
+        rank_absolute: 1,
+        url: 'https://example.org/zebra',
+        domain: 'example.org',
+      },
+    ]
+    return Response.json({
+      tasks: [
+        {
+          status_code: 20000,
+          status_message: 'Ok.',
+          cost: 0.002,
+          result: [{ items: unrelated }],
+        },
+      ],
+    })
+  }) as typeof fetch
+  const out = await runIndexCheck(
+    { url: 'https://example.com/docs/flags', phrases: ['zebra release'] },
+    dataForSeo,
+  )
+  const data = out.data as { verdict: string; checks: { result: string }[] }
+  assert.equal(data.verdict, 'not_found')
+  assert.deepEqual(
+    data.checks.map((check) => check.result),
+    ['fallback', 'fallback', 'other_sites', 'other_sites'],
+  )
 })
 
 // The link gap is the referring domains of two or more competitors minus

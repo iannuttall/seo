@@ -33,6 +33,7 @@ import type { Detail } from './present.js'
 import { runBingReport, runReport, SECTION_IDS, SECTIONS } from './report.js'
 import {
   RESEARCH_ACTIONS,
+  RESEARCH_DEVICES,
   RESEARCH_HELP,
   RESEARCH_PROVIDERS,
   RESEARCH_SCOPES,
@@ -534,6 +535,12 @@ export const SHARED_TOOLS: SharedTool[] = [
         .optional()
         .describe(
           `serp only: results per keyword, default ${SERP_DEPTH}. Deeper costs more.`,
+        ),
+      device: z
+        .enum(RESEARCH_DEVICES)
+        .optional()
+        .describe(
+          'serp only: desktop (default) or mobile. Google ranks pages differently on each. DataForSEO only.',
         ),
       ...detail,
     }),

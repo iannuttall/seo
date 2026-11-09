@@ -21,6 +21,7 @@ seo providers ahrefs connect
 | `ranked_keywords` | A site, subfolder or page | The keywords it ranks for, and the provider's traffic estimate for the whole target |
 | `top_pages` | A site or subfolder | The pages with the most estimated search traffic |
 | `serp` | Up to 5 keywords | The pages that rank for each one, with each domain's authority |
+| `index_check` | One page URL | Whether Google returns the page, on desktop and mobile (DataForSEO only) |
 | `serp_overlap` | 2 to 10 keywords | For each pair, how many top 10 pages and sites they share |
 | `competitors` | A domain | Domains that rank for the same keywords |
 | `backlinks` | A site, subfolder or page | Referring domains |
@@ -73,6 +74,14 @@ It reads the top 1,000 referring domains of each site, one `backlinks` request p
 
 `serp` reads 20 results per keyword unless you set `--depth` (1 to 100). Deeper costs more: DataForSEO charges about five times as much for 100 results as for 10. With several keywords, the rows run position by position, so every keyword shows up on the first page.
 
+Each `serp` row has two positions. `position` is the organic position: the page is the nth organic link. DataForSEO's `rank_absolute` counts every block from the top of the page, including AI Overviews, People Also Ask, videos and images, so a third organic link can have a `rank_absolute` of 7. Quote `position` when you say where a page ranks. `ranked_keywords` rows carry both numbers too.
+
+Google ranks pages differently on phones. Add `--device mobile` to read the mobile results (DataForSEO only). When a results page shows an AI Overview, the notes list the sites it cites and the JSON has the full list as `aiOverviews`. DataForSEO retries a search that fails on Google's side up to three times before it lists the keyword as failed.
+
+```sh
+seo research serp --keywords "feature flags" --device mobile
+```
+
 `serp_overlap` helps you decide whether a set of searches needs one page or several. It reads the top 10 for each keyword and counts the pages and sites each pair shares. Lots of shared pages usually means Google treats the searches as one topic.
 
 ```sh
@@ -80,6 +89,18 @@ seo research serp_overlap --keywords "seo migration checklist,website migration 
 ```
 
 DataForSEO returns most results as Google redirect links with no exact page, so the result says how many pages it could compare. When that's only a few, compare sites, or use Ahrefs.
+
+## Check whether Google has indexed a page
+
+`index_check` asks Google for `site:` plus the page URL, and for an exact phrase from the page, on desktop and mobile. The phrase comes from the page's H1 or title and its meta description, or pass up to 2 of your own with `--keywords`.
+
+```sh
+seo research index_check --target https://example.com/docs/feature-flags
+```
+
+The answer is `indexed`, `not found` or `unknown`, with every search beside it. When nothing matches a `site:` search, Google drops the filter and shows unrelated sites. Those are marked `fallback` and count as no match. A search that still fails after retries makes the answer `unknown`. It costs about $0.02 to $0.04 a page.
+
+This is Google search, not Search Console. A page can be indexed and still not show for a `site:` search, so `not found` is evidence, not proof. For a site you own, `seo page` and `seo index` read Google's URL Inspection instead.
 
 ## Page through results without paying again
 

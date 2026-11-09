@@ -23,7 +23,7 @@ link for them to approve, then run it again.
 | `seo page --url <url>` | `seo_page` | One URL: live page, index status, queries |
 | `seo compare --site <site> --date <date>` | `seo_compare` | Before and after a date, with Google updates |
 | `seo index --site <site>` | `seo_index` | Google's indexing reasons, labelled, and pages that lost their clicks |
-| `seo research <action>` | `seo_research` | Keywords, keyword ideas, SERP and SERP overlap, top pages, competitors, backlinks, pages by backlinks, link gaps, AI answer citations, for a site, subfolder (`example.com/blog/`) or page; provider optional; next pages are free for a day |
+| `seo research <action>` | `seo_research` | Keywords, keyword ideas, SERP (organic position, mobile) and SERP overlap, whether Google indexed any URL (`index_check`), top pages, competitors, backlinks, pages by backlinks, link gaps, AI answer citations, for a site, subfolder (`example.com/blog/`) or page; provider optional; next pages are free for a day |
 | `seo data --site <site>` | `seo_data` | Raw Search Console, Bing, Clicky or Google Analytics rows |
 | `seo crawl --url <url>` | `seo_crawl` | Technical issues across a site |
 | `seo internal-links --site <site>` or `--url <url>` | `seo_internal_links` | Links to add across a site, or to one page |

@@ -29,9 +29,11 @@ import {
   type LintPreset,
   MAX_INSPECT_LIMIT,
   RESEARCH_ACTIONS,
+  RESEARCH_DEVICES,
   RESEARCH_PROVIDERS,
   RESEARCH_SCOPES,
   type ResearchAction,
+  type ResearchDevice,
   type ResearchProvider,
   type ResearchScope,
   runAiAnswers,
@@ -570,6 +572,11 @@ export const researchCommand = defineCommand({
       description:
         'serp only: results per keyword, 1 to 100. Default 20. Deeper costs more.',
     },
+    device: {
+      type: 'string',
+      description:
+        'serp only: desktop (default) or mobile. Google ranks pages differently on each. DataForSEO only.',
+    },
     ...detail,
     account: common.account,
     json: common.json,
@@ -601,6 +608,13 @@ export const researchCommand = defineCommand({
       throw new SeoError(
         'INVALID_INPUT',
         `--scope is one of ${RESEARCH_SCOPES.join(', ')}.`,
+      )
+    }
+    const device = stringArg(args.device) as ResearchDevice | undefined
+    if (device && !RESEARCH_DEVICES.includes(device)) {
+      throw new SeoError(
+        'INVALID_INPUT',
+        `--device is one of ${RESEARCH_DEVICES.join(', ')}.`,
       )
     }
     const keywords = csvArg(args.keywords) ?? []
@@ -655,6 +669,7 @@ export const researchCommand = defineCommand({
           provider,
           scope,
           depth: numberArg(args.depth),
+          device,
           action,
           keywords,
           target,
@@ -672,6 +687,7 @@ export const researchCommand = defineCommand({
               provider,
               scope,
               depth: numberArg(args.depth),
+              device,
               keywords: keywords.join(',') || undefined,
               target,
               competitors: competitors.join(',') || undefined,

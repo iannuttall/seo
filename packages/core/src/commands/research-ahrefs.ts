@@ -126,7 +126,24 @@ export async function ahrefs(
           country: input.country,
           top_positions: String(serpDepth(input)),
         })
-        return (data.positions ?? []).map((row) => ({ keyword, ...row }))
+        // Ahrefs gives one position field for every kind of result. As with
+        // DataForSEO, position here counts organic links only, in Ahrefs'
+        // order; ahrefs_position keeps Ahrefs' own number and type says what
+        // the row is.
+        let organic = 0
+        return (data.positions ?? []).map((row) => {
+          const { position, type, ...rest } = row as Row & { type?: unknown }
+          const kinds = Array.isArray(type)
+            ? type.map(String)
+            : [String(type ?? '')]
+          return {
+            keyword,
+            position: kinds.includes('organic') ? ++organic : null,
+            ahrefs_position: position ?? null,
+            type: kinds.join(',') || null,
+            ...rest,
+          }
+        })
       },
     )
   }

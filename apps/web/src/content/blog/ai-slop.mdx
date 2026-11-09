@@ -72,11 +72,11 @@ The em dash became the best-known sign of AI writing in 2025, and it was always 
 
 A flagged line means the sentence has a shape that AI drafts use a lot. It does not mean a model wrote it. <Fix rule="stranded-negation" slop="Does seo lint know who wrote it? It doesn't.">`seo lint` never guesses who wrote a page.</Fix> Each finding names the pattern, quotes the words and suggests a fix, so the decision stays with <Fix rule="contrast-reframe" slop="you, not with the tool.">you.</Fix>
 
-<Fix rule="copula-avoidance" slop="Accuracy stands as the cornerstone of the whole project." /> Before a rule ships, it runs against 287 labelled AI-style sentences and 221 sentences people wrote. A rule that gives any of the human sentences an error is downgraded to a question for a reader to judge. That is also why passive voice is not a rule at all: people use it too often for it to mean anything.
+<Fix rule="copula-avoidance" slop="Accuracy stands as the cornerstone of the whole project." /> Before a rule ships, it runs against 287 labelled AI-style sentences and 221 sentences people wrote. A rule that gives any of the human sentences an error is downgraded to a question for a reader to judge. Passive voice is not a rule at all, because people use it too often for it to mean anything.
 
 ## What AI detectors can and cannot tell you
 
-Detectors such as Pangram answer a different question: did a model generate this text? They have become accurate. Pangram's [model card for Pangram 4](https://www.pangram.com/research/model-card/pangram-4), released in July 2026, reports 41 false positives in 1,000,000 human-written English texts, about 1 in 24,000. An [independent test at the University of Chicago](https://bfi.uchicago.edu/insights/artificial-writing-and-automated-detection) found Pangram made almost no mistakes on medium and long passages, and slightly more on short ones.
+Detectors such as Pangram answer a different question, whether a model generated the text. They have become accurate. Pangram's [model card for Pangram 4](https://www.pangram.com/research/model-card/pangram-4), released in July 2026, reports 41 false positives in 1,000,000 human-written English texts, about 1 in 24,000. An [independent test at the University of Chicago](https://bfi.uchicago.edu/insights/artificial-writing-and-automated-detection) found Pangram made almost no mistakes on medium and long passages, and slightly more on short ones.
 
 A low false positive rate still means some false positives. Run a detector over a million essays and it will wrongly flag a few dozen of them, and each of those writers has no easy way to prove they wrote it.
 

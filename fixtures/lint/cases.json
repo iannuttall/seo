@@ -2664,6 +2664,11 @@
       "expect": ["contrast-reframe"]
     },
     {
+      "id": "tell-300",
+      "text": "The sitemap lists 7,279 addresses on example.com. Rendering isn't the problem: the text is in the HTML. Size is, on a site with this many pages.\n\nThe pricing page matters most: it's where plans are sold. The guides fell further: to 12% of their July estimate. The docs have one gap: no page says what the product costs.",
+      "expect": ["colon-density"]
+    },
+    {
       "id": "control-510",
       "text": "Kobak counted how often words such as \"delve\" appeared in abstracts after 2022.",
       "expect": null

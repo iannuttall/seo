@@ -89,6 +89,13 @@ export const STRUCTURE_RULES: Record<string, RuleInfo> = {
     description:
       'Two or more coined labels such as "the integration tax" or "the supervision paradox".',
   },
+  colonDensity: {
+    id: 'colon-density',
+    family: 'ai',
+    level: 'warning',
+    description:
+      'Colons used mid-sentence as a pause or lead-in, three or more per 1,000 words. One is ordinary; a piece full of them reads as AI.',
+  },
   pseudoCleft: {
     id: 'pseudo-cleft',
     family: 'ai',
@@ -919,6 +926,61 @@ function countedPatterns(ctx: Context) {
   }
 }
 
+// Colons inside a sentence, used as a pause ("Rendering isn't the problem:
+// the text is in the HTML") or to lead into an inline list. One is ordinary
+// punctuation; at three or more per 1,000 words it is an AI habit. Not
+// counted: a colon that ends its block (it introduces a list or table), a
+// short label with no verb ("The fix:"), one before a quotation, and one
+// inside quotes or link text, such as a cited title.
+function colonDensity(ctx: Context) {
+  const rule = STRUCTURE_RULES.colonDensity as RuleInfo
+  if (ctx.level(rule) === 'off') return
+  const found: Array<{ block: Block; start: number; end: number }> = []
+  for (const block of ctx.blocks(SENTENCE_KINDS)) {
+    const sentences = ctx.sentences(block)
+    for (const match of block.norm.matchAll(/:\s+(?=\S)/g)) {
+      const at = match.index ?? 0
+      const after = block.norm.slice(at + match[0].length)
+      if (/^["'(]/.test(after)) continue
+      // A short label with no verb, such as "The fix:" or "Volume and
+      // difficulty:", names what follows. "Rendering isn't the problem:" is
+      // a pause.
+      const lead = block.norm.slice(sentenceAt(sentences, at).start, at)
+      if (words(lead).length <= 4 && verbless(lead)) continue
+      // A bold label, "**Check:**" or "**The fix**:", even when the label
+      // is a verb.
+      const source = block.map[at] ?? -1
+      if (
+        /^(?:\*\*|__)/.test(ctx.doc.source.slice(source + 1, source + 3)) ||
+        /(?:\*\*|__)$/.test(ctx.doc.source.slice(source - 2, source))
+      ) {
+        continue
+      }
+      if (block.links.some((link) => link.start <= at && link.end > at)) {
+        continue
+      }
+      if (insideQuotes(block.norm, at, at + 1)) continue
+      const clause = after.match(/^(?:[^.!?;]|[.!?](?=\S)){0,60}/)?.[0] ?? ''
+      found.push({
+        block,
+        start: at,
+        end: at + match[0].length + clause.trimEnd().length,
+      })
+    }
+  }
+  if (found.length < 4 || found.length * 1000 < 3 * ctx.proseWords) return
+  for (const item of found) {
+    ctx.hit(
+      rule,
+      item.block,
+      item.start,
+      item.end,
+      `${found.length} mid-sentence colons in ${ctx.proseWords.toLocaleString('en-US')} words. A colon used as a pause in sentence after sentence is a common AI habit.`,
+      'Use a full stop, or join the two parts with a plain word such as "because" or "so". Keep colons that introduce a list or a quotation.',
+    )
+  }
+}
+
 function boldLabels(ctx: Context) {
   const rule = STRUCTURE_RULES.boldLabels as RuleInfo
   if (ctx.level(rule) === 'off') return
@@ -1011,6 +1073,7 @@ export function runStructureRules(ctx: Context) {
   vocabularyCluster(ctx)
   triads(ctx)
   countedPatterns(ctx)
+  colonDensity(ctx)
   boldLabels(ctx)
   boldEmphasis(ctx)
 }

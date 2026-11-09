@@ -32,6 +32,7 @@ import { type LintSource, runLint } from './lint.js'
 import type { Detail } from './present.js'
 import { runBingReport, runReport, SECTION_IDS, SECTIONS } from './report.js'
 import {
+  type InstalledSerp,
   RESEARCH_ACTIONS,
   RESEARCH_DEVICES,
   RESEARCH_HELP,
@@ -78,6 +79,8 @@ export type ToolSurface = {
   researchStore?: ResearchStore
   // The Ahrefs key for the free Domain Rating column, when there is one.
   drKey?: string | null
+  // serp from installed provider packages, where the surface loads them.
+  installedSerp?: InstalledSerp
   // Every Google sign-in on this surface, for listing and Google Analytics.
   accounts: () => Promise<GoogleAccount[]>
   // What to do when Google rejects the sign-in.
@@ -477,10 +480,12 @@ export const SHARED_TOOLS: SharedTool[] = [
     description: `Data from the person’s own DataForSEO or Ahrefs account, which costs them credits. It uses the key the person saved on their seoskill.dev account (or on this machine for the CLI). Actions: ${RESEARCH_HELP}`,
     input: z.object({
       provider: z
-        .enum(RESEARCH_PROVIDERS)
+        .string()
+        .max(64)
+        .regex(/^[a-z0-9]+(?:-[a-z0-9]+)*$/)
         .optional()
         .describe(
-          'Optional. Without it, the saved key; DataForSEO when both are saved.',
+          `${RESEARCH_PROVIDERS.join(' or ')}. Optional: without it, the saved key; DataForSEO when both are saved. For serp in the CLI and the local MCP server it can also be the id of an installed provider package with live search results.`,
         ),
       action: z.enum(RESEARCH_ACTIONS),
       keywords: z.array(z.string().min(1)).max(100).default([]),
@@ -548,7 +553,7 @@ export const SHARED_TOOLS: SharedTool[] = [
       const more = (offset: number) =>
         `seo_research with the same input, detail "rows", offset ${offset}`
       if (input.action === 'ai_answers') {
-        if (input.provider === 'ahrefs') {
+        if (input.provider && input.provider !== 'dataforseo') {
           throw new CommandError('INVALID_INPUT', 'ai_answers uses dataforseo.')
         }
         return runAiAnswers(
@@ -574,6 +579,7 @@ export const SHARED_TOOLS: SharedTool[] = [
       return runResearch(input, await surface.keys(), {
         drKey: surface.drKey,
         store: surface.researchStore,
+        installedSerp: surface.installedSerp,
         call: more,
       })
     },

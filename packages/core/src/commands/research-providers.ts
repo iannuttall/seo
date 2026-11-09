@@ -196,6 +196,8 @@ export type ResearchRows = {
   // serp from DataForSEO: each keyword whose page showed an AI Overview,
   // with the pages it cites.
   aiOverviews?: AiOverview[]
+  // serp from an installed provider package: its own quality warnings.
+  warnings?: string[]
 }
 
 // A provider's monthly organic traffic estimate for the whole target, in

@@ -1,6 +1,7 @@
 import { existsSync } from 'node:fs'
 import {
   cloudLinked,
+  installedProviderSerp,
   localError,
   localRefreshClicky,
   localResearchKeys,
@@ -34,7 +35,6 @@ import {
   RESEARCH_SCOPES,
   type ResearchAction,
   type ResearchDevice,
-  type ResearchProvider,
   type ResearchScope,
   runAiAnswers,
   runAllSites,
@@ -533,7 +533,7 @@ export const researchCommand = defineCommand({
     },
     provider: {
       type: 'string',
-      description: `${RESEARCH_PROVIDERS.join(', ')}. Default: the saved key, DataForSEO when both are saved.`,
+      description: `${RESEARCH_PROVIDERS.join(', ')}, or for serp an installed provider package with live search results. Default: the saved key, DataForSEO when both are saved.`,
     },
     scope: {
       type: 'string',
@@ -596,13 +596,8 @@ export const researchCommand = defineCommand({
       )
     }
     const keys = await localResearchKeys()
-    const provider = stringArg(args.provider) as ResearchProvider | undefined
-    if (provider && !RESEARCH_PROVIDERS.includes(provider)) {
-      throw new SeoError(
-        'INVALID_INPUT',
-        `--provider is one of ${RESEARCH_PROVIDERS.join(', ')}.`,
-      )
-    }
+    // Any other id is an installed provider package, for serp.
+    const provider = stringArg(args.provider)
     const scope = stringArg(args.scope) as ResearchScope | undefined
     if (scope && !RESEARCH_SCOPES.includes(scope)) {
       throw new SeoError(
@@ -622,7 +617,7 @@ export const researchCommand = defineCommand({
     const competitors = csvArg(args.competitors) ?? []
     const country = stringArg(args.country)
     if (action === 'ai_answers') {
-      if (provider === 'ahrefs') {
+      if (provider && provider !== 'dataforseo') {
         throw new SeoError('INVALID_INPUT', 'ai_answers uses dataforseo.')
       }
       const tasks = csvArg(args.tasks) ?? []
@@ -681,6 +676,7 @@ export const researchCommand = defineCommand({
         keys,
         {
           store: localResearchStore(booleanArg(args.refresh)),
+          installedSerp: installedProviderSerp,
           call: (offset) =>
             cliCall('research', {
               action,

@@ -15,6 +15,10 @@ import {
   workersResearchStore,
 } from './research-cache.js'
 import {
+  type InstalledSerp,
+  installedSerpResearch,
+} from './research-installed.js'
+import {
   type AiOverview,
   dataForSeoLanguage,
   type ResearchAction,
@@ -29,6 +33,7 @@ import {
 import { PAGE_SIZE, rowsText } from './rows.js'
 import { CommandError, type CommandResult } from './types.js'
 
+export type { InstalledSerp } from './research-installed.js'
 export type {
   ResearchAction,
   ResearchDevice,
@@ -61,7 +66,7 @@ export const RESEARCH_PROVIDERS = [
   'ahrefs',
 ] as const satisfies readonly ResearchProvider[]
 
-export const RESEARCH_HELP = `provider is optional: without it the call uses the saved key, DataForSEO when both are saved. The target is a domain (the whole site), a path ending in / such as example.com/blog/ (every URL under it), or one page; scope overrides that. keyword_metrics (keywords: volume, difficulty, CPC), keyword_ideas (up to 5 seed keywords: searches that contain each seed, by volume), ranked_keywords (target: keywords a site, subfolder or page ranks for, with the provider's traffic total for the whole target), top_pages (target: the pages with the most estimated organic traffic), serp (keywords, up to 5: the ranking pages with their organic position beside DataForSEO's rank_absolute, which also counts AI Overviews and other blocks, plus the AI Overview's sources; device desktop or mobile, DataForSEO only; each with its domain's authority: DataForSEO domain_rank 0 to 100, Ahrefs domain_rating; depth sets results per keyword, default ${SERP_DEPTH}; rows run position by position across the keywords), index_check (DataForSEO only; target: one page URL; keywords: up to ${INDEX_CHECK_PHRASES} exact phrases from the page, default its H1 or title. Searches Google for site:<url> and each "<phrase>" on desktop and mobile, retries failed searches, treats Google's fallback to unrelated sites as no match, and says indexed, not found or unknown with each search's evidence; about $0.01 a page), serp_overlap (2 to 10 keywords: for each pair, how many of their top 10 pages and sites are the same, to decide one page or several; results without a real page are counted, not compared), competitors (target: domains that share keywords), backlinks (target: referring domains), pages_by_backlinks (target: the pages with the most referring domains), link_gap (target and 2 to 5 competitors: referring domains that link to two or more competitors and not the target, highest authority first, from each site's top 1,000 referring domains; costs one backlinks call per site), ai_answers (DataForSEO only; target: the site. Without keywords it takes the site’s top ${AI_ANSWER_QUESTIONS} chat-style and long questions from Search Console’s AI-shaped queries itself. With up to ${AI_ANSWER_QUESTIONS} questions in keywords it asks those instead, and the target can be any domain, such as a competitor's. Each answer row also lists the other sites it cites, and the notes rank them. Answers come from DataForSEO's queue: answers not ready after about 40 seconds are returned as tasks, already paid for; call again with the same target and those tasks to read them at no cost. It asks ChatGPT search, Google AI Mode and Google AI Overviews each one and says whether the answer cites or mentions the site. DataForSEO’s queue prices are about $0.0072 a question across the three engines, so about $0.07 a run: tell the person before running it). Rows with a domain, and the target, get a free Ahrefs domain_rating column. Numbers are provider estimates, not Search Console data.`
+export const RESEARCH_HELP = `provider is optional: without it the call uses the saved key, DataForSEO when both are saved. In the CLI and the local MCP server, serp can also use a provider package installed on this machine that supplies live search results: pass its id as provider. The target is a domain (the whole site), a path ending in / such as example.com/blog/ (every URL under it), or one page; scope overrides that. keyword_metrics (keywords: volume, difficulty, CPC), keyword_ideas (up to 5 seed keywords: searches that contain each seed, by volume), ranked_keywords (target: keywords a site, subfolder or page ranks for, with the provider's traffic total for the whole target), top_pages (target: the pages with the most estimated organic traffic), serp (keywords, up to 5: the ranking pages with their organic position beside DataForSEO's rank_absolute, which also counts AI Overviews and other blocks, plus the AI Overview's sources; device desktop or mobile, DataForSEO only; each with its domain's authority: DataForSEO domain_rank 0 to 100, Ahrefs domain_rating; depth sets results per keyword, default ${SERP_DEPTH}; rows run position by position across the keywords), index_check (DataForSEO only; target: one page URL; keywords: up to ${INDEX_CHECK_PHRASES} exact phrases from the page, default its H1 or title. Searches Google for site:<url> and each "<phrase>" on desktop and mobile, retries failed searches, treats Google's fallback to unrelated sites as no match, and says indexed, not found or unknown with each search's evidence; about $0.01 a page), serp_overlap (2 to 10 keywords: for each pair, how many of their top 10 pages and sites are the same, to decide one page or several; results without a real page are counted, not compared), competitors (target: domains that share keywords), backlinks (target: referring domains), pages_by_backlinks (target: the pages with the most referring domains), link_gap (target and 2 to 5 competitors: referring domains that link to two or more competitors and not the target, highest authority first, from each site's top 1,000 referring domains; costs one backlinks call per site), ai_answers (DataForSEO only; target: the site. Without keywords it takes the site’s top ${AI_ANSWER_QUESTIONS} chat-style and long questions from Search Console’s AI-shaped queries itself. With up to ${AI_ANSWER_QUESTIONS} questions in keywords it asks those instead, and the target can be any domain, such as a competitor's. Each answer row also lists the other sites it cites, and the notes rank them. Answers come from DataForSEO's queue: answers not ready after about 40 seconds are returned as tasks, already paid for; call again with the same target and those tasks to read them at no cost. It asks ChatGPT search, Google AI Mode and Google AI Overviews each one and says whether the answer cites or mentions the site. DataForSEO’s queue prices are about $0.0072 a question across the three engines, so about $0.07 a run: tell the person before running it). Rows with a domain, and the target, get a free Ahrefs domain_rating column. Numbers are provider estimates, not Search Console data.`
 
 // Platforms that share keywords with almost every site. Competitor lists
 // leave them out, with the target itself, and say how many rows went.
@@ -126,10 +131,7 @@ const KEY_HEADER: Record<ResearchProvider, string> = {
 // The provider to use: the one asked for, else the one with a saved key,
 // DataForSEO when both are saved. A provider asked for without its key, or
 // no key at all, fails in the call with how to add the key.
-function chooseProvider(
-  asked: ResearchProvider | undefined,
-  keys: Headers,
-): ResearchProvider {
+function chooseProvider(asked: string | undefined, keys: Headers): string {
   return (
     asked ??
     RESEARCH_PROVIDERS.find((name) => keys.has(KEY_HEADER[name])) ??
@@ -164,7 +166,8 @@ export type ResearchInput = {
   depth?: number
   // serp only: desktop (default) or mobile results.
   device?: ResearchDevice
-  provider?: ResearchProvider
+  // dataforseo, ahrefs, or for serp the id of an installed provider package.
+  provider?: string
   scope?: ResearchScope
   action: ResearchAction
   keywords?: string[]
@@ -185,6 +188,8 @@ export async function runResearch(
     call: (offset: number) => string
     // Where results are kept for a day; the Workers cache when unset.
     store?: ResearchStore | null
+    // serp from installed provider packages, on the surfaces that load them.
+    installedSerp?: InstalledSerp
   },
 ): Promise<CommandResult> {
   const country = input.country ?? 'us'
@@ -194,6 +199,15 @@ export async function runResearch(
     throw new CommandError('INVALID_INPUT', 'ai_answers runs on its own.')
   }
   const provider = chooseProvider(input.provider, keys)
+  const builtIn = (RESEARCH_PROVIDERS as readonly string[]).includes(provider)
+    ? (provider as ResearchProvider)
+    : null
+  if (!builtIn && input.action !== 'serp') {
+    throw new CommandError(
+      'INVALID_INPUT',
+      `An installed provider answers serp only; ${input.action} needs a built-in provider.`,
+    )
+  }
   if (input.action === 'index_check') {
     if (provider === 'ahrefs') {
       throw new CommandError(
@@ -242,14 +256,20 @@ export async function runResearch(
     ...(device === 'mobile' ? { device } : {}),
   }
   const store = options.store ?? workersResearchStore()
-  const credential =
-    provider === 'dataforseo'
-      ? keys.get('x-dataforseo-login')
-      : keys.get('x-ahrefs-key')
+  // A live results page does not depend on whose package account asked, so
+  // an installed provider's results are kept by provider and request.
+  const credential = builtIn ? keys.get(KEY_HEADER[builtIn]) : null
   const key = await researchKey([provider, credential, request])
   const saved = await readResearch(store, key, limit)
   const result =
-    saved?.result ?? (await research(provider, keys, { ...request, limit }))
+    saved?.result ??
+    (builtIn
+      ? await research(builtIn, keys, { ...request, limit })
+      : await installedSerpResearch(
+          provider,
+          { ...request, limit },
+          options.installedSerp,
+        ))
   if (!saved) {
     await saveResearch(store, key, {
       limit,
@@ -270,6 +290,7 @@ export async function runResearch(
     rankFailed,
     compared,
     aiOverviews,
+    warnings,
   } = result
   // A saved result costs nothing now; its first cost is in the note.
   const costUsd = saved ? 0 : paid
@@ -331,8 +352,8 @@ export async function runResearch(
               `Compared: ${compared.withPage} of ${compared.results} top results had a real page, so shared_pages counts only those; ${compared.results - compared.withPage} came back as Google redirect links and could not be compared by page. ${compared.withSite} had a known site for shared_sites. Unique pages and sites are counted per keyword.${compared.withPage < compared.results / 2 && provider === 'dataforseo' ? ' With this few pages, shared_pages cannot settle one page or several; provider ahrefs returns real pages.' : ''}`,
             ]
           : []),
-        ...(VOLUME_ACTIONS.includes(input.action)
-          ? [`Volume model: ${VOLUME_MODEL[provider]} ${VOLUMES_DIFFER}`]
+        ...(VOLUME_ACTIONS.includes(input.action) && builtIn
+          ? [`Volume model: ${VOLUME_MODEL[builtIn]} ${VOLUMES_DIFFER}`]
           : []),
         ...(input.action === 'serp' || input.action === 'ranked_keywords'
           ? [positionNote(provider)]
@@ -351,7 +372,9 @@ export async function runResearch(
                 )}. Rows run position by position across the keywords.`,
             ]
           : []),
-        ...(siteTotal ? [siteTotalNote(provider, siteTotal, rows.length)] : []),
+        ...(siteTotal && builtIn
+          ? [siteTotalNote(builtIn, siteTotal, rows.length)]
+          : []),
         ...(available !== undefined && available > found.length
           ? [
               `Capped: ${provider} has ${available.toLocaleString('en-US')} rows for this; this read the first ${found.length.toLocaleString('en-US')} in its order.`,
@@ -380,12 +403,19 @@ export async function runResearch(
               `Read from the result saved at ${saved.savedAt}, at no new cost${paid ? ` (it cost $${paid} then)` : ''}. Results are kept for a day.`,
             ]
           : costUsd !== null
-            ? [`DataForSEO cost: $${costUsd}.`]
+            ? [
+                builtIn
+                  ? `DataForSEO cost: $${costUsd}.`
+                  : `Cost the ${provider} package reports: $${costUsd}.`,
+              ]
             : []),
         ...(partial
           ? [
-              'Partial: DataForSEO could not fetch some pages of results, so rows may be missing.',
+              `Partial: ${builtIn ? 'DataForSEO' : provider} could not fetch some pages of results, so rows may be missing.`,
             ]
+          : []),
+        ...(warnings?.length
+          ? [`${provider} warnings: ${warnings.join(' ')}`]
           : []),
         ...(missed.length
           ? [
@@ -424,9 +454,10 @@ export async function runResearch(
       action: input.action,
       target: target || null,
       scope,
-      siteTotal: siteTotal
-        ? { ...siteTotal, model: TRAFFIC_MODEL[provider] }
-        : null,
+      siteTotal:
+        siteTotal && builtIn
+          ? { ...siteTotal, model: TRAFFIC_MODEL[builtIn] }
+          : null,
       available: available ?? null,
       country,
       language,
@@ -442,6 +473,7 @@ export async function runResearch(
       partial,
       missedKeywords: missed,
       noDataKeywords: noData,
+      ...(warnings?.length ? { warnings } : {}),
       ...(input.action === 'link_gap'
         ? {
             competitors: input.competitors ?? [],
@@ -462,7 +494,10 @@ export async function runResearch(
 }
 
 // What position means in serp and ranked_keywords rows.
-function positionNote(provider: ResearchProvider): string {
+function positionNote(provider: string): string {
+  if (provider !== 'dataforseo' && provider !== 'ahrefs') {
+    return `position is the organic position the ${provider} package reports (its rankGroup); rank_absolute is its rank among every block on the page, and type is featured_snippet for a featured snippet, which has no organic position.`
+  }
   return provider === 'dataforseo'
     ? 'position is the organic position: the nth organic link (DataForSEO rank_group). rank_absolute counts every block on the page from the top, AI Overviews, People Also Ask, videos and images included, so it is higher. A featured snippet has type featured_snippet and no organic position.'
     : "position is the organic position: the nth row Ahrefs marks organic. ahrefs_position is Ahrefs' own position field, and type lists what each row is."
@@ -513,7 +548,7 @@ function siteTotalNote(
 
 // An empty list for a site, subfolder or page: the provider has no rows for
 // it, which is not the same as no traffic or no links.
-function emptyNote(provider: ResearchProvider, action: ResearchAction): string {
+function emptyNote(provider: string, action: ResearchAction): string {
   const what =
     action === 'backlinks' || action === 'pages_by_backlinks'
       ? 'links'
@@ -524,7 +559,7 @@ function emptyNote(provider: ResearchProvider, action: ResearchAction): string {
 // Why some keywords have no rows: the provider has no data for them, or
 // Google showed no results, which is not the same as nobody ranking.
 function noDataNote(
-  provider: ResearchProvider,
+  provider: string,
   action: ResearchAction,
   keywords: string[],
 ): string {

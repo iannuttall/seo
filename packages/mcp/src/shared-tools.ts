@@ -1,6 +1,7 @@
 import type { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js'
 import {
   cloudLinked,
+  installedProviderSerp,
   internalLinksReport,
   LOCAL_SIGN_IN,
   localAccounts,
@@ -108,6 +109,7 @@ export function registerSharedTools(
     refreshClicky: localRefreshClicky,
     drKey: null,
     researchStore: localResearchStore(),
+    installedSerp: installedProviderSerp,
     accounts: localAccounts,
     signIn: LOCAL_SIGN_IN.signIn,
     connect:

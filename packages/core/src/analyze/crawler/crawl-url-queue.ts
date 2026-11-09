@@ -4,13 +4,16 @@ export const CRAWL_QUERY_VARIANTS_PER_PATH = 5
 export type CrawlUrlQueueItem = {
   url: string
   depth: number
+  // Order within a depth, e.g. the sitemap sample spread across sections.
+  rank?: number
 }
 
 function before(left: CrawlUrlQueueItem, right: CrawlUrlQueueItem): boolean {
-  return (
-    left.depth < right.depth ||
-    (left.depth === right.depth && left.url < right.url)
-  )
+  if (left.depth !== right.depth) return left.depth < right.depth
+  const leftRank = left.rank ?? 0
+  const rightRank = right.rank ?? 0
+  if (leftRank !== rightRank) return leftRank < rightRank
+  return left.url < right.url
 }
 
 export class CrawlUrlQueue {

@@ -136,6 +136,103 @@ function sitemapDiscoveryStatus(
     : 'partial'
 }
 
+/** How many sitemap URLs a crawl reads to pick its sample from. */
+export function sitemapReadLimit(maxPages: number): number {
+  return Math.min(50_000, Math.max(10_000, maxPages * 10))
+}
+
+function sectionOf(url: string): string {
+  try {
+    return new URL(url).pathname.split('/')[1]?.toLowerCase() ?? ''
+  } catch {
+    return ''
+  }
+}
+
+function pathDepth(url: string): number {
+  try {
+    return new URL(url).pathname.split('/').filter(Boolean).length
+  } catch {
+    return 0
+  }
+}
+
+/**
+ * Picks up to `limit` URLs round-robin across sections (the first path
+ * segment), so one large section such as a forum cannot fill a capped crawl.
+ * Within a section, shallower paths come first, then URL order.
+ */
+export function spreadSitemapSample(
+  urls: string[],
+  limit: number,
+): { urls: string[]; sections: number } {
+  const groups = new Map<string, string[]>()
+  for (const url of urls) {
+    const key = sectionOf(url)
+    const group = groups.get(key)
+    if (group) group.push(url)
+    else groups.set(key, [url])
+  }
+  const ordered = [...groups.entries()]
+    .sort(([left], [right]) => (left < right ? -1 : left > right ? 1 : 0))
+    .map(([, group]) =>
+      group
+        .map((url) => ({ url, depth: pathDepth(url) }))
+        .sort(
+          (left, right) =>
+            left.depth - right.depth ||
+            (left.url < right.url ? -1 : left.url > right.url ? 1 : 0),
+        )
+        .map((entry) => entry.url),
+    )
+  const picked: string[] = []
+  for (let index = 0; picked.length < limit; index += 1) {
+    let added = false
+    for (const group of ordered) {
+      const url = group[index]
+      if (url === undefined) continue
+      added = true
+      picked.push(url)
+      if (picked.length >= limit) break
+    }
+    if (!added) break
+  }
+  return { urls: picked, sections: groups.size }
+}
+
+export type SitemapSampleCaveat = {
+  checked: number
+  read: number
+  sections: number
+}
+
+/**
+ * The sitemap URLs a capped crawl checks, leaving room for the seed URLs, and
+ * how they were picked when the sitemaps listed more.
+ */
+export function sitemapCrawlSample(
+  urls: string[],
+  maxPages: number,
+  seedUrls: Set<string>,
+  normalize: (url: string) => string | undefined,
+): { urls: string[]; caveat?: SitemapSampleCaveat } {
+  const candidates = urls.filter((url) => !seedUrls.has(normalize(url) ?? url))
+  const sample = spreadSitemapSample(
+    candidates,
+    Math.max(0, maxPages - seedUrls.size),
+  )
+  return candidates.length > sample.urls.length
+    ? {
+        urls: sample.urls,
+        caveat: {
+          checked: sample.urls.length,
+          read: candidates.length,
+          sections: sample.sections,
+        },
+      }
+    : { urls: sample.urls }
+}
+
 export async function sitemapSeeds(input: {
   url: string
   sitemapUrl?: string

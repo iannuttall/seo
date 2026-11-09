@@ -9,6 +9,11 @@ import type {
 } from '../monitoring/types.js'
 import { estimateSerpTitleWidth } from '../title-width.js'
 import {
+  GOOGLEBOT_HTML_LIMIT_BYTES,
+  largeHtmlIssue,
+  responseCapIssue,
+} from './html-size.js'
+import {
   isAuditableHtmlPage,
   isCdnUtilityUrl,
   isHtmlPage,
@@ -61,7 +66,7 @@ function urlKey(value?: string): string | undefined {
 }
 
 const SLOW_RESPONSE_MS = 2_000
-const LARGE_HTML_BYTES = 2 * 1024 * 1024
+const LARGE_HTML_BYTES = GOOGLEBOT_HTML_LIMIT_BYTES
 const COMPRESSION_MIN_BYTES = 4 * 1024
 const DEEP_PAGE_DEPTH = 4
 const WEAK_VALUABLE_INLINKS = 1
@@ -329,6 +334,11 @@ export function auditCrawlRequests(
   for (const request of requests) {
     if (request.outcome === 'failure') {
       if (request.failureKind === 'aborted') continue
+      const overCap = responseCapIssue(request)
+      if (overCap) {
+        issues.push(overCap)
+        continue
+      }
       issues.push(
         requestIssue('connection_error', request, request.error, {
           outcome: request.outcome,
@@ -549,17 +559,7 @@ export function auditCrawlPages(
     }
 
     if (isHtmlPage(page) && (page.sizeBytes ?? 0) > LARGE_HTML_BYTES) {
-      issues.push(
-        issue(
-          'large_html',
-          page,
-          `${Math.round((page.sizeBytes ?? 0) / 1024)} KB`,
-          {
-            sizeBytes: page.sizeBytes,
-            thresholdBytes: LARGE_HTML_BYTES,
-          },
-        ),
-      )
+      issues.push(largeHtmlIssue(issue('large_html', page), page))
     }
     if (
       isHtmlPage(page) &&

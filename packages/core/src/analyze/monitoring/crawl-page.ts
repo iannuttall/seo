@@ -15,6 +15,7 @@ import {
   hasXRobotsDirective,
 } from '../../robots-directives.js'
 import type { PageFetchResult } from '../../types.js'
+import { googlebotCutEvidence } from '../crawler/html-size.js'
 import type {
   CrawlPageSnapshot,
   CrawlRequestObservation,
@@ -364,6 +365,7 @@ export async function snapshotFetchedPage(
       responseTimeMs: fetched.diagnostics.durationMs,
       sizeBytes: Buffer.byteLength(fetched.html),
       usedJs: fetched.usedJs,
+      googlebotCut: googlebotCutEvidence(fetched.html),
       fetchSource: fetched.diagnostics.source,
       cacheState: fetched.diagnostics.cache,
       fetchDiagnostics: fetched.diagnostics,

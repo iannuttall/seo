@@ -32,12 +32,11 @@ export function sitemapLimitCaveatInput(
   config: CrawlConfig,
   discovery: CrawlSitemapDiscovery | undefined,
   defaulted: boolean,
+  sample?: { checked: number; read: number; sections: number },
 ): CrawlCaveatInput['sitemapLimit'] {
-  if (
-    !discovery ||
-    discovery.urlsReturned < config.maxPages ||
-    !discovery.roots.some((root) => root.possiblyTruncated)
-  ) {
+  if (!discovery) return undefined
+  const truncated = discovery.roots.some((root) => root.possiblyTruncated)
+  if (!sample && (discovery.urlsReturned < config.maxPages || !truncated)) {
     return undefined
   }
   return {
@@ -46,6 +45,7 @@ export function sitemapLimitCaveatInput(
     ceiling: MAX_CRAWL_PAGES,
     health: config.strategy === 'health',
     url: config.url,
+    ...(sample ? { sample: { ...sample, readCapped: truncated } } : {}),
   }
 }
 
@@ -65,6 +65,12 @@ export function crawlCaveats(input: {
     ceiling: number
     health: boolean
     url: string
+    sample?: {
+      checked: number
+      read: number
+      sections: number
+      readCapped: boolean
+    }
   }
   memoryPressureSkippedUrls: number
   queryVariantSkippedUrls?: number
@@ -95,9 +101,13 @@ export function crawlCaveats(input: {
     )
   }
   if (input.sitemapLimit) {
-    const { maxPages, defaulted, ceiling, health, url } = input.sitemapLimit
+    const { maxPages, defaulted, ceiling, health, url, sample } =
+      input.sitemapLimit
+    const rerun = `Raise --max-pages, up to ${ceiling.toLocaleString('en-US')}, to check more: seo crawl ${url}${health ? ' --health' : ''} --max-pages ${ceiling}`
     caveats.push(
-      `Checked only the first ${maxPages} sitemap URLs because the page limit is ${maxPages}${defaulted ? ' by default' : ''}, and the sitemaps list more. Raise --max-pages, up to ${ceiling.toLocaleString('en-US')}, to check more: seo crawl ${url}${health ? ' --health' : ''} --max-pages ${ceiling}`,
+      sample
+        ? `Checked a sample of ${sample.checked.toLocaleString('en-US')} of the ${sample.read.toLocaleString('en-US')}${sample.readCapped ? '+' : ''} sitemap URLs read because the page limit is ${maxPages}${defaulted ? ' by default' : ''}. The sample takes URLs in turn from each of ${sample.sections} sections (the first path segment), shortest paths first, so no one section fills the crawl.${sample.readCapped ? ' The sitemaps list more URLs than the crawl read.' : ''} ${rerun}`
+        : `Checked only the first ${maxPages} sitemap URLs because the page limit is ${maxPages}${defaulted ? ' by default' : ''}, and the sitemaps list more. ${rerun}`,
     )
   }
   if (input.memoryPressureSkippedUrls > 0) {

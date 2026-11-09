@@ -56,7 +56,7 @@ GET https://support.anthropic.com/en/articles/8324991-about-claude-pro-usage
 
 [Claude](https://claude.com/) is the AI assistant and model family built by Anthropic. It makes money from subscriptions (Free, Pro, Max, Team and Enterprise plans) and from the Claude API that developers pay for by the token.
 
-Earlier this year Anthropic advertised for an [SEO Lead](https://web.archive.org/web/20260623120558/https://job-boards.greenhouse.io/anthropic/jobs/5102291008) to "own organic search strategy and technical SEO infrastructure across Anthropic's web properties", naming claude.ai, docs.anthropic.com and anthropic.com. The listing has since closed. This post is what I'd do in that job, using only what anyone can see from outside: public pages, search data and AI answers.
+Earlier this year Anthropic advertised for an [SEO Lead](https://web.archive.org/web/20260623120558/https://job-boards.greenhouse.io/anthropic/jobs/5102291008) to "own organic search strategy and technical SEO infrastructure across Anthropic's web properties", naming claude.ai, docs.anthropic.com and anthropic.com. The listing has since closed. This post is what I'd do in that job, using only public pages, search data and AI answers that anyone can see from outside.
 
 Key findings, from data pulled on 6 November 2026:
 
@@ -117,7 +117,7 @@ Claude's own pages describe the product in brand lines. The homepage heading is 
   }}
 />
 
-The product overview title is already close, and it has 4,498 words of content. What it lacks is the sentence an answer would quote: what Claude is best at, for whom, and what it costs, in the first paragraph. I'd add a short block under the heading on the overview, pricing and each solutions page:
+The product overview title is already close, and it has 4,498 words of content. What it lacks is a sentence in the first paragraph that an answer would quote, saying what Claude is best at, for whom, and what it costs. I'd add a short block under the heading on the overview, pricing and each solutions page:
 
 - One sentence on what Claude is and who it's for, naming the job ("Claude is an AI assistant for professionals who work with long documents, writing and code").
 - A "best for" line per plan, with the price.
@@ -143,7 +143,7 @@ Brand demand for Claude is enormous. The non-brand demand is where the room is.
   ]}
 />
 
-These are DataForSEO estimates, and Anthropic publishes no web traffic figures I could find to check them against. Read the map for its shape. Brand searches are a strength: Google already treats Claude as an entity, and that makes new non-brand pages easier to rank.
+These are DataForSEO estimates, and Anthropic publishes no web traffic figures I could find to check them against. Read the map for its shape. Brand searches are a strength. Google already treats Claude as an entity, and that makes new non-brand pages easier to rank.
 
 The comparison is ChatGPT. chatgpt.com gets an estimated 543,652 US visits a month to its translate pages, 120,462 to its writing tools and 104,013 to its image pages, all from searches that don't say ChatGPT (same data and date). OpenAI built pages for the jobs people search for. Claude has a solutions page per industry, and none of them is written for a search.
 
@@ -210,9 +210,9 @@ I'd make that the switching page, at a clear address such as claude.com/switch, 
 
 ### Comparison pages, written by the company that knows the answer
 
-"claude vs chatgpt", "chatgpt vs claude" and "is claude better than chatgpt" add up to 73,700 US searches a month, and no Claude or Anthropic page ranks for any of them. Google's AI Overview for "claude vs chatgpt" cites 13 sources: 5 YouTube videos, Zapier's own Claude vs ChatGPT page, Towards AI, Medium, HackerNoon, Reddit and a few blogs.
+"claude vs chatgpt", "chatgpt vs claude" and "is claude better than chatgpt" add up to 73,700 US searches a month, and no Claude or Anthropic page ranks for any of them. Google's AI Overview for "claude vs chatgpt" cites 13 sources. They are 5 YouTube videos, Zapier's own Claude vs ChatGPT page, Towards AI, Medium, HackerNoon, Reddit and a few blogs.
 
-Vendor comparison pages can read as sales copy, which is why most companies skip them. Anthropic can do something nobody else can: say plainly which jobs it built Claude for, with its own benchmark numbers and a date. One page per pair, each with the verdict in the first paragraph:
+Vendor comparison pages can read as sales copy, which is why most companies skip them. Only Anthropic can say plainly which jobs it built Claude for, with its own benchmark numbers and a date. One page per pair, each with the verdict in the first paragraph:
 
 - Claude vs ChatGPT (49,500, plus 24,200 for the two variants above)
 - Claude Code vs Codex (14,800 and 5,400 for the reverse order)
@@ -255,15 +255,15 @@ Claude's Organization markup already links Anthropic's YouTube channel, LinkedIn
 2. A YouTube video with the search as its title ("Claude vs ChatGPT: which should you use?"), chapters that match the page's sections and a link to the page. The cited videos in the AI Overview are titled exactly like the search.
 3. The same verdict as a LinkedIn post or article from the Claude page, for the work questions where LinkedIn is cited.
 4. An X post with the short version, linking to the page.
-5. Send the page to the lists that answers already cite: Zapier's [ChatGPT alternatives](https://zapier.com/blog/chatgpt-alternatives/) and [best AI chatbots](https://zapier.com/blog/best-ai-chatbot/), plus TechTarget and Digital Trends. Google's AI Overviews cite these for "chatgpt alternative" and "best ai chatbot". Zapier's ChatGPT alternatives page already names Claude first, so the ask is a newer fact or a correction.
+5. Send the page to Zapier's [ChatGPT alternatives](https://zapier.com/blog/chatgpt-alternatives/) and [best AI chatbots](https://zapier.com/blog/best-ai-chatbot/), plus TechTarget and Digital Trends, which are lists that answers already cite. Google's AI Overviews cite these for "chatgpt alternative" and "best ai chatbot". Zapier's ChatGPT alternatives page already names Claude first, so the ask is a newer fact or a correction.
 
-Every channel repeats the same sentence about what Claude is best at. That's how an answer engine ends up repeating it too. Jake Ward's [How to win search in 2026](https://x.com/i/article/2093291732741873664) splits this the same way: what you own, and what you influence.
+Every channel repeats the same sentence about what Claude is best at. That's how an answer engine ends up repeating it too. Jake Ward's [How to win search in 2026](https://x.com/i/article/2093291732741873664) splits this the same way, into what you own and what you influence.
 
 ## Technical fixes, closest to revenue first
 
 The listing asked for "sitemaps, structured data (JSON-LD), canonical tags, redirect strategies, and robots.txt across multiple domains". Here's that list for today's sites, ordered by how close each fix sits to a sign-up.
 
-Anthropic runs at least 13 public hosts. I'd keep the split that exists: claude.ai is the app, claude.com the product site, anthropic.com the company and platform.claude.com and code.claude.com the docs. The docs have moved twice already (docs.anthropic.com, then docs.claude.com, then their current homes). The evidence against a third move is in fix 2: the first two moves are still leaking links. Fix the redirects before moving anything again.
+Anthropic runs at least 13 public hosts. I'd keep the split that exists, where claude.ai is the app, claude.com the product site, anthropic.com the company and platform.claude.com and code.claude.com the docs. The docs have moved twice already (docs.anthropic.com, then docs.claude.com, then their current homes). The evidence against a third move is in fix 2, which shows the first two moves are still leaking links. Fix the redirects before moving anything again.
 
 <UrlMap
   caption="Anthropic's main hosts, what each serves and its referring domains (DataForSEO backlinks, host only, 6 November 2026)."
@@ -289,7 +289,7 @@ The canonical tag tells Google which address is the main copy, and hreflang tell
   after={{ label: "After the fix", html: afterHead }}
 />
 
-It depends on the page, the user agent and the request. Of six requests each, the homepage put the tags in the body on some and in the head on others, for Googlebot and a browser alike. On the pricing page, only Bingbot got them in the head. My crawl on 6 November found the pattern on 132 of 600 claude.com pages. The pricing page is the one that matters most: it's where plans are sold, in eight languages.
+It depends on the page, the user agent and the request. Of six requests each, the homepage put the tags in the body on some and in the head on others, for Googlebot and a browser alike. On the pricing page, only Bingbot got them in the head. My crawl on 6 November found the pattern on 132 of 600 claude.com pages. The pricing page is the one that matters most because it's where plans are sold, in eight languages.
 
 **The fix:** claude.com runs on Next.js, which streams metadata into the body for any user agent not on its [`htmlLimitedBots`](https://nextjs.org/docs/app/api-reference/config/next-config-js/htmlLimitedBots) list. Google's crawlers are on the default list, yet Googlebot still got the body here, so I'd set `htmlLimitedBots: /.*/` and make metadata blocking for every request. The head tags then arrive in the first bytes of every response. Then confirm with URL Inspection in Search Console that the "User-declared canonical" for claude.com/pricing and claude.com/ja/pricing is the page itself.
 
@@ -315,7 +315,7 @@ Two problems. Most docs redirects pass through a 307 inside platform.claude.com,
 
 The Claude Code docs have the same gap in other languages. The Chinese and Japanese slash commands pages, with 67 and 19 referring domains on the old host, redirect to code.claude.com addresses that 404.
 
-**The fix:** a redirect map for every old address with links, built from a backlink export, each pointing with one 301 to the page that answers the same question today. For the help center, map each old article to the one that replaced it, since some slugs changed and some articles were retired. Then rerun the same 900 addresses: every one should end in one 301 and a 200.
+**The fix:** a redirect map for every old address with links, built from a backlink export, each pointing with one 301 to the page that answers the same question today. For the help center, map each old article to the one that replaced it, since some slugs changed and some articles were retired. Then rerun the same 900 addresses and check that every one ends in one 301 and a 200.
 
 ### 3. Made-up docs addresses return a 200
 
@@ -365,7 +365,7 @@ Here's every change I'd make:
 Then check the results:
 
 <PlanSteps
-  steps={[{"marker": "Day 0", "title": "Ask Google to recrawl", "body": "Submit every changed and new URL to Index My Site."}, {"marker": "Day 3", "title": "Check the head and redirects", "body": "URL Inspection shows the canonical on claude.com/pricing; the 900 old addresses each end in one 301 and a 200."}, {"marker": "Day 7", "title": "First impressions", "body": "Search Console impressions for chatgpt alternative, claude vs chatgpt and is claude free on the new pages."}, {"marker": "Day 14", "title": "Sign-ups from the new pages", "body": "Free and Pro sign-ups that started on a comparison, switching or solutions page."}, {"marker": "Day 30", "title": "Ask the same 20 questions", "body": "Rerun the AI answers and compare: how many of the 60 link a Claude page, and how many of Google's 40."}]}
+  steps={[{"marker": "Day 0", "title": "Ask Google to recrawl", "body": "Submit every changed and new URL to Index My Site."}, {"marker": "Day 3", "title": "Check the head and redirects", "body": "URL Inspection shows the canonical on claude.com/pricing; the 900 old addresses each end in one 301 and a 200."}, {"marker": "Day 7", "title": "First impressions", "body": "Search Console impressions for chatgpt alternative, claude vs chatgpt and is claude free on the new pages."}, {"marker": "Day 14", "title": "Sign-ups from the new pages", "body": "Free and Pro sign-ups that started on a comparison, switching or solutions page."}, {"marker": "Day 30", "title": "Ask the same 20 questions", "body": "Rerun the AI answers and compare how many of the 60 link a Claude page, and how many of Google's 40."}]}
 />
 
 ## Get the changes seen quickly
@@ -407,12 +407,12 @@ and count redirects that are temporary or end in 404.
 Rank every fix by how close it sits to a sign-up.
 ```
 
-If your brand is already the answer, the lesson from this one is cheap to apply: ask the engines your buyers' questions, count the answers that name you and the ones that link to you, and write the sentence you want repeated at the top of the page that should get the link.
+If your brand is already the answer, the lesson from this one is cheap to apply. Ask the engines your buyers' questions, count the answers that name you and the ones that link to you, and write the sentence you want repeated at the top of the page that should get the link.
 
 If you're at Anthropic, I'm happy to talk any of this through. And if you'd like the same teardown for your company, [SEO Skill](/) will run it for you.
 
 ## Further reading
 
-- [GEO is a distraction](https://www.mariehaynes.com/geo-is-a-distraction), Marie Haynes: Google still drives most conversions, which is why the head tags and redirects come first.
+- [GEO is a distraction](https://www.mariehaynes.com/geo-is-a-distraction), Marie Haynes, on why Google still drives most conversions. That's why the head tags and redirects come first.
 - [Make each section useful on its own](https://x.com/i/web/status/2097252340973617458), on how answer engines read a page one section at a time.
 - [Almost nobody gets XML sitemaps right](https://joost.blog/broken-sitemaps), Joost de Valk.

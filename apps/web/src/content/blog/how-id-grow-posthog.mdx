@@ -110,7 +110,7 @@ PostHog doesn't publish its search traffic, so every visit number here is a thir
 DataForSEO's database lists 5,437 searches where posthog.com ranks in US Google, worth about 10,662 visits a month (November 2026). The 160 searches with "posthog" in them bring 8,672 of those visits (81%). "posthog" alone gets 33,100 US searches a month.
 
 <TrafficMap
-  caption="Estimated monthly US Google visits to posthog.com and its subdomains by kind of page (DataForSEO, November 2026). Brand means the search contains &quot;posthog&quot;. Editorial means articles: the blog, the newsletter and the sections like them."
+  caption="Estimated monthly US Google visits to posthog.com and its subdomains by kind of page (DataForSEO, November 2026). Brand means the search contains &quot;posthog&quot;. Editorial means articles in the blog, the newsletter and the sections like them."
   items={[
     { label: "Brand searches", value: 8672, tone: "brand", note: "\"posthog\", \"posthog login\", \"posthog mcp\", \"posthog pricing\" and 156 more" },
     { label: "Editorial", value: 1110, tone: "other", note: "Non-brand searches landing on the blog, newsletter, product engineers, founders and handbook pages" },
@@ -122,7 +122,7 @@ DataForSEO's database lists 5,437 searches where posthog.com ranks in US Google,
 
 Brand demand at this level is the asset.
 
-The gap is the 2.5% landing on pages that sell: about 270 estimated visits a month from non-brand searches. A third-party panel put all posthog.com traffic at about 3.3 million visits in September 2026 (Semrush, through [Exploding Topics](https://analytics.explodingtopics.com/website/posthog.com)), so the search estimate above is small next to the whole site and should be read for its shape.
+The gap is the 2.5% landing on pages that sell, which is about 270 estimated visits a month from non-brand searches. A third-party panel put all posthog.com traffic at about 3.3 million visits in September 2026 (Semrush, through [Exploding Topics](https://analytics.explodingtopics.com/website/posthog.com)), so the search estimate above is small next to the whole site and should be read for its shape.
 
 ## AI answers named PostHog in 24 of 30 answers, and linked a page past the homepage in 5
 
@@ -154,9 +154,9 @@ PostHog's handbook draws the same line between mention rate and citation rate. O
 
 ### YouTube and Reddit were the sources Google's engines cited most
 
-Across the 30 answers, YouTube was cited in 8 and Reddit in 7, more than any vendor except PostHog. Two of the YouTube videos were PostHog's own: [The top session recording and replay tools (open source)](https://www.youtube.com/watch?v=mWW3lJw81LE), cited in both Google answers for session replay, and [How to set up Next.js A/B tests](https://www.youtube.com/watch?v=QfTMREUEc18), cited in the AI Overview for the Next.js question.
+Across the 30 answers, YouTube was cited in 8 and Reddit in 7, more than any vendor except PostHog. Two of the YouTube videos were PostHog's own. They were [The top session recording and replay tools (open source)](https://www.youtube.com/watch?v=mWW3lJw81LE), cited in both Google answers for session replay, and [How to set up Next.js A/B tests](https://www.youtube.com/watch?v=QfTMREUEc18), cited in the AI Overview for the Next.js question.
 
-I'd copy that: a video for each comparison and docs topic, with the page linked in its description.
+I'd copy that by making a video for each comparison and docs topic, with the page linked in its description.
 
 ## Google's AI Overviews cite PostHog's product pages for searches where they don't rank
 
@@ -177,15 +177,15 @@ For "session replay" (1,000 US searches a month), Google's AI Overview cited pos
   ]}
 />
 
-The session replay page is indexed: a `site:` search for posthog.com/session-replay returned it on desktop and mobile on 7 November 2026. These checks don't show why the AI Overview quotes it while the organic results leave it out of the top 26.
+The session replay page is indexed. A `site:` search for posthog.com/session-replay returned it on desktop and mobile on 7 November 2026. These checks don't show why the AI Overview quotes it while the organic results leave it out of the top 26.
 
 ## Every posthog.com page sends 857 KB of CSS before its first word
 
-posthog.com is built with Gatsby, and every page I fetched inlines Gatsby's whole global stylesheet into the HTML: 857,296 bytes at the least. After it come about 300 KB of inline SVG icons for the desktop-style menus and windows. Only then does the page start.
+posthog.com is built with Gatsby, and every page I fetched inlines Gatsby's whole global stylesheet into the HTML. That is 857,296 bytes at the least. After it come about 300 KB of inline SVG icons for the desktop-style menus and windows. Only then does the page start.
 
-I fetched 1,174 posthog.com addresses from the sitemap as Googlebot's smartphone user agent on 6 November 2026: all 320 API reference pages and a sample of every other section. The median page was 1,348,769 bytes. On all 1,107 pages with an H1, the H1 started between 1,219,664 and 1,765,118 bytes into the file.
+I fetched 1,174 posthog.com addresses from the sitemap as Googlebot's smartphone user agent on 6 November 2026. They were all 320 API reference pages and a sample of every other section. The median page was 1,348,769 bytes. On all 1,107 pages with an H1, the H1 started between 1,219,664 and 1,765,118 bytes into the file.
 
-That matters because [Google's Googlebot documentation](https://developers.google.com/search/docs/crawling-indexing/googlebot) says Googlebot "crawls the first 2MB of a supported file type", that the limit "is applied on the uncompressed data", and that at the cutoff it "only sends the already downloaded part of the file for indexing consideration". 81 of the 1,174 pages run past 2 MB: 77 API reference pages, the changelog, the Learn page, the main feature flags docs page and the Hogpedia feature flags article.
+That matters because [Google's Googlebot documentation](https://developers.google.com/search/docs/crawling-indexing/googlebot) says Googlebot "crawls the first 2MB of a supported file type", that the limit "is applied on the uncompressed data", and that at the cutoff it "only sends the already downloaded part of the file for indexing consideration". 81 of the 1,174 pages run past 2 MB. They are 77 API reference pages, the changelog, the Learn page, the main feature flags docs page and the Hogpedia feature flags article.
 
 <BeforeAfter
   caption="Where the words sit in posthog.com/hogpedia/feature-flags today, and with the stylesheet linked and the hedgehog served as an image file (byte offsets in the uncompressed HTML, fetched 6 November 2026)."
@@ -255,7 +255,7 @@ The thread already works as the short version. Reply under it with a link to the
 
 ## PostHog has 81 comparison pages, and five of the six I checked missed page one
 
-PostHog's sitemap lists 81 comparison pages under posthog.com/compare, from Amplitude alternatives to PostHog vs LaunchDarkly. The one that ranks is the one AI answers cite: the Amplitude alternatives page was fifth on desktop and mobile, and the AI Overview cited it in both live checks.
+PostHog's sitemap lists 81 comparison pages under posthog.com/compare, from Amplitude alternatives to PostHog vs LaunchDarkly. The one that ranks is the one AI answers cite. The Amplitude alternatives page was fifth on desktop and mobile, and the AI Overview cited it in both live checks.
 
 The other five I checked didn't reach page one. In live US results on 6 November 2026, PostHog's comparison page for Mixpanel alternatives was 12th on mobile and missing on desktop. The pages for Sentry, LaunchDarkly and Langfuse alternatives weren't in the top 26, and "google analytics alternatives" (590 US searches a month) showed no posthog.com page, though PostHog has a page called Google Analytics alternative.
 
@@ -289,7 +289,7 @@ Both copies point their canonical tag at themselves, so Google picks, and on 6 N
 
 ## Housekeeping: shared titles, Article markup and nine README redirects
 
-Thirteen newsletter category pages, such as posthog.com/newsletter/engineering, share one title: the word "Posts" and the brand name. My crawl of 201 pages found 110 with a title another page also uses. Each category page should name its category.
+Thirteen newsletter category pages, such as posthog.com/newsletter/engineering, share one title, made of the word "Posts" and the brand name. My crawl of 201 pages found 110 with a title another page also uses. Each category page should name its category.
 
 199 of those 201 pages had no structured data. I'd add `Article` markup to blog and newsletter posts, with the author, publish date and `dateModified`.
 
@@ -300,7 +300,7 @@ PostHog's GitHub README, on a repo with 40,675 stars, links nine posthog.com add
 Here's every change I'd make:
 
 <PlanSteps
-  steps={[{"title": "Link the stylesheet", "body": "Replace the inline Gatsby global CSS with a link in gatsby-ssr.js, and move inline SVGs over 20 KB into image files."}, {"title": "Evaluation guide", "body": "Publish How to evaluate LLMs and AI agents from the benchmark post and thread, and link it from the AI observability page."}, {"title": "Comparison pages for agents", "body": "Markdown copies and llms.txt entries for all 81 comparison pages, each with a dated answer at the top."}, {"title": "Product page Markdown", "body": "Turn each 95-word product Markdown copy into the full page: what it does, pricing and comparisons."}, {"title": "Significance calculator", "body": "A free calculator on the Experiments engine, with a link to run the test in PostHog."}, {"title": "Newsletter on one domain", "body": "Publish on posthog.com first and send Substack as email with a short web post that links back."}, {"title": "Housekeeping", "body": "Category page titles, Article markup on posts, and the nine README links that redirect."}]}
+  steps={[{"title": "Link the stylesheet", "body": "Replace the inline Gatsby global CSS with a link in gatsby-ssr.js, and move inline SVGs over 20 KB into image files."}, {"title": "Evaluation guide", "body": "Publish How to evaluate LLMs and AI agents from the benchmark post and thread, and link it from the AI observability page."}, {"title": "Comparison pages for agents", "body": "Markdown copies and llms.txt entries for all 81 comparison pages, each with a dated answer at the top."}, {"title": "Product page Markdown", "body": "Turn each 95-word product Markdown copy into the full page, with what it does, pricing and comparisons."}, {"title": "Significance calculator", "body": "A free calculator on the Experiments engine, with a link to run the test in PostHog."}, {"title": "Newsletter on one domain", "body": "Publish on posthog.com first and send Substack as email with a short web post that links back."}, {"title": "Housekeeping", "body": "Category page titles, Article markup on posts, and the nine README links that redirect."}]}
 />
 
 Then check the results:
@@ -354,6 +354,6 @@ cites a page that doesn't rank.
 Rank the fixes by how close each is to revenue.
 ```
 
-On your own site, the hosted server adds what I couldn't see from outside: your real Search Console clicks and queries, and the canonical Google chose for each page.
+On your own site, the hosted server adds your real Search Console clicks and queries, and the canonical Google chose for each page. I couldn't see those from outside.
 
 If you're at PostHog, I'm happy to talk any of this through. And if you'd like the same teardown for your company, [SEO Skill](/) will run it for you.

@@ -72,11 +72,11 @@ Cognition makes Devin, an AI coding agent, and Devin Desktop, the IDE it called 
 
 On 23 September 2026 Cognition posted an [SEO & AEO listing](https://jobs.ashbyhq.com/cognition/7a9d995f-bc55-4347-9db3-1d366308a95e) on its jobs board, and it was still open on 6 November 2026. It asks for someone to "build Cognition's organic demand engine from the ground up... across Devin, Windsurf, and our broader web presence". This post is what I'd do in that job.
 
-It uses only what anyone can see from outside: public pages, search data, AI answers and Cognition's own posts.
+It uses only public pages, search data, AI answers and Cognition's own posts, which anyone can see from outside.
 
 Key findings:
 
-- Cognition's search traffic is split across five hosts: about 63,689 estimated Google visits a month between them (Ahrefs, November 2026). Cursor gets about 398,182.
+- Cognition's search traffic is split across five hosts, with about 63,689 estimated Google visits a month between them (Ahrefs, November 2026). Cursor gets about 398,182.
 - Those hosts have up to 74,752 linking sites between them, against Cursor's 62,594. The authority is there; it's spread thin.
 - About 96% of the estimated traffic from Cognition's top 150 US keywords is brand search (DataForSEO). Devin wasn't in the top 27 for "ai coding agent" (8,100 US searches a month) in either of two live checks.
 - AI answers named Devin in 19 of 30 answers to coding agent questions, and in 0 of 18 answers about COBOL and codebase migrations, the work its enterprise customers buy.
@@ -113,7 +113,7 @@ The biggest of the three is windsurf.com, a site Cognition is retiring. Ahrefs e
   notes={[{ at: "Jul 25", text: "Cognition buys Windsurf" }, { at: "Jun 26", text: "Windsurf becomes Devin Desktop; windsurf.com starts redirecting" }]}
 />
 
-Some of that fall is the market, since Cursor fell too, from 715,169 in July 2025 to 398,280 in November 2026 (Ahrefs monthly history). Windsurf fell further: to 12% of its July 2025 estimate, against Cursor's 56%.
+Some of that fall is the market, since Cursor fell too, from 715,169 in July 2025 to 398,280 in November 2026 (Ahrefs monthly history). Windsurf fell further, to 12% of its July 2025 estimate, against Cursor's 56%.
 
 ## Fewer than 1 in 30 visits reaches a page that sells
 
@@ -138,7 +138,7 @@ The gap is the people who don't know the names yet. In DataForSEO's top 150 US k
 
 ## Five hosts become two: devin.ai for Devin, cognition.com for the company
 
-The listing asks for a "technical SEO roadmap across site architecture, crawlability, indexing, internal linking, structured data, page performance, redirects, canonicalization". All of those start with the same decision: which host Google and AI answers should treat as Devin's, and which as the company's.
+The listing asks for a "technical SEO roadmap across site architecture, crawlability, indexing, internal linking, structured data, page performance, redirects, canonicalization". All of those start with the same decision about which host Google and AI answers should treat as Devin's, and which as the company's.
 
 Each host has built its own links, and today most of those links reach Devin through a redirect.
 
@@ -157,11 +157,11 @@ Each host has built its own links, and today most of those links reach Devin thr
   ]}
 />
 
-I'd make devin.ai the home of everything Devin: product, pricing, docs, the product blog and every page that sells. It has the highest Domain Rating of the set (84, [Domain Rating by Ahrefs](https://ahrefs.com/)), it already holds the pricing page and the 173 moved Windsurf posts, and it's the name buyers search for ("devin" gets 22,200 US searches a month, DataForSEO). Every Windsurf host folds into it.
+I'd make devin.ai the home of everything Devin. That means product, pricing, docs, the product blog and every page that sells. It has the highest Domain Rating of the set (84, [Domain Rating by Ahrefs](https://ahrefs.com/)), it already holds the pricing page and the 173 moved Windsurf posts, and it's the name buyers search for ("devin" gets 22,200 US searches a month, DataForSEO). Every Windsurf host folds into it.
 
 cognition.com stays as the company site, the way Anthropic runs anthropic.com next to claude.com. anthropic.com keeps the research and company news, and anthropic.com/pricing redirects to claude.com/pricing (checked 6 November 2026). For Cognition that means research, FrontierCode, careers and company news on cognition.com, and anything a buyer would act on at devin.ai.
 
-The split only works if each launch has one home. Today two blogs announce product launches: Devin Desktop on cognition.com, Devin Review 2.0 on devin.ai. Product launches belong on devin.ai, with a short company post on cognition.com that links to them.
+The split only works if each launch has one home. Today two blogs announce product launches. Devin Desktop was announced on cognition.com and Devin Review 2.0 on devin.ai. Product launches belong on devin.ai, with a short company post on cognition.com that links to them.
 
 <UrlMap
   caption="Every host I found that leads to Cognition, and what I'd do with each. Status checked 6 November 2026."
@@ -181,17 +181,17 @@ The split only works if each launch has one home. Today two blogs announce produ
 
 **The fix, in order:**
 
-1. Build the URL map first: every URL in each old sitemap, every URL Ahrefs shows with links or traffic, and every address in the Wayback Machine, each with one final address on devin.ai or cognition.com.
+1. Build the URL map first. It lists every URL in each old sitemap, every URL Ahrefs shows with links or traffic, and every address in the Wayback Machine, each with one final address on devin.ai or cognition.com.
 2. Move the content to its new home and check each page renders with a self canonical.
 3. Switch the redirects on, one rule per host, each going straight to its final page in one hop.
-4. Update the links Cognition controls: the 598 blog links between its own hosts (172 of them pass through a redirect today and 20 end in a 404), the X and LinkedIn profiles, and the JSON-LD.
+4. Update the links Cognition controls. These are the 598 blog links between its own hosts (172 of them pass through a redirect today and 20 end in a 404), the X and LinkedIn profiles, and the JSON-LD.
 5. Submit the new sitemaps and use Search Console's Change of Address tool for each old domain.
 
-To confirm it worked, crawl the URL map with `seo crawl --mode list`: every old address should answer with a single 301 to a 200 page.
+To confirm it worked, crawl the URL map with `seo crawl --mode list`. Every old address should answer with a single 301 to a 200 page.
 
 ## Cognition has lost "windsurf", its biggest brand search, to the sport
 
-"windsurf" gets 60,500 US searches a month (DataForSEO), shared with the sport. On 6 November 2026 the sport had the results page to itself: Wikipedia's windsurfing article, schools, board shops and dictionaries. Cognition's best result was a docs.devin.ai page on Windsurf plugins, 14th on desktop and 13th on mobile (DataForSEO live checks, US, organic positions counted by hand).
+"windsurf" gets 60,500 US searches a month (DataForSEO), shared with the sport. On 6 November 2026 the results page was all about the sport, led by Wikipedia's windsurfing article, with schools, board shops and dictionaries below it. Cognition's best result was a docs.devin.ai page on Windsurf plugins, 14th on desktop and 13th on mobile (DataForSEO live checks, US, organic positions counted by hand).
 
 The old Windsurf vs Cursor page on windsurf.com still ranks for the comparison. It was fourth for "cursor vs windsurf" on desktop, in 1 of 2 checks; on mobile it wasn't in the top 28. Ahrefs still credits it with an estimated 11,480 visits a month, from rankings it recorded before these checks, so read that as past traffic.
 
@@ -213,7 +213,7 @@ The page sells a product that has a new name.
   }}
 />
 
-The body says "Download Windsurf" and compares SWE-1.5 with Sonnet 4.5. AI answers repeat that history: Google's AI Mode and AI Overview named Windsurf but not Devin when asked for the best AI code editor (DataForSEO, 6 November 2026).
+The body says "Download Windsurf" and compares SWE-1.5 with Sonnet 4.5. AI answers repeat that history. Google's AI Mode and AI Overview named Windsurf but not Devin when asked for the best AI code editor (DataForSEO, 6 November 2026).
 
 **The fix:** move the page to devin.ai/compare/windsurf-vs-cursor, rewrite it for Devin Desktop with today's models and prices, and 301 the old address to it. Keep "Windsurf" in the title for as long as people search for it. Then give devin.ai/desktop one line near the top: "Devin Desktop is the IDE formerly called Windsurf." That line, on a page Google can rank, is how Cognition gets back onto the "windsurf" results page next to the sport.
 
@@ -224,7 +224,7 @@ Migrations are where Cognition's enterprise stories are. Its blog has "How Devin
 The AI answers to the same questions go to IBM and AWS.
 
 <KeywordTable
-  caption="Six migration questions, three engines each: ChatGPT search, Google AI Mode and Google's AI Overview (DataForSEO, US, 6 November 2026, one run). Named most is counted from the answer text."
+  caption="Six migration questions, each asked of ChatGPT search, Google AI Mode and Google's AI Overview (DataForSEO, US, 6 November 2026, one run). Named most is counted from the answer text."
   sortBy="question"
   columns={[{ key: 'question', label: 'Question', format: 'text' }, { key: 'devin', label: 'Devin', format: 'text' }, { key: 'named', label: 'Named most', format: 'text' }]}
   rows={[
@@ -241,7 +241,7 @@ Across the 18 answers, IBM was named in 12 and Claude in 9. Devin was named in n
 
 AI answers aren't deterministic. The same question can get a different answer on the next run, so every count in this post is one run on 6 November 2026.
 
-Google already knows Devin has a page on this. Its AI Overview for "cobol modernization" cites the Devin docs page on COBOL (DataForSEO, US, 6 November 2026, desktop and mobile). One of the 18 answers above cites it too, without naming Devin. But the page has nothing an answer can quote about Devin: no customer, no number, no visible date.
+Google already knows Devin has a page on this. Its AI Overview for "cobol modernization" cites the Devin docs page on COBOL (DataForSEO, US, 6 November 2026, desktop and mobile). One of the 18 answers above cites it too, without naming Devin. But the page has nothing an answer can quote about Devin. It names no customer and gives no number. It has no visible date either.
 
 ### What the cited pages have
 
@@ -288,7 +288,7 @@ Outside migrations, the brand already works. I asked ten questions a buyer might
   ]}
 />
 
-Devin wins the questions about what it does differently: background work, pull requests, parallel cloud agents. It loses "best AI coding agent" and "best for enterprise teams", which are the two closest to a purchase.
+Devin wins the questions about background work, pull requests and parallel cloud agents, which is what it does differently. It loses "best AI coding agent" and "best for enterprise teams", which are the two closest to a purchase.
 
 It's also missing from every answer about AI code review, the day after [Devin Review 2.0](https://devin.ai/blog/devin-review-2) launched on 5 November 2026.
 
@@ -301,7 +301,7 @@ Devin's meta description and JSON-LD call it "an AI coding agent and software en
 The category words are what people search for.
 
 <KeywordTable
-  caption="The category searches. Volume and difficulty: DataForSEO, US, November 2026. Who ranks: the top two organic results in a DataForSEO live check, US desktop, 6 November 2026, counted by hand. Brand searches are left out."
+  caption="The category searches. Volume and difficulty: DataForSEO, US, November 2026. Who ranks comes from the top two organic results in a DataForSEO live check, US desktop, 6 November 2026, counted by hand. Brand searches are left out."
   sortBy="volume"
   columns={[{ key: 'keyword', label: 'Search', format: 'text' }, { key: 'volume', label: 'US searches', format: 'number', short: 'US' }, { key: 'difficulty', label: 'Difficulty', format: 'number', short: 'KD' }, { key: 'who', label: 'Who ranks', format: 'text' }]}
   rows={[
@@ -318,7 +318,7 @@ The category words are what people search for.
   ]}
 />
 
-The listing names these themes itself: "AI coding agents, agentic engineering, developer productivity". Augment Code, with a Domain Rating of 76 to Devin's 84 (Ahrefs), ranks first for two of them, "ai coding assistant" and "ai ide", with one roundup page. Devin ranks for one: its Coding Agents 101 guide was eighth for "ai coding agents" on desktop.
+The listing names these themes itself: "AI coding agents, agentic engineering, developer productivity". Augment Code, with a Domain Rating of 76 to Devin's 84 (Ahrefs), ranks first for two of them, "ai coding assistant" and "ai ide", with one roundup page. Devin ranks for one. Its Coding Agents 101 guide was eighth for "ai coding agents" on desktop.
 
 <SerpLadder
   keyword="ai coding agent"
@@ -340,7 +340,7 @@ The listing names these themes itself: "AI coding agents, agentic engineering, d
   ]}
 />
 
-**The fix:** say it on the homepage, in the heading or the first line: "Devin is the AI coding agent for engineering teams." Then publish one guide, "What is an AI coding agent?", at devin.ai/ai-coding-agent. It answers what an agent does, what it costs, which one to use, and whether ChatGPT has one. The Coding Agents 101 guide that already ranks for "ai coding agents" is a starting point. Cognition has the evidence most roundups don't: its own benchmark and its customers' numbers.
+**The fix:** say it on the homepage, in the heading or the first line: "Devin is the AI coding agent for engineering teams." Then publish one guide, "What is an AI coding agent?", at devin.ai/ai-coding-agent. It answers what an agent does, what it costs, which one to use, and whether ChatGPT has one. The Coding Agents 101 guide that already ranks for "ai coding agents" is a starting point. Cognition has its own benchmark and its customers' numbers, which most roundups don't.
 
 ## Comparison searches add up to 37,270 a month, and Cognition's only comparison page is from 2025
 
@@ -467,7 +467,7 @@ Here's every change I'd make:
 Then check the results:
 
 <PlanSteps
-  steps={[{"marker": "Day 0", "title": "Ask Google to recrawl", "body": "Submit every new and changed URL, and the old URLs that now redirect, to Index My Site."}, {"marker": "Day 3", "title": "Redirects", "body": "Crawl the URL map with seo crawl --mode list. Every old address should give one 301 to a 200 page."}, {"marker": "Day 7", "title": "Search Console", "body": "Check the Change of Address status and impressions for \"windsurf\", \"ai coding agent\" and \"devin vs cursor\"."}, {"marker": "Day 14", "title": "Indexing", "body": "Check the migration and comparison pages are indexed, and the old hosts are dropping out."}, {"marker": "Day 30", "title": "AI answers", "body": "Ask the same 16 questions for Devin and Cursor, and count the answers that name or cite Devin."}, {"marker": "Day 30", "title": "Pipeline", "body": "Compare demo requests and sign-ups from organic search with the month before, as the listing asks: pipeline, not traffic."}]}
+  steps={[{"marker": "Day 0", "title": "Ask Google to recrawl", "body": "Submit every new and changed URL, and the old URLs that now redirect, to Index My Site."}, {"marker": "Day 3", "title": "Redirects", "body": "Crawl the URL map with seo crawl --mode list. Every old address should give one 301 to a 200 page."}, {"marker": "Day 7", "title": "Search Console", "body": "Check the Change of Address status and impressions for \"windsurf\", \"ai coding agent\" and \"devin vs cursor\"."}, {"marker": "Day 14", "title": "Indexing", "body": "Check the migration and comparison pages are indexed, and the old hosts are dropping out."}, {"marker": "Day 30", "title": "AI answers", "body": "Ask the same 16 questions for Devin and Cursor, and count the answers that name or cite Devin."}, {"marker": "Day 30", "title": "Pipeline", "body": "Compare demo requests and sign-ups from organic search with the month before, since the listing asks for pipeline."}]}
 />
 
 ## Get the changes seen quickly
@@ -478,8 +478,8 @@ A move this size depends on Google recrawling the old addresses to find the redi
 
 These are from my own library, and each one fits a part of this plan:
 
-- Chris Long on [documentation as an AEO strategy](https://x.com/i/web/status/2098135376447578187) (September 2026): some clients get 40% or more of their AI citations from docs, which is why the Devin docs should carry the migration answers.
-- [Make each section useful on its own](https://x.com/i/web/status/2097252340973617458) (September 2026): AI answers lift one passage at a time, so put the claim, the number and the source together.
+- Chris Long on [documentation as an AEO strategy](https://x.com/i/web/status/2098135376447578187) (September 2026). Some clients get 40% or more of their AI citations from docs, which is why the Devin docs should carry the migration answers.
+- [Make each section useful on its own](https://x.com/i/web/status/2097252340973617458) (September 2026), on why AI answers lift one passage at a time. Put the claim, the number and the source together.
 - [AI SEO: writing that's specific may get cited more](https://www.searchenginejournal.com/ai-seo-writing-thats-specific-may-get-cited-more/582531) (Search Engine Journal, July 2026).
 - [The three lives of schema markup](https://suganthan.com/blog/three-lives-of-schema-markup) by Suganthan Mohanadasan, on what JSON-LD does for Google and for LLMs.
 - Profound's [AEO guide](https://www.tryprofound.com/aeo-guide), on choosing the prompts to track.

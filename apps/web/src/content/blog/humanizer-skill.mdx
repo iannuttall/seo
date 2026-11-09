@@ -9,19 +9,19 @@ cover:
   title: left
 ---
 
-I use a humanizer skill for one reason: to make the idea and the message in a piece as clear and direct as they can be for the person reading it. Getting past an AI detector was never the goal, and neither was sounding human.
+I use a humanizer skill to make the idea and the message in a piece as clear and direct as they can be for the person reading it. Getting past an AI detector was never the goal, and neither was sounding human.
 
-I still do the human part myself: the plan, the angle, the idea and the story behind a piece, and the taste to know when it's right. When an agent writes 10 times faster than I can, I see no reason to type the words by hand, any more than I'd hand-code software or design a UI by hand.
+I still do the human part myself. That means the plan, the angle, the idea and the story behind a piece, and the taste to know when it's right. When an agent writes 10 times faster than I can, I see no reason to type the words by hand, any more than I'd hand-code software or design a UI by hand.
 
 The AI writing tells matter because they get in the way. A forced triad, a slogan fragment or a puffed-up claim makes the reader work harder to find the point.
 
 In 24 drafts written by Claude, a blind judge found 212 of these tells, about 24 per 1,000 words. 187 of the 212 (88%) came from just 8 sentence patterns.
 
-A humanizer skill is a file that teaches your agent to find those patterns and rewrite them. You can build one in an afternoon: a check for each tell, a rewrite rule for each check, and one rule about facts that matters more than all of them.
+A humanizer skill is a file that teaches your agent to find those patterns and rewrite them. You can build one in an afternoon. It needs a check for each tell, a rewrite rule for each check, and one rule about facts that matters more than all of them.
 
 Key findings:
 
-- Forced triads were the most common tell: 63 of 212 (30%), in all 24 drafts.
+- Forced triads were the most common tell, with 63 of 212 (30%), in all 24 drafts.
 - The famous AI words such as "delve" and "testament" were only 4 of 212 tells (2%). The tells in Claude's drafts are sentence shapes.
 - A plain "make it sound like a person wrote it" prompt cut the tells from 212 to 134 but added 54 claims the drafts never made, in 18 of 24 rewrites.
 - Rewriting with fix rules that forbid new facts cut the tells to 139 and added 5 flagged claims in 4 rewrites. A hand check found all 5 were rewordings or judge errors.
@@ -94,7 +94,7 @@ A list where every item opens with a bolded phrase and a full stop or colon is t
 
 ## One-line closers and fragments: 26 tells in 15 drafts
 
-These are the short lines that end a paragraph or a post with a flourish: a slogan fragment, a sign-off or a sales question. They restate the point instead of adding to it.
+These are the short lines, such as a slogan fragment, a sign-off or a sales question, that end a paragraph or a post with a flourish. They restate the point instead of adding to it.
 
 | In the draft | After the rewrite |
 | --- | --- |
@@ -135,7 +135,7 @@ Models tell the reader something matters instead of showing it: "a major milesto
 
 ## Sales words and arguing with no one: 18 tells in 9 drafts
 
-Sales words such as "stunning", "magical" and "nestled" made up 9 tells, almost all of them in the two travel posts. Arguing with no one made up 8.7: an answer to an objection nobody raised.
+Sales words such as "stunning", "magical" and "nestled" made up 9 tells, almost all of them in the two travel posts. Arguing with no one, which means answering an objection nobody raised, made up 8.7.
 
 | In the draft | After the rewrite |
 | --- | --- |
@@ -145,11 +145,11 @@ Sales words such as "stunning", "magical" and "nestled" made up 9 tells, almost 
 
 **Check:** a word list for travel and product copy, and short denials such as "It isn't perfect.", "This isn't about..." and "None of this means...".
 
-**Rewrite rule:** cut the denial and start with the point. Swap a sales word for the detail that earned it: a price, a size, a date.
+**Rewrite rule:** cut the denial and start with the point. Swap a sales word for the detail that earned it, such as a price, a size or a date.
 
 ## The fact rule: a plain prompt added 54 claims, fix rules added 5
 
-The rule that matters most in a humanizer skill is about facts. Ask an agent to make text sound human and it adds what a human would have: an experience, a name, a reason, a number.
+The rule that matters most in a humanizer skill is about facts. Ask an agent to make text sound human and it adds the details a human would have, such as an experience, a name, a reason or a number.
 
 A plain prompt, "Rewrite the prose in draft.md so it sounds like a person wrote it", cut the tells from 212 to 134. It also added 54 claims the drafts never made, in 18 of the 24 rewrites. In one LinkedIn post it said "the people made it hard to leave", which the draft never said.
 
@@ -157,7 +157,7 @@ The rewrite that followed fix rules cut the tells to 139 and the judge flagged 5
 
 Two things separate the two rewrites. The plain prompt asked for a voice, so the agent supplied one. The fix rules named each line to change, and the rules most likely to tempt an agent say where the words must come from. The fix for inflated significance reads: "Cut it, or name the concrete effect the text already states. Do not add a number that is not there."
 
-Put that rule in your skill once, then repeat it in each rule an agent is most tempted to fill in: closers, significance and sales words.
+Put that rule in your skill once, then repeat it in the rules for closers, significance and sales words, where an agent is most tempted to fill in.
 
 ## Write the skill as checks, rules and a loop
 
@@ -260,7 +260,7 @@ If "work" means getting past an AI detector, the answer in this test was no for 
 
 An open detector, [desklib/ai-text-detector-v1.01](https://huggingface.co/desklib/ai-text-detector-v1.01), scored 22 of the 24 drafts at 50% AI or higher. It scored 22 of the 24 rewrites made with `seo lint` the same way, and 20 of the 24 plain prompt rewrites. It scored all 5 human texts at 4% or lower.
 
-A [September 2026 test by aidetectors.io](https://www.aidetectors.io/blog/do-ai-humanizers-work) found the same with commercial detectors: GPTZero and Pangram scored every humanized text it tried as 100% AI.
+A [September 2026 test by aidetectors.io](https://www.aidetectors.io/blog/do-ai-humanizers-work) found the same with commercial detectors. GPTZero and Pangram scored every humanized text it tried as 100% AI.
 
 That result doesn't matter to me, because detection was never the goal. I don't hide that an agent wrote the words. I check that they say what I mean as clearly and directly as they can, and that is the job a humanizer skill does.
 

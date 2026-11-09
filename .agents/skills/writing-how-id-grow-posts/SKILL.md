@@ -28,7 +28,7 @@ Sources:
 - **One provider per table**, named in the caption. Ahrefs and DataForSEO volumes can differ by 7 times for the same search.
 - **The CLI** for crawls. Hosted platforms (Substack, Webflow, Shopify) rate-limit, so crawl them with `--concurrency 2 --fetch-interval-cap 1 --fetch-interval-ms 1200 --refresh`.
 - Ahrefs MCP calls return the data JSON, then a second JSON object (`{"apiUsageCosts":...}`) and a line starting "Display these". Cut the raw text at `\n{"apiUsageCosts"` (or at `\nDisplay these`) and parse what comes before it. Ask the SERP overview for one keyword per call.
-- **AI answers:** `seo research ai_answers --target <domain> --keywords "<q1>,<q2>"` asks ChatGPT search, Google AI Mode and AI Overviews up to 10 questions through DataForSEO, for any domain, and says whether each answer cites or mentions it (about $0.01 a question). Run the same questions for the top competitor so the result has a comparison. Ahrefs Brand Radar isn't on the plan.
+- **AI answers:** `seo research ai_answers --target <domain> --keywords "<q1>,<q2>"` asks ChatGPT search, Google AI Mode and AI Overviews up to 10 questions through DataForSEO, for any domain, and says whether each answer cites or mentions it (about $0.01 a question). Run it once, with the same questions for the top competitor, so the result has a comparison (step 13). Ahrefs Brand Radar isn't on the plan.
 
 Save raw output under `.amp/in/research/<slug>-<date>/` (biome ignores `.amp/`), with a `sources.md` that lists each number, its tool call and date. Transcribe MCP output there by hand, since code_exec can't write files. Never commit real data outside the post itself.
 
@@ -54,7 +54,18 @@ For each domain:
     - **Clusters:** group the gaps into clusters with a head term and the supporting searches, total volume and the easiest difficulty. Each cluster gets a proposed page: title, URL, the sections it covers and the searches each section answers (`KeywordTable`).
     - **Social posts:** every post from step 9 that's worth a page gets the same treatment: target search, title, URL and sections mapped to searches.
 12. **Free tools and programmatic pages:** look for searches with tool intent (checker, generator, calculator, template, "free") and for repeatable page patterns (one page per tool, model, integration or city) in the company's niche. Record volume, who ranks and what the company already has (data, an API, a product feature) that could power the page. Propose only what the company can build from what it owns.
-13. **AI visibility:** pick 5 to 10 questions buyers ask an AI assistant about the company's category ("best <category> for <use>", "how do I <job>"). Run `ai_answers` for the company and its top competitor. Report who's cited, which pages get cited, and what the cited pages have that the company's don't (a direct answer near the top, a comparison table, a definition, fresh dates). Pair it with step 10: an AI crawler that gets the full page but no cited answer points to content, not access.
+13. **AI answers:** write 10 questions before running anything, and save them in the research folder so they can't be swapped after you see the results. Split them into three kinds. Product questions ask about the company's own product, such as its price, a feature or how to set it up. Category questions ask what something is or how to do it. Choice questions ask which product to pick, with "best", "vs" or "alternatives". Run `ai_answers` once for the company and once for its top competitor, with the same questions. Before a claim rests on one answer, or on a difference of one or two, ask those questions once more. If the answer changes, drop the claim or give both results.
+
+    Count each engine and each kind of question separately. For every answer, record whether it links a company page, names the company without a link, or does neither, and which page it links.
+
+    Read the counts against what's normal. ChatGPT usually links a brand it names. Google's AI Mode and AI Overviews usually cite lists, videos and forums for choice questions, even when they name the brand. All three usually link the brand's own page for product questions. A gap that matches this pattern isn't a finding.
+
+    These are findings:
+    - An answer a company page should supply that cites a third party or the wrong company page instead, such as the homepage or another country's copy.
+    - A choice question where a competitor's own page is cited. It shows a vendor page can win that question, so the company needs one too.
+    - The lists and videos cited for choice questions. They are the outreach and content targets.
+
+    For each finding, check whether the company has a page titled with the question, and whether that page ranks in Google for the search. That decides most of what Google's AI answers cite. Pair it with step 10. An AI crawler that gets the full page but no citation points to content, not access.
 14. **Links and PR:** links come from having something worth linking to, so look for what the company owns that others would cite.
     - **Link gap:** run `seo research link_gap --target <domain> --competitors <a>,<b>,<c> --provider ahrefs`. It lists the referring domains that link to two or more competitors and not to the company, highest Domain Rating first. Then find the competitor page each one links to. Group them by why they link: a tool, a data report, a comparison, a quote in a news story.
     - **Unique data:** list the data only the company has (usage numbers, benchmarks, model scores, a survey of its readers, prices it tracks) and one report each could become, with a dated headline a journalist could quote ("1.7% of 49,345 sites were deindexed in March 2024"). Check who covered the last report like it (`serp` for the topic plus "study", "report" or "data"), since those writers are the outreach list.
@@ -113,7 +124,7 @@ Sections, in this order, adjusted to the company:
 3. One section per revenue line: the demand, who ranks, whether the company can compete there, and what page it needs.
 4. Portfolio links: where the company's own sites link to each other, with an example page and the exact link.
 5. New content: the keyword clusters from step 11, the free tools and page patterns from step 12, and the social posts worth a page. Each proposal has a target search with volume, a title and its sections.
-6. AI search: what crawlers get (step 10) and who AI answers cite (step 13), with the fixes the platform allows.
+6. AI search: what crawlers get (step 10) and the AI answer findings from step 13, by engine and kind of question, with the fixes the platform allows.
 6a. Links and PR (step 14): the link gap as a `UrlMap` or table, the data reports with draft headlines, and the outreach list an agent can work through with the company approving each email. Leave the section out when step 14 finds nothing to act on.
 7. Technical fixes, closest to revenue first. Each gets an `###` subsection: what it is in plain words, an exhibit that shows it, **The fix:** with best practice, and how to confirm it worked.
 8. The plan, under a descriptive heading with the count and what the changes win, in the company's own terms ("10 changes to send US searches to US pages and get stripe.com cited"), never a bare "The plan": every change as a numbered list (`PlanSteps`, no "Agent 1" labels), then how to check the results (`PlanSteps` with `marker: "Day 0"` and so on). No implementation timeline, and no lines about shipping it all today, sprints or agents running in parallel.
@@ -126,6 +137,11 @@ Rules that came from Ian's reviews:
 - Refer to pages by name ("their courses page"), not bare paths, in prose.
 - A strong claim stays when it is specific and the numbers sit next to it. Portable puffery goes.
 - Name a fix the company can act on, with an example from their own site.
+- Report AI answer counts by engine and by kind of question. Never add the engines together into one "named in X, linked in Y".
+- Don't promise to close the gap between mentions and links. Name the citations the company can win and the page that would win each one.
+- The fix the evidence supports for AI citations is a page titled with the question, with a paragraph that answers it, that ranks for the search. An answer in the first lines, a visible date and a matching video are reasonable but unproven, so call them heuristics.
+- Never present llms.txt, Markdown copies or schema as a way to get cited, because Google says its AI features ignore them. Put them under what agents can read.
+- The Day 30 check asks the same questions once more. Report a change only when it shows up across several questions, or when a specific new page is now cited. A shift of one or two answers can be normal variation.
 
 ## 4. Exhibits
 

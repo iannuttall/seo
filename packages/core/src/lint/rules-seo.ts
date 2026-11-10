@@ -48,7 +48,7 @@ export const SEO_RULES: Record<string, RuleInfo> = {
     level: 'error',
     presets: { docs: 'warning' },
     description:
-      'Headings that label instead of telling: "Overview", "Key takeaways", "Why it matters", "The ultimate guide".',
+      'Headings that label instead of telling, or tease: "Overview", "Key takeaways", "Why it matters", \'What "exhausted" means\', "X is dead".',
   },
   emoji: {
     id: 'emoji',
@@ -175,6 +175,10 @@ function lengths(ctx: Context) {
 
 const HEADING_CLICHE =
   /^(?:a )?(?:deep dive|under the hood|demystifying\b|why (?:it|this|that) matters|a closer look|the ultimate guide|everything you need to know|mastering\b|unlocking\b|the power of\b|the future of\b|what you'll learn|key takeaways|final thoughts|wrapping up|conclusion|in conclusion|tl;?dr|overview|introduction|the road ahead|looking ahead|challenges and (?:legacy|opportunities|future)|future outlook|the bottom line|let's dive in|get started today|(?:the )?(?:challenge|solution|results?)$|at a glance$|first impressions$|a note of thanks$)/i
+// Coy and thesis-shaped headings: 'What "exhausted" means', "Peer code
+// review is dead", "The one gap that does clear the bar".
+const HEADING_COY =
+  /^(?:what "[^"]{1,40}" (?:really |actually )?means$|[^?]{1,60} is dead$|the one [\w-]+ (?:that|which|you|we)\b)/i
 
 function headings(ctx: Context) {
   const list = ctx.blocks(['heading'])
@@ -205,13 +209,16 @@ function headings(ctx: Context) {
       )
     }
     previous = level
-    if (HEADING_CLICHE.test(block.norm)) {
+    const coy = HEADING_COY.test(block.norm)
+    if (coy || HEADING_CLICHE.test(block.norm)) {
       ctx.hit(
         SEO_RULES.headingCliche as RuleInfo,
         block,
         0,
         block.text.length,
-        'A heading that labels the section instead of saying what is in it.',
+        coy
+          ? 'A heading that teases or announces a verdict instead of saying what is in the section.'
+          : 'A heading that labels the section instead of saying what is in it.',
         'Name what the section tells the reader, such as "Check coverage before trusting the count".',
       )
     }

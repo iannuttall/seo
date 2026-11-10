@@ -5,7 +5,8 @@ import type { Block, BlockKind, LintLevel } from './types.js'
 // Fixed phrases: one match is enough. Many patterns are adapted from MIT and
 // Apache-2.0 sources: conorbronsdon/avoid-ai-writing (detector/patterns.js),
 // eric-tramel/slop-guard, tbhb/vale-ai-tells, hardikpandya/stop-slop,
-// coreyhaines31/marketingskills and simonw/tools (LLM cliche highlighter).
+// coreyhaines31/marketingskills, simonw/tools (LLM cliche highlighter) and
+// oaustegard/claude-skills (declauding).
 // Matching runs on text with straight quotes.
 
 type Match = { text: string; sentence: string }
@@ -219,7 +220,7 @@ export const PHRASE_RULES: PhraseRule[] = [
     family: 'ai',
     level: 'error',
     description:
-      'Importance puffery: "plays a crucial role", "marks a pivotal moment", "a testament to".',
+      'Importance puffery: "plays a crucial role", "marks a pivotal moment", "a testament to", "the part that really matters".',
     patterns: [
       /\bplays? an? (?:crucial|pivotal|vital|key|significant|critical|central|important|major) role\b/gi,
       /\b(?:marks?|marking|represents?|signals?) an? (?:pivotal|significant|important|major|defining|watershed|key) (?:moment|shift|turning point|milestone|step)\b/gi,
@@ -239,7 +240,15 @@ export const PHRASE_RULES: PhraseRule[] = [
       /\bbuilding a better (?:future|world|tomorrow)\b/gi,
       /\bthe implications are (?:profound|significant|enormous|huge|far-reaching)\b/gi,
       /\b(?:is|was) an (?:event|experience|attraction) in itself\b/gi,
+      // Designations that rank one part over the rest: "the leg that
+      // answers the actual question", "the part that really matters".
+      /\b(?:answers|asks|addresses) the (?:actual|real) question\b/gi,
+      /\bthe (?:one |only )?(?:part|bit|thing|piece|step|number|leg|detail|line|row) that (?:actually|really|truly) (?:matters|counts)\b/gi,
     ],
+    levelFor: (match) =>
+      /question|that (?:actually|really|truly)/i.test(match.text)
+        ? 'warning'
+        : undefined,
     message: 'It inflates importance without saying what changed.',
     fix: 'Cut it, or name the concrete effect the text already states. Do not add a number that is not there.',
   },
@@ -248,10 +257,10 @@ export const PHRASE_RULES: PhraseRule[] = [
     family: 'ai',
     level: 'error',
     description:
-      'A sentence that ends on ", highlighting/underscoring/showcasing ..." commentary.',
+      'A sentence that ends on ", highlighting/underscoring/suggesting ..." commentary.',
     kinds: PROSE,
     patterns: [
-      /,\s+(?:highlighting|underscoring|emphasi[sz]ing|showcasing|symboli[sz]ing|solidifying|cementing|signall?ing|reinforcing|fostering|cultivating|paving the way|setting the stage|demonstrating|illustrating|reflecting|ensuring|marking|contributing to)\b[^.!?]{0,120}[.!?]?/gi,
+      /,\s+(?:highlighting|underscoring|emphasi[sz]ing|showcasing|symboli[sz]ing|solidifying|cementing|signall?ing|reinforcing|fostering|cultivating|paving the way|setting the stage|suggesting|demonstrating|illustrating|reflecting|ensuring|marking|contributing to)\b[^.!?]{0,120}[.!?]?/gi,
       // A rider that sells the benefit of the fact before it: ", giving
       // small teams a powerful new way to ...", ", freeing them to focus".
       /,\s+(?:giving (?:users|teams|customers|small teams|every \w+|people) (?:a|an|the|more)\b|freeing (?:you|them|up)\b|making it (?:easy|easier|simple|simpler|effortless|possible) (?:for|to)\b|creating an? (?:[\w-]+ )?(?:experience|panorama|atmosphere|sense)\b|delivering (?:real-time|accurate|predictions|reliable|a seamless|an intuitive)\b)[^.!?]{0,120}[.!?]?/gi,
@@ -382,6 +391,7 @@ export const PHRASE_RULES: PhraseRule[] = [
       /\bpunch(?:es|ing)? (?:well )?above (?:its|their|his|her) weight\b/gi,
       /\b(?:thrilled|delighted) to (?:announce|share|introduce|unveil)\b/gi,
       /\bthe (?:whole|entire) point\b/gi,
+      /\bthe only (?:[\w-]+ ){1,3}(?:I|we) (?:actually |really |still )?trust\b/gi,
       /,? which is (?:the (?:whole |real |entire )?point|exactly the point|kind of the point)\b/gi,
     ],
     message: (match) =>
@@ -519,6 +529,20 @@ export const PHRASE_RULES: PhraseRule[] = [
     fix: 'Keep one qualifier, or state what the evidence shows.',
   },
   {
+    id: 'false-range',
+    family: 'ai',
+    level: 'error',
+    kinds: PROSE,
+    description:
+      'Stacked "from X to Y" ranges that sound broad but name no scale: "from the Big Bang to the cosmic web, from stars to dark matter".',
+    patterns: [
+      /\bfrom [^,.;:!?\n]{1,40} to [^,.;:!?\n]{1,40},\s+(?:and )?from [^,.;:!?\n]{1,40} to [^,.;:!?\n]{1,40}/gi,
+    ],
+    message:
+      'Two "from X to Y" ranges in a row cover everything and say nothing.',
+    fix: 'Name the specific things the text covers, or cut the ranges.',
+  },
+  {
     id: 'colon-reveal',
     family: 'ai',
     level: 'error',
@@ -583,14 +607,18 @@ export const PHRASE_RULES: PhraseRule[] = [
     level: 'error',
     kinds: PROSE,
     description:
-      'A one-line denial used as a beat: "It isn\'t." "Not quite." "But only part."',
+      'A one-line denial used as a beat: "It isn\'t." "Not quite." "The sixth is not." "; the data didn\'t."',
     patterns: [
       /(?:^|[.!?:]\s+)(?:It|That|This|They|He|She|We) (?:isn't|wasn't|doesn't|didn't|won't|aren't|weren't|is not|was not|does not|did not)\.(?=\s|$)/g,
       /(?:^|[.!?:]\s+)(?:Not quite|Not even close|Not really|Not anymore|Not any more)\.(?=\s|$)/g,
       /(?:^|[.!?:]\s+)(?:But|And) only (?:part|half|some|partly)\.(?=\s|$)/g,
+      // A deferred noun or stranded auxiliary: "Five rows are one
+      // cluster. The sixth is not." "The tool died; the data didn't."
+      /(?:^|[.!?]\s+)The (?:[\w-]+ ){0,1}[\w-]+ (?:isn't|wasn't|doesn't|didn't|won't|aren't|weren't|hasn't|haven't|is not|was not|does not|did not|are not|were not|has not)\.(?=\s|$)/g,
+      /;\s+(?:the|its|their|our|your) (?:[\w-]+ ){0,1}[\w-]+ (?:isn't|wasn't|doesn't|didn't|won't|aren't|weren't|hasn't|haven't|is not|was not|does not|did not|are not|were not|has not)\.(?=\s|$)/gi,
     ],
-    message: 'A two-word denial used for rhythm. It makes the reader wait.',
-    fix: 'Join it to the sentence before, so the point is stated once.',
+    message: 'A bare denial used for rhythm. It makes the reader wait.',
+    fix: 'Join it to the sentence before and name the thing, so the point is stated once.',
   },
   {
     id: 'strawman',
@@ -598,13 +626,16 @@ export const PHRASE_RULES: PhraseRule[] = [
     level: 'error',
     kinds: PROSE,
     description:
-      'An answer to an objection nobody raised: "It isn\'t perfect.", "doesn\'t have to be stressful", "None of this means", "This isn\'t about".',
+      'An answer to an objection nobody raised: "It isn\'t perfect.", "doesn\'t have to be stressful", "None of this means", "This isn\'t about", "is the obvious reading, and it is wrong".',
     patterns: [
       /(?:^|[.!?:]\s+)(?:It|This|That|Nothing|No \w+)(?:'s| is|'s not| isn't| is not| wasn't| was not) (?:not )?perfect\.(?=\s|$)/g,
       /\b(?:doesn't|does not|don't|do not|needn't|need not) (?:have to |need to )?be (?:so )?(?:stressful|hard|complicated|difficult|painful|expensive|overwhelming|a chore|scary|intimidating|daunting|confusing|a headache)\b/gi,
       /(?:^|[.!?]\s)None of this means\b/g,
       /(?:^|[.!?]\s)(?:This|That|It)(?: isn't| is not|'s not) (?:just |really |only )?about\b/g,
       /\b(?:isn't|is not|ain't) rocket science\b/gi,
+      // A reading supplied only to knock it down: '"It thinks twice as
+      // long" is the obvious reading, and it is wrong.'
+      /\bis the (?:obvious|natural|easy|tempting|intuitive|common|usual|first) (?:reading|answer|interpretation|explanation|assumption|guess|conclusion|take)(?:,)? (?:and|but) (?:it(?:'s| is| was)|that(?:'s| is)) (?:wrong|mistaken|backwards|not (?:quite )?right)\b/gi,
     ],
     message: 'It answers a doubt the reader did not raise.',
     fix: 'Cut it, or state the limit or the point plainly as a fact.',

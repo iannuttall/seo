@@ -214,6 +214,15 @@ export const tools = [
     kind: 'browser',
   },
   {
+    id: 'serp-preview',
+    path: '/tools/serp-preview',
+    title: 'SERP preview',
+    action: 'Open the SERP preview',
+    description:
+      'Preview title and meta description width on desktop or mobile, then copy the finished HTML tags.',
+    kind: 'browser',
+  },
+  {
     id: 'title-and-meta-description-checker',
     path: '/tools/title-and-meta-description-checker',
     title: 'Title tag and meta description checker',

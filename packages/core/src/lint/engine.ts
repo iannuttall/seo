@@ -43,6 +43,13 @@ export type ReviewHit = {
 
 // Block kinds that hold running prose.
 export const PROSE: BlockKind[] = ['paragraph', 'list', 'quote', 'prop']
+export const SENTENCE_KINDS: BlockKind[] = [
+  'paragraph',
+  'quote',
+  'prop',
+  'list',
+]
+export const RHYTHM_KINDS: BlockKind[] = ['paragraph', 'quote', 'prop']
 // Everything a person reads, including headings, labels and meta.
 export const ALL: BlockKind[] = [
   'paragraph',

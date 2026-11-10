@@ -18,9 +18,13 @@ export const BOLD_RULES: Record<string, RuleInfo> = {
     level: 'warning',
     presets: { docs: 'off' },
     description:
-      'Three or more list items in a row that open with a bold label.',
+      'Three or more list items in a row that open with a bold label, or one whose label the item then repeats: "**Performance:** Performance has been improved."',
   },
 }
+
+// "**Performance:** Performance has been enhanced" says the label twice.
+const RESTATED =
+  /^\s*(?:[-*+]|\d{1,9}[.)])\s+(?:\*\*|__)(?:[^*_\n]{0,30}\s)?([a-z]{4})[^*_\s]*(?:\*\*|__)\s*[:.]?\s+\1/i
 
 export function boldLabels(ctx: Context) {
   const rule = BOLD_RULES.boldLabels as RuleInfo
@@ -48,6 +52,16 @@ export function boldLabels(ctx: Context) {
     const line = ctx.doc.source.lastIndexOf('\n', offset) + 1
     const raw = ctx.doc.source.slice(line, offset + 4)
     const bold = /^\s*(?:[-*+]|\d{1,9}[.)])\s+(?:\*\*|__)/.test(raw)
+    if (bold && RESTATED.test(ctx.doc.source.slice(line, line + 200))) {
+      ctx.hit(
+        rule,
+        block,
+        0,
+        Math.min(block.text.length, 60),
+        'The item repeats its bold label.',
+        'Drop the label and keep the sentence, or cut the repeat.',
+      )
+    }
     const adjacent =
       previous !== null &&
       ctx.doc.blocks.indexOf(block) === ctx.doc.blocks.indexOf(previous) + 1

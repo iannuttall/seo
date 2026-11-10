@@ -26,7 +26,7 @@ export const RHYTHM_RULES: Record<string, RuleInfo> = {
     family: 'ai',
     level: 'error',
     description:
-      'A stock kicker line: "That\'s a real win." "That is what makes this interesting."',
+      'A stock kicker line: "That\'s a real win." "That is what makes this interesting." "That\'s why X mattered."',
   },
   negativeReframe: {
     id: 'negative-reframe',
@@ -202,6 +202,8 @@ const CLOSERS = [
   /^(?:and |but |so )?(?:that|this)(?:'s| is| was) (?:exactly )?what makes [^.]{1,60}(?:interesting|special|different|powerful|unique|useful|valuable|effective|work|works|matter|compelling|worth \w+)\.$/i,
   /^(?:and |but |so )?(?:that|this)(?:'s| is) (?:why|where|how) (?:it|this|that) (?:matters|counts|works)\.$/i,
   /^(?:and |but )?that distinction matters\.$/i,
+  // Retroactive significance: "That's why being able to open it mattered."
+  /^(?:and |but |so )?(?:that|this)(?:'s| is| was) (?:why|what|how) [^.]{1,80} (?:mattered|made (?:all )?the difference|paid off)\.$/i,
   /^(?:and |but )?(?:that|this)(?:'s| is) (?:huge|everything|the whole thing|what matters|all that matters)\.$/i,
 ]
 

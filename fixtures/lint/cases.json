@@ -2708,6 +2708,86 @@
       "text": "---\ntitle: \"Pricing - Example | Example Co\"\n---\n\nPlans start at $9 a month.",
       "expect": null,
       "format": "md"
+    },
+    {
+      "id": "tell-301",
+      "text": "Five of those six rows are one cluster. The sixth is not.",
+      "expect": ["stranded-negation"]
+    },
+    {
+      "id": "tell-302",
+      "text": "The tool died; the data didn't.",
+      "expect": ["stranded-negation"]
+    },
+    {
+      "id": "tell-303",
+      "text": "\"It thinks twice as long\" is the obvious reading, and it is wrong.",
+      "expect": ["strawman"]
+    },
+    {
+      "id": "tell-304",
+      "text": "That's why being able to open the environment mattered.",
+      "expect": ["stock-closer"]
+    },
+    {
+      "id": "tell-305",
+      "text": "These are the only release notes I trust.",
+      "expect": ["cliche"]
+    },
+    {
+      "id": "tell-306",
+      "text": "Her records are not publicly available, suggesting she maintains a low profile.",
+      "expect": ["participle-tail"]
+    },
+    {
+      "id": "tell-307",
+      "text": "The book covers everything from the Big Bang to the cosmic web, from stars to dark matter.",
+      "expect": ["false-range"]
+    },
+    {
+      "id": "tell-308",
+      "text": "## What \"exhausted\" means\n\nThe run stopped after the budget ran out.",
+      "expect": ["heading-cliche"]
+    },
+    {
+      "id": "tell-309",
+      "text": "## Peer code review is dead\n\nTeams merge without review now.",
+      "expect": ["heading-cliche"]
+    },
+    {
+      "id": "tell-310",
+      "text": "## The one gap that does clear the bar\n\nThe run stopped after the budget ran out.",
+      "expect": ["heading-cliche"]
+    },
+    {
+      "id": "tell-311",
+      "text": "- **Performance:** Performance has been enhanced through optimized algorithms.",
+      "expect": ["bold-label-bullets"]
+    },
+    {
+      "id": "tell-312",
+      "text": "It is the leg that answers the actual question.",
+      "expect": ["significance-inflation"]
+    },
+    {
+      "id": "control-518",
+      "text": "Prices run from $5 to $20 a month and from $50 to $200 for teams of more than ten.",
+      "expect": null
+    },
+    {
+      "id": "control-519",
+      "text": "- **Performance:** Pages load in 1.2 seconds on a phone.",
+      "expect": null
+    },
+    {
+      "id": "control-520",
+      "text": "The sixth row is a duplicate of the fifth. The API does not retry on 4xx errors.",
+      "expect": null
+    },
+    {
+      "id": "control-521",
+      "text": "## What crawl budget means for small sites\n\nMost sites under 10,000 pages never hit it.",
+      "expect": null
     }
   ]
 }

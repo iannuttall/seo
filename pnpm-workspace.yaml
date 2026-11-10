@@ -2,6 +2,8 @@ packages:
   - apps/*
   - packages/*
 
+# Mirrored in package.json pnpm.overrides for Workers Builds, whose older pnpm
+# ignores overrides here. Keep both lists in sync.
 overrides:
   "@hono/node-server": 2.1.5
   "@sentry/node": 10.60.0

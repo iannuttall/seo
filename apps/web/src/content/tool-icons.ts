@@ -55,6 +55,7 @@ export const toolIcons = {
   'schema-markup-generator': CodeIcon,
   'schema-markup-validator': CheckListIcon,
   'hreflang-generator': TranslateIcon,
+  'serp-preview': Search01Icon,
   'title-and-meta-description-checker': Search01Icon,
   'ai-humanizer': AiMagicIcon,
   'noindex-checker': ViewOffIcon,

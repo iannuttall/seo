@@ -10,6 +10,13 @@ import {
   SERP_PREVIEW_DEVICES,
   SERP_PREVIEW_LIMITS,
 } from '@/lib/serp-preview'
+
+interface Props {
+  /** Show the checks panel. The SERP preview page shows the result only. */
+  checks?: boolean
+}
+
+const { checks = true } = Astro.props
 ---
 
 <section data-serp-preview class="space-y-6">
@@ -17,8 +24,17 @@ import {
     <form data-serp-form class="space-y-6 p-5 sm:p-6">
       <div class="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
         <div class="space-y-1">
-          <h2 class="text-lg font-medium">Check a title and description</h2>
-          <p class="text-sm leading-6 text-foreground-muted">Load a live page or type your own. The checks measure rendered width in pixels and update as you edit.</p>
+          {checks ? (
+            <>
+              <h2 class="text-lg font-medium">Check a title and description</h2>
+              <p class="text-sm leading-6 text-foreground-muted">Load a live page or type your own. The checks measure rendered width in pixels and update as you edit.</p>
+            </>
+          ) : (
+            <>
+              <h2 class="text-lg font-medium">Draft the search result</h2>
+              <p class="text-sm leading-6 text-foreground-muted">The preview measures rendered text width. Google can still create a different title link or snippet for a specific search.</p>
+            </>
+          )}
         </div>
         <div class="flex gap-2">
           <Button data-use-example type="button" class="px-3 py-2 text-xs">Use example</Button>
@@ -71,16 +87,18 @@ import {
     </form>
   </Card>
 
-  <Card>
-    <div class="space-y-4 p-5 sm:p-6">
-      <div class="flex flex-col gap-1 sm:flex-row sm:items-baseline sm:justify-between">
-        <h2 class="text-lg font-medium">Checks</h2>
-        <p data-check-summary class="text-sm text-foreground-muted" aria-live="polite"></p>
+  {checks && (
+    <Card>
+      <div class="space-y-4 p-5 sm:p-6">
+        <div class="flex flex-col gap-1 sm:flex-row sm:items-baseline sm:justify-between">
+          <h2 class="text-lg font-medium">Checks</h2>
+          <p data-check-summary class="text-sm text-foreground-muted" aria-live="polite"></p>
+        </div>
+        <dl data-measures class="grid gap-2 text-sm sm:grid-cols-2"></dl>
+        <ul data-checks class="divide-y divide-border text-sm"></ul>
       </div>
-      <dl data-measures class="grid gap-2 text-sm sm:grid-cols-2"></dl>
-      <ul data-checks class="divide-y divide-border text-sm"></ul>
-    </div>
-  </Card>
+    </Card>
+  )}
 
   <Card>
     <div class="space-y-5 p-5 sm:p-6">

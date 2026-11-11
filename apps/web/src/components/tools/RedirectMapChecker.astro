@@ -106,11 +106,13 @@ import { REDIRECT_MAP_ROWS } from '@/lib/redirect-map'
   }
   type Summary = { type: 'summary'; rows: number; verdicts: Partial<Record<Verdict, number>>; milliseconds: number }
 
+  // Real URLs that redirect, so the example shows a pass, a chain, a
+  // temporary hop and a redirect to the wrong page.
   const example = `old url,new url
-http://example.com/about-us,https://example.com/about
-https://example.com/blog/2019/old-post,https://example.com/blog/new-post
-https://example.com/services/seo,https://example.com/
-https://example.com/pricing.html,https://example.com/pricing`
+http://github.com/about,https://github.com/about
+http://www.github.com/pricing,https://github.com/pricing
+http://developer.mozilla.org/,https://developer.mozilla.org/en-US/
+https://www.github.com/pricing,https://github.com/features`
 
   // A row passes only when every hop is permanent, it lands where the map
   // says, and the page it lands on returns 200 and can be indexed.

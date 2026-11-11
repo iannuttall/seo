@@ -23,7 +23,7 @@ Setup walks you through three things:
 2. Add an MCP server to the agents it finds on your machine. The free [hosted server](/docs/mcp) is the first choice; the local one runs on your machine with this sign-in. Claude Desktop takes the hosted server only from its Connectors settings, so setup gives it the local one.
 3. Install the skill, which teaches your agent the commands.
 
-If you skip a step, you can do it later with `seo mcp install` or `seo skill install`. Setup saves nothing about your site, so each command names the site it works on. To see the sites your sign-in can read:
+If you skip a step, you can do it later with `seo mcp install` or `seo skill install`. The [Claude SEO skill](/features/claude-seo) page shows what the skill tells Claude Code. Setup saves nothing about your site, so each command names the site it works on. To see the sites your sign-in can read:
 
 ```sh
 seo sites
@@ -77,7 +77,7 @@ Before and after a site move, check every old URL lands where you planned. Put o
 seo redirect-trace --map redirects.csv
 ```
 
-Each row gets a verdict: it matches, it reaches the right page through a chain of redirects, it lands on the wrong page, it doesn't redirect, it loops, or it didn't answer. A line with only an old URL just shows where it ends up. Add `--json` for one row per line.
+Each row gets a verdict: it matches, it reaches the right page through a chain of redirects, it lands on the wrong page, it doesn't redirect, it loops, or it didn't answer. A line with only an old URL just shows where it ends up. Add `--json` for one row per line. To trace a few URLs in your browser instead, use the free [redirect checker](/tools/redirect-checker).
 
 ## Coming from an older version
 

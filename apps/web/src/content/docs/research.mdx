@@ -41,7 +41,7 @@ seo research pages_by_backlinks --target example.com/blog/
 seo research ranked_keywords --target https://example.com/pricing
 ```
 
-A teardown usually starts here: the top pages show where a site's search traffic comes from, and the pages by backlinks show which content earns its links.
+A teardown usually starts here: the top pages show where a site's search traffic comes from, and the pages by backlinks show which content earns its links. A [domain overview](/features/domain-overview) puts a site's traffic, top pages, competitors and links in one answer. The [SEO competitor analysis](/features/seo-competitor-analysis) page runs these actions in order, and the [keyword gap analysis](/features/keyword-gap) page compares a competitor's ranked keywords with your own queries.
 
 ## Run research
 
@@ -74,7 +74,7 @@ The rows look the same as DataForSEO's, and the result shows the cost the packag
 
 ## Find a link gap
 
-`link_gap` lists the sites that link to at least two of your competitors and not to you, with the highest authority first. These are the sites most likely to link to you too.
+`link_gap` lists the sites that link to at least two of your competitors and not to you, with the highest authority first. These are the sites most likely to link to you too. The [backlink gap analysis](/features/backlink-gap) page shows how to pick the competitors and read the list.
 
 ```sh
 seo research link_gap --provider ahrefs --target example.com --competitors example.org,example.net
@@ -134,7 +134,7 @@ An empty result always says why. A `serp` with no results means Google showed an
 
 ## Check whether AI answers cite your site
 
-`ai_answers` starts from questions people already ask about your site. It takes the top 10 chat-style and long questions from the [AI queries section](/docs/report) of your Search Console data, so you need Google connected as well as a DataForSEO key.
+`ai_answers` starts from questions people already ask about your site. It takes the top 10 chat-style and long questions from the [AI queries section](/docs/report) of your Search Console data, so you need Google connected as well as a DataForSEO key. The [AI visibility checker](/features/ai-visibility-checker) page has a worked example and the prompts to run it from your agent.
 
 ```sh
 seo research ai_answers --target example.com --country gb

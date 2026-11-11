@@ -69,14 +69,17 @@ const related = [
     <thead><tr><th>Label</th><th>What it means</th></tr></thead>
     <tbody>
       <tr><td>fix</td><td>The evidence shows a fault on the site, such as a temporary redirect or a missing page your sitemap still lists.</td></tr>
-      <tr><td>check</td><td>A person should look, such as a page Google crawled and chose not to index.</td></tr>
+      <tr><td>check</td><td>A person should look, such as a page Google crawled and chose not to index (<a href="/features/crawled-currently-not-indexed">crawled, currently not indexed</a>) or one it knows about but has not crawled (<a href="/features/discovered-currently-not-indexed">discovered, currently not indexed</a>).</td></tr>
       <tr><td>expected</td><td>The site works as built, such as an http page that redirects to https.</td></tr>
       <tr><td>indexed</td><td>Google indexes it and nothing looks wrong.</td></tr>
     </tbody>
   </table>
   <p>
     The labels come from simple rules over this evidence, not from Google
-    (so treat a check as a question, not a verdict).
+    (so treat a check as a question, not a verdict). If most of your pages
+    are missing, start with{' '}
+    <a href="/features/website-not-showing-up-on-google">website not showing
+    up on Google</a>.
   </p>
 
   <h2>Check one URL</h2>

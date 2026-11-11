@@ -25,7 +25,7 @@ Add `--start-date` and `--end-date` for other dates, `--detail rows` for more qu
 
 ## What comes back
 
-- **Live page facts.** The HTTP status, any redirect, the title, meta description, H1, canonical and robots tags as the page serves them now. Robots tags for one crawler, such as `googlebot`, are named, and a `googlebot` noindex counts as noindex for Google. An empty title or description shows as empty, apart from a missing one.
+- **Live page facts.** The HTTP status, any redirect, the title, meta description, H1, canonical and robots tags as the page serves them now. To follow every hop of a redirect chain, use the [redirect checker](/tools/redirect-checker). Robots tags for one crawler, such as `googlebot`, are named, and a `googlebot` noindex counts as noindex for Google. An empty title or description shows as empty, apart from a missing one.
 - **Google index status.** What Search Console URL Inspection reports for the URL.
 - **Queries.** The page's Search Console queries for the last 28 days against the previous period.
 - **Main content as Markdown,** with `--detail full`. The page's main text, without the menus, sidebars and footer, read live. It stops at 20,000 characters and says so when it cuts. Your agent can read or rewrite the page from it without fetching the page again.
@@ -34,6 +34,6 @@ The hosted MCP does not return the Markdown, because the extraction code runs on
 
 The page has to belong to a Search Console property you can read. URL Inspection reports Google's last known state, which can lag behind a change you just made. Google can take up to a minute to answer, so the CLI prints what it's waiting on. When the index status is missing, the result says why (quota used up, no access to the property, a sign-in problem or no answer within 60 seconds) and what to do next.
 
-When Google doesn't know the page yet, the result gives the next step: use Request indexing in Search Console's URL Inspection tool, check the sitemap that lists the page has been read, and find pages that could link to it with `seo internal-links`. `seo` can't submit URLs to Google itself.
+When Google doesn't know the page yet, the result gives the next step: use Request indexing in Search Console's URL Inspection tool, check the sitemap that lists the page has been read, and find pages that could link to it with `seo internal-links`. `seo` can't submit URLs to Google itself. If your whole site is missing, read [website not showing up on Google](/features/website-not-showing-up-on-google) for Google's reason for every page.
 
 To check many pages that lost clicks at once, use [`seo index`](/docs/indexing).

@@ -62,10 +62,10 @@ export const pageRedirects = {
  */
 export const reportToolPages = {
   'keyword-research': '/features/keyword-research',
-  'keyword-metrics': '/features/keyword-research',
+  'keyword-metrics': '/features/keyword-report',
   'saved-keywords': '/features/keyword-research',
   'link-evidence': '/tools/backlink-checker',
-  'domain-overview': '/tools/website-traffic-checker',
+  'domain-overview': '/features/domain-overview',
   cannibalisation: '/tools/keyword-cannibalization-checker',
   'internal-links': '/tools/internal-linking-tool',
   'server-log-analysis': '/tools/server-log-analyzer',
@@ -77,7 +77,7 @@ export const reportToolPages = {
   'agent-readiness': '/features/ai-search',
   'ai-readiness': '/features/ai-search',
   'ai-mention-research': '/features/ai-search',
-  'ai-prompt-observations': '/features/ai-search',
+  'ai-prompt-observations': '/features/ai-visibility-checker',
   'ai-search-scorecard': '/features/ai-search',
   'entity-readiness': '/features/ai-search',
   'geo-gaps': '/features/ai-search',
@@ -97,12 +97,20 @@ export const reportToolPages = {
   'search-status-updates': '/tools/google-algorithm-update-checker',
   'competitor-keyword-gap': '/tools/competitor-keyword-research',
   'ranked-keywords': '/tools/competitor-keyword-research',
-  'serp-competitors': '/tools/competitor-keyword-research',
+  'serp-competitors': '/features/seo-competitor-analysis',
   'serp-results': '/tools/serp-checker',
   'rank-tracking': '/tools/serp-checker',
   'monthly-report': '/tools/monthly-seo-report',
   'monthly-action-plan': '/tools/monthly-seo-report',
   'domain-rating': '/tools/domain-rating-checker',
+  'redirect-trace': '/tools/redirect-checker',
+  'keyword-opportunities': '/features/keyword-opportunities',
+  'competitive-opportunities': '/features/keyword-opportunities',
+  'quick-wins': '/features/striking-distance-keywords',
+  'striking-distance': '/features/striking-distance-keywords',
+  'ctr-underperformers': '/features/striking-distance-keywords',
+  'decaying-pages': '/features/striking-distance-keywords',
+  'ai-referrals': '/features/google-analytics',
 }
 
 /** Every old report URL and where it goes now. */

@@ -64,6 +64,16 @@ const connectSteps = source
     ]
   : []
 
+// A link to the feature page that covers this source or client in depth.
+const featureLinks: Record<string, { before: string; anchor: string; href: string; after: string }> = {
+  'google-search-console': { before: 'This page shows how to connect it. For everything it can do, with prompts and a worked example, see the ', anchor: 'Google Search Console MCP', href: '/features/search-console', after: ' page.' },
+  'google-analytics': { before: 'This page shows how to connect it. For everything it can do, with prompts and a worked example, see the ', anchor: 'Google Analytics MCP server', href: '/features/google-analytics', after: ' page.' },
+  'claude-code': { before: 'Add the ', anchor: 'Claude SEO skill', href: '/features/claude-seo', after: ' too, so Claude Code knows which tool answers which question.' },
+  claude: { before: 'The ', anchor: 'Claude SEO skill', href: '/features/claude-seo', after: ' page covers claude.ai, Claude Desktop and Claude Code.' },
+  codex: { before: 'The ', anchor: 'Codex SEO skill', href: '/features/codex-seo', after: ' page adds the skill and the seo CLI to Codex.' },
+}
+const featureLink = featureLinks[id]
+
 const clientFaq = client
   ? [
       { question: `Is SEO Skill free in ${name}?`, answer: 'Yes. Every tool your agent calls on demand is free with no usage cap. The only paid part is the weekly site audit, which runs on our servers in the background for $50 a month per site.' },
@@ -80,7 +90,15 @@ const clientFaq = client
     {
       source ? (
         hosted ? (
-          <LandingHero {title} {lead} setupId="integration-setup" />
+          <LandingHero {title} {lead} setupId="integration-setup">
+            {featureLink ? (
+              <p slot="note" class="mt-4 max-w-2xl text-pretty text-base leading-7 text-foreground-muted">
+                {featureLink.before}
+                <a class="underline underline-offset-4" href={featureLink.href}>{featureLink.anchor}</a>
+                {featureLink.after}
+              </p>
+            ) : null}
+          </LandingHero>
         ) : (
           <LandingHero {title} {lead} setupId="integration-setup">
             <CodeBlock label="Install the CLI, then add the local MCP server to your agents" value={'npm i -g seo && seo start\nseo mcp install'} />
@@ -102,7 +120,8 @@ const clientFaq = client
               title="Questions you can ask it"
               text={`Ask the way you would ask a colleague. Your agent picks the tool and reads your ${name} data before it answers.`}
               items={source.asks.map((ask) => ({ title: ask.question, text: ask.answer }))}
-            />
+            >
+            </SplitList>
             {source.tools.length ? (
               <SplitList
                 id="tools-heading"
@@ -126,6 +145,13 @@ const clientFaq = client
               href: `/integrations/${item.id}/${id}`,
             }))}
           >
+            {featureLink ? (
+              <p class="mt-4 text-base leading-7 text-foreground-muted">
+                {featureLink.before}
+                <a class="underline underline-offset-4" href={featureLink.href}>{featureLink.anchor}</a>
+                {featureLink.after}
+              </p>
+            ) : null}
             <a class:list={[getButtonClasses('secondary', 'lg'), 'mt-6']} href={client?.docsUrl} target="_blank" rel="noreferrer">
               {name} MCP docs
             </a>

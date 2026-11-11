@@ -1,0 +1,266 @@
+---
+import {
+  Analytics01Icon,
+  GitCompareIcon,
+  SearchList01Icon,
+  Target02Icon,
+  UserGroupIcon,
+} from '@hugeicons/core-free-icons'
+import CodeBlock from '@/components/CodeBlock.astro'
+import FeaturePage from '@/components/FeaturePage.astro'
+
+const related = [
+  { title: 'Striking distance keywords', text: 'Queries just off page one, quick wins, low CTR and content decay, and each fix measured 28 and 56 days later.', href: '/features/striking-distance-keywords', icon: Target02Icon, link: 'Striking distance keywords' },
+  { title: 'AI keyword research tool', text: 'Keyword ideas, search volume, SERPs and SERP overlap in your agent, from your own key.', href: '/features/keyword-research', icon: SearchList01Icon, link: 'AI keyword research' },
+  { title: 'Keyword gap analysis', text: 'The searches your competitors rank for and you don’t, against your own Search Console queries.', href: '/features/keyword-gap', icon: GitCompareIcon, link: 'Keyword gap analysis' },
+  { title: 'Competitor keyword research', text: 'See what any domain ranks for in your browser, with no account.', href: '/tools/competitor-keyword-research', icon: UserGroupIcon, link: 'Free tool' },
+  { title: 'SEO report', text: 'Every section of the Search Console report, with its dates and how to ask for it.', href: '/docs/report', icon: Analytics01Icon, link: 'SEO report docs' },
+]
+---
+
+<FeaturePage
+  title="Keyword opportunities"
+  metaTitle="Find keyword opportunities in your own search data"
+  description="Find keyword opportunities from your own Search Console, score them by the clicks they could win, and size new keywords with your DataForSEO or Ahrefs key."
+  path="/features/keyword-opportunities"
+  lead="A keyword opportunity is a search where one change to your site could win clicks it is not getting yet. Ask your agent for them and it starts from your own Search Console, then sizes new keywords with your DataForSEO or Ahrefs key."
+  {related}
+  relatedHeading="Read more"
+>
+  <h2>Two kinds of keyword opportunity, from two kinds of data</h2>
+  <p>
+    A keyword opportunity is a search with real demand where your site has
+    a fair chance of earning more clicks than it gets today. Some of those
+    searches already show your pages in Google. Others don't show your
+    site at all yet, and the evidence for each kind comes from a different
+    place:
+  </p>
+  <table>
+    <thead><tr><th>Kind</th><th>Evidence and where it comes from</th></tr></thead>
+    <tbody>
+      <tr><td>Searches you already appear for</td><td>Impressions, clicks, click-through rate and average position, from your own Search Console through the SEO report.</td></tr>
+      <tr><td>Searches you don't appear for yet</td><td>Search volume, keyword difficulty, cost per click and who ranks, from your DataForSEO or Ahrefs key through keyword research.</td></tr>
+    </tbody>
+  </table>
+  <p>
+    Start with the first kind. Search Console shows what people actually
+    typed and where Google already places you, so an opportunity there has
+    evidence behind it. Provider numbers are estimates. Your agent keeps
+    them in their own columns and never adds them to your clicks.
+  </p>
+
+  <h2>Find keyword opportunities your site already ranks for</h2>
+  <p>
+    Add the hosted MCP server to Claude Code, Codex, Cursor or ChatGPT with
+    the commands at the top of this page and sign in with Google (access is
+    read only). Then ask:
+  </p>
+  <CodeBlock value={`Find the keyword opportunities for example.com in my Search Console. Show the top 10 with the page that ranks for each.`} wrap />
+  <p>In a terminal, after <code>npm i -g seo</code> and <code>seo start</code>:</p>
+  <CodeBlock value={`seo report --site example.com`} wrap />
+  <p>
+    The report overview counts the rows in each section and shows its top
+    rows, so you can pick where to look first. Six sections hold keyword
+    opportunities:
+  </p>
+  <table>
+    <thead><tr><th>Section</th><th>What it lists</th></tr></thead>
+    <tbody>
+      <tr><td><code>second-page</code></td><td>Pages at an average position above 10 and up to 20, each with the queries that put it there.</td></tr>
+      <tr><td><code>striking-distance</code></td><td>Query and page pairs in the same range, with impressions.</td></tr>
+      <tr><td><code>quick-wins</code></td><td>Pairs at positions 4 to 10 that get fewer clicks than your site's own curve says they should.</td></tr>
+      <tr><td><code>low-ctr</code></td><td>Pairs at positions 1 to 4 below the same curve. Titles and snippets to review.</td></tr>
+      <tr><td><code>ai-queries</code></td><td>Searches shaped like AI prompts and follow-up questions, grouped by question, with the page Google showed.</td></tr>
+      <tr><td><code>cannibalization</code></td><td>Queries where two or more of your pages share the impressions.</td></tr>
+    </tbody>
+  </table>
+  <p>
+    Open one section by name, such as{' '}
+    <code>seo report --site example.com --section second-page</code>. Brand
+    searches are left out, and the top 20 pages in every section except{' '}
+    <code>ai-queries</code> are fetched live, so a page that now redirects or returns an error shows before
+    you spend time on it. The <a href="/features/striking-distance-keywords">striking
+    distance keywords</a> page covers the page-two, quick wins and low CTR
+    lists in depth, including the hand method in Search Console.
+  </p>
+
+  <h2>How a keyword opportunity score is worked out from your clicks</h2>
+  <p>
+    SEO Skill scores each Search Console opportunity with your own numbers,
+    using one of two formulas. Both are heuristics for sorting the list,
+    and the report labels them that way.
+  </p>
+  <table>
+    <thead><tr><th>Rows</th><th>Score</th></tr></thead>
+    <tbody>
+      <tr>
+        <td>Page two (above 10, up to 20)</td>
+        <td>Impressions × closeness to page one. Closeness is 1 up to position 11 and drops by 0.1 for each position after it, to 0.1 at position 20. So 400 impressions at position 11 score 400, and the same 400 at position 16 score 200.</td>
+      </tr>
+      <tr>
+        <td>Page one (positions 1 to 10)</td>
+        <td>Impressions × the gap between your curve's click-through rate for that position and the row's own rate. So 2,000 impressions at position 6 with a 1% rate, where your curve says 4%, score 60 clicks missed in 28 days.</td>
+      </tr>
+    </tbody>
+  </table>
+  <p>
+    The curve is built from your own site: for each position on page one,
+    the click-through rate that one page in four beats. A site with too
+    little data falls back to a built-in curve, and the report says which
+    one it used. Brand searches, ads and AI Overviews all change click
+    rates, so treat a high score as a page to open first.
+  </p>
+  <p>
+    Most published keyword opportunity scores are built from provider
+    estimates instead. Moz's{' '}
+    <a href="https://moz.com/help/keyword-explorer/keyword-metrics/priority" target="_blank" rel="noreferrer">Priority</a>{' '}
+    weighs volume, difficulty and organic click-through rate, and{' '}
+    <a href="https://help.seomonitor.com/en/articles/6222130-seo-opportunity" target="_blank" rel="noreferrer">SEOmonitor's
+    opportunity score</a> divides the clicks a top three position would add
+    by difficulty. For keywords you don't rank for yet, your agent can
+    build a score like that from keyword metrics and show its formula:
+  </p>
+  <CodeBlock value={`Score these 30 keywords by search volume, keyword difficulty and whether example.com already ranks for them. Show the formula you used.`} wrap />
+
+  <h2>Estimate the SEO potential of a keyword you don't rank for</h2>
+  <p>
+    SEO potential is the number of clicks a keyword could bring if your
+    page ranked for it. For a search with no Search Console row, any such
+    number is the provider's volume times an assumed click-through rate.
+    Ask your agent to label it as an estimate and to check the results page
+    first. An AI Overview, ads or a video block above the organic results
+    takes some of the clicks the arithmetic assumes.
+  </p>
+  <p>
+    A blank volume means the provider has no data, which is different from
+    zero. In November 2026 DataForSEO had no volume for "keyword
+    opportunity report", while Search Console had shown seoskill.dev 59
+    impressions for it between July and November 2026.
+  </p>
+
+  <h2>Find new keyword opportunities from a seed keyword</h2>
+  <p>
+    For searches your site doesn't appear for, you need a{' '}
+    <a href="/docs/keys">DataForSEO or Ahrefs key</a> saved on your account
+    page (the provider bills you, and every DataForSEO result says what the
+    request cost). Then ask for ideas and metrics together:
+  </p>
+  <CodeBlock value={`Give me keyword ideas for "invoice template" in the US, then get volume and difficulty for the 30 best fits for example.com`} wrap />
+  <CodeBlock value={`seo research keyword_ideas --keywords "invoice template" --country us
+seo research keyword_metrics --keywords "invoice template for contractors,free invoice template word" --country us`} wrap />
+  <p>
+    Keyword ideas take up to 5 seed keywords and return the searches that
+    contain each one, highest volume first. Keyword metrics take up to 100
+    keywords. The <a href="/features/keyword-research">AI keyword research
+    tool</a> page walks through the whole research workflow.
+  </p>
+
+  <h2>Check who ranks before you call it an opportunity</h2>
+  <p>
+    A low difficulty score is a provider's model. The results page is the
+    evidence. Ask for the SERP:
+  </p>
+  <CodeBlock value={`seo research serp --keywords "invoice template for contractors" --country us`} wrap />
+  <p>
+    Each ranking page comes with its domain's authority and a free column
+    of Domain Rating by{' '}
+    <a href="https://ahrefs.com" target="_blank" rel="noreferrer">Ahrefs</a>,
+    plus, with DataForSEO, whether Google showed an AI Overview and which
+    sites it cites. A
+    page one with several sites weaker than yours is a real opening. To
+    decide whether a group of keywords needs one page or several, ask for a{' '}
+    <code>serp_overlap</code>, which counts the top 10 pages each pair of
+    searches shares.
+  </p>
+
+  <h2>Find keyword opportunities your competitors already win</h2>
+  <p>
+    The searches a competitor ranks for and you don't are opportunities with
+    proof that the topic can rank. Ask your agent:
+  </p>
+  <CodeBlock value={`Who are example.com's search competitors? For the top 3, list the keywords they rank for in the top 10 that example.com doesn't.`} wrap />
+  <p>
+    The agent finds the domains that share your keywords, reads each
+    one's ranked keywords and compares them with your Search Console
+    queries. The <a href="/features/keyword-gap">keyword gap analysis</a>{' '}
+    page covers that comparison step by step, and the free{' '}
+    <a href="/tools/competitor-keyword-research">competitor keyword
+    research tool</a> shows what any domain ranks for with no account.
+  </p>
+
+  <h2>The keyword opportunity that led to this page</h2>
+  <p>
+    We found the keywords for this page with the steps above, on
+    seoskill.dev's own data, on 11 November 2026.
+  </p>
+  <ol>
+    <li>
+      The striking distance section for 11 October to 7 November 2026
+      listed "keyword opportunity" second, at an average position of 10.16
+      with 130 impressions and 0 clicks. Its live check showed the page that
+      had earned it, an old report page at{' '}
+      <code>/docs/reports/keyword-opportunities</code>, now redirects to the
+      general SEO report docs.
+    </li>
+    <li>
+      Search Console for 1 July to 8 November 2026 showed that old page
+      with 395 impressions for "keyword opportunity" at position 10.4, and
+      59 for "keyword opportunity report" at position 8.4, all with 0
+      clicks. One day, 11 October 2026, accounts for 111 of the 395. Without
+      it the page had 284 impressions in just over four months.
+    </li>
+    <li>
+      Keyword metrics from DataForSEO for the US (searches a month, with
+      keyword difficulty from 0 to 100) sized the nearby searches:
+      <table>
+        <thead><tr><th>Keyword</th><th>Searches (KD)</th></tr></thead>
+        <tbody>
+          <tr><td>keyword opportunity</td><td>140 (KD 24)</td></tr>
+          <tr><td>keyword opportunities</td><td>140 (KD 14)</td></tr>
+          <tr><td>seo opportunities</td><td>70 (KD 32)</td></tr>
+          <tr><td>seo potential</td><td>40 (KD 0)</td></tr>
+          <tr><td>opportunity keywords</td><td>20 (KD 0)</td></tr>
+          <tr><td>keyword opportunity score</td><td>10 (no KD)</td></tr>
+          <tr><td>keyword opportunity report</td><td>No data</td></tr>
+        </tbody>
+      </table>
+    </li>
+    <li>
+      The SERP for "keyword opportunity" on desktop in the US had an AI
+      Overview and a mixed top 8: pages from searchengineland.com (Domain
+      Rating 91), wordstream.com (90) and blog.majestic.com (83) beside
+      appvector.io (36) and danielbianchini.co.uk (5). A second run minutes
+      earlier returned a different top 10, which is what an unsettled
+      results page looks like.
+    </li>
+    <li>
+      The SERP for "seo opportunities" settled one question. All 9 organic
+      results were about Sponsors for Educational Opportunity, a nonprofit
+      that is also called SEO (a fair reminder to read the results before
+      trusting a volume).
+    </li>
+  </ol>
+  <p>
+    So this page targets "keyword opportunity" and "keyword opportunities"
+    first, with the score, report and SEO potential searches beside them.
+    Small volumes and a weak, shifting results page make a focused page
+    with a real method a fair bet. A month after it goes live, the same
+    striking distance section will show whether it took the old page's
+    place.
+  </p>
+
+  <h2>Turn the list into a keyword opportunity report</h2>
+  <p>
+    A keyword opportunity report is the list in a form you can act on and
+    share. Ask for one in a single prompt:
+  </p>
+  <CodeBlock value={`Write a keyword opportunity report for example.com. First the top 10 Search Console opportunities with their score and the page for each. Then 10 new keywords with volume, difficulty and who ranks, in a separate table. Say which numbers are estimates.`} wrap />
+  <p>
+    Monthly is a sensible cadence. Keep the same 28 days of Search Console
+    data each time so the scores compare. When you fix a page from the
+    list, your agent can mark it fixed in the report's issues list, which
+    later shows that page's clicks for the 28 and 56 days after the change,
+    as the <a href="/features/striking-distance-keywords">striking distance
+    keywords</a> page explains.
+  </p>
+</FeaturePage>

@@ -11,6 +11,7 @@ import {
   FileSearchIcon,
   GitCompareIcon,
   Globe02Icon,
+  Idea01Icon,
   Link01Icon,
   McpServerIcon,
   Notification01Icon,
@@ -86,6 +87,12 @@ export const features = [
     title: 'Backlink gap analysis',
     text: 'The sites that link to two or more of your competitors and not to you, highest Domain Rating first, from your own DataForSEO or Ahrefs key.',
     icon: Link01Icon,
+  },
+  {
+    path: '/features/keyword-opportunities',
+    title: 'Keyword opportunities',
+    text: 'The searches your site could win more clicks from, scored with your own Search Console, and new keywords sized from your own key.',
+    icon: Idea01Icon,
   },
   {
     path: '/features/striking-distance-keywords',

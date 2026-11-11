@@ -1,0 +1,87 @@
+---
+title: Weekly SEO site audit with daily Google index checks
+heading: Weekly site audit
+description: A weekly crawl of your site, daily Google index checks, competitor keywords and alerts, run on our servers for $50 a month per site.
+lead: We crawl your site every week, check Google's index every day and tell you what changed, so you hear about a broken release or a dropped page without asking.
+---
+
+The weekly site audit is the only paid part of SEO Skill. It costs $50 a month per site, where a site is one Search Console property. Every tool your agent runs on demand stays free, so pay only if you want the site watched in the background.
+
+## Start the audit
+
+Sign in on your [account page](https://seoskill.dev/account), open the **Sites** tab and pick one of the Search Console properties your linked Google accounts can read. Or ask your agent:
+
+```text
+Add example.com to the weekly site audit
+```
+
+Your first site opens Stripe Checkout. Your agent can give you that link, but it cannot pay for you. Each site after that raises the plan by one, charged for the rest of the month at once. The first crawl and index checks start as soon as the plan is active.
+
+## What runs each week and each day
+
+| Check | What you get |
+| --- | --- |
+| Weekly crawl | Up to 5,000 pages, with each problem marked new, back or resolved since the crawl before. |
+| Daily index checks | Up to 2,000 URL Inspection checks a day for the property, top pages first. |
+| Weekly competitor keywords | At most 3 keywords your competitors rank for and you do not, often none. |
+| Alerts | Google updates, pages that drop out of the index, and a Monday summary. |
+
+### The weekly crawl
+
+The crawl starts from your sitemaps and follows links inside the property. It looks for:
+
+- Internal links to errors, redirects and pages that could not be fetched.
+- Missing, empty or duplicate titles and descriptions, and missing H1s.
+- Pages that ask not to be indexed, and canonicals that point to another URL.
+- Sitemap URLs that do not return 200.
+- Thin pages under 100 words (a heuristic, not a Google rule).
+- Pages where JavaScript changes the title, canonical or robots tag.
+
+Sections of the site that need JavaScript are rendered in a real browser, so the crawl sees what Google sees. Each finding is compared with the crawl before, which makes a release that broke something stand out from problems you already knew about.
+
+The crawler identifies itself as `SEOSkillBot` and follows your robots.txt, including any crawl delay. If your firewall blocks unknown bots, allow it, or the crawl stops early and says so.
+
+### Daily Google index checks
+
+Search Console lets each property run 2,000 URL Inspection checks a day, and the audit uses all of them. Your top pages (those that lost clicks, then by clicks and impressions) are checked every day. The rest are checked as often as the quota allows, and a page the crawl saw change is checked straight away.
+
+When a page that was indexed is no longer indexed, that is a drop. A top page's drop is only reported after a second check agrees, so one odd answer from Google does not wake you up.
+
+A large site may have more pages than 2,000 checks a day can cover in a week. The site's **Coverage** tile then offers **Improve coverage**, which lists the folders worth adding as their own Search Console properties. Each one brings its own 2,000 checks a day, and the button can create them in Search Console for you.
+
+### Competitor keywords
+
+Each week the audit looks at the keywords your competitors rank for and you do not. It names a keyword only when at least two competitors rank in the top 10 for it, it is worth money, sites no stronger than yours rank for it too, and it fits what you do. Most weeks that is none, and that is on purpose.
+
+DataForSEO suggests competitors to start with. You can replace them with your own list on the site's page. The check runs on our DataForSEO account, so it never uses your own key.
+
+## Read the results
+
+Your agent reads the audit through the same tools as everything else. For one site, ask for the `weekly-audit` section of the [SEO report](/docs/report):
+
+```text
+Show me the weekly audit for example.com
+```
+
+```sh
+seo report --site example.com --section weekly-audit
+```
+
+For last week across every audited site, ask for the SEO report with no site, or run `seo report` (on a machine, run `seo login` first). It is the same summary as the Monday email.
+
+Audited sites also change how two other tools answer:
+
+- [`seo index`](/docs/indexing) answers at once from the stored daily checks, and lists the pages that dropped out of or came back to Google's index this week first.
+- The `issues` section of the report keeps its fix list on the server, so your agent can mark an issue fixed and see the page's Search Console clicks 28 and 56 days later.
+
+The **Sites** tab on your account page shows each site's last and next crawl, today's index checks, coverage, this week's drops and returns, and its alerts.
+
+## Alerts
+
+Every audited site gets email alerts without any setup: Google algorithm updates and what they moved, pages that drop out of Google's index, and a Monday summary. They can go to a webhook too. [Alerts](/docs/alerts) covers each one and how to turn them off.
+
+## Remove a site or cancel
+
+Open the site on the **Sites** tab and choose **Remove from audit**. The plan drops by one site from the next bill, and the site's crawls and checks are deleted. To change your card, read invoices or cancel, choose **Manage billing**, which opens Stripe.
+
+[What is stored](/docs/privacy) lists everything the audit keeps for a site.

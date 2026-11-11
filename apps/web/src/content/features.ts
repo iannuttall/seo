@@ -92,7 +92,7 @@ export const features = [
   {
     path: '/features/seo-monitoring',
     title: 'SEO monitoring',
-    text: 'Free index and traffic checks your agent runs, and a weekly site audit in beta with alerts when a page drops out of Google.',
+    text: 'Free index and traffic checks your agent runs, and a paid weekly site audit with alerts when a page drops out of Google.',
     icon: Notification01Icon,
   },
   {

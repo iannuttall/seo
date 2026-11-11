@@ -113,7 +113,7 @@ export type AuditAccess = {
 export const AUDIT_SECTION = 'weekly-audit'
 
 export const AUDIT_SECTION_TEXT =
-  'What the weekly crawl of the site found (broken and redirected internal links, missing, empty or duplicate titles and descriptions, missing H1s, noindex for Google, canonicals to another page, sitemap URLs that do not return 200, thin pages, tags that JavaScript changes), with what is new, back or resolved since the crawl before. Only for sites added to the weekly site audit beta.'
+  'What the weekly crawl of the site found (broken and redirected internal links, missing, empty or duplicate titles and descriptions, missing H1s, noindex for Google, canonicals to another page, sitemap URLs that do not return 200, thin pages, tags that JavaScript changes), with what is new, back or resolved since the crawl before. Only for sites in the weekly site audit.'
 
 // Plain names for each rule. Heuristics say so.
 export const AUDIT_RULES: Record<string, string> = {

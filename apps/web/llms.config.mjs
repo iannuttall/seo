@@ -46,6 +46,10 @@ export const llmsTxt = {
       items: docsSection('Commands'),
     },
     {
+      heading: 'Weekly site audit',
+      items: docsSection('Weekly site audit'),
+    },
+    {
       heading: 'Free web tools',
       items: [
         { path: '/tools' },

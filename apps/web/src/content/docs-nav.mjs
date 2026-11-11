@@ -112,6 +112,23 @@ export const docsSections = [
     ],
   },
   {
+    title: 'Weekly site audit',
+    items: [
+      {
+        path: '/docs/weekly-site-audit',
+        label: 'Weekly site audit',
+        description:
+          'A weekly crawl, daily Google index checks and competitor keywords for $50 a month per site.',
+      },
+      {
+        path: '/docs/alerts',
+        label: 'Alerts',
+        description:
+          'Email and webhook alerts for Google algorithm updates, index drops and a Monday summary.',
+      },
+    ],
+  },
+  {
     title: 'Reference',
     items: [
       {

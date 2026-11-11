@@ -104,10 +104,7 @@ const helpSections: HelpSection[] = [
     title: 'Start here',
     commands: [
       ['seo start', 'Sign in with Google, then add the MCP server and skill'],
-      [
-        'seo report',
-        'Last week across your audited sites (beta, after seo login)',
-      ],
+      ['seo report', 'Last week across your audited sites (after seo login)'],
       ['seo report --site <site>', 'One site: overview and every section'],
       [
         'seo report --site <site> --section quick-wins',

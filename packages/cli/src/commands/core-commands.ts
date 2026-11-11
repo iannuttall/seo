@@ -161,13 +161,13 @@ export const reportCommand = defineCommand({
   meta: {
     name: 'report',
     description:
-      'Start here. No --site: last week across your audited sites (beta, after `seo login`). --site: overview and every section. Add --section for one',
+      'Start here. No --site: last week across your audited sites (weekly site audit, after `seo login`). --site: overview and every section. Add --section for one',
   },
   args: {
     site: {
       type: 'string',
       description:
-        'Site, URL or Search Console property. Leave it out for the summary of every audited site (beta, after `seo login`).',
+        'Site, URL or Search Console property. Leave it out for the summary of every audited site (weekly site audit, after `seo login`).',
     },
     section: {
       type: 'string',

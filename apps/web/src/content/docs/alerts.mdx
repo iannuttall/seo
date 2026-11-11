@@ -1,0 +1,116 @@
+---
+title: Google algorithm update alerts by email
+heading: Alerts
+description: Get an email when Google starts or finishes a core or spam update, then what moved on your site, plus daily Google index alerts and a Monday summary.
+lead: Email and webhook alerts when Google starts or finishes a ranking update and what moved on your sites afterwards, pages that drop out of Google's index, and a summary every Monday.
+---
+
+Alerts come with the [weekly site audit](/docs/weekly-site-audit), $50 a month per site. They watch every site in your audit, so you hear about a Google update or a dropped page without asking.
+
+You do not need the audit to check an update yourself. Any agent connected to SEO Skill can run the same update check at any time, for free (see [check an update yourself](#check-an-update-yourself)).
+
+## Google algorithm update alerts
+
+Google posts each core, spam and similar ranking update on its [Search Status Dashboard](https://status.search.google.com/) when it starts and when it finishes. SEO Skill reads that dashboard every hour and sends up to three emails for each update.
+
+| Email | What it says |
+| --- | --- |
+| Started | The update's name, the day it began and a link to Google's notice. Sent within the hour of Google posting it. |
+| Finished | When it ran and how many days it took. Sent within the hour of Google posting it. |
+| What moved | What moved on each of your audited sites during the update. Sent once Search Console's final data covers the update, usually a few days after it finished. |
+
+The "what moved" email is the one to read. For each site it shows:
+
+- Clicks and impressions from the day the update began, against the same number of days just before it, on the same weekdays.
+- Whether that change is outside the site's normal movement, judged against the eight comparisons of the same length before the update. This is a heuristic, not a Google rule.
+- The folders that moved most, and the pages and queries that lost or gained most.
+
+Sites with outside-normal movement come first. A quiet result is a real answer: most updates leave most sites alone. A site with fewer than 50 clicks in the days before the update, or too little history, is marked as not enough data instead of getting a verdict.
+
+If an update had already finished before your first alert about it, you get the finished email only. Updates that started or finished more than 7 days ago are not sent, so a new audit does not fill your inbox with old news.
+
+## Check an update yourself
+
+The "what moved" email is the same result as the `google-updates` section of the [SEO report](/docs/report), which any agent can run for free on any site you can read in Search Console. Ask your agent:
+
+```text
+Did the latest Google update hit example.com?
+```
+
+In a terminal:
+
+```sh
+seo report --site example.com --section google-updates
+```
+
+For an earlier update, add `--end-date` with a day in or after it.
+
+To compare your own dates around an update, such as the week before against the week after, use [`seo compare`](/docs/compare). It lists the Google updates that fall in the window too. The free [Google algorithm update checker](/tools/google-algorithm-update-checker) draws your Search Console clicks over every update since 2021.
+
+## Timing is not cause
+
+An update that lines up with a change shows the dates match. It does not prove the update caused it. A release, a tracking change, a seasonal dip or a competitor can move clicks in the same days, so check those before you rewrite anything.
+
+## Google index alerts
+
+Once a day, after the day's Google index checks are done, you get one email that lists the pages on all your audited sites that dropped out of Google's index or got into it. It comes only when something changed.
+
+Pages are grouped by Google's own reason, such as "Not found (404)", and each dropped page has a link to check what Google search shows now. Search results can take a few days to catch up with Google's index checks, so a dropped page may still show in a `site:` search for a while. A top page's drop is sent only after a second check agrees.
+
+To see every page the email could not list, ask your agent for [`seo index`](/docs/indexing) on that site.
+
+## Weekly summary
+
+Every Monday at about 8am UK time (once Sunday is over in California) you get last week across all your audited sites: each site's Google index checks, its weekly crawl and new issues, its search clicks against the week before, and any Google update that ran or got its result that week. Monday's index changes go in this email instead of a separate one.
+
+Your first summary does not wait for Monday. It comes once your first site's crawl is done, within a day of adding it, and covers the 7 days to then.
+
+Your agent can read the same summary at any time. Ask it for the SEO report with no site, or run:
+
+```sh
+seo report
+```
+
+On a machine, run `seo login` first so the CLI uses your seoskill.dev account.
+
+## Turn alerts on or off
+
+Alerts go to the email address of the first Google account you linked. Under **Alerts** on your [account page](https://seoskill.dev/account#alerts), each kind of alert has its own email and webhook switch. Both are on until you change them, and the webhook only sends once you save a URL.
+
+Every email also has a link at the bottom that turns that kind of email off.
+
+## Send alerts to a webhook
+
+A webhook lets an agent or automation act on each alert as it lands, such as a weekly Claude Code or Codex job, an n8n flow or a GitHub Action. Save an `https://` URL under **Alerts** on your account page. Each alert is one `POST` with a JSON body, carrying the same data as the email.
+
+Requests are signed the [Standard Webhooks](https://www.standardwebhooks.com/) way, so most webhook libraries can check them:
+
+- `webhook-id` is the alert's id. It stays the same on every retry, so you can drop repeats.
+- `webhook-timestamp` is the time it was sent, in seconds.
+- `webhook-signature` is `v1,` followed by the base64 HMAC-SHA256 of `<id>.<timestamp>.<body>`, keyed with the signing secret shown on your account page (the base64 bytes after its `whsec_` prefix).
+
+Answer with any 2xx status within 10 seconds. A timeout, 408, 429 or 5xx is tried again up to 6 times over about a day. Redirects are not followed, and any other answer stops that alert. Your account page shows the result of the last call.
+
+The body's `type` says which alert it is: `google-update`, `index-changes` or `weekly-summary`. A Google update alert looks like this:
+
+```json
+{
+  "id": "alt_0f4c2a9e8b7d4c1fa3e5b6c7d8e9f001",
+  "type": "google-update",
+  "site": null,
+  "created_at": "2026-11-04T16:12:40.000Z",
+  "data": {
+    "update": {
+      "id": "example-update-id",
+      "name": "November 2026 core update",
+      "phase": "started",
+      "start": "2026-11-04T15:30:00.000Z",
+      "end": null,
+      "url": "https://status.search.google.com/incidents/example-update-id"
+    },
+    "sites": ["sc-domain:example.com"]
+  }
+}
+```
+
+`phase` is `started`, `finished` or `impact`. An `impact` alert adds `impacts`, one result per audited site with the same data as the `google-updates` report section, and `unread`, the sites Search Console could not be read for. More alert types may come later, so ignore a type you do not know.

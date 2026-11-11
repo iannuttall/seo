@@ -183,7 +183,7 @@ export async function cliWeek(request: Request, env: Env): Promise<Response> {
   if (!(await betaFlags(env, link.userId)).has('weekly-audit')) {
     return error(
       'not_in_beta',
-      'The weekly summary is for accounts in the weekly site audit beta.',
+      'The weekly summary is for accounts with the weekly site audit.',
       403,
     )
   }

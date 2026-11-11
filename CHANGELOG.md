@@ -1,5 +1,17 @@
 # Changelog
 
+## 0.17.6
+
+### Fixed
+
+- `seo report` striking distance no longer lists one result's sitelinks
+  as separate pages. Three or more pages for the same query with the same
+  impressions and average position are left out and counted in the
+  report's limits.
+- Queries with a numbered prefix, such as "12264: keyword serp tracker",
+  are flagged `likely-automated` and rank after real searches in striking
+  distance, quick wins and low CTR.
+
 ## 0.17.5
 
 ### Added

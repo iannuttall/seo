@@ -17,11 +17,14 @@ const STALE_MS = 6 * 3_600_000
 export const MAX_SITES = 5
 
 // SQL for how many sites the account in column may audit: MAX_PAID_SITES
-// free with unlimited-sites, MAX_SITES free with the beta flag, plus the
-// sites an active plan pays for.
+// free with unlimited-sites, plus the sites an active plan pays for. The
+// beta flag's MAX_SITES free sites apply only without an active plan, so a
+// plan never adds free sites to what it pays for.
 const siteLimitSql = (column: string) =>
   `(CASE WHEN EXISTS (SELECT 1 FROM beta_flags f WHERE f.user_id = ${column} AND f.flag = 'unlimited-sites')
       THEN ${MAX_PAID_SITES}
+    WHEN EXISTS (SELECT 1 FROM billing b WHERE b.user_id = ${column} AND b.status IN ${ACTIVE_SQL})
+      THEN 0
     WHEN EXISTS (SELECT 1 FROM beta_flags f WHERE f.user_id = ${column} AND f.flag = 'weekly-audit')
       THEN ${MAX_SITES} ELSE 0 END
     + COALESCE((SELECT b.sites FROM billing b WHERE b.user_id = ${column} AND b.status IN ${ACTIVE_SQL}), 0))`

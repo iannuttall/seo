@@ -141,7 +141,7 @@ export type View =
           status: string | null
           manage: boolean
         }
-        // Alert settings, for an account with a beta that has alerts.
+        // Alert settings, for an account that gets alerts (paid or beta).
         alerts?: {
           // Where alert email goes: the first linked Google account.
           email: string | null

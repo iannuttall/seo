@@ -303,7 +303,7 @@ export const SHARED_TOOLS: SharedTool[] = [
     name: 'seo_report',
     command: 'report',
     title: 'Search Console report',
-    description: `Start here. Without site: a short summary of every site in the person's weekly site audit (beta) for last week, with each site's Google index, weekly crawl and search clicks, sites with changes first, ending with the site to ask about next; an account outside that beta gets its site list to pick from. With site: the main report for that Search Console property, the overview plus each section's row count and top rows. With site and section: that section's rows; page sections also check their top 20 URLs live. Sections:\n${Object.entries(
+    description: `Start here. Without site: a short summary of every site in the person's weekly site audit for last week, with each site's Google index, weekly crawl and search clicks, sites with changes first, ending with the site to ask about next; an account without the audit gets its site list to pick from. With site: the main report for that Search Console property, the overview plus each section's row count and top rows. With site and section: that section's rows; page sections also check their top 20 URLs live. Sections:\n${Object.entries(
       SECTIONS,
     )
       .map(([id, text]) => `- ${id}: ${text}`)
@@ -314,7 +314,7 @@ export const SHARED_TOOLS: SharedTool[] = [
       site: site
         .optional()
         .describe(
-          'Leave it out for the summary of every audited site (weekly site audit beta). Otherwise a Search Console property or site, such as sc-domain:example.com, https://example.com/ or example.com.',
+          'Leave it out for the summary of every site in the weekly site audit. Otherwise a Search Console property or site, such as sc-domain:example.com, https://example.com/ or example.com.',
         ),
       section: z
         .enum([...SECTION_IDS, ISSUES_SECTION, UPDATES_SECTION])
@@ -749,7 +749,7 @@ function indexFromStore(shared: SharedTool): SharedTool {
   const paged = 'detail' in shared.input.shape
   return {
     ...shared,
-    description: `${shared.description} For a site in the weekly site audit beta it answers at once from the URL Inspection results this server keeps for the site, checked in the background each day, and says how many URLs are covered, how many are queued and the time left.`,
+    description: `${shared.description} For a site in the weekly site audit it answers at once from the URL Inspection results this server keeps for the site, checked in the background each day, and says how many URLs are covered, how many are queued and the time left.`,
     run: async (surface, parsed: never) => {
       const input = parsed as {
         site: string
@@ -867,7 +867,7 @@ export const MCP_SERVER_INFO = {
 
 export const MCP_INSTRUCTIONS = `SEO Skill reads the person's own Search Console, Google Analytics, Bing Webmaster Tools, Clicky and optional keyword accounts, and returns facts with their dates and limits. It gives no advice.
 1. seo_sites: the properties the connected accounts can read.
-2. seo_report: start here. Without site it summarises last week across every site in the weekly site audit (beta) and names the site to ask about next. With site it shows that property's overview and every section's count and top rows; then ask for the one section you need. Section issues keeps a list of what it found for the site between sessions; mark records which the person fixed or wants ignored.
+2. seo_report: start here. Without site it summarises last week across every site in the weekly site audit and names the site to ask about next. With site it shows that property's overview and every section's count and top rows; then ask for the one section you need. Section issues keeps a list of what it found for the site between sessions; mark records which the person fixed or wants ignored.
 3. seo_page for one URL, seo_compare for before and after a date, seo_index for Google's indexing reasons and pages that lost their clicks, seo_research for keyword, competitor and backlink data, and whether AI answers cite the site, from the DataForSEO or Ahrefs key the person saved, seo_data for raw rows, including Google Analytics, Bing and Clicky.
 4. seo_lint checks copy you are writing or editing (a landing page, blog post, title or meta description) for patterns common in AI-written text and for title and description length. It reads only the text or files you give it.`
 

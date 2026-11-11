@@ -509,14 +509,14 @@ export async function runAllSites(
   if (!data && sites) {
     const list = await sites()
     return {
-      text: `No site given. Pick one below and send it: ${deps.call('report', { site: '<site>' })}. The summary of every site is for accounts in the weekly site audit beta.\n\n${list.text}`,
+      text: `No site given. Pick one below and send it: ${deps.call('report', { site: '<site>' })}. The summary of every site is for accounts with the weekly site audit.\n\n${list.text}`,
       data: list.data,
     }
   }
   if (!data) {
     throw new CommandError(
       'INVALID_INPUT',
-      `No site given. Name one: ${deps.call('report', { site: '<site>' })}. The summary of every site is for accounts in the weekly site audit beta.`,
+      `No site given. Name one: ${deps.call('report', { site: '<site>' })}. The summary of every site is for accounts with the weekly site audit.`,
     )
   }
   // The site to name next: the most urgent one, else the first by name.

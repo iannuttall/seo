@@ -1,5 +1,6 @@
 import {
   AiChat02Icon,
+  AiSearch02Icon,
   Analytics01Icon,
   ChartLineData01Icon,
   ComputerTerminal01Icon,
@@ -43,6 +44,12 @@ export const features = [
     title: 'AI search tracking',
     text: 'The questions people ask AI that show in your Search Console, whether AI answers cite you, visits from AI assistants, and what AI crawlers can read.',
     icon: AiChat02Icon,
+  },
+  {
+    path: '/features/ai-visibility-checker',
+    title: 'AI visibility checker',
+    text: 'Whether ChatGPT search, Google AI Mode and AI Overviews cite or mention your site for up to 10 questions, and which sites they cite instead.',
+    icon: AiSearch02Icon,
   },
   {
     path: '/features/keyword-research',

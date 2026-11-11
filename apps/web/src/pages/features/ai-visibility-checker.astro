@@ -1,0 +1,208 @@
+---
+import {
+  AiChat02Icon,
+  Analytics01Icon,
+  Key01Icon,
+  SearchList01Icon,
+} from '@hugeicons/core-free-icons'
+import CodeBlock from '@/components/CodeBlock.astro'
+import FeaturePage from '@/components/FeaturePage.astro'
+
+const related = [
+  { title: 'seo research', text: 'The AI answer check, its options and how to run it from the CLI.', href: '/docs/research', icon: SearchList01Icon },
+  { title: 'API keys', text: 'Add a DataForSEO key to the hosted MCP or the CLI.', href: '/docs/keys', icon: Key01Icon },
+  { title: 'SEO report', text: 'The AI queries section and visits from AI assistants.', href: '/docs/report', icon: Analytics01Icon },
+  { title: 'AI search tracking', text: 'Every way SEO Skill reads AI search, from questions to crawlers.', href: '/features/ai-search', icon: AiChat02Icon, link: 'AI search tracking' },
+]
+---
+
+<FeaturePage
+  title="AI visibility checker"
+  metaTitle="AI visibility checker for ChatGPT, AI Mode and AI Overviews"
+  description="Check whether ChatGPT search, Google AI Mode and AI Overviews cite or mention your site for up to 10 questions, and which sites they cite instead."
+  path="/features/ai-visibility-checker"
+  lead="Ask your agent whether ChatGPT search, Google AI Mode and Google AI Overviews cite your site for the questions people already ask, and which sites they cite instead."
+  {related}
+  relatedHeading="Read more"
+>
+  <h2>What the AI visibility checker returns for each question</h2>
+  <p>
+    The AI visibility checker in SEO Skill asks up to 10 questions on
+    ChatGPT search, Google AI Mode and Google AI Overviews, so one check is
+    up to 30 answers. Each answer gets one of four results:
+  </p>
+  <table>
+    <thead><tr><th>Result</th><th>What it means</th></tr></thead>
+    <tbody>
+      <tr><td>Cited</td><td>The answer lists or links a page on your site.</td></tr>
+      <tr><td>Mentioned</td><td>The answer names your site or brand in its text, with no link.</td></tr>
+      <tr><td>Neither</td><td>The answer gave no link to your site and did not name it.</td></tr>
+      <tr><td>No AI answer</td><td>The engine showed no AI answer for that question.</td></tr>
+    </tbody>
+  </table>
+  <p>
+    Every answer also lists the other sites it cites, and the result ranks
+    the sites cited most across the whole check. Those are the pages the AI
+    used instead of yours, so open them first to see what they cover.
+  </p>
+  <p>
+    A check of 10 questions costs about 7 cents of DataForSEO credit, and
+    most answers come back in about 15 seconds. It runs when you ask. SEO
+    Skill does not run it on a schedule or store a history of past checks.
+  </p>
+
+  <h2>Set up the checker in 3 steps</h2>
+  <ol>
+    <li>
+      Add the hosted MCP server to Claude Code, Codex, Cursor, ChatGPT or any
+      client with remote MCP, and sign in with Google. The commands are at
+      the top of this page.
+    </li>
+    <li>
+      Save a <a href="/docs/keys">DataForSEO key</a> on your account page.
+      DataForSEO bills you directly for each check, and SEO Skill adds
+      nothing on top. The AI answer check needs DataForSEO; an Ahrefs key
+      does not run it.
+    </li>
+    <li>Ask your agent, like the prompts below.</li>
+  </ol>
+  <p>
+    Prefer a terminal? <code>npm i -g seo</code> then <code>seo start</code>{' '}
+    sets up the CLI, and <code>seo providers dataforseo connect</code> keeps
+    the key on your machine.
+  </p>
+
+  <h2>Check the questions people already ask AI about your site</h2>
+  <p>
+    The most useful questions to check are ones real people ask. When people
+    use Google's AI Mode, or an AI assistant searches the web for them, their
+    questions show up in your Search Console as long, chat-style queries. With
+    Google connected, ask:
+  </p>
+  <CodeBlock value={`Check whether AI answers cite example.com for the questions people ask about it`} wrap />
+  <p>
+    The checker takes the top 10 chat-style and long questions from the last
+    90 days of your Search Console, and shows each one's impressions beside
+    its answers. A "neither" on a question with 400 impressions matters more
+    than one on a question with 3. In a terminal:
+  </p>
+  <CodeBlock value={`seo research ai_answers --target example.com --country us`} wrap />
+
+  <h2>Check your own questions on any site, including a competitor's</h2>
+  <p>
+    To check prompts you choose, give up to 10 questions. The target can then
+    be any site, and Google does not need to be connected:
+  </p>
+  <CodeBlock value={`Ask ChatGPT, AI Mode and AI Overviews "what is the best crm for a small team" and "how do I import contacts into a crm", and check whether they cite competitor.example`} wrap />
+  <CodeBlock value={`seo research ai_answers --target competitor.example --keywords "what is the best crm for a small team,how do I import contacts into a crm"`} wrap />
+  <p>
+    Run the same questions for your site and a competitor's, and the
+    difference is the list of answers where they get cited and you don't.
+  </p>
+
+  <h2>Count every domain and brand name you use</h2>
+  <p>
+    The checker counts a mention when the answer names your site, taken from
+    the domain unless you say otherwise. When your brand name differs from
+    your domain, or you run more than one domain, tell it:
+  </p>
+  <CodeBlock value={`seo research ai_answers --target example.com --also example.org --brand "Example" --keywords "what is example"`} wrap />
+  <p>
+    A citation to any of the domains counts as cited. Placeholder sites in an
+    answer, such as yourdomain.com, and images in ChatGPT's answers never
+    count as citations.
+  </p>
+
+  <h2>Check AI Overviews for your keywords</h2>
+  <p>
+    Every check already asks Google AI Overviews each question. For
+    ordinary keywords, a SERP request is a quick AI Overview checker: for up
+    to 5 keywords it says whether Google showed an AI Overview, lists the
+    sites it cited, and shows the ranking pages underneath.
+  </p>
+  <CodeBlock value={`Show the top 10 for "free ai visibility checker" and the sites its AI Overview cites`} wrap />
+  <p>
+    Each ranking page comes with Domain Rating by{' '}
+    <a href="https://ahrefs.com" target="_blank" rel="noreferrer">Ahrefs</a>,
+    free on the hosted MCP. When we ran that request for the US on 11
+    November 2026, Google showed an AI Overview for "free ai visibility
+    checker" that cited 5 sites: ahrefs.com, amplitude.com, honeyb.ai,
+    arobis.ai and seocrawl.ai. The small sites sit next to the big ones,
+    which is a reason to check the AI Overview before you decide a keyword
+    is out of reach.
+  </p>
+
+  <h2>A real check: AI answers named seoskill.dev in 4 of 30 answers</h2>
+  <p>
+    On 11 November 2026 we checked seoskill.dev in the US with 10 questions
+    of our own, such as "what is the best google search console mcp server"
+    and "how can I check if chatgpt cites my website". With "SEO Skill" as
+    the brand, the 30 answers cost $0.072:
+  </p>
+  <table>
+    <thead><tr><th>Result</th><th>Answers (of 30)</th></tr></thead>
+    <tbody>
+      <tr><td>Cited</td><td>0</td></tr>
+      <tr><td>Mentioned</td><td>4</td></tr>
+      <tr><td>Neither</td><td>26</td></tr>
+      <tr><td>No AI answer</td><td>0</td></tr>
+    </tbody>
+  </table>
+  <p>
+    Not one answer cited a page on seoskill.dev. The other sites cited most
+    were github.com (in 12 answers), google.com (10), youtube.com (9),
+    reddit.com (5) and ahrefs.com (4).
+  </p>
+  <p>
+    Three of the 4 mentions came from one question, "is there an seo skill
+    for claude code", where the brand name is also the words of the
+    question. A mention is a text match, so when your brand is an everyday
+    phrase, read the answer before you count it as a win. The fourth mention
+    came from Google AI Mode for "how do I connect google search console to
+    claude code", and it is the one we would open and read first.
+  </p>
+
+  <h2>Repeat a check to follow ChatGPT visibility over time</h2>
+  <p>
+    SEO Skill checks AI answers on demand. It is not a ChatGPT visibility
+    tracker that stores daily history, and the paid weekly site audit does
+    not ask AI answers. To follow the same questions over time, ask your
+    agent to run the check again on the same site, country and questions,
+    and compare the two results:
+  </p>
+  <CodeBlock value={`Run the AI answer check for example.com again with the same 10 questions as last month, and show which answers changed`} wrap />
+  <p>
+    In a terminal, add <code>--json</code> and save each run to a file. Once a
+    month is often enough. Each answer is one sample, and the same question
+    can get a different answer the next day, so one answer that flips is
+    noise. A question that goes from cited on all 3 engines to none is a
+    real change: open the pages the answers cite now.
+  </p>
+
+  <h2>See the visits AI assistants send you</h2>
+  <p>
+    Citations do not show whether anyone clicked. With Google Analytics
+    connected, the <a href="/docs/report">SEO report</a> overview counts
+    visits from ChatGPT, Perplexity, Claude, Gemini and Copilot by source,
+    with the pages they land on:
+  </p>
+  <CodeBlock value={`Which AI assistants sent visits to example.com in the last 28 days, and which pages did they land on?`} wrap />
+  <p>
+    Only visits that pass a referrer count. An AI app that sends none shows
+    up as Direct traffic, so treat the number as a minimum.
+  </p>
+
+  <h2>What one AI visibility check cannot prove</h2>
+  <p>
+    The checker asks ChatGPT search, Google AI Mode and Google AI Overviews.
+    It does not ask Perplexity, Claude, Gemini or Copilot, although visits
+    from them show in the report.
+  </p>
+  <p>
+    Each answer is one sample from one country on one day, without a chat
+    history. A "neither" is not proof the engine will never cite you, and a
+    "cited" is not a ranking. For the questions themselves, the{' '}
+    <a href="/features/ai-search">AI search tracking</a> page covers how
+    SEO Skill finds the questions people ask AI in your Search Console.
+  </p>
+</FeaturePage>

@@ -2788,6 +2788,36 @@
       "id": "control-521",
       "text": "## What crawl budget means for small sites\n\nMost sites under 10,000 pages never hit it.",
       "expect": null
+    },
+    {
+      "id": "tell-313",
+      "text": "The question isn't whether to optimize. The question is when to stop.",
+      "expect": ["negative-parallelism"]
+    },
+    {
+      "id": "tell-314",
+      "text": "The real issue isn't technical. The real issue is organizational.",
+      "expect": ["negative-parallelism"]
+    },
+    {
+      "id": "tell-315",
+      "text": "The first wall is the absence of a free, scoped API.\n\nThe second wall is the lack of delegated access.\n\nThe third wall is the absence of scoped permissions.",
+      "expect": ["anaphora"]
+    },
+    {
+      "id": "control-522",
+      "text": "The API isn't rate limited. The dashboard is rate limited at 10 requests a minute.",
+      "expect": null
+    },
+    {
+      "id": "control-523",
+      "text": "The first step is to install the CLI. The second step is to run seo start.",
+      "expect": null
+    },
+    {
+      "id": "control-524",
+      "text": "The first step is to install it. The second time you run it, it is faster. The third option is the hosted server.",
+      "expect": null
     }
   ]
 }

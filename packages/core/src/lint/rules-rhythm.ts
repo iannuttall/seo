@@ -1,6 +1,6 @@
 import { type Context, RHYTHM_KINDS, type RuleInfo } from './engine.js'
 import { verbless, words } from './text.js'
-import type { Sentence } from './types.js'
+import type { Block, Sentence } from './types.js'
 
 // Short-sentence rules: announcements, slogan fragments, kicker closers,
 // "worth + -ing" idioms, staccato runs and repeated openings.
@@ -46,7 +46,7 @@ export const RHYTHM_RULES: Record<string, RuleInfo> = {
     family: 'ai',
     level: 'error',
     description:
-      'Short sentences in a row that start with the same word: two or more "No ..." sentences, or three or more starting "It\'s", "They", "We" or "You".',
+      'Short sentences in a row that start with the same word: two or more "No ..." sentences, or three or more starting "It\'s", "They", "We" or "You". Also a list written as prose: "The first wall ... The second wall ... The third wall ...".',
   },
 }
 
@@ -317,9 +317,52 @@ export function staccato(ctx: Context) {
   }
 }
 
+const ORDINALS = ['first', 'second', 'third', 'fourth', 'fifth', 'sixth']
+const ORDINAL_OPENER =
+  /^(?:And |But |So )?The (first|second|third|fourth|fifth|sixth) ([a-z][\w-]*)\b/i
+
+// A list written as prose: sentences that open "The first wall", "The
+// second wall", "The third wall", in order, anywhere in the piece. From
+// tropes.fyi (CC BY 4.0).
+function numberedProse(ctx: Context, rule: RuleInfo) {
+  type Open = { block: Block; start: number; next: number; noun: string }
+  let open: Open | null = null
+  const report = (item: Open, endBlock: Block, end: number) => {
+    const count = item.next
+    ctx.hit(
+      rule,
+      item.block,
+      item.start,
+      item.block === endBlock ? end : item.block.text.length,
+      `${count} sentences open "The first ${item.noun}", "The second ${item.noun}" and so on: a list written as prose.`,
+      'Write it as a list, or as plain prose that names each point without numbering it.',
+      'warning',
+    )
+  }
+  let last: { block: Block; end: number } | null = null
+  for (const block of ctx.blocks(RHYTHM_KINDS)) {
+    for (const sentence of ctx.sentences(block)) {
+      const found = ORDINAL_OPENER.exec(sentence.text)
+      if (!found) continue
+      const ordinal = ORDINALS.indexOf((found[1] ?? '').toLowerCase())
+      const noun = (found[2] ?? '').toLowerCase()
+      if (ordinal === 0) {
+        if (open && open.next >= 3 && last) report(open, last.block, last.end)
+        open = { block, start: sentence.start, next: 1, noun }
+        last = null
+      } else if (open && ordinal === open.next && noun === open.noun) {
+        open.next++
+        last = { block, end: sentence.end }
+      }
+    }
+  }
+  if (open && open.next >= 3 && last) report(open, last.block, last.end)
+}
+
 export function anaphora(ctx: Context) {
   const rule = RHYTHM_RULES.anaphora as RuleInfo
   if (ctx.level(rule) === 'off') return
+  numberedProse(ctx, rule)
   for (const block of ctx.blocks(RHYTHM_KINDS)) {
     const sentences = ctx.sentences(block)
     let i = 0

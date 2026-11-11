@@ -53,6 +53,15 @@ const PARALLEL = [
       'gi',
     ),
   },
+  // The subject said twice: "The question isn't whether to optimize. The
+  // question is when to stop." From tropes.fyi (CC BY 4.0).
+  {
+    kind: 'repeated',
+    re: new RegExp(
+      `(?<=^|[.!?]\\s+)(The\\s+(?:[\\w-]+\\s+){0,2}?[\\w-]+)\\s+(?:is|are|was|were)(?:n't|\\s+not)\\s+${BODY}[.!]\\s+\\1\\s+(?:is|are|was|were)\\b`,
+      'gi',
+    ),
+  },
   {
     kind: 'joined',
     re: new RegExp(`${NEG}\\s+${BODY}${JOIN}${RESTATE}`, 'gi'),
@@ -82,8 +91,9 @@ export function negativeParallelism(ctx: Context) {
         )
         const firstWords = words(block.norm.slice(sentence.start, end)).length
         let level: 'error' | 'warning' = 'warning'
-        if (kind === 'reveal' || kind === 'about') level = 'error'
-        else if (FRAMING.test(subject)) level = 'error'
+        if (kind === 'reveal' || kind === 'about' || kind === 'repeated') {
+          level = 'error'
+        } else if (FRAMING.test(subject)) level = 'error'
         else if (pronoun && (kind === 'joined' || firstWords <= 10)) {
           level = 'error'
         }
@@ -95,9 +105,12 @@ export function negativeParallelism(ctx: Context) {
           )
         const from = restate ? end - restate[0].length : end
         const second = block.text.slice(from, after.end).trim()
-        const fix = second
-          ? `Drop the "isn't" half and state the claim: "${second.charAt(0).toUpperCase()}${second.slice(1)}"`
-          : 'Drop the "isn\'t" half and state the claim once.'
+        const fix =
+          kind === 'repeated'
+            ? `Drop the "isn't" sentence and keep the claim: "${block.text.slice(after.start, after.end).trim()}"`
+            : second
+              ? `Drop the "isn't" half and state the claim: "${second.charAt(0).toUpperCase()}${second.slice(1)}"`
+              : 'Drop the "isn\'t" half and state the claim once.'
         // The looser shapes, and a concession joined by "but" ("It's not
         // their only offering, but it is the first"), are often a real
         // correction: a reader judges.

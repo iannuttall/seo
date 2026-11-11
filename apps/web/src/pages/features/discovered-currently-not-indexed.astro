@@ -1,0 +1,177 @@
+---
+import {
+  Alert02Icon,
+  FileSearchIcon,
+  Link01Icon,
+  Notification01Icon,
+  Search01Icon,
+  ViewOffIcon,
+} from '@hugeicons/core-free-icons'
+import CodeBlock from '@/components/CodeBlock.astro'
+import FeaturePage from '@/components/FeaturePage.astro'
+
+const related = [
+  { title: 'seo index', text: "Google's indexing reason for every known page, each checked live and labelled.", href: '/docs/indexing', icon: Alert02Icon },
+  { title: 'seo page', text: 'One URL: what it serves now, its Google index status and its queries.', href: '/docs/page', icon: FileSearchIcon },
+  { title: 'Crawled, currently not indexed', text: 'Pages Google fetched and chose not to index.', href: '/features/crawled-currently-not-indexed', icon: ViewOffIcon, link: 'Crawled, not indexed' },
+  { title: 'Website not showing up on Google', text: 'Every indexing reason across your site, and what to check for each.', href: '/features/website-not-showing-up-on-google', icon: Search01Icon, link: 'Website not on Google' },
+  { title: 'seo internal-links', text: 'Find the pages on your site that should link to one page.', href: '/docs/internal-links', icon: Link01Icon },
+  { title: 'Weekly site audit', text: 'Daily Google index checks and an email when a page drops out.', href: '/docs/weekly-site-audit', icon: Notification01Icon },
+]
+
+const example = `URLs labelled fix or check, 1 to 3 of 3:
+reason | label | url | live | in_sitemap | last_crawl | why
+Discovered - currently not indexed | check | /guides/composting | 200 | yes | | Google knows the URL but has not crawled it yet. The sitemap lists it. It returns 200 now.
+Discovered - currently not indexed | check | /shop?colour=red&size=9 | 200 | no | | Google knows the URL but has not crawled it yet. It returns 200 now.
+Discovered - currently not indexed | fix | /guides/old-compost-bins | 404 | yes | | It returns 404 now, and the sitemap lists it.`
+---
+
+<FeaturePage
+  title="Discovered, currently not indexed"
+  metaTitle="Discovered, currently not indexed: check every page"
+  description="Find every page Google knows about but has not crawled, with a live check of each one, and see whether the hold-up is the page, your server or your links."
+  path="/features/discovered-currently-not-indexed"
+  lead="See every page Google knows about but has not crawled yet. Your agent reads Google's reason for each one and checks what the page does now, so you can tell a broken or unwanted URL from a good page Google has not got to."
+  {related}
+>
+  <h2>What discovered, currently not indexed means</h2>
+  <p>
+    Discovered, currently not indexed is a reason in Search Console's Page
+    indexing report. Google found the URL, through a link or your sitemap,
+    and has not crawled it yet.
+  </p>
+  <p>
+    Google's <a href="https://support.google.com/webmasters/answer/7440203" target="_blank" rel="noreferrer">Page
+    indexing report help</a> says that typically Google wanted to crawl the
+    URL but expected it to overload the site, so it rescheduled the crawl.
+    That is also why the last crawl date is empty.
+  </p>
+  <p>
+    Google has not read the page, so rewriting its text is not the first
+    thing to try. Check that the URL works, that you want it indexed, and
+    that Google can reach it easily.
+  </p>
+
+  <h2>Find every discovered, not indexed page on your site</h2>
+  <p>
+    Search Console's report shows up to 1,000 example URLs for each reason.
+    SEO Skill asks Google's URL Inspection about each page it knows from
+    your Search Console and your sitemap, and sorts them by reason.
+  </p>
+  <ol>
+    <li>
+      Connect the hosted MCP server and sign in with Google, or run{' '}
+      <code>npm i -g seo</code> then <code>seo start</code>. Both are free.
+      The site has to be a Search Console property your Google account can
+      read.
+    </li>
+    <li>Ask your agent:</li>
+  </ol>
+  <CodeBlock value={`Which pages on example.com are discovered but not indexed? Group them by folder and tell me which ones we want in Google.`} wrap />
+  <p>Or run it in a terminal:</p>
+  <CodeBlock value={`seo index --site example.com`} />
+  <p>
+    Each run checks 100 pages, in a fixed order: pages that lost their
+    clicks, pages by clicks and impressions, sitemap pages, then the rest.
+    On your own machine, <code>--max-urls</code> takes it up to the 2,000
+    checks Google allows each property a day. The result always says how
+    many pages it checked out of how many it knows.
+  </p>
+
+  <h2>What you get for a page Google has not crawled</h2>
+  <p>
+    Google has no crawl of these pages, so its side of the answer is mostly
+    empty. The live check fills in the rest: the page's status, any
+    redirect, its canonical and robots tags, and whether your sitemap lists
+    it. A page that loads is labelled check. A missing page your sitemap
+    still lists is labelled fix. Here is the kind of result to expect, for
+    example.com:
+  </p>
+  <CodeBlock value={example} wrap />
+  <p>
+    Each of the three rows needs something different. The guide is a real
+    page that Google has not crawled yet. The filter URL is one you probably never wanted in Google.
+    The old guide is gone, and the sitemap still sends Google to it.
+  </p>
+
+  <h2>Four things to check, in this order</h2>
+  <ol>
+    <li>
+      Check the URL works. A page that returns 404, redirects or
+      carries a noindex tag now will not be indexed when Google does crawl
+      it. Fix the sitemap or the link that sends Google there instead.
+    </li>
+    <li>
+      Decide whether you want it indexed. Filter, sort and tracking URLs
+      add to Google's crawl queue without adding a page anyone searches
+      for. Take them out of your sitemap and stop linking to them.
+    </li>
+    <li>
+      Check your server answers quickly. Google puts off crawls it
+      expects to overload the site. Search Console's{' '}
+      <a href="https://support.google.com/webmasters/answer/9679690" target="_blank" rel="noreferrer">Crawl
+      stats report</a> shows how fast your server answered Googlebot and any
+      host problems.
+    </li>
+    <li>
+      Make sure your own pages link to it. A page that only your
+      sitemap mentions is easy to put off. <code>seo internal-links --url
+      https://example.com/guides/composting</code> crawls your site from
+      your machine and returns up to eight pages that should link to it.
+    </li>
+  </ol>
+  <p>
+    Look at the pattern before the pages. Hundreds of discovered URLs in one
+    folder usually trace back to that folder as a whole, such as a filter
+    system or a batch you published at once.
+  </p>
+  <p>
+    None of these checks makes Google crawl or index a page. They remove the
+    reasons on your side that Google could have.
+  </p>
+
+  <h2>See whether Google has crawled it since</h2>
+  <p>Check one URL on its own:</p>
+  <CodeBlock value={`seo page --url https://example.com/guides/composting`} wrap />
+  <p>
+    Once Google crawls the page, URL Inspection shows a last crawl date and
+    the reason changes. <code>seo</code> cannot submit URLs to Google. To
+    ask for a crawl, use Request indexing in Search Console's{' '}
+    <a href="https://support.google.com/webmasters/answer/9012289" target="_blank" rel="noreferrer">URL
+    Inspection tool</a>.
+  </p>
+  <p>
+    A live index check searches Google itself for <code>site:</code> plus
+    the URL and an exact phrase from the page, on desktop and mobile. It
+    needs a DataForSEO key and costs about 2 to 4 cents a page:
+  </p>
+  <CodeBlock value={`seo research index_check --target https://example.com/guides/composting`} wrap />
+
+  <h2>No discovered pages on seoskill.dev on 11 November 2026</h2>
+  <p>
+    When we ran <code>seo index</code> on this site on 11 November 2026, none
+    of its 272 known URLs had this reason, which is why the example above
+    uses example.com. Three URLs were unknown to Google, a step before
+    discovered: Google had no record of them at all. The{' '}
+    <a href="/features/website-not-showing-up-on-google">website not showing
+    up on Google</a> page covers that reason and the others.
+  </p>
+
+  <h2>Discovered or crawled, currently not indexed</h2>
+  <p>
+    Discovered means Google has the URL and has not fetched it. <a href="/features/crawled-currently-not-indexed">Crawled,
+    currently not indexed</a> means Google fetched it and left it out, and
+    URL Inspection shows when. A page can move from discovered to crawled,
+    so watch for the reason changing.
+  </p>
+
+  <h2>Daily index checks with alerts</h2>
+  <p>
+    The <a href="/docs/weekly-site-audit">weekly site audit</a> ($50 a month
+    per site) runs these checks every day on our servers, using each
+    property's full 2,000 checks. Your agent's <code>seo index</code> then
+    answers at once from the stored results, and you get an email when a
+    page drops out of Google's index or comes back. <a href="/docs/alerts">Alerts</a>{' '}
+    covers each email.
+  </p>
+</FeaturePage>

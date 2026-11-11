@@ -1,0 +1,202 @@
+---
+import {
+  Alert02Icon,
+  Clock01Icon,
+  FileSearchIcon,
+  Link01Icon,
+  Notification01Icon,
+  Search01Icon,
+} from '@hugeicons/core-free-icons'
+import CodeBlock from '@/components/CodeBlock.astro'
+import FeaturePage from '@/components/FeaturePage.astro'
+
+const related = [
+  { title: 'seo index', text: "Google's indexing reason for every known page, each checked live and labelled.", href: '/docs/indexing', icon: Alert02Icon },
+  { title: 'seo page', text: 'One URL: what it serves now, its Google index status and its queries.', href: '/docs/page', icon: FileSearchIcon },
+  { title: 'Discovered, currently not indexed', text: 'Pages Google knows about but has not crawled yet.', href: '/features/discovered-currently-not-indexed', icon: Clock01Icon, link: 'Discovered, not indexed' },
+  { title: 'Website not showing up on Google', text: 'Every indexing reason across your site, and what to check for each.', href: '/features/website-not-showing-up-on-google', icon: Search01Icon, link: 'Website not on Google' },
+  { title: 'seo internal-links', text: 'Find the pages on your site that should link to one page.', href: '/docs/internal-links', icon: Link01Icon },
+  { title: 'Weekly site audit', text: 'Daily Google index checks and an email when a page drops out.', href: '/docs/weekly-site-audit', icon: Notification01Icon },
+]
+---
+
+<FeaturePage
+  title="Crawled, currently not indexed"
+  metaTitle="Crawled, currently not indexed: check every page"
+  description="Find every page Google crawled and left out of its index, with Google's own reason, a live check of each page, and what to look at before you change it."
+  path="/features/crawled-currently-not-indexed"
+  lead="Find every page on your site that Google crawled and left out of its index. Your agent reads Google's own reason for each one and checks the live page, so you can tell the pages worth fixing from the ones to leave alone."
+  {related}
+>
+  <h2>What crawled, currently not indexed means</h2>
+  <p>
+    Crawled, currently not indexed is a reason in Search Console's Page
+    indexing report. Google fetched the page and chose not to add it to its
+    index.
+  </p>
+  <p>
+    Google's <a href="https://support.google.com/webmasters/answer/7440203" target="_blank" rel="noreferrer">Page
+    indexing report help</a> says Google does not index every page on the
+    web, so this reason "doesn't necessarily indicate an issue that needs
+    attention". It gives no further detail, in the report or in URL
+    Inspection.
+  </p>
+  <p>
+    So the reason alone tells you very little. The useful work is finding
+    which affected pages you actually want in Google, then reading each one
+    for something Google would skip.
+  </p>
+
+  <h2>Find every crawled, not indexed page on your site</h2>
+  <p>
+    Search Console's report shows up to 1,000 example URLs for each reason,
+    and not necessarily all of them. SEO Skill asks Google's URL Inspection
+    about each page it knows from your Search Console and your sitemap, and
+    sorts them by reason.
+  </p>
+  <ol>
+    <li>
+      Connect the hosted MCP server and sign in with Google, or run{' '}
+      <code>npm i -g seo</code> then <code>seo start</code>. Both are free.
+      The site has to be a Search Console property your Google account can
+      read.
+    </li>
+    <li>Ask your agent:</li>
+  </ol>
+  <CodeBlock value={`Which pages on example.com are crawled but not indexed, and which of them matter?`} wrap />
+  <p>Or run it in a terminal:</p>
+  <CodeBlock value={`seo index --site example.com`} />
+  <p>
+    It checks pages in a fixed order: pages that lost their clicks, then
+    pages by clicks and impressions, then sitemap pages, then the rest. Each
+    run checks 100. On your own machine you can check up to the quota Google
+    has left today, which is 2,000 checks a day for each property:
+  </p>
+  <CodeBlock value={`seo index --site example.com --max-urls 500`} />
+  <p>
+    The result says how many pages it checked out of how many it knows. A
+    page it did not reach has no result, so a short run is never an
+    all-clear.
+  </p>
+
+  <h2>Read the evidence for each page before you change it</h2>
+  <p>
+    A page with this reason that still loads comes back labelled check,
+    which means a person should look. One that now returns 404 while your
+    sitemap or your own pages still point to it is labelled fix. Next to
+    Google's reason you get what the page does now:
+  </p>
+  <table>
+    <thead><tr><th>Evidence</th><th>What it tells you</th></tr></thead>
+    <tbody>
+      <tr><td>Live status and redirect</td><td>Whether the page still answers 200, or has moved or broken since Google crawled it.</td></tr>
+      <tr><td>In your sitemap</td><td>Whether you told Google you want this page indexed.</td></tr>
+      <tr><td>Canonical, yours and Google's</td><td>Whether the page points Google at another URL, or Google picked a different one.</td></tr>
+      <tr><td>Pages linking to it</td><td>The pages Google saw linking to it, as of its last crawl.</td></tr>
+      <tr><td>Last crawl</td><td>How old Google's view of the page is.</td></tr>
+    </tbody>
+  </table>
+  <p>
+    SEO Skill's labels come from simple rules over this evidence. Google
+    does not set them, so treat check as a question for you to answer.
+  </p>
+
+  <h2>Pages you can leave out of Google</h2>
+  <p>
+    Plenty of crawled, not indexed pages never needed to be search results:
+    feeds, tag and filter pages, internal search results, deep pagination
+    and plain text files. If a page is not in your sitemap and nothing you
+    care about links to it, leaving it alone is usually the right call.
+  </p>
+  <p>
+    Start with the pages your sitemap lists. Those are the ones you have
+    told Google you want indexed, so they are where this reason costs you.
+  </p>
+
+  <h2>What to check on a page you want indexed</h2>
+  <p>Give your agent the job for the whole list at once:</p>
+  <CodeBlock value={`For each crawled, not indexed page on example.com that is in the sitemap, read the page, compare it with our other pages on the same topic, and tell me whether to improve it, merge it or leave it out.`} wrap />
+  <p>Check three things on each page:</p>
+  <ul>
+    <li>
+      Read what the page says. On your machine,{' '}
+      <code>seo page --url https://example.com/guides/composting --detail full</code>{' '}
+      returns the page's main text as Markdown, as your server sends it. A
+      template with a few fields filled in reads very differently from a
+      page someone wrote.
+    </li>
+    <li>
+      Look for another page on your site that answers the same search. Two
+      pages that cover the same thing usually read better merged into one,
+      whatever Google does next.
+    </li>
+    <li>
+      See which of your pages link to it. The result lists the pages Google
+      saw linking there, and <code>seo internal-links --url
+      https://example.com/guides/composting</code> crawls your site and
+      returns up to eight pages that should link to it, each with a sentence
+      the link fits in.
+    </li>
+  </ul>
+  <p>
+    None of this makes Google index the page. A better page is a better
+    candidate, and Google still decides.
+  </p>
+
+  <h2>Check the page again after you change it</h2>
+  <p>For one page you just changed, check that URL on its own:</p>
+  <CodeBlock value={`seo page --url https://example.com/guides/composting`} wrap />
+  <p>
+    URL Inspection reports Google's last known state, so it lags behind your
+    change until Google crawls the page again. Compare the last crawl date
+    with the day you made the change. <code>seo</code> cannot submit URLs to
+    Google. To ask for a fresh crawl, use Request indexing in Search
+    Console's <a href="https://support.google.com/webmasters/answer/9012289" target="_blank" rel="noreferrer">URL
+    Inspection tool</a>.
+  </p>
+  <p>
+    To see whether Google search shows the page, ask for a live index check.
+    It searches Google for <code>site:</code> plus the URL and for an exact
+    phrase from the page, on desktop and mobile, and answers indexed, not
+    found or unknown. It needs a DataForSEO key and costs about 2 to 4 cents
+    a page:
+  </p>
+  <CodeBlock value={`seo research index_check --target https://example.com/guides/composting`} wrap />
+  <p>
+    That is Google search, not Search Console, so not found is evidence, not
+    proof.
+  </p>
+
+  <h2>One crawled, not indexed URL out of 272 on seoskill.dev</h2>
+  <p>
+    We ran <code>seo index</code> on this site on 11 November 2026. Google
+    had a current answer for all 272 URLs SEO Skill knows: 185 indexed, 79
+    redirects, 4 noindex pages, 3 unknown to Google and 1 crawled, currently
+    not indexed.
+  </p>
+  <p>
+    That one URL is <code>/llms.txt</code>, a plain text file for AI agents
+    that our sitemap does not list. The rules label it check, like any page
+    with this reason that still loads. We looked and left it alone: it was never meant
+    to be a search result.
+  </p>
+
+  <h2>Crawled or discovered, currently not indexed</h2>
+  <p>
+    Crawled means Google fetched the page, so URL Inspection has a last
+    crawl date. <a href="/features/discovered-currently-not-indexed">Discovered,
+    currently not indexed</a> means Google knows the URL and has not fetched
+    it yet, so the last crawl date is empty. They point at different checks:
+    the page itself for crawled, your server and your links for discovered.
+  </p>
+
+  <h2>Hear when a page drops out of Google's index</h2>
+  <p>
+    The <a href="/docs/weekly-site-audit">weekly site audit</a> ($50 a month
+    per site) runs the index checks for you on our servers, using each
+    property's full 2,000 checks a day. Your top pages are checked daily.
+    When a page drops out of the index you get one email, grouped by
+    Google's reason, and a top page's drop is only sent after a second check
+    agrees. <a href="/docs/alerts">Alerts</a> covers each email.
+  </p>
+</FeaturePage>

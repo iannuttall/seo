@@ -8,6 +8,8 @@
   <url><loc>https://seoskill.dev/features/chatgpt-seo</loc></url>
   <url><loc>https://seoskill.dev/features/claude-seo</loc></url>
   <url><loc>https://seoskill.dev/features/codex-seo</loc></url>
+  <url><loc>https://seoskill.dev/features/crawled-currently-not-indexed</loc></url>
+  <url><loc>https://seoskill.dev/features/discovered-currently-not-indexed</loc></url>
   <url><loc>https://seoskill.dev/features/google-analytics</loc></url>
   <url><loc>https://seoskill.dev/features/google-index-checker</loc></url>
   <url><loc>https://seoskill.dev/features/keyword-gap</loc></url>
@@ -23,6 +25,7 @@
   <url><loc>https://seoskill.dev/features/seo-monitoring</loc></url>
   <url><loc>https://seoskill.dev/features/seo-reporting</loc></url>
   <url><loc>https://seoskill.dev/features/striking-distance-keywords</loc></url>
+  <url><loc>https://seoskill.dev/features/website-not-showing-up-on-google</loc></url>
   <url><loc>https://seoskill.dev/guides</loc></url>
   <url><loc>https://seoskill.dev/guides/astro-seo</loc></url>
   <url><loc>https://seoskill.dev/guides/nextjs-seo</loc></url>

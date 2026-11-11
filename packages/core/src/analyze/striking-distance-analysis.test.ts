@@ -188,3 +188,55 @@ test('merges #fragment URLs and ranks heuristic query flags last', () => {
   )
   assert.equal(result.methodology.queryFlags.heuristic, true)
 })
+
+test('leaves out sitelink rows and ranks numbered tool queries last', () => {
+  const sitelink = (path: string) =>
+    row({
+      query: 'seo skills',
+      url: `https://acme.test${path}`,
+      clicks: 0,
+      impressions: 35,
+      position: 10.028571428571428,
+    })
+  const result = analyzeStrikingDistanceRows({
+    site,
+    minImpressions: 10,
+    rows: [
+      sitelink('/account'),
+      sitelink('/docs'),
+      sitelink('/stats'),
+      sitelink('/tools'),
+      // Two pages that match by chance stay in.
+      row({
+        query: 'crawl budget',
+        url: 'https://acme.test/a',
+        impressions: 40,
+        position: 12,
+      }),
+      row({
+        query: 'crawl budget',
+        url: 'https://acme.test/b',
+        impressions: 40,
+        position: 12,
+      }),
+      row({
+        query: '12264: keyword serp tracker',
+        impressions: 90,
+        position: 12.9,
+      }),
+      row({ query: 'serp tracker guide', impressions: 30, position: 14 }),
+    ],
+  })
+
+  assert.equal(result.selection.sitelinkRows, 4)
+  assert.deepEqual(
+    result.items.map((item) => `${item.query} ${item.url}`),
+    [
+      'crawl budget https://acme.test/a',
+      'crawl budget https://acme.test/b',
+      'serp tracker guide https://acme.test/guide',
+      '12264: keyword serp tracker https://acme.test/guide',
+    ],
+  )
+  assert.deepEqual(result.items[3]?.queryFlags, ['likely-automated'])
+})

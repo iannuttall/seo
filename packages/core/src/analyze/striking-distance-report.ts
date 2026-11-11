@@ -304,6 +304,9 @@ export async function strikingDistanceWith(
       analysis.selection.flaggedRows
         ? `${countLabel(analysis.selection.flaggedRows, 'eligible row')} carry heuristic query flags (likely-automated or navigational-other) and rank after unflagged rows.`
         : '',
+      analysis.selection.sitelinkRows
+        ? `${countLabel(analysis.selection.sitelinkRows, 'row')} left out as sitelinks: three or more pages for the same query with the same impressions and average position, which is one result shown with its sitelinks. A heuristic.`
+        : '',
       "Position is GSC average position for the property's topmost result per impression; it does not prove a URL ranked on a literal second results page every time.",
       'Search Analytics exposes retained query rows only. Anonymized and lower-value queries can be absent even when pagination is exhausted.',
       'Priority is a demand-and-position heuristic, not an estimated click lift or proof that a change will improve rankings.',

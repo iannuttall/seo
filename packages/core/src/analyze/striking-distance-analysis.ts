@@ -64,6 +64,7 @@ function selectRows(input: {
     belowMinimumRows: 0,
     lowActionabilityRows: 0,
     brandRows: 0,
+    sitelinkRows: 0,
     eligibleRows: 0,
     likelyAutomatedRows: 0,
     navigationalOtherRows: 0,
@@ -95,10 +96,28 @@ function selectRows(input: {
       selection.brandRows++
     } else {
       rows.push(row)
-      selection.eligibleRows++
     }
   }
-  return { rows, selection }
+  const kept = withoutSitelinkRows(rows)
+  selection.sitelinkRows = rows.length - kept.length
+  selection.eligibleRows = kept.length
+  return { rows: kept, selection }
+}
+
+// Sitelinks under one result show up as several pages for the same query
+// with exactly the same impressions and average position. They are one
+// result, not separate pages to improve. A heuristic: three or more pages,
+// so two pages that happen to match are kept.
+const SITELINK_MINIMUM_PAGES = 3
+
+function withoutSitelinkRows(rows: GscRow[]): GscRow[] {
+  const counts = new Map<string, number>()
+  const key = (row: GscRow) =>
+    `${row.keys[0]?.trim()}\n${row.impressions}\n${row.position}`
+  for (const row of rows) counts.set(key(row), (counts.get(key(row)) ?? 0) + 1)
+  return rows.filter(
+    (row) => (counts.get(key(row)) ?? 0) < SITELINK_MINIMUM_PAGES,
+  )
 }
 
 export function analyzeStrikingDistanceRows(
@@ -193,6 +212,7 @@ export function analyzeStrikingDistanceRows(
         'minimum_impressions',
         'query_quality',
         'brand',
+        'sitelinks',
         'query_flag_ranking',
       ],
       selection: selected.selection,

@@ -15,6 +15,9 @@ export type StrikingDistanceSelection = {
   belowMinimumRows: number
   lowActionabilityRows: number
   brandRows: number
+  // Rows left out as one result's sitelinks: three or more pages for the
+  // same query with the same impressions and average position.
+  sitelinkRows: number
   eligibleRows: number
   likelyAutomatedRows: number
   navigationalOtherRows: number
@@ -108,6 +111,7 @@ export type StrikingDistanceAnalysis = {
       'minimum_impressions',
       'query_quality',
       'brand',
+      'sitelinks',
       'query_flag_ranking',
     ]
     selection: StrikingDistanceSelection

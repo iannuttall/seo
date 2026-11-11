@@ -133,9 +133,9 @@ const related = [
   </p>
   <p>
     A blank volume means the provider has no data, which is different from
-    zero. In November 2026 DataForSEO had no volume for "keyword
-    opportunity report", while Search Console had shown seoskill.dev 59
-    impressions for it between July and November 2026.
+    zero. In November 2026 DataForSEO had no US volume for "algorithm update
+    checker", while Search Console showed one seoskill.dev page 267
+    impressions for it in the 28 days to 7 November 2026.
   </p>
 
   <h2>Find new keyword opportunities from a seed keyword</h2>
@@ -188,65 +188,79 @@ seo research keyword_metrics --keywords "invoice template for contractors,free i
     research tool</a> shows what any domain ranks for with no account.
   </p>
 
-  <h2>The keyword opportunity that led to this page</h2>
+  <h2>A worked example: one keyword opportunity on seoskill.dev</h2>
   <p>
-    We found the keywords for this page with the steps above, on
-    seoskill.dev's own data, on 11 November 2026.
+    We ran the steps above on seoskill.dev's own Search Console on 11
+    November 2026. These are the real numbers for one page, the{' '}
+    <a href="/tools/google-algorithm-update-checker">Google algorithm update
+    checker</a>.
   </p>
   <ol>
     <li>
       The striking distance section for 11 October to 7 November 2026
-      listed "keyword opportunity" second, at an average position of 10.16
-      with 130 impressions and 0 clicks. Its live check showed the page that
-      had earned it, an old report page at{' '}
-      <code>/docs/reports/keyword-opportunities</code>, now redirects to the
-      general SEO report docs.
+      ranked "algorithm update checker" first: 267 impressions, 8 clicks (a
+      3% click-through rate) and an average position of 11.08, on{' '}
+      <code>/tools/google-algorithm-update-checker</code>. The live check
+      found the page returning 200, with the search in its title and H1.
     </li>
     <li>
-      Search Console for 1 July to 8 November 2026 showed that old page
-      with 395 impressions for "keyword opportunity" at position 10.4, and
-      59 for "keyword opportunity report" at position 8.4, all with 0
-      clicks. One day, 11 October 2026, accounts for 111 of the 395. Without
-      it the page had 284 impressions in just over four months.
+      Its score works out as closeness (21 − 11.08) ÷ 10 = 0.992, times 267
+      impressions, which is about 265. The report shows 264.81 because it
+      uses the unrounded position.
     </li>
     <li>
-      Keyword metrics from DataForSEO for the US (searches a month, with
-      keyword difficulty from 0 to 100) sized the nearby searches:
-      <table>
-        <thead><tr><th>Keyword</th><th>Searches (KD)</th></tr></thead>
-        <tbody>
-          <tr><td>keyword opportunity</td><td>140 (KD 24)</td></tr>
-          <tr><td>keyword opportunities</td><td>140 (KD 14)</td></tr>
-          <tr><td>seo opportunities</td><td>70 (KD 32)</td></tr>
-          <tr><td>seo potential</td><td>40 (KD 0)</td></tr>
-          <tr><td>opportunity keywords</td><td>20 (KD 0)</td></tr>
-          <tr><td>keyword opportunity score</td><td>10 (no KD)</td></tr>
-          <tr><td>keyword opportunity report</td><td>No data</td></tr>
-        </tbody>
-      </table>
+      The second-page section scores the same page as a whole: 809
+      impressions across 12 queries at an impression-weighted position of
+      13.88. Closeness is (21 − 13.88) ÷ 10 = 0.712, and 809 × 0.712 is
+      about 576, the report's 576.14. It was the second-highest page in
+      that section, behind the SERP checker.
     </li>
     <li>
-      The SERP for "keyword opportunity" on desktop in the US had an AI
-      Overview and a mixed top 8: pages from searchengineland.com (Domain
-      Rating 91), wordstream.com (90) and blog.majestic.com (83) beside
-      appvector.io (36) and danielbianchini.co.uk (5). A second run minutes
-      earlier returned a different top 10, which is what an unsettled
-      results page looks like.
+      Keyword metrics from DataForSEO for the US had no volume for the
+      exact search. Two near variants had some: "google algorithm checker"
+      40 a month (KD 0) and "algorithm checker" 40 (KD 0). Here Search
+      Console is the better evidence of demand than the provider.
     </li>
     <li>
-      The SERP for "seo opportunities" settled one question. All 9 organic
-      results were about Sponsors for Educational Opportunity, a nonprofit
-      that is also called SEO (a fair reminder to read the results before
-      trusting a volume).
+      The SERP for "algorithm update checker" on desktop in the US had an
+      AI Overview, and 5 of the top 8 results were articles about updates
+      rather than checkers. The ranking sites included peoplefirstcontent.com (Domain Rating 16) and
+      aysa.ai (23), and virtina.com (48) held first place.
     </li>
   </ol>
   <p>
-    So this page targets "keyword opportunity" and "keyword opportunities"
-    first, with the score, report and SEO potential searches beside them.
-    Small volumes and a weak, shifting results page make a focused page
-    with a real method a fair bet. A month after it goes live, the same
-    striking distance section will show whether it took the old page's
-    place.
+    Read together, the page already matches the search, Google already
+    shows it at the top of page two, and page one includes sites with a
+    Domain Rating of 16 and 23. That makes it a better bet than a new page. The next step is{' '}
+    <a href="/docs/page">seo page</a> on the URL to see its other queries
+    and what the articles above it cover. Mark the change fixed in the
+    issues list on the day it ships, so its clicks can be compared 28 and
+    56 days later.
+  </p>
+
+  <h2>The keywords this page targets</h2>
+  <p>
+    We sized this page's own keywords the same way. Keyword metrics from
+    DataForSEO for the US, November 2026, in searches a month with keyword
+    difficulty from 0 to 100:
+  </p>
+  <table>
+    <thead><tr><th>Keyword</th><th>Searches (KD)</th></tr></thead>
+    <tbody>
+      <tr><td>keyword opportunity</td><td>140 (KD 24)</td></tr>
+      <tr><td>keyword opportunities</td><td>140 (KD 14)</td></tr>
+      <tr><td>seo opportunities</td><td>70 (KD 32)</td></tr>
+      <tr><td>seo potential</td><td>40 (KD 0)</td></tr>
+      <tr><td>opportunity keywords</td><td>20 (KD 0)</td></tr>
+      <tr><td>keyword opportunity score</td><td>10 (no KD)</td></tr>
+      <tr><td>keyword opportunity report</td><td>No data</td></tr>
+    </tbody>
+  </table>
+  <p>
+    The SERP for "seo opportunities" ruled that one out. All 9 organic
+    results were about Sponsors for Educational Opportunity, a nonprofit
+    that is also called SEO (a fair reminder to read the results before
+    trusting a volume).
   </p>
 
   <h2>Turn the list into a keyword opportunity report</h2>

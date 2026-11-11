@@ -6,6 +6,7 @@ import {
   DatabaseIcon,
   FileSearchIcon,
   Globe02Icon,
+  Link01Icon,
   McpServerIcon,
   Notification01Icon,
   RoboticIcon,
@@ -46,6 +47,12 @@ export const features = [
     title: 'AI keyword research tool',
     text: 'Keyword ideas, search volume, SERPs and competitor keywords in your agent, from your own DataForSEO or Ahrefs key.',
     icon: SearchList01Icon,
+  },
+  {
+    path: '/features/backlink-gap',
+    title: 'Backlink gap analysis',
+    text: 'The sites that link to two or more of your competitors and not to you, highest Domain Rating first, from your own DataForSEO or Ahrefs key.',
+    icon: Link01Icon,
   },
   {
     path: '/features/seo-audit',

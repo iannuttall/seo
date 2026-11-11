@@ -1,0 +1,202 @@
+---
+import {
+  Analytics01Icon,
+  Key01Icon,
+  Link01Icon,
+  SearchList01Icon,
+  UserGroupIcon,
+} from '@hugeicons/core-free-icons'
+import CodeBlock from '@/components/CodeBlock.astro'
+import FeaturePage from '@/components/FeaturePage.astro'
+
+const related = [
+  { title: 'seo research', text: 'Every research action, including the link gap, with its inputs and CLI flags.', href: '/docs/research', icon: SearchList01Icon },
+  { title: 'API keys', text: 'Add a DataForSEO or Ahrefs key to the hosted MCP or the CLI.', href: '/docs/keys', icon: Key01Icon },
+  { title: 'Backlink checker', text: 'See who links to any domain or page in your browser, with no account.', href: '/tools/backlink-checker', icon: Link01Icon, link: 'Free tool' },
+  { title: 'Domain Rating checker', text: 'Check the Domain Rating of up to 10 sites at once, for free.', href: '/tools/domain-rating-checker', icon: Analytics01Icon, link: 'Free tool' },
+  { title: 'AI keyword research tool', text: 'Find the competitors that win your searches before you compare their links.', href: '/features/keyword-research', icon: UserGroupIcon, link: 'Keyword research' },
+]
+---
+
+<FeaturePage
+  title="Backlink gap analysis"
+  metaTitle="Backlink gap analysis tool for AI agents"
+  description="Find the sites that link to two or more of your competitors but not to you, sorted by Domain Rating, from your own DataForSEO or Ahrefs key."
+  path="/features/backlink-gap"
+  lead="Ask your agent which sites link to two or more of your competitors and not to you. It compares up to 5 competitors from your own DataForSEO or Ahrefs account and lists the gap, highest Domain Rating first."
+  {related}
+  relatedHeading="Read more"
+>
+  <h2>What a backlink gap analysis finds</h2>
+  <p>
+    A backlink gap analysis lists the websites that link to your competitors
+    but not to you. Those sites already link out on your topic, so they are
+    the warmest link building prospects you have.
+  </p>
+  <p>
+    SEO Skill counts a site as part of the gap when it links to at least two
+    of your competitors. One competitor's link can be a friendship, a
+    sponsorship or chance. Two or more is a pattern, such as a comparison
+    post, a tools list or a community that covers the whole category. Ahrefs'
+    own <a href="https://ahrefs.com/blog/backlink-gap-analysis/" target="_blank" rel="noreferrer">backlink gap guide</a>{' '}
+    draws the same line: sites that link to every competitor are high
+    priority, and sites that link to two are next.
+  </p>
+
+  <h2>Run a backlink gap in your agent in 3 steps</h2>
+  <ol>
+    <li>
+      Add the hosted MCP server to Claude Code, Codex, Cursor, ChatGPT or any
+      client with remote MCP, and sign in with Google. The commands are at
+      the top of this page.
+    </li>
+    <li>
+      Save a <a href="/docs/keys">DataForSEO or Ahrefs key</a> on your
+      account page. The provider bills you directly, and SEO Skill adds
+      nothing on top.
+    </li>
+    <li>Name your site and 2 to 5 competitors:</li>
+  </ol>
+  <CodeBlock value={`Run a backlink gap for example.com against example.org, example.net and example.io`} wrap />
+  <p>
+    The agent reads each site's referring domains, keeps the sites that link
+    to two or more competitors and not to you, and sorts them by Domain
+    Rating. A run with DataForSEO says what it cost: about $0.24 for a site
+    and 3 competitors in November 2026. With Ahrefs it uses your API units.
+  </p>
+  <p>
+    Prefer a terminal? <code>npm i -g seo</code> then <code>seo start</code>{' '}
+    gives you the same gap as a command, with the key kept on your machine:
+  </p>
+  <CodeBlock value={`seo research link_gap --target example.com --competitors example.org,example.net,example.io`} wrap />
+
+  <h2>Pick competitors that win the searches you want</h2>
+  <p>
+    A backlink gap is only as good as the competitors you compare. Pick the
+    sites that rank for the searches you want, not the companies you meet in
+    sales calls. If you are not sure who they are, ask first:
+  </p>
+  <CodeBlock value={`Which domains share the most keywords with example.com? Then show the top 10 for "invoice software" with each site's Domain Rating`} wrap />
+  <p>
+    Competitors lists the domains that rank for the same keywords as you, and
+    a SERP shows who holds page one for one search. Sites a little stronger
+    than yours make the best comparison. A gap against a site with 50 times
+    your links tends to fill up with prospects that would never look at
+    you (big publishers rarely link to the newcomer).
+  </p>
+
+  <h2>A real backlink gap: Umami against 3 analytics rivals</h2>
+  <p>
+    We ran the gap for Umami, the open source web analytics tool, against
+    Plausible, Fathom and Simple Analytics in November 2026, with DataForSEO
+    and Domain Rating by{' '}
+    <a href="https://ahrefs.com" target="_blank" rel="noreferrer">Ahrefs</a>.
+    It found 90 sites that link to at least two of the three rivals and not
+    to umami.is. The run cost $0.24.
+  </p>
+  <p>
+    Of the 90 sites, 29 link to all three rivals, 14 have a Domain Rating of
+    50 or more, and 8 are both. Those 8 are where we would start. The top of
+    the list:
+  </p>
+  <table>
+    <thead><tr><th>Linking site</th><th>Domain Rating (links to)</th></tr></thead>
+    <tbody>
+      <tr><td>iubenda.com</td><td>94 (all 3)</td></tr>
+      <tr><td>ycombinator.com</td><td>91 (Plausible, Simple Analytics)</td></tr>
+      <tr><td>beehiiv.com</td><td>91 (all 3)</td></tr>
+      <tr><td>kinsta.com</td><td>89 (Plausible, Fathom)</td></tr>
+      <tr><td>discourse.org</td><td>83 (Plausible, Fathom)</td></tr>
+      <tr><td>indiehackers.com</td><td>82 (Plausible, Simple Analytics)</td></tr>
+      <tr><td>spreadprivacy.com</td><td>77 (all 3)</td></tr>
+      <tr><td>sdf.org</td><td>77 (all 3)</td></tr>
+    </tbody>
+  </table>
+  <p>
+    The other end matters too. 48 of the 90 sites have a Domain Rating under
+    10. Going by their names, many are tool directories and "alternatives
+    to" lists. Some are worth a two-minute submission. Few are worth an
+    outreach email.
+  </p>
+  <p>
+    Then we swapped the roles. With Plausible as the target and Umami, Fathom
+    and Simple Analytics as competitors, the gap was 13 sites. Most strong
+    sites that link to two of Plausible's rivals already link to Plausible,
+    which is what a category leader's link profile looks like. A short gap
+    is still a finding.
+  </p>
+
+  <h2>Read the gap by overlap first, then Domain Rating</h2>
+  <p>
+    Each row names the linking site, its Domain Rating and which of your
+    competitors it links to. A site that links to all your competitors covers
+    the category on purpose, so it is the likeliest to add you. Ask your
+    agent to put those first:
+  </p>
+  <CodeBlock value={`From that backlink gap, list the sites that link to every competitor, then the ones with Domain Rating 50 or more, and tell me what each site is`} wrap />
+  <p>
+    Domain Rating tells you how strong a site's own links are, not whether
+    it would link to you. In the Umami gap, a cookie consent company and Y
+    Combinator sit at the top. Whether either is a real prospect depends on
+    the page that carries the link, so open the site before you write to it.
+  </p>
+  <p>
+    URL shorteners, link lists, and coupon or site-stats directories link to
+    almost every site, so the gap leaves them out and names each one. The
+    Umami run left out one, a subdomain finder.
+  </p>
+
+  <h2>See which competitor pages earn the links</h2>
+  <p>
+    The gap names sites. Two more research actions show what earned the
+    links. Backlinks lists a competitor's referring domains, strongest
+    first, with how many links each one sends and when it first linked.
+    Pages by backlinks lists the competitor pages that most sites link to:
+  </p>
+  <CodeBlock value={`Which pages on example.org have the most referring domains, and which sites link to example.org most often?`} wrap />
+  <p>
+    If a competitor's most linked page is a free tool, a pricing study or an
+    open dataset, that is the kind of page the sites in your gap link to. A
+    page like it on your site gives you something to point them at.
+  </p>
+
+  <h2>SEO Skill and the Semrush Backlink Gap tool compared</h2>
+  <p>
+    The <a href="https://www.semrush.com/kb/773-backlink-gap" target="_blank" rel="noreferrer">Semrush Backlink Gap tool</a>{' '}
+    compares up to five domains at once, yours included, and its Best tab
+    shows the domains that link to all your competitors but not to you. It
+    is part of Semrush's SEO toolkit, with daily limits set by your plan.
+  </p>
+  <table>
+    <thead><tr><th>Question</th><th>SEO Skill</th></tr></thead>
+    <tbody>
+      <tr><td>How many sites?</td><td>Yours and 2 to 5 competitors.</td></tr>
+      <tr><td>Which sites count?</td><td>Sites that link to two or more competitors and not to you.</td></tr>
+      <tr><td>Sorted by</td><td>Domain Rating by Ahrefs, highest first.</td></tr>
+      <tr><td>Where it runs</td><td>In your agent, or as a command in your terminal.</td></tr>
+      <tr><td>What it costs</td><td>Your own DataForSEO or Ahrefs usage, about $0.24 a run with DataForSEO.</td></tr>
+    </tbody>
+  </table>
+  <p>
+    If you already pay for Semrush and work in its interface, its tool does
+    the job. SEO Skill suits you if you want the gap inside the agent that
+    writes your outreach list, next to your own Search Console data.
+  </p>
+
+  <h2>What a capped backlink list cannot prove</h2>
+  <p>
+    The gap reads each site's top 1,000 referring domains, strongest first.
+    When a site has more than that, the gap stops at the lowest authority it
+    read and says so, instead of guessing below it. Both analytics runs
+    stopped there, because at least one of the four sites has more than
+    1,000 referring domains.
+  </p>
+  <p>
+    So a site missing from the gap may still link to a competitor below that
+    line, and a site in the gap may link to you somewhere the provider has
+    not crawled. Link counts and Domain Rating are provider estimates, and
+    no outside index sees every link Google sees. The gap also compares
+    whole domains and names the linking site. To find the page that carries
+    the link, open the site or ask your agent to search it.
+  </p>
+</FeaturePage>

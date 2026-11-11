@@ -18,6 +18,7 @@ import {
   Route01Icon,
   Search01Icon,
   SearchList01Icon,
+  Table01Icon,
   Target02Icon,
   TaskDone01Icon,
   UserSearch01Icon,
@@ -91,6 +92,12 @@ export const features = [
     title: 'Striking distance keywords',
     text: 'Queries just off page one, quick wins, low CTR and content decay from your Search Console, and each fix measured 28 and 56 days later.',
     icon: Target02Icon,
+  },
+  {
+    path: '/features/keyword-report',
+    title: 'SEO keyword report',
+    text: 'Every search your site shows for in Search Console, with the page that ranks, clicks, impressions, CTR and position against the period before.',
+    icon: Table01Icon,
   },
   {
     path: '/features/seo-audit',

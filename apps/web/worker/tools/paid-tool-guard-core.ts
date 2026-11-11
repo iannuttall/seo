@@ -24,6 +24,7 @@ export const PUBLIC_WORKER_TOOLS = [
   'open-graph',
   'noindex-checker',
   'redirect-map',
+  'redirect-checker',
 ] as const
 
 export type PaidToolId = keyof typeof PAID_TOOL_PROVIDERS

@@ -241,6 +241,15 @@ export const tools = [
     kind: 'worker',
   },
   {
+    id: 'redirect-checker',
+    path: '/tools/redirect-checker',
+    title: 'Redirect checker',
+    action: 'Open the redirect checker',
+    description:
+      'Trace every 301, 302 and 307 a URL takes to its final page, or check up to 200 URLs against the pages they should reach.',
+    kind: 'worker',
+  },
+  {
     id: 'seo-migration-checklist',
     path: '/tools/seo-migration-checklist',
     title: 'SEO migration checklist',

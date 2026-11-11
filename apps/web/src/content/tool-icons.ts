@@ -1,6 +1,7 @@
 import {
   AiMagicIcon,
   Analytics02Icon,
+  ArrowTurnForwardIcon,
   Calendar03Icon,
   ChartLineData01Icon,
   CheckListIcon,
@@ -59,6 +60,7 @@ export const toolIcons = {
   'title-and-meta-description-checker': Search01Icon,
   'ai-humanizer': AiMagicIcon,
   'noindex-checker': ViewOffIcon,
+  'redirect-checker': ArrowTurnForwardIcon,
   'seo-migration-checklist': Route01Icon,
   'canonical-checker': LinkSquare01Icon,
 } as const

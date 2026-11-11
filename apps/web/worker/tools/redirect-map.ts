@@ -2,8 +2,10 @@
 // with the new URL it should land on. Rows stream back as NDJSON while the
 // rest are traced, so one check of up to 200 rows is one request and counts
 // once against the daily limit. The verdict names match the CLI's
-// `seo redirect-trace --map`.
+// `seo redirect-trace --map`. The redirect checker sends the same rows with
+// the CLI's crawler user agent and hop timeout (REDIRECT_CHECKER).
 import {
+  REDIRECT_HOP_TIMEOUT_MS,
   type RedirectVerdict,
   redirectKind,
   redirectVerdict,
@@ -21,8 +23,18 @@ export const REDIRECT_MAP_LIMITS = Object.freeze({
   totalMilliseconds: 180_000,
 })
 
-const USER_AGENT =
-  'SEO-Redirect-Map-Checker/1.0 (+https://seoskill.dev/tools/seo-migration-checklist)'
+type TraceOptions = { userAgent?: string; timeoutMilliseconds?: number }
+
+const MAP_CHECKER: TraceOptions = {
+  userAgent:
+    'SEO-Redirect-Map-Checker/1.0 (+https://seoskill.dev/tools/seo-migration-checklist)',
+}
+
+// /tools/redirect-checker: no user agent override, so the core tracer sends
+// the SEO Skill crawler one, and the core per-hop timeout.
+export const REDIRECT_CHECKER: TraceOptions = {
+  timeoutMilliseconds: REDIRECT_HOP_TIMEOUT_MS,
+}
 
 const JSON_HEADERS = {
   'cache-control': 'no-store',
@@ -37,7 +49,13 @@ export type RedirectMapRowResult = {
   from: string
   to: string | null
   verdict: RedirectVerdict
-  hops: Array<{ url: string; status: number }>
+  // location: where a redirect points. ms: how long the response took.
+  hops: Array<{
+    url: string
+    status: number
+    location: string | null
+    ms: number
+  }>
   finalUrl: string
   finalStatus: number | null
   // A 302, 303 or 307 anywhere on the way.
@@ -45,6 +63,8 @@ export type RedirectMapRowResult = {
   // The page it lands on, when it returns 200 HTML.
   noindex: boolean | null
   canonical: string | null
+  // A meta refresh in the page it lands on. The trace does not follow it.
+  metaRefresh: { seconds: number; url: string | null } | null
   homepage: boolean
   error?: string
 }
@@ -116,10 +136,20 @@ export async function readMapRequest(request: Request): Promise<Row[]> {
   })
 }
 
+function resolve(value: string | null, base: string): string | null {
+  if (!value) return null
+  try {
+    return new URL(value, base).toString()
+  } catch {
+    return value
+  }
+}
+
 export async function traceMapRow(
   row: Row,
   index: number,
   fetcher: SitemapFetcher,
+  options: TraceOptions = MAP_CHECKER,
 ): Promise<RedirectMapRowResult> {
   const base: RedirectMapRowResult = {
     type: 'row',
@@ -133,6 +163,7 @@ export async function traceMapRow(
     temporary: false,
     noindex: null,
     canonical: null,
+    metaRefresh: null,
     homepage: false,
   }
   let from: URL
@@ -147,7 +178,7 @@ export async function traceMapRow(
     }
   }
   const trace = await tracePage(from, fetcher, {
-    userAgent: USER_AGENT,
+    ...options,
     readBody: true,
     maxBytes: REDIRECT_MAP_LIMITS.htmlBytes,
   })
@@ -180,7 +211,12 @@ export async function traceMapRow(
       },
       to ?? undefined,
     ),
-    hops: trace.hops.map((hop) => ({ url: hop.url, status: hop.status })),
+    hops: trace.hops.map((hop) => ({
+      url: hop.url,
+      status: hop.status,
+      location: hop.location,
+      ms: hop.ms,
+    })),
     finalUrl: trace.finalUrl,
     finalStatus: trace.outcome === 'done' ? trace.finalStatus : null,
     temporary: trace.hops.some(
@@ -194,6 +230,12 @@ export async function traceMapRow(
         : null,
     canonical:
       canonical && !sameTarget(canonical, trace.finalUrl) ? canonical : null,
+    metaRefresh: signals?.metaRefresh
+      ? {
+          seconds: signals.metaRefresh.seconds,
+          url: resolve(signals.metaRefresh.url, trace.finalUrl),
+        }
+      : null,
     homepage:
       trace.redirects > 0 &&
       trace.outcome === 'done' &&
@@ -207,6 +249,7 @@ export async function handleRedirectMap(
   request: Request,
   fetcher: SitemapFetcher = fetch,
   now: () => number = Date.now,
+  options: TraceOptions = MAP_CHECKER,
 ): Promise<Response> {
   if (request.method !== 'POST') {
     return jsonResponse({ error: 'Method not allowed' }, 405)
@@ -259,11 +302,12 @@ export async function handleRedirectMap(
                 temporary: false,
                 noindex: null,
                 canonical: null,
+                metaRefresh: null,
                 homepage: false,
                 error:
                   'The check stopped after three minutes before reaching this row.',
               } satisfies RedirectMapRowResult)
-            : await traceMapRow(row, index, fetcher).catch(
+            : await traceMapRow(row, index, fetcher, options).catch(
                 () =>
                   ({
                     type: 'row',
@@ -277,6 +321,7 @@ export async function handleRedirectMap(
                     temporary: false,
                     noindex: null,
                     canonical: null,
+                    metaRefresh: null,
                     homepage: false,
                     error: 'The URL could not be checked.',
                   }) satisfies RedirectMapRowResult,

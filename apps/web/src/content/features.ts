@@ -6,6 +6,7 @@ import {
   ChartLineData01Icon,
   Clock01Icon,
   ComputerTerminal01Icon,
+  DashboardSquare01Icon,
   DatabaseIcon,
   FileSearchIcon,
   GitCompareIcon,
@@ -66,6 +67,12 @@ export const features = [
     title: 'SEO competitor analysis',
     text: 'Find your real search competitors, the pages that earn their traffic and the sites that link to them and not you.',
     icon: UserSearch01Icon,
+  },
+  {
+    path: '/features/domain-overview',
+    title: 'Domain overview',
+    text: 'Estimated search traffic, top keywords and pages, competitors, backlinks and Domain Rating for any site, beside your own Search Console.',
+    icon: DashboardSquare01Icon,
   },
   {
     path: '/features/keyword-gap',

@@ -34,8 +34,8 @@ export const pageRedirects = {
   '/security': 'https://github.com/iannuttall/seo/security/policy',
   '/docs/indexnow': '/docs',
   '/docs/html-reports': '/docs',
-  '/docs/ai-search': '/docs',
-  '/docs/ai-visibility': '/docs',
+  '/docs/ai-search': '/features/ai-search',
+  '/docs/ai-visibility': '/features/ai-search',
   // Merged into the tools that now cover the same searches.
   '/features/google-updates': '/tools/google-algorithm-update-checker',
   '/tools/seo-report-template': '/tools/monthly-seo-report',
@@ -56,10 +56,43 @@ export const pageRedirects = {
 }
 
 /**
- * Old report pages whose searches a free tool now answers. The rest go to
- * the command page that covers them. Telemetry keeps the command pages.
+ * Old report pages whose searches a focused feature or free tool page now
+ * answers. The rest go to the command page that covers them. Telemetry
+ * keeps the command pages.
  */
 export const reportToolPages = {
+  'keyword-research': '/features/keyword-research',
+  'keyword-metrics': '/features/keyword-research',
+  'saved-keywords': '/features/keyword-research',
+  'link-evidence': '/tools/backlink-checker',
+  'domain-overview': '/tools/website-traffic-checker',
+  cannibalisation: '/tools/keyword-cannibalization-checker',
+  'internal-links': '/tools/internal-linking-tool',
+  'server-log-analysis': '/tools/server-log-analyzer',
+  'llms-txt-audit': '/tools/llms-txt-validator',
+  'generate-llms-txt': '/tools/llms-txt-generator',
+  'pseo-audit': '/features/programmatic-seo',
+  'pseo-opportunities': '/features/programmatic-seo',
+  'pseo-patterns': '/features/programmatic-seo',
+  'agent-readiness': '/features/ai-search',
+  'ai-readiness': '/features/ai-search',
+  'ai-mention-research': '/features/ai-search',
+  'ai-prompt-observations': '/features/ai-search',
+  'ai-search-scorecard': '/features/ai-search',
+  'entity-readiness': '/features/ai-search',
+  'geo-gaps': '/features/ai-search',
+  'seo-to-ai-query': '/features/ai-search',
+  'index-coverage': '/features/google-index-checker',
+  'index-monitor': '/features/seo-monitoring',
+  'index-watch': '/features/seo-monitoring',
+  'technical-watch': '/features/seo-monitoring',
+  'site-crawl': '/features/seo-crawler',
+  'crawl-report': '/features/seo-crawler',
+  'crawl-diff': '/features/seo-crawler',
+  'compare-crawls': '/features/seo-crawler',
+  'crawl-history': '/features/seo-crawler',
+  'bing-webmaster-overview': '/docs/bing',
+  'measure-change': '/docs/compare',
   'update-correlation': '/tools/google-algorithm-update-checker',
   'search-status-updates': '/tools/google-algorithm-update-checker',
   'competitor-keyword-gap': '/tools/competitor-keyword-research',

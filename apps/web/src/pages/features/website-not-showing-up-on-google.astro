@@ -1,0 +1,160 @@
+---
+import {
+  Alert02Icon,
+  Analytics01Icon,
+  Clock01Icon,
+  FileSearchIcon,
+  Notification01Icon,
+  ViewOffIcon,
+} from '@hugeicons/core-free-icons'
+import CodeBlock from '@/components/CodeBlock.astro'
+import FeaturePage from '@/components/FeaturePage.astro'
+
+const related = [
+  { title: 'seo index', text: "Google's indexing reason for every known page, each checked live and labelled.", href: '/docs/indexing', icon: Alert02Icon },
+  { title: 'Google index checker', text: 'Check which of your pages Google has indexed, in bulk or one at a time.', href: '/features/google-index-checker', icon: FileSearchIcon, link: 'Google index checker' },
+  { title: 'Crawled, currently not indexed', text: 'Pages Google fetched and chose not to index.', href: '/features/crawled-currently-not-indexed', icon: ViewOffIcon, link: 'Crawled, not indexed' },
+  { title: 'Discovered, currently not indexed', text: 'Pages Google knows about but has not crawled yet.', href: '/features/discovered-currently-not-indexed', icon: Clock01Icon, link: 'Discovered, not indexed' },
+  { title: 'Google Search Console MCP', text: 'Your clicks, impressions, positions and queries in your agent.', href: '/features/search-console', icon: Analytics01Icon, link: 'Search Console MCP' },
+  { title: 'Weekly site audit', text: 'Daily Google index checks and an email when a page drops out.', href: '/docs/weekly-site-audit', icon: Notification01Icon },
+]
+---
+
+<FeaturePage
+  title="Website not showing up on Google"
+  metaTitle="Why is my website not showing up on Google?"
+  description="Find out whether Google has indexed your site, with Google's own reason for every page it left out and a live check of each one, from Search Console."
+  path="/features/website-not-showing-up-on-google"
+  lead="Find out whether Google has indexed your pages, and Google's own reason for each one it has not. Your agent reads it from Search Console and checks every page live, so you work from Google's answer instead of guessing from a site: search."
+  {related}
+>
+  <h2>Not indexed or not ranking: two different problems</h2>
+  <p>
+    A website that does not show up on Google has one of two problems.
+    Either Google has not indexed its pages, or it has indexed them and they
+    do not rank for the searches you tried.
+  </p>
+  <p>
+    The fixes have nothing in common, so find out which one you have first.
+    Google's URL Inspection answers it page by page, with Google's own
+    reason for every page it left out.
+  </p>
+
+  <h2>What you need: the site in Search Console</h2>
+  <p>
+    URL Inspection only answers for a site you have verified in{' '}
+    <a href="https://search.google.com/search-console" target="_blank" rel="noreferrer">Google
+    Search Console</a>. If you have not added the site yet, do that first.
+    It is free, and its URL Inspection is where Google says why a page is
+    not indexed.
+  </p>
+  <p>
+    Then connect the hosted MCP server and sign in with the same Google
+    account, or run <code>npm i -g seo</code> then <code>seo start</code>.
+    SEO Skill is free for this.
+  </p>
+
+  <h2>Get Google's reason for every page on your site</h2>
+  <p>Ask your agent:</p>
+  <CodeBlock value={`Why is example.com not showing up on Google? Check which pages are indexed and which need fixing.`} wrap />
+  <p>Or run it in a terminal:</p>
+  <CodeBlock value={`seo index --site example.com`} />
+  <p>
+    It finds the pages it knows from your Search Console and your sitemap,
+    asks URL Inspection about each one and loads each page live. Each run
+    checks 100, starting with the pages that lost clicks and the pages that
+    get the most. On your own machine, <code>--max-urls</code> goes up to
+    the 2,000 checks Google allows each property a day.
+  </p>
+  <p>
+    The result groups pages by Google's reason and labels each one fix,
+    check, expected or indexed. The labels come from simple rules over the
+    evidence, not from Google. It also says how many pages it checked out of
+    how many it knows, so a short run is never an all-clear.
+  </p>
+
+  <h2>The indexing reasons you are most likely to see</h2>
+  <table>
+    <thead><tr><th>Google's reason</th><th>What to check</th></tr></thead>
+    <tbody>
+      <tr><td>URL is unknown to Google</td><td>Google has no record of the URL. Check that a submitted sitemap lists it and that your own pages link to it.</td></tr>
+      <tr><td>Discovered, currently not indexed</td><td>Google has the URL and has not crawled it. See <a href="/features/discovered-currently-not-indexed">discovered, currently not indexed</a>.</td></tr>
+      <tr><td>Crawled, currently not indexed</td><td>Google crawled it and left it out. See <a href="/features/crawled-currently-not-indexed">crawled, currently not indexed</a>.</td></tr>
+      <tr><td>Excluded by noindex tag</td><td>The page asks not to be indexed. Fine if you meant it. If the page has since dropped the tag, it is labelled check.</td></tr>
+      <tr><td>Blocked by robots.txt</td><td>Your robots.txt stops Google fetching it. Check the rule is one you meant.</td></tr>
+      <tr><td>Page with redirect</td><td>Usually expected for old URLs. A temporary redirect, or a redirect your sitemap still lists, is labelled fix.</td></tr>
+      <tr><td>Not found (404)</td><td>Labelled fix when your sitemap or your own pages still point to it.</td></tr>
+      <tr><td>Duplicate, Google chose different canonical than user</td><td>Google indexed another URL in this page's place. The result shows both.</td></tr>
+    </tbody>
+  </table>
+  <p>
+    Google's <a href="https://support.google.com/webmasters/answer/7440203" target="_blank" rel="noreferrer">Page
+    indexing report help</a> defines every reason. SEO Skill shows the
+    reason word for word, so you can look it up there.
+  </p>
+
+  <h2>A new site that Google does not know yet</h2>
+  <p>
+    When most pages come back as URL is unknown to Google, Google has not
+    found the site yet. Submit your sitemap in Search Console and use
+    Request indexing in the{' '}
+    <a href="https://support.google.com/webmasters/answer/9012289" target="_blank" rel="noreferrer">URL
+    Inspection tool</a> for your most important pages. <code>seo</code>{' '}
+    cannot submit URLs to Google itself, but for one page it tells you what
+    to do next:
+  </p>
+  <CodeBlock value={`seo page --url https://example.com/pricing`} wrap />
+  <p>
+    For a page Google does not know, the result says whether your sitemap
+    lists it and points to <code>seo internal-links</code>, which finds the
+    pages on your site that could link to it.
+  </p>
+
+  <h2>Four new seoskill.dev pages took 4 days to show as indexed</h2>
+  <p>
+    We published four feature pages on this site on 3 November 2026. Our
+    daily index checks showed each one as URL is unknown to Google until 7
+    November 2026, when all four came back as indexed.
+  </p>
+  <p>
+    That is one site and four pages, so it proves no rule. It does suggest
+    watching a page that is a few days old and unknown to Google for a week
+    before you change anything.
+  </p>
+
+  <h2>When every page is indexed and the site still does not show up</h2>
+  <p>
+    If <code>seo index</code> finds your pages indexed, the problem is
+    ranking. Your Search Console already shows which searches
+    your pages appear for and at what position. Ask your agent for them:
+  </p>
+  <CodeBlock value={`Which searches does example.com show up for on Google, and at what position?`} wrap />
+  <p>
+    The <a href="/docs/report">SEO report</a> lists the queries just outside
+    the top positions and the pages that rank but get few clicks.
+  </p>
+
+  <h2>Check a site you do not own</h2>
+  <p>
+    URL Inspection only covers your own properties. For any other URL, such
+    as a client's page or a page linking to you, a live index check searches
+    Google for <code>site:</code> plus the URL and an exact phrase from the
+    page, on desktop and mobile. It needs a DataForSEO key and costs about 2
+    to 4 cents a page:
+  </p>
+  <CodeBlock value={`seo research index_check --target https://example.org/blog/launch`} wrap />
+  <p>
+    That is Google search, not Search Console. A page can be indexed and
+    still not show for a <code>site:</code> search, so not found is evidence,
+    not proof.
+  </p>
+
+  <h2>Hear about it when a page drops out of Google</h2>
+  <p>
+    The <a href="/docs/weekly-site-audit">weekly site audit</a> ($50 a month
+    per site) checks Google's index every day on our servers, using each
+    property's full 2,000 checks. Your top pages are checked daily, and you
+    get an email when a page drops out of the index or comes back, grouped
+    by Google's reason. <a href="/docs/alerts">Alerts</a> covers each email.
+  </p>
+</FeaturePage>

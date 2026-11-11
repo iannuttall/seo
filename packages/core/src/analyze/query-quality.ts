@@ -70,7 +70,7 @@ export const QUERY_FLAG_METHOD = {
   ranking: 'flagged_rows_after_unflagged_rows',
   flags: {
     'likely-automated':
-      'Snake_case identifier tokens, 20 or more words, or 8 or more ASCII words with no common function word. Such queries often come from scripts, prompts or tools, not people.',
+      'A numbered prefix such as "12264: ", snake_case identifier tokens, 20 or more words, or 8 or more ASCII words with no common function word. Such queries often come from scripts, prompts or tools, not people.',
     'navigational-other':
       "Names a domain that is not the property's host, ends with a spoken domain suffix or a login/site/app word, starts with a large platform name and adds no topic word, or is one short ASCII word that is not a brand term. Such queries usually look for another site.",
   },
@@ -138,9 +138,13 @@ const FUNCTION_WORDS = new Set([
 ])
 
 const IDENTIFIER_TOKEN = /[\p{L}\p{N}]_[\p{L}\p{N}]/u
+// A numbered prefix such as "12264: keyword serp tracker", which rank
+// tracking and prompt tools send in bulk. Four digits or more, so "404:" stays.
+const NUMBERED_PREFIX = /^\d{4,}:\s+\S/u
 
 /** Heuristic: the query looks machine-generated rather than typed by a person. */
 export function isLikelyAutomatedQuery(query: string): boolean {
+  if (NUMBERED_PREFIX.test(query.trim())) return true
   const rawTokens = query.trim().split(/\s+/).filter(Boolean)
   if (rawTokens.some((token) => IDENTIFIER_TOKEN.test(token))) return true
   const tokens = tokenize(query)

@@ -30,6 +30,16 @@ The CLI uses your account's Google accounts, Bing and keys, with nothing else to
 
 If the agent can show you a link, it can also run `npx -y seo login` and ask you to approve the machine. That link lasts only as long as the machine, so a token is better for machines that are rebuilt.
 
+### Codex cloud
+
+Codex cloud works differently. It gives secrets to the setup script only and removes them before the agent starts, so a token saved as a secret never reaches the `seo` commands the agent runs. In the environment's settings:
+
+1. Add `SEO_TOKEN` under **Environment variables**. Those stay set while the agent works.
+2. Put `npm i -g seo` in the setup script.
+3. Turn on agent internet access. It is off by default. With a domain allowlist, add `seoskill.dev` and `googleapis.com`, plus `ssl.bing.com` for Bing, `api.dataforseo.com` or `api.ahrefs.com` for research, and any site you want the agent to crawl.
+
+OpenAI's [Codex cloud environments guide](https://developers.openai.com/codex/cloud/environments) explains secrets, variables and internet access.
+
 ## Option 3: the CLI with a Google service account
 
 The CLI can also run with no account at all. It needs three things from the platform: an install step, a Google service account, and your keys as secrets.
@@ -44,7 +54,7 @@ The service account reads Search Console and Google Analytics with read-only acc
 
 ### Add the secrets
 
-Store these as secrets in the platform, so they arrive as environment variables:
+Store these as secrets in the platform, so they arrive as environment variables. On Codex cloud, set them as environment variables instead, as in [Codex cloud](#codex-cloud) above:
 
 | Variable | What it holds |
 | --- | --- |

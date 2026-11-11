@@ -80,8 +80,9 @@ one site, or returns the Checkout link for the person to open. Stripe posts
 `customer.subscription.created`, `.updated` and `.deleted` to
 `POST /account/billing/webhook`, which checks the `Stripe-Signature` and
 keeps one `billing` row per account. An active, trialing or past-due plan
-grants `weekly-audit` like the beta flag; the site limit is the beta's 5
-free sites plus the sites paid for, and over the limit only the oldest
+grants `weekly-audit` like the beta flag; the site limit is the sites paid
+for (the beta flag's 5 free sites apply only without a plan), and over the
+limit only the oldest
 sites keep running. Each account has one open Checkout session at a time: a new link expires
 the older one, and a paid one waiting for the webhook says the plan is
 starting, so nobody pays twice. A maintainer's own account can get the `unlimited-sites` flag

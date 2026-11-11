@@ -27,7 +27,7 @@ export const features = [
   {
     path: '/features/search-console',
     title: 'Google Search Console MCP',
-    text: 'Give your agent your clicks, impressions, CTR, positions, queries and pages.',
+    text: 'Connect Search Console to Claude, ChatGPT, Codex or Cursor with one URL and a Google sign-in. No Google Cloud setup.',
     icon: Analytics01Icon,
   },
   {

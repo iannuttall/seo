@@ -1,5 +1,27 @@
 # Changelog
 
+## 0.17.4
+
+### Added
+
+- `seo lint` warns when mid-sentence colons pile up, at three or more per
+  1,000 words (`colon-density`). One colon is never flagged.
+- `seo lint` finds more staged-prose tells, adapted from
+  [declauding](https://github.com/oaustegard/claude-skills/releases/tag/declauding-v0.13.0):
+  a bare denial after a sentence ("The sixth is not.", "; the data
+  didn't."), a reading set up only to be called wrong, "That's why X
+  mattered." closers, "the only X I trust", ", suggesting ..." tails, two
+  stacked "from X to Y" ranges (`false-range`), and headings such as
+  `What "X" means` or "X is dead".
+- Warnings for a bold list label that the item repeats
+  ("**Performance:** Performance has been improved") and for phrases such
+  as "the part that really matters".
+
+### Changed
+
+- Help and tool text call the weekly site audit by its name instead of a
+  beta.
+
 ## 0.17.3
 
 ### Added

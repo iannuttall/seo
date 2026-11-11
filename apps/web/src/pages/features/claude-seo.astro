@@ -1,73 +1,260 @@
 ---
 import {
-  Analytics01Icon,
   ComputerTerminal01Icon,
+  GitCompareIcon,
   McpServerIcon,
-  SearchList01Icon,
+  SmartPhone01Icon,
 } from '@hugeicons/core-free-icons'
+import CodeBlock from '@/components/CodeBlock.astro'
 import FeaturePage from '@/components/FeaturePage.astro'
 
 const related = [
-  { title: 'Claude Code', text: 'The one command that adds SEO Skill to Claude Code.', href: '/integrations/claude-code', icon: ComputerTerminal01Icon },
-  { title: 'Claude', text: 'Add SEO Skill as a custom connector in claude.ai, desktop and mobile.', href: '/integrations/claude', icon: McpServerIcon },
-  { title: 'seo report', text: 'The Search Console report Claude reads first.', href: '/docs/report', icon: Analytics01Icon },
-  { title: 'seo research', text: 'Keyword and competitor data from your own key.', href: '/docs/research', icon: SearchList01Icon },
+  { title: 'Claude Code', text: 'The steps for Claude Code, with the hosted MCP and the skill.', href: '/integrations/claude-code', icon: ComputerTerminal01Icon, link: 'Claude Code setup' },
+  { title: 'Claude', text: 'The custom connector for claude.ai, the desktop app and the mobile apps.', href: '/integrations/claude', icon: SmartPhone01Icon, link: 'Claude setup' },
+  { title: 'Hosted MCP', text: 'Every tool the server gives Claude, and what the server keeps.', href: '/docs/mcp', icon: McpServerIcon },
+  { title: 'SEO Skill vs Claude SEO', text: 'How SEO Skill compares with the Claude SEO plugin on GitHub.', href: '/alternatives/claude-seo', icon: GitCompareIcon, link: 'Comparison' },
 ]
 ---
 
 <FeaturePage
-  title="Claude SEO with your own search data"
-  description="Use Claude for SEO with your real Search Console, Google Analytics and keyword data. Free MCP server and SEO skill for Claude Code, claude.ai and Claude desktop."
+  title="Claude SEO skill"
+  metaTitle="Claude SEO skill for Claude Code and Claude.ai"
+  description="Free Claude SEO skill and MCP server for Claude Code, claude.ai and Claude Desktop, so Claude answers from your own Search Console and keyword data."
   path="/features/claude-seo"
-  lead="Claude is good at SEO reasoning. Give it your clicks, queries, index status and keyword data, and it answers about your site instead of an average one."
+  lead="Add SEO Skill to Claude Code, claude.ai or Claude Desktop, and Claude reads your clicks, queries, index status and keyword data before it answers an SEO question about your site."
   {related}
+  relatedHeading="Read more"
 >
-  <h2>Why Claude needs your data for SEO</h2>
   <p>
-    Ask Claude why your traffic dropped and, on its own, it can only list the
-    usual suspects. It has never seen your Search Console. Connect SEO Skill
-    and Claude reads your clicks, impressions, positions and queries before it
-    answers, checks the pages it names with URL Inspection, and tells you
-    which Google update fell in the same week.
+    SEO Skill has three parts, and each Claude app uses a different mix. The
+    skill is one instruction file that tells Claude which tool answers which
+    SEO question. The hosted MCP server at <code>seoskill.dev/mcp</code>{' '}
+    fetches your Search Console, Google Analytics and keyword data after you
+    sign in with Google. The <code>seo</code> CLI runs on your own machine
+    for the jobs a server cannot do, such as crawling a staging site.
   </p>
 
-  <h2>Add SEO Skill to Claude Code</h2>
-  <p>Run this in a terminal. The user scope makes it work in every project:</p>
-  <pre><code>claude mcp add --transport http --scope user seoskill https://seoskill.dev/mcp</code></pre>
-  <p>
-    Start Claude Code, type <code>/mcp</code>, choose seoskill and sign in
-    with Google. Access is read only. For the site crawl, internal links and
-    Bing, install the CLI with <code>npm i -g seo</code> and run <code>seo start</code>, which can also add the SEO skill to Claude Code
-    (and if you skip that, <code>seo skill install</code> adds it later).
-  </p>
-
-  <h2>Add SEO Skill to claude.ai and Claude desktop</h2>
-  <p>
-    Open Customize, then Connectors, choose Add, then Add custom connector.
-    Name it seoskill, enter <code>https://seoskill.dev/mcp</code> and sign in
-    with Google. The connector belongs to your Claude account, so it shows up
-    on the web, in the desktop app and on your phone. Every Claude plan can
-    add custom connectors, and the free plan allows one.
-  </p>
-
-  <h2>Prompts to try in Claude</h2>
+  <h2>Which parts of SEO Skill each Claude app uses</h2>
   <table>
-    <thead><tr><th>Ask</th><th>What Claude reads</th></tr></thead>
+    <thead><tr><th>Claude app</th><th>What to add</th></tr></thead>
     <tbody>
-      <tr><td>What changed in search last week?</td><td>Clicks and impressions against the week before, with the pages and queries that moved most.</td></tr>
-      <tr><td>Which queries am I on page two for?</td><td>The striking distance section of the Search Console report, with the page that ranks for each.</td></tr>
-      <tr><td>Why did this page lose its clicks?</td><td>The live page, its Google index status and its queries before and after.</td></tr>
-      <tr><td>Did the last core update hit us?</td><td>Equal periods before and after the date, with the Google updates in the window.</td></tr>
-      <tr><td>What does this competitor rank for that we don't?</td><td>Ranked keywords from your own DataForSEO or Ahrefs key.</td></tr>
+      <tr><td>Claude Code</td><td>The hosted MCP server and the skill. Add the CLI for site crawls, internal links and Bing.</td></tr>
+      <tr><td>claude.ai</td><td>The hosted MCP server, as a custom connector.</td></tr>
+      <tr><td>Claude Desktop</td><td>The same custom connector, or the local MCP server that <code>seo start</code> adds.</td></tr>
+      <tr><td>Claude on your phone</td><td>Nothing more. A connector you add on claude.ai shows up in the mobile apps too.</td></tr>
     </tbody>
   </table>
 
-  <h2>What it costs</h2>
+  <h2>Add the Claude SEO skill to Claude Code in 3 steps</h2>
+  <p>
+    You need Claude Code and a Google account that can read at least one
+    Search Console property. Step 2 needs Node 22 or later (the{' '}
+    <a href="/docs/cli">CLI guide</a> lists the exact versions).
+  </p>
+
+  <h3>1. Connect the hosted MCP server</h3>
+  <p>Run this in a terminal. The user scope adds the server to every project on this machine:</p>
+  <CodeBlock value="claude mcp add --transport http --scope user seoskill https://seoskill.dev/mcp" wrap />
+  <p>
+    Start Claude Code, type <code>/mcp</code>, choose seoskill and sign in
+    with Google. Access to Search Console and Google Analytics is read only.
+  </p>
+
+  <h3>2. Install the CLI and the skill</h3>
+  <CodeBlock value="npm i -g seo && seo start" />
+  <p>
+    Setup signs you in, offers to add an MCP server to the agents it finds,
+    and then offers to install the skill. If you said no to the skill (or
+    want to reinstall it later), run:
+  </p>
+  <CodeBlock value="seo skill install" />
+  <p>
+    It runs <code>npx skills add iannuttall/seo</code>, which lets you pick
+    the agents to add the skill to. Pick Claude Code.
+  </p>
+
+  <h3>3. Check that Claude can read your sites</h3>
+  <p>Ask Claude:</p>
+  <CodeBlock value="Which Search Console sites can you read?" wrap />
+  <p>
+    Claude lists the Search Console and Google Analytics properties your
+    Google account can read, and which research keys you saved. If a site is
+    missing, add the Google account that can read it on your{' '}
+    <a href="/account">account page</a>.
+  </p>
+
+  <h2>What the Claude SEO skill tells Claude</h2>
+  <p>
+    The skill is one Markdown file of about 75 lines,{' '}
+    <a href="https://github.com/iannuttall/seo/blob/main/skills/seo/SKILL.md" target="_blank" rel="noreferrer">SKILL.md on GitHub</a>.
+    Claude Code reads its description and loads the file when you ask an SEO
+    question, so you never have to name it.
+  </p>
+  <p>
+    The file tells Claude to use the MCP tools when they are connected and
+    the CLI when they are not. It says to start small (a site, then one
+    section, then more rows) so a big site does not flood the conversation.
+    It also covers three jobs that need care:
+  </p>
+  <ul>
+    <li>
+      The issues section keeps a list of what the last check found between
+      sessions. When you say you fixed one, Claude marks it, and the next
+      check says whether it still finds it.
+    </li>
+    <li>
+      For a Google update, Claude compares the update's days with the same
+      days before and reports the result as timing, never as the cause of a
+      drop.
+    </li>
+    <li>
+      For indexing, Claude runs the same index check every week and reports
+      new reasons and pages that moved to "fix".
+    </li>
+  </ul>
+
+  <h2>Connect SEO Skill to claude.ai and Claude Desktop</h2>
+  <p>
+    claude.ai and Claude Desktop take the hosted MCP server as a custom
+    connector. You add it once, and it follows your Claude account to the
+    web, the desktop app and your phone.
+  </p>
+  <ol>
+    <li>On claude.ai, open Customize, then Connectors. Choose Add, then Add custom connector.</li>
+    <li>Name it seoskill and enter <code>https://seoskill.dev/mcp</code>.</li>
+    <li>Connect, and sign in with Google when Claude opens the sign-in page.</li>
+    <li>In a chat, turn it on from the + menu under Connectors.</li>
+  </ol>
+  <p>
+    Every Claude plan can add custom connectors, and the free plan allows
+    one. On Team and Enterprise plans, an owner adds the connector under
+    Organization settings first, then each member connects their own Google
+    account.
+  </p>
+  <p>
+    You do not need to upload the skill file to claude.ai. The server sends
+    Claude its own short guide (start with the report, then ask for one
+    section) and offers the full skill to any client that loads skills from
+    a server.
+  </p>
+  <p>
+    Claude Desktop has one more option. Run <code>seo start</code> on the
+    same computer and setup adds the local MCP server to Claude Desktop. It
+    runs on your machine with your CLI sign-in and adds the site crawl and
+    internal links, which the hosted server does not have.
+  </p>
+
+  <h2>Use the CLI when Claude needs to crawl a site</h2>
+  <p>
+    Three jobs run only on your machine: the site crawl, internal link
+    suggestions and Bing Webmaster Tools (Bing blocks requests from the
+    hosted server). In Claude Code, the skill runs them through the CLI for
+    you.
+  </p>
+  <p>The crawl needs no sign-in, so it works on localhost and staging sites too:</p>
+  <CodeBlock value="seo crawl --url https://example.com" />
+  <p>
+    It lists pages that return errors, redirects, missing or duplicate
+    titles and descriptions, canonical and robots tags, and broken internal
+    links. Ask Claude to "crawl example.com and fix the broken internal
+    links" and it runs the crawl, shows you the pages, then edits the
+    templates in your repository if you agree.
+  </p>
+
+  <h2>A worked example: find out why example.com lost clicks</h2>
+  <p>
+    Say example.com lost search clicks in October 2026 and you want to know
+    why before you touch anything. In Claude Code with SEO Skill connected,
+    the session runs like this:
+  </p>
+  <table>
+    <thead><tr><th>You ask</th><th>What Claude reads</th></tr></thead>
+    <tbody>
+      <tr><td>How did example.com do in search last week?</td><td>The report overview: clicks and impressions against the week before, by device, with the top pages and queries.</td></tr>
+      <tr><td>Which pages lost clicks?</td><td>The content decay section: the page and query pairs that lost the most clicks.</td></tr>
+      <tr><td>Check example.com/pricing</td><td>The live page, its Google index status from URL Inspection, and its queries.</td></tr>
+      <tr><td>Did anything change around 7 October 2026?</td><td>The same number of days before and after that date, with the Google updates that fell in the window.</td></tr>
+      <tr><td>Who ranks for "example pricing" now?</td><td>The top 10 from your DataForSEO or Ahrefs key, each with its Domain Rating.</td></tr>
+    </tbody>
+  </table>
+  <p>
+    Claude shows what it read at each step before it suggests a change. If
+    the page check finds a noindex tag that shipped with a release, Claude
+    can remove it in your code and check the page again once the fix is
+    live. The CLI runs the same steps when you want them in a script:
+  </p>
+  <CodeBlock value={`seo report --site example.com --section content-decay
+seo page --url https://example.com/pricing
+seo compare --site example.com --date 2026-10-07`} />
+
+  <h2>6 Claude SEO prompts that start from your own data</h2>
+  <table>
+    <thead><tr><th>Ask</th><th>What Claude reads</th></tr></thead>
+    <tbody>
+      <tr><td>Which queries am I on page two for?</td><td>The striking distance section: queries just outside the top positions, with the page that ranks for each.</td></tr>
+      <tr><td>Which titles should I rewrite?</td><td>Queries at positions 1 to 4 with a click-through rate below your site's own curve.</td></tr>
+      <tr><td>Are two of my pages competing for the same search?</td><td>Queries where more than one of your pages gets impressions, with each page's share.</td></tr>
+      <tr><td>What do people ask AI about us?</td><td>Search Console queries that read like AI prompts and follow-ups, with the page Google picked for each.</td></tr>
+      <tr><td>What does competitor.example rank for that we don't?</td><td>Ranked keywords from your own DataForSEO or Ahrefs key, beside your Search Console queries.</td></tr>
+      <tr><td>Does this draft read as AI-written?</td><td>The lines that read as AI-written in the text you give it, each with a fix. No sign-in needed.</td></tr>
+    </tbody>
+  </table>
+
+  <h2>How we picked this page's keywords with the same tools</h2>
+  <p>
+    We researched this page with SEO Skill in November 2026: keyword ideas
+    for "claude seo" and "claude code seo", then keyword metrics and the
+    top 10 results, from DataForSEO for the US. Searches are monthly, and KD
+    is DataForSEO's keyword difficulty from 0 to 100.
+  </p>
+  <table>
+    <thead><tr><th>Keyword</th><th>Searches (KD)</th></tr></thead>
+    <tbody>
+      <tr><td>claude seo</td><td>590 (KD 8)</td></tr>
+      <tr><td>claude seo skill</td><td>480 (KD 3)</td></tr>
+      <tr><td>claude seo skills</td><td>480 (KD 3)</td></tr>
+      <tr><td>claude code seo skill</td><td>110 (KD 5)</td></tr>
+      <tr><td>claude code for seo</td><td>110 (KD 8)</td></tr>
+      <tr><td>claude seo github</td><td>110 (KD 37)</td></tr>
+      <tr><td>claude code seo</td><td>90 (KD 36)</td></tr>
+      <tr><td>claude for seo</td><td>70 (KD 6)</td></tr>
+    </tbody>
+  </table>
+  <p>
+    On 11 November 2026, the US top 5 for "claude seo skill" held a skill
+    listing on mcpmarket.com (Domain Rating 63), two forum threads, a GitHub
+    repository (Domain Rating 97) and context-link.ai (Domain Rating 46),
+    with Domain Rating by{' '}
+    <a href="https://ahrefs.com/website-authority-checker" target="_blank" rel="noreferrer">Ahrefs</a>.
+    A difficulty of 3 and a page one with forum threads on it is a keyword a
+    focused page can win, so "claude seo skill" is the one this page aims at.
+  </p>
+  <p>
+    The searches with "github" in them are people looking for one open
+    source repository, and this page does not chase them. Search Console
+    agreed with the plan: from 12 August to 7 November 2026, the seoskill.dev
+    home page showed 317 times for "claude seo skills" at an average
+    position of 57.5, with no clicks. Those searches wanted a page about
+    Claude, and the home page is about every agent.
+  </p>
+
+  <h2>What Claude SEO with SEO Skill costs</h2>
   <p>
     Every tool Claude calls is free with no usage cap. Keyword research uses
-    your own DataForSEO or Ahrefs key, so you pay that provider directly. The
-    only paid part is the weekly site audit, $50 a month per site, which
-    crawls the site every week and checks Google's index every day in the
-    background.
+    your own DataForSEO or Ahrefs key, so you pay that provider directly,
+    and each DataForSEO result says what it cost (the research for this page
+    came to under 20 cents). The only paid part is the{' '}
+    <a href="/docs/weekly-site-audit">weekly site audit</a>, $50 a month per
+    site, which crawls the site every week and checks Google's index every
+    day in the background.
+  </p>
+
+  <h2>What Claude can see, and what stays private</h2>
+  <p>
+    Access is read only, so Claude can read your Search Console and Google
+    Analytics data but cannot change a setting in either. The hosted server
+    keeps your sign-ins and keys, encrypted, and keeps no Search Console or
+    analytics rows. Your questions and the data Claude reads go to Anthropic
+    like anything else you type into Claude.
   </p>
 </FeaturePage>

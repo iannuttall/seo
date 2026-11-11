@@ -67,8 +67,8 @@ export const features = [
   },
   {
     path: '/features/claude-seo',
-    title: 'Claude SEO',
-    text: 'Add SEO Skill to Claude Code or claude.ai and ask about your own Search Console and keyword data.',
+    title: 'Claude SEO skill',
+    text: 'Add the skill and hosted MCP to Claude Code, claude.ai or Claude Desktop, and ask about your own Search Console and keyword data.',
     icon: McpServerIcon,
   },
   {

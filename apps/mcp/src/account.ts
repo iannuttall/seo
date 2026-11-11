@@ -181,6 +181,9 @@ async function accountPage(
     : undefined
   const missing = extra.site && !site ? 'That site is not in your audit.' : ''
   const alerts = await alertSettings(env, userId)
+  const shownBeta = [...beta]
+    .filter((id) => !(id === 'weekly-audit' && paid?.active))
+    .sort()
   const held = alerts.types.length
     ? await env.DB.prepare(
         "SELECT count(*) AS n FROM alerts WHERE user_id = ? AND email = 'held'",
@@ -226,32 +229,34 @@ async function accountPage(
       ...(login
         ? { login: { code: login.code ?? '', label: login.label } }
         : {}),
-      // Only granted beta features; none for everyone else.
-      ...(beta.size
+      // Only granted beta features; none for everyone else. A paid plan's
+      // weekly audit is not a beta, so it is left out of the list.
+      ...(shownBeta.length
         ? {
-            beta: [...beta].sort().map((id) => ({
+            beta: shownBeta.map((id) => ({
               id,
               title: BETA[id].title,
               text: BETA[id].text,
             })),
-            ...(alerts.types.length
-              ? {
-                  alerts: {
-                    email:
-                      accounts.find((item) => item.provider === 'google')
-                        ?.label ?? null,
-                    types: alerts.types.map((item) => ({
-                      ...item,
-                      title: ALERTS[item.id].title,
-                      text: ALERTS[item.id].text,
-                    })),
-                    webhookUrl: alerts.webhookUrl,
-                    webhookSecret: alerts.webhookSecret,
-                    webhookLast: alerts.webhookLast,
-                    held: held?.n ?? 0,
-                  },
-                }
-              : {}),
+          }
+        : {}),
+      // Alert settings, for every account that gets alerts (paid or beta).
+      ...(alerts.types.length
+        ? {
+            alerts: {
+              email:
+                accounts.find((item) => item.provider === 'google')?.label ??
+                null,
+              types: alerts.types.map((item) => ({
+                ...item,
+                title: ALERTS[item.id].title,
+                text: ALERTS[item.id].text,
+              })),
+              webhookUrl: alerts.webhookUrl,
+              webhookSecret: alerts.webhookSecret,
+              webhookLast: alerts.webhookLast,
+              held: held?.n ?? 0,
+            },
           }
         : {}),
       // The Sites tab: with the weekly audit, or where it can be bought.
@@ -890,7 +895,7 @@ async function alertsOff(request: Request, env: Env): Promise<Response> {
     view: 'notice',
     notice: {
       title: 'Alert emails off',
-      text: `You will get no more ${ALERTS[off.type].title.toLowerCase()} emails. Turn them back on under Alerts on the Beta tab of your account page.`,
+      text: `You will get no more ${ALERTS[off.type].title.toLowerCase()} emails. Turn them back on under Alerts on your account page.`,
     },
   })
 }

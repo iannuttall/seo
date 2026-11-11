@@ -33,8 +33,9 @@ Sign in with Google at `https://seoskill.dev/account` to:
   crawl, today's index checks and coverage, this week's drops and returns,
   subfolder properties, alerts), and remove it. Without it, and once
   Stripe is set up, the tab offers the paid plan instead,
-- **Beta:** only on an account granted a beta feature, the features it can
-  try, and alert settings,
+- **Alerts:** alert settings for an account with the weekly site audit.
+  On an account granted a beta feature it is called **Beta** and also
+  lists the features it can try,
 - delete everything, which also revokes the Google sign-ins, or sign out.
 
 An account in the weekly-audit beta also gets a `weekly-audit` section in
@@ -154,7 +155,8 @@ one roundup of the pages on all its sites that dropped out of Google's index
 (a top page's drop only after a second check agrees) or got into it. It goes
 out after the Search Console day's checks are done, early morning UTC, and
 only when something changed. On Monday it goes in the weekly summary
-instead. Under Alerts on the Beta tab, each
+instead. Under Alerts on the Alerts tab (Beta for an account granted a
+beta feature), each
 alert type has its own email and webhook switch; both are on by default, and
 the webhook only once a URL is saved. Email goes to the first linked Google
 account from `alerts@e.seoskill.dev`, through PostShiba, at most 550 a day
@@ -172,11 +174,11 @@ A webhook URL must be `https://` on a public host name. Each alert is one
 - `webhook-timestamp`: seconds since 1970,
 - `webhook-signature`: `v1,` and the base64 HMAC-SHA256 of
   `<id>.<timestamp>.<body>`, keyed with the bytes of the signing secret
-  after its `whsec_` prefix (base64). The secret is on the Beta tab.
+  after its `whsec_` prefix (base64). The secret is on the Alerts tab.
 
 Answer with any 2xx within 10 seconds. A timeout, 408, 429 or 5xx is tried
 again up to 6 times over about a day. Redirects are not followed, and any
-other answer stops that alert. The Beta tab shows the last call's result.
+other answer stops that alert. The Alerts tab shows the last call's result.
 
 ```json
 {

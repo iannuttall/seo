@@ -31,7 +31,9 @@ const tabs = [
   // For accounts with the weekly audit, or where it can be bought; removed
   // otherwise.
   { id: 'sites', label: 'Sites' },
-  // Only for accounts granted a beta feature; removed otherwise.
+  // Alert settings, and beta features for an account granted one. Named
+  // Alerts unless the account has a beta feature; removed when it has
+  // neither.
   { id: 'beta', label: 'Beta' },
 ]
 const keys: { name: string; label: string; type: 'text' | 'password' }[] = [
@@ -556,7 +558,7 @@ const keys: { name: string; label: string; type: 'text' | 'password' }[] = [
         class="mt-4 flex flex-col gap-4"
         hidden
       >
-        <div class={panel} id="beta">
+        <div class={panel} id="beta" data-beta-panel>
           <h2 class={heading}>Beta</h2>
           <p class={note}>
             Features your account can try before everyone else. They may
@@ -1380,11 +1382,17 @@ const keys: { name: string; label: string; type: 'text' | 'password' }[] = [
         root.querySelector('[data-account-tab="sites"]')?.remove()
         root.querySelector('[data-account-panel="sites"]')?.remove()
       }
-      // The Beta tab exists only for an account with a beta feature.
-      if (account.beta?.length) {
+      // The tab holds alert settings and any beta features. Without a beta
+      // feature (a paid plan's audit is not one) it is the Alerts tab.
+      if (account.beta?.length || account.alerts) {
+        if (!account.beta?.length) {
+          const tab = root.querySelector('[data-account-tab="beta"]')
+          if (tab) tab.textContent = 'Alerts'
+          root.querySelector('[data-beta-panel]')?.remove()
+        }
         const betaRow = root.querySelector<HTMLTemplateElement>('[data-beta-row]')
         const betaList = root.querySelector('[data-beta-list]')
-        for (const feature of account.beta) {
+        for (const feature of account.beta ?? []) {
           const copy = betaRow?.content.cloneNode(true) as DocumentFragment
           const item = copy.querySelector<HTMLElement>('[data-beta-feature]')
           if (item) item.id = `beta-${feature.id}`

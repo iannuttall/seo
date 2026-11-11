@@ -161,46 +161,40 @@ const related = [
     this report.
   </p>
 
-  <h2>Worked example: one redirect cost seoskill.dev its keyword report rankings</h2>
+  <h2>Worked example: 5 rows from seoskill.dev's own keyword report</h2>
   <p>
-    This is a real keyword report for seoskill.dev, run with{' '}
-    <code>seo_data</code> grouped by query and page and filtered to queries
-    containing "keyword". It covers 11 October to 7 November 2026 against
-    13 September to 10 October 2026. An October 2026 redesign redirected two
-    old docs pages, <code>/docs/reports/keyword-metrics</code> and{' '}
-    <code>/docs/reports/keyword-research</code>, to other pages.
+    These rows come from a real keyword report for seoskill.dev, run with{' '}
+    <code>seo_data</code> grouped by query and page. It covers 11 October to
+    7 November 2026 against 13 September to 10 October 2026. Each row shows
+    the later period, with the earlier period's clicks and position in
+    brackets.
   </p>
   <table>
-    <thead><tr><th>Query</th><th>Old page</th><th>Impressions</th><th>Position (before)</th></tr></thead>
+    <thead><tr><th>Query on page</th><th>Last 28 days (28 days before)</th></tr></thead>
     <tbody>
-      <tr><td>keyword metrics</td><td>keyword-metrics</td><td>29</td><td>28.9 (17.1)</td></tr>
-      <tr><td>keyword reporting</td><td>keyword-metrics</td><td>11</td><td>25.2 (24.8)</td></tr>
-      <tr><td>seo keyword research report</td><td>keyword-research</td><td>10</td><td>40.8 (22.9)</td></tr>
-      <tr><td>keyword report</td><td>keyword-research</td><td>7</td><td>76.0 (25.5)</td></tr>
-      <tr><td>seo keyword report</td><td>keyword-research</td><td>6</td><td>35.2 (27.7)</td></tr>
-      <tr><td>keyword metrics</td><td>keyword-research</td><td>0</td><td>none (10.2)</td></tr>
+      <tr><td>seo skills on the home page</td><td>61 clicks (31), 1,644 impressions, position 7.1 (16.6)</td></tr>
+      <tr><td>algorithm update checker on /tools/google-algorithm-update-checker</td><td>8 clicks (0), 100 impressions, position 15.8 (no position)</td></tr>
+      <tr><td>google search console mcp on /features/search-console</td><td>0 clicks (0), 517 impressions, position 64.2 (70.5)</td></tr>
+      <tr><td>mcp seo on /features/mcp</td><td>0 clicks (0), 130 impressions, position 80.7 (73.7)</td></tr>
+      <tr><td>ai seo skills on the home page</td><td>1 click (0), 15 impressions, position 11.9 (29.8)</td></tr>
     </tbody>
   </table>
   <p>
     Source: Search Console for seoskill.dev, web search, read with SEO Skill
-    on 11 November 2026. Both old pages sit under /docs/reports/, impressions
-    are for the later period, and every row had 0 clicks in both periods.
+    on 11 November 2026. Impressions are for the later period only.
   </p>
   <p>
-    Google kept showing the old URLs for weeks after the
-    redirect, but lower than before. "keyword report" on the old keyword
-    research page fell from an average position of 25.5 to 76.0, and
-    "keyword metrics" on the same page stopped showing at all. The report
-    shows the timing, not the cause. Both old URLs now redirect to pages
-    about keyword research rather than keyword reporting, which is the
-    likely reason.
+    "seo skills" is the row that matters. It moved from an average position
+    of 16.6 to 7.1 on more than 1,600 impressions, and clicks went from 31
+    to 61. That is a page one result, and the click count backs it up.
   </p>
   <p>
-    The longer window shows what was at stake. From 1 July to 8 November
-    2026, <code>/docs/reports/keyword-metrics</code> had 1,462 impressions,
-    333 of them for "keyword metrics" at an average position of 41.1. Low
-    positions and almost no clicks, but Google was showing the page for
-    keyword reporting searches, and nothing else on the site took its place.
+    The algorithm update checker row had no position before because the
+    page had no impressions for that query in the earlier period, so it is a new
+    keyword rather than a climb. "google search console mcp" improved from
+    70.5 to 64.2 on 517 impressions, but at page seven it brings no clicks
+    yet. "ai seo skills" jumped from 29.8 to 11.9 on 15 impressions, which
+    is too few to read as a trend.
   </p>
 
   <h2>Turn the keyword report into a client or monthly report</h2>

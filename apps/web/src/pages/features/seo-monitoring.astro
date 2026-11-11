@@ -44,7 +44,9 @@ const related = [
     decision, and search results can take a few days to catch up, so each
     dropped page has a one-click site: search to see what Google shows
     right now. Each run of a site's background checks that finds
-    changes sends one alert for that site.
+    changes sends one alert for that site. When Google gives the reason{' '}
+    <a href="/features/crawled-currently-not-indexed">crawled, currently not
+    indexed</a>, it read the page and chose to leave it out.
   </p>
   <p>
     Each alert type has its own email and webhook switch, under Alerts on
@@ -104,5 +106,11 @@ const related = [
     date once a week or two of Search Console data has come in. The report's
     traffic drop section looks for a sudden change in daily clicks that
     lasted, with the date it started.
+  </p>
+  <p>
+    AI answers are not part of the weekly audit. To follow them, run the
+    same questions through the{' '}
+    <a href="/features/ai-visibility-checker">AI visibility checker</a> once
+    a month and compare the two results.
   </p>
 </FeaturePage>

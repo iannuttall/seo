@@ -52,6 +52,14 @@ const description = suite
 const related = competitors.filter((other) => other.kind === item.kind && other.slug !== item.slug)
 const others = (related.length ? related : competitors.filter((other) => other.slug !== item.slug)).slice(0, 4)
 
+// A link to the feature page closest to what this alternative does.
+const featureLinks: Record<string, { anchor: string; href: string }> = {
+  'claude-seo': { anchor: 'Claude SEO skill', href: '/features/claude-seo' },
+  'search-console-mcp': { anchor: 'Google Search Console MCP', href: '/features/search-console' },
+  'google-analytics-mcp': { anchor: 'Google Analytics MCP server', href: '/features/google-analytics' },
+}
+const featureLink = featureLinks[item.slug]
+
 const glance = [
   { label: 'Free use', ours: 'Every on-demand tool, no usage cap', theirs: item.freeShort },
   { label: 'Paid', ours: '$50 a month per site, for the weekly audit', theirs: item.priceFrom },
@@ -143,7 +151,13 @@ const faq = [
         title="Pick SEO Skill if"
         text={suite ? 'Free SEO tools in your browser, and your own search data in your AI agent.' : 'One hosted MCP server for your own search data.'}
         items={reasonsFor(item).map((reason) => ({ text: reason }))}
-      />
+      >
+        {featureLink ? (
+          <p class="mt-4 text-base leading-7 text-foreground-muted">
+            The <a class="underline underline-offset-4" href={featureLink.href}>{featureLink.anchor}</a> page shows the setup and the prompts to try.
+          </p>
+        ) : null}
+      </SplitList>
 
       <section class="site-frame" aria-labelledby="side-heading">
         <SectionHeading id="side-heading" title="Side by side" text={`Every fact we compared, with ${item.short}'s taken from the sources at the end of this page.`} />

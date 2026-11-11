@@ -5,7 +5,7 @@ heading: Hosted MCP
 lead: A free remote MCP server at seoskill.dev/mcp. Sign in with Google and your agent can read your Search Console and Google Analytics data. Your data is never stored.
 ---
 
-There is nothing to install and no password to create. Your agent connects to `https://seoskill.dev/mcp`, you sign in with Google once, and the tools read your own data on each request.
+There is nothing to install and no password to create. Your agent connects to `https://seoskill.dev/mcp`, you sign in with Google once, and the tools read your own data on each request. The [Google Search Console MCP](/features/search-console) page shows the questions it answers from Search Console.
 
 ## Add the server
 
@@ -15,11 +15,15 @@ Claude Code:
 claude mcp add --transport http seoskill https://seoskill.dev/mcp
 ```
 
+The [Claude SEO skill](/features/claude-seo) page adds the skill and the CLI next to the server.
+
 Codex:
 
 ```sh
 codex mcp add seoskill --url https://seoskill.dev/mcp
 ```
+
+The [Codex SEO skill](/features/codex-seo) page covers the sign-in, the skill and the CLI in Codex.
 
 Cursor, in `.cursor/mcp.json` or `~/.cursor/mcp.json`:
 

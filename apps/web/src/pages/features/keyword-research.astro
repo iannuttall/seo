@@ -14,7 +14,9 @@ const related = [
   { title: 'API keys', text: 'Add a DataForSEO or Ahrefs key to the hosted MCP or the CLI.', href: '/docs/keys', icon: Key01Icon },
   { title: 'SEO report', text: 'Quick wins, striking distance and AI-style queries from your own Search Console.', href: '/docs/report', icon: Database01Icon },
   { title: 'Competitor keyword research', text: 'See what any domain ranks for in your browser, with no account.', href: '/tools/competitor-keyword-research', icon: UserGroupIcon, link: 'Free tool' },
-  { title: 'AI search tracking', text: 'Whether ChatGPT search, AI Mode and AI Overviews cite your site.', href: '/features/ai-search', icon: AiChat02Icon, link: 'AI search tracking' },
+  { title: 'AI visibility checker', text: 'Whether ChatGPT search, AI Mode and AI Overviews cite your site.', href: '/features/ai-visibility-checker', icon: AiChat02Icon, link: 'AI visibility checker' },
+  { title: 'SEO competitor analysis', text: 'Find the sites that compete with you in Google and the pages that earn their traffic.', href: '/features/seo-competitor-analysis', icon: UserGroupIcon, link: 'Competitor analysis' },
+  { title: 'Keyword gap analysis', text: 'The searches your competitors rank for and you don\'t, set beside your own queries.', href: '/features/keyword-gap', icon: SearchList01Icon, link: 'Keyword gap' },
 ]
 ---
 
@@ -70,11 +72,19 @@ const related = [
   </p>
   <CodeBlock value={`Show me the striking-distance and quick-wins queries for example.com`} wrap />
   <p>
-    The <a href="/docs/report">SEO report</a> lists queries just outside the
-    top positions and pages that rank but get fewer clicks than they
-    should. The <code>ai-queries</code> section finds searches that read like
+    The <a href="/docs/report">SEO report</a> lists{' '}
+    <a href="/features/striking-distance-keywords">striking distance keywords</a>{' '}
+    just outside the top positions and pages that rank but get fewer clicks
+    than they should. The <code>ai-queries</code> section finds searches that read like
     AI prompts and follow-ups, which often name a gap in your content. This
     is Search Console data, so it is what people actually typed.
+  </p>
+  <p>
+    For every query with its page, clicks and position, ask for an{' '}
+    <a href="/features/keyword-report">SEO keyword report</a>. To pick which
+    searches to work on first, the{' '}
+    <a href="/features/keyword-opportunities">keyword opportunities</a> page
+    shows how each one is scored by the clicks it could win.
   </p>
 
   <h2>Find long-tail keywords from a seed</h2>
@@ -120,7 +130,10 @@ const related = [
     finds the domains that share your keywords. Your agent can set those
     beside your own Search Console queries to find the gaps. The two
     sources stay apart: a provider's estimate never gets added to your
-    clicks.
+    clicks. The <a href="/features/keyword-gap">keyword gap analysis</a>{' '}
+    page walks through that comparison, and{' '}
+    <a href="/features/seo-competitor-analysis">SEO competitor analysis</a>{' '}
+    starts one step earlier, with who your search competitors are.
   </p>
 
   <h2>See whether AI answers cite you</h2>
@@ -129,8 +142,8 @@ const related = [
     With a DataForSEO key, your agent can ask ChatGPT search, Google AI Mode
     and AI Overviews up to 10 questions and see whether each answer cites or
     mentions your site, and which sites it cites instead. A run of 10
-    questions costs about 7 cents. The <a href="/features/ai-search">AI search
-    tracking</a> page covers it in full.
+    questions costs about 7 cents. The <a href="/features/ai-visibility-checker">AI
+    visibility checker</a> page covers it in full.
   </p>
 
   <h2>A real example from this page</h2>
@@ -175,9 +188,10 @@ const related = [
     </tbody>
   </table>
   <p>
-    Every request takes a two-letter country code. Backlinks and link gaps
-    are covered on the <a href="/tools/backlink-checker">backlink checker</a>{' '}
-    and in the <a href="/docs/research">seo research</a> docs.
+    Every request takes a two-letter country code. Backlinks are covered on
+    the <a href="/tools/backlink-checker">backlink checker</a>, link gaps on
+    the <a href="/features/backlink-gap">backlink gap analysis</a> page, and
+    both in the <a href="/docs/research">seo research</a> docs.
   </p>
 
   <h2>What keyword data cannot tell you</h2>

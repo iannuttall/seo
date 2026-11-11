@@ -118,9 +118,12 @@ import { REDIRECT_MAP_ROWS } from '@/lib/redirect-map'
   type Summary = { type: 'summary'; rows: number; verdicts: Partial<Record<Verdict, number>>; milliseconds: number }
   type Level = 'pass' | 'warn' | 'fail'
 
-  const example = `http://example.com/
-https://example.com/old-pricing, https://example.com/pricing
-https://example.com/blog/2019/post, https://example.com/blog/post`
+  // Real URLs that redirect, so the example shows each result: one permanent
+  // hop, a chain, a temporary hop, and a redirect to the wrong page.
+  const example = `http://github.com/, https://github.com/
+http://www.github.com/about
+http://developer.mozilla.org/
+https://www.github.com/pricing, https://github.com/features`
 
   const KIND: Record<number, string> = {
     301: 'Permanent',

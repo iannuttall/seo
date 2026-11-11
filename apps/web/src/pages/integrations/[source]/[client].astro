@@ -59,6 +59,13 @@ const faq = [
   ...(client.note ? [{ question: `Which ${client.name} plans can add it?`, answer: client.note }] : []),
   ...source.faq.filter((item) => !/free|store|where do i put/i.test(item.question)).slice(0, 2),
 ]
+// A link to the feature page for the source, on the Google sources.
+const featureLink =
+  source.id === 'google-search-console'
+    ? { anchor: 'Google Search Console MCP', href: '/features/search-console' }
+    : source.id === 'google-analytics'
+      ? { anchor: 'Google Analytics MCP server', href: '/features/google-analytics' }
+      : undefined
 const otherClients = clients.filter((item) => item.id !== client.id)
 const otherSources = hostedSources.filter((item) => item.id !== source.id)
 ---
@@ -75,7 +82,13 @@ const otherSources = hostedSources.filter((item) => item.id !== source.id)
         title={`Prompts to try in ${client.name}`}
         text={`Ask in plain words and your agent picks the tool. ${source.limit}`}
         items={source.asks.map((ask) => ({ title: ask.question, text: ask.answer }))}
-      />
+      >
+        {featureLink ? (
+          <p class="mt-4 text-base leading-7 text-foreground-muted">
+            The <a class="underline underline-offset-4" href={featureLink.href}>{featureLink.anchor}</a> page has more prompts and a worked example.
+          </p>
+        ) : null}
+      </SplitList>
 
       <section class="site-frame" aria-labelledby="clients-heading">
         <SectionHeading id="clients-heading" title={`${source.name} in other AI clients`} text="The same server and sign-in, with each client's own setup steps." />

@@ -4,6 +4,8 @@
 type FaqItem = {
   question: string
   answer?: string
+  // Phrases in the answer to link, each found once, in order.
+  links?: { text: string; href: string }[]
   values?: string[]
 }
 
@@ -13,6 +15,20 @@ type Props = {
 }
 
 const { items, id = 'faq' } = Astro.props
+
+// Splits an answer into plain text and links around the linked phrases.
+const answerParts = (item: FaqItem) => {
+  const parts: { text: string; href?: string }[] = []
+  let rest = item.answer ?? ''
+  for (const link of item.links ?? []) {
+    const at = rest.indexOf(link.text)
+    if (at < 0) throw new Error(`FAQ link text not found in answer: ${link.text}`)
+    parts.push({ text: rest.slice(0, at) }, link)
+    rest = rest.slice(at + link.text.length)
+  }
+  parts.push({ text: rest })
+  return parts
+}
 ---
 
 <div class="w-full overflow-hidden rounded-lg bg-muted" data-faq-accordion>
@@ -58,7 +74,17 @@ const { items, id = 'faq' } = Astro.props
         >
           <div class="overflow-hidden">
             <div class="pb-5 text-base leading-7 text-foreground-muted">
-              {item.answer ? <p>{item.answer}</p> : null}
+              {item.answer ? (
+                <p>
+                  {answerParts(item).map((part) =>
+                    part.href ? (
+                      <a class="underline underline-offset-4" href={part.href}>{part.text}</a>
+                    ) : (
+                      part.text
+                    ),
+                  )}
+                </p>
+              ) : null}
               {
                 item.values ? (
                   <ul class="grid gap-x-4 gap-y-2 sm:grid-cols-2">

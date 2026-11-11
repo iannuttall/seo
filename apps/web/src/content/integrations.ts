@@ -64,10 +64,10 @@ export const sources: Source[] = [
   {
     id: 'google-search-console',
     name: 'Google Search Console',
-    title: 'Google Search Console MCP server',
-    metaTitle: 'Free Google Search Console MCP server',
+    title: 'Connect Google Search Console to your AI agent',
+    metaTitle: 'Connect Google Search Console to Claude, ChatGPT or Codex',
     description:
-      'Connect Google Search Console to Claude, ChatGPT, Codex, Cursor or any AI agent with a free hosted MCP server. Clicks, impressions, CTR, positions, queries, pages and URL Inspection.',
+      'Connect Google Search Console to Claude, ChatGPT, Codex or Cursor with a free hosted MCP server. Sign in with Google, with no Cloud project.',
     lead: 'Ask your agent about your own search performance. It reads your clicks, impressions, CTR, positions, queries, pages and index status straight from Search Console.',
     connect: 'google',
     needs:
@@ -165,10 +165,10 @@ export const sources: Source[] = [
   {
     id: 'google-analytics',
     name: 'Google Analytics',
-    title: 'Google Analytics MCP for SEO',
-    metaTitle: 'Google Analytics MCP server for SEO',
+    title: 'Connect Google Analytics to your AI agent',
+    metaTitle: 'Connect Google Analytics to Claude, ChatGPT or Codex',
     description:
-      'Connect Google Analytics to Claude, ChatGPT, Codex or any AI agent with a free MCP server. Search sessions beside Search Console clicks, landing pages and visits from AI assistants.',
+      'Connect Google Analytics to Claude, ChatGPT or Codex with a free hosted MCP server. Sign in with Google and ask about your search sessions.',
     lead: 'Your agent sees what happens after the click: sessions from search, the pages people land on, and visits from AI assistants, for the same dates as your Search Console data.',
     connect: 'google',
     needs:
@@ -275,7 +275,7 @@ export const sources: Source[] = [
       {
         question: 'Do AI answers cite my site?',
         answer:
-          'Your top AI-style questions from Search Console, checked in ChatGPT search, Google AI Mode and AI Overviews. A full run costs about 12 cents of credit.',
+          'Your top AI-style questions from Search Console, checked in ChatGPT search, Google AI Mode and AI Overviews. A full run costs about 7 cents of credit.',
       },
     ],
     limit:

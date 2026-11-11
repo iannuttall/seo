@@ -1,5 +1,15 @@
 # Changelog
 
+## 0.17.5
+
+### Added
+
+- `seo lint` flags a reframe that repeats its subject, such as "The
+  question isn't whether to optimize. The question is when to stop."
+  (`negative-parallelism`).
+- `seo lint` warns about a list written as prose: sentences that open "The
+  first X", "The second X" and "The third X" in order (`anaphora`).
+
 ## 0.17.4
 
 ### Added

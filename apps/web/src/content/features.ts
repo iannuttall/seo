@@ -43,8 +43,8 @@ export const features = [
   },
   {
     path: '/features/keyword-research',
-    title: 'SEO keyword research tool',
-    text: 'Keyword metrics, SERPs, competitors and backlinks from your own DataForSEO or Ahrefs key.',
+    title: 'AI keyword research tool',
+    text: 'Keyword ideas, search volume, SERPs and competitor keywords in your agent, from your own DataForSEO or Ahrefs key.',
     icon: SearchList01Icon,
   },
   {

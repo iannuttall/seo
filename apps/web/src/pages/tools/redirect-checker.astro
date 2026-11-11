@@ -1,0 +1,325 @@
+---
+import Breadcrumbs from '@/components/Breadcrumbs.astro'
+import CodeBlock from '@/components/CodeBlock.astro'
+import FaqAccordion from '@/components/FaqAccordion.astro'
+import PageHeader from '@/components/PageHeader.astro'
+import SetupCommands from '@/components/SetupCommands.astro'
+import RedirectChecker from '@/components/tools/RedirectChecker.astro'
+import BaseLayout from '@/layouts/BaseLayout.astro'
+import type { SchemaBreadcrumb } from '@/lib/schema'
+
+const breadcrumbs: SchemaBreadcrumb[] = [
+  { label: 'Home', href: '/' },
+  { label: 'Tools', href: '/tools' },
+  { label: 'Redirect checker' },
+]
+
+const faq = [
+  {
+    question: 'How do I check if a 301 redirect is working?',
+    answer:
+      'Enter the old URL above. A working 301 shows one response with status 301 and a Location header, then a 200 on the new URL. If you see 302 or 307 instead, the redirect works for visitors but tells Google the move is temporary.',
+  },
+  {
+    question: 'How many redirects does Google follow?',
+    answer:
+      'Up to 10 in a row. Google advises redirecting to the final page directly and, when that is not possible, keeping a chain to fewer than 5. This checker stops at 10 too, so a chain it cannot finish is one Google cannot finish either.',
+  },
+  {
+    question: 'Do redirects lose PageRank?',
+    answer:
+      'Not permanent ones. Google says 301 and other permanent redirects do not cause a loss in PageRank. A chain still costs a request per hop, adds delay for visitors and is easy to break during the next move, so shorten it anyway.',
+  },
+  {
+    question: 'Should I use a 301 or a 308?',
+    answer:
+      'Google treats them the same. The difference is for browsers: a 308 must keep the request method, so a form POST stays a POST. For ordinary pages, either works.',
+  },
+  {
+    question: 'Why does my browser show a different redirect from this checker?',
+    answer:
+      'Browsers remember 301s and HSTS rules, so a browser can skip a redirect the server still sends. Chrome shows an HSTS upgrade as "307 Internal Redirect", which never leaves the browser. This checker asks the server fresh every time, so it shows what a crawler gets.',
+  },
+  {
+    question: 'Does the checker follow meta refresh or JavaScript redirects?',
+    answer:
+      'It reports a meta refresh on the page where the trace ends, with its delay and target, but does not follow it. It does not run JavaScript, so a script redirect will not show. Google prefers server redirects for both reasons.',
+  },
+  {
+    question: 'How long should I keep redirects after a site move?',
+    answer:
+      'Google says as long as possible, and generally at least a year. Old links and bookmarks keep sending people to the old URLs long after Google has moved on.',
+  },
+  {
+    question: 'Can I check redirects on localhost or a staging site?',
+    answer:
+      'Not with this page. It fetches from a public server, so the URL has to be public, with no password or custom port. The seo CLI runs the same trace from your own machine, so it can reach anything your machine can.',
+  },
+]
+---
+
+<BaseLayout
+  title="Redirect checker: trace 301 chains and bulk URLs"
+  description="Free redirect checker. Trace every 301, 302, 307 and 308 a URL takes, with status, Location and time per hop, or check up to 200 URLs in bulk."
+  canonicalPath="/tools/redirect-checker"
+  {breadcrumbs}
+>
+  <main data-agent-content>
+    <Breadcrumbs {breadcrumbs} />
+    <PageHeader
+      title="Redirect checker"
+      description="Enter a URL to see every redirect it takes, the status code and Location of each one, how long each server took, and whether the page it ends on returns 200 and can be indexed. Switch to bulk to check up to 200 old URLs against the pages they should reach."
+    />
+
+    <RedirectChecker />
+
+    <div class="docs-prose mt-16">
+      <h2>Read a redirect trace in four columns</h2>
+      <p>
+        Each line in the trace is one request and one response. The checker
+        asks for the URL, reads the status code, and if the server answered
+        with a redirect, asks for the URL in its Location header next. It
+        stops at the first response that is not a redirect, at a loop, or
+        after 10 redirects.
+      </p>
+      <table>
+        <thead>
+          <tr>
+            <th>Column</th>
+            <th>What it tells you</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>Status</td>
+            <td>301 or 308 means moved for good. 302, 303 or 307 means moved for now. Anything else ends the trace.</td>
+          </tr>
+          <tr>
+            <td>Location</td>
+            <td>Where the server sends the next request. A relative Location is shown as the full URL it resolves to.</td>
+          </tr>
+          <tr>
+            <td>Time</td>
+            <td>How long that server took to answer, in milliseconds. A slow first hop on an old domain is common.</td>
+          </tr>
+          <tr>
+            <td>Final</td>
+            <td>The page the trace ends on, with its status, any noindex, a canonical that points somewhere else, and any meta refresh.</td>
+          </tr>
+        </tbody>
+      </table>
+      <p>
+        Most problems show up in the first two columns. A <code>301</code>{' '}
+        then a <code>302</code> then a <code>200</code> works for visitors,
+        but the temporary hop in the middle tells Google the move is not
+        settled, and the extra request adds delay for everyone.
+      </p>
+
+      <h2>301, 302, 307 and 308 come down to two questions</h2>
+      <p>
+        Is the move permanent, and must the browser keep the request method?
+        Those two answers pick the status code. Google only cares about the
+        first one. Its{' '}
+        <a href="https://developers.google.com/crawling/docs/troubleshooting/http-status-codes" target="_blank" rel="noreferrer">HTTP status code guide</a>{' '}
+        lists 308 as "Equivalent to 301" and 307 as "Equivalent to 302".
+      </p>
+      <table>
+        <thead>
+          <tr>
+            <th>Status and RFC 9110 name</th>
+            <th>Permanent</th>
+            <th>Keeps POST</th>
+            <th>Google shows</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><code>301</code> Moved Permanently</td>
+            <td>Yes</td>
+            <td>Not guaranteed</td>
+            <td>The new URL</td>
+          </tr>
+          <tr>
+            <td><code>308</code> Permanent Redirect</td>
+            <td>Yes</td>
+            <td>Yes</td>
+            <td>The new URL</td>
+          </tr>
+          <tr>
+            <td><code>302</code> Found</td>
+            <td>No</td>
+            <td>Not guaranteed</td>
+            <td>Usually the old URL</td>
+          </tr>
+          <tr>
+            <td><code>307</code> Temporary Redirect</td>
+            <td>No</td>
+            <td>Yes</td>
+            <td>Usually the old URL</td>
+          </tr>
+          <tr>
+            <td><code>303</code> See Other</td>
+            <td>No</td>
+            <td>No, it becomes GET</td>
+            <td>Usually the old URL</td>
+          </tr>
+        </tbody>
+      </table>
+      <p>
+        The method column comes from{' '}
+        <a href="https://www.rfc-editor.org/rfc/rfc9110.html#name-redirection-3xx" target="_blank" rel="noreferrer">RFC 9110</a>,
+        which says a browser "MAY change the request method from POST to GET"
+        after a 301 or 302, and added 307 and 308 to rule that out. For a
+        page that has moved, use 301 or 308 and stop there. Google's{' '}
+        <a href="https://developers.google.com/search/docs/crawling-indexing/301-redirects" target="_blank" rel="noreferrer">redirects guide</a>{' '}
+        says a temporary redirect is not used as a signal that the new URL
+        should be canonical, though the new page "might still be indexed if
+        other canonicalization signals are present".
+      </p>
+
+      <h2>Google follows 10 redirects, but one is the target</h2>
+      <p>
+        Google's crawlers "follow up to 10 redirect hops", according to the
+        same status code guide. This checker uses the same ceiling, so a URL
+        it reports as over 10 redirects is one Googlebot gives up on too.
+      </p>
+      <p>
+        Ten is a limit, not a goal. Google's{' '}
+        <a href="https://developers.google.com/search/docs/crawling-indexing/site-move-with-url-changes" target="_blank" rel="noreferrer">site move guide</a>{' '}
+        advises redirecting "to the final destination directly" and otherwise
+        keeping a chain to "ideally no more than 3 and fewer than 5", because
+        chains add latency and "not all user agents and browsers support long
+        redirect chains".
+      </p>
+      <p>
+        The same guide settles the PageRank question several redirect tools
+        still get wrong: "301 and other permanent redirects don't cause a
+        loss in PageRank." Shorten a chain for speed and to make the next
+        migration easier. Shortening it does not recover lost ranking value,
+        because a permanent redirect loses none.
+      </p>
+
+      <h2>Fix a redirect chain or loop in three steps</h2>
+      <p>
+        A chain usually builds up over several site changes, such as http to
+        https, then non-www to www, then an old slug to a new one. Each rule is
+        right on its own. Together they make three requests where one would
+        do.
+      </p>
+      <ol>
+        <li>Note the URL the trace ends on. That is the target every earlier URL should point at.</li>
+        <li>Change each older rule to send its URL straight to that final URL. In nginx or Apache that usually means editing the oldest rule.</li>
+        <li>Trace the first URL again here until it shows one permanent redirect and a 200.</li>
+      </ol>
+      <p>
+        A loop is two rules that disagree, such as one forcing a trailing
+        slash and another removing it. The trace shows the URL that came back
+        round, so search your redirect rules, CMS plugin and CDN settings for
+        that path. A loop never reaches a page, so the old URL shows an error
+        to visitors and Google alike.
+      </p>
+
+      <h2>Check up to 200 old URLs against the pages they should reach</h2>
+      <p>
+        After a migration, knowing where each old URL ends up is half the
+        job. You also need to know it ended up on the page you planned.
+        Switch the checker to bulk and put the planned target after each old
+        URL:
+      </p>
+      <CodeBlock value={'https://old.example.com/about-us, https://example.com/about\nhttps://old.example.com/blog/2019/post, https://example.com/blog/post\nhttp://old.example.com/services'} wrap />
+      <p>
+        A line with a second URL gets a verdict against it. It reaches the
+        right page, reaches it through a chain, lands on the wrong page,
+        does not redirect, loops, or is still redirecting after 10. A line with one URL just shows where it ends. URLs are
+        traced five at a time, results stream in as each finishes, and the
+        whole check counts once against the 10 free checks a day.
+      </p>
+      <p>
+        Download CSV writes one line per response, not one per URL, so the
+        full chain reads top to bottom in a spreadsheet and you can filter
+        to every 302 at once. For more than 200 rows, the CLI below takes up
+        to 1,000 in one run.
+      </p>
+
+      <h2>Your browser can hide a redirect the server still sends</h2>
+      <p>
+        Browsers can cache a 301 with no end date, and they remember HSTS,
+        the rule that says always use https on a domain. Both let a browser
+        skip a request the server would still answer with a redirect. Chrome
+        then shows "307 Internal Redirect" for an http URL, a redirect that
+        never left the browser.
+      </p>
+      <p>
+        This checker sends every request fresh from a server, with no cache
+        and no HSTS memory, so it shows what a crawler gets. It identifies
+        itself as the SEO Skill crawler. A site that
+        redirects by user agent, country or cookie can answer Googlebot or a
+        visitor differently, so check those with URL Inspection in Search
+        Console. Google says its inspection tools do not follow redirects, so
+        inspect the final URL rather than the old one.
+      </p>
+
+      <h2>Meta refresh and JavaScript redirects are a last resort</h2>
+      <p>
+        Google's redirects guide reads an instant meta refresh as permanent
+        and a delayed one as temporary. The checker reports a meta refresh
+        on the page where the trace ends, with its delay and target, so you
+        can see one hiding behind a 200. It does not follow it.
+      </p>
+      <p>
+        JavaScript redirects do not show here, because the checker does not
+        run scripts. Google says to use them only "if you can't do
+        server-side or meta refresh redirects", since Google "might never see
+        it if rendering of the content failed". If a URL looks fine here but
+        visitors still move, a script is doing it.
+      </p>
+
+      <h2>Trace redirects from your agent or terminal</h2>
+      <p>
+        The page above uses the same redirect tracer as{' '}
+        <code>seo redirect-trace</code> in the CLI, with the same 10 redirect
+        limit, 10 seconds per request and SEO Skill crawler user agent.
+        Install it once:
+      </p>
+      <CodeBlock value="npm i -g seo && seo start" wrap />
+      <p>
+        Then trace one URL from your own machine, which also reaches staging
+        sites and anything behind your VPN. It reads the final page's title,
+        canonical and robots tags too:
+      </p>
+      <CodeBlock value="seo redirect-trace --url http://example.com/old-page" wrap />
+      <p>
+        For a migration, put one <code>old_url,new_url</code> pair per line
+        in a CSV file, up to 1,000 rows, and check the whole map. Add{' '}
+        <code>--json</code> for one result per line that an agent or script
+        can read:
+      </p>
+      <CodeBlock value="seo redirect-trace --map redirects.csv" wrap />
+      <p>
+        Your agent runs the same commands once setup has added the skill, so
+        you can ask it in plain words. With the hosted MCP server, the{' '}
+        <a href="/docs/page">seo page</a> report shows a URL's live status and
+        redirects next to Google's own URL Inspection result and the page's
+        Search Console queries, for any page on a site you have in Search
+        Console. Ask:
+      </p>
+      <CodeBlock value="Check https://example.com/old-pricing with SEO Skill. Where does it redirect, is every hop permanent, and is the old URL still getting impressions in Search Console?" wrap />
+      <p>Add the hosted MCP server to your agent and sign in with Google:</p>
+    </div>
+
+    <SetupCommands id="redirect-checker-setup" class="mt-6" />
+
+    <div class="docs-prose mt-16">
+      <h2>Related checks for a redirect</h2>
+      <ul>
+        <li>The <a href="/tools/seo-migration-checklist">SEO migration checklist</a> plans a site move and reads your redirect map for duplicates and homepage targets before anything is fetched.</li>
+        <li>The <a href="/tools/noindex-checker">noindex checker</a> explains which robots rule keeps the final page out of Google.</li>
+        <li>The <a href="/docs/crawl">seo crawl</a> command finds every redirect your own internal links still point at.</li>
+      </ul>
+      <h2>Redirect checker questions</h2>
+    </div>
+    <div class="mt-6">
+      <FaqAccordion id="redirect-checker-faq" items={faq} />
+    </div>
+  </main>
+</BaseLayout>

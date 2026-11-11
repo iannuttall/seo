@@ -29,7 +29,7 @@ import {
   handleSpamScore,
   handleWebsiteTraffic,
 } from './tools/paid-tool-routes.ts'
-import { handleRedirectMap } from './tools/redirect-map.ts'
+import { handleRedirectMap, REDIRECT_CHECKER } from './tools/redirect-map.ts'
 import { handleRobotsTxtFetch } from './tools/robots-txt.ts'
 import { handleSerpPreviewFetch } from './tools/serp-preview.ts'
 import { handleSitemapImport } from './tools/sitemap.ts'
@@ -886,6 +886,9 @@ app.all('/api/tools/noindex-checker', (context) =>
 )
 app.all('/api/tools/redirect-map', (context) =>
   handleRedirectMap(context.req.raw),
+)
+app.all('/api/tools/redirect-checker', (context) =>
+  handleRedirectMap(context.req.raw, fetch, Date.now, REDIRECT_CHECKER),
 )
 app.all('/api/tools/spam-score', (context) =>
   handleSpamScore(context.req.raw, context.env),

@@ -1,0 +1,430 @@
+---
+import Button from '@/components/Button.astro'
+import Card from '@/components/Card.astro'
+import FormInput from '@/components/FormInput.astro'
+import FormTextarea from '@/components/FormTextarea.astro'
+import ToggleGroup from '@/components/ui/toggle-group.astro'
+import ToggleGroupItem from '@/components/ui/toggle-group-item.astro'
+import { REDIRECT_MAP_ROWS } from '@/lib/redirect-map'
+---
+
+<section data-redirect-checker class="space-y-6">
+  <Card>
+    <form data-rc-form class="space-y-5 p-5 sm:p-6" novalidate>
+      <div class="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+        <div class="space-y-1">
+          <h2 class="text-lg font-medium">Trace a redirect</h2>
+          <p class="text-sm leading-6 text-foreground-muted">
+            Every response from the first URL to the page it ends on, with the status code, where each redirect points and how long each server took.
+          </p>
+        </div>
+        <ToggleGroup size="sm" class="shrink-0 self-start">
+          <ToggleGroupItem value="one" type="button" data-state="on" aria-pressed="true">One URL</ToggleGroupItem>
+          <ToggleGroupItem value="bulk" type="button">Bulk</ToggleGroupItem>
+        </ToggleGroup>
+      </div>
+
+      <label data-rc-one class="block space-y-2 text-sm font-medium">
+        <span>URL</span>
+        <FormInput
+          data-rc-url
+          type="text"
+          inputmode="url"
+          autocomplete="url"
+          autocapitalize="off"
+          spellcheck="false"
+          maxlength="2048"
+          placeholder="http://example.com/old-page"
+        />
+      </label>
+
+      <div data-rc-bulk hidden class="space-y-2">
+        <div class="flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
+          <label for="rc-bulk-text" class="text-sm font-medium">One URL a line, or old URL, expected URL</label>
+          <Button data-rc-example type="button" class="shrink-0 self-start px-3 py-2 text-xs">Use example</Button>
+        </div>
+        <FormTextarea
+          id="rc-bulk-text"
+          data-rc-text
+          class="min-h-44 font-mono text-xs"
+          spellcheck="false"
+          placeholder={'http://example.com/about-us\nhttps://example.com/old-post, https://example.com/blog/new-post'}
+        />
+      </div>
+
+      <div class="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+        <p data-rc-count class="text-xs leading-5 text-foreground-muted">Free, 10 checks a day, up to {REDIRECT_MAP_ROWS} URLs a check. No sign-up.</p>
+        <Button data-rc-run type="submit" class="min-h-10 shrink-0 px-5 text-xs">Check redirects</Button>
+      </div>
+      <p data-rc-error hidden class="text-sm leading-6 text-red-700 dark:text-red-400" role="alert"></p>
+    </form>
+  </Card>
+
+  <div data-rc-results hidden class="space-y-6">
+    <Card inverted>
+      <div class="space-y-4 p-5 sm:p-6">
+        <div class="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
+          <div class="min-w-0">
+            <p data-rc-headline class="text-2xl font-medium text-primary"></p>
+            <p data-rc-subline class="mt-1 break-words text-sm leading-6 text-foreground-muted [overflow-wrap:anywhere]" aria-live="polite"></p>
+          </div>
+          <Button data-rc-download type="button" class="min-h-10 shrink-0 px-4 text-xs">Download CSV</Button>
+        </div>
+        <dl data-rc-facts class="grid grid-cols-2 gap-2 text-sm sm:grid-cols-4"></dl>
+      </div>
+    </Card>
+
+    <div data-rc-hops-card>
+      <Card>
+        <div class="space-y-4 p-5 sm:p-6">
+          <p class="text-sm font-medium">Every response on the way</p>
+          <ol data-rc-hops class="space-y-2 text-xs"></ol>
+          <ul data-rc-notes class="divide-y divide-border text-sm"></ul>
+        </div>
+      </Card>
+    </div>
+
+    <div data-rc-table-card>
+      <Card>
+        <div class="overflow-x-auto p-5 sm:p-6">
+          <div data-rc-table></div>
+        </div>
+      </Card>
+    </div>
+  </div>
+</section>
+
+<script>
+  import { parseRedirectMap, REDIRECT_MAP_ROWS, type MapRow } from '@/lib/redirect-map'
+
+  type Verdict = 'matches' | 'chain' | 'redirects' | 'wrong_target' | 'not_redirected' | 'loop' | 'too_many_hops' | 'timeout' | 'error'
+  type Hop = { url: string; status: number; location: string | null; ms: number }
+  type Row = {
+    type: 'row'
+    index: number
+    from: string
+    to: string | null
+    verdict: Verdict
+    hops: Hop[]
+    finalUrl: string
+    finalStatus: number | null
+    temporary: boolean
+    noindex: boolean | null
+    canonical: string | null
+    metaRefresh: { seconds: number; url: string | null } | null
+    homepage: boolean
+    error?: string
+  }
+  type Summary = { type: 'summary'; rows: number; verdicts: Partial<Record<Verdict, number>>; milliseconds: number }
+  type Level = 'pass' | 'warn' | 'fail'
+
+  const example = `http://example.com/
+https://example.com/old-pricing, https://example.com/pricing
+https://example.com/blog/2019/post, https://example.com/blog/post`
+
+  const KIND: Record<number, string> = {
+    301: 'Permanent',
+    308: 'Permanent',
+    302: 'Temporary',
+    303: 'Temporary',
+    307: 'Temporary',
+  }
+
+  const LEVEL_CLASS: Record<Level, string> = {
+    pass: 'bg-primary-soft text-foreground',
+    warn: 'bg-warning-soft text-foreground',
+    fail: 'bg-destructive-soft text-destructive',
+  }
+
+  // What a row needs. A row passes when it takes at most one permanent
+  // redirect, ends on a 200 page that can be indexed, and (when an expected
+  // URL is given) ends there.
+  function grade(row: Row): { level: Level; label: string; notes: string[] } {
+    const redirects = row.hops.filter((hop) => hop.location).length
+    const landed = row.finalStatus
+    const notes: string[] = []
+    const labels: Record<Verdict, string> = {
+      matches: redirects ? 'Right page' : 'No redirect',
+      redirects: 'One redirect',
+      chain: `Chain, ${redirects} redirects`,
+      wrong_target: 'Wrong page',
+      not_redirected: 'No redirect',
+      loop: 'Loop',
+      too_many_hops: 'Over 10 redirects',
+      timeout: 'Timed out',
+      error: 'Could not check',
+    }
+    if (row.error) notes.push(row.error)
+    if (row.verdict === 'loop') notes.push('A redirect points back to a URL earlier in the chain, so no page is ever reached.')
+    if (row.verdict === 'too_many_hops') notes.push('Still redirecting after 10 redirects. Googlebot stops following at 10.')
+    if (row.verdict === 'wrong_target' && row.to) notes.push(`Expected ${row.to}.`)
+    if (row.verdict === 'chain') notes.push(`Point the first URL straight at ${row.finalUrl} to cut ${redirects - 1} ${redirects - 1 === 1 ? 'redirect' : 'redirects'}.`)
+    if (row.temporary) notes.push('Uses a temporary redirect (302, 303 or 307). For a page that has moved for good, use 301 or 308.')
+    if (row.homepage) notes.push('Ends on the homepage. Google may treat a page redirected to an unrelated homepage as a soft 404.')
+    if (landed !== null && landed !== 200 && row.verdict !== 'loop' && row.verdict !== 'too_many_hops') {
+      notes.push(landed === 404 || landed === 410 ? `The last page returns ${landed}.` : [401, 403, 429].includes(landed) ? `The last page refused this checker with ${landed}. Check it in a browser.` : `The last page returns ${landed}, not 200.`)
+    }
+    if (row.noindex) notes.push('The last page has noindex, so Google will not index it.')
+    if (row.canonical) notes.push(`The last page's canonical points to ${row.canonical}.`)
+    if (row.metaRefresh) notes.push(`The last page has a meta refresh after ${row.metaRefresh.seconds} ${row.metaRefresh.seconds === 1 ? 'second' : 'seconds'}${row.metaRefresh.url ? ` to ${row.metaRefresh.url}` : ''}. This checker does not follow it. Google reads an instant one as permanent and a delayed one as temporary.`)
+    const fail =
+      ['wrong_target', 'loop', 'too_many_hops', 'error'].includes(row.verdict) ||
+      (landed !== null && landed >= 400 && ![401, 403, 429].includes(landed)) ||
+      row.noindex === true
+    const clean = ['matches', 'redirects', 'not_redirected'].includes(row.verdict) && !row.temporary && !row.homepage && landed === 200 && !row.canonical && !row.metaRefresh && !row.error
+    return { level: fail ? 'fail' : clean ? 'pass' : 'warn', label: labels[row.verdict], notes }
+  }
+
+  function el<K extends keyof HTMLElementTagNameMap>(tag: K, className = '', text = ''): HTMLElementTagNameMap[K] {
+    const node = document.createElement(tag)
+    if (className) node.className = className
+    if (text) node.textContent = text
+    return node
+  }
+
+  function csvCell(value: string): string {
+    return /[",\n]/u.test(value) ? `"${value.replaceAll('"', '""')}"` : value
+  }
+
+  function normalise(value: string): string {
+    const trimmed = value.trim()
+    return /^https?:\/\//iu.test(trimmed) ? trimmed : `https://${trimmed}`
+  }
+
+  for (const root of document.querySelectorAll<HTMLElement>('[data-redirect-checker]')) {
+    const $ = <T extends Element>(selector: string) => root.querySelector<T>(selector) as T
+    const form = $<HTMLFormElement>('[data-rc-form]')
+    const url = $<HTMLInputElement>('[data-rc-url]')
+    const text = $<HTMLTextAreaElement>('[data-rc-text]')
+    const one = $<HTMLElement>('[data-rc-one]')
+    const bulk = $<HTMLElement>('[data-rc-bulk]')
+    const run = $<HTMLButtonElement>('[data-rc-run]')
+    const error = $<HTMLElement>('[data-rc-error]')
+    const count = $<HTMLElement>('[data-rc-count]')
+    const results = $<HTMLElement>('[data-rc-results]')
+    const headline = $<HTMLElement>('[data-rc-headline]')
+    const subline = $<HTMLElement>('[data-rc-subline]')
+    const facts = $<HTMLElement>('[data-rc-facts]')
+    const hops = $<HTMLElement>('[data-rc-hops]')
+    const notes = $<HTMLElement>('[data-rc-notes]')
+    const hopsCard = $<HTMLElement>('[data-rc-hops-card]')
+    const tableCard = $<HTMLElement>('[data-rc-table-card]')
+    // The table is built here so the page's Markdown copy has no empty table.
+    const table = el('table', 'w-full text-left text-xs')
+    const thead = el('thead', 'border-b border-border text-foreground-muted')
+    const head = el('tr')
+    head.append(el('th', 'py-2 pr-3 font-normal', 'Result'), el('th', 'py-2 pr-3 font-normal', 'URL and path'), el('th', 'hidden py-2 font-normal sm:table-cell', 'Ends on'))
+    thead.append(head)
+    const tbody = el('tbody', 'divide-y divide-border align-top')
+    table.append(thead, tbody)
+    $<HTMLElement>('[data-rc-table]').append(table)
+    const defaultCount = count.textContent ?? ''
+    let mode: 'one' | 'bulk' = 'one'
+    let rows: MapRow[] = []
+    let done: Row[] = []
+
+    const setMode = (next: 'one' | 'bulk') => {
+      mode = next
+      for (const item of root.querySelectorAll<HTMLButtonElement>('[data-toggle-item]')) {
+        const on = item.dataset.toggleItem === next
+        item.dataset.state = on ? 'on' : 'off'
+        item.setAttribute('aria-pressed', String(on))
+      }
+      one.hidden = next !== 'one'
+      bulk.hidden = next !== 'bulk'
+      error.hidden = true
+      preview()
+    }
+
+    const preview = () => {
+      if (mode === 'one') {
+        count.textContent = defaultCount
+        return
+      }
+      const parsed = parseRedirectMap(text.value)
+      rows = parsed.rows
+      count.textContent = rows.length
+        ? `${rows.length} ${rows.length === 1 ? 'URL' : 'URLs'}${rows.length > REDIRECT_MAP_ROWS ? `, over the ${REDIRECT_MAP_ROWS} a check limit` : ''}${parsed.skipped.length ? `. Skipped line${parsed.skipped.length === 1 ? '' : 's'} ${parsed.skipped.slice(0, 5).join(', ')}, not a URL` : ''}. Rows with a second URL are checked against it.`
+        : defaultCount
+    }
+
+    const fact = (label: string, value: string) => {
+      const box = el('div', 'min-w-0 rounded-lg bg-card px-3 py-2')
+      box.append(el('dt', 'text-xs text-foreground-muted', label), el('dd', 'break-words text-lg font-medium [overflow-wrap:anywhere]', value))
+      return box
+    }
+
+    const renderOne = (row: Row) => {
+      const g = grade(row)
+      const redirects = row.hops.filter((hop) => hop.location).length
+      const total = row.hops.reduce((sum, hop) => sum + hop.ms, 0)
+      headline.textContent =
+        row.verdict === 'loop' ? 'Redirect loop' :
+        row.verdict === 'too_many_hops' ? 'More than 10 redirects' :
+        row.verdict === 'timeout' || row.verdict === 'error' ? 'The trace stopped' :
+        redirects === 0 ? `No redirect, ${row.finalStatus}` :
+        `${redirects} ${redirects === 1 ? 'redirect' : 'redirects'} to a ${row.finalStatus}`
+      subline.textContent = row.verdict === 'loop' || row.verdict === 'too_many_hops' || row.finalStatus === null ? `From ${row.from}` : `${row.from} ends on ${row.finalUrl}`
+      const kinds = [...new Set(row.hops.filter((hop) => hop.location).map((hop) => KIND[hop.status] ?? String(hop.status)))]
+      facts.replaceChildren(
+        fact('Redirects', String(redirects)),
+        fact('Final status', row.finalStatus === null ? 'None' : String(row.finalStatus)),
+        fact('Type', kinds.length === 0 ? 'None' : kinds.length > 1 ? 'Mixed' : (kinds[0] as string)),
+        fact('Total time', `${(total / 1000).toFixed(2)} s`),
+      )
+      hops.replaceChildren(
+        ...row.hops.map((hop, index) => {
+          const item = el('li', 'flex items-start gap-3 rounded-md bg-muted px-3 py-2')
+          const badge = el('div', 'w-16 shrink-0')
+          badge.append(el('p', 'font-mono font-medium text-foreground', String(hop.status)))
+          badge.append(el('p', 'text-foreground-muted', hop.location ? KIND[hop.status] ?? '' : index === row.hops.length - 1 ? 'Final' : ''))
+          const body = el('div', 'min-w-0 flex-1 space-y-0.5')
+          body.append(el('p', 'break-all font-mono text-foreground', hop.url))
+          if (hop.location) body.append(el('p', 'break-all text-foreground-muted', `Location: ${hop.location}`))
+          item.append(badge, body, el('span', 'shrink-0 font-mono text-foreground-muted', `${hop.ms} ms`))
+          return item
+        }),
+      )
+      const list = g.notes.length ? g.notes : [redirects ? 'One permanent redirect to a 200 page that can be indexed. Nothing to fix.' : 'The URL answers 200 itself and can be indexed.']
+      notes.replaceChildren(
+        ...list.map((note) => {
+          const item = el('li', 'flex items-start gap-3 py-2.5')
+          item.append(
+            el('span', `mt-0.5 inline-flex w-12 shrink-0 justify-center rounded px-1.5 py-0.5 text-xs font-medium ${LEVEL_CLASS[g.level]}`, g.level === 'pass' ? 'OK' : g.level === 'fail' ? 'Fix' : 'Check'),
+            el('span', 'min-w-0 break-words leading-6 text-foreground [overflow-wrap:anywhere]', note),
+          )
+          return item
+        }),
+      )
+      hopsCard.hidden = false
+      tableCard.hidden = true
+    }
+
+    const renderSummary = (summary?: Summary) => {
+      const graded = done.map(grade)
+      const fail = graded.filter((item) => item.level === 'fail').length
+      const warn = graded.filter((item) => item.level === 'warn').length
+      const pass = graded.length - fail - warn
+      headline.textContent = summary ? (fail ? `${fail} of ${rows.length} ${rows.length === 1 ? 'URL' : 'URLs'} ${fail === 1 ? 'needs' : 'need'} fixing` : warn ? `${warn} of ${rows.length} to check` : rows.length === 1 ? 'Looks right' : `All ${rows.length} look right`) : `Checked ${done.length} of ${rows.length}`
+      subline.textContent = summary ? `Traced in ${(summary.milliseconds / 1000).toFixed(1)} seconds, five URLs at a time. A URL passes when it takes at most one permanent redirect to a 200 page that can be indexed, and lands on the expected URL when you gave one.` : 'Tracing each URL hop by hop...'
+      facts.replaceChildren(fact('Pass', String(pass)), fact('Check', String(warn)), fact('Fix', String(fail)), fact('Chains', String(done.filter((row) => row.verdict === 'chain').length)))
+      hopsCard.hidden = true
+      tableCard.hidden = false
+    }
+
+    const addRow = (row: Row) => {
+      done.push(row)
+      const g = grade(row)
+      const tr = el('tr')
+      tr.dataset.index = String(row.index)
+      const result = el('td', 'py-2.5 pr-3')
+      result.append(el('span', `inline-flex rounded px-1.5 py-0.5 font-medium sm:whitespace-nowrap ${LEVEL_CLASS[g.level]}`, g.label))
+      const path = el('td', 'py-2.5 pr-3')
+      path.append(el('p', 'break-all font-mono text-foreground', row.from))
+      if (row.hops.length > 1) path.append(el('p', 'mt-1 font-mono text-foreground-muted', row.hops.map((hop) => hop.status).join(' → ')))
+      if (row.finalUrl !== row.from) path.append(el('p', 'mt-1 break-all font-mono text-foreground sm:hidden', `Ends on ${row.finalUrl}`))
+      for (const note of g.notes) path.append(el('p', 'mt-1 break-words text-foreground-muted', note))
+      const final = el('td', 'hidden py-2.5 sm:table-cell')
+      final.append(el('p', 'break-all font-mono text-foreground', row.finalUrl))
+      tr.append(result, path, final)
+      const after = ([...tbody.children] as HTMLElement[]).find((item) => Number(item.dataset.index) > row.index)
+      tbody.insertBefore(tr, after ?? null)
+    }
+
+    for (const item of root.querySelectorAll<HTMLButtonElement>('[data-toggle-item]')) {
+      item.addEventListener('click', () => setMode(item.dataset.toggleItem === 'bulk' ? 'bulk' : 'one'))
+    }
+    text.addEventListener('input', preview)
+    $<HTMLButtonElement>('[data-rc-example]').addEventListener('click', () => {
+      text.value = example
+      preview()
+    })
+
+    form.addEventListener('submit', async (event) => {
+      event.preventDefault()
+      error.hidden = true
+      if (mode === 'one') {
+        rows = url.value.trim() ? [{ line: 1, from: normalise(url.value), to: null }] : []
+      } else preview()
+      if (!rows.length) {
+        error.textContent = mode === 'one' ? 'Enter a URL.' : 'Add at least one URL.'
+        error.hidden = false
+        return
+      }
+      if (rows.length > REDIRECT_MAP_ROWS) {
+        error.textContent = `Check up to ${REDIRECT_MAP_ROWS} URLs at a time.`
+        error.hidden = false
+        return
+      }
+      done = []
+      tbody.replaceChildren()
+      run.disabled = true
+      run.textContent = 'Checking…'
+      const single = mode === 'one'
+      try {
+        const response = await fetch('/api/tools/redirect-checker', {
+          method: 'POST',
+          headers: { 'content-type': 'application/json' },
+          body: JSON.stringify({ rows: rows.map((row) => ({ from: row.from, to: row.to })) }),
+        })
+        if (!response.ok || !response.body) {
+          const body = (await response.json().catch(() => ({}))) as { error?: string }
+          throw new Error(body.error || 'The URLs could not be checked.')
+        }
+        if (!single) {
+          results.hidden = false
+          renderSummary()
+        }
+        const reader = response.body.pipeThrough(new TextDecoderStream()).getReader()
+        let buffer = ''
+        let summary: Summary | undefined
+        while (true) {
+          const chunk = await reader.read()
+          if (chunk.done) break
+          buffer += chunk.value
+          const lines = buffer.split('\n')
+          buffer = lines.pop() ?? ''
+          for (const line of lines) {
+            if (!line.trim()) continue
+            const item = JSON.parse(line) as Row | Summary
+            if (item.type === 'row') single ? done.push(item) : addRow(item)
+            else summary = item
+          }
+          if (!single) renderSummary(summary)
+        }
+        if (!summary) throw new Error(`The check stopped after ${done.length} of ${rows.length} URLs. Try again with fewer.`)
+        if (single) renderOne(done[0] as Row)
+        else renderSummary(summary)
+        results.hidden = false
+        if (single) results.scrollIntoView({ behavior: 'smooth', block: 'start' })
+      } catch (caught) {
+        error.textContent = caught instanceof Error ? caught.message : 'The URLs could not be checked.'
+        error.hidden = false
+        if (!done.length || single) results.hidden = true
+      } finally {
+        run.disabled = false
+        run.textContent = 'Check redirects'
+      }
+    })
+
+    // One line per response, so a chain reads top to bottom in a spreadsheet.
+    $<HTMLButtonElement>('[data-rc-download]').addEventListener('click', () => {
+      const header = ['url', 'expected_url', 'result', 'step', 'step_url', 'status', 'location', 'ms', 'final_url', 'final_status', 'notes']
+      const lines = [...done].sort((a, b) => a.index - b.index).flatMap((row) => {
+        const g = grade(row)
+        const steps = row.hops.length ? row.hops : [{ url: row.from, status: 0, location: null, ms: 0 }]
+        return steps.map((hop, index) =>
+          [row.from, row.to ?? '', g.label, String(index + 1), hop.url, hop.status ? String(hop.status) : '', hop.location ?? '', String(hop.ms), row.finalUrl, String(row.finalStatus ?? ''), index === 0 ? g.notes.join(' ') : ''].map(csvCell).join(','),
+        )
+      })
+      const link = document.createElement('a')
+      link.href = URL.createObjectURL(new Blob([[header.join(','), ...lines].join('\n')], { type: 'text/csv' }))
+      link.download = 'redirect-check.csv'
+      link.click()
+      URL.revokeObjectURL(link.href)
+    })
+
+    const preset = new URLSearchParams(location.search).get('url')
+    if (preset) url.value = preset
+  }
+</script>

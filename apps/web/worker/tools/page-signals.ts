@@ -72,6 +72,8 @@ export type TraceHop = {
   status: number
   location: string | null
   robotsHeader: string | null
+  // How long the response took to arrive.
+  ms: number
 }
 
 export type PageTrace = {
@@ -112,7 +114,8 @@ export async function tracePage(
   start: URL,
   fetcher: SitemapFetcher,
   options: {
-    userAgent: string
+    // Without one, the core tracer's SEO Skill crawler user agent is sent.
+    userAgent?: string
     readBody: boolean
     maxBytes?: number
     timeoutMilliseconds?: number
@@ -139,7 +142,7 @@ export async function tracePage(
         )
       }
       const headers = new Headers(init.headers)
-      headers.set('user-agent', options.userAgent)
+      if (options.userAgent) headers.set('user-agent', options.userAgent)
       return fetcher(url, { ...init, headers })
     },
     onResponse: async (response, url) => {
@@ -184,6 +187,7 @@ export async function tracePage(
       status: step.status,
       location: step.location,
       robotsHeader: robotsHeaders.get(step.url) ?? null,
+      ms: step.ms,
     })),
     redirects: trace.hops,
     finalUrl: trace.final_url,

@@ -31,6 +31,7 @@ const PUBLIC_TOOL_BY_PATH = new Map<string, PublicWorkerToolId>([
   ['/api/tools/open-graph', 'open-graph'],
   ['/api/tools/noindex-checker', 'noindex-checker'],
   ['/api/tools/redirect-map', 'redirect-map'],
+  ['/api/tools/redirect-checker', 'redirect-checker'],
 ])
 
 const JSON_HEADERS = {

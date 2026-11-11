@@ -31,8 +31,8 @@ export const features = [
   },
   {
     path: '/features/google-analytics',
-    title: 'Google Analytics MCP for SEO',
-    text: 'Search sessions beside your clicks, the pages search sends people to, and visits from AI assistants.',
+    title: 'Google Analytics MCP server',
+    text: 'Search sessions beside your clicks, the landing pages that convert, and AI referral traffic from ChatGPT and Perplexity.',
     icon: ChartLineData01Icon,
   },
   {

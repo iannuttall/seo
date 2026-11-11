@@ -19,6 +19,7 @@ import HomeCard from '@/components/HomeCard.astro'
 import SectionHeading from '@/components/SectionHeading.astro'
 import SetupCommands from '@/components/SetupCommands.astro'
 import { getButtonClasses } from '@/components/ui/button'
+import { features } from '@/content/features'
 import { toolIcon } from '@/content/tool-icons'
 import { tools } from '@/content/tools/manifest.mjs'
 import BaseLayout from '@/layouts/BaseLayout.astro'
@@ -388,6 +389,29 @@ const faqs = [
             ))
           }
         </ul>
+      </section>
+
+      <section class="site-frame" aria-labelledby="features-heading">
+        <SectionHeading
+          id="features-heading"
+          title="What SEO Skill does"
+          text="One page for each job, with the prompts to ask your agent and what comes back."
+        />
+        <ul class="grid grid-cols-1 gap-x-8 rounded-lg bg-muted px-6 py-2 sm:grid-cols-2">
+          {
+            features.map((item) => (
+              <li class="border-b border-border last:border-b-0 sm:[&:nth-last-child(2):nth-child(odd)]:border-b-0">
+                <a class="group block py-4 no-underline" href={item.path}>
+                  <span class="block text-base leading-7 font-medium text-foreground group-hover:underline">{item.title}</span>
+                  <span class="block text-sm leading-6 text-foreground-muted">{item.text}</span>
+                </a>
+              </li>
+            ))
+          }
+        </ul>
+        <a class:list={[getButtonClasses('secondary', 'lg'), 'mt-6']} href="/features">
+          See all features
+        </a>
       </section>
 
       <section class="site-frame" aria-labelledby="tools-heading">

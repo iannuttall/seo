@@ -14,6 +14,7 @@ import {
   RoboticIcon,
   Route01Icon,
   SearchList01Icon,
+  Target02Icon,
   TaskDone01Icon,
   UserSearch01Icon,
 } from '@hugeicons/core-free-icons'
@@ -76,6 +77,12 @@ export const features = [
     icon: Link01Icon,
   },
   {
+    path: '/features/striking-distance-keywords',
+    title: 'Striking distance keywords',
+    text: 'Queries just off page one, quick wins, low CTR and content decay from your Search Console, and each fix measured 28 and 56 days later.',
+    icon: Target02Icon,
+  },
+  {
     path: '/features/seo-audit',
     title: 'SEO audit tool',
     text: 'Crawl the site, check single pages, and find pages that lost their clicks.',
@@ -104,6 +111,12 @@ export const features = [
     title: 'ChatGPT SEO',
     text: 'Add SEO Skill to ChatGPT so its SEO answers start from your own clicks, queries and pages.',
     icon: AiChat02Icon,
+  },
+  {
+    path: '/features/codex-seo',
+    title: 'Codex SEO skill',
+    text: 'Add the SEO skill, the hosted MCP and the seo CLI to Codex, so it changes the pages your Search Console says matter.',
+    icon: ComputerTerminal01Icon,
   },
   {
     path: '/features/seo-agent',

@@ -1,0 +1,238 @@
+---
+import {
+  Analytics01Icon,
+  ChartDecreaseIcon,
+  FileSearchIcon,
+  Notification01Icon,
+  SearchList01Icon,
+} from '@hugeicons/core-free-icons'
+import CodeBlock from '@/components/CodeBlock.astro'
+import FeaturePage from '@/components/FeaturePage.astro'
+
+const related = [
+  { title: 'SEO report', text: 'Every section of the Search Console report, with its dates and how to ask for it.', href: '/docs/report', icon: Analytics01Icon, link: 'SEO report docs' },
+  { title: 'seo page', text: "One URL's live title, H1, index status and queries, before you edit it.", href: '/docs/page', icon: FileSearchIcon },
+  { title: 'seo index', text: 'Pages that lost most of their clicks, checked live and with URL Inspection.', href: '/docs/indexing', icon: ChartDecreaseIcon },
+  { title: 'Weekly site audit', text: 'Keeps the issues list on the server and emails you when a page drops out of Google.', href: '/docs/weekly-site-audit', icon: Notification01Icon, link: 'Weekly site audit docs' },
+  { title: 'AI keyword research tool', text: 'Search volume, difficulty and who ranks for a query, from your own DataForSEO or Ahrefs key.', href: '/features/keyword-research', icon: SearchList01Icon, link: 'Keyword research' },
+]
+---
+
+<FeaturePage
+  title="Striking distance keywords"
+  metaTitle="Find striking distance keywords in Search Console"
+  description="Find striking distance keywords, quick wins, low CTR and content decay in your own Search Console, then see each fixed page's clicks 28 and 56 days later."
+  path="/features/striking-distance-keywords"
+  lead="Striking distance keywords are searches your pages already rank for just off page one. Ask your agent for them, along with quick wins, low CTR and content decay, from your own Search Console."
+  {related}
+  relatedHeading="Read more"
+>
+  <h2>What striking distance keywords are</h2>
+  <p>
+    A striking distance keyword is a search your site already ranks for at
+    an average position of 11 to 20 in Google Search Console. That is the
+    top of page two. Google already thinks the page is relevant, so a better
+    section, title or internal link has a real chance of moving it onto page
+    one.
+  </p>
+  <p>
+    Guides disagree on the range (some say 4 to 20, some 8 to 20). SEO
+    Skill splits it into four lists so each one points at a different fix:
+  </p>
+  <table>
+    <thead><tr><th>Ask for</th><th>What it lists</th></tr></thead>
+    <tbody>
+      <tr><td>Striking distance</td><td>Queries at average positions 11 to 20 for pages that already rank, with impressions.</td></tr>
+      <tr><td>Quick wins</td><td>Queries at positions 4 to 10 that get fewer clicks than your site's own curve says they should.</td></tr>
+      <tr><td>Low CTR</td><td>Queries at positions 1 to 4 that get fewer clicks than your curve says. Titles and snippets to review.</td></tr>
+      <tr><td>Content decay</td><td>Query and page pairs that lost clicks against the 28 days before.</td></tr>
+    </tbody>
+  </table>
+  <p>
+    All four come from the <a href="/docs/report">SEO report</a>, read live
+    from your own Search Console each time you ask. No keyword tool
+    estimates are mixed in.
+  </p>
+
+  <h2>Find striking distance keywords for your site</h2>
+  <p>
+    Add the hosted MCP server to Claude Code, Codex, Cursor or ChatGPT with
+    the commands at the top of this page, and sign in with Google (access
+    is read only). Then ask:
+  </p>
+  <CodeBlock value={`Show me the striking distance keywords for example.com`} wrap />
+  <p>In a terminal, after <code>npm i -g seo</code> and <code>seo start</code>:</p>
+  <CodeBlock value={`seo report --site example.com --section striking-distance`} wrap />
+  <p>
+    Each row is a query and the page that ranks for it, with clicks,
+    impressions, click-through rate and average position for the last 28
+    days of final Search Console data.
+  </p>
+
+  <h2>How the striking distance list is ranked</h2>
+  <p>
+    Rows are sorted by impressions, weighted towards the top of page two. A
+    query at position 11 with 400 impressions comes before one at position
+    19 with the same 400, because it has less ground to make up.
+  </p>
+  <p>
+    Searches for your own brand are left out, and the report names the
+    brand terms it used. Rows with very few impressions are dropped, with a
+    floor that scales with your site's traffic (a heuristic, and the report
+    says what floor it picked). The top 20 pages are also fetched live, so a
+    page that now redirects or returns an error shows up before you spend
+    an hour on it.
+  </p>
+
+  <h2>Find "low-hanging fruit" keywords on page one</h2>
+  <p>
+    What most guides call "low-hanging fruit" keywords are searches where a
+    page already ranks on page one and still gets fewer clicks than it
+    should. Ask for the
+    quick wins:
+  </p>
+  <CodeBlock value={`Show me the quick wins for example.com`} wrap />
+  <p>
+    Quick wins are query and page pairs at positions 4 to 10 with a
+    click-through rate below your site's own curve for that position. A
+    page at position 5 that gets 1% of clicks, when your other pages at
+    position 5 get 5%, is a better bet than a new article. These are SEO
+    quick wins from your own data, rather than a generic checklist.
+  </p>
+
+  <h2>Fix low CTR in the top four positions</h2>
+  <p>
+    At positions 1 to 4 the ranking is mostly done, so a low click-through
+    rate points at the title, the description or what else Google shows on
+    the results page. Ask for the low CTR section:
+  </p>
+  <CodeBlock value={`Show me the low-ctr section for example.com, then read the live title and description of the top 5 pages`} wrap />
+  <p>
+    Your agent can then run <a href="/docs/page">seo page</a> on each URL to
+    read its live title, description and queries before it suggests a new
+    title.
+  </p>
+
+  <h2>How the click-through rate curve is built</h2>
+  <p>
+    The curve is built from your own site's Search Console data. For each
+    position on page one, it takes the 75th percentile of your pages'
+    click-through rates at that position (the rate one page in four beats),
+    leaving out the page being judged. A site with too little data falls
+    back to a built-in curve, and the report says which one it used.
+  </p>
+  <p>
+    The curve is a heuristic, not a Google rule. Brand searches, AI
+    Overviews and ads all change click-through rates, so treat a row below
+    the curve as a page to open and check, not proof that its title is wrong.
+  </p>
+
+  <h2>Find content decay before it costs you more clicks</h2>
+  <p>
+    Content decay is the slow loss of search clicks on pages that used to do
+    well. A competitor publishes something better, the search changes, or
+    the page goes out of date. Ask for it by name:
+  </p>
+  <CodeBlock value={`Show me the content decay for example.com`} wrap />
+  <CodeBlock value={`seo report --site example.com --section content-decay`} wrap />
+  <p>
+    The content decay section lists the query and page pairs that lost
+    clicks in the last 28 days against the 28 days before, with brand
+    searches left out. To see which queries one page lost, run{' '}
+    <a href="/docs/page">seo page</a> on it. For pages that lost almost all
+    their clicks, which is usually an indexing problem rather than decay,{' '}
+    <a href="/docs/indexing">seo index</a> checks each page live and with
+    Google's URL Inspection.
+  </p>
+
+  <h2>Check whether a fix worked 28 and 56 days later</h2>
+  <p>
+    The <code>issues</code> section of the report keeps a list of what the
+    striking distance, quick wins and low CTR checks found for a site. When
+    you fix one, your agent marks it fixed, and the list later shows that
+    page's Search Console clicks and impressions for the 28 and 56 days
+    after the fix against the same number of days before.
+  </p>
+  <CodeBlock value={`Show me the issues list for example.com`} wrap />
+  <CodeBlock value={`seo report --site example.com --mark fixed --issues 3f9a1c2e --note "Added a contractors section and a new title"`} wrap />
+  <p>
+    The CLI keeps the list in a file on your machine. The hosted server
+    keeps it for sites in the <a href="/docs/weekly-site-audit">weekly site
+    audit</a> ($50 a month per site). For any other site, it hands the list
+    back to your agent to save and pass in next time. Each result names any
+    Google update whose dates overlap, because before and after is timing,
+    not proof that the fix caused the change.
+  </p>
+
+  <h2>A worked example on example.com</h2>
+  <p>
+    One row, from the striking distance list to a measured result. The
+    numbers are made up for the example, and the last line is in the format
+    the issues list uses.
+  </p>
+  <ol>
+    <li>
+      The striking distance section shows "invoice template for
+      contractors" on <code>example.com/templates/invoice</code> at position
+      13.4, with 2,140 impressions and 9 clicks in 28 days.
+    </li>
+    <li>
+      You ask the agent to check the page. <code>seo page --url
+      https://example.com/templates/invoice</code> shows the title and H1 say
+      "Invoice templates" and never mention contractors.
+    </li>
+    <li>
+      You add a section for contractors and a title that names them, then
+      ask the agent to mark the issue fixed on 3 November 2026.
+    </li>
+    <li>
+      Once final data covers 28 days after the fix, the issues list reads:
+      "28 days from 2026-11-03 (query on page): 41 clicks (+33) and 2,380
+      impressions, average position 8.2, against 8 clicks and 2,050
+      impressions, average position 13.6 in the 28 days before." The
+      56-day line follows four weeks later.
+    </li>
+  </ol>
+
+  <h2>Find striking distance keywords by hand in Search Console</h2>
+  <p>
+    You can do a rough version in Search Console. Open Performance, then
+    Search results, turn on Average position, add a filter for position
+    greater than 10, and sort by impressions. Ignore rows past 20. Click a
+    query, then the Pages tab, to see which page ranks for it.
+  </p>
+  <p>
+    That works for one site, once. What the hand method does not give you
+    is the query and the page in one row, a click-through rate curve for
+    your site, a check that each page is still live, or a record of what
+    happened after you changed it.
+  </p>
+
+  <h2>The keywords this page targets, and why</h2>
+  <p>
+    We picked these keywords with the same tools. Keyword ideas and keyword
+    metrics came from DataForSEO for the US in November 2026. Searches are
+    monthly, and KD is DataForSEO's keyword difficulty from 0 to 100:
+  </p>
+  <table>
+    <thead><tr><th>Keyword</th><th>Searches (KD)</th></tr></thead>
+    <tbody>
+      <tr><td>seo quick wins</td><td>90 (KD 0)</td></tr>
+      <tr><td>how to find low hanging fruit keywords</td><td>50 (KD 0)</td></tr>
+      <tr><td>content decay</td><td>40 (KD 2)</td></tr>
+      <tr><td>what is content decay</td><td>40 (KD 0)</td></tr>
+      <tr><td>striking distance keywords</td><td>30 (KD 0)</td></tr>
+      <tr><td>low-hanging fruit keywords</td><td>20 (KD 2)</td></tr>
+    </tbody>
+  </table>
+  <p>
+    The volumes are small, and the results page is weak. In November 2026
+    the top results for "striking distance keywords" in the US included
+    sites with a <a href="https://ahrefs.com" target="_blank" rel="noreferrer">Domain
+    Rating by Ahrefs</a> of 12, 10 and 7, and a Reddit thread. Search
+    Console already showed seoskill.dev at an average position of 6.5 for
+    "striking distance seo" over the three months to 7 November 2026, from
+    an older docs page. A focused page with the method and a real follow-up
+    step is a fair bet to win it.
+  </p>
+</FeaturePage>

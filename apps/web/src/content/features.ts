@@ -5,6 +5,7 @@ import {
   ComputerTerminal01Icon,
   DatabaseIcon,
   FileSearchIcon,
+  GitCompareIcon,
   Globe02Icon,
   Link01Icon,
   McpServerIcon,
@@ -13,6 +14,7 @@ import {
   Route01Icon,
   SearchList01Icon,
   TaskDone01Icon,
+  UserSearch01Icon,
 } from '@hugeicons/core-free-icons'
 
 // The feature pages. Each targets one search phrase and links to the
@@ -47,6 +49,18 @@ export const features = [
     title: 'AI keyword research tool',
     text: 'Keyword ideas, search volume, SERPs and competitor keywords in your agent, from your own DataForSEO or Ahrefs key.',
     icon: SearchList01Icon,
+  },
+  {
+    path: '/features/seo-competitor-analysis',
+    title: 'SEO competitor analysis',
+    text: 'Find your real search competitors, the pages that earn their traffic and the sites that link to them and not you.',
+    icon: UserSearch01Icon,
+  },
+  {
+    path: '/features/keyword-gap',
+    title: 'Keyword gap analysis',
+    text: 'The searches your competitors rank for and you don’t, compared with your own Search Console queries.',
+    icon: GitCompareIcon,
   },
   {
     path: '/features/backlink-gap',

@@ -1,5 +1,6 @@
 import type { PageOpportunityReport } from './page-opportunities.js'
 import { pageOpportunitiesReport } from './page-opportunities.js'
+import { COMPARISON } from './query-shape.js'
 
 export type ContentOptimizationIntent =
   | 'comparison'
@@ -52,11 +53,7 @@ export type ContentOptimizationReport = {
 
 function intentFor(query: string): ContentOptimizationIntent {
   const value = query.toLowerCase()
-  if (
-    /\b(vs|versus|alternative|alternatives|compare|comparison|best)\b/.test(
-      value,
-    )
-  ) {
+  if (COMPARISON.test(value)) {
     return 'comparison'
   }
   if (/\b(price|pricing|cost|buy|deal|coupon|review|reviews)\b/.test(value)) {

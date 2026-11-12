@@ -100,21 +100,9 @@ export type RowFilter = {
 // Search Console takes RE2 expressions of at most 4,096 characters.
 export const REGEX_MAX_CHARS = 4096
 
-// Named query filters for AI search analysis, so agents pass a word, not a
-// pattern. Long tail is 8 words or more.
-export const QUERY_PRESETS = {
-  questions: '^(who|what|where|when|why|how|is|are|can|does|do|should)\\b',
-  long_tail: '^(\\S+\\s+){7,}\\S+$',
-  comparisons: '\\b(vs|versus|alternatives?)\\b',
-} as const
-
-export type QueryPreset = keyof typeof QUERY_PRESETS
-export const QUERY_PRESET_NAMES = Object.keys(QUERY_PRESETS) as QueryPreset[]
-
 export type RowTextFilters = {
   page?: string
   query?: string
-  queryPreset?: QueryPreset
   pageRegex?: string
   queryRegex?: string
   excludeQueryRegex?: string
@@ -127,11 +115,6 @@ export function rowTextFilters(input: RowTextFilters): RowFilter[] {
     ['query', 'contains', input.query],
     ['page', 'includingRegex', input.pageRegex],
     ['query', 'includingRegex', input.queryRegex],
-    [
-      'query',
-      'includingRegex',
-      input.queryPreset && QUERY_PRESETS[input.queryPreset],
-    ],
     ['query', 'excludingRegex', input.excludeQueryRegex],
   ]
   return filters.flatMap(([dimension, operator, expression]) => {

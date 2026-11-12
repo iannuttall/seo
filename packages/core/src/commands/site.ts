@@ -1,3 +1,4 @@
+import { queryShape, queryShapeLine } from '../analyze/query-shape.js'
 import { latestFinalGscDate, shiftIsoDate } from '../gsc/dates.js'
 import { analyticsBeside } from './analytics-site.js'
 import { CLI_LINK } from './bing.js'
@@ -214,6 +215,13 @@ export async function runPage(
       Number(b.clicks) - Number(a.clicks) ||
       Number(b.impressions) - Number(a.impressions),
   )
+  // Each query's shape (question, comparison or AI query kind) beside it.
+  const shaped: Row[] = rows.map((row) => ({
+    query: row.query,
+    shape: queryShape(String(row.query ?? '')),
+    ...row,
+  }))
+  const shapes = queryShapeLine(rows.map((row) => String(row.query ?? '')))
   const sum = (list: typeof now.rows, key: 'clicks' | 'impressions') =>
     list.reduce((total, row) => total + row[key], 0)
   const offset = input.offset ?? 0
@@ -233,11 +241,12 @@ export async function runPage(
         ? [unknownNext(input, sitemap.urls.includes(input.url), deps)]
         : []),
       `Query totals: clicks ${sum(now.rows, 'clicks')} (was ${sum(then.rows, 'clicks')}), impressions ${sum(now.rows, 'impressions')} (was ${sum(then.rows, 'impressions')}). Search Console hides rare queries, so these can be lower than the page total.`,
+      ...(shapes ? [shapes] : []),
       deps.pageMarkdown
         ? `Main content as Markdown: ${deps.call('page', { url: input.url, detail: 'full' })}.`
         : `Main content as Markdown: only in the CLI and the local MCP server, with \`npx -y seo page --url ${input.url} --detail full\`.`,
     ],
-    rows,
+    rows: shaped,
     offset,
     limit: PAGE_SIZE,
     detail: input.detail ?? 'summary',
@@ -263,7 +272,7 @@ export async function runPage(
       indexInspectedAt: savedAt,
       reason,
       totalQueries: rows.length,
-      queries: rows.slice(offset, offset + PAGE_SIZE),
+      queries: shaped.slice(offset, offset + PAGE_SIZE),
       ...(full ? { markdown } : {}),
     },
   }

@@ -88,7 +88,7 @@ export function aiQueryNoise(query: string): AiQueryNoise | null {
 // as it is: chat or long, and it opens with a question word or a request
 // such as "i need", or ends with a question mark. Statements, pasted lists
 // and tool text are not.
-const QUESTION =
+export const QUESTION =
   /^(how|what|what's|whats|which|why|when|where|who|is|are|can|could|does|do|should|would|will|i need|i want|i have|i'm looking|we need|we want)\b|\?$/u
 const ASKABLE_KINDS = new Set<AiQueryKind>(['chat', 'long'])
 const PROMPT_CHARACTERS = 500

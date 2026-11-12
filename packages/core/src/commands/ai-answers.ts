@@ -1,4 +1,5 @@
 import { aiQueriesReport } from '../analyze/ai-queries.js'
+import { queryShape } from '../analyze/query-shape.js'
 import { deriveBrandTerms, isBrandQuery, registrableDomain } from '../brand.js'
 import type { Detail } from './present.js'
 import {
@@ -623,6 +624,7 @@ export async function runAiAnswers(
   ]
   const shown = rows.map((row) => ({
     question: row.question,
+    shape: queryShape(row.question),
     impressions: row.impressions,
     engine: row.engine,
     result: row.result,

@@ -146,7 +146,7 @@ To ask your own questions, pass up to 10 in `--keywords`. Then the target can be
 seo research ai_answers --target example.org --keywords "what is the best crm for a small team,how do I import contacts"
 ```
 
-Each question goes to ChatGPT search, Google AI Mode and Google AI Overviews. Every row says whether the answer cited a page on your site, mentioned it by name, did neither, or showed no AI answer at all. ChatGPT rows also name the model DataForSEO reports for the answer. A run of 10 questions costs about 7 cents of DataForSEO credit, and the result shows what it actually cost. Each row also lists the other sites the answer cites, and the notes rank the sites cited most.
+Each question goes to ChatGPT search, Google AI Mode and Google AI Overviews. Every row says whether the answer cited a page on your site, mentioned it by name, did neither, or showed no AI answer at all. ChatGPT rows also name the model DataForSEO reports for the answer. A run of 10 questions costs about 7 cents of DataForSEO credit, and the result shows what it actually cost. Each row also lists the other sites the answer cites, and the notes rank the sites cited most. Each question also gets the same shape label as the report, such as `question` or `comparison`.
 
 Answers come from DataForSEO's queue and usually take about 15 seconds. Through the MCP server, any answers not ready after about 40 seconds come back as tasks that are already paid for. Ask again with the same target and those tasks to read them at no cost. The CLI waits up to four minutes, and prints the same tasks if any are still waiting; pass them with `--tasks`.
 

@@ -42,6 +42,7 @@ const ID_COLUMNS = [
   'changeDate',
   'query',
   'queryFlags',
+  'shape',
   'keyword',
   'url',
   'page',

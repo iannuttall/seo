@@ -85,8 +85,9 @@ Tests make no network calls and do not sleep.
   keys unreadable.
 - Release: bump the version in `package.json`, `.claude-plugin/plugin.json`
   and `server.json` (two places), add a `CHANGELOG.md` entry, and merge the
-  PR. `release.yml` publishes to npm with trusted publishing and tags the
-  version. Never add an `NPM_TOKEN`.
+  PR. `release.yml` publishes to npm with trusted publishing, tags the
+  version and publishes `server.json` to the MCP Registry. Never add an
+  `NPM_TOKEN`.
 - Before a release, install the packed tarball in an empty folder and check
   `seo --version`, `seo mcp serve --test`, the `seo` and `seo/mcp` imports
   and the packaged skill.

@@ -24,6 +24,51 @@ seo data --site example.com --dimensions page,country --page /blog/
 seo data --site example.com --dimensions query --query pricing
 ```
 
+### Filter for AI search queries with presets
+
+Three presets pick out the kinds of query that AI search and AI Mode leave in Search Console. In the CLI, pass `--query-preset`. Through MCP, your agent sets `query_preset` on `seo_data`, so you can just ask for "question queries on example.com".
+
+- `questions`: queries that start with a question word, such as "how long does it take to get to mars". Regex: `^(who|what|where|when|why|how|is|are|can|does|do|should)\b`
+- `long_tail`: queries of 8 words or more, the long chat-style searches people type into AI Mode. Regex: `^(\S+\s+){7,}\S+$`
+- `comparisons`: queries that compare things, such as "rigel vs betelgeuse size" or "notion alternatives". Regex: `\b(vs|versus|alternatives?)\b`
+
+```sh
+seo data --site example.com --query-preset questions
+seo data --site example.com --dimensions query,page --query-preset long_tail
+seo data --site example.com --query-preset comparisons --exclude-query-regex 'example|exmaple'
+```
+
+### Filter with your own regular expressions
+
+For anything a preset or plain text can't catch, write your own regular expression in the RE2 syntax Search Console uses.
+
+| CLI | MCP (`seo_data`) | What it does |
+| --- | --- | --- |
+| `--query-regex` | `query_regex` | Keeps queries that match |
+| `--exclude-query-regex` | `exclude_query_regex` | Leaves out queries that match, such as your brand |
+| `--page-regex` | `page_regex` | Keeps pages whose URL matches |
+
+Every filter you pass applies at once, so a row has to match all of them. That includes a preset, plain `--query` and `--page` text, and the regex options.
+
+```sh
+# Questions about pricing, without your brand
+seo data --site example.com --query-preset questions --query-regex 'price|pricing|cost' --exclude-query-regex 'example|exmaple'
+
+# Comparison searches that land on pages in two folders
+seo data --site example.com --dimensions query,page --query-preset comparisons --page-regex '/(blog|compare)/'
+
+# Queries with a pronoun in place of something named earlier, often AI Mode follow-ups
+seo data --site example.com --query-regex '\b(it|they|them|this|these|those)\b'
+```
+
+Through MCP, ask in plain words, such as "comparison queries for pages under /blog/ on example.com, without our brand", and your agent fills in the options.
+
+Limits:
+
+- Matching ignores case, so `^what` also matches "What".
+- RE2 has no lookarounds such as `(?=...)` or `(?!...)` and no backreferences such as `\1`. Search Console answers those with no rows, which would look like a real zero, so `seo data` rejects them with an error. To leave queries out, use the exclude option.
+- Each expression can be up to 4,096 characters.
+
 Add `--start-date` and `--end-date` for other dates, and `--detail rows` with `--offset` to page through long results. The [SEO keyword report](/features/keyword-report) page shows how to read the query and page rows as a keyword report.
 
 Queries that look like spam or tool noise get a `spam_hint` label: host names on top-level domains common in referral spam (such as `07.seo-anomaly-traffic.xyz`), rank tracker test queries, and spreadsheet rows pasted into Google. It's a guess from the query text alone. The rows stay in, with their numbers, so totals still match Search Console.

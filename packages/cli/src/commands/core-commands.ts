@@ -29,6 +29,8 @@ import {
   type LintMetaKind,
   type LintPreset,
   MAX_INSPECT_LIMIT,
+  QUERY_PRESET_NAMES,
+  type QueryPreset,
   RESEARCH_ACTIONS,
   RESEARCH_DEVICES,
   RESEARCH_PROVIDERS,
@@ -36,6 +38,7 @@ import {
   type ResearchAction,
   type ResearchDevice,
   type ResearchScope,
+  rowTextFilters,
   runAiAnswers,
   runAllSites,
   runBingReport,
@@ -384,6 +387,17 @@ export const indexCommand = defineCommand({
   },
 })
 
+function queryPresetArg(value?: string): QueryPreset | undefined {
+  if (value === undefined) return undefined
+  if (QUERY_PRESET_NAMES.includes(value as QueryPreset)) {
+    return value as QueryPreset
+  }
+  throw new SeoError(
+    'INVALID_INPUT',
+    `--query-preset is ${QUERY_PRESET_NAMES.join(', ')}.`,
+  )
+}
+
 export const dataCommand = defineCommand({
   meta: {
     name: 'data',
@@ -411,6 +425,26 @@ export const dataCommand = defineCommand({
     query: {
       type: 'string',
       description: 'Optional: only rows for queries that contain this.',
+    },
+    'query-preset': {
+      type: 'string',
+      description:
+        'Optional: questions, long_tail (8+ words) or comparisons queries only.',
+    },
+    'page-regex': {
+      type: 'string',
+      description:
+        'Optional: only rows for pages whose URL matches this RE2 regular expression.',
+    },
+    'query-regex': {
+      type: 'string',
+      description:
+        'Optional: only rows for queries that match this RE2 regular expression.',
+    },
+    'exclude-query-regex': {
+      type: 'string',
+      description:
+        'Optional: leave out queries that match this RE2 regular expression, such as your brand.',
     },
     ...dates,
     ...detail,
@@ -481,33 +515,20 @@ export const dataCommand = defineCommand({
       return
     }
     const site = await property(args, stringArg(args.site))
-    const page = stringArg(args.page)
-    const query = stringArg(args.query)
+    const filters = rowTextFilters({
+      page: stringArg(args.page),
+      query: stringArg(args.query),
+      pageRegex: stringArg(args['page-regex']),
+      queryRegex: stringArg(args['query-regex']),
+      queryPreset: queryPresetArg(stringArg(args['query-preset'])),
+      excludeQueryRegex: stringArg(args['exclude-query-regex']),
+    })
     await run(args, (deps) =>
       runRows(
         {
           site,
           dimensions: dimensions as Dimension[],
-          filters: [
-            ...(page
-              ? [
-                  {
-                    dimension: 'page' as const,
-                    operator: 'contains' as const,
-                    expression: page,
-                  },
-                ]
-              : []),
-            ...(query
-              ? [
-                  {
-                    dimension: 'query' as const,
-                    operator: 'contains' as const,
-                    expression: query,
-                  },
-                ]
-              : []),
-          ],
+          filters,
           startDate: stringArg(args['start-date']),
           endDate: stringArg(args['end-date']),
           detail: detailArg(args),

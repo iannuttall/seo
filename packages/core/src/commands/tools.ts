@@ -42,7 +42,14 @@ import {
   SERP_DEPTH,
 } from './research.js'
 import type { ResearchStore } from './research-cache.js'
-import { DIMENSIONS, runRows } from './rows.js'
+import {
+  DIMENSIONS,
+  QUERY_PRESET_NAMES,
+  type QueryPreset,
+  REGEX_MAX_CHARS,
+  rowTextFilters,
+  runRows,
+} from './rows.js'
 import {
   INDEXING_RULE,
   LOST_PAGES_RULE,
@@ -588,7 +595,7 @@ export const SHARED_TOOLS: SharedTool[] = [
     name: 'seo_data',
     command: 'data',
     title: 'Raw rows',
-    description: `Raw rows for questions the report does not answer. search_console (default): rows for any dimensions, each with the previous period and the change; page and query narrow to rows whose URL or query contains that text. google_analytics: landing pages for visits from search, with Google Analytics’ own metric names. bing: Bing Webmaster query or page rows (first dimension) for the same site, by week. clicky: landing-page visits, traffic sources and search engines from a Clicky site the person saved (site is its domain or Clicky site ID; at most 31 days).`,
+    description: `Raw rows for questions the report does not answer. search_console (default): rows for any dimensions, each with the previous period and the change; page and query narrow to rows whose URL or query contains that text; query_preset picks questions, long_tail (8+ words) or comparisons; *_regex take RE2 (no lookarounds). google_analytics: landing pages for visits from search, with Google Analytics’ own metric names. bing: Bing Webmaster query or page rows (first dimension) for the same site, by week. clicky: landing-page visits, traffic sources and search engines from a Clicky site the person saved (site is its domain or Clicky site ID; at most 31 days).`,
     input: z.object({
       source: z.enum(DATA_SOURCES).default('search_console'),
       site: z
@@ -612,6 +619,29 @@ export const SHARED_TOOLS: SharedTool[] = [
         .min(1)
         .optional()
         .describe('search_console only: query text.'),
+      query_preset: z
+        .enum(QUERY_PRESET_NAMES as [QueryPreset, ...QueryPreset[]])
+        .optional(),
+      page_regex: z
+        .string()
+        .min(1)
+        .max(REGEX_MAX_CHARS)
+        .optional()
+        .describe('search_console only: RE2 the page URL must match.'),
+      query_regex: z
+        .string()
+        .min(1)
+        .max(REGEX_MAX_CHARS)
+        .optional()
+        .describe('search_console only: RE2 the query must match.'),
+      exclude_query_regex: z
+        .string()
+        .min(1)
+        .max(REGEX_MAX_CHARS)
+        .optional()
+        .describe(
+          'search_console only: RE2 for queries to leave out, such as the brand.',
+        ),
       ...dates,
       ...detail,
     }),
@@ -672,26 +702,14 @@ export const SHARED_TOOLS: SharedTool[] = [
         {
           site: await surface.resolveSite(input.site),
           dimensions: input.dimensions,
-          filters: [
-            ...(input.page
-              ? [
-                  {
-                    dimension: 'page' as const,
-                    operator: 'contains' as const,
-                    expression: input.page,
-                  },
-                ]
-              : []),
-            ...(input.query
-              ? [
-                  {
-                    dimension: 'query' as const,
-                    operator: 'contains' as const,
-                    expression: input.query,
-                  },
-                ]
-              : []),
-          ],
+          filters: rowTextFilters({
+            page: input.page,
+            query: input.query,
+            pageRegex: input.page_regex,
+            queryRegex: input.query_regex,
+            queryPreset: input.query_preset,
+            excludeQueryRegex: input.exclude_query_regex,
+          }),
           startDate: input.start_date,
           endDate: input.end_date,
           detail: input.detail,

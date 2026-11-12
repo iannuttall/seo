@@ -1,4 +1,5 @@
 import { collapseFragmentPageRows } from '../analyze/page-fragments.js'
+import { SeoError } from '../errors.js'
 import type { SearchAnalyticsRequest } from '../gsc/client/types.js'
 import type { Detail } from './present.js'
 import { table } from './present.js'
@@ -94,6 +95,67 @@ export type RowFilter = {
     | 'includingRegex'
     | 'excludingRegex'
   expression: string
+}
+
+// Search Console takes RE2 expressions of at most 4,096 characters.
+export const REGEX_MAX_CHARS = 4096
+
+// Named query filters for AI search analysis, so agents pass a word, not a
+// pattern. Long tail is 8 words or more.
+export const QUERY_PRESETS = {
+  questions: '^(who|what|where|when|why|how|is|are|can|does|do|should)\\b',
+  long_tail: '^(\\S+\\s+){7,}\\S+$',
+  comparisons: '\\b(vs|versus|alternatives?)\\b',
+} as const
+
+export type QueryPreset = keyof typeof QUERY_PRESETS
+export const QUERY_PRESET_NAMES = Object.keys(QUERY_PRESETS) as QueryPreset[]
+
+export type RowTextFilters = {
+  page?: string
+  query?: string
+  queryPreset?: QueryPreset
+  pageRegex?: string
+  queryRegex?: string
+  excludeQueryRegex?: string
+}
+
+// The page and query text filters shared by the CLI and the MCP tool.
+export function rowTextFilters(input: RowTextFilters): RowFilter[] {
+  const filters: [RowFilter['dimension'], RowFilter['operator'], string?][] = [
+    ['page', 'contains', input.page],
+    ['query', 'contains', input.query],
+    ['page', 'includingRegex', input.pageRegex],
+    ['query', 'includingRegex', input.queryRegex],
+    [
+      'query',
+      'includingRegex',
+      input.queryPreset && QUERY_PRESETS[input.queryPreset],
+    ],
+    ['query', 'excludingRegex', input.excludeQueryRegex],
+  ]
+  return filters.flatMap(([dimension, operator, expression]) => {
+    if (!expression) return []
+    if (operator !== 'contains') checkRegex(expression)
+    return [{ dimension, operator, expression }]
+  })
+}
+
+// Search Console answers an expression it can't read with no rows, which
+// looks like a real zero, so reject what RE2 lacks before asking.
+function checkRegex(expression: string) {
+  if (expression.length > REGEX_MAX_CHARS) {
+    throw new SeoError(
+      'INVALID_INPUT',
+      `Search Console takes regular expressions of at most ${REGEX_MAX_CHARS} characters.`,
+    )
+  }
+  if (/\(\?<?[=!]|\\[1-9]/.test(expression)) {
+    throw new SeoError(
+      'INVALID_INPUT',
+      `Search Console uses RE2, which has no lookarounds such as (?=...) or (?!...) and no backreferences such as \\1. Use an exclude filter instead of a negative lookahead: ${expression}`,
+    )
+  }
 }
 
 export type RowsInput = DateInput & {

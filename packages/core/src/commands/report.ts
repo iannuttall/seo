@@ -1,5 +1,6 @@
 import { aiQueriesReport } from '../analyze/ai-queries.js'
 import { ctrUnderperformersReportWith } from '../analyze/ctr-underperformers-report.js'
+import { queryShape, queryShapeLine } from '../analyze/query-shape.js'
 import { secondPageWith } from '../analyze/second-page-report.js'
 import { cannibalReportWith } from '../analyze/site-diagnostics/cannibal-report.js'
 import { decayingReportWith } from '../analyze/site-diagnostics/decaying-report.js'
@@ -386,6 +387,41 @@ async function bingLead(
   }
 }
 
+// Sections whose query rows get a shape label (question, comparison or an AI
+// query kind) and a line counting them, so agents see which opportunities
+// are questions or comparisons without filtering for them.
+const SHAPED = new Set<SectionId>([
+  'quick-wins',
+  'low-ctr',
+  'striking-distance',
+  'second-page',
+  'ai-queries',
+])
+
+function labelShapes(report: Record<string, unknown>, count: boolean): void {
+  const queries: string[] = []
+  const visit = (value: unknown, depth: number) => {
+    if (depth > 3 || !value || typeof value !== 'object') return
+    if (Array.isArray(value)) {
+      for (const item of value) visit(item, depth + 1)
+      return
+    }
+    const row = value as Record<string, unknown>
+    if (typeof row.query === 'string') {
+      queries.push(row.query)
+      const shape = queryShape(row.query)
+      if (shape) row.shape = shape
+    }
+    for (const [key, child] of Object.entries(row)) {
+      if (Array.isArray(child) && key !== 'caveats') visit(child, depth + 1)
+    }
+  }
+  visit(report.items, 0)
+  // ai-queries already counts its kinds in its summary.
+  const line = count && queryShapeLine(queries)
+  if (line) report.queryShapes = line
+}
+
 // One way to run each section: brand terms, minimums and the comparison
 // period are automatic and shown in the output.
 async function build(
@@ -455,7 +491,9 @@ async function build(
     'ai-queries': () => aiQueriesReport({ site, ...range }, read),
     bing: async () => bingSection(await bing(), read, site, range),
   }[section]
-  return factsOnly(await run()) as Record<string, unknown>
+  const report = factsOnly(await run()) as Record<string, unknown>
+  if (SHAPED.has(section)) labelShapes(report, section !== 'ai-queries')
+  return report
 }
 
 function brandNote(report: Record<string, unknown>): string | null {
@@ -622,6 +660,7 @@ async function allSections(
       [
         `## ${id}: ${shown.total} ${shown.total === 1 ? 'row' : 'rows'}`,
         SECTIONS[id],
+        typeof run.queryShapes === 'string' ? run.queryShapes : null,
         shown.text,
         id === 'traffic-drop'
           ? listOfUpdates(run.googleUpdates, run.updateWindow)
@@ -751,6 +790,7 @@ async function oneSection(
     report.pageChecks = checked
   }
   const notes: string[] = money ? [money] : []
+  if (typeof report.queryShapes === 'string') notes.push(report.queryShapes)
   const brand = brandNote(report)
   if (brand) notes.push(brand)
   const updates = listOfUpdates(report.googleUpdates, report.updateWindow)

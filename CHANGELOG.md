@@ -1,5 +1,24 @@
 # Changelog
 
+## 0.17.8
+
+### Added
+
+- `seo report` labels each query in `quick-wins`, `low-ctr`,
+  `striking-distance`, `second-page` and `ai-queries` with its shape when
+  one fits: `question`, `comparison` or an AI query kind such as
+  `follow_up`, `chat` or `long`. Each section except `ai-queries` adds a
+  line counting them. `seo page` labels a page's queries the same way, and
+  `ai_answers` rows carry the shape of their question.
+
+### Removed
+
+- `seo data --query-preset` and `query_preset` on `seo_data`. The report
+  now finds questions, comparisons and AI-style queries on its own, using
+  the same definitions as `ai-queries`, `ai_answers` and content
+  optimization. `--query-regex`, `--exclude-query-regex` and
+  `--page-regex` stay for custom cuts.
+
 ## 0.17.7
 
 ### Added

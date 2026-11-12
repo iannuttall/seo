@@ -8,6 +8,7 @@ import LandingHero from '@/components/LandingHero.astro'
 import SectionHeading from '@/components/SectionHeading.astro'
 import SplitList from '@/components/SplitList.astro'
 import { integrationIcon } from '@/content/integration-icons'
+import { pairPages } from '@/content/integration-pairs'
 import { type Client, type Source, clients, hostedSources } from '@/content/integrations'
 import BaseLayout from '@/layouts/BaseLayout.astro'
 import type { SchemaBreadcrumb } from '@/lib/schema'
@@ -32,8 +33,9 @@ const breadcrumbs: SchemaBreadcrumb[] = [
   { label: source.name, href: `/integrations/${source.id}` },
   { label: client.name },
 ]
-const description = `Connect ${source.name} to ${client.name} with the free SEO Skill MCP server. ${source.card} Setup steps and prompts to try.`
-const lead = `Ask ${client.name} about your ${source.name} data in plain words. Add one server, sign in with Google, and it reads your own numbers on each request.`
+const pair = pairPages[`${source.id}/${client.id}`]
+const description = pair?.description ?? `Connect ${source.name} to ${client.name} with the free SEO Skill MCP server. ${source.card} Setup steps and prompts to try.`
+const lead = pair?.lead ?? `Ask ${client.name} about your ${source.name} data in plain words. Add one server, sign in with Google, and it reads your own numbers on each request.`
 
 // The key step goes after the client's own steps for research sources.
 const keyStep =
@@ -48,6 +50,7 @@ const headerStep = source.headers && client.withHeader ? client.withHeader(sourc
 const steps = [...client.steps, ...(keyStep ? [keyStep] : []), ...(headerStep ? [headerStep] : [])]
 
 const faq = [
+  ...(pair?.faq ?? []),
   {
     question: `Is the ${source.name} MCP free in ${client.name}?`,
     answer:
@@ -81,7 +84,7 @@ const otherSources = hostedSources.filter((item) => item.id !== source.id)
         id="prompts-heading"
         title={`Prompts to try in ${client.name}`}
         text={`Ask in plain words and your agent picks the tool. ${source.limit}`}
-        items={source.asks.map((ask) => ({ title: ask.question, text: ask.answer }))}
+        items={(pair?.asks ?? source.asks).map((ask) => ({ title: ask.question, text: ask.answer }))}
       >
         {featureLink ? (
           <p class="mt-4 text-base leading-7 text-foreground-muted">
@@ -89,6 +92,21 @@ const otherSources = hostedSources.filter((item) => item.id !== source.id)
           </p>
         ) : null}
       </SplitList>
+
+      {pair?.sections.map((section, index) => (
+        <section class="site-frame" aria-labelledby={`pair-section-${index}`}>
+          <div class="max-w-2xl">
+            <h2 id={`pair-section-${index}`} class="text-pretty text-2xl font-medium -tracking-[0.4px] text-foreground xl:text-3xl xl:-tracking-[0.6px]">
+              {section.title}
+            </h2>
+            {section.paragraphs.map((paragraph) => (
+              <p class="mt-4 text-base leading-7 text-foreground-muted">
+                {paragraph.split('`').map((part, i) => (i % 2 ? <code>{part}</code> : part))}
+              </p>
+            ))}
+          </div>
+        </section>
+      ))}
 
       <section class="site-frame" aria-labelledby="clients-heading">
         <SectionHeading id="clients-heading" title={`${source.name} in other AI clients`} text="The same server and sign-in, with each client's own setup steps." />

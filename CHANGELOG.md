@@ -1,5 +1,18 @@
 # Changelog
 
+## 0.17.7
+
+### Added
+
+- `seo data --query-preset` (and `query_preset` on the `seo_data` MCP
+  tool) keeps only `questions`, `long_tail` queries of 8 words or more, or
+  `comparisons`, the queries AI search and AI Mode leave in Search Console.
+- `seo data --query-regex`, `--exclude-query-regex` and `--page-regex`
+  (`query_regex`, `exclude_query_regex` and `page_regex` in MCP) filter
+  rows with Search Console's regular expressions. Lookarounds,
+  backreferences and expressions over 4,096 characters are rejected with
+  an error instead of returning an empty result.
+
 ## 0.17.6
 
 ### Fixed

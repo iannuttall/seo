@@ -67,14 +67,11 @@ rich results and for making clear who you are.
 
 ## AI agents are a growing way people search, as Ian's opinion
 
-Search still sends far more visits than AI today. Present the shift to
-agents as real and growing, and the timeline as Ian's view, not a finding.
-Never present the fall in visits per person (SparkToro and Similarweb) as
-proof that AI caused it.
-
-- Open: posts disagree on the timeline. aeo-vs-seo says "within the next
-  two to three years"; the later posts say "within about five years". Ian
-  to decide, then align every post.
+Search still sends far more visits than AI today. Ian expects AI agents to
+do most of the informational searching SEO has targeted within the next two
+to three years. Present the shift as real and growing, and the timeline as
+his view, not a finding. Never present the fall in visits per person
+(SparkToro and Similarweb) as proof that AI caused it.
 - Posts: aeo-vs-seo, search-ctr-by-position, indexnow, keyword-clustering,
   unlinked-brand-mentions, bing-long-tail, ai-mode-follow-up-questions.
 

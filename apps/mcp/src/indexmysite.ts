@@ -267,5 +267,9 @@ export function hostedSubmitAccess(env: Env, userId: string): SubmitAccess {
         ? 'Index My Site is connected to this seoskill.dev account.'
         : connect,
     indexMySiteConnect: connect,
+    // IndexNow answers this server's network with 429 on a site's first
+    // send, where the same URLs from elsewhere get 202.
+    indexNowBlocked:
+      "IndexNow limits requests from this server's network (Cloudflare), so the hosted server can't send to it",
   }
 }

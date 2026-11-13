@@ -68,6 +68,9 @@ export type SubmitAccess = {
   indexMySiteConnect: string
   // Fetch for the key file check and IndexNow, where a surface sets one.
   fetch?: typeof fetch
+  // Why this surface can't send to IndexNow, when it can't. The key steps
+  // still work, and sending points to the CLI or Index My Site's Bing.
+  indexNowBlocked?: string
 }
 
 const n = (value: number) => value.toLocaleString('en-US')
@@ -202,7 +205,11 @@ async function indexNowKey(
   if (key !== saved) await submit.saveIndexNowKey(host, key)
   const check = await checkKeyFile(host, key, submit.fetch)
   const text = check.live
-    ? `IndexNow key for ${host} is live: ${check.url} returns the key. Send pages with ${call('submit', { action: 'indexnow' })}.`
+    ? `IndexNow key for ${host} is live: ${check.url} returns the key. ${
+        submit.indexNowBlocked
+          ? sendElsewhere(submit.indexNowBlocked, [], call)
+          : `Send pages with ${call('submit', { action: 'indexnow' })}.`
+      }`
     : `IndexNow key for ${host}: ${key}${saved && key === saved ? ' (saved earlier)' : ' (saved now)'}. Not live yet: ${check.url} ${check.problem}.\n${setupSteps(host, key, call)}`
   return {
     text,
@@ -217,6 +224,16 @@ async function indexNowKey(
       problem: check.problem,
     },
   }
+}
+
+// Where to send pages to IndexNow from a surface that can't.
+function sendElsewhere(reason: string, urls: string[], call: Caller): string {
+  const cli = !urls.length
+    ? 'seo submit <url...>'
+    : urls.length <= 3
+      ? `seo submit ${urls.join(' ')}`
+      : `seo submit --file urls.txt, with the ${n(urls.length)} URLs one per line`
+  return `${reason}. Send pages to IndexNow from your own machine with the seo CLI, free: ${cli}. Or send them with Index My Site's Bing option, which reaches Google and Bing for 2 credits a URL: ${call('submit', { action: 'indexmysite', bing: 'true' })}.`
 }
 
 async function indexNow(
@@ -256,6 +273,12 @@ async function indexNow(
   }
   if (given && given !== (await submit.indexNowKey(host))) {
     await submit.saveIndexNowKey(host, given)
+  }
+  if (submit.indexNowBlocked) {
+    throw new CommandError(
+      'NO_ACCESS',
+      `Nothing was sent. ${sendElsewhere(submit.indexNowBlocked, urls, call)}`,
+    )
   }
   const result = await submitIndexNow({ host, key, urls }, submit.fetch)
   if (!result.ok) {

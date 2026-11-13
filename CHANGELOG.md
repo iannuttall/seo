@@ -1,5 +1,14 @@
 # Changelog
 
+## Unreleased
+
+### Changed
+
+- The hosted MCP no longer sends pages to IndexNow, which limits requests
+  from Cloudflare's network. `seo_submit` with `indexnow` there checks the
+  key file, then points to `seo submit` in the CLI or Index My Site's Bing
+  option. The CLI and local MCP send as before.
+
 ## 0.20.0
 
 ### Added

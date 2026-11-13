@@ -97,6 +97,8 @@ Both MCP servers have a `seo_submit` tool with these actions:
 
 The agent shows you the cost before it confirms. On the hosted MCP, connect Index My Site on your [account page](https://seoskill.dev/account#indexmysite).
 
+The hosted MCP makes and checks IndexNow keys but doesn't send pages to IndexNow, because IndexNow limits requests from its network. Send them with `seo submit` on your own machine, or with Index My Site's Bing option, which reaches Google and Bing.
+
 ## Where seo submit comes up
 
 [`seo index`](/docs/indexing) and [`seo page`](/docs/page) suggest it only for pages that return 200 with no redirect but that Google hasn't indexed ("Crawled - currently not indexed", "Discovered - currently not indexed" or "URL is unknown to Google"). Pages labelled fix come first: submitting a redirect or a noindex page doesn't help.

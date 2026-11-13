@@ -23,6 +23,12 @@
   the share of Google's impressions in queries it hides, and the pages one
   engine shows that the other does not. The ratio of the two query counts
   is labelled a heuristic.
+- `seo research ai_answers` lists the web searches ChatGPT ran for each
+  answer, and the notes rank the most common across the answers. Pass
+  your own questions in `--keywords` to see the searches for any question.
+  "none returned" means ChatGPT answered without searching; Google AI Mode
+  and AI Overviews don't report their searches, so their rows say "not
+  available".
 - Brand terms also count short misspellings of the domain name that the
   site answers like its own name.
 

@@ -3,6 +3,8 @@ import { render } from 'astro:content'
 import Breadcrumbs from '@/components/Breadcrumbs.astro'
 import FounderBadge from '@/components/FounderBadge.astro'
 import PageHeader from '@/components/PageHeader.astro'
+import SetupCommands from '@/components/SetupCommands.astro'
+import { getButtonClasses } from '@/components/ui/button'
 import { blogMdxComponents } from '@/components/blog/mdx'
 import BaseLayout from '@/layouts/BaseLayout.astro'
 import { isPostLive } from '@/content/blog-posts.mjs'
@@ -75,6 +77,16 @@ const breadcrumbs: SchemaBreadcrumb[] = [
     <article class="docs-prose min-w-0">
       <Content components={blogMdxComponents} />
     </article>
+    <section class="mt-20 text-center" aria-labelledby="post-cta-heading" data-agent-markdown="exclude">
+      <h2 id="post-cta-heading" class="text-pretty text-2xl/tight font-medium -tracking-[0.4px]">
+        Run this on your own site with SEO Skill
+      </h2>
+      <p class="mx-auto mt-3 max-w-xl text-pretty text-base/7 text-foreground-muted">
+        Give your AI agent your real Search Console, Google Analytics and Bing data, so its answers about search come from your own numbers instead of a guess.
+      </p>
+      <a class:list={[getButtonClasses('default', 'lg'), 'mt-6']} href="/account">Get started free</a>
+      <SetupCommands id="post-setup" class="mt-8 text-left" />
+    </section>
   </main>
 </BaseLayout>
 

@@ -32,7 +32,7 @@ export type PageExtractor = (
   extractor?: ContentExtractor,
 ) => Promise<ExtractedPage>
 
-const STOPWORDS = new Set([
+export const STOPWORDS = new Set([
   'a',
   'an',
   'and',

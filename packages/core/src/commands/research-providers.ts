@@ -1,6 +1,10 @@
 import { readJson } from '../http/read-json.js'
 import { ahrefs } from './research-ahrefs.js'
-import { type AiOverview, dataForSeoSerp } from './research-serp.js'
+import {
+  type AiOverview,
+  dataForSeoSerp,
+  type PeopleAlsoAsk,
+} from './research-serp.js'
 import { CommandError } from './types.js'
 
 // Keyword, competitor and backlink data from the person's own DataForSEO,
@@ -9,7 +13,7 @@ import { CommandError } from './types.js'
 // used for this one call only. Each function returns plain rows with the provider's own metric
 // names, so numbers from different providers are never mixed.
 
-export type { AiOverview } from './research-serp.js'
+export type { AiOverview, PeopleAlsoAsk } from './research-serp.js'
 
 export type ResearchProvider = 'dataforseo' | 'ahrefs'
 export type ResearchAction =
@@ -49,6 +53,9 @@ export type ResearchInput = {
   noRank?: boolean
   // serp from DataForSEO: desktop (default) or mobile.
   device?: ResearchDevice
+  // serp from DataForSEO: how many People Also Ask questions to open for
+  // more questions, 0 (default) to 4. Each one opened costs a little more.
+  peopleAlsoAskDepth?: number
   // link_gap only: the sites to compare the target with.
   competitors?: string[]
   country: string
@@ -196,6 +203,9 @@ export type ResearchRows = {
   // serp from DataForSEO: each keyword whose page showed an AI Overview,
   // with the pages it cites.
   aiOverviews?: AiOverview[]
+  // serp from DataForSEO: each keyword whose page showed People Also Ask,
+  // with its questions.
+  peopleAlsoAsk?: PeopleAlsoAsk[]
   // serp from an installed provider package: its own quality warnings.
   warnings?: string[]
 }
@@ -518,6 +528,7 @@ async function dataForSeo(
     ...(spent.available !== undefined ? { available: spent.available } : {}),
     ...(spent.siteTotal ? { siteTotal: spent.siteTotal } : {}),
     ...(spent.aiOverviews ? { aiOverviews: spent.aiOverviews } : {}),
+    ...(spent.peopleAlsoAsk ? { peopleAlsoAsk: spent.peopleAlsoAsk } : {}),
     ...(spent.rankFailed ? { rankFailed: true } : {}),
   }
 }
@@ -563,6 +574,7 @@ type Spent = {
   // serp: the domain_rank call failed.
   rankFailed?: boolean
   aiOverviews?: AiOverview[]
+  peopleAlsoAsk?: PeopleAlsoAsk[]
 }
 
 async function dataForSeoRows(
@@ -722,12 +734,22 @@ async function dataForSeoRows(
             keyword,
             depth: serpDepth(input),
             device: input.device ?? 'desktop',
+            ...(input.peopleAlsoAskDepth
+              ? {
+                  people_also_ask_click_depth: Math.min(
+                    4,
+                    Math.max(1, Math.round(input.peopleAlsoAskDepth)),
+                  ),
+                }
+              : {}),
           },
           2,
         )
-        const { rows, overview } = dataForSeoSerp(keyword, items)
+        const { rows, overview, questions } = dataForSeoSerp(keyword, items)
         if (overview)
           spent.aiOverviews = [...(spent.aiOverviews ?? []), overview]
+        if (questions)
+          spent.peopleAlsoAsk = [...(spent.peopleAlsoAsk ?? []), questions]
         return rows
       },
     )

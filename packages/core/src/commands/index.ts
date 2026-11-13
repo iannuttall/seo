@@ -34,7 +34,10 @@ export {
   dataForSeoList,
   dataForSeoMarket,
   dataForSeoTask,
+  type PeopleAlsoAsk,
+  research,
 } from './research-providers.js'
+export { dataForSeoSerp, GOTO } from './research-serp.js'
 export * from './rows.js'
 export * from './shared.js'
 export * from './simple-analytics.js'
@@ -42,6 +45,7 @@ export * from './site.js'
 export * from './sitemap-urls.js'
 export * from './sites.js'
 export * from './telemetry-report.js'
+export * from './title-words.js'
 export * from './tools.js'
 export * from './types.js'
 export * from './updates.js'

@@ -13,6 +13,21 @@ export type AiOverview = {
   }[]
 }
 
+// The People Also Ask questions on a results page, in page order. Google
+// now answers most of them with its own AI text (aiAnswer true, no page);
+// when a page answers one, its url, domain and title are kept, url null
+// behind a Google redirect link.
+export type PeopleAlsoAsk = {
+  keyword: string
+  questions: {
+    question: string
+    aiAnswer: boolean
+    url: string | null
+    domain: string | null
+    title: string | null
+  }[]
+}
+
 // Google's redirect links, which DataForSEO often leaves unresolved.
 export const GOTO = /^https?:\/\/(www\.)?google\.[a-z.]+\/goto\b/
 
@@ -35,7 +50,40 @@ const text = (value: unknown) =>
 export function dataForSeoSerp(
   keyword: string,
   items: Record<string, unknown>[],
-): { rows: Row[]; overview: AiOverview | null } {
+): {
+  rows: Row[]
+  overview: AiOverview | null
+  questions: PeopleAlsoAsk | null
+} {
+  const asked = new Map<string, PeopleAlsoAsk['questions'][number]>()
+  for (const block of items) {
+    if (block.type !== 'people_also_ask') continue
+    for (const element of (block.items as Record<string, unknown>[]) ?? []) {
+      const question = text(element.title)
+      if (!question || asked.has(question.toLowerCase())) continue
+      const answer = (
+        element.expanded_element as Record<string, unknown>[] | undefined
+      )?.[0]
+      const page = answer?.type === 'people_also_ask_expanded_element'
+      const url = page ? String(answer?.url ?? '') : ''
+      const goto = GOTO.test(url)
+      asked.set(question.toLowerCase(), {
+        question,
+        aiAnswer:
+          answer?.type === 'people_also_ask_ai_overview_expanded_element',
+        url: page && url && !goto ? url : null,
+        domain: page
+          ? goto
+            ? null
+            : (text(answer?.domain) ?? (hostOf(url) || null))
+          : null,
+        title: page ? text(answer?.title) : null,
+      })
+    }
+  }
+  const questions = asked.size
+    ? { keyword, questions: [...asked.values()].slice(0, 20) }
+    : null
   const found = items.find((item) => item.type === 'ai_overview')
   const overview = found
     ? {
@@ -81,5 +129,5 @@ export function dataForSeoSerp(
       }
       return row
     })
-  return { rows, overview }
+  return { rows, overview, questions }
 }

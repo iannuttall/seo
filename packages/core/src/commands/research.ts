@@ -21,6 +21,7 @@ import {
 import {
   type AiOverview,
   dataForSeoLanguage,
+  type PeopleAlsoAsk,
   type ResearchAction,
   type ResearchDevice,
   type ResearchProvider,
@@ -66,7 +67,7 @@ export const RESEARCH_PROVIDERS = [
   'ahrefs',
 ] as const satisfies readonly ResearchProvider[]
 
-export const RESEARCH_HELP = `provider is optional: without it the call uses the saved key, DataForSEO when both are saved. In the CLI and the local MCP server, serp can also use a provider package installed on this machine that supplies live search results: pass its id as provider. The target is a domain (the whole site), a path ending in / such as example.com/blog/ (every URL under it), or one page; scope overrides that. keyword_metrics (keywords: volume, difficulty, CPC), keyword_ideas (up to 5 seed keywords: searches that contain each seed, by volume), ranked_keywords (target: keywords a site, subfolder or page ranks for, with the provider's traffic total for the whole target), top_pages (target: the pages with the most estimated organic traffic), serp (keywords, up to 5: the ranking pages with their organic position beside DataForSEO's rank_absolute, which also counts AI Overviews and other blocks, plus the AI Overview's sources; device desktop or mobile, DataForSEO only; each with its domain's authority: DataForSEO domain_rank 0 to 100, Ahrefs domain_rating; depth sets results per keyword, default ${SERP_DEPTH}; rows run position by position across the keywords), index_check (DataForSEO only; target: one page URL; keywords: up to ${INDEX_CHECK_PHRASES} exact phrases from the page, default its H1 or title. Searches Google for site:<url> and each "<phrase>" on desktop and mobile, retries failed searches, treats Google's fallback to unrelated sites as no match, and says indexed, not found or unknown with each search's evidence; about $0.01 a page), serp_overlap (2 to 10 keywords: for each pair, how many of their top 10 pages and sites are the same, to decide one page or several; results without a real page are counted, not compared), competitors (target: domains that share keywords), backlinks (target: referring domains), pages_by_backlinks (target: the pages with the most referring domains), link_gap (target and 2 to 5 competitors: referring domains that link to two or more competitors and not the target, highest authority first, from each site's top 1,000 referring domains; costs one backlinks call per site), ai_answers (DataForSEO only; target: the site. Without keywords it takes the site’s top ${AI_ANSWER_QUESTIONS} chat-style and long questions from Search Console’s AI-shaped queries itself. With up to ${AI_ANSWER_QUESTIONS} questions in keywords it asks those instead, and the target can be any domain, such as a competitor's. Each answer row also lists the other sites it cites, and the notes rank them. Answers come from DataForSEO's queue: answers not ready after about 40 seconds are returned as tasks, already paid for; call again with the same target and those tasks to read them at no cost. It asks ChatGPT search, Google AI Mode and Google AI Overviews each one and says whether the answer cites or mentions the site. DataForSEO’s queue prices are about $0.0072 a question across the three engines, so about $0.07 a run: tell the person before running it). Rows with a domain, and the target, get a free Ahrefs domain_rating column. Numbers are provider estimates, not Search Console data.`
+export const RESEARCH_HELP = `provider is optional: without it the call uses the saved key, DataForSEO when both are saved. In the CLI and the local MCP server, serp can also use a provider package installed on this machine that supplies live search results: pass its id as provider. The target is a domain (the whole site), a path ending in / such as example.com/blog/ (every URL under it), or one page; scope overrides that. keyword_metrics (keywords: volume, difficulty, CPC), keyword_ideas (up to 5 seed keywords: searches that contain each seed, by volume), ranked_keywords (target: keywords a site, subfolder or page ranks for, with the provider's traffic total for the whole target), top_pages (target: the pages with the most estimated organic traffic), serp (keywords, up to 5: the ranking pages with their organic position beside DataForSEO's rank_absolute, which also counts AI Overviews and other blocks, plus the AI Overview's sources and the People Also Ask questions; device desktop or mobile, DataForSEO only; each with its domain's authority: DataForSEO domain_rank 0 to 100, Ahrefs domain_rating; depth sets results per keyword, default ${SERP_DEPTH}; rows run position by position across the keywords), index_check (DataForSEO only; target: one page URL; keywords: up to ${INDEX_CHECK_PHRASES} exact phrases from the page, default its H1 or title. Searches Google for site:<url> and each "<phrase>" on desktop and mobile, retries failed searches, treats Google's fallback to unrelated sites as no match, and says indexed, not found or unknown with each search's evidence; about $0.01 a page), serp_overlap (2 to 10 keywords: for each pair, how many of their top 10 pages and sites are the same, to decide one page or several; results without a real page are counted, not compared), competitors (target: domains that share keywords), backlinks (target: referring domains), pages_by_backlinks (target: the pages with the most referring domains), link_gap (target and 2 to 5 competitors: referring domains that link to two or more competitors and not the target, highest authority first, from each site's top 1,000 referring domains; costs one backlinks call per site), ai_answers (DataForSEO only; target: the site. Without keywords it takes the site’s top ${AI_ANSWER_QUESTIONS} chat-style and long questions from Search Console’s AI-shaped queries itself. With up to ${AI_ANSWER_QUESTIONS} questions in keywords it asks those instead, and the target can be any domain, such as a competitor's. Each answer row also lists the other sites it cites, and the notes rank them. Answers come from DataForSEO's queue: answers not ready after about 40 seconds are returned as tasks, already paid for; call again with the same target and those tasks to read them at no cost. It asks ChatGPT search, Google AI Mode and Google AI Overviews each one and says whether the answer cites or mentions the site. DataForSEO’s queue prices are about $0.0072 a question across the three engines, so about $0.07 a run: tell the person before running it). Rows with a domain, and the target, get a free Ahrefs domain_rating column. Numbers are provider estimates, not Search Console data.`
 
 // Platforms that share keywords with almost every site. Competitor lists
 // leave them out, with the target itself, and say how many rows went.
@@ -166,6 +167,9 @@ export type ResearchInput = {
   depth?: number
   // serp only: desktop (default) or mobile results.
   device?: ResearchDevice
+  // serp from DataForSEO only: People Also Ask questions to open for more
+  // questions, 0 (default) to 4.
+  peopleAlsoAskDepth?: number
   // dataforseo, ahrefs, or for serp the id of an installed provider package.
   provider?: string
   scope?: ResearchScope
@@ -254,6 +258,10 @@ export async function runResearch(
     // Desktop keeps the earlier cache key, so saved desktop results still
     // read back.
     ...(device === 'mobile' ? { device } : {}),
+    // Unset keeps the earlier cache key too.
+    ...(input.action === 'serp' && input.peopleAlsoAskDepth
+      ? { peopleAlsoAskDepth: input.peopleAlsoAskDepth }
+      : {}),
   }
   const store = options.store ?? workersResearchStore()
   // A live results page does not depend on whose package account asked, so
@@ -290,6 +298,7 @@ export async function runResearch(
     rankFailed,
     compared,
     aiOverviews,
+    peopleAlsoAsk,
     warnings,
   } = result
   // A saved result costs nothing now; its first cost is in the note.
@@ -363,6 +372,9 @@ export async function runResearch(
           : input.action === 'serp' && provider === 'dataforseo' && rows.length
             ? ['No AI Overview on these results pages.']
             : []),
+        ...(peopleAlsoAsk?.length
+          ? [peopleAlsoAskNote(peopleAlsoAsk, request.keywords.length)]
+          : []),
         ...(perKeyword
           ? [
               `Results per keyword: ${Object.entries(perKeyword)
@@ -463,7 +475,10 @@ export async function runResearch(
       language,
       ...(device ? { device: provider === 'dataforseo' ? device : null } : {}),
       ...(input.action === 'serp' && provider === 'dataforseo'
-        ? { aiOverviews: aiOverviews ?? [] }
+        ? {
+            aiOverviews: aiOverviews ?? [],
+            peopleAlsoAsk: peopleAlsoAsk ?? [],
+          }
         : {}),
       targetDomainRating: hasTargetDr ? targetDr : null,
       attribution: rated.added || hasTargetDr ? DR_ATTRIBUTION : null,
@@ -504,6 +519,14 @@ function positionNote(provider: string): string {
 }
 
 // Which keywords showed an AI Overview and the sites it cites first.
+function peopleAlsoAskNote(asked: PeopleAlsoAsk[], keywords: number): string {
+  const each = asked.map(
+    (block) =>
+      `${block.keyword}: ${block.questions.map((item) => item.question).join(' | ')}`,
+  )
+  return `People Also Ask shown for ${asked.length} of ${keywords} keyword${keywords === 1 ? '' : 's'}. ${each.join('; ')}. Google answers most of these with its own AI text, not a page; the answering page, when there is one, is in the JSON as peopleAlsoAsk.`
+}
+
 function aiOverviewNote(overviews: AiOverview[], keywords: number): string {
   const each = overviews.map((overview) => {
     const sites = [

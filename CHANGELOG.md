@@ -1,5 +1,28 @@
 # Changelog
 
+## 0.19.0
+
+### Added
+
+- `seo research mentions --target <domain>` finds pages on other sites
+  that name the domain, one page per site, from DataForSEO's content index,
+  and checks DataForSEO's backlink index for which of those sites already
+  link to it. `--brand` adds up to 3 brand names to search for. Pages that
+  name the domain come first, then sites with no link found. A link
+  DataForSEO hasn't crawled shows as `not_found`, so check the page before
+  asking. About $0.03 a term plus one backlinks call, under $0.10 a run.
+  The same works through `seo_research` in both MCP servers.
+
+### Fixed
+
+- `seo research serp_overlap` compared no pages on DataForSEO, because
+  DataForSEO now returns organic results as Google redirect links. Those
+  results are now matched on Google's breadcrumb, the site and path shown
+  under the title. Shortened and site-only breadcrumbs aren't compared. The
+  notes say how many pages were matched by breadcrumb, and that one live
+  snapshot per keyword is weak evidence because live results change between
+  pulls.
+
 ## 0.18.1
 
 ### Fixed

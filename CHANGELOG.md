@@ -1,5 +1,31 @@
 # Changelog
 
+## 0.18.0
+
+### Added
+
+- The `ai-queries` section of `seo report` finds AI Mode follow-ups: a
+  query with a pronoun and nothing named, such as "how much is it" or "do
+  they ship to canada". It leaves out queries that name the site, using
+  brand terms found in the site's own Search Console data, and the "it" of
+  time, weather and identity questions such as "what day is it". Follow-ups
+  that reach one page on one day are joined into trails, with a line naming
+  the pages with the most. A heuristic: Search Console has no sessions and
+  hides rare queries, so the counts are floors.
+- `seo research keyword_metrics --target <site>` with no keywords finds
+  zero-volume keywords: the site's top queries by Search Console
+  impressions that the provider rates at zero or has no data on, with
+  their impressions, clicks, position and top page. One call of up to 700
+  queries on DataForSEO (about $0.10 at most) or 100 on Ahrefs. The same
+  works through `seo_research` in both MCP servers.
+- The `bing` section of `seo report` counts the distinct queries Search
+  Console and Bing each list for the same dates and how many they share,
+  the share of Google's impressions in queries it hides, and the pages one
+  engine shows that the other does not. The ratio of the two query counts
+  is labelled a heuristic.
+- Brand terms also count short misspellings of the domain name that the
+  site answers like its own name.
+
 ## 0.17.9
 
 ### Added

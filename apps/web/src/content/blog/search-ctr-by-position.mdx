@@ -55,17 +55,13 @@ So I'd treat a study's rates as a rough guide to how clicks fall away down the p
 
 SEO Skill works out those rates from your own Search Console data. For each position on page one, it takes the click-through rate of the better-performing pages on your site that rank there (the 75th percentile), leaving out the page being checked. Then it compares each query's click-through rate with your site's rate for its position.
 
-Ask your agent which queries get fewer clicks than they should for their position, or run the report sections yourself. The low CTR section checks queries in the top three:
+Start with the queries in the top three:
 
-```sh
-seo report --site example.com --section low-ctr
-```
+<AgentStep setup prompt="Which of my site's top three queries get fewer clicks than they should for their position?" cli="seo report --site example.com --section low-ctr" />
 
-The quick wins section uses the same rates for queries at positions 4 to 10, where a small ranking gain is worth the most:
+Then check positions 4 to 10, where a small ranking gain is worth the most. The quick wins section uses the same rates:
 
-```sh
-seo report --site example.com --section quick-wins
-```
+<AgentStep prompt="Which of my site's queries at positions 4 to 10 would gain the most clicks from a small ranking gain?" cli="seo report --site example.com --section quick-wins" />
 
 Both leave out brand queries, check each page live, and estimate the clicks each query is missing against your site's own rate. That estimate is for deciding what to fix first, not a traffic forecast. When a site doesn't have enough data to work out its own rates, the report says so and uses a built-in set of rates instead.
 

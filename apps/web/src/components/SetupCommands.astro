@@ -5,9 +5,10 @@ import { Copy01Icon, Tick02Icon } from '@hugeicons/core-free-icons'
 import HugeIcon from './HugeIcon.astro'
 import { setupCommands } from '@/lib/site'
 
-type Props = { class?: string; id?: string }
+// hostedOnly leaves out the CLI install, for places that show it themselves.
+type Props = { class?: string; id?: string; hostedOnly?: boolean }
 
-const { class: className, id = 'setup' } = Astro.props
+const { class: className, id = 'setup', hostedOnly = false } = Astro.props
 
 // Each token stays whole, so a command wraps only between words.
 const tokens = (command: string) =>
@@ -97,6 +98,7 @@ const clients = [
   }
   </div>
 
+  {!hostedOnly && (
   <div class="mt-6">
     <p class="text-sm font-medium text-foreground">Or run it on your machine</p>
     <button
@@ -115,6 +117,7 @@ const clients = [
     </button>
     <p class="mt-2 text-sm/6 text-foreground-muted">Installs the CLI, signs you in and adds the skill to your agents. Site crawls and Bing data run this way, on your own machine. A crawl fetches many pages, and Bing blocks our hosted server.</p>
   </div>
+  )}
 </div>
 
 <script>

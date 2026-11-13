@@ -7,6 +7,10 @@
 - `seo compare` shows Clicky visits before and after the date beside Search
   Console and Google Analytics, when a saved Clicky site has the site's
   domain: all visits, by traffic source, and from AI assistants.
+- The weekly site audit asks ChatGPT search, Google AI Mode and AI Overviews
+  the same 10 questions from the site's Search Console each week, on SEO
+  Skill's DataForSEO account. The weekly summary shows which answers started
+  or stopped citing the site and which sites they cite instead.
 
 ## 0.17.8
 

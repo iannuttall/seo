@@ -47,6 +47,9 @@ export type WeekSite = {
   // Competitor keywords first named this week that passed every gate, or
   // null before the first check (or when the check is off on this server).
   opportunities?: WeekOpportunities | null
+  // The latest weekly AI answer check, or null before the first one (or
+  // when the check is off on this server).
+  ai_answers?: WeekAiAnswers | null
   // Google ranking updates that ran during the week or whose result
   // became ready in it (Monday email only), each with the site's result
   // once final data covers it, else null.
@@ -95,6 +98,36 @@ export type WeekOpportunity = {
   // A decision model's yes probability that the keyword fits what the site
   // does (a classification, not a fact).
   relevance: number
+}
+
+// What AI answers said about the site for the same questions each week.
+export type WeekAiAnswers = {
+  // The latest check, and the one before it, or null.
+  checked_at: number | null
+  previous_checked_at: number | null
+  // Why the check could not run this week, as a sentence, or null.
+  blocked: string | null
+  // The questions asked every week, fixed at the first check that found
+  // any, so one week compares with the next.
+  questions: string[]
+  // The latest check's answers by result, across every question and
+  // engine (the results ai_answers gives).
+  counts: Record<
+    'cited' | 'mentioned' | 'neither' | 'no_answer' | 'unavailable' | 'pending',
+    number
+  >
+  // Answers whose result changed since the check before, when both
+  // results are known, citations first.
+  changes: {
+    question: string
+    engine: string
+    from: string
+    to: string
+    cited_url: string | null
+  }[]
+  // Other sites the latest answers cite most, by how many answers cite
+  // each.
+  cited_sites: { host: string; answers: number }[]
 }
 
 export type WeekData = {
@@ -400,6 +433,62 @@ function opportunityLines(site: WeekSite): string[] {
   ]
 }
 
+const ENGINE_NAMES: Record<string, string> = {
+  chatgpt: 'ChatGPT search',
+  google_ai_mode: 'Google AI Mode',
+  google_ai_overview: 'AI Overviews',
+}
+export const MAX_AI_CHANGES = 10
+
+// The AI answer line, the answers that changed since the check before and
+// the sites cited instead. Each answer is one sample, so a change is
+// reported as what the answer said, never as a trend.
+function aiAnswerLines(site: WeekSite): string[] {
+  const found = site.ai_answers
+  if (!found) return []
+  if (found.blocked) return [`- AI answers: ${sentence(found.blocked)}`]
+  if (!found.checked_at) return []
+  const day = (ms: number) => dayLabel(new Date(ms).toISOString().slice(0, 10))
+  const { counts } = found
+  const answers = Object.values(counts).reduce((sum, n) => sum + n, 0)
+  const unknown = [
+    counts.unavailable ? `${count(counts.unavailable)} unavailable` : '',
+    counts.pending ? `${count(counts.pending)} not ready yet` : '',
+  ].filter(Boolean)
+  const engines = list(Object.values(ENGINE_NAMES))
+  const lines = [
+    `- AI answers, checked ${day(found.checked_at)}: ${plural(found.questions.length, 'question')} from Search Console asked in ${engines}. Cited in ${count(counts.cited)} of ${plural(answers, 'answer')}, mentioned by name in ${count(counts.mentioned)}, neither in ${count(counts.neither)}, no AI answer shown in ${count(counts.no_answer)}${unknown.length ? `, ${list(unknown)}` : ''}.`,
+  ]
+  if (found.previous_checked_at) {
+    const shown = found.changes.slice(0, MAX_AI_CHANGES)
+    const label = (result: string) => result.replace('_', ' ')
+    lines.push(
+      shown.length
+        ? `  - Changed since ${day(found.previous_checked_at)}:`
+        : `  - No answer changed since ${day(found.previous_checked_at)}${counts.unavailable || counts.pending ? ' among the ones known both weeks' : ''}.`,
+      ...shown.map(
+        (change) =>
+          `    - "${change.question}" in ${ENGINE_NAMES[change.engine] ?? change.engine}: ${label(change.from)}, now ${label(change.to)}${change.cited_url ? ` (${change.cited_url})` : ''}.`,
+      ),
+      ...(found.changes.length > shown.length
+        ? [`    - And ${plural(found.changes.length - shown.length, 'more')}.`]
+        : []),
+    )
+  }
+  if (found.cited_sites.length) {
+    lines.push(
+      `  - Sites cited instead: ${found.cited_sites
+        .slice(0, 5)
+        .map((item) => `${item.host} (${item.answers})`)
+        .join(', ')}.`,
+    )
+  }
+  lines.push(
+    '  - Each answer is one sample that can change from run to run, so one week’s change is not a trend.',
+  )
+  return lines
+}
+
 // A site's measures whose days after the fix ended in the latest 7 days
 // of final Search Console data, so each one is in exactly one weekly
 // summary.
@@ -488,6 +577,7 @@ export function weekMarkdown(data: WeekData): string {
       '',
       ...siteLines(site, startMs, endMs, data.first).map((line) => `- ${line}`),
       ...opportunityLines(site),
+      ...aiAnswerLines(site),
       ...measuredLines(site),
       ...updateLines(site),
       ...(site.link ? [`- [View site](${site.link})`] : []),

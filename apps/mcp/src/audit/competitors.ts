@@ -271,9 +271,26 @@ function saveState(meter: Meter, fields: Partial<State>): void {
 
 export type GapSite = { user_id: string; property: string }
 
+// The site's market: the country with the most clicks in 28 days, as
+// Search Console's alpha-3 code and DataForSEO's alpha-2 code (null when
+// DataForSEO has no data for it).
+export async function topCountry(
+  search: ReturnType<Google['searchAnalytics']>,
+  property: string,
+): Promise<{ alpha3: string; country: string | null }> {
+  const countries = await search(property, {
+    ...dateWindow({}, 28),
+    dimensions: ['country'],
+    type: 'web',
+    maxRows: 1,
+  })
+  const alpha3 = countries.rows[0]?.keys[0]?.toLowerCase() ?? 'usa'
+  return { alpha3, country: ALPHA2.get(alpha3) ?? null }
+}
+
 // Whether this account's sites get the check: a paid plan, or the
 // maintainer's unlimited-sites flag. Free beta sites do not.
-async function included(env: Env, userId: string): Promise<boolean> {
+export async function included(env: Env, userId: string): Promise<boolean> {
   const row = await env.DB.prepare(
     `SELECT EXISTS (SELECT 1 FROM billing WHERE user_id = ?1 AND status IN ${ACTIVE_SQL})
        OR EXISTS (SELECT 1 FROM beta_flags WHERE user_id = ?1 AND flag = 'unlimited-sites') AS n`,
@@ -350,15 +367,7 @@ export async function runGapCheck(
   const domain = bareDomain(site.property)
   const range = dateWindow({}, 28)
   const search = google.searchAnalytics()
-  // The market: the country with the most clicks.
-  const countries = await search(site.property, {
-    ...range,
-    dimensions: ['country'],
-    type: 'web',
-    maxRows: 1,
-  })
-  const alpha3 = countries.rows[0]?.keys[0]?.toLowerCase() ?? 'usa'
-  const country = ALPHA2.get(alpha3)
+  const { alpha3, country } = await topCountry(search, site.property)
   const language = country ? dataForSeoLanguage(country) : null
   if (!country || !language) {
     return finish(

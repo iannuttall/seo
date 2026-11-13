@@ -1,6 +1,7 @@
 ---
 // What SEO Skill costs. Facts must match apps/mcp/README.md (Paid plan).
 import {
+  AiChat02Icon,
   Analytics01Icon,
   CheckListIcon,
   CommandLineIcon,
@@ -36,6 +37,7 @@ const paid = [
   { title: 'A weekly crawl that sees what Google sees', icon: WebDesign01Icon, text: 'Broken links, titles, canonicals, noindex and sitemap problems, with what is new, back or resolved since last week. Pages that need JavaScript are rendered in a real browser.' },
   { title: 'Daily Google index monitoring', icon: Globe02Icon, text: "Up to each property's full 2,000 URL Inspection checks a day, top pages first, so your agent answers index questions at once. Drops and returns come in one daily roundup." },
   { title: 'Competitor opportunities', icon: Target02Icon, text: 'Every week we check what your competitors rank for, on our own DataForSEO account. You only hear about a keyword or free tool idea that competitors prove, that is worth money and that looks winnable. Some weeks that is nothing (which is the point).' },
+  { title: 'AI answer tracking', icon: AiChat02Icon, text: 'Every week we ask ChatGPT search, Google AI Mode and AI Overviews the same 10 questions from your Search Console, on our own DataForSEO account. You see which answers started or stopped citing you, and which sites they cite instead.' },
   { title: 'A fix list your agent remembers', icon: CheckListIcon, text: 'What the crawl, index checks and Search Console reports find goes on one list per site. Your agent marks what it fixed, and 28 and 56 days later it sees the Search Console clicks for that page against the same days before.' },
   { title: 'Internal links on up to 5,000 pages', icon: Link04Icon, text: 'The internal linking tool reads up to 5,000 pages of an audited site, against 100 on the free plan.', href: '/tools/internal-linking-tool', link: 'Internal linking tool' },
   { title: 'Start with one site', icon: CreditCardIcon, text: 'Pick a site on your account page. Your first one opens Stripe Checkout, and you can add or remove sites and cancel any time.', href: '/account', link: 'Your account page' },
@@ -45,7 +47,7 @@ const faqs = [
   { question: 'Is SEO Skill really free?', answer: 'Yes. Every tool your agent calls on demand is free with no usage cap and no trial that ends. The weekly site audit is the only paid part, because it runs on our servers in the background.' },
   { question: 'How much does the weekly site audit cost?', answer: '$50 a month per site. A site is one Search Console property. There are no seats and no plan sizes to choose: the plan is the sites you audit.' },
   { question: 'What happens when I add or remove a site?', answer: 'Your first site opens Stripe Checkout. Each site after that raises the plan by one, charged for the rest of the month at once. Removing a site lowers the plan from the next bill.' },
-  { question: 'Do I pay for keyword data?', answer: "For your agent's own research, you pay DataForSEO or Ahrefs directly, on your own key. SEO Skill adds nothing on top, and without a key everything else still works. The weekly audit's competitor check runs on our account and is included in the $50." },
+  { question: 'Do I pay for keyword data?', answer: "For your agent's own research, you pay DataForSEO or Ahrefs directly, on your own key. SEO Skill adds nothing on top, and without a key everything else still works. The weekly audit's competitor check and AI answer tracking run on our account and are included in the $50." },
   { question: 'Can my agent start the paid audit?', answer: 'Yes. Ask it to audit a site. Without a plan it returns a Stripe Checkout link for you to open, and it cannot pay for you. With a plan, it adds the site and raises the plan by one, charged to your card at once.' },
   { question: 'How do I cancel?', answer: 'Choose Manage billing on your account page. It opens Stripe, where you can change the card, read invoices or cancel.' },
 ]
@@ -84,7 +86,16 @@ const faqs = [
           text="Runs on our servers in the background for the sites you pick, so your agent starts each session with the week's evidence already gathered."
         />
         <div class="grid grid-cols-1 gap-2 sm:grid-cols-2">
-          {paid.map((item) => <HomeCard {...item} />)}
+          {paid.map((item, index) =>
+            // The last card of an odd count spans the row, so none sits alone.
+            index === paid.length - 1 && paid.length % 2 ? (
+              <div class="row-span-4 grid grid-rows-subgrid sm:col-span-2">
+                <HomeCard {...item} />
+              </div>
+            ) : (
+              <HomeCard {...item} />
+            ),
+          )}
         </div>
       </section>
 

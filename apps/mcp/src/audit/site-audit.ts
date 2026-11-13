@@ -13,6 +13,7 @@ import { betaFlags } from '../beta.ts'
 import { directory } from '../google.ts'
 import { accountsOf } from '../store.ts'
 import { flushUnmetered } from '../usage.ts'
+import { aiWake } from './ai-answers.ts'
 import {
   addKnown,
   checksView,
@@ -1003,12 +1004,14 @@ export class SiteAudit extends DurableObject<Env> {
   }
 
   // The background Google checks, when due, while the owner is still in the
-  // beta, after the competitor check (competitors.ts). They share the one
-  // alarm with the crawl: each sets it to its next wake only when sooner.
+  // beta, after the competitor check (competitors.ts) and the AI answer
+  // check (ai-answers.ts). They share the one alarm with the crawl: each
+  // sets it to its next wake only when sooner.
   private async checkWake(): Promise<void> {
     const meter = new Meter(this.ctx.storage)
     const site = await gapWake<Site>(this.env, meter, this.ctx.storage)
     if (!site) return
+    await aiWake(this.env, meter, this.ctx.storage, site)
     const saved = state(meter)
     // A new site's checks start at once.
     let at = saved ? saved.next_at : Date.now()

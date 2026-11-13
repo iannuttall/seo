@@ -1,3 +1,4 @@
+import { TABLES as AI_TABLES } from './ai-answers.ts'
 import { TABLES as GAP_TABLES } from './competitors.ts'
 
 // The site object's tables. Two kinds:
@@ -254,6 +255,7 @@ export const PAGES_ADDED: [string, string][] = [
 export function migrate(sql: SqlStorage): void {
   sql.exec(KEPT)
   sql.exec(GAP_TABLES)
+  sql.exec(AI_TABLES)
   sql.exec(DISPOSABLE)
   const columns = (table: string) =>
     new Set(

@@ -72,6 +72,7 @@ export async function weekData(
               )
               .map(({ surfaced_at: _, ...item }) => item),
           },
+          ai_answers: site.aiAnswers,
         }
       }),
     ),

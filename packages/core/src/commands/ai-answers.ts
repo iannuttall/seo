@@ -363,7 +363,7 @@ export async function runAiAnswers(
     brand?: string[]
   },
   headers: Headers,
-  deps: CommandDeps,
+  deps: Pick<CommandDeps, 'searchAnalytics'>,
   // How to ask for the next page: the same target with these tasks, which
   // reads every answer back at no cost instead of asking again.
   more: (offset: number, tasks: string[]) => string,

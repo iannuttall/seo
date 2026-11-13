@@ -320,8 +320,10 @@ export class IndexMySite {
     if (init.body !== undefined) headers['content-type'] = 'application/json'
     if (init.idempotencyKey) headers['idempotency-key'] = init.idempotencyKey
     let response: Response
+    // Called unbound: Workers reject fetch called as a method of this class.
+    const fetcher = this.fetcher
     try {
-      response = await this.fetcher(new URL(path, this.base), {
+      response = await fetcher(new URL(path, this.base), {
         method: init.method ?? 'GET',
         headers,
         body: init.body === undefined ? undefined : JSON.stringify(init.body),

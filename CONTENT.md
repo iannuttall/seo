@@ -166,6 +166,17 @@ Avoid headings such as "Overview", "Command facts", "Everything you need to
 know", or "Get to the first useful answer faster". They label the section or
 sell an outcome without saying what is inside it.
 
+Blog posts follow the same rule. Name the thing the section is about: "Where
+AEO and SEO actually differ", not "So what actually changed?". Skip teaser
+and rhetorical headings that only make sense after reading the section. A
+heading can use the search words when they fit naturally, but clarity comes
+first and keywords are never stuffed in.
+
+Say only what the reader needs to know. Skip background, history and
+naming for its own sake: "AEO, also called GEO" is enough, without which
+term came first. Cut any sentence that doesn't help the reader understand
+the point or act on it.
+
 ## Write instructions as a real sequence
 
 Do not assume the user knows what happened in an earlier setup screen. State

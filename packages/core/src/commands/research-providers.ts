@@ -30,6 +30,7 @@ export type ResearchAction =
   | 'keyword_ideas'
   | 'serp_overlap'
   | 'index_check'
+  | 'mentions'
 
 // The device a live SERP is read as. Google shows desktop and mobile
 // different results, so a SERP check names the one it read.

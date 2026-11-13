@@ -467,3 +467,63 @@ test('serp_overlap matches redirect results by their breadcrumb', async () => {
   assert.equal(out.rows[0]?.pages_compared_a, 2)
   assert.equal(out.rows[0]?.pages_compared_b, 3)
 })
+
+test('mentions lists sites naming the domain first and marks which link', async () => {
+  globalThis.fetch = (async (input: Request) => {
+    const [task] = (await input.json()) as {
+      keyword?: string
+      filters?: unknown[]
+    }[]
+    const item = (site: string, url: string, rank: number) => ({
+      type: 'content_analysis_search',
+      url,
+      domain: site,
+      main_domain: site,
+      domain_rank: rank,
+      content_info: { main_title: `About ${site}`, snippet: 'mentions it' },
+    })
+    const items = input.url.includes('backlinks')
+      ? [{ domain_from: 'www.linked.example' }]
+      : task?.keyword === '"example.com"'
+        ? [
+            item('docs.example.com', 'https://docs.example.com/a', 900),
+            item('linked.example', 'https://linked.example/post', 500),
+            item('quiet.example', 'https://quiet.example/list', 100),
+          ]
+        : [
+            item('loud.example', 'https://loud.example/words', 800),
+            item('quiet.example', 'https://quiet.example/other', 100),
+          ]
+    return Response.json({
+      tasks: [
+        {
+          status_code: 20000,
+          status_message: 'Ok.',
+          cost: 0.02,
+          result: [{ total_count: items.length, items }],
+        },
+      ],
+    })
+  }) as typeof fetch
+
+  const out = await runResearch(
+    {
+      action: 'mentions',
+      target: 'https://www.example.com/',
+      brand: ['Example'],
+    },
+    dataForSeo,
+    { call: () => '' },
+  )
+  const rows = (out.data as { rows: Record<string, unknown>[] }).rows
+  // The target's own subdomain is left out; domain matches come before the
+  // brand-only match even though it ranks higher; unlinked before linked.
+  assert.deepEqual(
+    rows.map((row) => [row.site, row.matched, row.links]),
+    [
+      ['quiet.example', 'example.com', 'not_found'],
+      ['linked.example', 'example.com', 'yes'],
+      ['loud.example', 'example', 'not_found'],
+    ],
+  )
+})

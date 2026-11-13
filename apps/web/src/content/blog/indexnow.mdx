@@ -1,0 +1,128 @@
+---
+title: How to get your pages indexed in Bing with IndexNow
+description: IndexNow tells Bing the moment a page changes. Why Bing matters for AI search, and how to send IndexNow pings with SEO Skill.
+heading: How to get your pages indexed in Bing with IndexNow
+lead: Most SEO work is aimed at Google. Bing sends more traffic than you'd expect, it feeds Microsoft's AI answers, and IndexNow tells Bing the moment one of your pages changes.
+date: '2026-11-13'
+draft: false
+cover:
+  alt: "A Victorian engraved harbour where a keeper hoists a lime green flag on a stone quay, and ships and a distant watchtower raise matching lime green flags in reply."
+  title: left
+---
+
+IndexNow is a simple protocol for telling search engines that a page on your site has changed, including new and deleted pages. You send one request with the page address, and Bing and the other engines that take part hear about it straight away instead of waiting to crawl it again.
+
+I think most sites skip it because it does nothing for Google. That's also why people skip Bing, and on a lot of small sites that's a mistake.
+
+## Bing sends more clicks than most SEOs assume
+
+Check what Bing sends you before you decide it doesn't matter. Across 29 of my own sites with both Search Console and Bing Webmaster Tools connected, Bing sent 84,906 clicks over the same four weeks that Google sent 145,848. On the middle site, Bing's share of the two engines' clicks was about 30%.
+
+On 12 of those 29 sites, Bing sent more clicks than Google. Together those 12 got 59,592 clicks from Bing and 2,963 from Google. On 7 of them, Bing sent more than ten times as many clicks, and one got about 28,000 Bing clicks against 6 from Google.
+
+None of those sites does anything special for Bing. They rank there and barely show in Google, which happens more often than the industry's focus on Google suggests. If you've never opened Bing Webmaster Tools, you don't know which kind of site you have.
+
+## Why Bing matters for AI search
+
+Bing's index is what Microsoft's AI answers are built on. Bing's [webmaster guidelines](https://www.bing.com/webmasters/help/webmaster-guidelines-30fba23a) say "Bing and Copilot search experiences rely on the same core crawling, indexing, and ranking foundation as traditional search", and they list IndexNow first among the ways to help Bing find your pages.
+
+Bing is also how developers give AI agents the web. Microsoft [retired its Bing Search APIs in August 2025](https://learn.microsoft.com/en-us/lifecycle/announcements/bing-search-api-retirement) and pointed customers to Grounding with Bing Search, a tool that lets AI agents pull live web results into their answers. ChatGPT is less clear. OpenAI's [ChatGPT search help page](https://help.openai.com/articles/9237897-chatgpt-search) says it sends searches to third-party providers and links Microsoft's privacy policy for them, without saying how much each one is used.
+
+Search still sends far more visits than AI assistants, but I don't think that lasts. My view is that within about five years agents will do most of the informational searching that SEO has targeted, with AI use growing 10 to 100 times. Plenty of those agents will read Bing's index rather than Google's, so a page Bing hasn't crawled since its last update is a page those agents can't use.
+
+## Ranking in Bing doesn't guarantee a ChatGPT citation
+
+Bing rankings are one way in. I took six questions where one of my Bing-heavy sites sits in Bing's top five and asked ChatGPT each one through SEO Skill. ChatGPT searched the web for five of them and cited none of my sites.
+
+Four of those five searches asked for the official source by name, such as the agency that publishes the figure or a `site:` search on its domain, and ChatGPT cited that source. When a primary source exists, ChatGPT goes looking for it. The page that ranks well in Bing for the same topic doesn't get a look in.
+
+My result matches what I saw in my [query fan-out tests](/blog/query-fan-out), where a page that does better in Bing than in Google did get cited, on a question with no single official answer. Ranking in Bing helps most when your page is the best source there is, and least when you're summarising someone else's numbers.
+
+## What IndexNow does and doesn't do
+
+IndexNow tells search engines a URL changed. Each engine still decides whether to crawl it and whether to index it. The [IndexNow FAQ](https://www.indexnow.org/faq) is plain about it: "Submitting a URL does not guarantee immediate indexing."
+
+One submission reaches every engine that takes part. Engines that adopt the protocol [agree to share](https://www.indexnow.org/documentation) the URLs they receive with each other, and the current list is Bing, Amazon, Naver, Seznam, Yandex and Yep. Amazon [joined in 2025](https://blogs.bing.com/webmaster/May-2025/IndexNow-Drives-Smarter-and-Faster-Content-Discovery), so a ping also reaches Amazon's own search and knowledge systems.
+
+Google isn't on the list. It said in 2021 that it would test IndexNow and never adopted it, so a ping does nothing for Google rankings.
+
+The protocol's own docs set a few rules:
+
+- Send pages when they're added, updated or deleted, including pages that now redirect or return 404. Don't resend pages that haven't changed.
+- Don't send pages that changed before you set IndexNow up. Your sitemap's `lastmod` dates cover those.
+- Every submitted URL counts toward your site's crawl quota, so send changes to the content and skip layout tweaks.
+- Keep your sitemap. Bing's own [sitemaps guidance](https://blogs.bing.com/webmaster/July-2025/Keeping-Content-Discoverable-with-Sitemaps-in-AI-Powered-Search) treats IndexNow as the fast signal and the sitemap as the complete list, and asks for accurate `lastmod` values.
+
+## How to send IndexNow pings with SEO Skill
+
+SEO Skill sends IndexNow pings for you, so you don't need a plugin or a script. IndexNow checks that you own the site through a key file hosted on it, so start by creating the key:
+
+```sh
+seo submit key example.com
+```
+
+The command creates the site's IndexNow key, or reuses the one you already have, tells you which file to serve (`/<key>.txt`, containing the key) and checks that the file is live.
+
+Then send each page you add or change when you publish it. A list of pages works too, with `--file urls.txt`.
+
+```sh
+seo submit https://example.com/page
+```
+
+IndexNow is free, and the ping reaches Bing, Yandex and the other engines that take part, but not Google. The command won't send anything until the key file is live, so a missing file can't quietly waste your submissions.
+
+An agent makes the same calls through the MCP server's `seo_submit` tool, so you can ask it to "send the pages I changed today to IndexNow" after you publish:
+
+```json
+{ "action": "indexnow", "urls": ["https://example.com/page"] }
+```
+
+The key step is the action `indexnow_key`, with your site as `site`. Sites built with `seo site new` already ping IndexNow on every deploy, sending only the pages that changed.
+
+## How to get the same pages indexed in Google
+
+Google has no IndexNow, so a new page reaches Google through your sitemap, your internal links, or a request in Search Console's URL Inspection tool. URL Inspection works one page at a time with a daily limit, which is fine for one post and slow for a launch.
+
+For more than a handful of pages, [Index My Site](https://indexmysite.app) helps Googlebot find and crawl the pages you submit. It checks each one in Google after 24 hours, around day 5 and around day 14, and the credit comes back for any page confirmed as not indexed. A URL costs one credit, which is $0.20, or $0.10 on purchases of $1,000 or more.
+
+Its Bing add-on sends every URL in the job to Bing as well, with no key file, no Bing Webmaster Tools and no site verification, and it works for any public URL. That costs one more credit, so $0.40 a URL with Bing. Only Google is checked, and the Bing credit isn't returned unless Bing was unavailable when the URLs were sent.
+
+If you can host a key file, use IndexNow for Bing and the other engines for free. Use Index My Site for Google, and add Bing to it when you can't or don't want to set up IndexNow.
+
+Connect your Index My Site account to SEO Skill once, which opens a browser sign-in with no key to paste:
+
+```sh
+seo providers indexmysite connect
+```
+
+Then add `--indexmysite` to the submit command, and `--bing` to send the same pages to Bing. It shows the cost and your credit balance first and asks before it spends anything:
+
+```sh
+seo submit https://example.com/page --indexmysite --bing
+```
+
+Through the MCP server, the `seo_submit` action `indexmysite` returns a quote first, and your agent has to send the call again with `confirm: true` before any credits are spent.
+
+Neither route gets a weak page indexed. Thin, duplicate or blocked pages tend to stay out whatever you send.
+
+## How to check Bing is picking up your pages
+
+Once Bing is [connected](/docs/bing), the Bing section of the report puts Bing's top queries and pages next to Google's clicks, impressions and position for the same query:
+
+```sh
+seo report --site example.com --section bing
+```
+
+Look for pages you sent through IndexNow that still have no Bing impressions after a couple of weeks, and for pages that do well in Bing and badly in Google, or the other way round. Bing lists only its top queries and pages, so a page missing from the list is unknown rather than proof that Bing ignores it.
+
+Then open the AI Performance report in [Bing Webmaster Tools](https://www.bing.com/webmasters). Microsoft [added it in February 2026](https://blogs.bing.com/webmaster/2026/2/Introducing-AI-Performance-in-Bing-Webmaster-Tools-Public-Preview), and it shows how often your pages are cited in Copilot, Bing's AI summaries and some partner integrations. Search Console counts [Google's AI features](https://developers.google.com/search/docs/appearance/ai-features) inside its normal web results and doesn't split them out, so Bing's report is the clearest first-party view of AI citations any search engine gives you.
+
+## Bing is ordinary SEO work
+
+Getting into Bing is the same SEO you already do, pointed at one more index. Connect Bing Webmaster Tools, check how much it sends you, send your changes through IndexNow and keep your sitemap honest. As more searching is done by agents, I'd rather my pages were current in every index they read.
+
+## How this was checked
+
+- The Bing and Google numbers come from 29 sites I run, through `seo report`, over the same four weeks to early November 2026. Bing groups its data by week, and for most sites it had 24 of the 28 days, so Bing's totals are slightly low.
+- The ChatGPT test used `seo research ai_answers` (DataForSEO) with six questions where one of my sites ranks in Bing's top five. It cost about 4 cents. SEO Skill doesn't force web search, so ChatGPT answered one question without searching.
+- IndexNow's behaviour and the list of engines come from [indexnow.org](https://www.indexnow.org/faq). Google's 2021 statement that it would test IndexNow was [reported by Search Engine Land](https://searchengineland.com/google-is-testing-the-indexnow-protocol-for-sustainability-375932).

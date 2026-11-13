@@ -1,0 +1,83 @@
+---
+title: How to find the long-tail searches Search Console hides
+description: Search Console leaves out anonymized queries to protect privacy, and on small sites they can be half your impressions. Bing Webmaster Tools shows many of them.
+heading: How to find the long-tail searches Google hides in Search Console
+lead: Search Console keeps anonymized queries out of its list to protect privacy, and on small sites they can carry half of your Google impressions. Bing's query report fills in a lot of that gap, and SEO Skill puts the two side by side.
+date: '2026-11-13'
+draft: false
+cover:
+  alt: "A Victorian engraved lighthouse keeper raising a lantern whose lime green beam lights a long line of small boats stretching away across a dark sea."
+  title: left
+---
+
+Search Console doesn't show you every search your site appears for. Google calls the missing ones anonymized queries: searches Google keeps out of Search Console to protect privacy. Few people make each one, and that's exactly where the long tail lives.
+
+I compared Search Console with Bing Webmaster Tools across my own sites. The searches Google leaves out are a big share of the total, and Bing lists a lot of them. If you've only ever read the Google side, you're missing the questions people ask most specifically.
+
+## Why Search Console hides some searches
+
+Google's [Search Console guide to performance data](https://developers.google.com/search/blog/2022/10/performance-data-deep-dive) says anonymized queries are those that "aren't issued by more than a few dozen users over a two-to-three month period". Search Console counts their clicks and impressions in your chart totals but never lists them in the table or the API.
+
+So the total at the top of the report is right, and the list of queries underneath it is incomplete. The gap is the impressions from searches Google won't name.
+
+## How much of your Google traffic sits in anonymized queries
+
+On 26 of my sites, with four weeks of data to early November 2026, anonymized queries carried half of all Google impressions. The middle site had 59% of its impressions in anonymized queries, and the range ran from 5% to 95%.
+
+The lowest was seoskill.dev, where most impressions come from a few short searches for the product's name. A site whose visitors arrive through many specific searches can have most of its Google impressions in searches it never sees.
+
+SEO Skill works this out for you. The Bing section of the report compares Search Console's listed searches with its totals and says what share of impressions sits in anonymized queries. When a site has more searches than Search Console's API returns, it says the figure is a ceiling instead.
+
+## Bing shows the searches Google leaves out
+
+Bing Webmaster Tools lists its top searches for each site, and it doesn't leave out anonymized queries the way Search Console does. On the same 26 sites, Bing listed 5,598 searches, and 86% of them never appeared in Search Console's list for the same dates. On half the sites, at least 90% of Bing's searches were ones Search Console didn't name.
+
+Those Bing-only searches look like the hidden long tail:
+
+| | Only Bing listed | Both listed |
+| --- | --- | --- |
+| Searches | 4,844 | 754 |
+| Median length | 5 words | 3 words |
+| Phrased as a question | 17% | 3% |
+| Bing clicks | 6,239 | 2,488 |
+
+The searches only Bing could show me sent two and a half times the Bing clicks of the searches both engines listed. They're longer, more often questions, and they rank higher in Bing, with a median position of 4 against about 6.
+
+Bing's list isn't a copy of Google's anonymized queries. People search a little differently on each engine, and Bing has its own cut-off. But the same people ask the same kinds of questions, so a long question someone typed into Bing is a good guess at the kind Google is hiding from you.
+
+## How to compare Google and Bing searches with SEO Skill
+
+Connect Bing once, either through your seoskill.dev account or with a Bing Webmaster API key, as the [Bing docs](/docs/bing) explain. Then run the Bing section of the report for your site:
+
+<AgentStep prompt="Compare my site's Bing searches with Google's and show me the ones Search Console doesn't list." cli="seo report --site example.com --section bing" local="Bing blocks our hosted server, so Bing data runs on your own machine." />
+
+The section lists Bing's top searches with Google's clicks, impressions and position for the same search beside them. It also counts how many searches each engine lists, how many appear in both, and the share of Google impressions in anonymized queries. A Bing search with no Google numbers beside it is one Search Console didn't list.
+
+For every Bing search, with the previous period beside it, pull the raw rows:
+
+<AgentStep prompt="List every Bing search for my site and pick out the long questions that have no Google row." cli="seo data --site example.com --source bing --dimensions query" local="Bing blocks our hosted server, so Bing data runs on your own machine." />
+
+The long questions with no Google row are the searches to write for.
+
+## What to do with the hidden long tail
+
+Treat the Bing-only searches as a list of real questions your pages already get close to. Bing ranks your site for most of them, so the topic fits. The question is whether the page answers that exact question well.
+
+1. Group the long searches by the page Bing shows for them.
+2. For each page, check whether it answers those questions plainly, near the top of a section, in the reader's own words.
+3. Add the missing answers to the existing page. A page that covers a topic well can take dozens of these searches, and a thin page for each one is the kind of near-duplicate Google's spam policies warn against.
+4. Recheck Bing's list and the share of impressions in anonymized queries a month later.
+
+Don't read the counts as volume. Bing lists only its top searches, grouped by week, so a search missing from Bing's list is unknown rather than zero. The two engines also count clicks and impressions their own way, so keep their numbers side by side and never add them together.
+
+## Why long questions matter more for AI search
+
+These long-tail searches are the kind AI assistants run. When ChatGPT or Google's AI Mode answers a question, it writes its own searches first, and those searches look a lot like this long tail: specific, five words or more, often phrased as questions. I covered what they look like in my [query fan-out post](/blog/query-fan-out).
+
+Search still sends far more visits than AI tools, but I expect agents to do most of the informational searching that SEO has targeted within about five years. A long, specific question that Search Console never shows you is exactly the kind of search an agent runs on someone's behalf. The pages that answer it well are the pages it reads, which makes the long tail worth more each year, even though Google hides it from you.
+
+## How this was checked
+
+- The figures come from 26 sites I run with both Search Console and Bing Webmaster Tools connected, through `seo report --section bing`, over four weeks to early November 2026. Three more sites had more searches than Search Console's API returns in one call, so their counts are lower limits and they're left out.
+- The anonymized share is each site's Search Console impressions minus the impressions in its listed searches. Bing's data comes by week, so its dates can start or end a few days away from Google's.
+- Questions are searches that start with words such as how, what, why, can or does. Search length counts words.

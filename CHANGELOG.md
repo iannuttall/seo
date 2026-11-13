@@ -1,5 +1,13 @@
 # Changelog
 
+## 0.18.1
+
+### Fixed
+
+- Publishing no longer warns that npm removed the `seo` command from the
+  package manifest. The `bin` path in `package.json` is now `dist/cli.js`
+  without the leading `./`. The command already worked in every release.
+
 ## 0.18.0
 
 ### Added

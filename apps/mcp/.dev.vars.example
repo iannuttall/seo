@@ -31,3 +31,7 @@ STRIPE_WEBHOOK_SECRET=
 DATAFORSEO_LOGIN=
 DATAFORSEO_PASSWORD=
 TYPESAFE_API_KEY=
+# Optional. The secret of SEO Skill's OAuth client at Index My Site (the
+# INDEXMYSITE_CLIENT_ID var), for Connect Index My Site on the account page.
+# seo submit's Index My Site actions stay off on this server without it.
+INDEXMYSITE_CLIENT_SECRET=

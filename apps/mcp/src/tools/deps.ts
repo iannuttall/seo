@@ -10,6 +10,7 @@ import { auditAccess, siteIssues } from '../audit/schedule.ts'
 import { weekData } from '../audit/week.ts'
 import { billingOn, startAuditSite } from '../billing.ts'
 import { accountUrl, signInHint } from '../google.ts'
+import { hostedSubmitAccess } from '../indexmysite.ts'
 import { addUsage } from '../usage.ts'
 import type { ToolContext } from './registry.ts'
 
@@ -62,6 +63,7 @@ export function deps({
     // Every account: audited sites keep the list here, others get it back
     // to save.
     issues: siteIssues(env, userId),
+    submit: hostedSubmitAccess(env, userId),
     analytics: {
       accounts: async () => directory.accounts(),
       signIn: signInHint(env),

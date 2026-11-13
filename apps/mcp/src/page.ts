@@ -71,7 +71,7 @@ button.danger { background: oklch(57.7% 0.215 27.325); color: oklch(98.5% 0 0); 
       'content-type': 'text/html; charset=utf-8',
       'cache-control': 'no-store',
       'content-security-policy':
-        "default-src 'none'; style-src 'unsafe-inline'; font-src 'self'; form-action 'self' https://accounts.google.com https://www.bing.com; frame-ancestors 'none'; base-uri 'none'",
+        "default-src 'none'; style-src 'unsafe-inline'; font-src 'self'; form-action 'self' https://accounts.google.com https://www.bing.com https://indexmysite.app; frame-ancestors 'none'; base-uri 'none'",
       'referrer-policy': 'no-referrer',
       'x-frame-options': 'DENY',
     },
@@ -94,6 +94,9 @@ export type View =
         google: { email: string; subject: string }[]
         bing: { label: string; subject: string }[]
         bingReady: boolean
+        // When Index My Site was connected, or null; ready is whether this
+        // server can connect it.
+        indexmysite: { connectedAt: number | null; ready: boolean }
         keys: string[]
         // Saved Clicky sites; the domain is null when Clicky had no pages.
         // account is true for a site that came from the Clicky account.

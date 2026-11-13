@@ -52,6 +52,10 @@ The labels come from simple rules over this evidence, not from Google. Where a r
 
 The live check sees what your server sends. A browser can show "307 Internal Redirect" for an http:// page because it remembers your site uses https; that hop never reaches the server, so it never shows here.
 
+## Ask for a crawl of pages Google hasn't indexed
+
+When pages return 200 with no redirect but Google hasn't indexed them ("Crawled - currently not indexed", "Discovered - currently not indexed" or "URL is unknown to Google"), the result ends with a line about [`seo submit`](/docs/submit). It can ask Bing and others to crawl them for free with IndexNow, or send them to Google with Index My Site from your own credits. Fix the pages labelled fix first: submitting a redirect or a noindex page doesn't help.
+
 ## Run it each week
 
 Run it once to get a baseline and keep the full result:

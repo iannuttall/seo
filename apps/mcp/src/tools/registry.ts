@@ -34,6 +34,8 @@ export type Tool = {
   title: string
   description: string
   input: z.ZodObject
+  // Changes something outside this server; see toolAnnotations in core.
+  writes?: true
   run(context: ToolContext, input: unknown): Promise<string>
 }
 

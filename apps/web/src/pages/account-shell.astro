@@ -23,7 +23,7 @@ const toggles =
 const toggle =
   'inline-flex h-8 items-center rounded-md px-3 text-sm font-medium outline-none transition-colors hover:text-foreground focus-visible:ring-[3px] focus-visible:ring-ring/20 aria-pressed:bg-card aria-pressed:text-foreground aria-pressed:shadow-xs'
 const description =
-  'The Google accounts, Bing, API keys and Clicky sites your agents use, through the hosted MCP server or the seo CLI.'
+  'The Google accounts, Bing, Index My Site, API keys and Clicky sites your agents use, through the hosted MCP server or the seo CLI.'
 const tabs = [
   { id: 'accounts', label: 'Accounts' },
   { id: 'keys', label: 'Keys' },
@@ -137,7 +137,7 @@ const keys: { name: string; label: string; type: 'text' | 'password' }[] = [
       {/* The ilo toggle group from SetupCommands, on one row. On a narrow
           screen it scrolls sideways with no scrollbar, and a fade shows on
           each edge that has more tabs past it. Each tab has a hash, and
-          the #google, #bing, #clicky and #machines links open the tab that
+          the #google, #bing, #indexmysite, #clicky and #machines links open the tab that
           holds them. */}
       <div class="relative w-fit max-w-full">
         <div
@@ -203,6 +203,27 @@ const keys: { name: string; label: string; type: 'text' | 'password' }[] = [
           <form method="post" data-action="/account/bing" class="mt-4" data-bing-add>
             <input type="hidden" name="form" />
             <button type="submit" class={outline} data-bing-button>Connect Bing</button>
+          </form>
+        </div>
+
+        <div class={panel} id="indexmysite" data-indexmysite-panel hidden>
+          <h2 class={heading}>Index My Site</h2>
+          <p class={note}>
+            Lets your agent send pages to Google with credits from your own
+            Index My Site account. Each page is checked after 24 hours, and a credit comes
+            back for each page Google has not indexed by the final check.
+            Your agent shows the cost and asks before it spends any.
+          </p>
+          <p class="mt-4 text-sm text-foreground" data-indexmysite-connected hidden>
+            Connected <span data-indexmysite-date></span>.
+          </p>
+          <form method="post" data-action="/account/indexmysite" class="mt-4" data-indexmysite-add>
+            <input type="hidden" name="form" />
+            <button type="submit" class={outline}>Connect Index My Site</button>
+          </form>
+          <form method="post" data-action="/account/indexmysite/remove" class="mt-3" data-indexmysite-remove hidden>
+            <input type="hidden" name="form" />
+            <button type="submit" class={quiet}>Disconnect Index My Site</button>
           </form>
         </div>
       </div>
@@ -784,6 +805,7 @@ const keys: { name: string; label: string; type: 'text' | 'password' }[] = [
       google: { email: string; subject: string }[]
       bing: { label: string; subject: string }[]
       bingReady: boolean
+      indexmysite?: { connectedAt: number | null; ready: boolean }
       keys: string[]
       clicky: { siteId: string; domain: string | null; account?: boolean }[]
       clickyAccount?: string | null
@@ -1346,6 +1368,21 @@ const keys: { name: string; label: string; type: 'text' | 'password' }[] = [
         root.querySelector('[data-bing-panel]'),
         account.bingReady || account.bing.length > 0,
       )
+      // Shown where this server can connect it, or it is connected.
+      const ims = account.indexmysite
+      const imsOn = Boolean(ims?.connectedAt)
+      show(root.querySelector('[data-indexmysite-panel]'), Boolean(ims?.ready || imsOn))
+      show(root.querySelector('[data-indexmysite-connected]'), imsOn)
+      show(root.querySelector('[data-indexmysite-add]'), Boolean(ims?.ready && !imsOn))
+      show(root.querySelector('[data-indexmysite-remove]'), imsOn)
+      const imsDate = root.querySelector('[data-indexmysite-date]')
+      if (imsDate && ims?.connectedAt) {
+        imsDate.textContent = new Date(ims.connectedAt).toLocaleDateString('en-GB', {
+          day: 'numeric',
+          month: 'short',
+          year: 'numeric',
+        })
+      }
       for (const name of account.keys) {
         show(root.querySelector(`[data-saved="${name}"]`))
         const input = root.querySelector<HTMLInputElement>(`[data-key-input="${name}"]`)

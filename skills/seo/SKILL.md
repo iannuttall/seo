@@ -23,6 +23,7 @@ link for them to approve, then run it again.
 | `seo page --url <url>` | `seo_page` | One URL: live page, index status, queries |
 | `seo compare --site <site> --date <date>` | `seo_compare` | Before and after a date, with Google updates |
 | `seo index --site <site>` | `seo_index` | Google's indexing reasons, labelled, and pages that lost their clicks |
+| `seo submit <url...>`, `--indexmysite` | `seo_submit` | Ask Bing and others to crawl pages (IndexNow, free, after `seo submit key <site>`), or send them to Google with Index My Site (the person's credits; quote first, send with `--yes` or `confirm: true` only after they agree) |
 | `seo research <action>` | `seo_research` | Keywords, keyword ideas, SERP (organic position, mobile) and SERP overlap, whether Google indexed any URL (`index_check`), top pages, competitors, backlinks, pages by backlinks, link gaps, AI answer citations, for a site, subfolder (`example.com/blog/`) or page; provider optional; next pages are free for a day |
 | `seo data --site <site>` | `seo_data` | Raw Search Console, Bing, Clicky, Simple Analytics or Google Analytics rows |
 | `seo crawl --url <url>` | `seo_crawl` | Technical issues across a site |

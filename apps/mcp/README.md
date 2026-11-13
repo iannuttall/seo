@@ -332,6 +332,7 @@ repository.
 | `seo_page` | One URL: live page facts, Google index status and its queries against the previous period. The page's main content as Markdown is CLI and local server only; with detail `full` this server says how to get it. |
 | `seo_compare` | Equal periods before and after a date, for the site or URLs that contain some text, with Google updates |
 | `seo_index` | Google's indexing reasons for 100 known URLs a run, checked live and labelled, and pages that lost most of their clicks |
+| `seo_submit` | Sends URLs to IndexNow (free, after its key file is live) or to Google through the person's own Index My Site account. Index My Site calls return the cost and send nothing until `confirm` is true. The only tool that is not read-only. |
 | `seo_research` | Keyword metrics, ranked keywords, top pages, SERPs, competitors, backlinks and pages by backlinks for a site, subfolder or page, from whichever DataForSEO or Ahrefs key is saved (DataForSEO when both are), with a free Ahrefs Domain Rating column |
 | `seo_data` | Raw Search Console rows, search landing pages from Google Analytics, Clicky visits by landing page with traffic sources and search engines, or Simple Analytics visitors by landing page with referrers and AI tools. |
 | `seo_lint` | Checks copy sent as text (up to 200,000 characters) for patterns common in AI-written text, weak copy and title and description length, with a fix for each finding and a list of lines to judge. Reads no account data. |
@@ -367,6 +368,12 @@ A small Cloudflare D1 database (`migrations/`) keeps only:
 - your Clicky account login, if you save it: username and password, used
   only to read your Clicky site list,
 - your Simple Analytics API key, if you save it,
+- your Index My Site connection, if you connect it: its OAuth refresh and
+  access tokens (`indexmysite`), refreshed here and rotated on each refresh.
+  A linked machine gets only a short-lived access token. Disconnect revokes
+  the grant at Index My Site,
+- IndexNow keys that `seo_submit` made, by host (`indexnow_keys`); a key is
+  public once the site serves it,
 - machines linked with `seo login` (a name from the host name and the date
   last used).
 - beta features granted to the account, and when (`beta_flags`). Only a
@@ -485,7 +492,11 @@ the site. Merging a PR deploys it. Its build settings:
 migration reaches the database first. A deploy keeps the Worker's secrets
 (`GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET`, `SEAL_KEY`, `AHREFS_DR_KEY`,
 `BING_CLIENT_ID`, `BING_CLIENT_SECRET`, `TELEGRAM_BOT_TOKEN`,
-`TELEGRAM_CHAT_ID`). Set or change one with
+`TELEGRAM_CHAT_ID`, `INDEXMYSITE_CLIENT_SECRET`). Connect Index My Site
+uses SEO Skill's confidential client at Index My Site, `seo-skill` (the
+`INDEXMYSITE_CLIENT_ID` var in `wrangler.jsonc`), with the redirect
+`<PUBLIC_URL>/oauth/indexmysite/callback`; it stays off until
+`INDEXMYSITE_CLIENT_SECRET` is set. Set or change one with
 `pnpm --filter @seo/hosted-mcp exec wrangler secret put <NAME>`. A new
 `SEAL_KEY` signs everyone out and makes every stored token and key
 unreadable. Set `PUBLIC_URL` in `wrangler.jsonc` to move the server,

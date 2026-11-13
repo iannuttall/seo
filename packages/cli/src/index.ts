@@ -71,6 +71,7 @@ import { explainCommand, rulesCommand } from './commands/rules.js'
 import { setupCommand, startCommand } from './commands/setup/index.js'
 import { siteCommand } from './commands/site.js'
 import { skillsCommand } from './commands/skills.js'
+import { submitCommand } from './commands/submit.js'
 import {
   privacyCommand,
   resetCommand,
@@ -127,6 +128,14 @@ const helpSections: HelpSection[] = [
       ['seo internal-links', 'Pages that could link to a target page'],
       ['seo lint <files>', 'Check copy for AI writing patterns and length'],
       [
+        'seo submit <url...>',
+        'Ask Bing and others to crawl pages (IndexNow, free)',
+      ],
+      [
+        'seo submit <url...> --indexmysite',
+        'Send pages to Google with Index My Site (paid)',
+      ],
+      [
         'seo site new <folder>',
         'Start a data-driven site on Astro and Cloudflare',
       ],
@@ -138,7 +147,7 @@ const helpSections: HelpSection[] = [
       ['seo login', 'Use your seoskill.dev account on this machine'],
       ['seo sites', 'List Search Console properties'],
       ['seo mcp install', 'Add the local MCP server to your agents'],
-      ['seo providers', 'Connect DataForSEO or Ahrefs'],
+      ['seo providers', 'Connect DataForSEO, Ahrefs or Index My Site'],
       ['seo doctor', 'Check local auth and config'],
     ],
   },
@@ -245,6 +254,7 @@ const main = defineCommand({
     data: dataCommand,
     research: researchCommand,
     lint: lintCommand,
+    submit: submitCommand,
     reports: reportCatalogCommand,
     'segment-impact': segmentImpactCommand,
     'striking-distance': strikingDistanceCommand,

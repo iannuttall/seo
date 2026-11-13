@@ -45,6 +45,7 @@ import {
 } from './gsc/client/inspection-cache.js'
 import { querySearchAnalytics } from './gsc/client/search-analytics.js'
 import { listSites } from './gsc/client/sites.js'
+import { localSubmitAccess } from './indexing/local.js'
 import { readAhrefsApiKey } from './providers/ahrefs/credentials.js'
 import { readBingApiKey } from './providers/bing/credentials.js'
 import { readProviderCache, writeProviderCache } from './providers/cache.js'
@@ -96,6 +97,7 @@ export function nodeCommandDeps(options: {
     bingConnect: LOCAL_BING_CONNECT,
     analytics: { accounts: localAccounts, signIn: LOCAL_SIGN_IN.signIn },
     issues: localIssues,
+    submit: localSubmitAccess(),
     ...(cloudLinked() ? { week: cloudWeek } : {}),
   }
 }

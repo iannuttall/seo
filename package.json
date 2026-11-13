@@ -74,8 +74,8 @@
   },
   "scripts": {
     "auth:inject-shared-client": "node scripts/inject-shared-oauth-client.mjs",
-    "build": "turbo run build && pnpm run build:package",
-    "build:package": "tsdown --config tsdown.config.ts",
+    "build": "turbo run build && tsdown --config tsdown.config.ts",
+    "build:package": "turbo run build --filter=@seo/cli^... && tsdown --config tsdown.config.ts",
     "build:mcp": "pnpm --filter \"@seo/hosted-mcp^...\" build",
     "build:web": "pnpm --filter @seo/web... build",
     "clean": "turbo run clean && rm -rf dist",

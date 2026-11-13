@@ -89,6 +89,11 @@ test('ai-queries finds pronoun follow-ups and joins them into trails', async () 
     ['was it a full moon', null],
     ['is it a common name', 'pronoun'],
     ['what happened this week', null],
+    ['it support salary', null],
+    ['how to get into it with no experience', null],
+    ['head of it job description', null],
+    ['does it support offline mode', 'pronoun'],
+    ['is it worth it', 'pronoun'],
   ] as const) {
     assert.equal(aiQueryKind(query) === 'pronoun', kind === 'pronoun', query)
   }

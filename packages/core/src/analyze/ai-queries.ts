@@ -128,6 +128,13 @@ const DUMMY_IT =
 // name"): the thing itself is not named.
 const IDENTIFY_IT =
   /^(what|which)( (kind|type|sort) of)?( \S+){1,2} (is|was) it\b|^(is|was) it (a|an|the) /u
+// "it" as IT, information technology: before a job, team or field word
+// ("it support", "it manager salary"), or after a word for working in a
+// field ("career in it", "head of it"). Search Console lowercases queries,
+// so the case can't tell them apart. After a verb ("does it support"),
+// "it" is still a pronoun.
+const IT_FIELD =
+  /(?<!\b(do|does|did|will|would|can|could|should|might|may|must|is|was|has|have|make|makes|let|help|helps|get|gets) )\bit (support|helpdesk|help desk|jobs?|careers?|manager|managers|director|department|dept|services?|company|companies|consultants?|consultancy|consulting|technicians?|admins?|administrators?|security|professionals?|industry|sector|salary|salaries|team|apprenticeships?|courses?|certifications?|contractors?|specialists?|analysts?|infrastructure|systems|budget|outsourcing|staff|roles?|skills|training|recruitment|recruiters?|engineers?|projects?|graduate|degree|asset|equipment|policy|procurement)\b|\b(work|working|works|jobs?|careers?|degree|degrees|experience|qualifications?|apprenticeships?|get|getting|break|switch|move) in(to)? it\b|\b(head|director|manager|vp|department) of it\b/gu
 const CLASS_WORD =
   /\b(name|surname|names|word|thing|one|company|brand|product|place|site|website|app|scam|service)\b/u
 const PRONOUN_WORDS = 10
@@ -141,6 +148,7 @@ function pointsBack(text: string): boolean {
   const found =
     text
       .replace(TIME_WORD, ' ')
+      .replace(IT_FIELD, ' ')
       .replace(/(?<!^)\bits\b/gu, ' ')
       .match(PRONOUNS) ?? []
   if (!found.length) return false

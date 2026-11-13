@@ -190,8 +190,8 @@ importers:
         specifier: ^7.4.2
         version: 7.4.4(@astrojs/markdown-remark@7.3.5)(@types/node@26.1.1)(esbuild@0.28.1)(jiti@2.7.0)(yaml@2.9.1)
       hono:
-        specifier: ^4.13.14
-        version: 4.13.17
+        specifier: ^4.13.18
+        version: 4.13.18
       lucide:
         specifier: ^1.69.0
         version: 1.69.0
@@ -2923,8 +2923,8 @@ packages:
     resolution: {integrity: sha512-CQ46U0ZkAGmbT/4UxdzzGJpacP2IeKgY4a5/tOI9AABbpOMfK739wfDXmv1usCk+3RkKj1hQy4/fjhiwa2xlrA==}
     engines: {node: '>=16.9.0'}
 
-  hono@4.13.17:
-    resolution: {integrity: sha512-vZIcbkvjOR5hHRWERbGkr8fGfF0GGM1ooYkuH448iO3b2AdVEr3AXZSw4Z3Kn+1L5z0CVoVeyV29VGYmFh05kQ==}
+  hono@4.13.18:
+    resolution: {integrity: sha512-H9q/E1XizaWstJxUW881dmLxEj+t/TrGGnyxINkm4+sK0qUwsMtFdo2BWI9Vs3cIS19MU6b6iCijoUoEf4f3DA==}
     engines: {node: '>=16.9.0'}
 
   hookable@6.1.2:
@@ -4180,6 +4180,7 @@ packages:
 
   tldts-core@7.4.20:
     resolution: {integrity: sha512-C630TWXZCZmLq0F2bW4QqwnaaxCQ/svpAqvJwnC4JvgEM5ohhBnGsEzTLSOXcN+xjz+kEaHS5uoWIw2klnqd0A==}
+    deprecated: Partial release, see https://github.com/remusao/tldts/issues/2735. Use >=7.4.22.
 
   tldts-icann@7.4.19:
     resolution: {integrity: sha512-lnGUR5BZm5UpNDYMBFGAr9pxS2RTUr/euXuJ9o1irR+zKhsBAFUn7quHoZt8UP/eIwykp4ye5f56bCjMBytbTg==}
@@ -7229,7 +7230,7 @@ snapshots:
 
   hono@4.13.13: {}
 
-  hono@4.13.17: {}
+  hono@4.13.18: {}
 
   hookable@6.1.2: {}
 

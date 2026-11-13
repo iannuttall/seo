@@ -532,7 +532,7 @@ export const SHARED_TOOLS: SharedTool[] = [
         .max(10)
         .default([])
         .describe(
-          "ai_answers only: the brand names that count as a mention, such as Datadog for datadoghq.com. Default: each domain's name.",
+          "ai_answers and mentions: the brand names that count as a mention, such as Datadog for datadoghq.com. Default: each domain's name for ai_answers; mentions searches the domain itself plus up to 3 names.",
         ),
       country: z
         .string()

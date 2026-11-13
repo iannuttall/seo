@@ -27,6 +27,7 @@ seo providers ahrefs connect
 | `backlinks` | A site, subfolder or page | Referring domains |
 | `pages_by_backlinks` | A site or subfolder | The pages with the most referring domains |
 | `link_gap` | Your domain and 2 to 5 competitors | Sites that link to two or more competitors and not to you |
+| `mentions` | Your domain, and brand names if you like (DataForSEO only) | Pages on other sites that name you, and whether each site already links to you |
 | `ai_answers` | Any site (DataForSEO only) | Whether AI answers cite or mention the site, for its own AI-style questions or up to 10 of yours, and the searches ChatGPT ran |
 
 Each request also takes a two-letter country code. The default is `us`. Link data covers every country. Every DataForSEO result says what the request cost, from DataForSEO's own numbers.
@@ -93,6 +94,16 @@ seo research link_gap --provider ahrefs --target example.com --competitors examp
 ```
 
 It reads the top 1,000 referring domains of each site, one `backlinks` request per site. When a site has more than that, the list stops at the lowest authority it read and says so, rather than guessing below it. With DataForSEO, the top 200 rows are sorted by Domain Rating. URL shorteners, link lists and coupon or site-stats directories link to almost every site, so they're left out, and the result names each one.
+
+## Find unlinked mentions
+
+`mentions` finds pages on other sites that name your domain, one page per site, and checks whether each site already links to you. Sites with no link come first. A site that writes about you without linking already knows you, so a short note asking for the link is a reasonable ask.
+
+```sh
+seo research mentions --target example.com --brand "Example App"
+```
+
+Pages that name the domain come before pages that only match a brand name. A brand name that is also an ordinary phrase matches pages that use the words, so check those before you count them. The pages come from DataForSEO's content index and the links from its backlink index, so a link it hasn't crawled shows as `not_found`. Open the page before you ask. A run costs about $0.03 a search term plus one backlinks request, under $0.10.
 
 ## Read SERPs and check overlap
 

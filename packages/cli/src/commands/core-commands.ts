@@ -589,7 +589,7 @@ export const researchCommand = defineCommand({
     brand: {
       type: 'string',
       description:
-        "ai_answers only: comma-separated brand names that count as a mention, such as Datadog for datadoghq.com. Default: each domain's name.",
+        "ai_answers and mentions: comma-separated brand names, such as Datadog for datadoghq.com. ai_answers counts them as a mention (default: each domain's name); mentions searches for them beside the domain.",
     },
     target: {
       type: 'string',
@@ -709,6 +709,7 @@ export const researchCommand = defineCommand({
           keywords,
           target: site,
           competitors,
+          brand: csvArg(args.brand),
           country,
           detail: detailArg(args),
           offset: numberArg(args.offset),

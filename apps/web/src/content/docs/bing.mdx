@@ -50,6 +50,12 @@ The `bing` section lists Bing's top queries with Google's clicks, impressions an
 seo report --site example.com --section bing
 ```
 
+### What Google hides and Bing shows
+
+The `bing` section also counts the distinct queries each engine lists for the same dates and how many appear in both. It shows the share of Google's impressions that sit in queries Search Console hides for privacy. It also lists the pages Bing shows that have no Search Console row, and the pages that get Google clicks but are missing from Bing's list.
+
+Search Console often lists more queries than Bing, but on some sites most of Bing's queries are ones Google never names. Those are real searches you can write for. The ratio between the two counts is a rough guide, not a measure of demand: each engine lists its own subset. And because Bing lists only its top pages, a page missing from Bing's list may still get Bing visits.
+
 For raw Bing query or page rows with the previous period, use [`seo data`](/docs/data) with Bing as the source:
 
 ```sh

@@ -151,6 +151,24 @@ test('the bing section sums Bing weeks in the window and puts Google beside each
   assert.ok(
     report.caveats.some((line) => /1 Bing rows were not valid/.test(line)),
   )
+  // The gap: queries each engine lists, Google's hidden share and pages
+  // only one engine shows, matched without case.
+  const gap = (result.data as { gap: Record<string, unknown> }).gap
+  assert.deepEqual(
+    [
+      gap.googleQueries,
+      gap.bingQueries,
+      gap.sharedQueries,
+      gap.bingOnlyQueries,
+    ],
+    [1, 2, 1, 1],
+  )
+  assert.equal(gap.googleToBingQueryRatio, 0.5)
+  assert.equal(gap.googleHiddenImpressionsPct, 95)
+  assert.deepEqual(
+    (gap.bingOnlyPages as { page: string }[]).map((row) => row.page),
+    ['https://example.com/pay'],
+  )
 })
 
 test('the overview puts Bing totals beside Google for the same dates, and names a missing Bing', async () => {

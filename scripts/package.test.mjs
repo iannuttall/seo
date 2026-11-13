@@ -18,7 +18,7 @@ const repositoryUrl = 'https://github.com/iannuttall/seo'
 test('the public package exposes one unscoped API, CLI, and MCP surface', () => {
   assert.equal(packageJson.name, 'seo')
   assert.equal(packageJson.private, undefined)
-  assert.equal(packageJson.bin.seo, './dist/cli.js')
+  assert.equal(packageJson.bin.seo, 'dist/cli.js')
   assert.equal(packageJson.exports['.'].import, './dist/index.js')
   assert.equal(packageJson.exports['./mcp'].import, './dist/mcp.js')
   assert.equal(

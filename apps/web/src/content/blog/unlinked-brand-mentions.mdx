@@ -39,7 +39,7 @@ So a mention helps you in AI answers today, and a link added to it helps you in 
 
 SEO Skill searches DataForSEO's content index for pages that name your domain, then checks your backlinks to mark which of those sites already link to you.
 
-<AgentStep prompt="Find pages on other sites that mention my domain but don't link to it." cli="seo research mentions --target example.com" />
+<AgentStep setup prompt="Find pages on other sites that mention my domain but don't link to it." cli="seo research mentions --target example.com" />
 
 The command lists one page per site and leaves out your own site. Each row says `links: yes` when the site already links to you, or `not_found` when the backlinks data has no link from it. A `not_found` site is your candidate, though it can also be a link DataForSEO hasn't crawled yet, so open the page and check before you ask. Some mentions sit in a screenshot, a code block or a comment, and some links point to your social profiles instead of your site.
 

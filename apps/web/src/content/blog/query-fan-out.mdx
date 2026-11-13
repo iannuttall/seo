@@ -82,7 +82,7 @@ Another page ChatGPT cited in that test does better in Bing than in Google. Over
 
 SEO Skill shows you the searches ChatGPT runs for the questions you care about. Give it up to 10 questions. Any domain works as the target, so you can check a competitor's questions too:
 
-<AgentStep prompt="What does ChatGPT search for when people ask: notion vs obsidian for personal notes, and is obsidian good for personal notes?" cli={'seo research ai_answers --target example.com --keywords "notion vs obsidian for personal notes,is obsidian good for personal notes"'} />
+<AgentStep setup prompt="What does ChatGPT search for when people ask: notion vs obsidian for personal notes, and is obsidian good for personal notes?" cli={'seo research ai_answers --target example.com --keywords "notion vs obsidian for personal notes,is obsidian good for personal notes"'} />
 
 Each ChatGPT answer lists the searches it ran and the pages it cited, and says whether it cited or mentioned your site. The notes rank the searches that came up most often across all your questions, which is the list to write for. The same call checks whether Google AI Mode and AI Overviews cite you, but it can't show their searches, because DataForSEO returns none for Google's engines. It runs on your own DataForSEO key, for about $0.007 a question across the three engines.
 

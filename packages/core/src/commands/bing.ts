@@ -227,25 +227,26 @@ export async function bingSection(
   range: DateRange,
 ): Promise<Record<string, unknown>> {
   if (!source.call) throw new CommandError('NOT_CONNECTED', source.missing)
-  const google = (dimension: 'query' | 'page') =>
+  const google = (dimension?: 'query' | 'page') =>
     read(property, {
       ...range,
-      dimensions: [dimension],
+      dimensions: dimension ? [dimension] : [],
       type: 'web',
       dataState: 'final',
-      maxRows: 25_000,
+      maxRows: GOOGLE_ROWS,
     })
   // Bing needs only Bing. Without Google the Google columns stay empty and
   // the caveats say why.
   const [queries, pages, googleRead] = await Promise.all([
     bingQueries(source.call, source.site),
     bingPages(source.call, source.site),
-    Promise.all([google('query'), google('page')]).catch((error: unknown) =>
-      error instanceof Error ? error : new Error(String(error)),
+    Promise.all([google('query'), google('page'), google()]).catch(
+      (error: unknown) =>
+        error instanceof Error ? error : new Error(String(error)),
     ),
   ])
   const googleError = googleRead instanceof Error ? googleRead : null
-  const [googleQueries, googlePages] =
+  const [googleQueries, googlePages, googleTotal] =
     googleRead instanceof Error ? [] : googleRead
   const beside = (
     bing: Summed[],
@@ -282,6 +283,14 @@ export async function bingSection(
   const p = sumWeeks(pages.rows, range)
   const invalid = queries.invalidRows + pages.invalidRows
   const empty = !queries.rows.length && !pages.rows.length && !invalid
+  const gap =
+    googleQueries && googlePages && googleTotal && !empty
+      ? engineGap(q.rows, p.rows, {
+          queries: googleQueries,
+          pages: googlePages,
+          impressions: googleTotal.rows[0]?.impressions ?? 0,
+        })
+      : null
   return {
     range,
     bingSite: source.site,
@@ -290,6 +299,7 @@ export async function bingSection(
       bingPages: p.rows.length,
       weeks: q.weeks.length,
     },
+    ...(gap ? { finding: gap.finding, gap: gap.data } : {}),
     items: beside(q.rows, googleQueries?.rows, 'query'),
     topPages: beside(p.rows, googlePages?.rows, 'page'),
     caveats: [
@@ -306,6 +316,105 @@ export async function bingSection(
         ? [`${invalid} Bing rows were not valid and were left out.`]
         : []),
     ],
+  }
+}
+
+const GOOGLE_ROWS = 25_000
+const GAP_PAGES = 20
+
+type GoogleRows = Awaited<ReturnType<SearchAnalyticsQuery>>
+
+// Search Console and Bing side by side for one site: how many distinct
+// queries each shows, how much of Google's impressions sit in queries it
+// hides, and pages that one engine shows and the other does not.
+function engineGap(
+  bingQueries: Summed[],
+  bingPages: Summed[],
+  google: { queries: GoogleRows; pages: GoogleRows; impressions: number },
+) {
+  const query = (value: string) => value.toLowerCase().trim()
+  const page = (value: string) => value.replace(/#.*$/, '')
+  const googleQueries = new Set(
+    google.queries.rows.map((row) => query(row.keys[0] ?? '')),
+  )
+  const bingQuerySet = new Set(bingQueries.map((row) => query(row.key)))
+  const shared = [...bingQuerySet].filter((key) => googleQueries.has(key))
+  const queriesCapped = google.queries.rowsFetched >= GOOGLE_ROWS
+  const pagesCapped = google.pages.rowsFetched >= GOOGLE_ROWS
+  const shown = google.queries.rows.reduce(
+    (sum, row) => sum + row.impressions,
+    0,
+  )
+  // Impressions in queries Search Console does not list. With the query
+  // rows capped, unread rows count here too, so it is a ceiling.
+  const hiddenPct =
+    google.impressions > 0
+      ? Math.round(
+          (Math.max(0, google.impressions - shown) / google.impressions) * 1000,
+        ) / 10
+      : null
+  const googleByPage = new Map(
+    google.pages.rows.map((row) => [page(row.keys[0] ?? ''), row]),
+  )
+  const bingByPage = new Set(bingPages.map((row) => page(row.key)))
+  const bingOnlyPages = bingPages
+    .filter((row) => row.impressions > 0 && !googleByPage.has(page(row.key)))
+    .slice(0, GAP_PAGES)
+    .map((row) => ({
+      page: row.key,
+      bingClicks: row.clicks,
+      bingImpressions: row.impressions,
+      bingPosition: row.position,
+    }))
+  const googleOnlyPages = [...google.pages.rows]
+    .filter((row) => row.clicks > 0 && !bingByPage.has(page(row.keys[0] ?? '')))
+    .sort(
+      (a, b) =>
+        b.clicks - a.clicks ||
+        b.impressions - a.impressions ||
+        String(a.keys[0]).localeCompare(String(b.keys[0])),
+    )
+    .slice(0, GAP_PAGES)
+    .map((row) => ({
+      page: row.keys[0] ?? '',
+      googleClicks: row.clicks,
+      googleImpressions: row.impressions,
+      googlePosition: Math.round(row.position * 10) / 10,
+    }))
+  const googleCount = googleQueries.size
+  const bingCount = bingQuerySet.size
+  // A heuristic: the ratio of what each engine chose to list, not of demand.
+  const ratio =
+    bingCount > 0 && !queriesCapped
+      ? Math.round((googleCount / bingCount) * 10) / 10
+      : null
+  const finding = [
+    `Distinct queries, same dates: Search Console lists ${queriesCapped ? `at least ${googleCount} (capped)` : googleCount}, Bing ${bingCount}; ${shared.length} appear in both and ${bingCount - shared.length} ${queriesCapped ? 'are not among the Search Console rows read' : "only in Bing's list"}.`,
+    ratio !== null
+      ? `Search Console lists ${ratio} times as many queries as Bing for this site, a heuristic: each engine lists its own subset, so this is not a ratio of searches.`
+      : null,
+    hiddenPct !== null
+      ? `Queries Search Console hides for privacy carry ${queriesCapped ? 'at most ' : ''}${hiddenPct}% of its impressions.`
+      : null,
+    `Pages: ${bingOnlyPages.length}${bingOnlyPages.length === GAP_PAGES ? '+' : ''} get Bing impressions with no Search Console row${pagesCapped ? ' among the pages read (capped)' : ''}; ${googleOnlyPages.length}${googleOnlyPages.length === GAP_PAGES ? '+' : ''} get Google clicks and are not in Bing's list, which holds only Bing's top pages, so that is not proof Bing does not show them.`,
+  ]
+    .filter(Boolean)
+    .join(' ')
+  return {
+    finding,
+    data: {
+      googleQueries: googleCount,
+      googleQueriesCapped: queriesCapped,
+      bingQueries: bingCount,
+      sharedQueries: shared.length,
+      bingOnlyQueries: bingCount - shared.length,
+      googleToBingQueryRatio: ratio,
+      ratioHeuristic: true,
+      googleHiddenImpressionsPct: hiddenPct,
+      googlePagesCapped: pagesCapped,
+      bingOnlyPages,
+      googleOnlyPages,
+    },
   }
 }
 

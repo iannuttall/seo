@@ -79,8 +79,8 @@ export const SECTIONS = {
   'traffic-drop':
     'Daily clicks and impressions checked for a sudden change that lasted, with the date it started (else the last 7 days against the days before), and Google updates within 3 days of that date. Overlap is timing only, not cause.',
   'ai-queries':
-    'Queries with the shape of AI conversations and agent searches (replies such as "yes go on", follow-ups, agent prompts, search operators, chat phrasing, ten or more words), with rewordings grouped into one question and its top page, impressions, clicks and position. A heuristic: Search Console does not mark AI Mode.',
-  bing: 'Bing’s top queries from Bing Webmaster Tools with Google’s clicks, impressions and position for the same query beside them, and the same for pages.',
+    'Queries with the shape of AI conversations and agent searches (replies such as "yes go on", follow-ups, agent prompts, search operators, a pronoun with nothing named, chat phrasing, ten or more words), with rewordings grouped into one question and its top page, impressions, clicks and position, and follow-up trails: follow-ups that reached one page on one day. A heuristic: Search Console does not mark AI Mode.',
+  bing: 'Bing’s top queries from Bing Webmaster Tools with Google’s clicks, impressions and position for the same query beside them, and the same for pages; how many distinct queries each engine shows, and pages one engine shows that the other does not.',
 } as const
 
 export type SectionId = keyof typeof SECTIONS
@@ -661,6 +661,7 @@ async function allSections(
         `## ${id}: ${shown.total} ${shown.total === 1 ? 'row' : 'rows'}`,
         SECTIONS[id],
         typeof run.queryShapes === 'string' ? run.queryShapes : null,
+        typeof run.finding === 'string' ? run.finding : null,
         shown.text,
         id === 'traffic-drop'
           ? listOfUpdates(run.googleUpdates, run.updateWindow)
@@ -791,6 +792,7 @@ async function oneSection(
   }
   const notes: string[] = money ? [money] : []
   if (typeof report.queryShapes === 'string') notes.push(report.queryShapes)
+  if (typeof report.finding === 'string') notes.push(report.finding)
   const brand = brandNote(report)
   if (brand) notes.push(brand)
   const updates = listOfUpdates(report.googleUpdates, report.updateWindow)

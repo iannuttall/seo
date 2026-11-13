@@ -1,4 +1,8 @@
+import { isBrandQuery } from '../brand.js'
+import { editsWithin, resolveReportBrandTerms } from '../brand-evidence.js'
 import type { SearchAnalyticsQuery } from '../gsc/client/types.js'
+import { shiftIsoDate } from '../gsc/dates.js'
+import type { GscRow } from '../types.js'
 
 // Search Console queries with the shape of AI conversations and agent
 // searches: replies such as "yes go on", follow-ups, agent prompts, search
@@ -12,6 +16,7 @@ export type AiQueryKind =
   | 'reply'
   | 'follow_up'
   | 'operator'
+  | 'pronoun'
   | 'chat'
   | 'long'
 
@@ -35,6 +40,7 @@ const RULES: [AiQueryKind, string][] = [
     'operator',
     '(^|\\s)-?(site|before|after|intitle|inurl|intext|filetype):|"[^"]*" or "',
   ],
+  ['pronoun', '\\b(it|its|they|them|their|this|these|those)\\b'],
   [
     'chat',
     '\\b(please|can you|could you|give me|show me|tell me|i want|i need|i have|i am|should i|do i need|is it worth|help me|walk me through)\\b|^(what|how|why|is|does|can|will|would) (it|that|this|they)\\b',
@@ -48,6 +54,8 @@ export const AI_QUERY_KINDS: Record<AiQueryKind, string> = {
   reply: 'a bare reply, such as "yes" or "tell me more"',
   follow_up: 'a follow-up, such as "what about …"',
   operator: 'search operators, such as site:, before: or "a" or "b"',
+  pronoun:
+    'a pronoun with nothing named, such as "how much is it" or "do they ship to canada", so likely a follow-up in a conversation',
   chat: 'chat phrasing, such as "can you" or "should i"',
   long: 'ten or more words with no other sign',
 }
@@ -105,9 +113,64 @@ export function askable(query: string, kind: AiQueryKind | undefined) {
   )
 }
 
-export function aiQueryKind(query: string): AiQueryKind | null {
+// A pronoun that points back at something said earlier, in a query under
+// ten words. Pronouns before a time word ("this week") and the "it" of
+// time, weather, distance and "is it safe to" are not references.
+const PRONOUNS = /\b(it|its|they|them|their|this|these|those)\b/gu
+const TIME_WORD =
+  /\b(this|these|those) (morning|evening|afternoon|night|day|date|week|weekend|month|year|time)\b/gu
+const DUMMY_IT =
+  /\b(now|rn|atm|tn|tdy|tmr|tmrw|tonite|yday|currently|to ?n?ight|to day|lastn\S*|(last|past|next|this) \S+|(mon|tues|wednes|thurs|fri|satur|sun)day|outside|dark|sunny|raining|snowing|o'?clock)\b|\bit (take|takes|took)\b.*\b(to|for)\b|\b(far|miles|km) (is|was) it (to|from|around|between)\b|\bis it (\S+ )?(safe|legal|illegal|possible|ok|okay|bad|good|better|best|hard|easy|normal|necessary|true|cheaper|rude|wise) (to|for|if)\b/u
+// "it" that a person types with nothing said before: naming the thing and
+// asking which one it is ("what moon is it", "what day is it"), or whether
+// it is a named thing ("was it a full moon", "is it a bank holiday"). A
+// class word such as name or brand is still a follow-up ("is it a common
+// name"): the thing itself is not named.
+const IDENTIFY_IT =
+  /^(what|which)( (kind|type|sort) of)?( \S+){1,2} (is|was) it\b|^(is|was) it (a|an|the) /u
+const CLASS_WORD =
+  /\b(name|surname|names|word|thing|one|company|brand|product|place|site|website|app|scam|service)\b/u
+const PRONOUN_WORDS = 10
+// Time words, also with a typing slip ("tofay", "tommorow").
+const DAYS = ['today', 'tonight', 'tomorrow', 'yesterday']
+
+function pointsBack(text: string): boolean {
+  const tokens = text.split(/\s+/u)
+  if (tokens.length >= PRONOUN_WORDS) return false
+  // "its" after a word belongs to a noun in the same query ("get its name").
+  const found =
+    text
+      .replace(TIME_WORD, ' ')
+      .replace(/(?<!^)\bits\b/gu, ' ')
+      .match(PRONOUNS) ?? []
+  if (!found.length) return false
+  if (!found.every((word) => word === 'it' || word === 'its')) return true
+  return !(
+    DUMMY_IT.test(text) ||
+    (IDENTIFY_IT.test(text) && !CLASS_WORD.test(text)) ||
+    tokens.some(
+      (token) =>
+        token.length >= 4 &&
+        DAYS.some((day) => editsWithin(token, day, day.length >= 8 ? 2 : 1)),
+    )
+  )
+}
+
+// With the site's brand terms, a pronoun query that names the brand is not
+// a follow-up: the person said who they meant.
+export function aiQueryKind(
+  query: string,
+  brandTerms: string[] = [],
+): AiQueryKind | null {
   const text = query.trim().toLowerCase()
-  return MATCHERS.find(([, pattern]) => pattern.test(text))?.[0] ?? null
+  return (
+    MATCHERS.find(
+      ([kind, pattern]) =>
+        pattern.test(text) &&
+        (kind !== 'pronoun' ||
+          (pointsBack(text) && !isBrandQuery(text, brandTerms))),
+    )?.[0] ?? null
+  )
 }
 
 const STOP = new Set(
@@ -131,6 +194,15 @@ function words(query: string): Set<string> {
 }
 
 const SAME_QUESTION = 0.6
+const BRAND_ROWS = 5_000
+// Follow-up trails use the last 28 days of the range, by date, query and
+// page, so the rows stay under the cap on a busy site.
+const TRAIL_DAYS = 28
+const TRAILS_KEPT = 50
+const TURNS = new Set<AiQueryKind>(['reply', 'follow_up', 'pronoun'])
+const TURN_PATTERN = RULES.filter(([kind]) => TURNS.has(kind))
+  .map(([, pattern]) => `(?:${pattern})`)
+  .join('|')
 const MAX_ROWS = 25_000
 const EXAMPLES = 3
 
@@ -165,6 +237,104 @@ const overlap = (
   return union ? shared / union : 0
 }
 
+type TrailDay = {
+  date: string
+  page: string
+  impressions: number
+  // One wording per question, with its impressions.
+  questions: Map<unknown, { query: string; impressions: number }>
+}
+
+// Follow-up turns (a pronoun with nothing named, a bare reply, "what
+// about …") joined by page and day: two or more different questions on one
+// page on one day make a trail. Search Console has no sessions, so this is
+// a heuristic and may join different people.
+function trailsOf(
+  rows: GscRow[],
+  brandTerms: string[],
+  questionOf: (text: string) => unknown,
+) {
+  const days = new Map<string, TrailDay>()
+  for (const row of rows) {
+    const [date = '', query = '', page = ''] = row.keys.map(String)
+    const text = query.trim().toLowerCase()
+    const kind = aiQueryKind(text, brandTerms)
+    if (!kind || !TURNS.has(kind) || aiQueryNoise(text)) continue
+    const key = `${date} ${page}`
+    const day = days.get(key) ?? {
+      date,
+      page,
+      impressions: 0,
+      questions: new Map(),
+    }
+    days.set(key, day)
+    const question = questionOf(text) ?? text
+    const seen = day.questions.get(question)
+    if (!seen || row.impressions > seen.impressions) {
+      day.questions.set(question, {
+        query: text,
+        impressions: row.impressions + (seen?.impressions ?? 0),
+      })
+    } else seen.impressions += row.impressions
+    day.impressions += row.impressions
+  }
+  const trails = [...days.values()]
+    .filter((day) => day.questions.size >= 2)
+    .map((day) => ({
+      date: day.date,
+      page: day.page,
+      turns: day.questions.size,
+      impressions: day.impressions,
+      queries: [...day.questions.values()]
+        .sort(
+          (a, b) =>
+            b.impressions - a.impressions || a.query.localeCompare(b.query),
+        )
+        .map((turn) => turn.query),
+    }))
+    .sort(
+      (a, b) =>
+        b.turns - a.turns ||
+        b.impressions - a.impressions ||
+        b.date.localeCompare(a.date) ||
+        a.page.localeCompare(b.page),
+    )
+  const pages = new Map<
+    string,
+    { trails: number; days: Set<string>; asked: Map<string, number> }
+  >()
+  for (const trail of trails) {
+    const entry = pages.get(trail.page) ?? {
+      trails: 0,
+      days: new Set(),
+      asked: new Map(),
+    }
+    pages.set(trail.page, entry)
+    entry.trails += 1
+    entry.days.add(trail.date)
+    for (const query of trail.queries) {
+      entry.asked.set(query, (entry.asked.get(query) ?? 0) + 1)
+    }
+  }
+  const byPage = [...pages]
+    .map(([page, entry]) => ({
+      page,
+      trails: entry.trails,
+      days: entry.days.size,
+      followUps: [...entry.asked]
+        .sort((a, b) => b[1] - a[1] || a[0].localeCompare(b[0]))
+        .slice(0, EXAMPLES)
+        .map(([query]) => query),
+    }))
+    .sort((a, b) => b.trails - a.trails || a.page.localeCompare(b.page))
+  return {
+    trailCount: trails.length,
+    pageCount: byPage.length,
+    byPage: byPage.slice(0, 10),
+    trails: trails.slice(0, TRAILS_KEPT),
+  }
+}
+
 const round = (value: number, places: number) =>
   Math.round(value * 10 ** places) / 10 ** places
 
@@ -173,7 +343,13 @@ export async function aiQueriesReport(
   searchAnalytics: SearchAnalyticsQuery,
 ): Promise<Record<string, unknown>> {
   const range = { startDate: input.startDate, endDate: input.endDate }
-  const [matched, site] = await Promise.all([
+  const trailRange = {
+    startDate: [input.startDate, shiftIsoDate(input.endDate, 1 - TRAIL_DAYS)]
+      .sort()
+      .at(-1) as string,
+    endDate: input.endDate,
+  }
+  const [matched, site, named, daily] = await Promise.all([
     searchAnalytics(input.site, {
       ...range,
       dimensions: ['query', 'page'],
@@ -198,7 +374,38 @@ export async function aiQueriesReport(
       type: 'web',
       dataState: 'final',
     }),
+    // The top queries by clicks, where the site's own name and its
+    // spellings are, for the brand terms.
+    searchAnalytics(input.site, {
+      ...range,
+      dimensions: ['query'],
+      type: 'web',
+      dataState: 'final',
+      maxRows: BRAND_ROWS,
+    }),
+    searchAnalytics(input.site, {
+      ...trailRange,
+      dimensions: ['date', 'query', 'page'],
+      type: 'web',
+      dataState: 'final',
+      maxRows: MAX_ROWS,
+      dimensionFilterGroups: [
+        {
+          filters: [
+            {
+              dimension: 'query',
+              operator: 'includingRegex',
+              expression: TURN_PATTERN,
+            },
+          ],
+        },
+      ],
+    }),
   ])
+  const brand = resolveReportBrandTerms({
+    siteUrl: input.site,
+    rows: named.rows,
+  })
 
   // Biggest first, so each group is named after its most seen wording.
   const rows = [...matched.rows].sort(
@@ -220,10 +427,14 @@ export async function aiQueriesReport(
   const byText = new Map<string, Group>()
   const kindOf = new Map<string, AiQueryKind>()
   const noise = new Map<AiQueryNoise, Set<string>>()
+  const namesBrand = new Set<string>()
   for (const row of rows) {
     const query = String(row.keys[0] ?? '')
     const page = String(row.keys[1] ?? '')
-    const kind = aiQueryKind(query)
+    const kind = aiQueryKind(query, brand.terms)
+    if (kind !== 'pronoun' && aiQueryKind(query) === 'pronoun') {
+      namesBrand.add(query.trim().toLowerCase())
+    }
     if (!kind) continue
     const junk = aiQueryNoise(query)
     if (junk) {
@@ -344,6 +555,21 @@ export async function aiQueriesReport(
     .sort((a, b) => a[0].localeCompare(b[0]))
     .map(([reason, seen]) => `${reason.replace('_', ' ')} ${seen.size}`)
     .join(', ')
+  const followUps = trailsOf(daily.rows, brand.terms, (text) =>
+    byText.get(text),
+  )
+  const path = (page: string) => page.replace(/^https?:\/\/[^/]+/u, '') || '/'
+  const finding = followUps.trailCount
+    ? `Follow-up trails, a heuristic, ${trailRange.startDate} to ${trailRange.endDate}: ${followUps.trailCount} on ${followUps.pageCount} ${followUps.pageCount === 1 ? 'page' : 'pages'}, where two or more follow-ups (a pronoun with nothing named, a bare reply, "what about …") reached one page on one day. ${followUps.byPage
+        .slice(0, 3)
+        .map(
+          (entry) =>
+            `${path(entry.page)}: ${entry.trails}, such as ${entry.followUps.map((query) => `"${query}"`).join(', ')}`,
+        )
+        .join(
+          '; ',
+        )}. Search Console has no sessions, so a trail may join different people; it hides rare queries, so these counts are floors.`
+    : `No follow-up trails from ${trailRange.startDate} to ${trailRange.endDate}: no page got two or more follow-ups on one day.`
   const asked = items.filter((item) => item.askable).length
   const capped = matched.rowsFetched >= MAX_ROWS
   return {
@@ -365,11 +591,20 @@ export async function aiQueriesReport(
         ? round(total.clicks / total.impressions, 4)
         : 0,
     },
+    finding,
     kinds: AI_QUERY_KINDS,
     items,
+    followUps: {
+      range: trailRange,
+      ...followUps,
+      namesBrand: namesBrand.size,
+      brandTerms: brand.terms,
+      capped: daily.rowsFetched >= MAX_ROWS,
+    },
     caveats: [
       'A heuristic: these queries match the patterns of AI conversations and agent searches. Search Console does not mark AI Mode or AI Overviews, and people type some of these too.',
       'A minimum: Search Console leaves out rare queries, and these are rare by nature.',
+      'pronoun: it, they, this and the like with nothing named, under ten words. Queries that name the site (its brand terms, from its own top queries) and the "it" of time, weather and distance are not counted.',
       'Rewordings of one question are grouped by their shared words; page is the page with the most impressions for it.',
       'Left out and counted, not shown: letters split by spaces, text broken by a wrong encoding, and text pasted from a tool or an agent’s output.',
       'askable: a chat or long question that opens with a question word or a request such as "i need", or ends with a question mark, so an AI engine can be asked it as it is. ai_answers checks the top askable questions only.',

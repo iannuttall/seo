@@ -1,6 +1,11 @@
 import assert from 'node:assert/strict'
 import { test } from 'node:test'
-import { aiQueryKind, aiQueryNoise, askable } from './ai-queries.js'
+import {
+  aiQueriesReport,
+  aiQueryKind,
+  aiQueryNoise,
+  askable,
+} from './ai-queries.js'
 
 // Junk that matched the AI query patterns and was sent to paid AI answer
 // checks: split letters, broken encoding and pasted tool or agent text.
@@ -59,4 +64,90 @@ test('ai-queries leaves out junk and asks only standalone questions', () => {
   ]) {
     assert.equal(askable(query, aiQueryKind(query) ?? undefined), false, query)
   }
+})
+
+// Follow-ups with a pronoun and nothing named, joined by page and day. The
+// site's own name, the "it" of time and distance, and "this week" are not
+// follow-ups.
+test('ai-queries finds pronoun follow-ups and joins them into trails', async () => {
+  const row = (keys: string[], impressions: number, clicks = 0) => ({
+    keys,
+    clicks,
+    impressions,
+    ctr: clicks / impressions,
+    position: 3,
+  })
+  for (const [query, kind] of [
+    ['how much is it', 'pronoun'],
+    ['do they ship to canada', 'pronoun'],
+    ['is it rare', 'pronoun'],
+    ['was it a full moon last night', null],
+    ['how far is it to the moon', null],
+    ['how long does it take to get to mars', null],
+    ['is it safe to swim in the sea', null],
+    ['what moon is it', null],
+    ['was it a full moon', null],
+    ['is it a common name', 'pronoun'],
+    ['what happened this week', null],
+  ] as const) {
+    assert.equal(aiQueryKind(query) === 'pronoun', kind === 'pronoun', query)
+  }
+  assert.equal(aiQueryKind('do they ship examplestore', ['examplestore']), null)
+
+  const page = 'https://example.com/widgets/'
+  const other = 'https://example.com/about/'
+  const daily = [
+    row(['2026-10-01', 'how much is it', page], 4),
+    row(['2026-10-01', 'do they ship to canada', page], 2),
+    row(['2026-10-01', 'how much does it cost', page], 1),
+    // The site's own name: not a follow-up, so no trail on the 2nd.
+    row(['2026-10-02', 'how much is it', page], 3),
+    row(['2026-10-02', 'does examplestore ship it', page], 3),
+    // One follow-up on another page that day: not a trail.
+    row(['2026-10-01', 'yes', other], 5),
+  ]
+  // The site is the navigational answer for its own name.
+  const named = [
+    { ...row(['examplestore'], 200, 120), position: 1 },
+    { ...row(['example store'], 50, 20), position: 1.2 },
+  ]
+  const report = await aiQueriesReport(
+    {
+      site: 'sc-domain:examplestore.com',
+      startDate: '2026-08-01',
+      endDate: '2026-10-28',
+    },
+    async (_site, body) => {
+      const dims = body.dimensions ?? []
+      const rows =
+        dims[0] === 'date'
+          ? daily
+          : dims.length === 0
+            ? [row([], 1000, 10)]
+            : dims.length === 1
+              ? named
+              : daily.map((r) => row(r.keys.slice(1), r.impressions))
+      return { rows, calls: 1, rowsFetched: rows.length }
+    },
+  )
+  const followUps = report.followUps as {
+    range: { startDate: string }
+    trailCount: number
+    trails: { date: string; page: string; turns: number; queries: string[] }[]
+    brandTerms: string[]
+  }
+  assert.equal(followUps.range.startDate, '2026-10-01')
+  assert.ok(followUps.brandTerms.includes('examplestore'))
+  assert.equal(followUps.trailCount, 1)
+  assert.deepEqual(followUps.trails[0], {
+    date: '2026-10-01',
+    page,
+    turns: 3,
+    impressions: 7,
+    queries: [
+      'how much is it',
+      'do they ship to canada',
+      'how much does it cost',
+    ],
+  })
 })

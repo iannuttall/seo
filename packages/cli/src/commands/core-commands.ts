@@ -694,7 +694,11 @@ export const researchCommand = defineCommand({
       )
       return
     }
-    await run(args, () =>
+    // keyword_metrics with a site and no keywords: zero-volume keywords.
+    const zeroVolume =
+      action === 'keyword_metrics' && !keywords.length && target
+    const site = zeroVolume ? await property(args, target) : target
+    await run(args, (deps) =>
       runResearch(
         {
           provider,
@@ -703,7 +707,7 @@ export const researchCommand = defineCommand({
           device,
           action,
           keywords,
-          target,
+          target: site,
           competitors,
           country,
           detail: detailArg(args),
@@ -711,6 +715,7 @@ export const researchCommand = defineCommand({
         },
         keys,
         {
+          searchAnalytics: zeroVolume ? deps.searchAnalytics : undefined,
           store: localResearchStore(booleanArg(args.refresh)),
           installedSerp: installedProviderSerp,
           call: (offset) =>

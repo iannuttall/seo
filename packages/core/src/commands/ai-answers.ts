@@ -35,8 +35,14 @@ export const AI_ANSWER_DOMAINS = 5
 const QUESTION_DAYS = 90
 
 // What an engine showed: the answer as Markdown, the URLs it cited (never
-// pages it only looked at), and the model DataForSEO says answered.
-type Shown = { markdown: string; sources: string[]; model: string | null }
+// pages it only looked at), the model DataForSEO says answered, and the web
+// searches it ran (null when the engine does not report them).
+type Shown = {
+  markdown: string
+  sources: string[]
+  model: string | null
+  searches: string[] | null
+}
 
 // Where and in which language an engine is asked. location is the code
 // from DataForSEO's own list when it has the country, else its name.
@@ -57,6 +63,8 @@ type Engine = {
   task: (question: string, market: Market) => Record<string, unknown>
   // What the engine showed, or null when it showed no AI answer.
   shown: (result: Record<string, unknown>) => Shown | null
+  // Whether DataForSEO reports the searches the engine ran.
+  searches: boolean
 }
 
 type Item = Record<string, unknown>
@@ -80,6 +88,7 @@ const overview = (result: Item): Shown | null => {
       ...parts.flatMap((part) => list(part.references)),
     ]),
     model: null,
+    searches: null,
   }
 }
 
@@ -90,6 +99,9 @@ const ENGINES: Engine[] = [
     post: 'v3/ai_optimization/chat_gpt/llm_scraper/task_post',
     get: 'v3/ai_optimization/chat_gpt/llm_scraper/task_get/advanced/',
     languages: 'v3/ai_optimization/chat_gpt/llm_scraper/languages',
+    // Web search is not forced: a forced search costs the same but makes
+    // ChatGPT search, and cite, questions it answers from memory for a
+    // person. With no search it reports no fan-out searches.
     task: (question, market) => ({ keyword: question, ...market }),
     shown: (result) => {
       const markdown =
@@ -100,8 +112,20 @@ const ENGINES: Engine[] = [
         markdown,
         sources,
         model: typeof result.model === 'string' ? result.model : null,
+        searches: [
+          ...new Set(
+            (Array.isArray(result.fan_out_queries)
+              ? result.fan_out_queries
+              : []
+            )
+              .filter((query): query is string => typeof query === 'string')
+              .map((query) => query.trim())
+              .filter(Boolean),
+          ),
+        ],
       }
     },
+    searches: true,
   },
   {
     name: 'google_ai_mode',
@@ -111,6 +135,7 @@ const ENGINES: Engine[] = [
     languages: 'v3/serp/google/ai_mode/languages',
     task: (question, market) => ({ keyword: question, ...market }),
     shown: overview,
+    searches: false,
   },
   {
     name: 'google_ai_overview',
@@ -125,6 +150,7 @@ const ENGINES: Engine[] = [
       ...market,
     }),
     shown: overview,
+    searches: false,
   },
 ]
 
@@ -163,6 +189,9 @@ type Answer = {
   sources: string[]
   // The model DataForSEO reports for the answer, when it reports one.
   model: string | null
+  // The web searches the engine ran for the answer: [] when it reported
+  // none, null when it was not read or the engine does not report them.
+  searches: string[] | null
   answered_at: string | null
   error?: string
 }
@@ -206,6 +235,7 @@ const empty = {
   mentioned_as: null,
   sources: [],
   model: null,
+  searches: null,
   answered_at: null,
 }
 
@@ -253,6 +283,7 @@ function judge(engine: Engine, task: DataForSeoQueued, site: Site): Answer {
     mentioned_as: null,
     sources,
     model: shown.model,
+    searches: shown.searches,
     answered_at,
   }
   if (cited) return { result: 'cited', ...base }
@@ -334,6 +365,18 @@ type Row = {
   ref: string | null
   cost_usd: number
 } & Answer
+
+const TOP_SEARCHES = 15
+
+// The searches column: the searches, "none returned" when the engine
+// reported none, "not available" for an engine that never reports them,
+// and blank for an answer not read.
+function searchesText(row: Row): string | null {
+  const engine = ENGINES.find((item) => item.name === row.engine)
+  if (engine && !engine.searches) return 'not available'
+  if (row.searches === null) return null
+  return row.searches.length ? row.searches.join('; ') : 'none returned'
+}
 
 type Waiting = {
   row: Row
@@ -588,6 +631,27 @@ export async function runAiAnswers(
   const topCited = [...cites]
     .sort((a, b) => b[1] - a[1] || a[0].localeCompare(b[0]))
     .slice(0, 10)
+  // The searches ChatGPT ran, by how many answers ran each.
+  const searched = new Map<string, number>()
+  for (const row of rows) {
+    for (const query of row.searches ?? []) {
+      const key = query.toLowerCase()
+      searched.set(key, (searched.get(key) ?? 0) + 1)
+    }
+  }
+  const topSearches = [...searched]
+    .sort((a, b) => b[1] - a[1] || a[0].localeCompare(b[0]))
+    .slice(0, TOP_SEARCHES)
+  const reporting = rows.filter((row) => row.searches !== null)
+  const noSearches = reporting.filter((row) => !row.searches?.length).length
+  const silent = ENGINES.filter((engine) => !engine.searches)
+  const searchesNote = reporting.length
+    ? `Searches ChatGPT ran, across ${reporting.length} ${reporting.length === 1 ? 'answer' : 'answers'}${noSearches ? ` (${noSearches} returned none: ChatGPT answered without searching)` : ''}: ${
+        topSearches.length
+          ? `${topSearches.map(([query, n]) => `"${query}" (${n})`).join(', ')}${searched.size > TOP_SEARCHES ? `, and ${searched.size - TOP_SEARCHES} more in the rows` : ''}.`
+          : 'none returned.'
+      } ${silent.map((engine) => engine.name).join(' and ')} do not report their searches, so their searches column says not available.`
+    : null
   const questionCount = new Set(rows.map((row) => row.question)).size
   const notes = [
     tasks.length
@@ -605,6 +669,7 @@ export async function runAiAnswers(
                 `${left.length === 1 ? "One answer wasn't" : `${left.length} answers weren't`} ready yet. They're paid for: ask ai_answers again with the same target and tasks ${JSON.stringify(left)} in a minute to read them at no cost (DataForSEO keeps them for 30 days).`,
               ]
             : []),
+          ...(searchesNote ? [searchesNote] : []),
           ...(topCited.length
             ? [
                 `Other sites these answers cite: ${topCited.map(([host, n]) => `${host} (${n})`).join(', ')}.`,
@@ -631,6 +696,7 @@ export async function runAiAnswers(
     cited_url: row.cited_url,
     mentioned_as: row.mentioned_as,
     sources: row.sources.join(', '),
+    searches: searchesText(row),
     model: row.model,
     answered_at: row.answered_at,
     cost_usd: row.cost_usd,
@@ -669,6 +735,7 @@ export async function runAiAnswers(
       // answers again at no cost.
       tasks: refs,
       citedSites: topCited.map(([host, answers]) => ({ host, answers })),
+      searches: topSearches.map(([query, answers]) => ({ query, answers })),
       total: rows.length,
       offset: input.offset,
       rows: rows

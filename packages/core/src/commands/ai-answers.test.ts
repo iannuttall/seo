@@ -194,3 +194,84 @@ test('ai_answers counts the brand’s other domains and names', async () => {
     ],
   )
 })
+
+// ChatGPT's fan-out searches: listed per answer and ranked across answers.
+// An answer with no searches says none returned; an engine that never
+// reports searches says not available.
+test('ai_answers lists the searches ChatGPT ran', async () => {
+  const results: Record<string, Record<string, unknown>> = {
+    '1': {
+      markdown: 'Use a CRM such as Example.',
+      sources: [{ url: 'https://example.org/crm' }],
+      fan_out_queries: ['best crm small team', 'crm pricing 2026'],
+    },
+    '2': {
+      markdown: 'Import a CSV.',
+      sources: [{ url: 'https://example.net/import' }],
+      fan_out_queries: ['Best CRM small team', 'import contacts csv'],
+    },
+    '3': { markdown: 'Jane Austen wrote it.', sources: [] },
+    '4': {
+      items: [
+        { type: 'ai_overview', markdown: 'An overview.', references: [] },
+      ],
+    },
+  }
+  globalThis.fetch = (async (input: Request) => {
+    const id = input.url.split('/').pop() ?? ''
+    const key = id.slice(-1)
+    return Response.json({
+      tasks: [
+        {
+          id,
+          status_code: 20000,
+          status_message: 'Ok.',
+          cost: 0,
+          data: { keyword: `question ${key}` },
+          result: [{ datetime: '2026-11-05 10:00:00 +00:00', ...results[key] }],
+        },
+      ],
+    })
+  }) as typeof fetch
+  const out = await runAiAnswers(
+    {
+      site: 'example.com',
+      country: 'us',
+      detail: 'rows',
+      offset: 0,
+      tasks: [
+        'chatgpt:00000000-0000-0000-0000-000000000001',
+        'chatgpt:00000000-0000-0000-0000-000000000002',
+        'chatgpt:00000000-0000-0000-0000-000000000003',
+        'google_ai_mode:00000000-0000-0000-0000-000000000004',
+      ],
+      waitSeconds: 0,
+    },
+    new Headers({
+      'x-dataforseo-login': 'login',
+      'x-dataforseo-password': 'password',
+    }),
+    {} as CommandDeps,
+    () => 'next page',
+  )
+  const data = out.data as {
+    searches: { query: string; answers: number }[]
+    rows: { question: string; searches: string[] | null }[]
+  }
+  assert.deepEqual(
+    data.rows.map((row) => [row.question, row.searches]),
+    [
+      ['question 1', ['best crm small team', 'crm pricing 2026']],
+      ['question 2', ['Best CRM small team', 'import contacts csv']],
+      ['question 3', []],
+      ['question 4', null],
+    ],
+  )
+  assert.deepEqual(data.searches[0], {
+    query: 'best crm small team',
+    answers: 2,
+  })
+  assert.match(out.text, /\(1 returned none/)
+  assert.match(out.text, /none returned/)
+  assert.match(out.text, /not available/)
+})

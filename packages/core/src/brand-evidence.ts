@@ -31,7 +31,11 @@ export type BrandQueryEvidence = {
 
 export type BrandTermEvidence = {
   term: string
-  source: 'host-compound' | 'navigational-stem' | 'provided'
+  source:
+    | 'host-compound'
+    | 'navigational-stem'
+    | 'navigational-spelling'
+    | 'provided'
   reason: string
   query?: BrandQueryEvidence
 }
@@ -167,12 +171,76 @@ export function brandTermsFromQueryRows(input: {
     })
   }
 
+  for (const spelling of navigationalSpellings(input.rows, host.stem)) {
+    evidence.push({
+      term: spelling.query,
+      source: 'navigational-spelling',
+      reason: `"${spelling.query}" is a spelling of ${host.stem} that averages position ${spelling.position} with CTR ${spelling.ctr} over ${spelling.impressions} impressions, so the property looks like its navigational answer (heuristic).`,
+      query: spelling,
+    })
+  }
+
   return {
     terms: evidence.map((item) => item.term),
     evidence,
     excluded,
     method,
   }
+}
+
+// Edits between two short strings, stopping once past `most`.
+export function editsWithin(a: string, b: string, most: number): boolean {
+  if (Math.abs(a.length - b.length) > most) return false
+  let previous = Array.from({ length: b.length + 1 }, (_, index) => index)
+  for (let i = 1; i <= a.length; i++) {
+    const current = [i]
+    for (let j = 1; j <= b.length; j++) {
+      current[j] = Math.min(
+        (previous[j] ?? 0) + 1,
+        (current[j - 1] ?? 0) + 1,
+        (previous[j - 1] ?? 0) + (a[i - 1] === b[j - 1] ? 0 : 1),
+      )
+    }
+    if (Math.min(...current) > most) return false
+    previous = current
+  }
+  return (previous[b.length] ?? most + 1) <= most
+}
+
+const SPELLING_WORDS = 3
+
+// Short queries one or two typing slips from the domain stem ("exmaple
+// store" for examplestore.com) that the property answers like its own name,
+// under the same thresholds as the bare stem.
+function navigationalSpellings(
+  rows: GscRow[],
+  stem: string,
+): BrandQueryEvidence[] {
+  const target = compact(stem)
+  if (target.length < 6) return []
+  const most = target.length >= 9 ? 2 : 1
+  const totals = new Map<string, GscRow[]>()
+  for (const row of rows) {
+    const value = row.keys?.[0]
+    if (typeof value !== 'string') continue
+    if (normalizeBrandText(value).split(' ').length > SPELLING_WORDS) continue
+    const key = compact(value)
+    if (key === target || !editsWithin(key, target, most)) continue
+    totals.set(key, [...(totals.get(key) ?? []), row])
+  }
+  const thresholds = NAVIGATIONAL_STEM_THRESHOLDS
+  return [...totals]
+    .map(([key, matched]) => stemQueryEvidence(matched, key))
+    .filter(
+      (found): found is BrandQueryEvidence =>
+        !!found &&
+        found.impressions >= thresholds.minimumImpressions &&
+        found.position <= thresholds.maximumPosition &&
+        found.ctr >= thresholds.minimumCtr,
+    )
+    .sort(
+      (a, b) => b.impressions - a.impressions || a.query.localeCompare(b.query),
+    )
 }
 
 export type ReportBrandTerms = {

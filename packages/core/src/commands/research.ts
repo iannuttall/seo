@@ -1,3 +1,4 @@
+import type { SearchAnalyticsQuery } from '../gsc/client/types.js'
 import { AI_ANSWER_QUESTIONS } from './ai-answers.js'
 import {
   bareDomain,
@@ -31,6 +32,11 @@ import {
   SERP_DEPTH,
   type SiteTotal,
 } from './research-providers.js'
+import {
+  ZERO_VOLUME_KEYWORDS,
+  zeroVolumeCandidates,
+  zeroVolumeRows,
+} from './research-zero-volume.js'
 import { PAGE_SIZE, rowsText } from './rows.js'
 import { CommandError, type CommandResult } from './types.js'
 
@@ -67,7 +73,7 @@ export const RESEARCH_PROVIDERS = [
   'ahrefs',
 ] as const satisfies readonly ResearchProvider[]
 
-export const RESEARCH_HELP = `provider is optional: without it the call uses the saved key, DataForSEO when both are saved. In the CLI and the local MCP server, serp can also use a provider package installed on this machine that supplies live search results: pass its id as provider. The target is a domain (the whole site), a path ending in / such as example.com/blog/ (every URL under it), or one page; scope overrides that. keyword_metrics (keywords: volume, difficulty, CPC), keyword_ideas (up to 5 seed keywords: searches that contain each seed, by volume), ranked_keywords (target: keywords a site, subfolder or page ranks for, with the provider's traffic total for the whole target), top_pages (target: the pages with the most estimated organic traffic), serp (keywords, up to 5: the ranking pages with their organic position beside DataForSEO's rank_absolute, which also counts AI Overviews and other blocks, plus the AI Overview's sources and the People Also Ask questions; device desktop or mobile, DataForSEO only; each with its domain's authority: DataForSEO domain_rank 0 to 100, Ahrefs domain_rating; depth sets results per keyword, default ${SERP_DEPTH}; rows run position by position across the keywords), index_check (DataForSEO only; target: one page URL; keywords: up to ${INDEX_CHECK_PHRASES} exact phrases from the page, default its H1 or title. Searches Google for site:<url> and each "<phrase>" on desktop and mobile, retries failed searches, treats Google's fallback to unrelated sites as no match, and says indexed, not found or unknown with each search's evidence; about $0.01 a page), serp_overlap (2 to 10 keywords: for each pair, how many of their top 10 pages and sites are the same, to decide one page or several; results without a real page are counted, not compared), competitors (target: domains that share keywords), backlinks (target: referring domains), pages_by_backlinks (target: the pages with the most referring domains), link_gap (target and 2 to 5 competitors: referring domains that link to two or more competitors and not the target, highest authority first, from each site's top 1,000 referring domains; costs one backlinks call per site), ai_answers (DataForSEO only; target: the site. Without keywords it takes the site’s top ${AI_ANSWER_QUESTIONS} chat-style and long questions from Search Console’s AI-shaped queries itself. With up to ${AI_ANSWER_QUESTIONS} questions in keywords it asks those instead, and the target can be any domain, such as a competitor's. Each answer row also lists the other sites it cites, and the notes rank them. Answers come from DataForSEO's queue: answers not ready after about 40 seconds are returned as tasks, already paid for; call again with the same target and those tasks to read them at no cost. It asks ChatGPT search, Google AI Mode and Google AI Overviews each one and says whether the answer cites or mentions the site. DataForSEO’s queue prices are about $0.0072 a question across the three engines, so about $0.07 a run: tell the person before running it). Rows with a domain, and the target, get a free Ahrefs domain_rating column. Numbers are provider estimates, not Search Console data.`
+export const RESEARCH_HELP = `provider is optional: without it the call uses the saved key, DataForSEO when both are saved. In the CLI and the local MCP server, serp can also use a provider package installed on this machine that supplies live search results: pass its id as provider. The target is a domain (the whole site), a path ending in / such as example.com/blog/ (every URL under it), or one page; scope overrides that. keyword_metrics (keywords: volume, difficulty, CPC; or target a Search Console site with no keywords: its top queries by impressions that the provider rates at zero or does not know, zero-volume keywords, in one call of up to 700 queries, about $0.10 on DataForSEO or 100 on Ahrefs), keyword_ideas (up to 5 seed keywords: searches that contain each seed, by volume), ranked_keywords (target: keywords a site, subfolder or page ranks for, with the provider's traffic total for the whole target), top_pages (target: the pages with the most estimated organic traffic), serp (keywords, up to 5: the ranking pages with their organic position beside DataForSEO's rank_absolute, which also counts AI Overviews and other blocks, plus the AI Overview's sources and the People Also Ask questions; device desktop or mobile, DataForSEO only; each with its domain's authority: DataForSEO domain_rank 0 to 100, Ahrefs domain_rating; depth sets results per keyword, default ${SERP_DEPTH}; rows run position by position across the keywords), index_check (DataForSEO only; target: one page URL; keywords: up to ${INDEX_CHECK_PHRASES} exact phrases from the page, default its H1 or title. Searches Google for site:<url> and each "<phrase>" on desktop and mobile, retries failed searches, treats Google's fallback to unrelated sites as no match, and says indexed, not found or unknown with each search's evidence; about $0.01 a page), serp_overlap (2 to 10 keywords: for each pair, how many of their top 10 pages and sites are the same, to decide one page or several; results without a real page are counted, not compared), competitors (target: domains that share keywords), backlinks (target: referring domains), pages_by_backlinks (target: the pages with the most referring domains), link_gap (target and 2 to 5 competitors: referring domains that link to two or more competitors and not the target, highest authority first, from each site's top 1,000 referring domains; costs one backlinks call per site), ai_answers (DataForSEO only; target: the site. Without keywords it takes the site’s top ${AI_ANSWER_QUESTIONS} chat-style and long questions from Search Console’s AI-shaped queries itself. With up to ${AI_ANSWER_QUESTIONS} questions in keywords it asks those instead, and the target can be any domain, such as a competitor's. Each answer row also lists the other sites it cites, and the notes rank them. Answers come from DataForSEO's queue: answers not ready after about 40 seconds are returned as tasks, already paid for; call again with the same target and those tasks to read them at no cost. It asks ChatGPT search, Google AI Mode and Google AI Overviews each one and says whether the answer cites or mentions the site. Each ChatGPT row lists the web searches ChatGPT ran (fan-out), and the notes rank the most common; to see them for any questions, pass the questions in keywords with any target. Web search is not forced: forcing costs the same but makes ChatGPT search questions it answers from memory, so "none returned" means it answered without searching. AI Mode and AI Overviews do not report their searches. DataForSEO’s queue prices are about $0.0072 a question across the three engines, so about $0.07 a run: tell the person before running it). Rows with a domain, and the target, get a free Ahrefs domain_rating column. Numbers are provider estimates, not Search Console data.`
 
 // Platforms that share keywords with almost every site. Competitor lists
 // leave them out, with the target itself, and say how many rows went.
@@ -194,6 +200,8 @@ export async function runResearch(
     store?: ResearchStore | null
     // serp from installed provider packages, on the surfaces that load them.
     installedSerp?: InstalledSerp
+    // keyword_metrics with a site and no keywords reads the site's queries.
+    searchAnalytics?: SearchAnalyticsQuery
   },
 ): Promise<CommandResult> {
   const country = input.country ?? 'us'
@@ -203,6 +211,14 @@ export async function runResearch(
     throw new CommandError('INVALID_INPUT', 'ai_answers runs on its own.')
   }
   const provider = chooseProvider(input.provider, keys)
+  if (
+    input.action === 'keyword_metrics' &&
+    !input.keywords?.length &&
+    target &&
+    options.searchAnalytics
+  ) {
+    return zeroVolume(input, keys, provider, options.searchAnalytics, options)
+  }
   const builtIn = (RESEARCH_PROVIDERS as readonly string[]).includes(provider)
     ? (provider as ResearchProvider)
     : null
@@ -642,5 +658,112 @@ async function sortedByDomainRating(
       ...rows.slice(GAP_RATED).map((row) => withDr(row, false)),
     ],
     added: true,
+  }
+}
+
+// keyword_metrics for a site: its top Search Console queries by impressions,
+// asked of the provider in one call, and the ones it rates at zero or does
+// not know.
+async function zeroVolume(
+  input: ResearchInput,
+  keys: Headers,
+  asked: string,
+  searchAnalytics: SearchAnalyticsQuery,
+  options: { call: (offset: number) => string; store?: ResearchStore | null },
+): Promise<CommandResult> {
+  if (!(RESEARCH_PROVIDERS as readonly string[]).includes(asked)) {
+    throw new CommandError(
+      'INVALID_INPUT',
+      'keyword_metrics for a site needs dataforseo or ahrefs.',
+    )
+  }
+  const provider = asked as ResearchProvider
+  const country = input.country ?? 'us'
+  const site = input.target ?? ''
+  const offset = input.offset ?? 0
+  const candidates = await zeroVolumeCandidates(
+    site,
+    searchAnalytics,
+    ZERO_VOLUME_KEYWORDS[provider],
+  )
+  const keywords = candidates.queries.map((query) => query.keyword)
+  const request = {
+    action: 'keyword_metrics' as const,
+    keywords,
+    target: '',
+    competitors: [],
+    country,
+  }
+  const limit = keywords.length
+  const store = options.store ?? workersResearchStore()
+  const key = await researchKey([
+    provider,
+    keys.get(KEY_HEADER[provider]),
+    request,
+  ])
+  const saved = keywords.length ? await readResearch(store, key, limit) : null
+  const result = keywords.length
+    ? (saved?.result ?? (await research(provider, keys, { ...request, limit })))
+    : null
+  if (result && !saved) {
+    await saveResearch(store, key, {
+      limit,
+      savedAt: new Date().toISOString(),
+      result,
+    })
+  }
+  const found = result
+    ? zeroVolumeRows(candidates, result.rows, provider)
+    : { rows: [], zero: 0, unknown: 0, rated: 0 }
+  const costUsd = saved ? 0 : (result?.costUsd ?? null)
+  const detail = input.detail ?? 'summary'
+  const size = detail === 'full' ? Math.max(found.rows.length, 1) : PAGE_SIZE
+  const { skipped, range } = candidates
+  const metric = provider === 'dataforseo' ? 'search_volume' : 'volume'
+  return {
+    text: rowsText({
+      title: `${provider} zero-volume keywords for ${site}, ${country}: ${found.rows.length} of ${keywords.length} of the site's top queries by Search Console impressions (${range.startDate} to ${range.endDate}) have ${metric} 0 (${found.zero}) or none (${found.unknown}); ${found.rated} have a volume.`,
+      rows: found.rows,
+      offset,
+      limit: size,
+      detail,
+      notes: [
+        `Impressions, clicks and position are Search Console's; ${metric} is ${provider}'s estimate. ${VOLUME_MODEL[provider]} A zero or missing volume means the provider's data is below its floor or does not have the keyword, not that nobody searches it: the impressions show people do.`,
+        `Asked about ${keywords.length} queries in one call (at most ${ZERO_VOLUME_KEYWORDS[provider]} for ${provider}). Not asked: ${skipped.brand} brand queries (${candidates.brandTerms.join(', ') || 'no brand terms'}), ${skipped.notAKeyword} that are not keywords (operators, pasted text, over 10 words or 80 characters), ${skipped.overLimit} with fewer impressions.`,
+        ...(candidates.capped
+          ? [
+              'Search Console rows were capped at 25,000 query and page rows, so some queries were not read.',
+            ]
+          : []),
+        saved
+          ? `Read from the result saved at ${saved.savedAt}, at no new cost. Results are kept for a day.`
+          : costUsd !== null
+            ? `DataForSEO cost: $${costUsd}.`
+            : provider === 'ahrefs'
+              ? "Ahrefs charges API units for each keyword returned; its response doesn't say how many."
+              : 'No keywords to ask about, so nothing was spent.',
+      ],
+      more: options.call,
+    }),
+    data: {
+      provider,
+      action: 'keyword_metrics',
+      target: site,
+      country,
+      range,
+      asked: keywords.length,
+      zero: found.zero,
+      unknown: found.unknown,
+      rated: found.rated,
+      skipped,
+      brandTerms: candidates.brandTerms,
+      capped: candidates.capped,
+      costUsd,
+      savedAt: saved?.savedAt ?? null,
+      rows:
+        detail === 'full'
+          ? found.rows
+          : found.rows.slice(offset, offset + size),
+    },
   }
 }

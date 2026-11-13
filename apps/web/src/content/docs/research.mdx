@@ -16,7 +16,7 @@ seo providers ahrefs connect
 
 | Action | Give it | What comes back |
 | --- | --- | --- |
-| `keyword_metrics` | Up to 100 keywords | Search volume, keyword difficulty and cost per click |
+| `keyword_metrics` | Up to 100 keywords, or your site with no keywords | Search volume, keyword difficulty and cost per click. For your site, the queries you get impressions for that the provider rates at zero or has no data on |
 | `keyword_ideas` | Up to 5 seed keywords | Searches that contain each seed, highest volume first |
 | `ranked_keywords` | A site, subfolder or page | The keywords it ranks for, and the provider's traffic estimate for the whole target |
 | `top_pages` | A site or subfolder | The pages with the most estimated search traffic |
@@ -59,6 +59,18 @@ seo research ranked_keywords --provider ahrefs --target competitor.com --country
 ```
 
 Add `--provider` (or `provider` in the MCP tools) to choose one when you saved both keys. Asking for a provider you have no key for stops with how to add it.
+
+## Find zero-volume keywords
+
+Keyword tools rate many real searches at zero or have no number for them, so they look like nothing to write about. Your Search Console data says otherwise. If a query earns impressions, people search it. Give `keyword_metrics` your site and no keywords:
+
+```sh
+seo research keyword_metrics --target example.com
+```
+
+It takes your site's top queries by impressions over the last 28 days and asks the provider about them in one request. It leaves out your brand searches and queries that aren't keywords, such as search operators and pasted text. It then lists the queries rated at zero or with no data, with their impressions, clicks, position and top page. Zero and no data stay apart. Zero is the provider's own number, and no data means the provider doesn't have the query.
+
+One request asks about up to 700 queries with DataForSEO, which costs about $0.10 at most, or 100 with Ahrefs, which uses its API units. A site with fewer queries costs less, and asking again within a day reads the saved result at no cost.
 
 ## Use another source for search results
 

@@ -583,12 +583,26 @@ export const SHARED_TOOLS: SharedTool[] = [
             `seo_research with the same provider, action, target, also and brand, tasks ${JSON.stringify(tasks)}, detail "rows", offset ${offset}. Passing the tasks reads these answers back at no cost; without them every question is asked and paid for again`,
         )
       }
-      return runResearch(input, await surface.keys(), {
-        drKey: surface.drKey,
-        store: surface.researchStore,
-        installedSerp: surface.installedSerp,
-        call: more,
-      })
+      // keyword_metrics with a site and no keywords: zero-volume keywords.
+      const zeroVolume =
+        input.action === 'keyword_metrics' &&
+        !input.keywords.length &&
+        input.target
+      return runResearch(
+        zeroVolume
+          ? { ...input, target: await surface.resolveSite(input.target) }
+          : input,
+        await surface.keys(),
+        {
+          searchAnalytics: zeroVolume
+            ? surface.deps.searchAnalytics
+            : undefined,
+          drKey: surface.drKey,
+          store: surface.researchStore,
+          installedSerp: surface.installedSerp,
+          call: more,
+        },
+      )
     },
   }),
   tool({

@@ -3,6 +3,7 @@ import { mock, test } from 'node:test'
 import { runIndexCheck } from './index-check.js'
 import { runResearch } from './research.js'
 import { research } from './research-providers.js'
+import { zeroVolumeRows } from './research-zero-volume.js'
 
 const dataForSeo = new Headers({
   'x-dataforseo-login': 'login',
@@ -361,4 +362,46 @@ test('paging a research result reads the saved rows at no new cost', async () =>
     [(full.rows as unknown[]).length, full.next, full.rowsLeftOut],
     [80, null, 0],
   )
+})
+
+// Zero-volume keywords keep a provider's zero apart from no data, and leave
+// out keywords the provider rates above zero.
+test('zero-volume keywords tell a zero from unknown', () => {
+  const query = (keyword: string, impressions: number) => ({
+    keyword,
+    impressions,
+    clicks: 0,
+    position: 8,
+    page: 'https://example.com/a/',
+  })
+  const candidates = {
+    range: { startDate: '2026-10-01', endDate: '2026-10-28' },
+    queries: [
+      query('widgets for left handed people', 40),
+      query('blue widget sizes', 30),
+      query('widget repair', 20),
+      query('widget glossary pdf', 10),
+    ],
+    skipped: { brand: 0, notAKeyword: 0, overLimit: 0 },
+    brandTerms: [],
+    capped: false,
+  }
+  const found = zeroVolumeRows(
+    candidates,
+    [
+      { keyword: 'Blue Widget Sizes', search_volume: 0 },
+      { keyword: 'widget repair', search_volume: 880 },
+      { keyword: 'widget glossary pdf', search_volume: null },
+    ],
+    'dataforseo',
+  )
+  assert.deepEqual(
+    found.rows.map((row) => [row.keyword, row.status, row.search_volume]),
+    [
+      ['widgets for left handed people', 'unknown', null],
+      ['blue widget sizes', 'zero', 0],
+      ['widget glossary pdf', 'unknown', null],
+    ],
+  )
+  assert.deepEqual([found.zero, found.unknown, found.rated], [1, 2, 1])
 })

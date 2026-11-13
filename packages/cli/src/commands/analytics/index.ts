@@ -1,6 +1,7 @@
 import { defineCommand } from 'citty'
 import { clickyAnalyticsCommand } from './clicky/index.js'
 import { googleAnalyticsCommand } from './google/index.js'
+import { simpleAnalyticsCommand } from './simple-analytics/index.js'
 
 export const analyticsCommand = defineCommand({
   meta: {
@@ -10,5 +11,6 @@ export const analyticsCommand = defineCommand({
   subCommands: {
     clicky: clickyAnalyticsCommand,
     google: googleAnalyticsCommand,
+    'simple-analytics': simpleAnalyticsCommand,
   },
 })

@@ -9,7 +9,9 @@ import {
   clickySites,
   isClickySiteId,
   isClickySitekey,
+  isSimpleAnalyticsKey,
   listBingSites,
+  SIMPLE_ANALYTICS_KEY,
 } from '@seo/core/commands'
 import { ALERTS, isAlertType } from './alerts/registry.ts'
 import {
@@ -221,6 +223,7 @@ async function accountPage(
         ({ siteId, domain, account }) => ({ siteId, domain, account }),
       ),
       clickyAccount: clickyLogin(new Headers(keys))?.username ?? null,
+      simpleAnalytics: Boolean(keys[SIMPLE_ANALYTICS_KEY]),
       machines: machines.map((machine) => ({
         id: machine.id,
         label: machine.label,
@@ -543,6 +546,25 @@ export async function account(
         { tab: 'keys', ok: true },
       )
     }
+    case '/account/simple-analytics': {
+      // Not checked with Simple Analytics here: public websites answer any
+      // key, and repeated failures lock a key out, so the first report
+      // checks it.
+      const key = field('simple-analytics-key').trim()
+      if (!isSimpleAnalyticsKey(key)) {
+        return accountPage(
+          env,
+          userId,
+          'Simple Analytics needs an API key that starts with sa_api_key_ (Account settings, API keys).',
+          { tab: 'keys' },
+        )
+      }
+      await setKey(env, userId, SIMPLE_ANALYTICS_KEY, key)
+      return redirect(`${home}#simple-analytics`)
+    }
+    case '/account/simple-analytics/remove':
+      await setKey(env, userId, SIMPLE_ANALYTICS_KEY, null)
+      return redirect(`${home}#simple-analytics`)
     case '/account/clicky/account/remove':
       await removeClickyAccount(env, userId)
       return redirect(`${home}#clicky`)

@@ -231,7 +231,7 @@ export const sources: Source[] = [
       {
         question: 'Does it work with other analytics tools?',
         answer:
-          'Clicky works in the hosted MCP too. Fathom, Plausible, Simple Analytics and others work on your own machine through a small provider package for the CLI.',
+          'Clicky and Simple Analytics work in the hosted MCP too. Fathom, Plausible and others work on your own machine through a small provider package for the CLI.',
       },
     ],
   },

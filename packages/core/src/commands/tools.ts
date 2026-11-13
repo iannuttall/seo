@@ -44,6 +44,10 @@ import {
 import type { ResearchStore } from './research-cache.js'
 import { DIMENSIONS, REGEX_MAX_CHARS, rowTextFilters, runRows } from './rows.js'
 import {
+  runSimpleAnalyticsRows,
+  simpleAnalyticsKey,
+} from './simple-analytics.js'
+import {
   INDEXING_RULE,
   LOST_PAGES_RULE,
   runCompare,
@@ -161,6 +165,7 @@ export const DATA_SOURCES = [
   'google_analytics',
   'bing',
   'clicky',
+  'simple_analytics',
 ] as const
 
 export type SharedTool = {
@@ -192,6 +197,7 @@ const listSites = async (surface: ToolSurface) =>
     accounts: await surface.accounts(),
     keys: await surface.keys(),
     clicky: clickySites(await surface.keys()).map(clickyLabel),
+    simpleAnalytics: Boolean(simpleAnalyticsKey(await surface.keys())),
     signIn: surface.signIn,
     bing: surface.deps.bing ? await surface.deps.bing() : undefined,
     connect: surface.connect,
@@ -417,7 +423,7 @@ export const SHARED_TOOLS: SharedTool[] = [
     command: 'compare',
     title: 'Before and after a date',
     description:
-      'Compares equal periods before and after a date, such as a site change or a Google update: totals, devices, and the pages and queries that moved, Google Analytics sessions from the property whose web stream matches the site, Clicky visits from a saved Clicky site with the same domain, and Google updates in the window. Optional pages narrows it to URLs that contain that text, such as /blog/.',
+      'Compares equal periods before and after a date, such as a site change or a Google update: totals, devices, and the pages and queries that moved, Google Analytics sessions from the property whose web stream matches the site, Clicky visits from a saved Clicky site with the same domain, Simple Analytics visitors when an API key is saved and it has the site, and Google updates in the window. Optional pages narrows it to URLs that contain that text, such as /blog/.',
     input: z.object({
       site,
       date: z
@@ -589,14 +595,14 @@ export const SHARED_TOOLS: SharedTool[] = [
     name: 'seo_data',
     command: 'data',
     title: 'Raw rows',
-    description: `Raw rows for questions the report does not answer. search_console (default): rows for any dimensions, each with the previous period and the change; page and query narrow to rows whose URL or query contains that text; page_regex, query_regex and exclude_query_regex take RE2 regexes for custom cuts. google_analytics: landing pages for visits from search, with Google Analytics’ own metric names. bing: Bing Webmaster query or page rows (first dimension) for the same site, by week. clicky: landing-page visits, traffic sources and search engines from a Clicky site the person saved (site is its domain or Clicky site ID; at most 31 days).`,
+    description: `Raw rows for questions the report does not answer. search_console (default): rows for any dimensions, each with the previous period and the change; page and query narrow to rows whose URL or query contains that text; page_regex, query_regex and exclude_query_regex take RE2 regexes for custom cuts. google_analytics: landing pages for visits from search, with Google Analytics’ own metric names. bing: Bing Webmaster query or page rows (first dimension) for the same site, by week. clicky: landing-page visits, traffic sources and search engines from a Clicky site the person saved (site is its domain or Clicky site ID; at most 31 days). simple_analytics: landing-page visitors, referrers, utm_source tags and AI tools from Simple Analytics with the API key the person saved (site is its domain).`,
     input: z.object({
       source: z.enum(DATA_SOURCES).default('search_console'),
       site: z
         .string()
         .min(1)
         .describe(
-          'search_console and bing: the property or site. google_analytics: numeric property id from seo_sites. clicky: the site or its Clicky site ID.',
+          'search_console and bing: the property or site. google_analytics: numeric property id from seo_sites. clicky: the site or its Clicky site ID. simple_analytics: the site domain.',
         ),
       dimensions: z
         .array(z.enum(DIMENSIONS))
@@ -637,6 +643,23 @@ export const SHARED_TOOLS: SharedTool[] = [
       ...detail,
     }),
     run: async (surface, input) => {
+      if (input.source === 'simple_analytics') {
+        return runSimpleAnalyticsRows(
+          {
+            site: input.site,
+            startDate: input.start_date,
+            endDate: input.end_date,
+            detail: input.detail,
+            offset: input.offset,
+          },
+          await surface.keys(),
+          {
+            connect: surface.connect,
+            call: (offset) =>
+              `seo_data with source "simple_analytics", site "${input.site}", detail "rows", offset ${offset}`,
+          },
+        )
+      }
       if (input.source === 'clicky') {
         return runClickyRows(
           {
@@ -873,10 +896,10 @@ export const MCP_SERVER_INFO = {
   ],
 }
 
-export const MCP_INSTRUCTIONS = `SEO Skill reads the person's own Search Console, Google Analytics, Bing Webmaster Tools, Clicky and optional keyword accounts, and returns facts with their dates and limits. It gives no advice.
+export const MCP_INSTRUCTIONS = `SEO Skill reads the person's own Search Console, Google Analytics, Bing Webmaster Tools, Clicky, Simple Analytics and optional keyword accounts, and returns facts with their dates and limits. It gives no advice.
 1. seo_sites: the properties the connected accounts can read.
 2. seo_report: start here. Without site it summarises last week across every site in the weekly site audit and names the site to ask about next. With site it shows that property's overview and every section's count and top rows; then ask for the one section you need. Section issues keeps a list of what it found for the site between sessions; mark records which the person fixed or wants ignored.
-3. seo_page for one URL, seo_compare for before and after a date, seo_index for Google's indexing reasons and pages that lost their clicks, seo_research for keyword, competitor and backlink data, and whether AI answers cite the site, from the DataForSEO or Ahrefs key the person saved, seo_data for raw rows, including Google Analytics, Bing and Clicky.
+3. seo_page for one URL, seo_compare for before and after a date, seo_index for Google's indexing reasons and pages that lost their clicks, seo_research for keyword, competitor and backlink data, and whether AI answers cite the site, from the DataForSEO or Ahrefs key the person saved, seo_data for raw rows, including Google Analytics, Bing, Clicky and Simple Analytics.
 4. seo_lint checks copy you are writing or editing (a landing page, blog post, title or meta description) for patterns common in AI-written text and for title and description length. It reads only the text or files you give it.`
 
 // How an MCP surface writes "run this next": the tool name and its inputs.

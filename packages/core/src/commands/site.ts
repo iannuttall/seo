@@ -27,6 +27,7 @@ import {
   realIsoDate,
   sharedReader,
 } from './shared.js'
+import { simpleAnalyticsBeside } from './simple-analytics.js'
 import { sitemapUrls } from './sitemap-urls.js'
 import {
   type CommandDeps,
@@ -432,18 +433,20 @@ export async function runCompare(
     startDate: shiftIsoDate(input.date, -days),
     endDate: shiftIsoDate(input.date, -1),
   }
-  const [report, updates, analytics, clicky] = await Promise.all([
-    siteOverview(
-      sharedReader(deps.searchAnalytics),
-      input.site,
-      after,
-      before,
-      input.pages,
-    ),
-    googleUpdates({ start: before.startDate, end: after.endDate }),
-    analyticsBeside(deps.analytics, input.site, after, before, input.pages),
-    clickyBeside(keys, input.site, after, before, input.pages),
-  ])
+  const [report, updates, analytics, clicky, simpleAnalytics] =
+    await Promise.all([
+      siteOverview(
+        sharedReader(deps.searchAnalytics),
+        input.site,
+        after,
+        before,
+        input.pages,
+      ),
+      googleUpdates({ start: before.startDate, end: after.endDate }),
+      analyticsBeside(deps.analytics, input.site, after, before, input.pages),
+      clickyBeside(keys, input.site, after, before, input.pages),
+      simpleAnalyticsBeside(keys, input.site, after, before, input.pages),
+    ])
   return {
     text: [
       overviewText(
@@ -454,6 +457,7 @@ export async function runCompare(
       ),
       analytics?.text,
       clicky?.text,
+      simpleAnalytics?.text,
       listOfUpdates(updates),
       `Next: ${deps.call('page')} for a page that moved.`,
       FACTS_ONLY,
@@ -464,6 +468,7 @@ export async function runCompare(
       ...report,
       ...(analytics ? { analytics: analytics.data } : {}),
       ...(clicky ? { clicky: clicky.data } : {}),
+      ...(simpleAnalytics ? { simpleAnalytics: simpleAnalytics.data } : {}),
       googleUpdates: updates,
     },
   }

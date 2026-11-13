@@ -24,7 +24,8 @@ Sign in with Google at `https://seoskill.dev/account` to:
 
 - **Accounts:** see your linked Google accounts and Bing, and add another,
 - **Keys:** save or remove DataForSEO, Ahrefs and TypeSafe keys, a Clicky
-  account login and Clicky sites (never shown again),
+  account login, Clicky sites and a Simple Analytics key (never shown
+  again),
 - **Machines:** approve a `seo login`, remove a linked machine, or make a
   token for a cloud agent,
 - **Sites:** with the weekly site audit, add a site by picking one of
@@ -293,8 +294,12 @@ Clicky site is one key, `x-clicky-<site id>`. A saved Clicky account login
 as from the account. When `seo_data` asks for a Clicky site that is not
 saved, the server reads the account's site list again (a linked CLI asks for
 this with `/account/cli/credentials?clicky=refresh`). The login never leaves
-the server. Other analytics tools run on your own machine with the `seo` CLI
-and a provider package.
+the server. Simple Analytics is one key, `x-simpleanalytics-key`, which
+reads every website its Simple Analytics user can see; the website is the
+site's hostname, bare or with `www.`. Saving it checks only its shape:
+public websites answer any key and repeated failures lock a key out, so the
+first read checks it. Other analytics tools run on your own machine with
+the `seo` CLI and a provider package.
 
 There are two ways to give a key, and neither puts it in a chat:
 
@@ -308,6 +313,7 @@ There are two ways to give a key, and neither puts it in a chat:
 | DataForSEO | `X-DataForSEO-Login`, `X-DataForSEO-Password` |
 | Ahrefs | `X-Ahrefs-Key` |
 | Clicky | `X-Clicky-<site id>` with the sitekey |
+| Simple Analytics | `X-SimpleAnalytics-Key` |
 
 ```sh
 claude mcp add --transport http seoskill https://seoskill.dev/mcp \
@@ -327,7 +333,7 @@ repository.
 | `seo_compare` | Equal periods before and after a date, for the site or URLs that contain some text, with Google updates |
 | `seo_index` | Google's indexing reasons for 100 known URLs a run, checked live and labelled, and pages that lost most of their clicks |
 | `seo_research` | Keyword metrics, ranked keywords, top pages, SERPs, competitors, backlinks and pages by backlinks for a site, subfolder or page, from whichever DataForSEO or Ahrefs key is saved (DataForSEO when both are), with a free Ahrefs Domain Rating column |
-| `seo_data` | Raw Search Console rows, search landing pages from Google Analytics, or Clicky visits by landing page with traffic sources and search engines. |
+| `seo_data` | Raw Search Console rows, search landing pages from Google Analytics, Clicky visits by landing page with traffic sources and search engines, or Simple Analytics visitors by landing page with referrers and AI tools. |
 | `seo_lint` | Checks copy sent as text (up to 200,000 characters) for patterns common in AI-written text, weak copy and title and description length, with a fix for each finding and a list of lines to judge. Reads no account data. |
 
 Bing Webmaster Tools runs only in the CLI and the local MCP server, because
@@ -360,6 +366,7 @@ A small Cloudflare D1 database (`migrations/`) keeps only:
 - your Clicky sites, if you save them: site ID, sitekey and domain,
 - your Clicky account login, if you save it: username and password, used
   only to read your Clicky site list,
+- your Simple Analytics API key, if you save it,
 - machines linked with `seo login` (a name from the host name and the date
   last used).
 - beta features granted to the account, and when (`beta_flags`). Only a

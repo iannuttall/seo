@@ -49,6 +49,7 @@ import {
   runReport,
   runResearch,
   runRows,
+  runSimpleAnalyticsRows,
   SECTION_IDS,
   type SectionId,
   UPDATES_SECTION,
@@ -301,6 +302,10 @@ export const pageCommand = defineCommand({
   },
 })
 
+// Where to add a Simple Analytics key from the CLI.
+export const SIMPLE_ANALYTICS_CONNECT =
+  'save it at https://seoskill.dev/account#simple-analytics and run `seo login`, or run `seo analytics simple-analytics connect` to keep it on this machine only.'
+
 export const compareCommand = defineCommand({
   meta: {
     name: 'compare',
@@ -390,7 +395,7 @@ export const dataCommand = defineCommand({
   meta: {
     name: 'data',
     description:
-      'Raw Search Console or Bing rows beside the previous period, or Clicky landing pages',
+      'Raw Search Console or Bing rows beside the previous period, or Clicky or Simple Analytics landing pages',
   },
   args: {
     site: {
@@ -400,7 +405,7 @@ export const dataCommand = defineCommand({
     source: {
       type: 'string',
       description:
-        'search_console (default), bing or clicky. Bing takes the first dimension, query or page. Clicky takes the site or its Clicky site ID.',
+        'search_console (default), bing, clicky or simple_analytics. Bing takes the first dimension, query or page. Clicky takes the site or its Clicky site ID. Simple Analytics takes the site.',
     },
     dimensions: {
       type: 'string',
@@ -445,11 +450,39 @@ export const dataCommand = defineCommand({
       )
     }
     const source = stringArg(args.source) ?? 'search_console'
-    if (!['search_console', 'bing', 'clicky'].includes(source)) {
+    if (
+      !['search_console', 'bing', 'clicky', 'simple_analytics'].includes(source)
+    ) {
       throw new SeoError(
         'INVALID_INPUT',
-        '--source is search_console, bing or clicky.',
+        '--source is search_console, bing, clicky or simple_analytics.',
       )
+    }
+    if (source === 'simple_analytics') {
+      const site = requireSite(stringArg(args.site))
+      await run(args, async () =>
+        runSimpleAnalyticsRows(
+          {
+            site,
+            startDate: stringArg(args['start-date']),
+            endDate: stringArg(args['end-date']),
+            detail: detailArg(args),
+            offset: numberArg(args.offset),
+          },
+          await localResearchKeys(),
+          {
+            connect: SIMPLE_ANALYTICS_CONNECT,
+            call: (offset) =>
+              cliCall('data', {
+                source: 'simple_analytics',
+                site,
+                detail: 'rows',
+                offset,
+              }),
+          },
+        ),
+      )
+      return
     }
     if (source === 'clicky') {
       const site = requireSite(stringArg(args.site))

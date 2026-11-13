@@ -321,6 +321,41 @@ const keys: { name: string; label: string; type: 'text' | 'password' }[] = [
             </div>
           </form>
         </div>
+
+        <div class={panel} id="simple-analytics">
+          <h2 class={heading}>Simple Analytics</h2>
+          <p class={note}>
+            Adds Simple Analytics visitors by landing page, referrers, UTM
+            sources and visits from AI tools, for every website your Simple
+            Analytics user can see. Make a key in Simple Analytics under
+            Account settings, API keys. It needs a paid plan or a trial.
+            Simple Analytics has no read-only keys, so yours is encrypted and
+            never shown again.
+          </p>
+          <div class="mt-3 flex items-center justify-between gap-4 text-sm" data-simple-analytics-saved hidden>
+            <span class="text-primary">API key saved</span>
+            <form method="post" data-action="/account/simple-analytics/remove">
+              <input type="hidden" name="form" />
+              <button type="submit" class={quiet}>Remove key</button>
+            </form>
+          </div>
+          <form method="post" data-action="/account/simple-analytics" class="mt-4 flex flex-col gap-4">
+            <input type="hidden" name="form" />
+            <label class="flex flex-col gap-1.5 text-sm font-medium text-foreground">
+              <span>Simple Analytics API key</span>
+              <FormInput
+                name="simple-analytics-key"
+                type="password"
+                autocomplete="off"
+                spellcheck="false"
+                data-simple-analytics-input
+              />
+            </label>
+            <div class="flex flex-wrap gap-3">
+              <button type="submit" class={outline}>Save Simple Analytics key</button>
+            </div>
+          </form>
+        </div>
       </div>
 
       <div
@@ -752,6 +787,7 @@ const keys: { name: string; label: string; type: 'text' | 'password' }[] = [
       keys: string[]
       clicky: { siteId: string; domain: string | null; account?: boolean }[]
       clickyAccount?: string | null
+      simpleAnalytics?: boolean
       machines: { id: string; label: string; usedAt: number | null }[]
       login?: { code: string; label: string }
       beta?: { id: string; title: string; text: string }[]
@@ -1333,6 +1369,11 @@ const keys: { name: string; label: string; type: 'text' | 'password' }[] = [
       const clickyAccount = root.querySelector('[data-clicky-account]')
       if (clickyAccount) clickyAccount.textContent = account.clickyAccount ?? ''
       show(root.querySelector('[data-clicky-account-row]'), Boolean(account.clickyAccount))
+      show(root.querySelector('[data-simple-analytics-saved]'), Boolean(account.simpleAnalytics))
+      const simpleAnalyticsInput = root.querySelector<HTMLInputElement>('[data-simple-analytics-input]')
+      if (simpleAnalyticsInput && account.simpleAnalytics) {
+        simpleAnalyticsInput.placeholder = 'Leave empty to keep the saved key'
+      }
       const machineRow = root.querySelector<HTMLTemplateElement>('[data-machine-row]')
       const machineList = root.querySelector('[data-machine-list]')
       for (const machine of account.machines) {

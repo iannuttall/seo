@@ -54,9 +54,9 @@ Queries that look like spam or tool noise get a `spam_hint` label: host names on
 
 ## Analytics landing pages
 
-In the hosted MCP, `seo_data` also reads Google Analytics landing pages for visits from search, with your Google sign-in, and Clicky landing pages for a Clicky site saved on your account. Each tool keeps its own metric names, such as sessions or visits, so compare them with Search Console clicks with care. The [analytics guide](/docs/analytics) covers Google Analytics and Clicky.
+In the hosted MCP, `seo_data` also reads Google Analytics landing pages for visits from search, with your Google sign-in, Clicky landing pages for a Clicky site saved on your account, and Simple Analytics landing pages with the API key saved there. Each tool keeps its own metric names, such as sessions, visits or visitors, so compare them with Search Console clicks with care. The [analytics guide](/docs/analytics) covers each one.
 
-In the CLI, `seo data` reads Search Console rows, or Bing rows with `--source bing`. For Google Analytics and Clicky, use [`seo analytics`](/docs/analytics).
+In the CLI, `seo data` reads Search Console rows, Bing rows with `--source bing`, or Clicky and Simple Analytics landing pages with `--source clicky` or `--source simple_analytics`. For Google Analytics, use [`seo analytics`](/docs/analytics).
 
 ## Bing rows
 

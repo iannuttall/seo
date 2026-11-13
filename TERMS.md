@@ -58,7 +58,7 @@ before you act on it, and do not rely on alerts as your only warning.
 
 ## Other services
 
-Google, Bing, Clicky, DataForSEO, Ahrefs, TypeSafe, Stripe, Cloudflare and
+Google, Bing, Clicky, Simple Analytics, DataForSEO, Ahrefs, TypeSafe, Stripe, Cloudflare and
 your AI agent are run by other companies under their own terms. They can
 change or withdraw what they offer, and we are not responsible for them.
 

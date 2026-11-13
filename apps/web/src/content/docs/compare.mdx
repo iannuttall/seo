@@ -1,6 +1,6 @@
 ---
 title: Compare before and after a date
-description: Compare Search Console, Google Analytics and Clicky before and after a release or Google update with seo compare, with the updates in the window.
+description: Compare Search Console and your analytics before and after a release or Google update with seo compare, with the updates in the window.
 heading: seo compare
 lead: Equal periods before and after a date, such as a site release or a Google update, with the updates that fall in the window.
 ---
@@ -34,6 +34,7 @@ seo compare --site example.com --date 2026-09-15 --pages /blog/
 - The pages and queries that moved the most.
 - Google Analytics sessions in each period: Organic Search from Google, from every search engine, from all channels, and from AI assistants such as ChatGPT and Perplexity. With `--pages`, only landing pages whose path contains that text.
 - Clicky visits in each period, when you saved a Clicky site with the same domain: all visits, by traffic source, and from AI assistants. With `--pages`, also the visits that landed on pages whose path contains that text.
+- Simple Analytics visitors and pageviews in each period, when your saved key can read the site: by referrer, and from AI assistants. With `--pages`, only paths that start with that text.
 - The Google algorithm updates whose dates fall in the window.
 
 The Google Analytics property is the one whose web stream matches the site. You do not pick it. If clicks fell but sessions from all channels fell the same way, the drop is probably not only in search.

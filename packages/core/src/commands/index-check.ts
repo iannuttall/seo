@@ -5,7 +5,7 @@ import {
   dataForSeoMarket,
   dataForSeoTask,
 } from './research-providers.js'
-import { dataForSeoSerp } from './research-serp.js'
+import { dataForSeoSerp, hintKey, pageKey as key } from './research-serp.js'
 import { CommandError, type CommandResult } from './types.js'
 
 // Is one URL in Google's index? Asks Google through DataForSEO's live SERP,
@@ -45,23 +45,6 @@ export type IndexCheckRow = {
 export type IndexVerdict = 'indexed' | 'not_found' | 'unknown'
 
 const bare = (host: string) => host.toLowerCase().replace(/^www\./, '')
-
-function key(url: string): string {
-  try {
-    const parsed = new URL(url)
-    return `${bare(parsed.hostname)}${parsed.pathname.replace(/\/+$/, '')}`.toLowerCase()
-  } catch {
-    return ''
-  }
-}
-
-// Google's breadcrumb, such as \"example.com › docs › flags\", as a page key.
-// A shortened one (with \"...\") names no page.
-function hintKey(hint: string): string | null {
-  const parts = hint.split('›').map((part) => part.trim())
-  if (!parts[0] || parts.some((part) => /^\.\.\.$|…/.test(part))) return null
-  return `${bare(parts[0])}${parts.length > 1 ? `/${parts.slice(1).join('/')}` : ''}`.toLowerCase()
-}
 
 // The words of the page's H1, or its title without a brand suffix, as an
 // exact phrase. Long ones are cut to 12 words.

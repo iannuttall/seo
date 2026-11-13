@@ -405,3 +405,65 @@ test('zero-volume keywords tell a zero from unknown', () => {
   )
   assert.deepEqual([found.zero, found.unknown, found.rated], [1, 2, 1])
 })
+
+// DataForSEO started returning every organic result as a google.com/goto
+// redirect, so serp_overlap compared no pages at all and every pair read
+// shared_pages 0. Breadcrumbs still name the site and path.
+test('serp_overlap matches redirect results by their breadcrumb', async () => {
+  const goto = (crumb: string, rank: number) => ({
+    type: 'organic',
+    rank_group: rank,
+    rank_absolute: rank,
+    url: `https://www.google.com/goto?url=x${rank}`,
+    domain: 'www.google.com',
+    breadcrumb: crumb,
+  })
+  const serps: Record<string, unknown[]> = {
+    'coffee grinder': [
+      goto('https://www.example.com › guides › grinders', 1),
+      goto('https://example.org › reviews › ... › burr', 2),
+      goto('https://example.net', 3),
+      {
+        type: 'organic',
+        rank_group: 4,
+        rank_absolute: 4,
+        url: 'https://shop.example/grinders/',
+        domain: 'shop.example',
+      },
+    ],
+    'burr grinder': [
+      goto('https://example.com › guides › grinders', 1),
+      goto('https://example.org › reviews › ... › burr', 2),
+      goto('https://example.net', 3),
+      goto('https://shop.example › grinders', 4),
+      goto('https://example.com › guides › burr', 5),
+    ],
+  }
+  globalThis.fetch = (async (input: Request) => {
+    const [task] = (await input.json()) as { keyword: string }[]
+    return Response.json({
+      tasks: [
+        {
+          status_code: 20000,
+          status_message: 'Ok.',
+          cost: 0.002,
+          result: [{ items: serps[task?.keyword ?? ''] ?? [] }],
+        },
+      ],
+    })
+  }) as typeof fetch
+
+  const out = await research('dataforseo', dataForSeo, {
+    action: 'serp_overlap',
+    keywords: ['coffee grinder', 'burr grinder'],
+    target: '',
+    country: 'us',
+    limit: 100,
+  })
+  // Same breadcrumb (www ignored) and a real URL against its breadcrumb
+  // match; the shortened and site-only breadcrumbs are not pages.
+  assert.equal(out.rows[0]?.shared_pages, 2)
+  assert.equal(out.rows[0]?.shared_sites, 4)
+  assert.equal(out.rows[0]?.pages_compared_a, 2)
+  assert.equal(out.rows[0]?.pages_compared_b, 3)
+})

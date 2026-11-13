@@ -31,6 +31,40 @@ export type PeopleAlsoAsk = {
 // Google's redirect links, which DataForSEO often leaves unresolved.
 export const GOTO = /^https?:\/\/(www\.)?google\.[a-z.]+\/goto\b/
 
+const bare = (host: string) => host.toLowerCase().replace(/^www\./, '')
+
+// A page as host and path, without scheme, www, query or trailing slash,
+// so a real URL and a breadcrumb for the same page give the same key.
+export function pageKey(url: string): string {
+  try {
+    const parsed = new URL(url)
+    return `${bare(parsed.hostname)}${parsed.pathname.replace(/\/+$/, '')}`.toLowerCase()
+  } catch {
+    return ''
+  }
+}
+
+// Google's breadcrumb, such as "example.com › docs › flags", as a page key.
+// A shortened one (with "...") names no page.
+export function hintKey(hint: string): string | null {
+  const parts = hint.split('›').map((part) => part.trim())
+  if (!parts[0] || parts.some((part) => /^\.\.\.$|…/.test(part))) return null
+  return `${bare(parts[0])}${parts.length > 1 ? `/${parts.slice(1).join('/')}` : ''}`.toLowerCase()
+}
+
+// The page key serp_overlap compares: the real URL, or else the breadcrumb.
+// A breadcrumb of the bare site could be any page on it, so it has none.
+export function overlapKey(row: { url?: unknown; url_hint?: unknown }): {
+  key: string
+  breadcrumb: boolean
+} {
+  if (typeof row.url === 'string' && row.url) {
+    return { key: pageKey(row.url), breadcrumb: false }
+  }
+  const hint = typeof row.url_hint === 'string' ? hintKey(row.url_hint) : null
+  return { key: hint?.includes('/') ? hint : '', breadcrumb: true }
+}
+
 const hostOf = (url: string) => {
   try {
     return new URL(url).hostname

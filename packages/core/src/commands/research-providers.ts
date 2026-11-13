@@ -3,6 +3,7 @@ import { ahrefs } from './research-ahrefs.js'
 import {
   type AiOverview,
   dataForSeoSerp,
+  overlapKey,
   type PeopleAlsoAsk,
 } from './research-serp.js'
 import { CommandError } from './types.js'
@@ -199,7 +200,12 @@ export type ResearchRows = {
   rankFailed?: boolean
   // serp_overlap: the top results read, and how many had a page and a site
   // to compare.
-  compared?: { results: number; withPage: number; withSite: number }
+  compared?: {
+    results: number
+    withPage: number
+    withSite: number
+    fromBreadcrumb: number
+  }
   // serp from DataForSEO: each keyword whose page showed an AI Overview,
   // with the pages it cites.
   aiOverviews?: AiOverview[]
@@ -908,8 +914,9 @@ export const serpDepth = (input: ResearchInput) =>
 
 // For each pair of keywords, how many of their top 10 results are the same
 // page and the same site: one SERP per keyword at depth 10. A result whose
-// page the provider did not return (a Google redirect link) cannot be
-// compared by page, so each keyword says how many pages it compared.
+// page the provider did not return (a Google redirect link) is compared by
+// Google's breadcrumb, site and path, when the breadcrumb is not shortened
+// and names more than the site; otherwise it is counted, not compared.
 async function serpOverlap(
   provider: ResearchProvider,
   headers: Headers,
@@ -941,16 +948,18 @@ async function serpOverlap(
           (row) => row.keyword === keyword && row.type !== 'featured_snippet',
         )
         .slice(0, OVERLAP_DEPTH)
-      const pages = new Set(
-        rows
-          .map((row) => row.url)
-          .filter((url): url is string => typeof url === 'string' && url !== '')
-          .map((url) => url.replace(/\/$/, '').toLowerCase()),
-      )
+      const keys = rows.map(overlapKey)
+      const pages = new Set(keys.map((k) => k.key).filter(Boolean))
+      const fromBreadcrumb = new Set(
+        keys.filter((k) => k.key && k.breadcrumb).map((k) => k.key),
+      ).size
       const sites = new Set(
         rows.map((row) => host(row.domain ?? siteOf(row.url))).filter(Boolean),
       )
-      return [keyword, { results: rows.length, pages, sites }] as const
+      return [
+        keyword,
+        { results: rows.length, pages, sites, fromBreadcrumb },
+      ] as const
     }),
   )
   const rows: Row[] = []
@@ -988,6 +997,10 @@ async function serpOverlap(
       results: results.reduce((sum, item) => sum + item.results, 0),
       withPage: results.reduce((sum, item) => sum + item.pages.size, 0),
       withSite: results.reduce((sum, item) => sum + item.sites.size, 0),
+      fromBreadcrumb: results.reduce(
+        (sum, item) => sum + item.fromBreadcrumb,
+        0,
+      ),
     },
   }
 }

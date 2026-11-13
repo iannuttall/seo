@@ -2,7 +2,7 @@
 title: How to get cited by ChatGPT and rank in its answers
 description: How to get your site cited in ChatGPT answers, from letting OpenAI's search bot in to getting onto the lists it already cites.
 heading: How to get cited by ChatGPT
-lead: ChatGPT can only cite pages its own search finds. Getting cited is mostly SEO work, done for the longer and more specific questions ChatGPT searches for.
+lead: When ChatGPT cites a page, it's almost always one its own search found. Getting cited is mostly SEO work, done for the longer and more specific questions ChatGPT searches for.
 date: '2026-11-13'
 draft: false
 cover:
@@ -10,7 +10,7 @@ cover:
   title: left
 ---
 
-Most advice on getting cited by ChatGPT makes it sound like a new discipline with its own tricks. I don't think it is. ChatGPT cites pages that its own search turned up for the question, and almost nothing else. Ahrefs looked at [1.4 million ChatGPT prompts](https://ahrefs.com/blog/why-chatgpt-cites-pages) and found that 88% of the pages it cited came from its general search results.
+Most advice on getting cited by ChatGPT makes it sound like a new discipline with its own tricks. I don't think it is. Ahrefs looked at [1.4 million ChatGPT prompts](https://ahrefs.com/blog/why-chatgpt-cites-pages) and found that 88% of the pages ChatGPT cited came from its general search results. Plenty of answers cite nothing at all, though, and those come from the model's training, which I cover [further down](#why-some-questions-get-no-citation-at-all).
 
 So the job is SEO. OpenAI has to be able to crawl your page, the page has to show up in the results ChatGPT reads, and it has to answer the question better than the other pages it's up against. What changes is the questions. ChatGPT writes its own searches, and they're longer and more specific than what most people type into Google.
 
@@ -38,7 +38,7 @@ User-agent: GPTBot
 Disallow: /
 ```
 
-Robots.txt changes take about a day to reach ChatGPT search. Your robots.txt can allow the bot while a firewall or CDN rule still blocks it, so make sure your host lets in [OpenAI's published IP ranges](https://openai.com/searchbot.json) as well.
+Robots.txt changes take about a day to reach ChatGPT search, [according to OpenAI](https://platform.openai.com/docs/bots). Your robots.txt can allow the bot while a firewall or CDN rule still blocks it, so make sure your host lets in [OpenAI's published IP ranges](https://openai.com/searchbot.json) as well.
 
 A crawl shows what your robots.txt allows for each AI bot, with search bots and training bots listed separately:
 
@@ -96,7 +96,7 @@ ChatGPT decides which results to open from the title, the URL and a short snippe
 1. Put the question the page answers in the title, in the words people use. "How to export Search Console data to BigQuery" works better than "BigQuery integration".
 2. Name the things you're writing about. "Notion vs Asana for small teams" matches more of ChatGPT's searches than "Which tool is right for you?".
 3. Use a slug made of words, such as `/blog/search-console-bigquery-export`, rather than an ID.
-4. Leave the year out of the title unless the page really changes every year. ChatGPT adds years to its searches, but an out-of-date year in a title does more harm than no year.
+4. Put the year in the title when the page covers something that changes each year, such as prices, rankings or rules, and update it when the year turns. ChatGPT adds years to its searches, and an out-of-date year in a title does more harm than none. Keep the year out of the URL, so the page keeps its address and links when you update it.
 
 The [title and meta description checker](/tools/title-and-meta-description-checker) shows how your title and description will look in a search result before you publish.
 
@@ -118,7 +118,7 @@ You don't need to cut pages into tiny chunks for this. Google's [guide to genera
 
 ChatGPT leans towards recent pages more than Google does. Ahrefs' [study of 17 million citations](https://ahrefs.com/blog/do-ai-assistants-prefer-to-cite-fresh-content) found the pages ChatGPT cited were on average more than a year newer than the pages ranking in Google for the same questions.
 
-Being new doesn't win on its own, though. Plenty of the pages ChatGPT cites are years old, and Ahrefs' reading is that it picks whichever page best matches the question, with age mostly breaking ties between news pages. A new page that answers the question better gets cited, and a new page that answers it worse gets read and dropped.
+Being new doesn't win on its own, though. Plenty of the pages ChatGPT cites are years old. A new page that answers the question better gets cited, and a new page that answers it worse gets read and dropped.
 
 1. Replace numbers and examples that have gone stale, and add anything that's changed since you wrote the page.
 2. Only change the visible "updated" date and `dateModified` when the page has changed enough that you'd tell a reader to read it again. Bumping the date for a typo fix is the kind of fake freshness Google's [helpful content guidance](https://developers.google.com/search/docs/fundamentals/creating-helpful-content) warns about.
@@ -127,7 +127,7 @@ Being new doesn't win on its own, though. Plenty of the pages ChatGPT cites are 
 
 ## Get onto the lists ChatGPT already cites
 
-For "best X" and "X vs Y" questions, ChatGPT cites lists and comparison pages more than anything else. When Ahrefs [looked at buying questions](https://ahrefs.com/blog/best-lists-research) about software, agencies and products, "best X" blog lists made up almost half the pages ChatGPT cited, three times as many as the next page type.
+For "best X" questions, ChatGPT cites "best" lists more than any other kind of page. When Ahrefs [looked at buying questions](https://ahrefs.com/blog/best-lists-research) about software, agencies and products, "best X" blog lists made up almost half the pages ChatGPT cited.
 
 I saw the same thing when I asked ChatGPT for the best tool to check Google Search Console data with an AI agent. It cited tool vendors' own sites, and seoskill.dev wasn't one of them.
 
@@ -136,7 +136,7 @@ This is ordinary off-site SEO. Brands have been getting recommended in Google by
 1. Ask ChatGPT the buying questions your customers ask, such as "best invoicing software for freelancers", and note every page it cites.
 2. Check which of those pages mention you, with a search such as `"yourbrand" -site:yourbrand.com`.
 3. For each list you're missing from, contact the publisher and give them a reason to add you: a feature their readers have asked about, a fair price comparison, or a customer who's in their audience.
-4. Publish your own comparison pages as well. When ChatGPT cited a software company's own site in that study, a "best" list on the company's blog came up about a third of the time. Be fair in yours, because readers stop trusting a list that hides its bias.
+4. Publish your own comparison pages as well. When ChatGPT cited a software company's own site in that study, a "best" list on the company's blog came up about a third of the time. That works today, and I don't know for how long. There's a credible way to do it, where you test each option, say who it suits and rank a competitor first when it's better, and a spammy way, where you come first on every list. I'd only do the first, for the reasons in [AEO vs SEO](/blog/aeo-vs-seo).
 5. Ask happy customers to leave reviews on the review sites people in your category use. Lists and answers lean on those reviews as outside proof.
 
 Reddit matters less than you might expect. ChatGPT reads a lot of it, but in Ahrefs' study it cited pages from its Reddit feed less than 2% of the time. Answer questions on Reddit because it helps people, and expect any citation to go to the page someone links to in the thread.
@@ -168,14 +168,14 @@ If you don't give it questions, it uses your site's own conversational queries f
 
 ChatGPT doesn't search for every question. When I asked it a handful of questions about AEO and SEO, it answered most of them without any sources, including "AEO vs SEO: what's different?". It answered from what the model already knew.
 
-Definitions and well-known facts are often answered that way. The only route into those answers is the model's training data, which means being the page other sites quote and link to well before the model is trained. That takes a long time, and it's the same work that earns links for Google.
+Definitions, well-known facts and a lot of brand recommendations are answered that way. The route into those answers is the model's training data: being named next to your topic on the pages other sites quote, and making it obvious who you are. That's the brand mention and entity work in [AEO vs SEO](/blog/aeo-vs-seo). It pays off slowly, as each new model is trained, so start it early.
 
-I'd spend your time on questions that need current or specific information: prices, comparisons, "best X for Y", and anything with a year in it. ChatGPT searches for those, so everything above applies.
+For quicker results, work on questions that need current or specific information: prices, comparisons, "best X for Y", and anything with a year in it. ChatGPT searches for those, so everything above applies.
 
 ## Where to start
 
 Getting cited by ChatGPT is good AEO, and good AEO is mostly good SEO aimed at longer, more specific questions. Let OAI-SearchBot in, get indexed in Bing, rank for the specific searches ChatGPT runs, answer each one in the first sentence, keep the page current, and get onto the lists that already rank.
 
-Start with the crawler and Bing. They take about an hour, and nothing else works without them.
+Start with the crawler and Bing. They take about an hour, and most of the rest depends on them.
 
 The ChatGPT examples here come from SEO Skill's AI answers check, with each question asked once, so a second run could cite different pages. The Ahrefs figures are correlations from Ahrefs' own samples and don't prove that any single change causes a citation. This post doesn't cover ChatGPT's shopping results or product feeds, which work differently.

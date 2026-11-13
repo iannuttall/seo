@@ -2,7 +2,7 @@
 title: 'Query fan-out: what ChatGPT and AI Mode search for'
 description: ChatGPT and Google AI Mode rewrite your question into their own searches before they pick sources. What those searches look like, and how to rank for them.
 heading: What query fan-out searches for and how to rank for it
-lead: ChatGPT and Google AI Mode don't search for what you typed. They write their own searches first, and the pages that rank for those are the ones that get cited.
+lead: ChatGPT and Google AI Mode usually don't search for exactly what you typed. They write their own searches first, and the pages they cite almost always come from those results.
 date: '2026-11-13'
 draft: false
 cover:
@@ -10,7 +10,7 @@ cover:
   title: left
 ---
 
-When ChatGPT searches the web for your question, it doesn't search for what you typed. OpenAI's [ChatGPT search help page](https://help.openai.com/articles/9237897-chatgpt-search) says it "typically rewrites your query into one or more targeted queries", and it picks its sources from what those searches return. Google AI Mode does the same thing, splitting a question into several searches at once.
+When ChatGPT searches the web for your question, it usually doesn't search for exactly what you typed. OpenAI's [ChatGPT search help page](https://help.openai.com/articles/9237897-chatgpt-search) says it "typically rewrites your query into one or more targeted queries", and it picks its sources from what those searches return. Google AI Mode does the same thing, splitting a question into several searches at once.
 
 That process is called query fan-out, and it decides which pages get cited. I wanted to see what the searches actually look like, so I asked ChatGPT 27 questions, from passport fees to note-taking apps, and logged every search it ran. They look nothing like the keywords in a keyword tool.
 
@@ -20,7 +20,7 @@ Query fan-out is an AI search engine turning one question into one or more searc
 
 Google's example is someone asking "how to fix a lawn that's full of weeds". AI Mode might search for "best herbicides for lawns", "remove weeds without chemicals" and "how to prevent weeds in lawn", and cite pages from all three.
 
-So a page doesn't need to rank for the question a person typed. It needs to rank for one of the searches the engine wrote. You can't see those searches in Search Console or a keyword tool, so I went and looked at them directly.
+So a page doesn't need to rank for the question a person typed. It usually needs to rank for one of the searches the engine wrote. You can't see those searches in Search Console or a keyword tool, so I went and looked at them directly.
 
 ## What ChatGPT searched for
 
@@ -48,7 +48,7 @@ Those counts match ChatGPT's quick answers. Its thinking mode searches far more:
 
 ## Why ChatGPT cites the official page over yours
 
-When ChatGPT puts "official" or a publisher's name in its search, the publisher usually wins. The passport question went to the State Department, and nothing else was cited.
+In my test, when ChatGPT put "official" or a publisher's name in its search, the publisher won. The passport question went to the State Department, and nothing else was cited.
 
 I wouldn't try to beat an official source on a search that asks for one. If it answers the question well, ChatGPT is right to cite it.
 
@@ -89,7 +89,7 @@ Each ChatGPT answer lists the searches it ran and the pages it cited, and says w
 
 Pick questions your customers really ask, including the comparisons and two-part questions. In my first set, the harder questions produced 17 of the 28 searches.
 
-ChatGPT decides first whether a question needs a search at all. When an answer shows no searches, ChatGPT answered from the model's training, as it would for a person asking the same question. How-tos and definitions often go that way, and no page can win a citation there. (My own test above forced a web search on every question, so it shows what ChatGPT searches when it does search.)
+ChatGPT decides first whether a question needs a search at all. When an answer shows no searches, ChatGPT answered from the model's training, as it would for a person asking the same question. How-tos and definitions often go that way. Those answers cite no page, and the way into them is the model's training: being named next to your topic on pages other sites quote, which [How to get cited by ChatGPT](/blog/how-to-get-cited-by-chatgpt#why-some-questions-get-no-citation-at-all) covers. (My own test above forced a web search on every question, so it shows what ChatGPT searches when it does search.)
 
 Google AI Mode's searches aren't visible anywhere, but the questions that led to them turn up in Search Console. The AI queries section of [`seo report`](/docs/report) finds the conversational questions and follow-ups, such as "how much is it" or "what about the pro plan", and shows which page Google showed for each one:
 
@@ -99,7 +99,7 @@ Google AI Mode's searches aren't visible anywhere, but the questions that led to
 
 Ranking for a fan-out search is ordinary SEO aimed at a longer, more specific query. These are the changes I'd make, based on which pages got cited in my test.
 
-1. Put the words the engine adds into your title and first paragraph. ChatGPT searched for years, places, months and data sources, such as "November 2026" in the Austin rent search.
+1. Put the words the engine adds into your title and first paragraph. ChatGPT searched for years, places, months and data sources, such as "November 2026" in the Austin rent search. Put the year in the title only when the page covers something that changes each year, and update it when the year turns. Keep it out of the URL either way, so the page keeps its address when you update it.
 2. Say where your numbers come from. The heat pump search asked for the Department of Energy, and ChatGPT cited a Department of Energy report. Name your source in plain text near the number.
 3. Answer the part the official source doesn't. A regional split, one location, one month or one model year is often missing from the official page.
 4. Write the comparison page. If you have pages for A and B, people will ask about A versus B, and the engine will search for both together.

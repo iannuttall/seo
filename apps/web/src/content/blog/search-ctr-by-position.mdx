@@ -1,0 +1,85 @@
+---
+title: How to find your real CTR by position in Search Console
+description: CTR studies say a top Google result gets about 20% of clicks. My Search Console data shows far less, so measure your own click-through rate by position.
+heading: How to find your real CTR by position in Search Console
+lead: CTR studies publish the average share of searchers who click a result at each Google position. On my sites, pages at positions 2 to 4 got about half the clicks those averages predict, so work out your own click-through rates before you forecast traffic from a ranking.
+date: '2026-11-13'
+draft: false
+cover:
+  alt: "A Victorian engraved theatre where a lime green spotlight falls on crowded front rows while the audience thins out toward nearly empty upper tiers."
+  title: left
+---
+
+Click-through rate by position is the share of searchers who click your result at each ranking spot. SEOs use these rates to forecast traffic and to spot titles that underperform, and most of them take the rates from a published study rather than their own site.
+
+I pulled the query data for every site in my Search Console and compared my click-through rates with the best published study I could find. Lower positions match the study well. The top positions get far fewer clicks on my sites than the study says, and the rates differ a lot from one of my sites to the next. I don't think one industry-wide set of rates is a safe number to plan with any more.
+
+## What the published CTR studies say
+
+Advanced Web Ranking's study is the largest public one I know of, built on more than 1.75 million US results pages a month. For non-brand searches across all devices it puts position 1 at 19.4%, position 3 at 6.0% and position 10 at 0.8% ([Advanced Web Ranking](https://www.advancedwebranking.com/seo/organic-ctr)).
+
+AI Overviews pull those numbers down. In the same study, position 1 on US desktop fell from 20.0% across all results pages to 9.7% on pages with an AI Overview, which appeared on 43% of the desktop pages sampled. Ahrefs put the position 1 loss from AI Overviews at about 58% in its own Search Console data ([Ahrefs](https://ahrefs.com/blog/ai-overviews-reduce-clicks-update)).
+
+## What my own Search Console data shows
+
+Across 34 Search Console properties I run, I took each site's top 500 non-brand queries over four weeks and kept the ones with at least 100 impressions. Here's the median CTR at each position beside Advanced Web Ranking's non-brand figures:
+
+| Position | My sites (median) | Study (non-brand) |
+| --- | --- | --- |
+| 2 | 4.9% | 9.6% |
+| 3 | 4.4% | 6.0% |
+| 4 | 2.1% | 3.9% |
+| 5 | 2.3% | 2.7% |
+| 7 | 1.2% | 1.4% |
+| 10 | 0.8% | 0.8% |
+
+From position 5 down, my sites match the study closely. At positions 2 to 4, my median query gets about half the clicks the study predicts. The top of the page is where AI Overviews, featured answers and other results take the clicks, and on my mostly informational sites they take a lot of them.
+
+I've left position 1 out of the table. Only 30 of my non-brand queries with enough impressions averaged position 1, and their CTR ranged from under 3% to about 50%, so a median would be meaningless.
+
+## Why a top ranking can send almost nothing
+
+Position 1 on my sites shows the problem most clearly. Three short definition searches made up 63,000 of the 75,000 non-brand impressions I had at position 1, and together they got a click about 0.2% of the time. Google answers those searches on the results page, so ranking first for them is close to worthless.
+
+If you averaged every impression at position 1, my sites would show a CTR of 4.7%, a quarter of the published figure. Three queries did that. Any forecast that multiplies search volume by a published position 1 CTR would have promised me about 80 times the clicks I got from them.
+
+Brand searches behave differently. My brand queries at position 1 got clicked 22% of the time, close to Advanced Web Ranking's 27% for branded searches. People who search for you by name still click.
+
+## Why every site needs its own click-through rates
+
+The spread between my own sites is wider than the gap between me and the study. Among the six sites with enough data at position 3, non-brand CTR there ranged from 2.2% to 11.4%. The sites cover different topics, and each topic gets a different results page, with more or fewer AI answers, ads, videos and People Also Ask boxes.
+
+So I'd treat a study's rates as a rough guide to how clicks fall away down the page, and nothing more. A forecast, a ranking target or a judgment that a title is underperforming should use your own site's rate at each position, worked out from your own queries.
+
+## How to check CTR against your own site's rates
+
+SEO Skill works out those rates from your own Search Console data. For each position on page one, it takes the click-through rate of the better-performing pages on your site that rank there (the 75th percentile), leaving out the page being checked. Then it compares each query's click-through rate with your site's rate for its position.
+
+Ask your agent which queries get fewer clicks than they should for their position, or run the report sections yourself. The low CTR section checks queries in the top three:
+
+```sh
+seo report --site example.com --section low-ctr
+```
+
+The quick wins section uses the same rates for queries at positions 4 to 10, where a small ranking gain is worth the most:
+
+```sh
+seo report --site example.com --section quick-wins
+```
+
+Both leave out brand queries, check each page live, and estimate the clicks each query is missing against your site's own rate. That estimate is for deciding what to fix first, not a traffic forecast. When a site doesn't have enough data to work out its own rates, the report says so and uses a built-in set of rates instead.
+
+Before you rewrite a title over a low CTR, search the query yourself. If Google answers it on the results page, a better title won't bring the clicks back, and the page needs a reason to click that the answer doesn't give, such as a tool, data or a full walk-through.
+
+## What lower CTR means for SEO
+
+Lower CTR at the top of the page is a real and growing shift. People get more of their answers on Google's page and in AI tools, and fewer of them click. I expect AI agents to do most of the informational searching that SEO has targeted within about five years, and clicks will count less and less of how often your pages are used.
+
+That doesn't make rankings less important. The pages Google ranks are the pages its AI answers and other assistants read, and a page that never ranks can't be quoted. Rankings just need a different scorecard: track impressions, citations in AI answers and the clicks from searches that still want a page, and stop judging every ranking by the clicks an old study said it would send.
+
+## How this was checked
+
+- I pulled query-level Search Console rows for 34 properties through `seo data`, over four weeks to early November 2026, taking the top 500 queries by clicks on each site. Brand queries, which contain the site's own name, and queries SEO Skill flags as rank-tracker spam were left out.
+- Search Console returns rows by clicks, so the sample covers 27% of the sites' clicks and 14% of their impressions, and it misses many queries with no clicks. That pushes my CTRs up, so the real gap with the study is probably wider.
+- Position is Search Console's average topmost position for each query, rounded to the nearest whole position. Medians use queries with at least 100 impressions.
+- The Advanced Web Ranking figures are its US, all devices, non-brand and branded numbers for July 2026, and its desktop figures for the AI Overview comparison.

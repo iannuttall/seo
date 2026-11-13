@@ -1,8 +1,8 @@
 ---
 title: Connect analytics
-description: Read Google Analytics and Clicky landing pages with the hosted MCP or the CLI, and build a provider package for any other tool.
+description: Read Google Analytics, Clicky and Simple Analytics landing pages with the hosted MCP or the CLI, and build a provider package for any other tool.
 heading: Analytics
-lead: See which landing pages get visits. Google Analytics and Clicky work in the hosted MCP and the CLI. Other tools run on your own machine.
+lead: See which landing pages get visits. Google Analytics, Clicky and Simple Analytics work in the hosted MCP and the CLI. Other tools run on your own machine.
 ---
 
 Search Console tells you what happens in Google before the click. Your analytics tells you what happens after it.
@@ -13,9 +13,10 @@ Search Console tells you what happens in Google before the click. Your analytics
 | --- | --- | --- |
 | Google Analytics | Yes, with your Google sign-in | Yes, `seo analytics google report` |
 | Clicky | Yes, with the site saved on your account page | Yes, `seo analytics clicky report` |
-| Fathom, Simple Analytics, Plausible or anything else | No | Build your own from the [provider template](https://github.com/iannuttall/seo-provider-template) |
+| Simple Analytics | Yes, with the API key saved on your account page | Yes, `seo analytics simple-analytics report` |
+| Fathom, Plausible or anything else | No | Build your own from the [provider template](https://github.com/iannuttall/seo-provider-template) |
 
-The hosted MCP reads your Google data, your Clicky sites and your DataForSEO or Ahrefs research. When you ask it about another analytics tool, or about [Bing](/docs/bing), it tells your agent to use the CLI, the same way it does for a crawl.
+The hosted MCP reads your Google data, your Clicky sites, your Simple Analytics websites and your DataForSEO or Ahrefs research. When you ask it about another analytics tool, or about [Bing](/docs/bing), it tells your agent to use the CLI, the same way it does for a crawl.
 
 ## Google Analytics
 
@@ -67,9 +68,33 @@ A Clicky site saved on this machine only with `seo analytics clicky connect --si
 
 Clicky counts visits, not Google Analytics sessions or users, so compare the two with care. Clicky does not split landing pages by source, so the landing pages include every visit, not only visits from search.
 
+## Simple Analytics
+
+Make an API key in your Simple Analytics account settings, under API keys. API access needs a paid Simple Analytics plan or a trial. Save the key on the Keys tab of your [account page](/account#simple-analytics). It reads every website your Simple Analytics user can see. Simple Analytics has no read-only keys, so the key is encrypted and never shown again.
+
+**Hosted MCP.** Ask your agent:
+
+```text
+Show the Simple Analytics landing pages for example.com
+```
+
+The agent runs `seo_data` with Simple Analytics as the source and the site's domain. It returns visitors by landing page, with referrers, UTM sources and visits from AI tools such as ChatGPT and Perplexity, for the last 28 days unless you ask for other dates.
+
+**CLI.** Link the CLI to your account with `seo login`, then:
+
+```sh
+seo analytics simple-analytics report --site example.com
+```
+
+To keep the key on this machine only, run `seo analytics simple-analytics connect` instead.
+
+[`seo compare`](/docs/compare) shows Simple Analytics visitors before and after a date beside Search Console when the key can read the site.
+
+Simple Analytics counts visitors: a pageview with no referrer or one from another site, which it also counts as a visit. They are not Google Analytics sessions or users. A visitor with both an AI referrer and an AI UTM source is counted once.
+
 ## Any other analytics tool
 
-There is no built-in support for Fathom, Simple Analytics, Plausible or any other analytics tool, and there will be no more built-in sources. You can add your own in about an hour: copy the [provider template](https://github.com/iannuttall/seo-provider-template), point it at your tool's API and publish it to npm. Then:
+There is no built-in support for Fathom, Plausible or other analytics tools. You can add your own in about an hour: copy the [provider template](https://github.com/iannuttall/seo-provider-template), point it at your tool's API and publish it to npm. Then:
 
 ```sh
 seo providers install <your-package-name>

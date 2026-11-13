@@ -25,6 +25,7 @@ import {
   liveCheck,
   matchProperty,
   readable,
+  SIMPLE_ANALYTICS_KEY,
 } from './commands/index.js'
 import type { ResearchStore } from './commands/research-cache.js'
 import { typesafeDecisionModel } from './decision-model.js'
@@ -48,6 +49,7 @@ import { readAhrefsApiKey } from './providers/ahrefs/credentials.js'
 import { readBingApiKey } from './providers/bing/credentials.js'
 import { readProviderCache, writeProviderCache } from './providers/cache.js'
 import { readDataForSeoCredentials } from './providers/dataforseo/credentials.js'
+import { readSimpleAnalyticsKey } from './simple-analytics/credentials.js'
 import { localIssues } from './storage/issues.js'
 
 // The core commands' functions for the CLI and the local MCP: Search Console
@@ -166,12 +168,14 @@ export async function localAccounts(): Promise<GoogleAccount[]> {
 // Provider keys, as header-style names: keys saved on this machine win over
 // the seoskill.dev account's. Keys go only to their provider.
 export async function localResearchKeys(): Promise<Headers> {
-  const [dataForSeo, ahrefs, clicky, saved] = await Promise.all([
-    readDataForSeoCredentials().catch(() => undefined),
-    readAhrefsApiKey().catch(() => undefined),
-    readClickySiteKeys().catch(() => ({})),
-    cloudLinked() ? cloudKeys().catch(() => ({})) : {},
-  ])
+  const [dataForSeo, ahrefs, clicky, simpleAnalytics, saved] =
+    await Promise.all([
+      readDataForSeoCredentials().catch(() => undefined),
+      readAhrefsApiKey().catch(() => undefined),
+      readClickySiteKeys().catch(() => ({})),
+      readSimpleAnalyticsKey().catch(() => undefined),
+      cloudLinked() ? cloudKeys().catch(() => ({})) : {},
+    ])
   const keys = new Headers(saved)
   // A Clicky site saved on the account also knows its domain, so it stays.
   for (const [siteId, sitekey] of Object.entries(clicky)) {
@@ -183,6 +187,7 @@ export async function localResearchKeys(): Promise<Headers> {
     keys.set('x-dataforseo-password', dataForSeo.password)
   }
   if (ahrefs?.apiKey) keys.set('x-ahrefs-key', ahrefs.apiKey)
+  if (simpleAnalytics) keys.set(SIMPLE_ANALYTICS_KEY, simpleAnalytics.key)
   return keys
 }
 

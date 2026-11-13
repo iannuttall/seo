@@ -35,6 +35,7 @@ encrypted before they are written.
   your Clicky login, we keep your username and password, encrypted, and use
   them only to read your list of Clicky sites. The password never leaves
   the server.
+- **Simple Analytics, if you save it.** Your API key, encrypted.
 - **Machines you link with `seo login`.** A name made from the machine's
   host name, and when it was last used.
 - **How you signed up.** Written once: whether you came from an AI agent,
@@ -49,7 +50,7 @@ encrypted before they are written.
   URLs or results.
 - **Beta features** the maintainer turned on for your account.
 
-We keep nothing else. Your Search Console, Google Analytics, Clicky and
+We keep nothing else. Your Search Console, Google Analytics, Clicky, Simple Analytics and
 provider data is fetched for each request, returned to your agent and not
 kept. Request logs are turned off.
 
@@ -173,7 +174,7 @@ send your reports or data to us.
 - **Cache.** Google and Clicky answers are reused for up to 24 hours, and
   Google index checks for up to 7 days. Old cache rows are removed after 30
   days.
-- **Direct requests.** Commands talk straight to Google, Bing, Clicky, the
+- **Direct requests.** Commands talk straight to Google, Bing, Clicky, Simple Analytics, the
   research providers and the sites you crawl. Each receives only what that
   command needs, plus normal network data.
 - **`seo login`.** A linked machine gets short-lived Google and Bing tokens
@@ -212,7 +213,7 @@ You can remove our access at any time in your
 When you use a provider, it handles your request under its own policy:
 [DataForSEO](https://dataforseo.com/privacy-policy) (which says it keeps
 API task data for 365 days), [Ahrefs](https://ahrefs.com/legal/privacy-policy),
-[TypeSafe](https://typesafe.ai/legal/privacy-policy), Clicky, Bing and
+[TypeSafe](https://typesafe.ai/legal/privacy-policy), Clicky, Simple Analytics, Bing and
 Google.
 
 Your AI agent sends tool results to its model provider. That is up to your

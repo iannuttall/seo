@@ -44,6 +44,8 @@ export async function runSites(input: {
   keys: Headers
   // Saved Clicky sites, as "site id (domain)".
   clicky?: string[]
+  // Whether a Simple Analytics API key is saved.
+  simpleAnalytics?: boolean
   signIn: string
   // null when Bing is not connected; left out on a surface without Bing.
   bing?: BingCall | null
@@ -143,6 +145,9 @@ export async function runSites(input: {
     input.clicky?.length
       ? `Clicky sites (seo_data with source "clicky"): ${input.clicky.join(', ')}.`
       : null,
+    input.simpleAnalytics
+      ? 'Simple Analytics: API key saved; seo_data with source "simple_analytics" and the site\'s domain.'
+      : null,
     `Add a Google account${input.bing === undefined ? '' : ', Bing'} or a key: ${input.connect}`,
     'Next: seo_report with a site.',
   ]
@@ -154,6 +159,7 @@ export async function runSites(input: {
       bing: Array.isArray(bing) ? bingSites : null,
       research,
       clicky: input.clicky ?? [],
+      simpleAnalytics: Boolean(input.simpleAnalytics),
     },
   }
 }

@@ -18,6 +18,7 @@ export const PROVIDER_SECRET_NAMES = {
   clickySiteKeys: 'clicky-sitekeys',
   dataForSeoCredentials: 'dataforseo-credentials',
   providerExtensionCredentials: 'provider-extension-credentials',
+  simpleAnalyticsKey: 'simple-analytics-key',
 } as const
 
 // Secrets of providers removed in 0.3.0. Nothing reads them, but reset still

@@ -20,7 +20,7 @@ publishing. Pages written from a keyword list aren't SEO. They're slop.
 This works the other way round. It's a Google Search Console MCP server and
 CLI, and it doesn't tell your agent what to do. It gives it the facts: your
 clicks, impressions and positions from Search Console, your visits from
-Google Analytics or Clicky, your Bing data, the dates of Google updates, and
+Google Analytics, Clicky or Simple Analytics, your Bing data, the dates of Google updates, and
 a crawl of your site. Your agent works out what matters, and you decide what
 changes.
 
@@ -148,7 +148,7 @@ ends with the command to run next, so your agent always knows where to go.
 | [`seo index`](https://seoskill.dev/docs/indexing) | Google's indexing reasons for known URLs, labelled from live checks, and pages that lost their clicks |
 | [`seo research`](https://seoskill.dev/docs/research) | Keywords, search results, competitors and backlinks from your own key |
 | [`seo data`](https://seoskill.dev/docs/data) | Raw Search Console or Bing rows |
-| [`seo analytics`](https://seoskill.dev/docs/analytics) | Landing pages from Google Analytics or Clicky |
+| [`seo analytics`](https://seoskill.dev/docs/analytics) | Landing pages from Google Analytics, Clicky or Simple Analytics |
 | [`seo crawl`](https://seoskill.dev/docs/crawl) | Technical issues and AI agent access across a site (CLI only) |
 | [`seo internal-links`](https://seoskill.dev/docs/internal-links) | Internal links to add across a site or to one page (CLI only) |
 

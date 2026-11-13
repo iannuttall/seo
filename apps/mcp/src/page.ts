@@ -100,6 +100,8 @@ export type View =
         clicky: { siteId: string; domain: string | null; account: boolean }[]
         // The saved Clicky account's username, never its password.
         clickyAccount: string | null
+        // Whether a Simple Analytics API key is saved; never the key.
+        simpleAnalytics: boolean
         // Machines linked with `seo login`.
         machines: { id: string; label: string; usedAt: number | null }[]
         // A `seo login` waiting for this person to approve it.

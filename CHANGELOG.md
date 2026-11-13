@@ -4,9 +4,15 @@
 
 ### Added
 
-- `seo compare` shows Clicky visits before and after the date beside Search
-  Console and Google Analytics, when a saved Clicky site has the site's
-  domain: all visits, by traffic source, and from AI assistants.
+- Simple Analytics is a built-in analytics source in the hosted MCP and the
+  CLI. Save an API key on the account page, or run
+  `seo analytics simple-analytics connect` to keep it on this machine.
+  `seo data --source simple_analytics` (`seo_data` in MCP) lists visitors
+  by landing page with referrers, UTM sources and visits from AI tools,
+  counting a visitor with both an AI referrer and an AI UTM source once.
+- `seo compare` shows Clicky visits and Simple Analytics visitors before and
+  after the date beside Search Console and Google Analytics, each in its own
+  metric, with visits from AI assistants.
 - The weekly site audit asks ChatGPT search, Google AI Mode and AI Overviews
   the same 10 questions from the site's Search Console each week, on SEO
   Skill's DataForSEO account. The weekly summary shows which answers started

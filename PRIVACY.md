@@ -98,6 +98,14 @@ run it we send:
   Jev model can judge whether each keyword fits the site;
 - Ahrefs: the domains in the top 10 results, for their Domain Rating.
 
+**AI answer check.** Each paid site also gets a weekly check of whether
+ChatGPT search, Google AI Mode and AI Overviews cite it. It runs on our own
+DataForSEO account, not your key. We send DataForSEO the site's domain, its
+main country and up to 10 questions from its Search Console queries. We keep
+those questions and, for each one and each engine, whether this week's and
+last week's answer cited or named the site, which page it cited and the
+other sites the answer cited.
+
 **Search Console folders.** If you click Create these in Search Console,
 Google asks for permission to add properties. We use it once, to add the
 listed folders, and do not keep it.

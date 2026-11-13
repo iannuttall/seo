@@ -1,4 +1,9 @@
-import type { AuditAccess, IssueStore, StoredIssue } from '@seo/core/commands'
+import type {
+  AuditAccess,
+  IssueStore,
+  StoredIssue,
+  WeekAiAnswers,
+} from '@seo/core/commands'
 import { ACTIVE_SQL, MAX_PAID_SITES } from '../billing.ts'
 import { sha256Base64Url } from '../seal.ts'
 import type { AuditMonitor } from './checks.ts'
@@ -59,6 +64,8 @@ export type AuditSite = {
   competitorsChosen: boolean
   // The latest competitor check, pushed by the site object.
   opportunities: GapResult | null
+  // The latest AI answer check, pushed by the site object.
+  aiAnswers: WeekAiAnswers | null
 }
 
 export type AuditCoverage = {
@@ -95,6 +102,7 @@ type Row = {
   competitors: string | null
   competitors_chosen: number
   opportunities: string | null
+  ai_answers: string | null
 }
 
 // One object per person and property, so two people who audit the same
@@ -145,6 +153,9 @@ export async function auditSites(
     competitorsChosen: row.competitors_chosen === 1,
     opportunities: row.opportunities
       ? (JSON.parse(row.opportunities) as GapResult)
+      : null,
+    aiAnswers: row.ai_answers
+      ? (JSON.parse(row.ai_answers) as WeekAiAnswers)
       : null,
   }))
 }

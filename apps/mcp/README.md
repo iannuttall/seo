@@ -111,6 +111,22 @@ goes to the weekly summary through `audit_sites.opportunities`. The check
 stays off until `DATAFORSEO_LOGIN` and `DATAFORSEO_PASSWORD` are set, and
 names nothing without `TYPESAFE_API_KEY`.
 
+## AI answer check
+
+The same sites get a weekly AI answer check (`src/audit/ai-answers.ts`),
+also on SEO Skill's DataForSEO account. It runs `ai_answers` (the
+`seo_research` action) for the site's top 10 askable questions from its
+Search Console AI-shaped queries, in the country with the most clicks, on
+ChatGPT search, Google AI Mode and AI Overviews. The questions are fixed
+at the first check that finds any, so each week asks the same ones. Each
+question and engine keeps its latest result and the one before, and the
+weekly summary lists the answers whose result changed when both are known
+(cited, mentioned, neither or no answer), citations first, with the sites
+cited instead. Answers still queued after two minutes are read back free
+each hour for up to a day. Spend is capped before each run at $1 a site a
+month (a run costs about $0.07), metered as `included_dataforseo_microusd`.
+The result goes to the weekly summary through `audit_sites.ai_answers`.
+
 ## Internal linking tool page
 
 The site's `/tools/internal-linking-tool` page runs the internal links

@@ -49,6 +49,22 @@ write any site copy, metadata included.
 - After a visual change, look at the rendered page on desktop, phone width
   and dark mode. A passing build does not prove the layout.
 
+## Blog posts
+
+- Read `POSITIONS.md` before you write or edit a post. A post agrees with
+  every stance in it; a new or changed stance goes into it in the same PR,
+  and a changed stance updates every post it lists.
+- Answer each `seo lint` review item, `absolute` especially: narrow the
+  claim to what its source shows, or say it's Ian's view.
+- Before a post is published, and before a published post's claims change,
+  get a sceptical review from a separate reviewer (a subagent) that hasn't
+  seen the drafting. Give it the draft, `POSITIONS.md`, the live posts on
+  the same topic and the post's sources, and don't tell it the post is
+  right. Ask it for each claim that contradicts a position or another live
+  post, goes further than its source, gives a number without a source, or
+  is advice one post gives and another post argues against. Fix each
+  finding or record why it stands before publishing.
+
 ## Checks
 
 ```sh

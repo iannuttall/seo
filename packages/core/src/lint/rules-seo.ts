@@ -1,5 +1,11 @@
 import { SERP_PIXEL_BUDGETS, serpTextWidth } from '../serp/browser.js'
-import { ALL, type Context, PROSE, type RuleInfo } from './engine.js'
+import {
+  ALL,
+  type Context,
+  insideQuotes,
+  PROSE,
+  type RuleInfo,
+} from './engine.js'
 import { quoted } from './rules-phrases.js'
 import { sentenceAt, words } from './text.js'
 import type { Block } from './types.js'
@@ -374,10 +380,29 @@ const INANIMATE =
 const PROOF =
   /\b\d[\d,.]*\s*\+?\s*(?:happy |active |satisfied |paying |loyal )?(?:users|customers|teams|companies|businesses|subscribers|clients|marketers|brands)\b|\b\d+(?:\.\d+)?x (?:faster|more|better|cheaper)\b|\b\d{1,3}% (?:faster|more|less|fewer|higher|lower|increase|reduction|better|growth)\b/gi
 
+// A claim that covers every case: "and almost nothing else", "the only
+// way", "never works". A number beside it doesn't settle it, because the
+// source usually covers less than the sentence does.
+const ABSOLUTE =
+  /\b(?:(?:and|or) )?(?:almost |practically |virtually )?nothing else\b|\bthe only (?:way|route|thing|reason|factor|signal|path|source)\b|(?<!\b(?:that|which|who) )\b(?:never|always) (?:works?|helps?|ranks?|gets?|cites?|matters?|counts?|wins?|fails?)\b|(?<!\b(?:not|no|never|cannot|\w+n['\u2019]t) )\bguarantee[sd]? (?:a|an|the|you|your|that|it|rankings?|results?|traffic|citations?|clicks)\b|\bno (?:one|site|page|brand|engine) (?:can|will|ever)\b/gi
+
 function reviews(ctx: Context) {
   const prose = ctx.blocks(PROSE)
   for (const block of prose) {
     const sentences = ctx.sentences(block)
+    ABSOLUTE.lastIndex = 0
+    for (const found of block.norm.matchAll(ABSOLUTE)) {
+      const start = found.index ?? 0
+      const end = start + found[0].length
+      if (insideQuotes(block.norm, start, end)) continue
+      ctx.review(
+        'absolute',
+        block,
+        start,
+        end,
+        `Does your source cover every case "${found[0]}" claims? Narrow it to what the evidence shows, or say it's your view.`,
+      )
+    }
     SUPERLATIVE.lastIndex = 0
     for (const found of block.norm.matchAll(SUPERLATIVE)) {
       const index = sentences.indexOf(sentenceAt(sentences, found.index ?? 0))

@@ -1,0 +1,88 @@
+---
+title: How to find AI Mode follow-up questions in Search Console
+description: Google counts each AI Mode follow-up question as a new query in Search Console. Here's how to find them, what they look like and what to do with them.
+heading: How to find AI Mode follow-up questions in Search Console
+lead: When someone asks a follow-up question in Google's AI Mode, Search Console records it as a query of its own, such as "what about the cheaper one" or a bare "yes please". Nothing labels them, but you can find them, and they tell you what people still wanted to know after your page was shown.
+date: '2026-11-13'
+draft: false
+cover:
+  alt: "A Victorian engraved study where a chain of speech bubbles edged in lime green rises from an open book toward a man reading a long scroll."
+  title: left
+---
+
+Google's AI Mode lets people keep asking. Google's [launch post for AI Mode](https://blog.google/products/search/ai-mode-search/) describes "the ability to go further with follow-up questions", and those follow-up questions reach Search Console just like ordinary searches.
+
+The odd part is what they look like there. A follow-up question only makes sense inside the conversation, so Search Console gets queries such as "how much is it", "what about the blue one" or simply "yes". I went through Search Console data for every site I run to see how many of these there are and what they're worth.
+
+## How Search Console counts AI Mode follow-up questions
+
+Google's [help page on impressions, position and clicks](https://support.google.com/webmasters/answer/7042828) says: "If a user asks a follow-up question within AI Mode, they are essentially performing a new query. All impression, position, and click data in the new response are counted as coming from this new user query."
+
+So each follow-up question gets its own row in the Performance report, under the words the person typed. If your page appears in the answer to "do they ship to canada", Search Console records an impression for "do they ship to canada", with no record of the question that came before it.
+
+## Why Search Console doesn't label them
+
+AI Mode traffic sits inside the normal Performance report, in the Web search type, mixed in with everything else. Google's [AI features documentation](https://developers.google.com/search/docs/appearance/ai-features) says so, and there's no filter that separates it.
+
+Search Console's newer [Generative AI performance report](https://support.google.com/webmasters/answer/16984139) counts impressions in AI Overviews and AI Mode, but it groups them by page, country, date and device. It doesn't list queries, and it isn't in the Search Console API. It tells you which pages appear in AI answers and nothing about what people asked.
+
+The only way to find follow-up questions is to read the query text. A query with a pronoun and nothing named, a "what about" with one word after it, or a bare reply such as "go on" is very unlikely to be a fresh search. Someone typed it in the middle of a conversation.
+
+## What I found in my own Search Console data
+
+I ran this across 34 Search Console properties I run, over 90 days. 28 of them had follow-up questions. They made up 44% of all the conversational and AI-style queries, but only 12% of their impressions, because each one is asked by very few people.
+
+They also rank well. Nearly half of the follow-up questions showed one of my pages at position 3 or better, and bare replies such as "yes please" and "go on" had a median position of about 4. Google is putting real pages in front of people who typed one word. AI Mode answers with the earlier questions in mind, even though Search Console only keeps the last one.
+
+Clicks are scarce. On the 15 sites with at least 1,000 impressions from conversational and AI-style queries, those queries got clicked at about a fifth of each site's normal rate. People in AI Mode read the answer, and most of them don't need to visit.
+
+The useful part is the pattern across a day. When two or more different follow-up questions reach one page on the same day, SEO Skill calls that a follow-up trail. Over the last four weeks, 16 of my sites had trails, 440 of them across 144 pages. Most were two questions long, and a few ran to eight.
+
+## How to find follow-up questions with SEO Skill
+
+The AI queries section of [`seo report`](/docs/report) finds follow-up questions, bare replies and other conversational queries in your Search Console data. It groups the different wordings of one question and shows which page Google showed for each:
+
+<AgentStep setup prompt="Which AI Mode follow-up questions and conversational queries bring my site impressions, and which page shows for each?" cli="seo report --site example.com --section ai-queries" />
+
+A pronoun query that names your own site doesn't count as a follow-up, and neither does the "it" in time and weather questions such as "is it raining". The section covers 90 days by default.
+
+Then look at the follow-up trails. Each trail is one page and one day, with the follow-up questions people asked there:
+
+<AgentStep prompt="Show me my site's follow-up trails: which pages got several follow-up questions on one day, and what were the questions?" cli="seo report --site example.com --section ai-queries --detail full" />
+
+A page with several trails is one that AI Mode keeps showing, while the people reading the answer keep asking for something else. Those questions are what the page is missing.
+
+To see whether AI answers actually cite your page for the questions behind those follow-ups, ask the AI engines directly. This uses your own DataForSEO key and costs about $0.07 a run:
+
+<AgentStep prompt="Ask ChatGPT, AI Mode and AI Overviews my site's top conversational questions. Do the answers cite or mention my site?" cli="seo research ai_answers --target example.com" />
+
+Without keywords, SEO Skill picks your top 10 chat-style and long questions from Search Console itself.
+
+## What to do with follow-up questions
+
+Treat a trail as a list of questions a reader asked after seeing your page, and answer them on that page.
+
+1. Open the page the trail points to and read the follow-up questions in order.
+2. Work out what each one refers to. "How much is it" on a product guide is a price question, and "what about the older model" is a comparison the page didn't make.
+3. Add the answers to the existing page, under clear headings, in a sentence or two each. Don't make a new page for each follow-up question.
+4. Check the trails again a month later. If the same follow-ups keep arriving, the answer isn't where people, or AI Mode, can find it.
+
+A follow-up question that names nothing can't be targeted as a keyword, and it doesn't need to be. It tells you what to add to a page that already appears.
+
+## Read the counts carefully
+
+SEO Skill finds follow-up questions by their wording, so some matches are wrong. When I read 30 pronoun queries by hand, five weren't follow-ups, and four of those used "it" to mean IT.
+
+Search Console has no sessions, so a trail can join two different people who asked on the same day. And because follow-up questions are asked by so few people, many of them are [anonymized queries](/blog/bing-long-tail) that Search Console never lists. Every count here is a minimum.
+
+## Why follow-up questions matter more each year
+
+Search still sends far more visits than AI tools, but in my opinion that's changing fast. I expect agents and AI assistants to do most of the informational searching SEO has targeted within about five years, with AI use growing ten to a hundred times.
+
+Follow-up questions are the first place you can see that conversation in your own data. They show what people ask once the first answer isn't enough, and AI Mode runs its own searches to answer each one, as I covered in the [query fan-out post](/blog/query-fan-out). A page that already answers the follow-ups is the page an AI answer can use without sending the reader somewhere else.
+
+## How this was checked
+
+- The figures come from 34 Search Console properties I run, through `seo report --section ai-queries`, over 90 days to early November 2026. Follow-up trails cover the last 28 days of that range.
+- Follow-up questions are queries with a pronoun such as it, they or this and nothing named, under ten words, plus "what about" and "how about" queries and bare replies such as "yes" or "go on". The click comparison covers the wider set of conversational and AI-style queries the section finds.
+- Positions are Search Console's average position for each grouped question.

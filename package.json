@@ -143,13 +143,13 @@
   },
   "pnpm": {
     "overrides": {
-      "@hono/node-server": "2.1.5",
+      "@hono/node-server": "2.1.6",
       "@sentry/node": "10.60.0",
       "@xmldom/xmldom": "0.9.12",
       "devalue": "5.9.3",
       "esbuild": "0.28.1",
       "fast-uri": "3.1.9",
-      "hono@<4.13.11": "4.13.13",
+      "hono@<4.13.16": "4.13.17",
       "body-parser@<2.4.0": "2.4.0",
       "fast-copy@<4.1.0": "4.1.0",
       "http-cache-semantics@<4.2.1": "4.3.0",

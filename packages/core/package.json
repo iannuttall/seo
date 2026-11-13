@@ -69,10 +69,10 @@
     "p-retry": "^8.0.1",
     "pino": "^10.4.0",
     "pino-pretty": "^13.2.0",
-    "playwright-core": "1.64.1",
+    "playwright-core": "1.65.0",
     "proper-lockfile": "^4.1.2",
     "robots-parser": "^3.0.1",
-    "undici": "^8.12.2",
+    "undici": "^8.12.4",
     "zod": "^4.6.7"
   }
 }

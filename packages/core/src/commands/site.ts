@@ -2,6 +2,7 @@ import { queryShape, queryShapeLine } from '../analyze/query-shape.js'
 import { latestFinalGscDate, shiftIsoDate } from '../gsc/dates.js'
 import { analyticsBeside } from './analytics-site.js'
 import { CLI_LINK } from './bing.js'
+import { clickyBeside } from './clicky.js'
 import {
   byReason,
   INSPECT_LIMIT,
@@ -401,9 +402,11 @@ export type CompareInput = {
   pages?: string
 }
 
+// keys: the person's saved provider keys, for a Clicky site that matches.
 export async function runCompare(
   input: CompareInput,
   deps: CommandDeps,
+  keys?: Headers,
 ): Promise<CommandResult> {
   if (!realIsoDate(input.date)) {
     throw new CommandError(
@@ -429,7 +432,7 @@ export async function runCompare(
     startDate: shiftIsoDate(input.date, -days),
     endDate: shiftIsoDate(input.date, -1),
   }
-  const [report, updates, analytics] = await Promise.all([
+  const [report, updates, analytics, clicky] = await Promise.all([
     siteOverview(
       sharedReader(deps.searchAnalytics),
       input.site,
@@ -439,6 +442,7 @@ export async function runCompare(
     ),
     googleUpdates({ start: before.startDate, end: after.endDate }),
     analyticsBeside(deps.analytics, input.site, after, before, input.pages),
+    clickyBeside(keys, input.site, after, before, input.pages),
   ])
   return {
     text: [
@@ -449,6 +453,7 @@ export async function runCompare(
         10,
       ),
       analytics?.text,
+      clicky?.text,
       listOfUpdates(updates),
       `Next: ${deps.call('page')} for a page that moved.`,
       FACTS_ONLY,
@@ -458,6 +463,7 @@ export async function runCompare(
     data: {
       ...report,
       ...(analytics ? { analytics: analytics.data } : {}),
+      ...(clicky ? { clicky: clicky.data } : {}),
       googleUpdates: updates,
     },
   }

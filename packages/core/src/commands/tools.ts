@@ -417,7 +417,7 @@ export const SHARED_TOOLS: SharedTool[] = [
     command: 'compare',
     title: 'Before and after a date',
     description:
-      'Compares equal periods before and after a date, such as a site change or a Google update: totals, devices, and the pages and queries that moved, Google Analytics sessions from the property whose web stream matches the site, and Google updates in the window. Optional pages narrows it to URLs that contain that text, such as /blog/.',
+      'Compares equal periods before and after a date, such as a site change or a Google update: totals, devices, and the pages and queries that moved, Google Analytics sessions from the property whose web stream matches the site, Clicky visits from a saved Clicky site with the same domain, and Google updates in the window. Optional pages narrows it to URLs that contain that text, such as /blog/.',
     input: z.object({
       site,
       date: z
@@ -438,6 +438,7 @@ export const SHARED_TOOLS: SharedTool[] = [
           pages: input.pages,
         },
         surface.deps,
+        await surface.keys(),
       ),
   }),
   tool({

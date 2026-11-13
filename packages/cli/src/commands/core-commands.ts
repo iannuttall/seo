@@ -325,7 +325,7 @@ export const compareCommand = defineCommand({
   },
   run: async ({ args }) => {
     const site = await property(args, stringArg(args.site))
-    await run(args, (deps) =>
+    await run(args, async (deps) =>
       runCompare(
         {
           site,
@@ -333,6 +333,7 @@ export const compareCommand = defineCommand({
           pages: stringArg(args.pages),
         },
         deps,
+        await localResearchKeys().catch(() => undefined),
       ),
     )
   },

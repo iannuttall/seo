@@ -126,6 +126,7 @@ test('the packed package installs globally into an isolated prefix', {
       'seo_page',
       'seo_compare',
       'seo_index',
+      'seo_submit',
       'seo_research',
       'seo_data',
       'seo_lint',

@@ -1,0 +1,150 @@
+---
+import Breadcrumbs from '@/components/Breadcrumbs.astro'
+import CodeBlock from '@/components/CodeBlock.astro'
+import FaqAccordion from '@/components/FaqAccordion.astro'
+import PageHeader from '@/components/PageHeader.astro'
+import SetupCommands from '@/components/SetupCommands.astro'
+import ResearchLookup from '@/components/tools/ResearchLookup.astro'
+import BaseLayout from '@/layouts/BaseLayout.astro'
+import type { SchemaBreadcrumb } from '@/lib/schema'
+
+const breadcrumbs: SchemaBreadcrumb[] = [
+  { label: 'Home', href: '/' },
+  { label: 'Tools', href: '/tools' },
+  { label: 'People Also Ask tool' },
+]
+
+const faq = [
+  {
+    question: 'What is People Also Ask?',
+    answer:
+      'A box of related questions Google shows on many results pages. Each question opens to an answer, and opening one adds a few more questions to the list.',
+  },
+  {
+    question: 'Where do the questions come from?',
+    answer:
+      'The tool asks Google for your keyword live, in the country you pick, opens the first questions to load a few more, and lists up to 8 in the order Google showed them.',
+  },
+  {
+    question: 'Why do so few questions link to a page?',
+    answer:
+      'Google now answers most People Also Ask questions with its own AI text instead of a quote from a page. For those, the tool searches the question itself and shows the first result, which is the page Google ranks highest for that exact question.',
+  },
+  {
+    question: 'What does the traffic number mean?',
+    answer:
+      "DataForSEO's estimate of the page's monthly organic visits in that country, across every keyword it ranks for. It is a model, not the site's own analytics. n/a means DataForSEO has no estimate for the page.",
+  },
+  {
+    question: 'Is this People Also Ask tool free?',
+    answer:
+      'Yes. You get 3 free lookups a day without an account. Your agent can pull questions for every topic you plan with your own DataForSEO key.',
+  },
+  {
+    question: 'Why is there no People Also Ask box for my keyword?',
+    answer:
+      'Google does not show one on every search. Product and brand searches often have none. Try the question form of the topic, such as "what is" or "how to", or a broader keyword.',
+  },
+]
+---
+
+<BaseLayout
+  title="Free People Also Ask tool with answer pages"
+  description="Find the People Also Ask questions Google shows for any keyword, the page that answers each one, and that page's estimated monthly traffic, free."
+  canonicalPath="/tools/people-also-ask-tool"
+  {breadcrumbs}
+>
+  <main data-agent-content>
+    <Breadcrumbs {breadcrumbs} />
+    <PageHeader
+      title="People Also Ask tool"
+      description="List the questions Google shows under a keyword, the page that answers each one, and how much traffic that page gets."
+    />
+
+    <ResearchLookup
+      kind="paa"
+      heading="Find People Also Ask questions"
+      description="Enter a keyword and pick a country. Questions work well too."
+      example="what is a 401k"
+    />
+
+    <div class="docs-prose mt-16">
+      <h2>Read the questions and answer pages</h2>
+      <p>
+        Each row is one question from the People Also Ask box, in the order
+        Google showed it. Next to it is the page that answers it and that
+        page's estimated monthly organic traffic.
+      </p>
+      <table>
+        <thead>
+          <tr>
+            <th>Column</th>
+            <th>What it tells you</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>Question</td>
+            <td>The question as Google wrote it in the box.</td>
+          </tr>
+          <tr>
+            <td>Page that answers it</td>
+            <td>The page Google linked in the box, or the first result when the question is searched on its own.</td>
+          </tr>
+          <tr>
+            <td>Traffic</td>
+            <td>DataForSEO's estimate of the page's monthly organic visits, from all its keywords.</td>
+          </tr>
+        </tbody>
+      </table>
+
+      <h2>Find topics that already bring traffic</h2>
+      <p>
+        A question with an answer page that gets steady traffic is a topic
+        people search for, even when keyword tools show little volume for the
+        exact wording. Look for answer pages on small or narrow sites. If a
+        modest page gets real traffic from a question, a better answer has
+        room to compete.
+      </p>
+      <p>
+        Then write the answer in the first two sentences under a heading that
+        matches the question. That is the shape Google quotes when it does
+        link a page.
+      </p>
+
+      <h2>Where the answer pages come from</h2>
+      <p>
+        Google now answers most of these questions with its own AI text, not a
+        link to a page. When it does that, the tool searches the question by
+        itself and shows the first result. Google sometimes sends results
+        through its own redirect links; when one cannot be followed, the tool
+        shows the site without the exact page, and no traffic estimate.
+      </p>
+      <p>
+        The traffic figure is an estimate of the whole page across every
+        keyword it ranks for, not the visits that one question sends. Use it to
+        compare pages. For the full results page of any
+        question, use the <a href="/tools/serp-checker">SERP checker</a>.
+      </p>
+
+      <h2>Answer the questions your site already gets</h2>
+      <p>
+        With SEO Skill your agent can pull these questions with{' '}
+        <a href="/docs/research">seo research</a> and your own DataForSEO key,
+        then check your own Search Console for the questions your pages already
+        show up for. Ask:
+      </p>
+      <CodeBlock value="Find the People Also Ask questions for my top five topics on example.com and tell me which ones my pages already get impressions for" wrap />
+      <p>Add the hosted MCP server to your agent and sign in with Google:</p>
+    </div>
+
+    <SetupCommands id="paa-setup" class="mt-6" />
+
+    <div class="docs-prose mt-16">
+      <h2>People Also Ask tool questions</h2>
+    </div>
+    <div class="mt-6">
+      <FaqAccordion id="paa-faq" items={faq} />
+    </div>
+  </main>
+</BaseLayout>

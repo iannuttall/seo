@@ -25,8 +25,10 @@ import {
   handleBacklinks,
   handleCompetitorKeywords,
   handleDomainRating,
+  handlePeopleAlsoAsk,
   handleSerpChecker,
   handleSpamScore,
+  handleTitleWords,
   handleWebsiteTraffic,
 } from './tools/paid-tool-routes.ts'
 import { handleRedirectMap, REDIRECT_CHECKER } from './tools/redirect-map.ts'
@@ -907,6 +909,12 @@ app.all('/api/tools/competitor-keywords', (context) =>
 )
 app.all('/api/tools/serp-checker', (context) =>
   handleSerpChecker(context.req.raw, context.env),
+)
+app.all('/api/tools/title-words', (context) =>
+  handleTitleWords(context.req.raw, context.env),
+)
+app.all('/api/tools/people-also-ask', (context) =>
+  handlePeopleAlsoAsk(context.req.raw, context.env),
 )
 app.all('/api/*', () => jsonResponse({ error: 'Not found' }, 404))
 app.all('*', (context) => context.env.ASSETS.fetch(context.req.raw))

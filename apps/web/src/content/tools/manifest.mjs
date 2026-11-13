@@ -45,6 +45,24 @@ export const tools = [
     kind: 'protected',
   },
   {
+    id: 'people-also-ask-tool',
+    path: '/tools/people-also-ask-tool',
+    title: 'People Also Ask tool',
+    action: 'Open the People Also Ask tool',
+    description:
+      'List the People Also Ask questions Google shows for a keyword, with the page that answers each one and its estimated traffic.',
+    kind: 'protected',
+  },
+  {
+    id: 'title-tag-word-frequency',
+    path: '/tools/title-tag-word-frequency',
+    title: 'Title tag word frequency',
+    action: 'Open the title tag word frequency tool',
+    description:
+      'Count the words and phrases in the titles that rank for a keyword, so you write a title from the words Google already rewards.',
+    kind: 'protected',
+  },
+  {
     id: 'domain-age-checker',
     path: '/tools/domain-age-checker',
     title: 'Domain age checker',

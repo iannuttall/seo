@@ -9,6 +9,8 @@ export const PAID_TOOL_PROVIDERS = {
   'website-traffic': 'dataforseo-traffic',
   'competitor-keywords': 'dataforseo-research',
   'serp-checker': 'dataforseo-research',
+  'title-words': 'dataforseo-research',
+  'people-also-ask': 'dataforseo-research',
   backlinks: 'dataforseo-backlinks',
 } as const
 

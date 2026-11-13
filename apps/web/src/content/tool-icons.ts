@@ -10,6 +10,7 @@ import {
   FileEditIcon,
   FileValidationIcon,
   GitMergeIcon,
+  HelpCircleIcon,
   HierarchySquare02Icon,
   HourglassIcon,
   Image02Icon,
@@ -26,6 +27,7 @@ import {
   Share08Icon,
   ShuffleIcon,
   StarIcon,
+  TextFontIcon,
   TranslateIcon,
   UserGroupIcon,
   ViewOffIcon,
@@ -63,6 +65,8 @@ export const toolIcons = {
   'redirect-checker': ArrowTurnForwardIcon,
   'seo-migration-checklist': Route01Icon,
   'canonical-checker': LinkSquare01Icon,
+  'people-also-ask-tool': HelpCircleIcon,
+  'title-tag-word-frequency': TextFontIcon,
 } as const
 
 export const fallbackToolIcon = Analytics02Icon

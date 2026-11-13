@@ -1,0 +1,142 @@
+---
+import Breadcrumbs from '@/components/Breadcrumbs.astro'
+import CodeBlock from '@/components/CodeBlock.astro'
+import FaqAccordion from '@/components/FaqAccordion.astro'
+import PageHeader from '@/components/PageHeader.astro'
+import SetupCommands from '@/components/SetupCommands.astro'
+import ResearchLookup from '@/components/tools/ResearchLookup.astro'
+import BaseLayout from '@/layouts/BaseLayout.astro'
+import type { SchemaBreadcrumb } from '@/lib/schema'
+
+const breadcrumbs: SchemaBreadcrumb[] = [
+  { label: 'Home', href: '/' },
+  { label: 'Tools', href: '/tools' },
+  { label: 'Title tag word frequency' },
+]
+
+const faq = [
+  {
+    question: 'How does the title tag word counter work?',
+    answer:
+      'It asks Google for the keyword live, reads the titles of up to 50 organic results, and counts how many titles use each word and each two-word phrase. The counting is plain code, so the same titles always give the same counts.',
+  },
+  {
+    question: 'Why count titles instead of words?',
+    answer:
+      'A title that says "best" twice is still one title that uses it. Counting titles shows how widely a word is shared across the results page, which is the useful part. Otherwise a word one site repeats would look more important than it is.',
+  },
+  {
+    question: 'Will using these words make my page rank?',
+    answer:
+      'No. The words show what Google and searchers expect a result to be about. The page still has to answer the search better than the others. Treat the list as vocabulary, not a formula.',
+  },
+  {
+    question: 'Is this tool free?',
+    answer:
+      'Yes. You get 3 free lookups a day without an account. Your agent can run the same check for every page you plan with your own DataForSEO key.',
+  },
+  {
+    question: 'Why does a title in the results differ from the page?',
+    answer:
+      'Google rewrites some titles, often from the H1 or anchor text. The counter reads the titles Google shows, because those are what searchers see and compare.',
+  },
+]
+---
+
+<BaseLayout
+  title="Title tag word frequency from Google results"
+  description="Count the words and phrases in the titles that rank in Google for any keyword, free, then write a title from the words the results already share."
+  canonicalPath="/tools/title-tag-word-frequency"
+  {breadcrumbs}
+>
+  <main data-agent-content>
+    <Breadcrumbs {breadcrumbs} />
+    <PageHeader
+      title="Title tag word frequency"
+      description="See which words the ranking titles share for a keyword, so your title uses the language the results page already rewards."
+    />
+
+    <ResearchLookup
+      kind="title-words"
+      heading="Count the words in ranking titles"
+      description="Enter a keyword and pick a country. The counter reads up to 50 live organic results."
+      example="what is a heat pump"
+    />
+
+    <div class="docs-prose mt-16">
+      <h2>Read the word counts</h2>
+      <p>
+        Each row is a word, with the number of ranking titles that use it and
+        its share of all the titles read. A title counts once per word, however
+        often it repeats it. Common words such as the, for and how are hidden
+        by default. Untick the box to see them, because a question word like
+        "how" can say a lot about what the searcher wants.
+      </p>
+      <table>
+        <thead>
+          <tr>
+            <th>Column</th>
+            <th>What it tells you</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>Titles</td>
+            <td>How many ranking titles contain the word at least once.</td>
+          </tr>
+          <tr>
+            <td>Share</td>
+            <td>Those titles as a share of every title read.</td>
+          </tr>
+          <tr>
+            <td>Phrases</td>
+            <td>Two-word phrases that appear in at least two titles.</td>
+          </tr>
+        </tbody>
+      </table>
+
+      <h2>Write a title from the shared words</h2>
+      <p>
+        Start with the words that appear in most titles. They tell you what the
+        searcher expects to see, such as "guide", "cost" or a year. Then add one
+        thing the other titles do not say, so yours stands out in the list (a
+        test you ran, a number, a narrower audience). Words in only one title
+        tell you about that one site, not the results page.
+      </p>
+      <p>
+        Keep the result under about 600 pixels so Google does not cut it. The{' '}
+        <a href="/tools/title-and-meta-description-checker">title tag and meta description checker</a>{' '}
+        measures a finished title on desktop and mobile.
+      </p>
+
+      <h2>What the counts cannot tell you</h2>
+      <p>
+        A shared word is a pattern, not a ranking factor. Pages rank for what
+        they contain and who links to them, and the title is a small part of
+        that. Results also move by country and through the day, so check again
+        before you rewrite a title that already gets clicks. To see the full
+        results page with each site's Domain Rating, use the{' '}
+        <a href="/tools/serp-checker">SERP checker</a>.
+      </p>
+
+      <h2>Draft titles with your AI agent</h2>
+      <p>
+        With SEO Skill your agent can read the live results with{' '}
+        <a href="/docs/research">seo research</a> and your own DataForSEO key,
+        count the shared words, and draft titles next to the queries your page
+        already gets in Search Console. Ask:
+      </p>
+      <CodeBlock value="Read the top 50 Google titles for my main keyword on example.com/guide, count the words they share, and draft three titles that use them" wrap />
+      <p>Add the hosted MCP server to your agent and sign in with Google:</p>
+    </div>
+
+    <SetupCommands id="title-words-setup" class="mt-6" />
+
+    <div class="docs-prose mt-16">
+      <h2>Title tag word frequency questions</h2>
+    </div>
+    <div class="mt-6">
+      <FaqAccordion id="title-words-faq" items={faq} />
+    </div>
+  </main>
+</BaseLayout>

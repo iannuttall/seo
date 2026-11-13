@@ -6,12 +6,15 @@ import FormSelect from '@/components/FormSelect.astro'
 import TurnstileWidget from '@/components/tools/TurnstileWidget.astro'
 
 type Props = {
-  kind: 'competitors' | 'serp'
+  kind: 'competitors' | 'serp' | 'title-words' | 'paa'
   heading: string
   description: string
+  // A real keyword the example button fills in.
+  example?: string
 }
 
-const { kind, heading, description } = Astro.props
+const { kind, heading, description, example } = Astro.props
+const byKeyword = kind !== 'competitors'
 const markets = [
   ['us', 'United States'],
   ['gb', 'United Kingdom'],
@@ -27,12 +30,39 @@ const markets = [
 const toggle =
   'inline-flex h-8 items-center justify-center rounded-md border border-transparent px-3 text-sm font-medium text-foreground-muted outline-none transition-colors hover:text-foreground focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/20 aria-pressed:bg-card aria-pressed:text-foreground aria-pressed:shadow-xs'
 // The first results header is drawn here so the table always has a row.
-const columns =
-  kind === 'serp'
-    ? ['#', 'Result', 'Domain Rating']
-    : ['Keyword', 'Position', 'Monthly searches', 'Page']
-const endpoint = kind === 'serp' ? '/api/tools/serp-checker' : '/api/tools/competitor-keywords'
-const action = kind === 'serp' ? 'serp-checker' : 'competitor-keywords'
+const columns = {
+  serp: ['#', 'Result', 'Domain Rating'],
+  competitors: ['Keyword', 'Position', 'Monthly searches', 'Page'],
+  'title-words': ['Word', 'Titles', 'Share'],
+  paa: ['Question', 'Page that answers it', 'Traffic'],
+}[kind]
+const action = {
+  serp: 'serp-checker',
+  competitors: 'competitor-keywords',
+  'title-words': 'title-words',
+  paa: 'people-also-ask',
+}[kind]
+const endpoint = `/api/tools/${action}`
+const submitLabel = {
+  serp: 'Check results',
+  competitors: 'Look up',
+  'title-words': 'Count words',
+  paa: 'Find questions',
+}[kind]
+const agentText = {
+  serp: 'This page gives you 3 lookups a day. With a free account and your own DataForSEO or Ahrefs key, your agent checks the results for as many keywords as you need, next to the queries your site already gets clicks for in Search Console.',
+  competitors:
+    'This page gives you 3 lookups a day. With a free account and your own DataForSEO or Ahrefs key, your agent runs the same research whenever it needs to, next to the queries your site already gets clicks for in Search Console.',
+  'title-words':
+    'This page gives you 3 lookups a day. With a free account and your own DataForSEO key, your agent reads the same results for every page you plan, counts the title words and drafts titles from them next to the queries your page already gets in Search Console.',
+  paa: 'This page gives you 3 lookups a day. With a free account and your own DataForSEO key, your agent pulls the People Also Ask questions for every topic you plan and checks which ones your pages already answer in Search Console.',
+}[kind]
+const agentAsk = {
+  serp: 'who ranks for a keyword',
+  competitors: "which keywords a competitor ranks for that you don't",
+  'title-words': 'which words the ranking titles share',
+  paa: 'which questions people ask about a topic',
+}[kind]
 ---
 
 <section data-research-lookup data-kind={kind} data-endpoint={endpoint} class="space-y-6">
@@ -52,15 +82,15 @@ const action = kind === 'serp' ? 'serp-checker' : 'competitor-keywords'
 
       <div class="grid gap-4 sm:grid-cols-[minmax(0,1fr)_12rem]">
         <label class="block space-y-2 text-sm font-medium">
-          <span>{kind === 'serp' ? 'Keyword' : 'Domain'}</span>
+          <span>{byKeyword ? 'Keyword' : 'Domain'}</span>
           <FormInput
             data-target
             type="text"
-            inputmode={kind === 'serp' ? 'text' : 'url'}
+            inputmode={byKeyword ? 'text' : 'url'}
             autocapitalize="off"
             spellcheck="false"
-            maxlength={kind === 'serp' ? 200 : 253}
-            placeholder={kind === 'serp' ? 'running shoes for flat feet' : 'example.com'}
+            maxlength={byKeyword ? 200 : 253}
+            placeholder={byKeyword ? 'running shoes for flat feet' : 'example.com'}
             required
           />
         </label>
@@ -81,9 +111,12 @@ const action = kind === 'serp' ? 'serp-checker' : 'competitor-keywords'
 
       <TurnstileWidget {action} />
 
-      <div class="flex items-center justify-between gap-4">
-        <p class="text-xs leading-5 text-foreground-muted">3 free lookups a day.</p>
-        <Button data-submit type="submit" class="min-h-10 shrink-0 px-5 text-xs">{kind === 'serp' ? 'Check results' : 'Look up'}</Button>
+      <div class="flex flex-wrap items-center justify-between gap-4">
+        <p class="text-xs leading-5 text-foreground-muted">
+          3 free lookups a day.
+          {example ? <button type="button" data-example={example} class="ml-1 underline underline-offset-4 hover:text-foreground">Try “{example}”</button> : null}
+        </p>
+        <Button data-submit type="submit" class="min-h-10 shrink-0 px-5 text-xs">{submitLabel}</Button>
       </div>
       <p data-error hidden class="text-sm leading-6 text-red-700 dark:text-red-400" role="alert"></p>
     </form>
@@ -96,13 +129,28 @@ const action = kind === 'serp' ? 'serp-checker' : 'competitor-keywords'
           <h3 data-title class="text-xl font-medium text-foreground"></h3>
           <p data-summary class="text-sm leading-6 text-foreground-muted"></p>
         </div>
+        <label data-common-toggle hidden class="flex items-center gap-2 text-sm text-foreground-muted">
+          <input data-hide-common type="checkbox" class="size-4 accent-primary" checked />
+          Hide common words such as the, for and how
+        </label>
         <div class="-mx-5 overflow-x-auto px-5 sm:-mx-6 sm:px-6">
-          <table class="w-full min-w-[32rem] text-left text-sm">
+          <table class:list={['w-full text-left text-sm', kind === 'title-words' ? 'min-w-0' : 'min-w-[32rem]']}>
             <thead data-head class="text-xs text-foreground-muted">
               <tr>{columns.map((column) => <th scope="col" class="py-2 pr-3 font-normal">{column}</th>)}</tr>
             </thead>
             <tbody data-body></tbody>
           </table>
+        </div>
+        <div data-phrases hidden class="space-y-2 border-t border-border pt-4">
+          <p class="text-sm font-medium text-foreground">Phrases in two or more titles</p>
+          <div class="-mx-5 overflow-x-auto px-5 sm:-mx-6 sm:px-6">
+            <table class="w-full min-w-[24rem] text-left text-sm">
+              <thead class="text-xs text-foreground-muted">
+                <tr><th scope="col" class="py-2 pr-3 font-normal">Phrase</th><th scope="col" class="py-2 pr-3 font-normal">Titles</th><th scope="col" class="py-2 pr-3 font-normal">Share</th></tr>
+              </thead>
+              <tbody data-phrase-body></tbody>
+            </table>
+          </div>
         </div>
         <p data-notes class="border-t border-border pt-3 text-xs leading-5 text-foreground-muted"></p>
       </div>
@@ -111,15 +159,11 @@ const action = kind === 'serp' ? 'serp-checker' : 'competitor-keywords'
     <Card>
       <div class="space-y-3 p-5 sm:p-6">
         <h3 class="text-lg font-medium">Run it from your agent with your own key</h3>
-        <p class="text-sm leading-6 text-foreground-muted">
-          {kind === 'serp'
-            ? 'This page gives you 3 lookups a day. With a free account and your own DataForSEO or Ahrefs key, your agent checks the results for as many keywords as you need, next to the queries your site already gets clicks for in Search Console.'
-            : 'This page gives you 3 lookups a day. With a free account and your own DataForSEO or Ahrefs key, your agent runs the same research whenever it needs to, next to the queries your site already gets clicks for in Search Console.'}
-        </p>
+        <p class="text-sm leading-6 text-foreground-muted">{agentText}</p>
         <ol class="list-decimal space-y-1 pl-5 text-sm leading-6 text-foreground-muted">
           <li>Sign in with Google on your account page. That creates the free account.</li>
           <li>Save your DataForSEO or Ahrefs key in the Keys tab. The provider bills you directly.</li>
-          <li>Connect the hosted MCP to your agent and ask it {kind === 'serp' ? 'who ranks for a keyword' : "which keywords a competitor ranks for that you don't"}.</li>
+          <li>Connect the hosted MCP to your agent and ask it {agentAsk}.</li>
         </ol>
         <div class="flex flex-wrap gap-2 pt-1">
           <Button href="/account" class="min-h-10 px-4 text-xs">Get started free</Button>{' '}
@@ -132,6 +176,29 @@ const action = kind === 'serp' ? 'serp-checker' : 'competitor-keywords'
 
 <script>
   type Row = Record<string, string | number | boolean | null>
+  type Word = { text: string; titles: number; share: number; common: boolean }
+  type TitleWordsResult = {
+    keyword: string
+    country: string
+    titles: number
+    words: Word[]
+    phrases: Word[]
+    partial: boolean
+  }
+  type PaaResult = {
+    keyword: string
+    country: string
+    questions: {
+      question: string
+      linked: boolean
+      url: string | null
+      domain: string | null
+      title: string | null
+      traffic: number | null
+    }[]
+    trafficFailed: boolean
+    partial: boolean
+  }
   type Result = {
     action: 'ranked_keywords' | 'competitors' | 'serp'
     target: string
@@ -198,6 +265,10 @@ const action = kind === 'serp' ? 'serp-checker' : 'competitor-keywords'
     const title = $<HTMLElement>('[data-title]')
     const summary = $<HTMLElement>('[data-summary]')
     const notes = $<HTMLElement>('[data-notes]')
+    const commonToggle = $<HTMLElement>('[data-common-toggle]')
+    const hideCommon = $<HTMLInputElement>('[data-hide-common]')
+    const phrases = $<HTMLElement>('[data-phrases]')
+    const phraseBody = $<HTMLElement>('[data-phrase-body]')
     if (!form || !target || !market || !submit || !error || !results || !head || !body || !title || !summary || !notes) return
     const kind = root.dataset.kind
     const label = submit.textContent ?? ''
@@ -209,6 +280,10 @@ const action = kind === 'serp' ? 'serp-checker' : 'competitor-keywords'
         button.setAttribute('aria-pressed', String(button.dataset.mode === value))
       }
     }
+    root.querySelector<HTMLButtonElement>('[data-example]')?.addEventListener('click', (event) => {
+      target.value = (event.currentTarget as HTMLButtonElement).dataset.example ?? ''
+      target.focus()
+    })
     root.querySelector('[data-modes]')?.addEventListener('click', (event) => {
       const button = (event.target as HTMLElement).closest<HTMLButtonElement>('[data-mode]')
       if (button) setMode(button.dataset.mode === 'competitors' ? 'competitors' : 'keywords')
@@ -237,6 +312,92 @@ const action = kind === 'serp' ? 'serp-checker' : 'competitor-keywords'
       link.textContent = 'Ahrefs'
       span.append(link, '. ')
       return span
+    }
+
+    const share = (value: number) => `${Math.round(value * 100)}%`
+    const wordRows = (into: HTMLElement, words: Word[]) => {
+      into.replaceChildren()
+      for (const word of words) {
+        const tr = document.createElement('tr')
+        tr.className = 'border-t border-border'
+        if (word.common) tr.dataset.common = 'true'
+        tr.append(
+          cell(word.text, word.common ? 'py-2 pr-3 text-foreground-muted' : 'py-2 pr-3 text-foreground'),
+          cell(String(word.titles)),
+          cell(share(word.share)),
+        )
+        into.append(tr)
+      }
+    }
+    const applyCommon = () => {
+      for (const row of body.querySelectorAll<HTMLElement>('tr[data-common]')) row.hidden = Boolean(hideCommon?.checked)
+    }
+    hideCommon?.addEventListener('change', applyCommon)
+
+    const renderTitleWords = (result: TitleWordsResult) => {
+      const where = MARKETS[result.country] ?? result.country
+      title.textContent = `Words in the titles that rank for “${result.keyword}”`
+      summary.textContent = result.titles
+        ? `Counted from the titles of the first ${result.titles} organic results in ${where}, checked just now. Each title counts once per word.`
+        : `Google showed no organic results with titles for this keyword in ${where}.`
+      header(['Word', 'Titles', 'Share'])
+      wordRows(body, result.words)
+      if (commonToggle) commonToggle.hidden = !result.words.some((word) => word.common)
+      applyCommon()
+      if (phrases && phraseBody) {
+        wordRows(phraseBody, result.phrases)
+        phrases.hidden = result.phrases.length === 0
+      }
+      notes.replaceChildren(
+        'These are the titles Google shows, which it sometimes rewrites from the page. A word in most titles is the vocabulary the results page expects. It does not make a page rank on its own.',
+        result.partial ? ' DataForSEO could not fetch every page of results, so some titles may be missing.' : '',
+      )
+    }
+
+    const renderPaa = (result: PaaResult) => {
+      const where = MARKETS[result.country] ?? result.country
+      title.textContent = `People also ask for “${result.keyword}”`
+      summary.textContent = result.questions.length
+        ? `${result.questions.length} questions Google showed in ${where}, checked just now.`
+        : `Google showed no People Also Ask box for this keyword in ${where}. Try a question or a broader topic.`
+      header(['Question', 'Page that answers it', 'Traffic'])
+      body.replaceChildren()
+      for (const item of result.questions) {
+        const tr = document.createElement('tr')
+        tr.className = 'border-t border-border'
+        const page = document.createElement('td')
+        page.className = 'py-2 pr-3 align-top'
+        const name = document.createElement('p')
+        name.className = 'max-w-[22rem] text-foreground-muted'
+        name.textContent = item.title ?? item.domain ?? 'Not known'
+        const url = document.createElement('p')
+        url.className = 'max-w-[22rem] truncate font-mono text-xs text-foreground-muted'
+        if (item.url) {
+          const link = document.createElement('a')
+          link.href = item.url
+          link.rel = 'noreferrer nofollow'
+          link.target = '_blank'
+          link.className = 'underline-offset-4 hover:underline'
+          link.textContent = item.url.replace(/^https?:\/\//, '')
+          url.append(link)
+        } else {
+          url.textContent = item.domain ? `${item.domain} (page not known)` : ''
+        }
+        page.append(name, url)
+        tr.append(
+          cell(item.question, 'py-2 pr-3 align-top text-foreground'),
+          page,
+          cell(item.url ? (item.traffic === null ? 'n/a' : count(item.traffic)) : 'n/a', 'py-2 pr-3 align-top text-foreground-muted'),
+        )
+        body.append(tr)
+      }
+      const parts = [
+        'Google answers most of these questions with its own AI text, not a link. The page shown is the first result when the question itself is searched, unless Google linked a page in the box. ',
+        `Traffic is DataForSEO's estimate of the page's monthly organic visits in ${where}, from all its keywords, not Search Console data. n/a means DataForSEO has no estimate for the page, or the page is not known.`,
+      ]
+      if (result.trafficFailed) parts.push(' The traffic lookup failed this time, so every estimate is missing, not zero.')
+      if (result.partial) parts.push(' DataForSEO could not fetch every page of results, so some questions may be missing.')
+      notes.replaceChildren(...parts)
     }
 
     const render = (result: Result) => {
@@ -348,7 +509,7 @@ const action = kind === 'serp' ? 'serp-checker' : 'competitor-keywords'
       error.hidden = true
       const value = target.value.trim()
       if (!value) {
-        error.textContent = kind === 'serp' ? 'Enter a keyword.' : 'Enter a domain.'
+        error.textContent = kind === 'competitors' ? 'Enter a domain.' : 'Enter a keyword.'
         error.hidden = false
         target.focus()
         return
@@ -366,7 +527,7 @@ const action = kind === 'serp' ? 'serp-checker' : 'competitor-keywords'
           method: 'POST',
           headers: { 'content-type': 'application/json' },
           body: JSON.stringify(
-            kind === 'serp'
+            kind !== 'competitors'
               ? { target: value, country: market.value, turnstileToken: token }
               : { target: bare(value), country: market.value, mode, turnstileToken: token },
           ),
@@ -374,9 +535,17 @@ const action = kind === 'serp' ? 'serp-checker' : 'competitor-keywords'
         if (!response.headers.get('content-type')?.includes('application/json')) {
           throw new Error('The lookup could not be completed.')
         }
-        const data = (await response.json()) as { result?: Result; error?: string }
+        const data = (await response.json()) as { result?: unknown; error?: string }
         if (!response.ok || !data.result) throw new Error(data.error || 'The lookup could not be completed.')
-        render(data.result)
+        if (commonToggle) commonToggle.hidden = true
+        if (phrases) phrases.hidden = true
+        if (kind === 'title-words') renderTitleWords(data.result as TitleWordsResult)
+        else if (kind === 'paa') renderPaa(data.result as PaaResult)
+        else render(data.result as Result)
+        if (kind === 'title-words' || kind === 'paa') {
+          results.hidden = false
+          results.scrollIntoView({ behavior: 'smooth', block: 'start' })
+        }
       } catch (caught) {
         error.textContent = caught instanceof Error ? caught.message : 'The lookup could not be completed.'
         error.hidden = false

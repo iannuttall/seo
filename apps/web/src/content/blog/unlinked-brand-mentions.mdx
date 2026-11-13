@@ -1,0 +1,98 @@
+---
+title: How to find unlinked brand mentions and turn them into links
+description: Sites that name you without linking to you are the easiest links you'll ever get. How to find unlinked brand mentions and ask for the link.
+heading: How to find unlinked brand mentions and turn them into links
+lead: Some sites already write about you and just don't link. Asking those sites to add a link is the easiest link request there is, and the mention helps you in AI answers either way.
+date: '2026-11-13'
+draft: false
+cover:
+  alt: "A Victorian engraved reading room where a man with a magnifying glass finds a lime green patch in a newspaper, and a lime green thread runs from it out of the window to a shopfront."
+  title: left
+---
+
+An unlinked brand mention is a page that names your site, product or company without linking to it. Someone has already chosen to write about you, so asking them to add the link is a much easier conversation than a cold outreach email.
+
+I checked seoskill.dev to see how many of these it has. It's a young site, so the list is short, but the pattern is the same one you'll find on any site.
+
+## What I found when I checked seoskill.dev
+
+DataForSEO's content index found 18 pages on 9 sites that name seoskill.dev. Five of those sites already link to it, according to its backlinks. The other four don't.
+
+Here's what those four turned out to be:
+
+- Ben's Bites, a well-read AI newsletter, listed seoskill.dev in a roundup. The name links to my post on X, so the site gets no link.
+- A directory of agent skills prints the MCP address, `https://seoskill.dev/mcp`, as code text with no link.
+- An aggregator page no longer showed the mention when I loaded it.
+- A copy of the Ben's Bites issue on another site wouldn't load at all.
+
+The first one is the find. A popular newsletter recommended the product and sent its link somewhere that can't rank anything. That's the classic unlinked mention. The writer meant to point readers at the product and used the nearest link to hand.
+
+## Why unlinked mentions matter for Google and AI answers
+
+For Google rankings, the link is what counts. John Mueller of Google said in 2021 that he didn't think Google uses plain mentions "at all for things like PageRank or understanding the link graph of a website" ([Search Engine Journal](https://www.searchenginejournal.com/google-seo-brand-mentions/430848/)). So a mention on its own doesn't pass link value, which is why turning it into a link is the point.
+
+AI answers are different, and that's where I think mentions matter most. Ahrefs studied 75,000 brands and found that how often a brand is mentioned across the web correlated with how often AI Overviews name it at 0.664, against 0.218 for backlinks ([Ahrefs](https://ahrefs.com/blog/ai-overview-brand-correlation)). Its follow-up found the same pattern in ChatGPT and AI Mode ([Ahrefs](https://ahrefs.com/blog/ai-brand-visibility-correlations)). That's a correlation, not proof that mentions cause AI visibility, but it fits how these systems work, because they learn and retrieve what the web says about you, linked or not.
+
+So a mention helps you in AI answers today, and a link added to it helps you in Google too. I expect agents to do most of the informational searching that SEO has targeted within about five years, which makes both halves of that worth the same ordinary SEO effort.
+
+## How to find unlinked mentions of your brand
+
+SEO Skill searches DataForSEO's content index for pages that name your domain, then checks your backlinks to mark which of those sites already link to you. Ask your agent to find unlinked mentions, or run:
+
+```sh
+seo research mentions --target example.com
+```
+
+An agent makes the same call through the MCP server's `seo_research` tool:
+
+```json
+{ "action": "mentions", "target": "example.com" }
+```
+
+The command lists one page per site and leaves out your own site. Each row says `links: yes` when the site already links to you, or `not_found` when the backlinks data has no link from it. A `not_found` site is your candidate, though it can also be a link DataForSEO hasn't crawled yet, so open the page and check before you ask. Some mentions sit in a screenshot, a code block or a comment, and some links point to your social profiles instead of your site.
+
+Search the domain first. You can add up to three brand names with `--brand "Example App"`, but only when the name is distinctive. When I added "SEO Skill" for seoskill.dev, it pulled in a long list of unrelated pages about SEO skills. The domain search found the same nine sites without the noise. A run costs about 3 cents a term plus one backlinks check, so usually under 10 cents.
+
+For a free check, search Google and Bing for your domain and brand name in quotes, leaving out your own site. Bing often lists different pages from Google.
+
+```text
+"example.com" -site:example.com
+"Example Brand" -site:example.com
+```
+
+## How to check whether AI answers mention you without citing you
+
+AI answers have their own version of the unlinked mention, which is an answer that names your brand but cites someone else's page. SEO Skill checks this directly. Give it the questions your customers ask:
+
+```sh
+seo research ai_answers --target example.com --keywords "question one,question two"
+```
+
+An agent makes the same call through the MCP server's `seo_research` tool:
+
+```json
+{ "action": "ai_answers", "target": "example.com", "keywords": ["question one", "question two"] }
+```
+
+Each row says whether ChatGPT, Google AI Mode and AI Overviews cited your site, mentioned it without citing, or did neither, and lists the sites each answer cited instead. A "mentioned" result tells you the engine knows your brand but found a better page to cite. The cited pages are your next targets, either to beat or to get a mention on. It costs about $0.0072 a question across the three engines.
+
+## How to ask for the link
+
+Keep the request short and make it easy to say yes:
+
+1. Thank them for the mention and say where it appeared.
+2. Give the exact URL you'd like them to use, usually your homepage or the page that matches what they wrote about.
+3. If they linked to the wrong thing, such as a social post or an old page, say so plainly and offer the right one.
+4. Don't ask for anchor text or a followed link. Ask for a link to the right page and leave the rest to them.
+
+Most writers fix it because a link to the real site helps their own readers. For the Ben's Bites mention, the ask is one line saying the post links to my X post and the product lives at seoskill.dev.
+
+## Unlinked mentions are ordinary SEO
+
+Finding unlinked mentions is the cheapest link building there is, and the mentions themselves already count in AI answers. Search for your domain, check which sites already link, ask politely for the missing links, and check the AI answers for the pages they cite instead of you.
+
+## How this was checked
+
+- The seoskill.dev mentions came from one DataForSEO content search for "seoskill.dev" in November 2026, which found 18 pages on 9 sites. DataForSEO's index doesn't cover the whole web, so this is a sample, not every mention.
+- Linking sites came from `seo research backlinks` for seoskill.dev, which returned 98 referring domains. I loaded each unlinked page by hand to confirm it. Both lookups cost about 5 cents. A later run of `seo research mentions` for seoskill.dev with the brand name "SEO Skill" found the same nine sites for 7.6 cents, with Ben's Bites first.
+- The correlations are from Ahrefs' own studies, linked above, which measure correlation across brands.

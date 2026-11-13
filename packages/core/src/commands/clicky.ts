@@ -1,3 +1,4 @@
+import { aiReferralSourceForValue } from '../analyze/ai-referrals-sources.js'
 import {
   ClickyError,
   type ClickyItem,
@@ -8,9 +9,11 @@ import {
   isClickySiteId,
   isClickySitekey,
 } from '../clicky/api.js'
+import { change } from './analytics-site.js'
 import type { Detail } from './present.js'
 import { PAGE_SIZE, rowsText } from './rows.js'
-import { CommandError, type CommandResult } from './types.js'
+import { pct } from './shared.js'
+import { CommandError, type CommandResult, type DateRange } from './types.js'
 
 // Clicky landing pages, traffic sources and search engines for one saved
 // Clicky site. Numbers stay Clicky's own: visits, as Clicky counts them.
@@ -303,5 +306,206 @@ export async function runClickyRows(
       offset,
       rows: rows.slice(offset, offset + PAGE_SIZE),
     },
+  }
+}
+
+// Clicky beside Search Console in seo compare: the saved Clicky site whose
+// domain is the site's, with its visits for both periods. Null when no saved
+// Clicky site matches, so a person with Clicky on other sites sees nothing.
+// A failure is named instead of stopping the comparison.
+
+// Clicky returns at most 100 rows a request on a free account.
+const FREE_LIMIT = 100
+// How far back a free Clicky account keeps data.
+const FREE_HISTORY_DAYS = 30
+
+type Compared = { visits: number; previousVisits: number }
+
+// Visits now and before for each name, most visits first.
+function compared(
+  now: { name: string; visits: number }[],
+  before: { name: string; visits: number }[],
+) {
+  const rows = new Map<string, Compared>()
+  const add = (name: string, visits: number, key: keyof Compared) => {
+    const row = rows.get(name) ?? { visits: 0, previousVisits: 0 }
+    row[key] += visits
+    rows.set(name, row)
+  }
+  for (const item of now) add(item.name, item.visits, 'visits')
+  for (const item of before) add(item.name, item.visits, 'previousVisits')
+  return [...rows]
+    .map(([name, row]) => ({ name, ...row }))
+    .sort(
+      (left, right) =>
+        right.visits - left.visits ||
+        right.previousVisits - left.previousVisits ||
+        (left.name < right.name ? -1 : left.name > right.name ? 1 : 0),
+    )
+}
+
+const sum = (rows: Compared[]) => ({
+  visits: rows.reduce((total, row) => total + row.visits, 0),
+  previousVisits: rows.reduce((total, row) => total + row.previousVisits, 0),
+})
+
+const was = (rows: (Compared & { name: string })[]) =>
+  rows
+    .slice(0, 10)
+    .map((row) => `${row.name} ${row.visits} (was ${row.previousVisits})`)
+    .join(', ')
+
+export async function clickyBeside(
+  keys: Headers | undefined,
+  site: string,
+  range: DateRange,
+  before: DateRange,
+  pages?: string,
+): Promise<{ text: string; data: unknown } | null> {
+  const saved = keys ? clickySites(keys) : []
+  if (!saved.length) return null
+  let found: SavedClickySite
+  try {
+    found = await pickClickySite(saved, site, '')
+  } catch {
+    return null
+  }
+  const types = [
+    'visitors',
+    'traffic-sources',
+    'links-domains',
+    ...(pages ? ['pages-entrance'] : []),
+  ]
+  try {
+    // One period after the other: Clicky takes one request at a time for a
+    // site.
+    const read = (dates: DateRange) =>
+      clickyStats(found, types, {
+        date: `${dates.startDate},${dates.endDate}`,
+        limit: LIMIT,
+      })
+    const now = await read(range)
+    const then = await read(before)
+    // The visitors tally is one untitled item for the whole range.
+    const tally = (items: ClickyItem[]) =>
+      items.reduce((total, item) => total + (count(item) ?? 0), 0)
+    const visits = {
+      visits: tally(now.visitors ?? []),
+      previousVisits: tally(then.visitors ?? []),
+    }
+    const sources = compared(
+      totals(now['traffic-sources'] ?? []),
+      totals(then['traffic-sources'] ?? []),
+    )
+    // Incoming links from AI assistants, by assistant.
+    const fromAi = (items: ClickyItem[]) =>
+      totals(items).flatMap((item) => {
+        const source = aiReferralSourceForValue(item.name)
+        return source ? [{ name: source.label, visits: item.visits }] : []
+      })
+    const ai = compared(
+      fromAi(now['links-domains'] ?? []),
+      fromAi(then['links-domains'] ?? []),
+    )
+    const aiTotal = sum(ai)
+    // Landing-page visits from every source on pages whose path contains
+    // the text.
+    const landed = (items: ClickyItem[]) => {
+      let total = 0
+      for (const item of items) {
+        const value = count(item)
+        if (value === null || !item.url) continue
+        try {
+          if (new URL(item.url).pathname.includes(pages ?? '')) total += value
+        } catch {}
+      }
+      return total
+    }
+    const onPages = pages
+      ? {
+          contains: pages,
+          visits: landed(now['pages-entrance'] ?? []),
+          previousVisits: landed(then['pages-entrance'] ?? []),
+        }
+      : null
+    // A list as long as a row limit may be cut there.
+    const cut = (type: string) =>
+      [now, then].some((stats) => {
+        const length = stats[type]?.length ?? 0
+        return length >= LIMIT || length === FREE_LIMIT
+      })
+    const linksCut = cut('links-domains')
+    const pagesCut = Boolean(pages) && cut('pages-entrance')
+    const daysBack = Math.round(
+      (Date.now() - Date.parse(`${before.startDate}T00:00:00Z`)) / DAY,
+    )
+    const notes = [
+      'Visits are Clicky’s own count, in the Clicky site’s time zone; they are not Google Analytics sessions or Search Console clicks.',
+      pagesCut
+        ? 'Clicky’s list of landing pages reached its row limit (100 on a free account, 1,000 otherwise), so the landing-page total can be higher than shown.'
+        : '',
+      daysBack > FREE_HISTORY_DAYS
+        ? `The earlier period starts ${daysBack} days ago; a free Clicky account keeps 30 days, so on one it can read as zero.`
+        : '',
+    ].filter(Boolean)
+    const total = `${visits.visits} (was ${visits.previousVisits}, ${change(pct(visits.visits, visits.previousVisits))})`
+    const text = [
+      `Clicky site ${clickyLabel(found)}: visits ${total}${pages ? ' on the whole site' : ''}.`,
+      sources.length ? `Traffic sources (visits): ${was(sources)}.` : '',
+      onPages
+        ? `Visits that landed on pages whose path contains "${pages}", from every source: ${onPages.visits} (was ${onPages.previousVisits}, ${change(pct(onPages.visits, onPages.previousVisits))}). Clicky does not split landing pages by source.`
+        : '',
+      ...notes,
+    ]
+      .filter(Boolean)
+      .join(' ')
+    const limit =
+      'Clicky’s list of incoming link domains reached its row limit (100 on a free account, 1,000 otherwise)'
+    const aiLine = [
+      aiTotal.visits || aiTotal.previousVisits
+        ? `Visits from AI assistants in Clicky’s incoming links (whole site): ${aiTotal.visits} (was ${aiTotal.previousVisits}, ${change(pct(aiTotal.visits, aiTotal.previousVisits))}). By source: ${was(ai)}.`
+        : linksCut
+          ? `Visits from AI assistants in Clicky’s incoming links (whole site): none among the domains Clicky listed. ${limit}, so this is unknown, not zero.`
+          : 'Visits from AI assistants in Clicky’s incoming links (whole site): none in either period.',
+      linksCut && (aiTotal.visits || aiTotal.previousVisits)
+        ? `${limit}, so these can be higher.`
+        : '',
+      'Only visits that pass a referrer count; AI apps that send none show as direct.',
+    ]
+      .filter(Boolean)
+      .join(' ')
+    return {
+      text: `${text}\n\n${aiLine}`,
+      data: {
+        siteId: found.siteId,
+        domain: found.domain,
+        metric: 'visits',
+        ...visits,
+        visitsChangePct: pct(visits.visits, visits.previousVisits),
+        trafficSources: sources.map(({ name, ...row }) => ({
+          source: name,
+          ...row,
+        })),
+        ...(onPages ? { landingPages: { ...onPages, capped: pagesCut } } : {}),
+        aiAssistants: {
+          ...aiTotal,
+          visitsChangePct: pct(aiTotal.visits, aiTotal.previousVisits),
+          bySource: ai.map(({ name, ...row }) => ({ source: name, ...row })),
+          capped: linksCut,
+        },
+        notes,
+      },
+    }
+  } catch (error) {
+    const message =
+      error instanceof ClickyError
+        ? error.message
+        : error instanceof Error
+          ? error.message
+          : String(error)
+    return {
+      text: `Clicky: could not be read. ${message}`,
+      data: { error: message },
+    }
   }
 }

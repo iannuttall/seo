@@ -437,7 +437,7 @@ async function totals(
   }
 }
 
-const change = (value: number | null) =>
+export const change = (value: number | null) =>
   value === null ? 'n/a' : `${value > 0 ? '+' : ''}${value}%`
 
 type AiRow = { sessions: number; previousSessions: number }

@@ -1,5 +1,13 @@
 # Changelog
 
+## Unreleased
+
+### Added
+
+- `seo compare` shows Clicky visits before and after the date beside Search
+  Console and Google Analytics, when a saved Clicky site has the site's
+  domain: all visits, by traffic source, and from AI assistants.
+
 ## 0.17.8
 
 ### Added

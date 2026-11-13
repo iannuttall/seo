@@ -188,7 +188,7 @@ export async function runIndexCheck(
         ? has('error')
           ? `${rows.filter((row) => row.result === 'error').length} of ${rows.length} searches failed after retries, and none of the others returned the page. Ask again later.`
           : 'Google returned results from the site, but DataForSEO gave Google redirect links whose page it could not resolve, so they may or may not be this page.'
-        : `None of ${rows.length} searches returned the page.${has('fallback') ? ' Where the site: search showed other sites, Google had dropped the filter because nothing matched; those are not rankings.' : ''} It may be missing from the index, or indexed without this text. Check it with URL Inspection (seo page or seo index) if the site is yours.`
+        : `None of ${rows.length} searches returned the page.${has('fallback') ? ' Where the site: search showed other sites, Google had dropped the filter because nothing matched; those are not rankings.' : ''} It may be missing from the index, or indexed without this text. Check it with URL Inspection (seo page or seo index) if the site is yours. If it is yours, live and indexable, seo submit can ask Bing and others to crawl it through IndexNow (free, not Google), or send it to Google through Index My Site (paid, indexmysite.app).`
   const usd = Math.round(cost * 10_000) / 10_000
   const lines = [
     `Index check for ${target.href} (${country}, desktop and mobile): ${verdict.replace('_', ' ')}.`,

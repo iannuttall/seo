@@ -49,6 +49,13 @@ import {
 import { loginUrl, newToken } from './cli.ts'
 import { importClicky, removeClickyAccount } from './clicky.ts'
 import { directory } from './google.ts'
+import {
+  indexMySiteCallback,
+  indexMySiteConnectedAt,
+  indexMySiteReady,
+  indexMySiteSignInUrl,
+  removeIndexMySite,
+} from './indexmysite.ts'
 import { signInPerson } from './oauth.ts'
 import { view } from './page.ts'
 import {
@@ -160,7 +167,7 @@ async function accountPage(
     site?: string
   } = {},
 ): Promise<Response> {
-  const [accounts, keys, machines, login, beta, paid, limit] =
+  const [accounts, keys, machines, login, beta, paid, limit, indexmysite] =
     await Promise.all([
       accountsOf(env, userId),
       keysOf(env, userId),
@@ -169,6 +176,7 @@ async function accountPage(
       betaFlags(env, userId),
       billingOf(env, userId),
       siteLimit(env, userId),
+      indexMySiteConnectedAt(env, userId),
     ])
   const audits = beta.has('weekly-audit')
     ? await Promise.all(
@@ -216,6 +224,7 @@ async function accountPage(
         .filter((account) => account.provider === 'bing')
         .map((account) => ({ label: account.label, subject: account.subject })),
       bingReady: Boolean(env.BING_CLIENT_ID),
+      indexmysite: { connectedAt: indexmysite, ready: indexMySiteReady(env) },
       keys: KEY_FIELDS.map((field) => field.header).filter(
         (name) => keys[name],
       ),
@@ -320,6 +329,19 @@ export async function account(
     return userId
       ? accountPage(env, userId, '', { link })
       : signInPage(env, '', link)
+  }
+  // The end of Connect Index My Site (indexmysite.ts).
+  if (request.method === 'GET' && path === '/account/indexmysite/done') {
+    const signedIn = await sessionUser(request, env)
+    const result = await indexMySiteCallback(request, env, signedIn)
+    if (!result.userId) {
+      return signedIn
+        ? accountPage(env, signedIn, result.message ?? '', { tab: 'accounts' })
+        : signInPage(env, result.message ?? '')
+    }
+    return result.message
+      ? accountPage(env, result.userId, result.message, { tab: 'accounts' })
+      : redirect(`${home}#indexmysite`)
   }
   // The link in an alert email, opened (GET) or one-click (POST, RFC 8058).
   if (path === '/account/alerts/off') {
@@ -448,6 +470,14 @@ export async function account(
       if (provider === 'google') await revokeGoogle(target.refresh)
       return redirect(`${home}#${provider}`)
     }
+    case '/account/indexmysite':
+      if (!indexMySiteReady(env)) {
+        return accountPage(env, userId, 'Index My Site is not set up yet.')
+      }
+      return redirect(await indexMySiteSignInUrl(env, userId))
+    case '/account/indexmysite/remove':
+      await removeIndexMySite(env, userId)
+      return redirect(`${home}#indexmysite`)
     case '/account/link': {
       const code = linkCode(field('code'))
       if (code && (await approveLogin(env, code, userId))) {
@@ -716,6 +746,7 @@ export async function account(
           .filter((item) => item.provider === 'google')
           .map((item) => revokeGoogle(item.refresh)),
       )
+      await removeIndexMySite(env, userId).catch(() => undefined)
       await deleteUser(env, userId)
       return view(
         env,
@@ -723,7 +754,7 @@ export async function account(
           view: 'notice',
           notice: {
             title: 'Deleted',
-            text: 'SEO Skill no longer has your Google or Bing sign-ins, keys or linked machines. Your agents will ask you to sign in again if you use SEO Skill later.',
+            text: 'SEO Skill no longer has your Google, Bing or Index My Site sign-ins, keys or linked machines. Your agents will ask you to sign in again if you use SEO Skill later.',
           },
         },
         200,

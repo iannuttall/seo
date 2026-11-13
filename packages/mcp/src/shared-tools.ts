@@ -28,6 +28,7 @@ import {
   runSharedTool,
   SHARED_TOOLS,
   telemetryReportFor,
+  toolAnnotations,
 } from '@seo/core/commands'
 import * as z from 'zod/v4'
 import { executeReport } from './reports.js'
@@ -113,7 +114,7 @@ export function registerSharedTools(
     accounts: localAccounts,
     signIn: LOCAL_SIGN_IN.signIn,
     connect:
-      'run `seo login` to use your seoskill.dev account (Google, Bing and keys in one place), or `seo auth login`, `seo providers bing connect` and `seo providers dataforseo connect` or `seo providers ahrefs connect` on this machine only.',
+      'run `seo login` to use your seoskill.dev account (Google, Bing, Index My Site and keys in one place), or `seo auth login`, `seo providers bing connect`, `seo providers indexmysite connect` and `seo providers dataforseo connect` or `seo providers ahrefs connect` on this machine only.',
     readFiles: (paths: string[]) => readLintFiles(paths),
   }
   for (const shared of SHARED_TOOLS) {
@@ -123,7 +124,7 @@ export function registerSharedTools(
         title: shared.title,
         description: shared.description,
         inputSchema: (shared.localInput ?? shared.input).shape,
-        annotations: readOnly,
+        annotations: toolAnnotations(shared),
       },
       async (input: Record<string, unknown>) =>
         counted(shared.command, input, options.telemetry, async () => {

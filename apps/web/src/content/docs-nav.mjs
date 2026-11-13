@@ -81,6 +81,12 @@ export const docsSections = [
           'Why Google does or does not index your pages, checked live, and pages that lost their clicks.',
       },
       {
+        path: '/docs/submit',
+        label: 'seo submit',
+        description:
+          'Ask Bing and others to crawl pages for free with IndexNow, or send them to Google with Index My Site.',
+      },
+      {
         path: '/docs/research',
         label: 'seo research',
         description:

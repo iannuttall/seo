@@ -3,6 +3,7 @@ import { weekData } from './audit/week.ts'
 import { betaFlags } from './beta.ts'
 import { refreshClicky } from './clicky.ts'
 import { freshAccess } from './google.ts'
+import { indexMySiteAccess, indexNowKeysOf } from './indexmysite.ts'
 import { seal, unseal } from './seal.ts'
 import { cliAgent, userAgentOf } from './signup.ts'
 import {
@@ -146,9 +147,15 @@ export async function credentials(
   if (new URL(request.url).searchParams.get('clicky') === 'refresh') {
     await refreshClicky(env, link.userId).catch(() => null)
   }
-  const [accounts, saved] = await Promise.all([
+  const [accounts, saved, indexmysite, indexnow] = await Promise.all([
     accountsOf(env, link.userId),
     keysOf(env, link.userId),
+    // Only a short-lived access token leaves the server, never the
+    // refresh token.
+    indexMySiteAccess(env, link.userId).catch((failure: unknown) => ({
+      error: failure instanceof Error ? failure.message : String(failure),
+    })),
+    indexNowKeysOf(env, link.userId),
     touchCliLink(env, link.id),
   ])
   // The Clicky account login stays on the server; machines get its sites.
@@ -172,6 +179,10 @@ export async function credentials(
       .filter((item) => item.provider === 'bing')
       .map(({ provider: _, ...rest }) => rest),
     keys,
+    indexmysite: indexmysite
+      ? { label: 'Index My Site', ...indexmysite }
+      : null,
+    indexnow,
   })
 }
 

@@ -15,6 +15,7 @@ import { cliWeek, credentials, finishLogin, logout, startLogin } from './cli.ts'
 import { checkCosts, sendCostReport } from './cost-report.ts'
 import { failureReport } from './failure-report.ts'
 import { directory } from './google.ts'
+import { indexMySiteHandOff } from './indexmysite.ts'
 import { serveMcp, serverCard } from './mcp.ts'
 import {
   authorize,
@@ -100,6 +101,9 @@ async function route(
   if (pathname === '/oauth/bing/callback' && method === 'GET') {
     return bingCallback(request, env)
   }
+  if (pathname === '/oauth/indexmysite/callback' && method === 'GET') {
+    return indexMySiteHandOff(request, env)
+  }
   // `seo login` and a linked CLI. See cli.ts.
   if (pathname === '/account/cli/start' && method === 'POST') {
     return startLogin(request, env)
@@ -177,7 +181,8 @@ export default {
       !pathname.startsWith('/oauth/authorize') &&
       !pathname.startsWith('/oauth/google') &&
       !pathname.startsWith('/oauth/callback') &&
-      !pathname.startsWith('/oauth/bing/')
+      !pathname.startsWith('/oauth/bing/') &&
+      !pathname.startsWith('/oauth/indexmysite/')
     if (request.method === 'OPTIONS') {
       return new Response(null, { status: 204, headers: cors })
     }

@@ -29,6 +29,7 @@ import {
 } from './shared.js'
 import { simpleAnalyticsBeside } from './simple-analytics.js'
 import { sitemapUrls } from './sitemap-urls.js'
+import { SUBMITTABLE_REASON, submitSuggestion } from './submit.js'
 import {
   type CommandDeps,
   CommandError,
@@ -240,7 +241,14 @@ export async function runPage(
           ]
         : []),
       ...(indexed && /^URL is unknown to Google$/i.test(indexed.coverage ?? '')
-        ? [unknownNext(input, sitemap.urls.includes(input.url), deps)]
+        ? [
+            unknownNext(
+              input,
+              sitemap.urls.includes(input.url),
+              facts.status === 200 && !live.hops.length,
+              deps,
+            ),
+          ]
         : []),
       `Query totals: clicks ${sum(now.rows, 'clicks')} (was ${sum(then.rows, 'clicks')}), impressions ${sum(now.rows, 'impressions')} (was ${sum(then.rows, 'impressions')}). Search Console hides rare queries, so these can be lower than the page total.`,
       ...(shapes ? [shapes] : []),
@@ -367,14 +375,19 @@ function indexErrorText(
   }`
 }
 
-// A page Google has never seen. seo cannot submit URLs, so the next steps
-// are the ones Search Console offers, and finding out how far it goes.
+// A page Google has never seen: the next steps Search Console offers, the
+// ways seo submit asks for a crawl, and finding out how far it goes.
 function unknownNext(
   input: PageInput,
   inSitemap: boolean,
+  // It returns 200 with no redirect now, so a crawl request can help.
+  live: boolean,
   deps: CommandDeps,
 ): string {
-  return `Next for a page Google does not know: seo cannot submit URLs to Google. Use Request indexing in Search Console's URL Inspection tool for this URL, and ${inSitemap ? 'check that the Sitemaps report in Search Console has the sitemap that lists it, with a recent read date' : 'add the URL to a sitemap and submit that sitemap in Search Console'}. Google finds pages through links, so ${deps.call('internal-links', { url: input.url })} lists pages that could link here. To see whether other URLs on the site are unknown too, run ${deps.call('index', { site: input.site })}.`
+  const submit = live
+    ? `, or ${deps.call('submit', { action: 'indexmysite', urls: input.url })} to send it to Google with Index My Site (paid, indexmysite.app, a credit back if Google has not indexed it by the final check); ${deps.call('submit', { action: 'indexnow', urls: input.url })} tells Bing and others for free through IndexNow, not Google`
+    : ''
+  return `Next for a page Google does not know: use Request indexing in Search Console's URL Inspection tool for this URL${submit}. Also ${inSitemap ? 'check that the Sitemaps report in Search Console has the sitemap that lists it, with a recent read date' : 'add the URL to a sitemap and submit that sitemap in Search Console'}. Google finds pages through links, so ${deps.call('internal-links', { url: input.url })} lists pages that could link here. To see whether other URLs on the site are unknown too, run ${deps.call('index', { site: input.site })}.`
 }
 
 // The page's main content, or why it is missing. A surface without the
@@ -627,6 +640,18 @@ export async function runLostPages(
   const offset = input.offset ?? 0
   const origin = originOf(input.site)
   const firstFix = run.rows.find((row) => row.label === 'fix')
+  // Live, indexable-looking pages Google has not indexed, where a crawl
+  // request is the next step once nothing else is wrong.
+  const submittable = run.rows
+    .filter(
+      (row) =>
+        row.label === 'check' &&
+        SUBMITTABLE_REASON.test(row.reason) &&
+        row.status === 200 &&
+        !row.redirects &&
+        (!row.page_canonical || row.page_canonical === row.url),
+    )
+    .map((row) => row.url)
   const reasons = indexingText(
     input.site,
     run,
@@ -679,6 +704,7 @@ export async function runLostPages(
     quota: run.quota,
     byReason: byReason(run.rows),
     rows: run.rows,
+    submittable,
   }
   const text =
     detail === 'full'
@@ -689,6 +715,7 @@ export async function runLostPages(
       : [
           ...(detail === 'summary' ? lostText : []),
           ...reasons,
+          submitSuggestion(submittable.length, deps.call) ?? '',
           `To see what changed, keep this run's full result (${deps.call('index', { site: input.site, max_urls: input.maxUrls, detail: 'full' })}) and compare it with the next run by url and reason. Inspect the same number each week: the order is fixed, so the same first URLs come back. Where results are saved (the CLI and the local MCP), a URL inspected in the last 7 days is reused; any other URL is inspected again and uses URL Inspection quota.`,
           `Next: ${firstFix ? deps.call('page', { url: firstFix.url }) : deps.call('page')} for one URL, including a URL from a Search Console email that is not in this set; ${deps.call('report', { site: input.site, section: 'content-decay' })} for pages that lost part of their clicks.`,
         ]

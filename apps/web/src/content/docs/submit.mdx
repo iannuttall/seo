@@ -1,0 +1,102 @@
+---
+title: Submit pages to Bing with IndexNow, or to Google
+description: Ask search engines to crawl new and updated pages with seo submit. IndexNow is free and reaches Bing, Yandex and others. Index My Site sends pages to Google from your own credits.
+heading: seo submit
+lead: Ask Bing and other search engines to crawl your pages for free with IndexNow, or send them to Google with Index My Site.
+---
+
+You published a page, or fixed one, and want search engines to look at it now rather than whenever they next crawl. `seo submit` asks them to. It asks for a crawl; it can't make a search engine index a page it has chosen to leave out, so fix redirects, noindex tags, error pages and canonicals first. [`seo index`](/docs/indexing) shows which pages need that.
+
+There are two ways to send pages, and you can use both:
+
+| | IndexNow | Index My Site |
+|---|---|---|
+| Reaches | Bing, Yandex, Seznam, Naver and Yep | Google, and Bing if you ask |
+| Cost | Free | Credits from your own [Index My Site](https://indexmysite.app) account |
+| Setup | A key file on your site | Connect your Index My Site account once |
+| What you get back | Whether IndexNow took the URLs | Each page's status, a check after 24 hours, and a credit back for each page Google has not indexed by the final check |
+
+Google doesn't use IndexNow.
+
+## Send pages to Bing with IndexNow
+
+IndexNow needs proof that the site is yours: a small text file at the root of the site whose name and contents are a key. Make the key first:
+
+```sh
+seo submit key example.com
+```
+
+It makes a key for that host, saves it, and tells you the file to serve, such as `https://example.com/3f9c…e1.txt`, whose only text is the key. Then it checks whether the file is live yet.
+
+To add the file:
+
+- **With the site's code:** save the key as `<key>.txt` in the folder your site serves at its root (`public/` in Astro, Next.js, Nuxt and Vite; `static/` in SvelteKit and Hugo), then deploy. Your agent can do both.
+- **Without the code:** upload the file to the site's root folder with your host's file manager or FTP.
+- **If your site can't serve its own file at the root** (some hosted stores and site builders can't), IndexNow won't work this way. Bing Webmaster Tools' URL submission, or Index My Site's Bing option, still reach Bing.
+- **If your CMS or CDN already sends IndexNow**, such as Cloudflare Crawler Hints or a WordPress SEO plugin with IndexNow on, you don't need this for those pages.
+
+Each host needs its own file: `example.com` and `www.example.com` are separate. If your site already serves an IndexNow key, add `--key <key>` to use it.
+
+Run `seo submit key example.com` again after you deploy. Once it says the key is live, send pages:
+
+```sh
+seo submit https://example.com/new-post https://example.com/pricing
+seo submit --file urls.txt
+```
+
+A file has one URL per line. One submission takes up to 10,000 URLs on one host. `seo submit` checks the key file first and sends nothing while it's missing. IndexNow answers for the whole batch, not for each page, so the result says whether it took the URLs, not whether any page was crawled.
+
+## Send pages to Google with Index My Site
+
+[Index My Site](https://indexmysite.app) sends pages to Google and checks each one after 24 hours. You get a credit back for each page Google has not indexed by the final check, around day 14. It uses credits from your own Index My Site account, so connect that first:
+
+```sh
+seo providers indexmysite connect
+```
+
+This opens Index My Site in your browser. Sign in and approve SEO Skill, and the terminal says when it's connected. There's no API key to copy. On a machine linked to your seoskill.dev account with `seo login`, connect Index My Site on your [account page](https://seoskill.dev/account#indexmysite) instead, once, for the hosted MCP and every linked machine.
+
+Then send pages:
+
+```sh
+seo submit https://example.com/new-post --indexmysite
+```
+
+It shows the cost and your balance first, and asks before it spends anything. Each sent page costs 1 credit. Pages Index My Site skips, such as redirects, noindex pages and error pages, cost nothing. `--bing` also sends each page to Bing for 1 more credit, and `--fast` asks for faster Google indexing for 1 more. Only the Google credit comes back for a page that isn't indexed; the Bing and Fast credits don't.
+
+```sh
+seo submit https://example.com/new-post --indexmysite --bing
+```
+
+Add `--yes` to send without the question, in a script. A retry of the same pages on the same day is never charged twice.
+
+Pages with very little main content wait for your approval. The result lists them with their URL ids. To see a job, and to approve the ones you choose:
+
+```sh
+seo submit status
+seo submit status <job-id>
+seo submit approve <job-id> <url-id>
+```
+
+## Ask your agent
+
+```text
+I just published example.com/new-post. Ask Bing and Google to crawl it.
+```
+
+Both MCP servers have a `seo_submit` tool with these actions:
+
+| Action | What it does |
+|---|---|
+| `indexnow_key` | Makes or reuses the site's IndexNow key, says which file to serve and checks it |
+| `indexnow` | Sends URLs to IndexNow, free |
+| `indexmysite` | Without `confirm`, returns the cost and sends nothing. With `confirm: true`, sends the URLs to Index My Site |
+| `indexmysite_status` | Your balance and recent jobs, or one job's pages |
+| `indexmysite_approve` | Approves pages waiting for review, again only with `confirm: true` |
+| `indexmysite_connect` | Connects your Index My Site account |
+
+The agent shows you the cost before it confirms. On the hosted MCP, connect Index My Site on your [account page](https://seoskill.dev/account#indexmysite).
+
+## Where seo submit comes up
+
+[`seo index`](/docs/indexing) and [`seo page`](/docs/page) suggest it only for pages that return 200 with no redirect but that Google hasn't indexed ("Crawled - currently not indexed", "Discovered - currently not indexed" or "URL is unknown to Google"). Pages labelled fix come first: submitting a redirect or a noindex page doesn't help.

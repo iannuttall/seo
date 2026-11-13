@@ -29,6 +29,11 @@ export type CloudCredentials = {
   google: ({ email: string } & Token)[]
   bing: ({ label: string } & Token)[]
   keys: Record<string, string>
+  // The account's Index My Site connection, as a short-lived access token,
+  // or null when it has none. Absent from older servers.
+  indexmysite?: ({ label: string } & Token) | null
+  // IndexNow keys saved on the account, by host.
+  indexnow?: Record<string, string>
 }
 
 const linkFile = () => join(getSeoCliPaths().configDir, 'cloud.json')
@@ -74,9 +79,11 @@ async function call<T>(
 let credentials: Promise<CloudCredentials> | undefined
 
 function expiresSoon(value: CloudCredentials): boolean {
-  return [...value.google, ...value.bing].some(
-    (item) => 'expiresAt' in item && item.expiresAt - EARLY < Date.now(),
-  )
+  return [
+    ...value.google,
+    ...value.bing,
+    ...(value.indexmysite ? [value.indexmysite] : []),
+  ].some((item) => 'expiresAt' in item && item.expiresAt - EARLY < Date.now())
 }
 
 // The account's linked sign-ins and keys, fetched once and again when a
@@ -224,6 +231,27 @@ export async function cloudBing(): Promise<BingCall | null> {
 export async function cloudKeys(): Promise<Record<string, string>> {
   return (await cloudCredentials()).keys
 }
+
+// A current Index My Site access token from the linked account, or null
+// when the account has not connected Index My Site. fresh asks the account
+// again, such as after the person connected it.
+export async function cloudIndexMySiteToken(
+  options: { fresh?: boolean } = {},
+): Promise<string | null> {
+  if (options.fresh) credentials = undefined
+  const { indexmysite, account } = await cloudCredentials()
+  if (!indexmysite) return null
+  return tokenOf(
+    indexmysite,
+    `Index My Site sign-in. Reconnect it at ${account}#indexmysite`,
+  )
+}
+
+export async function cloudIndexNowKeys(): Promise<Record<string, string>> {
+  return (await cloudCredentials()).indexnow ?? {}
+}
+
+export const cloudAccountUrl = () => `${CLOUD_URL}/account`
 
 // `seo login`, step one: a code for the person to approve on the account
 // page. The pending login is kept until it is approved or expires. The agent

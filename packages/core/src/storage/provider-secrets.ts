@@ -17,6 +17,8 @@ export const PROVIDER_SECRET_NAMES = {
   bingApiKey: 'bing-api-key',
   clickySiteKeys: 'clicky-sitekeys',
   dataForSeoCredentials: 'dataforseo-credentials',
+  indexMySiteOAuth: 'indexmysite-oauth',
+  indexNowKeys: 'indexnow-site-keys',
   providerExtensionCredentials: 'provider-extension-credentials',
   simpleAnalyticsKey: 'simple-analytics-key',
 } as const

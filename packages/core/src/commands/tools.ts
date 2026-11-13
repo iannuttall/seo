@@ -55,6 +55,7 @@ import {
   runPage,
 } from './site.js'
 import { type GoogleAccount, runSites } from './sites.js'
+import { runSubmit, SUBMIT_ACTIONS, SUBMIT_HELP } from './submit.js'
 import {
   type Caller,
   type CommandDeps,
@@ -177,7 +178,23 @@ export type SharedTool = {
   // A wider input for the local MCP only, for options that need this
   // machine (such as the URL Inspection quota count).
   localInput?: z.ZodObject
+  // The tool changes something outside this server, such as sending URLs
+  // that spend the person's credits. Every other tool only reads.
+  writes?: true
   run: (surface: ToolSurface, input: never) => Promise<CommandResult>
+}
+
+// MCP annotations for a shared tool: read-only, or a write that is not
+// destructive and not safe to repeat blindly.
+export function toolAnnotations(tool: Pick<SharedTool, 'writes'>) {
+  return tool.writes
+    ? {
+        readOnlyHint: false,
+        destructiveHint: false,
+        idempotentHint: false,
+        openWorldHint: true,
+      }
+    : { readOnlyHint: true, destructiveHint: false, openWorldHint: true }
 }
 
 function tool<S extends z.ZodObject>(spec: {
@@ -187,6 +204,7 @@ function tool<S extends z.ZodObject>(spec: {
   description: string
   input: S
   localInput?: z.ZodObject
+  writes?: true
   run: (surface: ToolSurface, input: z.output<S>) => Promise<CommandResult>
 }): SharedTool {
   return spec as unknown as SharedTool
@@ -476,6 +494,97 @@ export const SHARED_TOOLS: SharedTool[] = [
           detail: input.detail,
           offset: input.offset,
           maxUrls: (input as { max_urls?: number }).max_urls,
+        },
+        surface.deps,
+      ),
+  }),
+  tool({
+    name: 'seo_submit',
+    command: 'submit',
+    title: 'Ask search engines to crawl pages',
+    writes: true,
+    description: `Sends page URLs to search engines. IndexNow is free and reaches Bing, Yandex, Seznam, Naver and Yep, not Google; it needs a key file on the site, which indexnow_key sets up and checks. Index My Site (indexmysite.app) is paid from the person's own credits: it sends URLs to Google, checks each, and gives a credit back for each page Google has not indexed by its final check. It never sends without confirm true, and only after the person saw the cost. Submitting asks for a crawl; it does not make a search engine index a page. Fix redirects, noindex, errors and canonicals first. Actions: ${SUBMIT_HELP}`,
+    input: z.object({
+      action: z.enum(SUBMIT_ACTIONS),
+      site: z
+        .string()
+        .min(1)
+        .max(300)
+        .optional()
+        .describe(
+          'indexnow_key: the host or a URL on it, such as example.com.',
+        ),
+      urls: z
+        .array(z.string().min(1).max(2048))
+        .max(2000)
+        .optional()
+        .describe(
+          'indexnow and indexmysite: full page URLs. indexnow takes one host per call.',
+        ),
+      key: z
+        .string()
+        .max(128)
+        .optional()
+        .describe(
+          'indexnow_key and indexnow, optional: an IndexNow key the site already serves at /<key>.txt.',
+        ),
+      fast: z
+        .boolean()
+        .optional()
+        .describe(
+          'indexmysite, optional: faster Google indexing, 1 more credit per URL, not returned. Only when the person asks.',
+        ),
+      bing: z
+        .boolean()
+        .optional()
+        .describe(
+          'indexmysite, optional: also send each URL to Bing, 1 more credit per URL, not returned. Only when the person asks.',
+        ),
+      name: z
+        .string()
+        .max(120)
+        .optional()
+        .describe('indexmysite, optional: a label for the job.'),
+      job_id: z
+        .string()
+        .min(1)
+        .max(100)
+        .optional()
+        .describe('indexmysite_status and indexmysite_approve: the job id.'),
+      url_ids: z
+        .array(z.string().min(1).max(100))
+        .max(2000)
+        .optional()
+        .describe(
+          'indexmysite_approve: the url_id of each URL the person chose.',
+        ),
+      all: z
+        .boolean()
+        .optional()
+        .describe(
+          'indexmysite_approve: every URL waiting for approval, only when the person chose all of them.',
+        ),
+      confirm: z
+        .boolean()
+        .optional()
+        .describe(
+          'indexmysite and indexmysite_approve: true sends and spends credits. Without it the call returns the cost and sends nothing.',
+        ),
+    }),
+    run: (surface, input) =>
+      runSubmit(
+        {
+          action: input.action,
+          site: input.site,
+          urls: input.urls,
+          key: input.key,
+          fast: input.fast,
+          bing: input.bing,
+          name: input.name,
+          jobId: input.job_id,
+          urlIds: input.url_ids,
+          all: input.all,
+          confirm: input.confirm,
         },
         surface.deps,
       ),
@@ -914,11 +1023,13 @@ export const MCP_INSTRUCTIONS = `SEO Skill reads the person's own Search Console
 1. seo_sites: the properties the connected accounts can read.
 2. seo_report: start here. Without site it summarises last week across every site in the weekly site audit and names the site to ask about next. With site it shows that property's overview and every section's count and top rows; then ask for the one section you need. Section issues keeps a list of what it found for the site between sessions; mark records which the person fixed or wants ignored.
 3. seo_page for one URL, seo_compare for before and after a date, seo_index for Google's indexing reasons and pages that lost their clicks, seo_research for keyword, competitor and backlink data, and whether AI answers cite the site, from the DataForSEO or Ahrefs key the person saved, seo_data for raw rows, including Google Analytics, Bing, Clicky and Simple Analytics.
-4. seo_lint checks copy you are writing or editing (a landing page, blog post, title or meta description) for patterns common in AI-written text and for title and description length. It reads only the text or files you give it.`
+4. seo_submit asks search engines to crawl pages: IndexNow for free (not Google), or Index My Site for Google from the person's own paid credits. It never spends credits without confirm true; show the person the cost first.
+5. seo_lint checks copy you are writing or editing (a landing page, blog post, title or meta description) for patterns common in AI-written text and for title and description length. It reads only the text or files you give it.`
 
 // How an MCP surface writes "run this next": the tool name and its inputs.
 export const mcpCall: Caller = (command, args) => {
   const name = `seo_${command.replace('-', '_')}`
+  if (command === 'submit') return submitMcpCall(args ?? {})
   const shown = Object.entries(args ?? {}).filter(
     ([, value]) => value !== undefined,
   )
@@ -938,3 +1049,21 @@ export const SKILL_RESOURCE = {
     'How to use these tools: what each command returns and how to reach it.',
   mimeType: 'text/markdown',
 } as const
+
+// seo_submit with its list and true/false inputs written as such.
+function submitMcpCall(args: Record<string, string | number | undefined>) {
+  const parts = Object.entries(args)
+    .filter(([, value]) => value !== undefined)
+    .map(([key, value]) =>
+      value === 'true'
+        ? `${key} true`
+        : key === 'urls'
+          ? `urls ${JSON.stringify(String(value).split(' '))}`
+          : `${key} "${value}"`,
+    )
+  const needsUrls =
+    (args.action === 'indexnow' || args.action === 'indexmysite') &&
+    args.urls === undefined
+  if (needsUrls) parts.push('the URLs in urls')
+  return parts.length ? `seo_submit with ${parts.join(', ')}` : 'seo_submit'
+}

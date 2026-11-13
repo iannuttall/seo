@@ -32,6 +32,9 @@ export type Sealed =
   | { k: 'alert-off'; userId: string; type: string }
   // A Bing sign-in from the account page.
   | { k: 'bing'; userId: string; exp: number }
+  // An Index My Site connection from the account page, with its PKCE
+  // verifier.
+  | { k: 'indexmysite'; userId: string; verifier: string; exp: number }
   | {
       k: 'code'
       clientId: string

@@ -83,15 +83,46 @@ const FLAGS: Record<string, string> = {
 const quote = (value: string | number) =>
   /^[\w:/.,<>@#?=&%+-]+$/.test(String(value)) ? String(value) : `"${value}"`
 
+// seo submit's own shape: URLs as arguments, key, status and approve as
+// subcommands, and Index My Site's connect under providers.
+function submitCall(args: Record<string, string | number | undefined>) {
+  const flags = [
+    args.fast === 'true' ? '--fast' : null,
+    args.bing === 'true' ? '--bing' : null,
+    args.confirm === 'true' ? '--yes' : null,
+  ].filter(Boolean)
+  const urls = args.urls === undefined ? '<url...>' : String(args.urls)
+  switch (args.action) {
+    case 'indexnow_key':
+      return `seo submit key ${args.site ?? '<site>'}`
+    case 'indexmysite':
+      return ['seo submit', urls, '--indexmysite', ...flags].join(' ')
+    case 'indexmysite_status':
+      return `seo submit status${args.job_id ? ` ${args.job_id}` : ''}`
+    case 'indexmysite_approve':
+      return [
+        `seo submit approve ${args.job_id ?? '<job-id>'} <url-id...>`,
+        ...flags,
+      ].join(' ')
+    case 'indexmysite_connect':
+      return 'seo providers indexmysite connect'
+    default:
+      return `seo submit ${urls}`
+  }
+}
+
 export const cliCall: Caller = (command, args) =>
-  [
-    `seo ${command}`,
-    ...Object.entries(args ?? {})
-      .filter(([, value]) => value !== undefined)
-      .map(
-        ([key, value]) => `${FLAGS[key] ?? `--${key}`} ${quote(value ?? '')}`,
-      ),
-  ].join(' ')
+  command === 'submit'
+    ? submitCall(args ?? {})
+    : [
+        `seo ${command}`,
+        ...Object.entries(args ?? {})
+          .filter(([, value]) => value !== undefined)
+          .map(
+            ([key, value]) =>
+              `${FLAGS[key] ?? `--${key}`} ${quote(value ?? '')}`,
+          ),
+      ].join(' ')
 
 const common = {
   account: { type: 'string', description: 'Saved Google account email.' },

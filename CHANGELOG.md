@@ -1,5 +1,30 @@
 # Changelog
 
+## Unreleased
+
+### Added
+
+- `seo submit` asks search engines to crawl pages. With no option it sends
+  them to IndexNow, free, which reaches Bing, Yandex, Seznam, Naver and Yep
+  but not Google. `seo submit key <site>` makes the site's IndexNow key,
+  says which file to serve and checks that it is live; nothing is sent
+  until it is. `--file` reads one URL per line.
+- `seo submit <url...> --indexmysite` sends pages to Google through the
+  person's own Index My Site account, which checks each page and gives a
+  credit back for each one Google has not indexed by its final check. It
+  shows the cost and balance first and asks before it spends; `--yes`
+  skips the question. `--bing` and `--fast` add 1 credit a page each, not
+  returned. `seo submit status` and `seo submit approve` follow a job.
+- `seo providers indexmysite connect` connects Index My Site with a browser
+  sign-in (OAuth). No API key is pasted. A machine linked with `seo login`
+  uses the connection made on the seoskill.dev account page instead.
+- `seo_submit` in both MCP servers, with actions `indexnow_key`,
+  `indexnow`, `indexmysite` (cost only until `confirm` is true),
+  `indexmysite_status`, `indexmysite_approve` and `indexmysite_connect`.
+  It is the only tool not marked read-only.
+- `seo index` and `seo page` mention `seo submit` for live pages Google has
+  not indexed, and `index_check` mentions it when a page is not found.
+
 ## 0.19.0
 
 ### Added

@@ -11,6 +11,7 @@ import {
   SHARED_TOOLS,
   type SharedTool,
   SKILL_RESOURCE,
+  toolAnnotations,
 } from '@seo/core/commands'
 import { z } from 'zod'
 // The same skills/seo/SKILL.md that `npx skills add` installs, bundled as
@@ -27,6 +28,7 @@ import { addUsage } from './usage.ts'
 function sharedTool(shared: SharedTool): Tool {
   return {
     name: shared.name,
+    writes: shared.writes,
     title: shared.title,
     description: shared.description,
     input: shared.input,
@@ -114,7 +116,7 @@ export function serverCard(): Response {
       title: tool.title,
       description: tool.description,
       inputSchema: z.toJSONSchema(tool.input, { io: 'input' }),
-      annotations: { readOnlyHint: true, openWorldHint: true },
+      annotations: toolAnnotations(tool),
     })),
     resources: [SKILL_RESOURCE],
     prompts: [],
@@ -141,11 +143,7 @@ export async function serveMcp(
         title: tool.title,
         description: tool.description,
         inputSchema: tool.input.shape,
-        annotations: {
-          title: tool.title,
-          readOnlyHint: true,
-          openWorldHint: true,
-        },
+        annotations: { title: tool.title, ...toolAnnotations(tool) },
       },
       async (input: unknown): Promise<CallToolResult> => {
         const count = (failure: Parameters<typeof events>[0]['failure']) =>

@@ -38,7 +38,11 @@
     "ALERT_FROM": "SEO Skill <alerts@e.seoskill.dev>",
     // The paid weekly audit's Stripe price, $50 a month per site. Empty
     // keeps billing off.
-    "STRIPE_PRICE_ID": "price_1UXIsj7DEU8hlDUtVD9aqd1A"
+    "STRIPE_PRICE_ID": "price_1UXIsj7DEU8hlDUtVD9aqd1A",
+    // SEO Skill's confidential OAuth client at Index My Site, for Connect
+    // Index My Site on the account page. Its secret is
+    // INDEXMYSITE_CLIENT_SECRET; without it the connection stays off.
+    "INDEXMYSITE_CLIENT_ID": "seo-skill"
   },
   // The site Worker, for the account page design (/account-shell).
   "services": [{ "binding": "SITE", "service": "seo-skill" }],

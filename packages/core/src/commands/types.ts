@@ -6,9 +6,10 @@ import type { AnalyticsAccess } from './analytics-site.js'
 import type { AuditAccess } from './audit.js'
 import type { IssueStore } from './issues.js'
 import type { LiveCheck } from './page-facts.js'
+import type { SubmitAccess } from './submit.js'
 import type { WeekData } from './week.js'
 
-// The nine public commands. Each runs the same core code in the CLI, the
+// The ten public commands. Each runs the same core code in the CLI, the
 // local MCP and the hosted MCP; only the functions that reach Google and the
 // web differ. "local" commands need the person's machine (a crawl).
 
@@ -54,6 +55,11 @@ export const COMMANDS = {
     where: 'anywhere',
     summary:
       'Check copy for patterns common in AI-written text, weak copy and title and description length.',
+  },
+  submit: {
+    where: 'anywhere',
+    summary:
+      'Ask search engines to crawl pages: IndexNow for free (Bing, Yandex and others), or Index My Site for Google, paid.',
   },
 } as const
 
@@ -181,6 +187,9 @@ export type CommandDeps = {
   // Each site's list of issues and what the person marked them: a file on
   // this machine, or the hosted account.
   issues?: IssueStore
+  // IndexNow keys and the person's Index My Site connection, for seo
+  // submit.
+  submit?: SubmitAccess
   // Short lines while a command waits on slow calls. The CLI prints them to
   // stderr; MCP surfaces leave it unset.
   progress?: ProgressReporter

@@ -1,0 +1,97 @@
+---
+title: 'People Also Ask: find questions small sites win'
+description: Google now answers most People Also Ask questions with its own AI text. How to find the questions behind the box, and the small pages that rank for them.
+heading: How to use People Also Ask to find questions small sites can win
+lead: The People Also Ask box is still a list of real questions in searchers' own words. Google rarely links a page from it any more, so the value is in searching each question and seeing who ranks.
+date: '2026-11-13'
+draft: false
+cover:
+  alt: "A Victorian engraved lecture hall where rows of people hold up lime green question slips, and some drift down to a man writing answers at a small desk by lamplight."
+  title: left
+---
+
+People Also Ask is the box of related questions Google shows under many searches. Each question opens to a short answer, and opening one loads a few more questions underneath.
+
+For years the trick was to win that answer. A page quoted in the box got a link right in the middle of the results page. That trick has mostly gone, because Google now writes most of the answers itself. The questions are still useful, though, and I'd argue they're more useful than the box ever was.
+
+## Google answers most People Also Ask questions with AI text
+
+Most People Also Ask answers are now AI Overviews rather than quotes from a page. AlsoAsked looked at 19.2 million English questions in 2026 and found that 97% of answers in the first week of September were AI generated, up from 86% in August and about 12% a year earlier ([Search Engine Roundtable, September 2026](https://www.seroundtable.com/ppa-ai-overviews-google-42047.html)).
+
+My own check agrees. I pulled the box for five everyday searches, such as "what is a 401k" and "how to descale a kettle", and got 20 questions. Google answered 16 of them with AI text. Only one search, about sourdough starters, still linked pages in its answers.
+
+An AI answer usually still shows a link or two, but there's no single quoted passage to take over. If your plan was to write the answer Google lifts, most of the time there's nothing left to lift.
+
+## Why People Also Ask questions are still useful
+
+People Also Ask gives you questions in the words people actually use, with no volume filter in the way. Keyword tools often show little or no volume for a question like "can I use lemon juice to clean a kettle", but Google only puts a question in the box because people ask it.
+
+Each question is also a search of its own. When someone types it into Google, there's an ordinary results page with ordinary rankings. That page is where a smaller site can win, and you won't see it by staring at the box.
+
+The questions matter more as AI agents do more of the searching. An agent answering "what is a heat pump" runs these follow-up questions as searches for the person, and the pages that rank for them are the ones it reads. Human visits per person to the top million sites fell about 29% between 2022 and 2026 ([SparkToro and Similarweb](https://sparktoro.com/blog/new-research-traffic-to-the-open-web-has-fallen-24-in-5-years/)), and I expect agents to do most of this kind of searching within about five years.
+
+## Search each question on its own to see who ranks
+
+The useful step is to take each question out of the box and search it by itself. I did that for five of the questions from my check:
+
+| Question from the box | What ranked first and second | Monthly US visits (DataForSEO estimate) |
+| --- | --- | --- |
+| how much should a plumber charge to fix a leaking tap | A tap maker's blog post and a small home services blog | 3 and 2 |
+| can I refrigerate my sourdough starter | A homesteading blog and a baking forum thread | 156 and 16 |
+| how to tell when a sourdough starter goes bad | A Reddit thread and a zero waste cooking blog | n/a and 1 |
+| can I use lemon juice to clean a kettle | An appliance brand's how-to and a Reddit thread | 20 and n/a |
+| can a heat pump work with radiators | A Reddit thread and a radiator retailer's article | n/a and 1 |
+
+Apart from Reddit, none of those top results came from a big publisher. On DataForSEO's 0 to 100 domain rank, the named sites scored between 22 and 60, and a forum thread sat in second place for the starter question.
+
+That's the opening. A question where a forum thread or a small blog post ranks second is a question where a clear, complete answer has room to move up. The box tells you the question exists, and the search on its own tells you whether you can compete.
+
+The traffic estimates keep this in proportion. Most of these pages get a handful of estimated visits a month, and only the sourdough care guide gets more than a few dozen. DataForSEO only counts keywords in its own database, so a page answering questions that show no volume is probably undercounted, but no single question here is a traffic source on its own. The value comes from answering a group of them well on one page that covers the topic.
+
+## How to find People Also Ask questions with SEO Skill
+
+The free [People Also Ask tool](/tools/people-also-ask-tool) lists the questions for a keyword, the page that answers each one and that page's estimated monthly traffic. When Google answers with AI text, the tool searches the question by itself and shows the top result instead, which is the step above done for you. It gives you 3 lookups a day.
+
+For more than a handful of topics, ask your agent, or run `seo research serp` with up to 5 keywords on your own DataForSEO key:
+
+```sh
+seo research serp --keywords "what is a 401k,how to descale a kettle,what is a heat pump"
+```
+
+The summary lists the People Also Ask questions for each keyword, in the order Google showed them, and the full JSON says which ones Google answered with AI text and which page answered the rest. Then run the same command with the questions themselves as keywords to see who ranks for each. My two runs cost about 7 cents in total.
+
+An agent makes the same call through the MCP server's `seo_research` tool:
+
+```json
+{ "action": "serp", "keywords": ["what is a 401k", "how to descale a kettle"] }
+```
+
+The traffic number in the free tool is DataForSEO's estimate for the whole page across every keyword it ranks for, not the visits one question sends. Use it to compare pages with each other, and read a modest page with steady traffic as a sign that the topic brings visits even when the exact question shows no volume.
+
+## How to check which questions your pages already show up for
+
+Search Console shows which of these questions Google already shows your pages for. It counts an impression for a link inside the box once someone opens the question, and a click only when they follow that link ([Google's Search Console help](https://support.google.com/webmasters/answer/7042828)).
+
+Ask your agent to compare the questions with your Search Console queries, or look at the queries for the page that covers the topic. A question that already gets impressions at a low position is the easiest win, because Google already thinks the page is relevant.
+
+## How to answer People Also Ask questions on your page
+
+Write the answer the way you'd want it quoted, even though Google may write its own. The same answer serves the person who searched the question on its own, the AI Overview that might link you, and ChatGPT if it searches for it.
+
+1. Use the question, or a close natural wording of it, as a heading on the page that covers the topic.
+2. Answer it fully in the first sentence or two under that heading, naming the subject instead of saying "it".
+3. Add the detail, the exceptions and the numbers after that.
+4. Put several related questions on one page rather than a thin page for each. Google's [guide to generative AI features](https://developers.google.com/search/docs/fundamentals/ai-optimization-guide) warns that pages made for every related question "primarily to manipulate rankings" break its scaled content abuse policy.
+
+Skip FAQ markup as a way in. Google stopped showing FAQ rich results on 7 May 2026 ([Search Central changelog](https://developers.google.com/search/updates)), and People Also Ask never needed the markup anyway. A visible question and a clear answer are what Google reads.
+
+## What People Also Ask is good for now
+
+People Also Ask has stopped being a place to win traffic and become a free list of real questions. Collect them, search each one on its own, and write for the ones where small sites already rank. That's ordinary SEO aimed at longer questions, and it's the same work that gets a page into AI answers.
+
+## How this was checked
+
+- I pulled People Also Ask for five US desktop searches through `seo research serp` (DataForSEO) in November 2026, then searched five of the questions on their own. Both runs cost $0.07 in total.
+- The traffic figures are DataForSEO's US organic traffic estimates for each ranking page, across every keyword it ranks for in DataForSEO's database. They cost about 2.5 cents. The Reddit threads came through Google redirect links with no page address, so they have no estimate and show "n/a", which means missing, not zero.
+- Each search ran once. People Also Ask changes between searches, devices and countries, so the questions and answers show one snapshot.
+- Domain rank is DataForSEO's 0 to 100 score, not Ahrefs' Domain Rating. Some results came through Google redirect links with no site name, and the table describes those by the page title shown.

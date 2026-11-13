@@ -1,6 +1,12 @@
 # Changelog
 
-## Unreleased
+## 0.20.1
+
+### Fixed
+
+- The AI queries section of `seo report` no longer counts "it" meaning
+  IT as a follow-up, such as "it support salary" or "career in it".
+  "it" after a verb ("does it support") still counts.
 
 ### Changed
 

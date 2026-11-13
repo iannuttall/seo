@@ -22,6 +22,8 @@ const { entry } = Astro.props
 const { Content } = await render(entry)
 const { date, updated, draft, cover } = entry.data
 const scheduled = !draft && !isPostLive(date)
+// A post whose steps carry their own agent setup needs no closing pitch.
+const guided = entry.body?.includes('<AgentStep') ?? false
 const breadcrumbs: SchemaBreadcrumb[] = [
   { label: 'Home', href: '/' },
   { label: 'Blog', href: '/blog' },
@@ -77,6 +79,7 @@ const breadcrumbs: SchemaBreadcrumb[] = [
     <article class="docs-prose min-w-0">
       <Content components={blogMdxComponents} />
     </article>
+    {!guided && (
     <section class="mt-20 text-center" aria-labelledby="post-cta-heading" data-agent-markdown="exclude">
       <h2 id="post-cta-heading" class="text-pretty text-2xl/tight font-medium -tracking-[0.4px]">
         Run this on your own site with SEO Skill
@@ -87,6 +90,7 @@ const breadcrumbs: SchemaBreadcrumb[] = [
       <a class:list={[getButtonClasses('default', 'lg'), 'mt-6']} href="/account">Get started free</a>
       <SetupCommands id="post-setup" class="mt-8 text-left" />
     </section>
+    )}
   </main>
 </BaseLayout>
 

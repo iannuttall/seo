@@ -80,19 +80,12 @@ Another page ChatGPT cited in that test does better in Bing than in Google. Over
 
 ## How to see the fan-out searches for your own questions
 
-SEO Skill shows you the searches ChatGPT runs for the questions you care about. Ask your agent what ChatGPT searches for when people ask about your topic, or run `seo research ai_answers` with up to 10 questions. Any domain works as the target, so you can check a competitor's questions too:
+SEO Skill shows you the searches ChatGPT runs for the questions you care about. Give it up to 10 questions. Any domain works as the target, so you can check a competitor's questions too:
 
-```sh
-seo research ai_answers --target example.com --keywords "notion vs obsidian for personal notes,is obsidian good for personal notes"
-```
+<AgentStep prompt="What does ChatGPT search for when people ask: notion vs obsidian for personal notes, and is obsidian good for personal notes?" cli={'seo research ai_answers --target example.com --keywords "notion vs obsidian for personal notes,is obsidian good for personal notes"'} />
 
 Each ChatGPT answer lists the searches it ran and the pages it cited, and says whether it cited or mentioned your site. The notes rank the searches that came up most often across all your questions, which is the list to write for. The same call checks whether Google AI Mode and AI Overviews cite you, but it can't show their searches, because DataForSEO returns none for Google's engines. It runs on your own DataForSEO key, for about $0.007 a question across the three engines.
 
-An agent makes the same call through the MCP server's `seo_research` tool:
-
-```json
-{ "action": "ai_answers", "target": "example.com", "keywords": ["notion vs obsidian for personal notes", "is obsidian good for personal notes"] }
-```
 
 Pick questions your customers really ask, including the comparisons and two-part questions. In my first set, the harder questions produced 17 of the 28 searches.
 
@@ -100,9 +93,7 @@ ChatGPT decides first whether a question needs a search at all. When an answer s
 
 Google AI Mode's searches aren't visible anywhere, but the questions that led to them turn up in Search Console. The AI queries section of [`seo report`](/docs/report) finds the conversational questions and follow-ups, such as "how much is it" or "what about the pro plan", and shows which page Google showed for each one:
 
-```sh
-seo report --site example.com --section ai-queries
-```
+<AgentStep prompt="Which conversational questions and follow-ups bring my site impressions in Google, and which page shows for each?" cli="seo report --site example.com --section ai-queries" />
 
 ## How to rank for fan-out searches
 

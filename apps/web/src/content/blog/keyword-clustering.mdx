@@ -37,33 +37,17 @@ On seoskill.dev, "domain traffic checker", "website traffic checker" and "websit
 
 The opposite case is a query Google spreads across several of your pages. SEO Skill's cannibalization section lists those, and on seoskill.dev "seo mcp" is split across three pages, with about half its impressions on one and the rest on two others. That's Google telling me it can't pick a page, and the fix is to make one page the clear answer and point the others at it.
 
-Ask your agent which queries share a page, or run the raw query and page rows yourself:
+Start with the queries Google already splits across more than one of your pages:
 
-```sh
-seo data --site example.com --dimensions query,page
-```
-
-Then list the queries that Google splits across more than one of your pages:
-
-```sh
-seo report --site example.com --section cannibalization
-```
+<AgentStep prompt="Which queries does Google split across more than one page on my site?" cli="seo report --site example.com --section cannibalization" />
 
 The report checks each competing page live, so you can see a redirect or a canonical that already explains the split before you change anything.
 
 ## How to cluster keywords you don't rank for yet
 
-For a topic you haven't written about, compare the results Google shows for each keyword. With SEO Skill, give `seo research serp_overlap` between 2 and 10 keywords, and it counts how many of their top 10 pages and sites each pair shares:
+For a topic you haven't written about, compare the results Google shows for each keyword. Give SEO Skill between 2 and 10 keywords, and it counts how many of their top 10 pages and sites each pair shares:
 
-```sh
-seo research serp_overlap --keywords "coffee grinder,best coffee grinder,manual coffee grinder,how to grind coffee beans"
-```
-
-An agent makes the same call through the MCP server's `seo_research` tool:
-
-```json
-{ "action": "serp_overlap", "keywords": ["coffee grinder", "best coffee grinder", "manual coffee grinder"] }
-```
+<AgentStep prompt="Compare the Google results for coffee grinder, best coffee grinder, manual coffee grinder and how to grind coffee beans. Which belong on one page?" cli={'seo research serp_overlap --keywords "coffee grinder,best coffee grinder,manual coffee grinder,how to grind coffee beans"'} />
 
 When I ran the command for the four coffee grinder searches, no pair shared a single page in its top results. The only pair that shared any sites was "coffee grinder" and "manual coffee grinder", with two shops ranking for both. Those are the two searches where Google ranks shop pages, so the overlap and the page types point the same way.
 

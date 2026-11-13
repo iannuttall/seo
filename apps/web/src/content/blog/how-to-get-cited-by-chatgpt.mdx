@@ -42,9 +42,7 @@ Robots.txt changes take about a day to reach ChatGPT search. Your robots.txt can
 
 A crawl shows what your robots.txt allows for each AI bot, with search bots and training bots listed separately:
 
-```sh
-seo crawl --mode sites --urls example.com
-```
+<AgentStep prompt="Check which AI bots my site's robots.txt allows, with search bots and training bots listed separately." cli="seo crawl --mode sites --urls example.com" local="Crawls fetch pages from your site, so they run on your own machine." />
 
 ## Get your pages into Bing
 
@@ -154,9 +152,7 @@ ChatGPT's answers change every time you ask, so there's no position to track. A 
 
 With SEO Skill, an agent can ask your questions in ChatGPT search, Google AI Mode and Google AI Overviews and tell you whether each answer cites or mentions you, through your own DataForSEO key for less than a cent a question:
 
-```sh
-seo research ai_answers --target example.com --keywords "best invoicing software for freelancers,how to send an invoice as a freelancer"
-```
+<AgentStep prompt="Ask ChatGPT, AI Mode and AI Overviews: best invoicing software for freelancers, and how to send an invoice as a freelancer. Do the answers cite or mention my site?" cli={'seo research ai_answers --target example.com --keywords "best invoicing software for freelancers,how to send an invoice as a freelancer"'} />
 
 If you don't give it questions, it uses your site's own conversational queries from Search Console. There's a worked example on the [AI visibility checker](/features/ai-visibility-checker) page. [`seo report`](/docs/report) shows visits from ChatGPT, Perplexity, Claude, Gemini and Copilot, and which pages they land on.
 

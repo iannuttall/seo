@@ -1,4 +1,5 @@
 import CodeBlock from '@/components/CodeBlock.astro'
+import AgentStep from './AgentStep.astro'
 import BeforeAfter from './BeforeAfter.astro'
 import BrowserFrame from './BrowserFrame.astro'
 import Callout from './Callout.astro'
@@ -20,6 +21,7 @@ import VerticalBars from './VerticalBars.astro'
 
 /** Components every blog post can use without importing them. */
 export const blogMdxComponents = {
+  AgentStep,
   BeforeAfter,
   BrowserFrame,
   Callout,

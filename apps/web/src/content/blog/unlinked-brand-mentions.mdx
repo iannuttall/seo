@@ -37,17 +37,9 @@ So a mention helps you in AI answers today, and a link added to it helps you in 
 
 ## How to find unlinked mentions of your brand
 
-SEO Skill searches DataForSEO's content index for pages that name your domain, then checks your backlinks to mark which of those sites already link to you. Ask your agent to find unlinked mentions, or run:
+SEO Skill searches DataForSEO's content index for pages that name your domain, then checks your backlinks to mark which of those sites already link to you.
 
-```sh
-seo research mentions --target example.com
-```
-
-An agent makes the same call through the MCP server's `seo_research` tool:
-
-```json
-{ "action": "mentions", "target": "example.com" }
-```
+<AgentStep prompt="Find pages on other sites that mention my domain but don't link to it." cli="seo research mentions --target example.com" />
 
 The command lists one page per site and leaves out your own site. Each row says `links: yes` when the site already links to you, or `not_found` when the backlinks data has no link from it. A `not_found` site is your candidate, though it can also be a link DataForSEO hasn't crawled yet, so open the page and check before you ask. Some mentions sit in a screenshot, a code block or a comment, and some links point to your social profiles instead of your site.
 
@@ -64,15 +56,7 @@ For a free check, search Google and Bing for your domain and brand name in quote
 
 AI answers have their own version of the unlinked mention, which is an answer that names your brand but cites someone else's page. SEO Skill checks this directly. Give it the questions your customers ask:
 
-```sh
-seo research ai_answers --target example.com --keywords "question one,question two"
-```
-
-An agent makes the same call through the MCP server's `seo_research` tool:
-
-```json
-{ "action": "ai_answers", "target": "example.com", "keywords": ["question one", "question two"] }
-```
+<AgentStep prompt="Ask ChatGPT, AI Mode and AI Overviews the questions my customers ask, and tell me which answers mention my brand without citing my site." cli={'seo research ai_answers --target example.com --keywords "question one,question two"'} />
 
 Each row says whether ChatGPT, Google AI Mode and AI Overviews cited your site, mentioned it without citing, or did neither, and lists the sites each answer cited instead. A "mentioned" result tells you the engine knows your brand but found a better page to cite. The cited pages are your next targets, either to beat or to get a mention on. It costs about $0.0072 a question across the three engines.
 

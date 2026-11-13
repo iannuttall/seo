@@ -52,19 +52,12 @@ The traffic estimates keep this in proportion. Most of these pages get a handful
 
 The free [People Also Ask tool](/tools/people-also-ask-tool) lists the questions for a keyword, the page that answers each one and that page's estimated monthly traffic. When Google answers with AI text, the tool searches the question by itself and shows the top result instead, which is the step above done for you. It gives you 3 lookups a day.
 
-For more than a handful of topics, ask your agent, or run `seo research serp` with up to 5 keywords on your own DataForSEO key:
+For more than a handful of topics, SEO Skill pulls the questions for up to 5 keywords at a time on your own DataForSEO key:
 
-```sh
-seo research serp --keywords "what is a 401k,how to descale a kettle,what is a heat pump"
-```
+<AgentStep prompt="List the People Also Ask questions for what is a 401k, how to descale a kettle and what is a heat pump, and which page answers each." cli={'seo research serp --keywords "what is a 401k,how to descale a kettle,what is a heat pump"'} />
 
 The summary lists the People Also Ask questions for each keyword, in the order Google showed them, and the full JSON says which ones Google answered with AI text and which page answered the rest. Then run the same command with the questions themselves as keywords to see who ranks for each. My two runs cost about 7 cents in total.
 
-An agent makes the same call through the MCP server's `seo_research` tool:
-
-```json
-{ "action": "serp", "keywords": ["what is a 401k", "how to descale a kettle"] }
-```
 
 The traffic number in the free tool is DataForSEO's estimate for the whole page across every keyword it ranks for, not the visits one question sends. Use it to compare pages with each other, and read a modest page with steady traffic as a sign that the topic brings visits even when the exact question shows no volume.
 

@@ -57,27 +57,15 @@ The protocol's own docs set a few rules:
 
 SEO Skill sends IndexNow pings for you, so you don't need a plugin or a script. IndexNow checks that you own the site through a key file hosted on it, so start by creating the key:
 
-```sh
-seo submit key example.com
-```
+<AgentStep prompt="Set up IndexNow for my site and tell me which key file to add." cli="seo submit key example.com" />
 
-The command creates the site's IndexNow key, or reuses the one you already have, tells you which file to serve (`/<key>.txt`, containing the key) and checks that the file is live.
+SEO Skill creates the site's IndexNow key, or reuses the one you already have, tells you which file to serve (`/<key>.txt`, containing the key) and checks that the file is live.
 
 Then send each page you add or change when you publish it. A list of pages works too, with `--file urls.txt`.
 
-```sh
-seo submit https://example.com/page
-```
+<AgentStep prompt="Send the pages I changed today to IndexNow." cli="seo submit https://example.com/page" local="IndexNow limits requests from our hosted server, so sending runs on your own machine." />
 
-IndexNow is free, and the ping reaches Bing, Yandex and the other engines that take part, but not Google. The command won't send anything until the key file is live, so a missing file can't quietly waste your submissions.
-
-An agent makes the same calls through the MCP server's `seo_submit` tool, so you can ask it to "send the pages I changed today to IndexNow" after you publish:
-
-```json
-{ "action": "indexnow", "urls": ["https://example.com/page"] }
-```
-
-The key step is the action `indexnow_key`, with your site as `site`. Sites built with `seo site new` already ping IndexNow on every deploy, sending only the pages that changed.
+IndexNow is free, and the ping reaches Bing, Yandex and the other engines that take part, but not Google. SEO Skill won't send anything until the key file is live, so a missing file can't quietly waste your submissions. Sites built with `seo site new` already ping IndexNow on every deploy, sending only the pages that changed.
 
 ## How to get the same pages indexed in Google
 
@@ -89,19 +77,9 @@ Its Bing add-on sends every URL in the job to Bing as well, with no key file, no
 
 If you can host a key file, use IndexNow for Bing and the other engines for free. Use Index My Site for Google, and add Bing to it when you can't or don't want to set up IndexNow.
 
-Connect your Index My Site account to SEO Skill once, which opens a browser sign-in with no key to paste:
+Connect your Index My Site account to SEO Skill once, with a browser sign-in and no key to paste. On the hosted server that's the Connect button on your [account page](/account#indexmysite); in a terminal it's `seo providers indexmysite connect`. Then send the pages. SEO Skill shows the cost and your credit balance first and asks before it spends anything:
 
-```sh
-seo providers indexmysite connect
-```
-
-Then add `--indexmysite` to the submit command, and `--bing` to send the same pages to Bing. It shows the cost and your credit balance first and asks before it spends anything:
-
-```sh
-seo submit https://example.com/page --indexmysite --bing
-```
-
-Through the MCP server, the `seo_submit` action `indexmysite` returns a quote first, and your agent has to send the call again with `confirm: true` before any credits are spent.
+<AgentStep prompt="Send my new pages to Google and Bing with Index My Site. Show me the cost first." cli="seo submit https://example.com/page --indexmysite --bing" />
 
 Neither route gets a weak page indexed. Thin, duplicate or blocked pages tend to stay out whatever you send.
 
@@ -109,9 +87,7 @@ Neither route gets a weak page indexed. Thin, duplicate or blocked pages tend to
 
 Once Bing is [connected](/docs/bing), the Bing section of the report puts Bing's top queries and pages next to Google's clicks, impressions and position for the same query:
 
-```sh
-seo report --site example.com --section bing
-```
+<AgentStep prompt="Compare my site's Bing queries and pages with Google's." cli="seo report --site example.com --section bing" local="Bing blocks our hosted server, so Bing data runs on your own machine." />
 
 Look for pages you sent through IndexNow that still have no Bing impressions after a couple of weeks, and for pages that do well in Bing and badly in Google, or the other way round. Bing lists only its top queries and pages, so a page missing from the list is unknown rather than proof that Bing ignores it.
 

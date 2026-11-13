@@ -1,0 +1,91 @@
+---
+// One how-to step in a blog post: a prompt to give your agent, the CLI
+// command for the same step, and how to set SEO Skill up for it. Setup
+// shows the hosted MCP; `local` gives the reason a step runs on the
+// reader's machine (Bing, IndexNow, crawls) and shows the install instead.
+// The first step's setup starts open; later ones stay folded.
+import { Copy01Icon, Tick02Icon } from '@hugeicons/core-free-icons'
+import HugeIcon from '@/components/HugeIcon.astro'
+import SetupCommands from '@/components/SetupCommands.astro'
+import { setupCommands } from '@/lib/site'
+
+type Props = { prompt: string; cli?: string; local?: string }
+
+const { prompt, cli, local } = Astro.props
+const id = `agent-step-${Math.random().toString(36).slice(2, 8)}`
+---
+
+<div class="agent-step mt-6 mb-8 rounded-lg bg-muted p-5" data-agent-step>
+  <p class="text-sm font-medium text-foreground">Ask your agent</p>
+  <button
+    type="button"
+    class="group mt-2 flex w-full min-w-0 items-start gap-3 rounded-lg bg-background px-4 py-3 text-left text-base/7 text-foreground outline-none transition-colors hover:bg-secondary-hover focus-visible:ring-[3px] focus-visible:ring-ring/20"
+    data-copy-value={prompt}
+    aria-label="Copy the prompt"
+  >
+    <span class="min-w-0 flex-1">{prompt}</span>
+    <span class="mt-1.5 shrink-0 text-foreground-muted group-hover:text-foreground">
+      <HugeIcon icon={Copy01Icon} class="size-4" data-copy-icon />
+      <HugeIcon icon={Tick02Icon} class="hidden size-4" data-copy-check-icon />
+    </span>
+  </button>
+  {
+    cli ? (
+      <div class="mt-4">
+        <p class="text-sm/6 text-foreground-muted">Or in a terminal</p>
+        <button
+          type="button"
+          class="group mt-1 flex w-full min-w-0 items-center gap-3 rounded-lg bg-background px-4 py-2.5 text-left font-mono text-sm text-foreground outline-none transition-colors hover:bg-secondary-hover focus-visible:ring-[3px] focus-visible:ring-ring/20"
+          data-copy-value={cli}
+          aria-label="Copy the command"
+        >
+          <span class="min-w-0 flex-1 overflow-x-auto whitespace-nowrap">{cli}</span>
+          <span class="shrink-0 text-foreground-muted group-hover:text-foreground">
+            <HugeIcon icon={Copy01Icon} class="size-4" data-copy-icon />
+            <HugeIcon icon={Tick02Icon} class="hidden size-4" data-copy-check-icon />
+          </span>
+        </button>
+      </div>
+    ) : null
+  }
+  <details class="mt-4" data-agent-setup data-agent-markdown="exclude">
+    <summary class="cursor-pointer text-sm font-medium text-foreground">
+      {local ? 'First time? Install SEO Skill on your machine' : 'First time? Connect SEO Skill to your agent'}
+    </summary>
+    {
+      local ? (
+        <div class="mt-3">
+          <button
+            type="button"
+            class="group flex w-full min-w-0 items-center gap-3 rounded-lg bg-background px-4 py-3 text-left font-mono text-sm text-foreground outline-none transition-colors hover:bg-secondary-hover focus-visible:ring-[3px] focus-visible:ring-ring/20"
+            data-copy-value={setupCommands.install}
+            aria-label="Copy the install command"
+          >
+            <span class="min-w-0 flex-1 overflow-x-auto whitespace-nowrap">{setupCommands.install}</span>
+            <span class="shrink-0 text-foreground-muted group-hover:text-foreground">
+              <HugeIcon icon={Copy01Icon} class="size-4" data-copy-icon />
+              <HugeIcon icon={Tick02Icon} class="hidden size-4" data-copy-check-icon />
+            </span>
+          </button>
+          <p class="mt-2 text-sm/6 text-foreground-muted">
+            {local} It installs the CLI, signs you in and adds SEO Skill to your agents, so the prompt above works.
+          </p>
+        </div>
+      ) : (
+        <div class="mt-3 rounded-lg bg-background p-4">
+          <SetupCommands id={id} hostedOnly />
+          <p class="mt-1 text-sm/6 text-foreground-muted">It's free to start. Once you've signed in, the prompt above works.</p>
+        </div>
+      )
+    }
+  </details>
+</div>
+
+<script>
+  // Open the first step's setup, once per page.
+  const first = document.querySelector('[data-agent-setup]')
+  if (first instanceof HTMLDetailsElement && !first.dataset.opened) {
+    first.dataset.opened = 'true'
+    first.open = true
+  }
+</script>

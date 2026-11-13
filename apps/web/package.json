@@ -34,7 +34,7 @@
     "@seo/core": "workspace:*",
     "@tailwindcss/vite": "^4.3.3",
     "alpinejs": "^3.17.5",
-    "astro": "^7.4.2",
+    "astro": "^7.4.7",
     "hono": "^4.13.14",
     "lucide": "^1.69.0",
     "saxes": "^6.0.0"

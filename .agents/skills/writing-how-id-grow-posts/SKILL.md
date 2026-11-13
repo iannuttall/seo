@@ -81,9 +81,9 @@ Frontmatter:
 
 ```yaml
 title: How I'd grow <Company> with SEO        # 30 to 60 characters
-description: ...                              # 70 to 160 characters
+description: ...                              # one plain sentence, 70 to 160 characters
 heading: How I'd grow <Company>
-lead: One or two sentences with the finding.
+lead: One or two short sentences, as you'd say it out loud.
 date: 'YYYY-MM-DD'                            # the day it ships; the post goes live as soon as it's approved
 company: <Company>
 x:
@@ -103,6 +103,17 @@ Cover: every post gets illustrated art, saved as `apps/web/public/blog/covers/<s
 - Save it at 1200×630: `magick in.png -resize 1200x630^ -gravity center -extent 1200x630 -quality 70 -define webp:method=6 <out>.webp`, under about 250 KB.
 - Build the site and check `dist/blog/<slug>/index.png`: the title must be legible and clear of the subject.
 
+Voice (from Ian, November 2026; applies to every blog post):
+
+- **Write it like Ian talking to someone he respects, with an opinion.** The research makes the post right; it isn't the post. A teardown is still a person saying what they'd do and why, not a report.
+- **Keep the description and lead short and plain.** Say what the post is about in the words you'd use out loud. Don't stack the finding, the method and the promise into one sentence.
+- **Don't open on whatever prompted the post.** A tweet, a thread or a conversation can be the idea without being cited, credited or dated in the opening. If it earns a mention, put it lower down.
+- **Not every point needs a number or a date.** Use one where it changes what the reader believes. A paragraph can just be an opinion, an example or what Ian would do. Avoid a date or count in every sentence and every heading.
+- **Skip the formula.** No key findings box unless the post is a long data report, no heading that is a stat with a count, and no "N things" framing when plain words work. Vary the shape of sections; they don't all need claim, source, number, steps.
+- **Say only what the reader needs.** No background, history or naming for its own sake: "AEO, also called GEO" is enough, not which term is older. Cut any sentence that doesn't help the reader understand the point or act on it.
+- **Headings name the thing.** Every H2 says plainly what the section is about: "Where AEO and SEO actually differ", not "So what actually changed?". No teaser or rhetorical headings. They don't have to carry a keyword, and never stuff one in.
+- **Sources back up a point; they aren't the structure.** Quote one or two lines that make the point better than paraphrase, link the rest.
+
 Series rules:
 
 - **One domain beats subdomains; less is more.** Recommend folding subdomains and side sites into subfolders on the main domain, or into the platform's post path when it can't serve folders, with a 301 from every old address. Make an exception only with evidence against it, and say what the evidence is. The referring domain counts from step 8 show what each move gains.
@@ -111,9 +122,9 @@ Series rules:
 - **An Ahrefs count is a minimum.** A count of ranking pages, spam accounts or links that Ahrefs finds is the floor, not the total: write "starting with the 24 that rank", not "the 24 accounts".
 - **Brand search is a strength, not a problem.** Call searches for the company's own name brand searches (or brand search, brand demand), the industry term, never "people typing its name". Brand demand shows the company is known, and Google already treats it as an entity, which makes non-brand pages easier to rank. Frame the gap as non-brand search: the people who need the product and don't know the brand yet. Leave brand searches out of keyword gap tables and say so in the caption. When the name is a common word (Amp, Linear, Notion), searches for the word aren't all brand demand: say what else the word means and treat only the clearly branded searches ("amp code", "ampcode") as brand.
 - **Only findings go in the post.** The research steps are a checklist for you, not a list of sections. When a step finds nothing to act on, leave it out: no heading, no "I checked X and found nothing". Keep an absence only when the absence is the finding ("Amp was in none of 28 AI answers").
-- **Lead with the finding, not the method.** Open a section with what's true, not "I requested..." or "I pulled...". The method goes in a short clause or the exhibit caption.
+- **Lead with the point, not the method.** Open a section with what's true, not "I requested..." or "I pulled...". The method goes in a short clause or the exhibit caption.
 - **No judgment words.** "Unusually", "remarkably", "impressively", "well set up", "strong" and the like say nothing a reader can check. State the fact instead.
-- Load the `writing-research-led-content` skill and follow it; it sets the writing standard.
+- Load the `writing-research-led-content` skill for the research and accuracy standard. Where its structure rules (counts in headings, key findings, a date on every claim) make a post read like a report, the voice rules above win.
 - **Real tables, not code blocks.** Never line up columns with spaces in a code block. Use `UrlMap`, `KeywordTable` or a Markdown table, and check it at 390px.
 
 Sections, in this order, adjusted to the company:
@@ -127,7 +138,7 @@ Sections, in this order, adjusted to the company:
 6. AI search: what crawlers get (step 10) and the AI answer findings from step 13, by engine and kind of question, with the fixes the platform allows.
 6a. Links and PR (step 14): the link gap as a `UrlMap` or table, the data reports with draft headlines, and the outreach list an agent can work through with the company approving each email. Leave the section out when step 14 finds nothing to act on.
 7. Technical fixes, closest to revenue first. Each gets an `###` subsection: what it is in plain words, an exhibit that shows it, **The fix:** with best practice, and how to confirm it worked.
-8. The plan, under a descriptive heading with the count and what the changes win, in the company's own terms ("10 changes to send US searches to US pages and get stripe.com cited"), never a bare "The plan": every change as a numbered list (`PlanSteps`, no "Agent 1" labels), then how to check the results (`PlanSteps` with `marker: "Day 0"` and so on). No implementation timeline, and no lines about shipping it all today, sprints or agents running in parallel.
+8. The plan, under a heading that says what it gets the company in plain words ("What I'd change to send US searches to US pages"), never a bare "The plan": every change as a numbered list (`PlanSteps`, no "Agent 1" labels), then how to check the results (`PlanSteps` with `marker: "Day 0"` and so on). No implementation timeline, and no lines about shipping it all today, sprints or agents running in parallel.
 9. Get the changes seen quickly: Index My Site for every changed and new URL.
 10. How I ran this: the hosted MCP first (free, Google sign-in, research key on the account page), then the CLI for crawling, then the prompt. No disclosure line: it's a product site, so readers can see we build the tools.
 

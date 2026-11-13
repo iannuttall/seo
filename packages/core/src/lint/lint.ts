@@ -36,6 +36,8 @@ export const LINT_REVIEW_LENSES: Record<string, string> = {
   metaphor:
     'A figure of speech that may not fit, such as a thing that "waits" or "wants".',
   evidence: 'A superlative with no number or source nearby.',
+  absolute:
+    'A claim that covers every case, such as "and nothing else" or "the only way", that may be broader than its source.',
   'mic-drop': 'A short closing line that may only restate the paragraph.',
   'swap-test':
     'A headline or description that could sit on a competitor’s page unchanged.',

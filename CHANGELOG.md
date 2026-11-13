@@ -1,5 +1,13 @@
 # Changelog
 
+## Unreleased
+
+### Added
+
+- `seo lint` asks about claims that cover every case, such as "and
+  almost nothing else", "the only way" or "never works", as an `absolute`
+  review item: is the source as broad as the sentence?
+
 ## 0.20.1
 
 ### Fixed

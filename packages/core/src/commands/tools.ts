@@ -42,7 +42,7 @@ import {
   SERP_DEPTH,
 } from './research.js'
 import type { ResearchStore } from './research-cache.js'
-import { DIMENSIONS, REGEX_MAX_CHARS, rowTextFilters, runRows } from './rows.js'
+import { DIMENSIONS, rowsInput, rowTextFilters, runRows } from './rows.js'
 import {
   runSimpleAnalyticsRows,
   simpleAnalyticsKey,
@@ -718,7 +718,7 @@ export const SHARED_TOOLS: SharedTool[] = [
     name: 'seo_data',
     command: 'data',
     title: 'Raw rows',
-    description: `Raw rows for questions the report does not answer. search_console (default): rows for any dimensions, each with the previous period and the change; page and query narrow to rows whose URL or query contains that text; page_regex, query_regex and exclude_query_regex take RE2 regexes for custom cuts. google_analytics: landing pages for visits from search, with Google Analytics’ own metric names. bing: Bing Webmaster query or page rows (first dimension) for the same site, by week. clicky: landing-page visits, traffic sources and search engines from a Clicky site the person saved (site is its domain or Clicky site ID; at most 31 days). simple_analytics: landing-page visitors, referrers, utm_source tags and AI tools from Simple Analytics with the API key the person saved (site is its domain).`,
+    description: `Raw rows for questions the report does not answer. search_console (default): rows for any dimensions, each with the previous period and the change, from web search or with search_type from image, video, news, Discover or Google News; page and query narrow to rows whose URL or query contains that text; page_regex, query_regex and exclude_query_regex take RE2 regexes for custom cuts. google_analytics: landing pages for visits from search, with Google Analytics’ own metric names. bing: Bing Webmaster query or page rows (first dimension) for the same site, by week. clicky: landing-page visits, traffic sources and search engines from a Clicky site the person saved (site is its domain or Clicky site ID; at most 31 days). simple_analytics: landing-page visitors, referrers, utm_source tags and AI tools from Simple Analytics with the API key the person saved (site is its domain).`,
     input: z.object({
       source: z.enum(DATA_SOURCES).default('search_console'),
       site: z
@@ -730,38 +730,11 @@ export const SHARED_TOOLS: SharedTool[] = [
       dimensions: z
         .array(z.enum(DIMENSIONS))
         .max(4)
-        .default(['query'])
-        .describe('search_console; bing uses the first, query or page.'),
-      page: z
-        .string()
-        .min(1)
-        .optional()
-        .describe('search_console only: URL text, such as /blog/.'),
-      query: z
-        .string()
-        .min(1)
-        .optional()
-        .describe('search_console only: query text.'),
-      page_regex: z
-        .string()
-        .min(1)
-        .max(REGEX_MAX_CHARS)
-        .optional()
-        .describe('search_console only: RE2 the page URL must match.'),
-      query_regex: z
-        .string()
-        .min(1)
-        .max(REGEX_MAX_CHARS)
-        .optional()
-        .describe('search_console only: RE2 the query must match.'),
-      exclude_query_regex: z
-        .string()
-        .min(1)
-        .max(REGEX_MAX_CHARS)
         .optional()
         .describe(
-          'search_console only: RE2 for queries to leave out, such as the brand.',
+          'search_console, default query (page for discover and google_news); bing uses the first, query or page.',
         ),
+      ...rowsInput,
       ...dates,
       ...detail,
     }),
@@ -805,7 +778,7 @@ export const SHARED_TOOLS: SharedTool[] = [
         return runBingRows(
           {
             site: input.site,
-            dimension: input.dimensions[0] === 'page' ? 'page' : 'query',
+            dimension: input.dimensions?.[0] === 'page' ? 'page' : 'query',
             startDate: input.start_date,
             endDate: input.end_date,
             detail: input.detail,
@@ -846,6 +819,7 @@ export const SHARED_TOOLS: SharedTool[] = [
             queryRegex: input.query_regex,
             excludeQueryRegex: input.exclude_query_regex,
           }),
+          searchType: input.search_type,
           startDate: input.start_date,
           endDate: input.end_date,
           detail: input.detail,

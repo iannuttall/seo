@@ -1,0 +1,80 @@
+---
+title: How to find your image search traffic in Search Console
+description: Search Console shows web search unless you change the search type. Check how often Google Images shows your site, then fix the pages it shows most.
+heading: How to find your image search traffic in Search Console
+lead: Search Console's Performance report opens on web search, so Google Images traffic never shows in the usual view. On most of my sites it's tiny. On one, Google Images shows the site a third as often as web search does.
+date: '2026-11-14'
+draft: false
+cover:
+  alt: "A Victorian engraved archivist, seen over her shoulder, sorting photographic prints laid flat on her desk under a lamp, sliding one glowing lime green print toward her."
+  title: left
+---
+
+Search Console's Performance report shows web search unless you change the search type. Google Images has its own search type, which Google's [Performance report help](https://support.google.com/webmasters/answer/7576553) describes as "search traffic from results shown in the Google Images tab". Its impressions and clicks are kept apart from web search, so you only see them when you ask for them.
+
+Two kinds of image traffic aren't in it. Image thumbnails in the normal results count as web search, and searches made with Google Lens or Circle to Search count as "Web: multimodal".
+
+## Check whether Google Images matters to your site
+
+Image search was a rounding error on most of my sites, and a third as big as web search on one. Over the 28 days to 10 November 2026, 27 of my sites had at least 1,000 web search impressions:
+
+- 7 of the 27 had no image search impressions at all.
+- On the 20 that did, Google Images showed the site a median 0.3% as often as web search.
+- 3 of the 20 got at least 10% as many image impressions as web impressions. The biggest got 34%: 1.36 million image impressions beside 4.05 million in web search.
+
+Image clicks were smaller still. Across the 20 sites, Google Images sent 2,629 clicks and web search sent 144,984, about 2%. The biggest image site got 2,554 of those image clicks, and the other 19 sites got 75 between them.
+
+So check before you plan a project around Google Images. SEO Skill's report overview raises Google Images only when it reaches 10% of your web impressions. Below that, I'd put the time into the pages people find in web search, and still write alt text for accessibility as you go.
+
+## How to see your image search traffic with SEO Skill
+
+Ask for the image search section of the report. It compares Google Images with web search, lists the pages with the most image impressions beside the previous period, and checks the images on the top 20 pages:
+
+<AgentStep setup prompt="How much does Google Images show example.com compared with web search, and which pages does it show most?" cli="seo report --site example.com --section image-search" />
+
+To see what people searched for when Google Images showed one page, ask for that page's image searches:
+
+<AgentStep prompt="Which Google Images searches show example.com/garden-paths, with impressions and clicks?" cli="seo data --site example.com --search-type image --dimensions query --page-regex '/garden-paths/?$'" />
+
+Search Console leaves anonymized queries out of this list to protect privacy, so a page's rarest image searches won't show.
+
+In Search Console itself, open the Performance report, click Search type and pick Image.
+
+## Expect a low click-through rate from Google Images
+
+Image search counts clicks differently from web search. Google's [help on how clicks are counted](https://support.google.com/webmasters/answer/7042828) says "Clicks to expand a thumbnail image are not counted as clicks". A click on the expanded image, or any click that takes the searcher off Google, is.
+
+On the 6 of my sites with at least 1,000 image impressions, Google Images got a median of about a sixth of each site's web search click-through rate. On the biggest one, image search got 0.19% and web search got 0.61%. Five of the six got 34 image clicks or fewer, so treat that as a rough guide.
+
+Two more rules from the same help page change how you read the numbers:
+
+- An image is "simply a link to the URL of the host page", so all the images on one page share one row. An impression counts once per page, however many of its images showed.
+- In the Google Images tab, an impression only counts when the image has been scrolled into view, and position counts left to right, then top to bottom. Google says image position "describes only very roughly how far down the image appeared": position 11 can be the second row on desktop or the sixth on mobile.
+
+So judge a page's image clicks against its own earlier weeks.
+
+## Fix the images on the pages Google Images already shows
+
+Start with the pages that already get image impressions. Google has already indexed at least one image from each of them, so they're the safest place to start.
+
+The report's live check reads each top page's HTML and counts the problems Google's [image SEO guide](https://developers.google.com/search/docs/appearance/google-images) names:
+
+| What the check counts | What Google's guide says |
+| --- | --- |
+| Missing or empty alt text | Alt text is "the most important attribute when it comes to providing more metadata for an image". Accessibility guidance, not Google's, says an empty `alt=""` is right only for decorative images. |
+| File names that look generic, such as `IMG00023.JPG` or a long hash (a heuristic) | File names give "very light clues" about what an image shows. |
+| Background images set in a `style` attribute | "Google doesn't index CSS images", so a picture that matters needs an `<img>` element. |
+| No `og:image` | It's one of the ways to tell Google which image represents the page. |
+
+When I ran the check on my biggest image site, 150 of the 182 images on its top 20 pages had empty alt text. Those 20 pages still got 426,546 image impressions over the 28 days. Search Console counts image impressions for the whole page, so I can't tell which images Google showed. Every one of those pages also had at least one image with alt text.
+
+Write each alt text from the page's image searches. If a page shows for "herringbone brick path pattern", describe the pattern in those words, the way you'd describe it to someone who can't see it. Don't paste the same keyword into every image: Google's guide counts that as keyword stuffing.
+
+I haven't measured how much better alt text moves image clicks, so treat it as a test. Fix the top pages, then run the report again in four to eight weeks and compare each page's image clicks with the period before.
+
+## How this was checked
+
+- The figures come from the Search Console sites I run, over the 28 days from 14 October to 10 November 2026, using Google's final data.
+- I kept the 27 sites with at least 1,000 web search impressions, and compared each one's web search and image search totals.
+- The click-through rate comparison uses the 6 sites with at least 1,000 image search impressions.
+- The live image check read the HTML of the 20 pages with the most image impressions on one site, as served. Images added by scripts and background images set in stylesheets aren't counted.

@@ -1,6 +1,6 @@
 # Changelog
 
-## Unreleased
+## 0.21.0
 
 ### Added
 
@@ -24,6 +24,12 @@
 - `seo lint` asks about claims that cover every case, such as "and
   almost nothing else", "the only way" or "never works", as an `absolute`
   review item: is the source as broad as the sentence?
+
+### Fixed
+
+- `seo lint` no longer reads an acronym as a named alternative, so "for
+  the job, not for an image API" gets a contrast warning instead of only a
+  review item. "not from Google" is still left for a reader to judge.
 
 ## 0.20.1
 

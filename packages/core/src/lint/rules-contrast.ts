@@ -252,8 +252,9 @@ export function contrastReframe(ctx: Context) {
         const end =
           sentence.start + at + found[0].length + right.trimEnd().length
         // A named alternative ("not from Google") is often a correction a
-        // reader needs, so a reader judges it.
-        const named = repeated && /\b[A-Z]/.test(right)
+        // reader needs, so a reader judges it. An acronym alone ("not for
+        // an image API") names nothing.
+        const named = repeated && /\b[A-Z][a-z]/.test(right)
         // A repeated preposition alone ("in the folder, not in email") is
         // often a plain correction: a warning, unless the other half is a
         // count ("not in 600 posts", "not by how many pages").

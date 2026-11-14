@@ -2805,6 +2805,11 @@
       "expect": ["anaphora"]
     },
     {
+      "id": "tell-316",
+      "text": "People search for the job, not for an image API.",
+      "expect": ["contrast-reframe"]
+    },
+    {
       "id": "control-522",
       "text": "The API isn't rate limited. The dashboard is rate limited at 10 requests a minute.",
       "expect": null

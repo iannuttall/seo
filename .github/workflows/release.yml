@@ -118,6 +118,22 @@ jobs:
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           git tag --annotate "$RELEASE_TAG" --message "Release seo@$RELEASE_VERSION"
           git push origin "$RELEASE_TAG"
+      # The MCP Registry checks that the npm package exists, so this runs
+      # after npm publish. seoskill.dev/.well-known/mcp-registry-auth holds
+      # the public half of MCP_REGISTRY_PRIVATE_KEY.
+      - name: Publish to the MCP Registry
+        if: steps.release.outputs.published == 'false' && (github.event_name == 'push' || inputs.dryRun == 'false')
+        env:
+          MCP_PUBLISHER_VERSION: 1.8.9
+          MCP_REGISTRY_PRIVATE_KEY: ${{ secrets.MCP_REGISTRY_PRIVATE_KEY }}
+        run: |
+          base="https://github.com/modelcontextprotocol/registry/releases/download/v${MCP_PUBLISHER_VERSION}"
+          curl --fail --silent --show-error --location --remote-name "${base}/mcp-publisher_linux_amd64.tar.gz"
+          curl --fail --silent --show-error --location --remote-name "${base}/registry_${MCP_PUBLISHER_VERSION}_checksums.txt"
+          grep ' mcp-publisher_linux_amd64.tar.gz$' "registry_${MCP_PUBLISHER_VERSION}_checksums.txt" | sha256sum --check -
+          tar xzf mcp-publisher_linux_amd64.tar.gz mcp-publisher
+          ./mcp-publisher login http --domain seoskill.dev --private-key "$MCP_REGISTRY_PRIVATE_KEY"
+          ./mcp-publisher publish
       - name: Report existing release
         if: steps.release.outputs.published == 'true'
         env:

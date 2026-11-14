@@ -1,0 +1,71 @@
+---
+title: How to find (not provided) keywords with Search Console
+description: Google Analytics, Clicky and other analytics tools can't see the Google search behind a visit. Search Console has the searches behind each landing page.
+heading: How to find the searches behind (not provided) in your analytics
+lead: Your analytics tool doesn't show you the search behind a visit from Google. Search Console shows you the searches behind each landing page, and that's the closest you can get.
+date: '2026-11-14'
+draft: false
+cover:
+  alt: "A Victorian engraved clerk, seen over his shoulder, peeling a paper strip off a ledger to show a line of handwriting glowing lime green beneath."
+  title: left
+---
+
+Google Analytics shows (not provided) where the organic keyword used to be. Google began hiding the search terms behind clicks from its results in October 2011, when it [started encrypting searches for signed-in users](https://googleblog.blogspot.com/2011/10/making-search-more-secure.html). Google's [Analytics help](https://support.google.com/analytics/answer/11242841) now says most Google searches run over HTTPS, "which causes the keyword dimension to automatically be set to (not provided)".
+
+It isn't only Google Analytics. Your site never receives the search, so Clicky, Simple Analytics and the rest see that a visit came from Google but not what was typed.
+
+The searches still exist in Search Console. You can't tie them to a single visit, but you can tie them to the page someone landed on. That's the join I use, and on my own sites it names the searches behind about a quarter of the clicks on a typical site.
+
+## Search Console has the searches by landing page
+
+Google's own link between Search Console and Google Analytics works by page. Its [guide to the Search Console integration](https://support.google.com/analytics/answer/10737381) says Search Console metrics "are only compatible with Search Console dimensions" and three Google Analytics dimensions: landing page, device and country.
+
+So the question you can answer is "which searches bring people to this page?". The search one visitor typed stays hidden. That's enough to see what each page is found for, which pages earn their visits from which searches, and where a page is shown for a search it doesn't answer well.
+
+## How to see the searches behind each page with SEO Skill
+
+Connect your Google account once and SEO Skill reads Search Console and Google Analytics with the same sign-in. It also reads landing pages from Clicky or Simple Analytics when you add their key. Start with the pages that get the most visits from search:
+
+<AgentStep setup prompt="Which pages on example.com get the most visits from organic search in my analytics, and which Google searches bring people to each one?" cli="seo analytics google report --property 123456789" />
+
+Your agent reads the landing pages from your analytics, then asks Search Console for each page's searches. Google Analytics splits landing pages by channel, so it can list the pages people reach from search. Clicky and Simple Analytics count each landing page's visits from every source, so read their top pages as your busiest pages overall, not only from search. With Clicky the first command is `seo data --source clicky --site example.com`.
+
+In a terminal it's two commands: `seo analytics google properties` lists your property numbers for the first, and this gives every page with its searches:
+
+<AgentStep prompt="List the Google searches for every page on example.com, with clicks and position." cli="seo data --site example.com --dimensions page,query" />
+
+For one page, ask for its searches directly:
+
+<AgentStep prompt="Show me the Google searches that bring people to example.com/pricing, with clicks, impressions and position." cli="seo page --url https://example.com/pricing" />
+
+That gives every search Search Console lists for the page, with the previous period beside it, plus a live check of the page itself.
+
+To see which searches land on pages that earn sign-ups or sales, ask for the report's quick wins. When the site's Google Analytics property records key events, the report lists the pages with key events from organic search first. Those counts cover the whole page, whichever search brought each visit:
+
+<AgentStep prompt="Which of my quick wins in Search Console are on pages that bring key events in Google Analytics?" cli="seo report --site example.com --section quick-wins" />
+
+## How much of a page's traffic Search Console can name
+
+On 18 of my sites, over the 28 days to 10 November 2026, the searches Search Console lists named 26% of landing page clicks on the middle site. Site by site the share ran from 1% to 71%.
+
+The rest are anonymized queries: searches so rare that Google leaves them out of Search Console's list to protect privacy, while still counting their clicks in each page's total. The biggest site in the set, with about 24,700 clicks, could name 64% of them. That one site has two thirds of all the clicks, so across the 18 sites together the share is 52%, and 29% without it. Twelve of the other 17 sites could name less than a third.
+
+So the join works, but on most of my smaller sites most of a page's clicks stay unnamed. Bing's query report shows many of the long searches Google leaves out, though not which of your pages they land on. My [post on the long-tail searches Search Console hides](/blog/bing-long-tail) compares the two.
+
+## Keep sessions, visits and clicks apart
+
+Google Analytics counts sessions, and its Organic Search channel includes visits from every search engine, not only Google. Clicky counts visits and Simple Analytics counts visitors, each in its own way and from every source. Search Console counts clicks from Google Search. So for a page with 1,000 organic sessions and 700 Search Console clicks, the 300 aren't necessarily lost visits. Bing, DuckDuckGo and the rest are in the first number and not the second, and consent banners and blockers can push Google Analytics below Search Console.
+
+Compare them at page level and read each in its own terms. Don't divide a page's sessions or visits among its searches by their share of clicks, because that guesses at exactly the thing Google hides.
+
+## What to do with the searches behind a page
+
+Read each top page's searches as a list of what people expected to find there. When the searches match the page, it's doing its job. When a page gets impressions for searches it doesn't answer, add the answer to that page, near the top of a section, in the searcher's words.
+
+Then check the page's title against its main search. The quick wins section lists searches at positions 4 to 10 that get fewer clicks than your site's own rate, with the live title of the top pages, so you can see which titles leave the search out. Search it yourself first: if Google answers it on the results page, a new title won't bring the clicks back.
+
+## How this was checked
+
+- The figures come from 18 sites I run with Search Console, each with at least 50 clicks over the 28 days to 10 November 2026.
+- For each site I compared clicks by page with clicks by page and search together. The second leaves out anonymized queries, so the gap between them is what Search Console can't name.
+- Sites where either the page rows or the page and search rows reached the API's 25,000-row limit are left out, because their share would be a lower limit. So are sites with fewer than 50 clicks.

@@ -33,7 +33,7 @@ Without a section, the report returns the overview: clicks, impressions, click-t
 
 If [Bing is connected](/docs/bing) in the CLI or the local MCP server, the overview also shows Google and Bing clicks and impressions for the same dates, and each engine's share of those clicks. The two are never added together. When Bing sends more clicks than Google, Bing's own overview follows, with the pages and queries that moved.
 
-The overview also lists clicks and impressions from image search, video search, the News tab, Discover and Google News, each counted apart from web search. When one of them has at least a tenth as many impressions as web search, the report says how it compares, and your agent asks whether that traffic matters to you before it opens the pages with [`seo data`](/docs/data).
+The overview also lists clicks and impressions from image search, video search, the News tab, Discover and Google News, each counted apart from web search. When one of them has at least a tenth as many impressions as web search, the report says how it compares, and your agent asks whether that traffic matters to you. For image search, it then opens the `image-search` section; for the others, the pages from [`seo data`](/docs/data).
 
 The overview also shows your Google Analytics sessions for the same dates. You do not pick the property: the report finds the one whose web stream matches the site, names it, and shows:
 
@@ -61,6 +61,7 @@ The quick wins, low CTR, striking distance and content decay sections are covere
 | `cannibalization` | Queries where more than one of your pages gets impressions, with each page's share. |
 | `traffic-drop` | Daily clicks and impressions checked for sudden changes, with Google updates whose dates overlap. |
 | `ai-queries` | Queries that look like AI conversations and agent searches: replies such as "yes", follow-ups such as "what about…" or "how much is it", agent prompts, search operators and long chat-style questions. Rewordings are grouped into one question, and follow-ups that reach one page on one day are joined into trails. A heuristic, covering the last 90 days. |
+| `image-search` | Pages that show in Google Images, most image impressions first, with their clicks against the previous period. The top 20 are fetched live and checked for images with no alt text or empty alt text, file names such as IMG_0023, background images set in CSS, and a missing og:image. |
 | `google-updates` | The latest Google ranking update laid over your clicks: the update's days against the same number of days before, whether that is more movement than usual for your site, and the folders, pages and queries that moved most. Add an end date for an earlier update. |
 | `bing` | Bing's top queries and pages with Google's numbers for the same rows beside them, how many queries each engine lists, and pages that one engine shows and the other doesn't. Needs [Bing connected](/docs/bing) in the CLI or the local MCP server. |
 

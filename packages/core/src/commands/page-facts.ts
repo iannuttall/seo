@@ -5,7 +5,7 @@ import {
   hasXRobotsDirective,
 } from '../robots-directives.js'
 import { traceRedirects } from './redirect-chain.js'
-import type { PageFacts } from './types.js'
+import type { ImageFacts, PageFacts } from './types.js'
 
 // Live facts for report URLs: status, redirect target, title, meta
 // description, first H1, canonical and robots. One request per URL, no
@@ -50,7 +50,17 @@ export function headFacts(
 ): Pick<
   PageFacts,
   'title' | 'description' | 'h1' | 'canonical' | 'robots' | 'google_noindex'
-> {
+> & { images: ImageFacts } {
+  const images: ImageFacts = {
+    img: 0,
+    no_alt: 0,
+    empty_alt: 0,
+    generic_names: 0,
+    generic_examples: [],
+    css_backgrounds: 0,
+    og_image: null,
+    capped: false,
+  }
   let title: string | null = null
   let h1: string | null = null
   let inTitle = false
@@ -64,6 +74,7 @@ export function headFacts(
   const parser = new Parser(
     {
       onopentag(name, attributes) {
+        countImage(images, name, attributes, url)
         if (name === 'title' && !titleDone) {
           inTitle = true
           title ??= ''
@@ -127,11 +138,63 @@ export function headFacts(
     canonical,
     robots: robots.length ? robots.join(', ') : null,
     google_noindex: hasMetaRobotsDirective(google, 'noindex'),
+    images,
+  }
+}
+
+// Camera, screenshot and placeholder names, bare numbers and long hashes:
+// names that say nothing about the image. A heuristic.
+const GENERIC_NAME =
+  /^((img|image|dsc|dscn|dcim|pxl|pic|photo|screenshot|screen[-_ ]shot|untitled|unnamed|file|scan)[-_ ]?\d*([-_ ]\d+)*|\d+|[0-9a-f]{16,}|[0-9a-f]{8}(-[0-9a-f]{4}){3}-[0-9a-f]{12})$/i
+
+// The file name an image URL ends in, without its extension.
+function fileName(src: string, base: string): string | null {
+  try {
+    const path = new URL(src, base).pathname
+    const last = decodeURIComponent(path.split('/').pop() ?? '')
+    return last.replace(/\.[a-z0-9]{2,5}$/i, '') || null
+  } catch {
+    return null
+  }
+}
+
+function countImage(
+  images: ImageFacts,
+  name: string,
+  attributes: Record<string, string>,
+  url: string,
+): void {
+  if (/background(-image)?\s*:[^;]*url\(/i.test(attributes.style ?? '')) {
+    images.css_backgrounds++
+  }
+  if (name === 'meta' && attributes.property === 'og:image') {
+    images.og_image ??= attributes.content?.trim() || null
+  }
+  if (name !== 'img') return
+  images.img++
+  if (attributes.alt === undefined) images.no_alt++
+  else if (!attributes.alt.trim()) images.empty_alt++
+  // Lazy loaders keep the real file in data-src or srcset.
+  const src = [attributes['data-src'], attributes.src, attributes.srcset]
+    .map((value) => value?.trim().split(/[\s,]+/)[0])
+    .find((value) => value && !value.startsWith('data:'))
+  const file = src ? fileName(src, url) : null
+  if (file && GENERIC_NAME.test(file)) {
+    images.generic_names++
+    if (images.generic_examples.length < 3) {
+      images.generic_examples.push(
+        file.length > 24 ? `${file.slice(0, 20)}…` : file,
+      )
+    }
   }
 }
 
 // Facts for one URL. With a response, reads that one instead of fetching.
-async function facts(url: string, given?: Response): Promise<PageFacts> {
+async function facts(
+  url: string,
+  given?: Response,
+  withImages = false,
+): Promise<PageFacts> {
   const out: PageFacts = {
     url,
     status: null,
@@ -171,8 +234,13 @@ async function facts(url: string, given?: Response): Promise<PageFacts> {
       await response.body?.cancel()
       return out
     }
-    const head = headFacts(await boundedText(response), url)
+    const html = await boundedText(response)
+    const { images, ...head } = headFacts(html, url)
     Object.assign(out, head)
+    if (withImages) {
+      images.capped = new TextEncoder().encode(html).byteLength >= MAX_BYTES
+      out.images = images
+    }
     out.robots = [headerRobots, head.robots].filter(Boolean).join(', ') || null
     out.google_noindex = headerNoindex || head.google_noindex
   } catch (error) {
@@ -181,8 +249,15 @@ async function facts(url: string, given?: Response): Promise<PageFacts> {
   return out
 }
 
-export function checkPages(urls: string[]): Promise<PageFacts[]> {
-  return Promise.all(urls.slice(0, MAX_PAGES).map((url) => facts(url)))
+export function checkPages(
+  urls: string[],
+  options: { images?: boolean } = {},
+): Promise<PageFacts[]> {
+  return Promise.all(
+    urls
+      .slice(0, MAX_PAGES)
+      .map((url) => facts(url, undefined, options.images)),
+  )
 }
 
 export type RedirectKind = 'permanent' | 'temporary'

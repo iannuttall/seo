@@ -4,6 +4,13 @@
 
 ### Added
 
+- `seo report --section image-search` lists the pages that show in
+  Google Images, most image impressions first, and checks the top 20
+  live: images with no alt text or empty alt text, file names such as
+  IMG_0023, background images set in CSS, and a missing og:image. The
+  overview points to it when image search has at least a tenth of web
+  search's impressions.
+
 - `seo data` reads image search, video search, the News tab, Discover
   and Google News with `--search-type` (`search_type` in MCP). Discover
   and Google News default to pages and have no queries or positions, so

@@ -65,6 +65,23 @@ write any site copy, metadata included.
   is advice one post gives and another post argues against. Fix each
   finding or record why it stands before publishing.
 
+## Blog covers
+
+Every post's cover (`public/blog/covers/<slug>.webp`, 1200 by 630) is an
+illustrated scene in the post's chosen style, drawn as if it were real:
+
+- Correct perspective: one consistent viewpoint, objects sized and
+  foreshortened for where they sit, and light from one direction.
+- Physical sense: hands grip objects the way a person would, and a
+  magnifying glass sits between the eye and what it looks at, lens facing
+  the page.
+- Anything a person reads faces them. The printed side of a newspaper,
+  leaflet, book or screen points at their eyes, never at the viewer.
+- No legible text in the art.
+- Before using a cover, look at it at full size and check hands, held
+  objects, gaze and which way pages face. Regenerate it when any of them is
+  wrong; don't publish a cover that only works at thumbnail size.
+
 ## Checks
 
 ```sh

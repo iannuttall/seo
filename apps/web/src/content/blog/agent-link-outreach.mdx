@@ -1,0 +1,69 @@
+---
+title: How to do link building outreach with an AI agent
+description: Find the sites that link to your competitors, have your agent find a real reason for each to link to you, approve its picks, then let it send.
+heading: How to do link building outreach with an AI agent
+lead: My agent got me two links from one site with an estimated 3 million visits a month. It found a topical reason for the site to link to me, I approved its suggestions, and it sent the outreach.
+date: '2026-11-14'
+draft: false
+cover:
+  alt: "A Victorian engraved study where a man initials a handwritten letter at his desk while a clerk stands beside him holding a stack of sealed envelopes, the top one glowing lime green."
+  title: left
+---
+
+I don't often send cold outreach for links any more, but I've had good success with it, and a personal agent can now do much of the work. In October 2026 I gave Grok Bot an export of my competitors' best backlinks, and [it got me two links](https://x.com/iannuttall/status/2107786133254078714) from one site with a [Domain Rating by Ahrefs](https://ahrefs.com/) of 84 and an estimated 3 million visits a month. It sent every email from my own Gmail account, through its Gmail connection.
+
+<Exhibit caption="My post on X, 7 October 2026. It had about 61,000 views and 1,431 bookmarks by 14 November 2026.">
+  <img src="/blog/images/agent-link-outreach-x-post.webp" width="1096" height="700" loading="lazy" alt="Ian Nuttall's X post: SEO pro tip. 1. Get an export of your competitors best backlinks. 2. Ask your agent to find a topical reason for them to link to you too. 3. Manually approve suggestions. 4. Let the agent send the cold outreach. Grok Bot just got me two DR 84 links on a site with 3M visits/month." class="mx-auto w-full max-w-md rounded-lg" />
+</Exhibit>
+
+Grok Bot isn't special here. Other personal agents that can read the web and send email, such as OpenAI's dots, Meta Muse, Claude Duet, OpenClaw or Hermes, should manage the same steps, though some are only available in a few countries.
+
+## Make a page worth linking to before you email anyone
+
+Most cold outreach fails because the page it pitches isn't worth a link. If your page is no better than what the site already links to, an agent will just send more emails that get ignored.
+
+Be honest with yourself here. Your own tool, data or guide has to be something you'd link to if it were someone else's.
+
+## Find the sites that link to your competitors and not you
+
+Start with the sites that already link to sites like yours. A site that links to two of your competitors has shown it will link to sites like yours, though not always to the kind of page you'd pitch:
+
+<AgentStep setup prompt="Which sites link to at least two of example.org, example.net and example.io but not to example.com? Put the strongest sites first." cli="seo research link_gap --target example.com --competitors example.org,example.net,example.io" />
+
+This uses your own DataForSEO or Ahrefs key, with one backlinks call for your site and one for each competitor. It reads each site's top 1,000 referring domains, so smaller sites that link to your competitors can be missing. For one competitor, ask for its referring domains instead with `seo research backlinks --target example.org`.
+
+Sites that already mention you without a link are an easier ask. My [post on unlinked brand mentions](/blog/unlinked-brand-mentions) covers those.
+
+## Have your agent find a reason for each site to link to you
+
+The list gives you sites, not pages. So first have your agent find the pages on each site that link to your competitors, with a `site:` search for each competitor's name or a backlinks export from Ahrefs.
+
+Then have it read those pages. I'm looking for a reason to email each site, and just as hard for a reason not to:
+
+<AgentStep prompt="For each site on this list, find and read the pages that link to example.org, example.net or example.io, and tell me: do they link to tools or guides like mine; are any of their links broken or pointing at a page that's gone; which page on their site is the most natural place to link to me, and what would my link replace or add; and do they already sell links or offer sponsored posts." />
+
+Add one rule of your own: have the agent quote the exact paragraph where your link would fit, and skip any site where it can't. That's the strictest test here. If no paragraph is better with your link in it, the site has no reason to add it.
+
+Skip any site that obviously sells links or offers sponsored posts. Its links look bought whether yours is or not, and an obviously bought link is the one thing to avoid here.
+
+That doesn't make every paid link a mistake. I do things for the people who'll read the page, not for Google, and a paid placement on a site whose readers would click through to you can be worth it for the traffic alone. Google's [spam policies](https://developers.google.com/search/docs/essentials/spam-policies) count "exchanging money for links, or posts that contain links" as link spam unless the link is marked sponsored or nofollow, and Bing's [guidelines](https://www.bing.com/webmasters/help/webmaster-guidelines-30fba23a) name "link buying" too. So if you pay, judge it by the visits it sends.
+
+AI answers are different again. A mention on a page ChatGPT already cites can get you named in its answers, which my post on [getting onto the lists ChatGPT cites](/blog/how-to-get-cited-by-chatgpt#get-onto-the-lists-chatgpt-already-cites) covers.
+
+## Approve every suggestion before your agent sends anything
+
+Have the agent draft one short email per site, then read each one yourself. A good pitch names the page and the paragraph, says what the reader gets from your link, and stops there. Don't offer a guest post or a link back, and don't ask for anchor text or a followed link.
+
+Only then let the agent send them, from your own email account. You can send a lot as long as every email is unique, accurate and about that site. If someone doesn't reply, one follow-up a few days later is fine. Stop at the first no. Cold email has legal rules in some countries, such as PECR and GDPR in the UK and EU, so check the ones that apply to you before you send any.
+
+Google's spam policies also list "using automated programs or services to create links to your site" as link spam. I read that as tools that place links themselves, such as an agent posting into comments, forums or directories. An email a person reads and decides on is a different thing, but Google hasn't drawn that line.
+
+## Give sites something new to link to
+
+The easiest pitch is a page nobody else has. Combining your own data into an up-to-date report or dashboard with a new angle gives a site a reason to link that a generic guide rarely does.
+
+That's where I'd point an agent next. Have it build the report from your data, then pitch it to the sites that already link to reports like it.
+
+## What to expect from agent outreach
+
+I can't give you a reply rate that would hold for your site, because it depends almost entirely on whether your page is worth linking to. Send fewer, better emails, and treat each one as a request a person can say no to.

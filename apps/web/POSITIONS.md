@@ -82,3 +82,14 @@ searches Search Console leaves out for privacy, and "follow-up question" for
 AI Mode. Introduce the term once in plain words.
 
 - Posts: bing-long-tail, ai-mode-follow-up-questions.
+
+## Judge a paid link by the traffic it sends
+
+Ian builds for the people who read a page, not for Google. Avoid links that
+are obviously bought, and skip sites that obviously sell them. A paid
+placement can still be worth it when its readers would click through. Say
+plainly that Google's spam policies and Bing's guidelines both count link
+buying against you unless the link is qualified, and never present a paid
+link as a ranking tactic.
+
+- Posts: agent-link-outreach.

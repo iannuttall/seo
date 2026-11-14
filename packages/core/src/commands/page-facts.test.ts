@@ -14,13 +14,39 @@ test('reads the first title, description, H1, canonical and robots', () => {
       heading </h1><h1>Other</h1></body></html>`,
     'https://example.com/page',
   )
-  assert.deepEqual(facts, {
+  const { images: _, ...head } = facts
+  assert.deepEqual(head, {
     title: 'Tools & tips | Site',
     description: 'Fast "tips"',
     h1: 'Big heading',
     canonical: 'https://example.com/a',
     robots: 'noindex',
     google_noindex: true,
+  })
+})
+
+test('counts images by what Google Images needs from them', () => {
+  const { images } = headFacts(
+    `<head><meta property="og:image" content="https://example.com/og.png"></head>
+    <body>
+    <img src="/photos/red-kite-in-flight.jpg" alt="A red kite in flight">
+    <img src="/uploads/IMG_0023.JPG">
+    <img src="/icons/divider.svg" alt="">
+    <img src="data:image/gif;base64,R0lGOD" data-src="/lazy/DSC-1042.webp" alt="Harbour at dusk">
+    <img srcset="/cdn/3f9a1c2b7d8e4f60aa11.jpg 480w, /cdn/big.jpg 800w" alt="Map">
+    <div style="background-image: url(/hero/banner.jpg)"></div>
+    </body>`,
+    'https://example.com/page',
+  )
+  assert.deepEqual(images, {
+    img: 5,
+    no_alt: 1,
+    empty_alt: 1,
+    generic_names: 3,
+    generic_examples: ['IMG_0023', 'DSC-1042', '3f9a1c2b7d8e4f60aa11'],
+    css_backgrounds: 1,
+    og_image: 'https://example.com/og.png',
+    capped: false,
   })
 })
 

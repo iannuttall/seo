@@ -94,7 +94,26 @@ export type PageFacts = {
   google_noindex: boolean | null
   // The WWW-Authenticate header, sent when the server asks for sign-in.
   www_authenticate?: string
+  // Image facts from the HTML as served, when asked for.
+  images?: ImageFacts
   error?: string
+}
+
+// Images in a page's HTML as served: script-added images are not counted,
+// and a page cut off at the read limit has counts that are floors.
+export type ImageFacts = {
+  img: number
+  // <img> with no alt attribute; alt="" marks a decorative image.
+  no_alt: number
+  // alt="": right for a decorative image, a gap on one that shows content.
+  empty_alt: number
+  // File names such as IMG_0023.jpg or a long hash, a heuristic.
+  generic_names: number
+  generic_examples: string[]
+  // Elements with a background image set in their style attribute.
+  css_backgrounds: number
+  og_image: string | null
+  capped: boolean
 }
 
 export type IndexStatus = {
@@ -137,7 +156,10 @@ export type CommandDeps = {
   // Search Console rows for a property.
   searchAnalytics: SearchAnalyticsQuery
   // Live facts for up to 20 URLs, one request each, no redirects followed.
-  checkPages: (urls: string[]) => Promise<PageFacts[]>
+  checkPages: (
+    urls: string[],
+    options?: { images?: boolean },
+  ) => Promise<PageFacts[]>
   // One URL live, following up to 5 redirects one request at a time.
   liveCheck: (url: string) => Promise<LiveCheck>
   // Google's index status for one URL. Throws when it cannot be read; a

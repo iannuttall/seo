@@ -25,6 +25,7 @@ import {
   enginesText,
   NO_BING_HERE,
 } from './bing.js'
+import { imageChecksText, imageSearchReport } from './image-search.js'
 import {
   ISSUES_SECTION,
   type IssueMark,
@@ -34,7 +35,6 @@ import {
 } from './issues.js'
 import { temporaryRedirectNote } from './page-facts.js'
 import { type Detail, presentReport, preview, table } from './present.js'
-import { SEARCH_TYPE_NAMES, SEARCH_TYPES, type SearchType } from './rows.js'
 import {
   type DateInput,
   dateWindow,
@@ -48,6 +48,7 @@ import {
   sharedReader,
   UPDATE_PADDING_DAYS,
 } from './shared.js'
+import { surfacesLine } from './surfaces.js'
 import {
   type Caller,
   type CommandDeps,
@@ -81,6 +82,8 @@ export const SECTIONS = {
     'Daily clicks and impressions checked for a sudden change that lasted, with the date it started (else the last 7 days against the days before), and Google updates within 3 days of that date. Overlap is timing only, not cause.',
   'ai-queries':
     'Queries with the shape of AI conversations and agent searches (replies such as "yes go on", follow-ups, agent prompts, search operators, a pronoun with nothing named, chat phrasing, ten or more words), with rewordings grouped into one question and its top page, impressions, clicks and position, and follow-up trails: follow-ups that reached one page on one day. A heuristic: Search Console does not mark AI Mode.',
+  'image-search':
+    'Pages that show in Google Images, most image impressions first, with their clicks against the previous period; the top 20 are checked live for alt text, file names, background images and og:image.',
   bing: 'Bing’s top queries from Bing Webmaster Tools with Google’s clicks, impressions and position for the same query beside them, and the same for pages; how many distinct queries each engine shows, and pages one engine shows that the other does not.',
 } as const
 
@@ -96,6 +99,7 @@ const PAGE_CHECKS = new Set<SectionId>([
   'second-page',
   'content-decay',
   'cannibalization',
+  'image-search',
 ])
 
 // Page sections whose rows put the pages that convert first, from Google
@@ -117,6 +121,7 @@ const DEFAULT_DAYS: Record<SectionId, number> = {
   cannibalization: 28,
   'traffic-drop': 90,
   'ai-queries': 90,
+  'image-search': 28,
   bing: 28,
 }
 
@@ -133,6 +138,7 @@ function nextFor(section: SectionId, call: Caller): string {
     cannibalization: `Next: ${call('page')} on each competing URL to see Google’s chosen canonical.`,
     'traffic-drop': `Next: ${call('compare')} with the date the drop started, for the pages and queries that moved; ${call('index')} for pages that lost almost all their clicks and their index status.`,
     'ai-queries': `Next: ${call('page')} for a page that gets many of these questions, to see whether it answers them; ${call('research')} ai_answers with the site as target checks whether AI answers cite it for the top 10 askable questions here (about $0.07 of DataForSEO credit), so show the person those questions and ask first.`,
+    'image-search': `Next: ${call('data', { search_type: 'image', dimensions: 'query', page: '<url>' })} for the image searches one page shows for, to write its alt text from.`,
     bing: `Next: ${call('data', { source: 'bing' })} for every Bing row; ${call('page')} for one page.`,
   }[section]
 }
@@ -362,123 +368,6 @@ async function enginesLine(
   }
 }
 
-// Share of web search impressions at which another surface is raised.
-const RAISE_SHARE = 0.1
-
-const count = (value: number) => Math.round(value).toLocaleString('en-US')
-
-// The question the agent puts to the person, with their numbers.
-const SURFACE_QUESTION: Partial<
-  Record<SearchType, (impressions: number, clicks: number) => string>
-> = {
-  image: (i, c) =>
-    `Google Images showed your pages ${count(i)} times in these dates and sent ${count(c)} clicks. Do visits from image search matter to you? I can look at the pages behind them.`,
-  video: (i, c) =>
-    `Google's Videos tab showed your pages ${count(i)} times and sent ${count(c)} clicks. Does video matter to you? I can look at the pages behind them.`,
-  news: (i, c) =>
-    `Google's News tab showed your pages ${count(i)} times and sent ${count(c)} clicks. Do you publish news? I can look at the pages behind them.`,
-  discover: (i, c) =>
-    `Google Discover showed your pages ${count(i)} times and sent ${count(c)} clicks. Does Discover matter to you? I can look at the pages behind them.`,
-  google_news: (i, c) =>
-    `Google News showed your pages ${count(i)} times and sent ${count(c)} clicks. Do you publish news? I can look at the pages behind them.`,
-}
-
-// Google's other surfaces for the overview's dates, each its own count, and
-// a call for the pages behind the biggest. A failed read is named and
-// never stops the report.
-async function surfacesLine(
-  read: SearchAnalyticsQuery,
-  site: string,
-  overview: Record<string, unknown>,
-  call: Caller,
-): Promise<{ text: string; data: Record<string, unknown>[] }> {
-  const range = overview.range as DateRange
-  const before = overview.comparisonRange as DateRange
-  const web = overview.summary as { clicks: number; impressions: number }
-  const types = (Object.keys(SEARCH_TYPES) as SearchType[]).filter(
-    (type) => type !== 'web',
-  )
-  const total = async (type: SearchType, window: DateRange) =>
-    (
-      await read(site, {
-        ...window,
-        dimensions: [],
-        type: SEARCH_TYPES[type],
-        dataState: 'final',
-        maxRows: 1,
-      })
-    ).rows[0] ?? { clicks: 0, impressions: 0 }
-  type Surface =
-    | {
-        surface: SearchType
-        clicks: number
-        previousClicks: number
-        impressions: number
-        previousImpressions: number
-      }
-    | { surface: SearchType; error: string }
-  const data = await Promise.all(
-    types.map(async (type): Promise<Surface> => {
-      try {
-        const [now, then] = await Promise.all([
-          total(type, range),
-          total(type, before),
-        ])
-        return {
-          surface: type,
-          clicks: now.clicks,
-          previousClicks: then.clicks,
-          impressions: now.impressions,
-          previousImpressions: then.impressions,
-        }
-      } catch (error) {
-        return {
-          surface: type,
-          error: error instanceof Error ? error.message : String(error),
-        }
-      }
-    }),
-  )
-  const parts = data.map((row) => {
-    const name = SEARCH_TYPE_NAMES[row.surface]
-    if ('error' in row) return `${name}: could not be read (${row.error})`
-    if (!row.impressions && !row.previousImpressions) {
-      return `${name}: no impressions recorded${row.surface === 'discover' ? ' (Search Console reports Discover only above a minimum number of impressions)' : ''}`
-    }
-    return `${name}: clicks ${row.clicks} (was ${row.previousClicks}), impressions ${row.impressions} (was ${row.previousImpressions})`
-  })
-  const shown = data
-    .flatMap((row) =>
-      'impressions' in row && row.impressions > 0 ? [row] : [],
-    )
-    .sort(
-      (a, b) =>
-        b.impressions - a.impressions || a.surface.localeCompare(b.surface),
-    )
-  const lines = [
-    `Other Google surfaces, same dates, each counted apart from web search: ${parts.join('; ')}.`,
-  ]
-  // A surface is raised only when it is a real share of the site's
-  // impressions; below that it is numbers only.
-  const top = shown[0]
-  if (
-    top &&
-    web.impressions > 0 &&
-    top.impressions >= web.impressions * RAISE_SHARE
-  ) {
-    const share = (part: number, whole: number) => {
-      if (whole <= 0) return 'n/a'
-      const percent = (part / whole) * 100
-      return part > 0 && percent < 1 ? 'under 1%' : `${Math.round(percent)}%`
-    }
-    const name = SEARCH_TYPE_NAMES[top.surface]
-    lines.push(
-      `${name[0]?.toUpperCase()}${name.slice(1)} has ${share(top.impressions, web.impressions)} as many impressions as web search and ${share(top.clicks, web.clicks)} as many clicks. Ask the person, in your words: "${SURFACE_QUESTION[top.surface]?.(top.impressions, top.clicks)}" If yes: ${call('data', { site, search_type: top.surface, dimensions: 'page' })}.`,
-    )
-  }
-  return { text: lines.join(' '), data }
-}
-
 // When Bing sends more clicks than Google for the same dates, Bing's own
 // overview follows, so a site that lives on Bing gets the same picture.
 async function bingLead(
@@ -607,6 +496,7 @@ async function build(
       }
     },
     'ai-queries': () => aiQueriesReport({ site, ...range }, read),
+    'image-search': () => imageSearchReport(site, range, read),
     bing: async () => bingSection(await bing(), read, site, range),
   }[section]
   const report = factsOnly(await run()) as Record<string, unknown>
@@ -897,6 +787,7 @@ async function oneSection(
     ) as unknown[] | undefined
     checked = await deps.checkPages(
       reportUrls((report.items as unknown[] | undefined) ?? list ?? [], origin),
+      { images: section === 'image-search' },
     )
     const redirects = new Map<string, string>()
     for (const page of checked) {
@@ -927,7 +818,9 @@ async function oneSection(
   if (updates) notes.push(updates)
   if (checked.length) {
     notes.push(
-      `Live page checks (${checked.length} URLs, fetched now, no redirects followed):\n${pageFactsTable(checked, origin)}`,
+      section === 'image-search'
+        ? imageChecksText(checked, origin)
+        : `Live page checks (${checked.length} URLs, fetched now, no redirects followed):\n${pageFactsTable(checked, origin)}`,
     )
   }
   if (merged.length) {

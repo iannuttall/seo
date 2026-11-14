@@ -1,0 +1,328 @@
+---
+title: How I'd grow Bannerbear with SEO
+description: An SEO teardown of Bannerbear, whose free tools bring about half its search traffic, and how I'd turn their users into API customers.
+heading: How I'd grow Bannerbear
+lead: Bannerbear has already built free tools for the jobs people search for, so this is how I'd get them found and send their users to the API.
+date: '2026-11-14'
+company: Bannerbear
+x:
+  company: bannerbearHQ
+draft: false
+cover:
+  alt: "Bannerbear's yellow bear runs a striped market stall on a quiet street, where a customer reads the one free certificate she was handed while a printing press behind the bear stacks hundreds more for a worker to box up."
+  title: left
+---
+
+export const beforeCert = `<pre>&lt;p&gt;Creating a lot of certificates and need to
+automate the process? Look into our API or
+Nocode automations to generate PDF
+certificates in bulk.&lt;/p&gt;</pre>`
+
+export const afterCert = `<pre>&lt;p&gt;Making certificates for a whole class or
+event? &lt;a href="/v5/workflows/spreadsheet-to-
+certificates-and-cards/"&gt;Print certificates from
+a spreadsheet&lt;/a&gt;: upload your list and get a
+print-ready PDF pack with one certificate for
+every name.&lt;/p&gt;</pre>`
+
+export const beforeHelp = `<pre>GET /help/articles/23-text-fitting/
+200 OK, old site template
+canonical: itself
+"What is Text Fitting? - Bannerbear"
+
+GET /v5/help/articles/558-what-is-text-fitting/
+200 OK, V5 template
+canonical: itself
+"What is Text Fitting? - Bannerbear"</pre>`
+
+export const afterHelp = `<pre>GET /help/articles/23-text-fitting/
+301 Moved Permanently
+→ /v5/help/articles/558-what-is-text-fitting/
+
+GET /v5/help/articles/558-what-is-text-fitting/
+200 OK, V5 template
+canonical: itself</pre>`
+
+[Bannerbear](https://www.bannerbear.com/) turns templates into images, videos and PDFs through an API. You design a template once, send it text and photos, and get back a social post, a product banner, a certificate or a subtitled video. It sells an Image API, a Video API, a PDF API, a Workflow API that chains them together, and an MCP server so agents can use your templates. Plans start at $49 a month. Jon Yongfook built it bootstrapped and wrote about the climb from zero to $10k MRR and beyond on the site.
+
+Bannerbear already gets more search traffic than the API companies it's compared with, and it has added 22 free tools that run in the browser, for video, images and PDFs, the ones I checked since August. That's the upside I'd build on.
+
+<CompareBars
+  caption="Estimated monthly US Google visits to each site (DataForSEO, 14 November 2026). These are third-party estimates, so read them for proportions."
+  unit="visits"
+  highlight="bannerbear.com"
+  rows={[
+    { label: "bannerbear.com", value: 3594, note: "2,670 ranking searches" },
+    { label: "templated.io", value: 2712, note: "Mostly file converters and free tools" },
+    { label: "creatomate.com", value: 193 },
+    { label: "placid.app", value: 131 },
+  ]}
+/>
+
+## Where Bannerbear's search traffic lands
+
+Free tools bring half of Bannerbear's estimated US search visits, and the free certificate generator brings two thirds of those.
+
+<TrafficMap
+  caption="Estimated monthly US Google visits to the 100 bannerbear.com pages with the most traffic, by kind of page, rounded down per page (DataForSEO, 14 November 2026). The whole site is estimated at 3,594. Blue pages are the free tools, the pages closest to a sale."
+  items={[
+    { label: "Free generators and tools", value: 1742, tone: "sells", note: "The certificate generator alone gets about 1,157, then the X card preview tool and the collage maker" },
+    { label: "Blog posts about other AI tools", value: 1156, tone: "other", note: "Bing Image Creator, Cursor, Claude Code install" },
+    { label: "FFmpeg and web development tutorials", value: 358, tone: "other" },
+    { label: "Homepage", value: 224, tone: "brand", note: "Nearly all from brand searches, \"bannerbear\" and \"bannerbear api\"" },
+    { label: "Help pages and demos", value: 55, tone: "other" },
+  ]}
+/>
+
+No product page, pricing page or comparison has an estimated visit from US search. Searches for the brand land on the homepage, and Bannerbear ranks first for its own name.
+
+I'd stop writing posts about other companies' AI tools. The Bing Image Creator post has links from 249 sites, more than any page but the homepage, and the Cursor and Claude Code posts bring visits. But the people reading them came to install an editor or try an image model, and nothing on those pages moves them toward a template.
+
+Jon posted this week that Bannerbear's Google traffic has been going down all year and has started to turn after a week of changes. From outside I can't see that history, so this teardown is about the pages that work today and the ones that could.
+
+## Searches for the job outnumber searches for the API
+
+The searches that describe Bannerbear's category are small, and the results are full of other things.
+
+<KeywordTable
+  caption="DataForSEO volumes and difficulty, US, November 2026. Who ranks: two names from the top live US desktop results, 14 November 2026. No result I could identify among the top 18 was a Bannerbear page."
+  sortBy="volume"
+  columns={[{ key: 'keyword', label: 'Search', format: 'text' }, { key: 'volume', label: 'US searches', format: 'number', short: 'US' }, { key: 'difficulty', label: 'Difficulty', format: 'number', short: 'KD' }, { key: 'who', label: 'Who ranks', format: 'text', short: 'Top' }]}
+  rows={[
+    { keyword: 'pdf generator api', volume: 210, difficulty: 3, who: 'Flows, Cloudlayer' },
+    { keyword: 'image generation api', volume: 140, difficulty: 14, who: 'Filmart, Fueler' },
+    { keyword: 'video generation api', volume: 110, difficulty: 10, who: 'JSON2Video, WaveSpeed' },
+  ]}
+/>
+
+"image generation api" now means AI image models: the top results are about OpenAI's image API and comparisons of AI models. Bannerbear's Image API page is titled "Image API" and is about filling in templates, which is a different product from the one those results describe.
+
+"pdf generator api" is the one I'd go after. It has a difficulty of 3, and the results are lists of PDF APIs, such as ExportSDK's "9 PDF generator APIs", plus Abyssale's blog. Bannerbear's PDF API page belongs on those lists, and a list of its own ("PDF generator APIs compared", with Bannerbear in it and honest about who suits what) would fit the results.
+
+The bigger demand is for the jobs Bannerbear's API does: convert a video, compress it, add subtitles, make a certificate, check a link preview. Bannerbear has already built a free tool for each of those.
+
+## The certificate generator already works, and it should lead to the bulk workflow
+
+The free certificate generator is Bannerbear's best page for search. It gets about 1,157 estimated US visits a month from 279 searches, ranks first for "certificate generator" and "certificate creator", and has links from 125 sites. It has been live since at least 2021.
+
+Some of those searches are for fake diplomas, and those visitors were never going to buy. The ones who matter are making certificates for a class, a course or an event, and the next thing they need is the same certificate for 40 names.
+
+Bannerbear has built exactly that. Its workflow "Print Certificates and Wallet Cards from a Spreadsheet" turns a list of people into a print-ready PDF pack. The certificate generator never mentions it. It talks about bulk twice: a sentence near the top with no link, and an FAQ answer that sends people to the PDF API page, where they'd still have to build the job themselves.
+
+<BeforeAfter
+  caption="The bulk paragraph on the certificate generator today, and with a link to the workflow that does the job."
+  before={{ label: "Today", html: beforeCert }}
+  after={{ label: "With the link", html: afterCert }}
+/>
+
+**The fix:** link that paragraph to the spreadsheet workflow, and put the same link under the download button, where someone who just made one certificate is looking. Then do the same on the other four generators (invoice, collage, event ID card, wedding invite), each pointing at the workflow or API that makes the same thing in bulk.
+
+I'd leave "certificate of completion template" (1,900 US searches) and "award certificate template" (2,400) alone. Adobe, Canva and Pinterest fill those results, and the generator already ranks first for most of the "generator" searches and in the top five for "certificate maker", which come from people who want the finished file.
+
+## Bannerbear's new free tools need the names people search for
+
+Bannerbear's 22 browser tools include a media converter, video compressor, subtitle tool, background remover, Markdown to PDF and more. The ones I checked first appear in the Wayback Machine in August 2026, so they're new. Each page explains the job, shows the steps and pitches the API, with a line such as "Want to convert, resize, watermark or generate media automatically at scale?" That line links to the homepage, so I'd point each one at the Video, Image or PDF API page that does the job. The pages don't rank yet for the searches below, each a job one of Bannerbear's free tools already does: the Media Converter for the first three, then the Markdown to PDF converter, the Facebook and LinkedIn preview tools and the subtitle tool.
+
+<KeywordTable
+  caption="DataForSEO volumes and difficulty, US, November 2026. Who ranks: two names from the top live US desktop results, 14 November 2026. No result I could identify among the top 18 was a Bannerbear page."
+  sortBy="volume"
+  columns={[{ key: 'keyword', label: 'Search', format: 'text' }, { key: 'volume', label: 'US searches', format: 'number', short: 'US' }, { key: 'difficulty', label: 'Difficulty', format: 'number', short: 'KD' }, { key: 'who', label: 'Who ranks', format: 'text', short: 'Top' }]}
+  rows={[
+    { keyword: 'mp4 to gif', volume: 110000, difficulty: 30, who: 'Clideo, ClipUtils' },
+    { keyword: 'mov to mp4', volume: 60500, difficulty: 13, who: 'Gihosoft, videofile.tools' },
+    { keyword: 'webm to mp4', volume: 22200, difficulty: 7, who: 'Clipfly, ToolSmart' },
+    { keyword: 'markdown to pdf', volume: 14800, difficulty: 26, who: 'Syncfusion, Linangdata' },
+    { keyword: 'facebook debugger', volume: 6600, difficulty: 20, who: 'Hosteko, Acquisa' },
+    { keyword: 'add subtitles to video', volume: 1900, difficulty: 46, who: 'Abraia, SubtitleBee' },
+    { keyword: 'linkedin post inspector', volume: 1600, difficulty: 6, who: 'AllEasySEO, FoxyApps' },
+  ]}
+/>
+
+### Give each format conversion its own page
+
+The Media Converter handles MP4, WebM, MOV, GIF, MP3 and more on one page titled "Free Online Media Converter". Nobody searches for that. They search for the pair they need: "mov to mp4" (60,500 a month, difficulty 13), "webm to mp4" (22,200, difficulty 7), "mp4 to gif" (110,000, difficulty 30). The results for those are single-purpose converter pages, and Templated, the closest rival in search, ranks with exactly that kind of page, such as its AVIF to JPG converter.
+
+Each pair is a different job with a different file, so I'd give the biggest ones their own page: the same converter, preset to that pair, with a title, a first paragraph and an FAQ about that format. Start with MOV to MP4, WebM to MP4 and MP4 to GIF, then add pairs from the searches they start to collect.
+
+### Name the official tool in the title
+
+The X card preview tool is the only tool page with more than a handful of estimated visits, about 268 a month from the US, and it ranks first for "twitter card preview" and "check twitter card". Its title names the job and X's own tool, "Card Validator". The LinkedIn and Facebook tools do the same job, and their titles don't say what people call it. LinkedIn's own tool is the Post Inspector, and people search "linkedin post inspector" 1,600 times a month at a difficulty of 6. Facebook's is the Sharing Debugger, and "facebook debugger" gets 6,600.
+
+<SearchResult
+  caption="The LinkedIn tool in Google today, and with the name people search for. The page and its URL stay as they are."
+  before={{
+    url: "https://www.bannerbear.com/tools/linkedin-link-preview-tool/",
+    site: "Bannerbear",
+    // seo-lint-ignore dash
+    title: "LinkedIn Link Preview Tool - Bannerbear",
+    description: "Quickly see a preview of how your links will look when posted on LinkedIn",
+  }}
+  after={{
+    url: "https://www.bannerbear.com/tools/linkedin-link-preview-tool/",
+    site: "Bannerbear",
+    title: "LinkedIn Post Inspector and Link Preview Tool",
+    description: "Check how your link will look on LinkedIn, see which meta tags LinkedIn reads, and fix the image and title before you post, free and with no sign-up.",
+  }}
+/>
+
+The Facebook tool gets the same treatment: "Facebook Debugger and Open Graph Preview Tool". This is a heuristic. The X tool has also been live since 2020, so I can't show it ranks because of its title, but a title that uses the searcher's words is the cheapest change on this list.
+
+### Build the tools index
+
+Every tool lives under bannerbear.com/tools/, and that address returns a 404, as do /tools/image/ and /tools/pdf/. Only the video tools have an index page. A /tools/ page that lists every tool by job gives each one a link from a page about tools, and gives people who land on one tool an easy way to find the next.
+
+## AI answers cite Bannerbear for its own product and skip it for the jobs it does
+
+I asked ChatGPT search, Google AI Mode and Google's AI Overviews ten questions, the same for Bannerbear and for Placid, its closest rival (`seo research ai_answers`, DataForSEO, US, 14 November 2026). Three were about Bannerbear's product, three asked how to do a job Bannerbear sells, and four asked which tool to choose.
+
+<KeywordTable
+  caption="Answers that cite (link to) or name each company, by kind of question and engine, one run (DataForSEO, US, 14 November 2026). The product questions were about Bannerbear, so Placid's zeros there are expected."
+  sortBy="kind"
+  columns={[{ key: 'kind', label: 'Questions', format: 'text' }, { key: 'chatgpt', label: 'ChatGPT', format: 'text', short: 'GPT' }, { key: 'mode', label: 'AI Mode', format: 'text', short: 'Mode' }, { key: 'overview', label: 'AI Overview', format: 'text', short: 'AIO' }]}
+  rows={[
+    { kind: '1. Product (3): Bannerbear', chatgpt: '3 cited', mode: '3 cited', overview: '3 cited' },
+    { kind: '1. Product (3): Placid', chatgpt: 'None', mode: 'None', overview: 'None' },
+    { kind: '2. Job (3): Bannerbear', chatgpt: 'None', mode: 'None', overview: '1 named' },
+    { kind: '2. Job (3): Placid', chatgpt: 'None', mode: '1 named', overview: '1 named' },
+    { kind: '3. Choice (4): Bannerbear', chatgpt: '2 cited, 1 named', mode: '3 cited, 1 named', overview: '1 cited, 2 named' },
+    { kind: '3. Choice (4): Placid', chatgpt: '3 cited', mode: '4 named', overview: '4 named' },
+  ]}
+/>
+
+All three engines cite the pricing page for "How much does Bannerbear cost?", and the alternatives page and the Bannerbear vs Placid post were each cited for choice questions. For "What are the best Bannerbear alternatives?", ChatGPT named Bannerbear without a link in Bannerbear's run and linked placid.app in Placid's. Only AI Mode cited Bannerbear's alternatives page, which is the page that should win that question on every engine.
+
+The job questions are the gap. "How do I generate PDF certificates in bulk from a spreadsheet?" and "How do I add subtitles to videos automatically with an API?" got no Bannerbear citation or mention in any of the six answers, and none again when I asked both a second time. The answers cited Certifier, DocsAutomator and YouTube for certificates, and OpenAI, Deepgram and Shotstack for subtitles. Bannerbear sells both: the spreadsheet workflow above, and subtitles in its Video API.
+
+GPTBot, OAI-SearchBot, ClaudeBot and PerplexityBot user agents get the same full pages a browser gets, and robots.txt welcomes each one by name, so access doesn't explain the gap. Bannerbear has pages near both questions, such as an FFmpeg subtitles tutorial and the spreadsheet workflow, but none is titled with the question and answers it with Bannerbear's own product.
+
+**The fix:** a page titled with each question, with the answer in its first paragraph and the steps below it, that ranks for the search:
+
+- "How to generate certificates in bulk from a spreadsheet", as the spreadsheet workflow page itself or a guide that links to it.
+- "How to add subtitles to videos automatically with an API", in the Video API docs, with the request and the result, linked from the FFmpeg tutorial.
+- "How to automatically generate Open Graph images for your blog". Only the AI Overview named Bannerbear for this one, without a link, and the answers cite Vercel and Next.js docs. Bannerbear already has "3 Ways to Generate Open Graph Images Automatically" and a Next.js guide, so I'd fold them into one page with that title and working code for each framework, and redirect the rest of the set to it.
+
+## Jon's X posts would make link-worthy pages
+
+Jon's founder posts earn more links than Bannerbear's product pages. "Journey to $10k MRR" has links from 58 sites, more than the Image API page (13) and the PDF API page (8) put together, even counting the 24 sites that link to the old Image API address, which redirects.
+
+<CompareBars
+  caption="Sites linking to each bannerbear.com page (DataForSEO backlinks, 14 November 2026). Founder posts in blue; the two product pages for comparison."
+  unit="sites"
+  highlight={["Journey to $10k MRR", "Why you should do 50% coding and 50% marketing", "Open startup page", "7 lessons growing a bootstrapped SaaS to $50K MRR", "Journey to $1 million ARR"]}
+  rows={[
+    { label: "Journey to $10k MRR", value: 58 },
+    { label: "Why you should do 50% coding and 50% marketing", value: 26 },
+    { label: "Open startup page", value: 26 },
+    { label: "7 lessons growing a bootstrapped SaaS to $50K MRR", value: 14 },
+    { label: "Journey to $1 million ARR", value: 14 },
+    { label: "Image API page", value: 13 },
+    { label: "PDF API page", value: 8 },
+  ]}
+/>
+
+Jon is posting the same kind of thing on X right now, and it isn't reaching the site. In early November, [his post about a daily marketing loop](https://x.com/yongfook/status/2117555432525099013) (an agent that reads his analytics, Search Console, Ahrefs and competitors, then proposes site changes he approves) had 30,753 views and 547 bookmarks. [His post on starting an AI-enhanced productized service instead of a SaaS](https://x.com/yongfook/status/2118143216944124094) had 37,500 views and 618 bookmarks.
+
+I'd turn each into a long post in the founder section of the Bannerbear blog, then reply under the original post with the link. The marketing loop post has a search behind it too: "ai marketing agent" gets 1,900 US searches a month at a difficulty of 10.
+
+While there, I'd merge the open startup page and the "Journey to $1 million ARR" page. They list the same posts, and their links (26 and 14 sites) would count for one page instead of two.
+
+## Finish the move to the V5 site
+
+Bannerbear launched V5 this year with a new site template, and about half the site hasn't moved. Of the 1,402 addresses in the sitemap, 651 still render the old template, with the old menu ("Multi Image API", "Twitter to Instagram Generator Tool") next to 740 pages on the new one.
+
+The old pages include all five generators, the template library (320 pages), 85 use-case pages, the old integrations, demos and solutions pages, and 201 help pages. Help, demos and solutions have V5 versions now. The generators, templates and most use cases don't.
+
+### Two help centres answer the same questions
+
+The help centre at bannerbear.com/help says "Guides and answers for Bannerbear V5" and links the V5 articles under /v5/help/. The old articles are still live at /help/articles/, 195 of them in the sitemap, each pointing its canonical at itself. Some have a V5 twin with the same title.
+
+<BeforeAfter
+  caption="One help question at two addresses today, and with the old one redirected (checked 14 November 2026)."
+  before={{ label: "Today", html: beforeHelp }}
+  after={{ label: "After the fix", html: afterHelp }}
+/>
+
+**The fix:** redirect each old help article to its V5 version with a 301, and retire the ones that describe features V5 no longer has. Do the same for the old copies that have no job left:
+
+<UrlMap
+  caption="Old pages and what I'd do with each (checked 14 November 2026)."
+  rows={[
+    { url: "bannerbear.com/help/articles/* (195)", action: "301", tone: "change", to: "the matching /v5/help/ article", note: "Or retire it when V5 has no matching feature" },
+    { url: "bannerbear.com/v2/", action: "301", tone: "change", to: "bannerbear.com/", note: "A copy of the old homepage with the same title, in the sitemap" },
+    { url: "bannerbear.com/v3/help/", action: "301", tone: "change", to: "bannerbear.com/help/", note: "The old help index, still in the sitemap" },
+    { url: "bannerbear.com/generators/* (5)", action: "Restyle", tone: "keep", note: "Keep the addresses, they hold the certificate generator's links. Move them to the V5 template" },
+    { url: "bannerbear.com/templates/* (320)", action: "Restyle", tone: "keep", note: "Move to the V5 template, and 301 the 14 templates published twice" },
+  ]}
+/>
+
+I'd also take the version number out of new addresses while this work is open, so /v5/products/image-api/ becomes /products/image-api/. The old Image, PDF and Video API addresses under /product/ already redirect to /v5/, and a V6 would mean another move. That's my preference rather than something the data shows. If it happens, point every old address straight at the final one so nothing redirects twice.
+
+To confirm it worked, request a sample of old help addresses and check each returns one 301 to a V5 page, then recrawl the sitemap and check no page carries the old menu.
+
+### Housekeeping
+
+- The template pages share one paragraph of copy, and 14 templates are published twice under two IDs, such as the Certificate of Completion template. Their titles start "Auto Generate Images / Videos from the" with a double space before the name.
+- The sitemap lists five sample pages marked noindex, under /sample_media/, and old /product/ addresses that redirect. List only the final 200 pages.
+- Three internal links point at 404s: an old QR code product page, a podcast clip template and /v5/integrations/.
+- /tools/shot/ has no title before the brand name, no heading, and nothing links to it.
+- The old Video API address under /product/ redirects to the Workflow API page. Point it at the Video API page.
+
+## What I'd change to turn free tool users into API customers
+
+Here's every change I'd make:
+
+<PlanSteps
+  steps={[{"title": "Certificate generator to workflow", "body": "Link the bulk paragraph and the download step to the spreadsheet workflow, and give each generator a link to the workflow or API that makes the same thing in bulk."}, {"title": "Tool titles", "body": "Rename the LinkedIn and Facebook tools after LinkedIn's Post Inspector and Facebook's Sharing Debugger."}, {"title": "Conversion pages", "body": "MOV to MP4, WebM to MP4 and MP4 to GIF pages on the existing converter, then more pairs as they earn searches. Build the /tools/ index."}, {"title": "Answer pages", "body": "Pages titled with the certificates, subtitles and Open Graph questions, each answering in its first paragraph and linking to the workflow or API."}, {"title": "Founder posts", "body": "The marketing loop and productized service posts as long posts on the blog, linked in replies under the X posts. Merge the open startup and journey pages."}, {"title": "Finish V5", "body": "301 the old help articles, /v2/ and /v3/help/, and move the generators, templates and use cases to the V5 template."}, {"title": "Housekeeping", "body": "Duplicate templates, template titles, the sitemap, the three broken links and /tools/shot/."}]}
+/>
+
+Then check the results:
+
+<PlanSteps
+  steps={[{"marker": "Day 0", "title": "Ask Google to recrawl", "body": "Submit every new page, renamed tool and redirected address to Index My Site."}, {"marker": "Day 3", "title": "Check the redirects", "body": "A sample of old help addresses returns one 301 each, and the sitemap lists only pages that return 200."}, {"marker": "Day 14", "title": "Tool searches", "body": "Search Console impressions for mov to mp4, webm to mp4, linkedin post inspector and facebook debugger, and clicks from the certificate generator to the workflow."}, {"marker": "Day 30", "title": "AI answers", "body": "Ask the same ten questions again and check whether the certificate, subtitle and Open Graph answers cite the new pages."}]}
+/>
+
+## Get the changes seen quickly
+
+Google will find new tool pages on its own, but the redirects only pay off once it recrawls the old addresses, and there are about 200 of them in the help centre alone. I'd submit the new pages, the renamed tools and every redirected address to [Index My Site](https://indexmysite.app/) the day they ship, so Google is asked to crawl them straight away.
+
+## How I ran this
+
+Everything in this teardown came from SEO Skill, run by an agent, plus hand checks with curl, the Wayback Machine and Jon's public X posts. You can run the same audit on your own site.
+
+**1. Connect the hosted MCP server.** It's free. You sign in with Google, and there's no password and nothing to install. In Claude Code:
+
+```sh
+claude mcp add --transport http seoskill https://seoskill.dev/mcp
+```
+
+Codex, Cursor and Claude on the web work too. The [MCP guide](/docs/mcp) has the steps for each one.
+
+**2. Add a research key.** On your [account page](/account), save an Ahrefs or DataForSEO key. The key gives your agent search volumes, rankings and results pages, like the tables above. With DataForSEO it can also ask ChatGPT and Google's AI answers your questions and check who they cite.
+
+**3. Install the CLI for crawling.** The crawl runs on your machine, so it can read any site:
+
+```sh
+npm i -g seo
+seo login
+seo crawl https://example.com/ --max-pages 1500
+```
+
+**4. Ask your agent.** This is close to the prompt I used:
+
+```text
+Audit example.com for US search and AI answers.
+Group our estimated search traffic by kind of page
+and tell me which pages sell something.
+For each free tool, find the searches people use
+for that job, with volume and who ranks.
+Crawl the whole sitemap and tell me which sections
+still use an old template or have a second copy.
+Ask ai_answers ten questions about our product,
+the jobs it does and which tool to choose, for us
+and our closest rival, and say who gets cited.
+Rank the fixes by how close each is to a sale.
+```
+
+On your own site, the hosted server adds your real Search Console clicks and queries, which I couldn't see from outside. With those you'd see which tool searches already bring impressions, and the trend this teardown can't.
+
+If you're at Bannerbear, I'm happy to talk any of this through. And if you'd like the same teardown for your company, [SEO Skill](/) will run it for you.

@@ -50,7 +50,9 @@ import {
   runResearch,
   runRows,
   runSimpleAnalyticsRows,
+  SEARCH_TYPES,
   SECTION_IDS,
+  type SearchType,
   type SectionId,
   UPDATES_SECTION,
 } from '@seo/core/commands'
@@ -78,6 +80,7 @@ const FLAGS: Record<string, string> = {
   issues: '--issues',
   note: '--note',
   end_date: '--end-date',
+  search_type: '--search-type',
 }
 
 const quote = (value: string | number) =>
@@ -440,7 +443,7 @@ export const dataCommand = defineCommand({
     },
     dimensions: {
       type: 'string',
-      description: `Comma-separated: ${DIMENSIONS.join(', ')}. Default query.`,
+      description: `Comma-separated: ${DIMENSIONS.join(', ')}. Default query (page for discover and google_news).`,
     },
     page: {
       type: 'string',
@@ -465,12 +468,17 @@ export const dataCommand = defineCommand({
       description:
         'Optional: leave out queries that match this RE2 regular expression, such as your brand.',
     },
+    'search-type': {
+      type: 'string',
+      description: `Optional: ${Object.keys(SEARCH_TYPES).join(', ')}. Default web. discover and google_news have pages but no queries or positions.`,
+    },
     ...dates,
     ...detail,
     ...common,
   },
   run: async ({ args }) => {
-    const dimensions = csvArg(args.dimensions) ?? ['query']
+    const asked = csvArg(args.dimensions)
+    const dimensions = asked ?? ['query']
     const unknown = dimensions.filter(
       (dimension) => !DIMENSIONS.includes(dimension as Dimension),
     )
@@ -561,6 +569,13 @@ export const dataCommand = defineCommand({
       )
       return
     }
+    const searchType = stringArg(args['search-type']) ?? 'web'
+    if (!(searchType in SEARCH_TYPES)) {
+      throw new SeoError(
+        'INVALID_INPUT',
+        `--search-type is ${Object.keys(SEARCH_TYPES).join(', ')}.`,
+      )
+    }
     const site = await property(args, stringArg(args.site))
     const filters = rowTextFilters({
       page: stringArg(args.page),
@@ -573,8 +588,9 @@ export const dataCommand = defineCommand({
       runRows(
         {
           site,
-          dimensions: dimensions as Dimension[],
+          dimensions: asked as Dimension[] | undefined,
           filters,
+          searchType: searchType as SearchType,
           startDate: stringArg(args['start-date']),
           endDate: stringArg(args['end-date']),
           detail: detailArg(args),

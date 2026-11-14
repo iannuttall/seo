@@ -24,6 +24,25 @@ seo data --site example.com --dimensions page,country --page /blog/
 seo data --site example.com --dimensions query --query pricing
 ```
 
+### Image, video, news and Discover
+
+Search Console counts web search apart from image search, video search, the News tab, Discover and Google News, and the report and these rows show web search unless you ask. Ask for another surface by name:
+
+```text
+Which pages on example.com get image search impressions but no clicks?
+```
+
+```sh
+seo data --site example.com --search-type image --dimensions page
+seo data --site example.com --search-type discover
+```
+
+`--search-type` (`search_type` in MCP) takes `web`, `image`, `video`, `news`, `discover` or `google_news`. Image, video and news are the Images, Videos and News tabs in Google Search. `google_news` is the Google News app and news.google.com, not the News tab.
+
+Discover and Google News show pages without a search, so they have no queries and no average position. Rows for them default to pages, and `seo data` refuses a query cut with an error rather than return an empty list that looks like a zero.
+
+Rows from each of these surfaces come with a line for your agent on what the numbers mean, and a reminder to ask whether that traffic matters to you before it suggests work.
+
 ### Filter with regular expressions
 
 You don't need a filter to find questions, comparisons or AI-style searches: the [report](/docs/report) and [`seo page`](/docs/page) label them for you. For any other cut, write a regular expression in the RE2 syntax Search Console uses.

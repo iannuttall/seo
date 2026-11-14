@@ -33,6 +33,8 @@ Without a section, the report returns the overview: clicks, impressions, click-t
 
 If [Bing is connected](/docs/bing) in the CLI or the local MCP server, the overview also shows Google and Bing clicks and impressions for the same dates, and each engine's share of those clicks. The two are never added together. When Bing sends more clicks than Google, Bing's own overview follows, with the pages and queries that moved.
 
+The overview also lists clicks and impressions from image search, video search, the News tab, Discover and Google News, each counted apart from web search. When one of them has at least a tenth as many impressions as web search, the report says how it compares, and your agent asks whether that traffic matters to you before it opens the pages with [`seo data`](/docs/data).
+
 The overview also shows your Google Analytics sessions for the same dates. You do not pick the property: the report finds the one whose web stream matches the site, names it, and shows:
 
 - Organic Search sessions from Google, the number to set beside Search Console clicks.

@@ -4,6 +4,16 @@
 
 ### Added
 
+- `seo data` reads image search, video search, the News tab, Discover
+  and Google News with `--search-type` (`search_type` in MCP). Discover
+  and Google News default to pages and have no queries or positions, so
+  a query cut of them is an error, not an empty list. Each surface's rows
+  say what the numbers mean and to ask the person whether that traffic
+  matters before suggesting work.
+- The `seo report` overview lists clicks and impressions from those
+  surfaces for the same dates. When one has at least a tenth of web
+  search's impressions, it gives the agent a question for the person with
+  their numbers, and the call that lists its pages.
 - `seo lint` asks about claims that cover every case, such as "and
   almost nothing else", "the only way" or "never works", as an `absolute`
   review item: is the source as broad as the sentence?

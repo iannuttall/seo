@@ -1,3 +1,4 @@
+import { z } from 'zod'
 import { collapseFragmentPageRows } from '../analyze/page-fragments.js'
 import { SeoError } from '../errors.js'
 import type { SearchAnalyticsRequest } from '../gsc/client/types.js'
@@ -85,6 +86,61 @@ export const DIMENSIONS = [
 
 export type Dimension = (typeof DIMENSIONS)[number]
 
+// Search Console's surfaces. web is the All tab; image, video and news are
+// Google Search's own tabs; discover and google_news are outside search.
+export const SEARCH_TYPES = {
+  web: 'web',
+  image: 'image',
+  video: 'video',
+  news: 'news',
+  discover: 'discover',
+  google_news: 'googleNews',
+} as const
+
+export type SearchType = keyof typeof SEARCH_TYPES
+
+export const SEARCH_TYPE_NAMES: Record<SearchType, string> = {
+  web: 'web search',
+  image: 'image search',
+  video: 'video search',
+  news: 'the News tab',
+  discover: 'Discover',
+  google_news: 'Google News',
+}
+
+// Discover and Google News have no queries and no average position.
+export const NO_QUERIES = new Set<SearchType>(['discover', 'google_news'])
+
+// What each surface is, beside the rows.
+const SURFACE_NOTES: Partial<Record<SearchType, string>> = {
+  image:
+    'Image search: results shown in the Google Images tab. Web search totals do not include it.',
+  video:
+    'Video search: results shown in the Google Videos tab. Web search totals do not include it.',
+  news: 'The News tab: results in Google Search’s News tab and news results view. Google News (the app and news.google.com) is search_type google_news.',
+  discover:
+    'Discover is Google’s feed: pages shown without a search, so there are no queries or positions.',
+  google_news:
+    'Google News is news.google.com and the Google News app, not the News tab in Google Search. It has no queries or positions.',
+}
+
+// From Google's Discover guide: the report needs a minimum of impressions.
+export const DISCOVER_MINIMUM =
+  'Search Console reports Discover only once a site reaches a minimum number of impressions, so a site below it shows none.'
+
+// One line for the agent on what the rows mean and what to ask first.
+export const SURFACE_GUIDES: Partial<Record<SearchType, string>> = {
+  image:
+    'compare pages with each other, since a much lower click-through rate than web search is common in the Images tab. Ask the person whether visits from image search matter to them before suggesting work.',
+  video:
+    'videos inside web results count under web search, by the searchAppearance dimension. Ask the person whether video matters to them before suggesting work.',
+  news: 'these matter when the person publishes news; for other sites they need no work.',
+  discover:
+    'there are no queries to target. Ask the person whether Discover matters to them before suggesting work.',
+  google_news:
+    'these matter when the person publishes news; for other sites they need no work.',
+}
+
 export type RowFilter = {
   dimension: Exclude<Dimension, 'date'>
   operator:
@@ -99,6 +155,46 @@ export type RowFilter = {
 
 // Search Console takes RE2 expressions of at most 4,096 characters.
 export const REGEX_MAX_CHARS = 4096
+
+// seo_data's Search Console inputs.
+export const rowsInput = {
+  page: z
+    .string()
+    .min(1)
+    .optional()
+    .describe('search_console only: URL text, such as /blog/.'),
+  query: z
+    .string()
+    .min(1)
+    .optional()
+    .describe('search_console only: query text.'),
+  search_type: z
+    .enum(Object.keys(SEARCH_TYPES) as [SearchType, ...SearchType[]])
+    .default('web')
+    .describe(
+      'search_console only. web (default) is the All tab; image, video and news are the Images, Videos and News tabs; discover is the Discover feed; google_news is the Google News app and site. discover and google_news have pages but no queries or positions.',
+    ),
+  page_regex: z
+    .string()
+    .min(1)
+    .max(REGEX_MAX_CHARS)
+    .optional()
+    .describe('search_console only: RE2 the page URL must match.'),
+  query_regex: z
+    .string()
+    .min(1)
+    .max(REGEX_MAX_CHARS)
+    .optional()
+    .describe('search_console only: RE2 the query must match.'),
+  exclude_query_regex: z
+    .string()
+    .min(1)
+    .max(REGEX_MAX_CHARS)
+    .optional()
+    .describe(
+      'search_console only: RE2 for queries to leave out, such as the brand.',
+    ),
+}
 
 export type RowTextFilters = {
   page?: string
@@ -145,6 +241,7 @@ export type RowsInput = DateInput & {
   site: string
   dimensions?: Dimension[]
   filters?: RowFilter[]
+  searchType?: SearchType
   detail?: Detail
   offset?: number
 }
@@ -158,13 +255,30 @@ export async function runRows(
   input: RowsInput,
   deps: CommandDeps,
 ): Promise<CommandResult> {
-  const dimensions = input.dimensions?.length ? input.dimensions : ['query']
+  const searchType = input.searchType ?? 'web'
+  const surface = SEARCH_TYPE_NAMES[searchType]
+  const noQueries = NO_QUERIES.has(searchType)
+  const dimensions = input.dimensions?.length
+    ? input.dimensions
+    : [noQueries ? 'page' : 'query']
   const filters = input.filters ?? []
+  // A query cut of Discover can only come back empty, which would look like
+  // a real zero.
+  if (
+    NO_QUERIES.has(searchType) &&
+    (dimensions.includes('query') ||
+      filters.some((filter) => filter.dimension === 'query'))
+  ) {
+    throw new SeoError(
+      'INVALID_INPUT',
+      `${surface} has no queries in Search Console, only pages. Ask for dimensions page, date, country, device or searchAppearance, without query filters.`,
+    )
+  }
   const range = dateWindow(input, 28)
   const previous = earlierRange(range)
   const query: Omit<SearchAnalyticsRequest, 'startDate' | 'endDate'> = {
     dimensions,
-    type: 'web',
+    type: SEARCH_TYPES[searchType],
     maxRows: ROWS,
     ...(filters.length
       ? { dimensionFilterGroups: [{ groupType: 'and' as const, filters }] }
@@ -200,6 +314,10 @@ export async function runRows(
     then.map((row) => [keyOf(row.keys, previous.startDate), row]),
   )
   const seen = new Set<string>()
+  // Discover and Google News report no position, so the column is left out.
+  const at = (position: number | null) => (noQueries ? {} : { position })
+  const before_ = (position: number | null) =>
+    noQueries ? {} : { previous_position: position }
   const rows: Row[] = now.map((row) => {
     const key = keyOf(row.keys, range.startDate)
     seen.add(key)
@@ -209,11 +327,11 @@ export async function runRows(
       clicks: row.clicks,
       impressions: row.impressions,
       ctr: row.ctr,
-      position: row.position,
+      ...at(row.position),
       ...(dateAt >= 0 ? { previous_date: old?.keys[dateAt] ?? null } : {}),
       previous_clicks: old?.clicks ?? 0,
       clicks_change: row.clicks - (old?.clicks ?? 0),
-      previous_position: old?.position ?? null,
+      ...before_(old?.position ?? null),
     }
   })
   if (dateAt < 0) {
@@ -224,17 +342,22 @@ export async function runRows(
         clicks: 0,
         impressions: 0,
         ctr: 0,
-        position: null,
+        ...at(null),
         previous_clicks: old.clicks,
         clicks_change: -old.clicks,
-        previous_position: old.position,
+        ...before_(old.position),
       })
     }
   }
+  // Most clicks first, then most impressions, so surfaces with few clicks
+  // such as image search still sort by size; keys break the last ties.
+  const keysOf = (row: Row) => dimensions.map((d) => String(row[d])).join(' ')
   rows.sort((a, b) =>
     dateAt >= 0
       ? String(a.date).localeCompare(String(b.date))
-      : Number(b.clicks ?? 0) - Number(a.clicks ?? 0),
+      : Number(b.clicks ?? 0) - Number(a.clicks ?? 0) ||
+        Number(b.impressions ?? 0) - Number(a.impressions ?? 0) ||
+        keysOf(a).localeCompare(keysOf(b)),
   )
   const notes: string[] = []
   // Spam-looking queries keep their numbers and get a label, so totals stay
@@ -263,8 +386,16 @@ export async function runRows(
     )
   }
   notes.push(
-    `Compared with ${previous.startDate} to ${previous.endDate}${before.rowsFetched >= ROWS ? ' (earlier period hit the row limit)' : ''}. 0 clicks with no position means the row had no impressions in the current period.`,
+    `Compared with ${previous.startDate} to ${previous.endDate}${before.rowsFetched >= ROWS ? ' (earlier period hit the row limit)' : ''}. ${noQueries ? '0 clicks and 0 impressions' : '0 clicks with no position'} means the row had no impressions in the current period.`,
   )
+  const surfaceNote = SURFACE_NOTES[searchType]
+  if (surfaceNote) notes.push(surfaceNote)
+  // Seen live: a Discover total of 1 impression with no page rows.
+  if (noQueries) {
+    notes.push(
+      `Search Console can count ${surface} impressions in the site total and leave them out of these rows, so few or no rows is not proof of none. The report overview gives the total.${searchType === 'discover' ? ` ${DISCOVER_MINIMUM}` : ''}`,
+    )
+  }
   if (pageAt >= 0) {
     notes.push('Page URLs with #fragments are merged into their page.')
   }
@@ -273,13 +404,17 @@ export async function runRows(
       `Search Console has more than ${ROWS} rows; add a filter to narrow it.`,
     )
   }
-  notes.push(
-    'Search Console hides some rare queries for privacy, so query rows do not add up to the site totals.',
-  )
+  if (!noQueries) {
+    notes.push(
+      'Search Console hides some rare queries for privacy, so query rows do not add up to the site totals.',
+    )
+  }
+  const guide = SURFACE_GUIDES[searchType]
+  if (guide && rows.length) notes.push(`How to use these rows: ${guide}`)
   const detail = input.detail ?? 'summary'
   return {
     text: `${rowsText({
-      title: `Search Console ${input.site}, ${range.startDate} to ${range.endDate}, web, by ${dimensions.join(' and ')}.`,
+      title: `Search Console ${input.site}, ${range.startDate} to ${range.endDate}, ${surface}, by ${dimensions.join(' and ')}.`,
       rows,
       offset: input.offset ?? 0,
       limit: PAGE_SIZE,
@@ -290,6 +425,7 @@ export async function runRows(
         deps.call('data', {
           site: input.site,
           dimensions: dimensions.join(','),
+          ...(searchType === 'web' ? {} : { search_type: searchType }),
           detail: 'rows',
           offset,
         }),
@@ -297,6 +433,7 @@ export async function runRows(
     data: {
       range,
       comparisonRange: previous,
+      searchType,
       total: rows.length,
       offset: input.offset ?? 0,
       rows: rows.slice(input.offset ?? 0, (input.offset ?? 0) + PAGE_SIZE),

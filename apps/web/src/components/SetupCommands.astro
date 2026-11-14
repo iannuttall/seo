@@ -33,6 +33,8 @@ const clients = [
   {
     id: 'other',
     label: 'Other clients',
+    // Three labels don't fit a phone-width box, so this one shortens there.
+    short: 'Other',
     command: setupCommands.url,
     note: 'Add it as a remote MCP server in your client.',
   },
@@ -43,7 +45,7 @@ const clients = [
   <div
     role="tablist"
     aria-label="MCP client"
-    class="inline-flex h-9 items-center justify-center gap-1 rounded-lg bg-muted p-0.5 text-foreground-muted"
+    class="inline-flex h-9 max-w-full items-center justify-start gap-1 overflow-x-auto rounded-lg bg-muted p-0.5 text-foreground-muted"
   >
     {
       clients.map((client, index) => (
@@ -55,9 +57,16 @@ const clients = [
           aria-selected={index === 0 ? 'true' : 'false'}
           tabindex={index === 0 ? undefined : -1}
           data-setup-tab={client.id}
-          class="inline-flex h-8 min-w-7 items-center justify-center rounded-md border border-transparent px-3 text-sm font-medium outline-none transition-colors hover:text-foreground focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/20 aria-selected:bg-card aria-selected:text-foreground aria-selected:shadow-xs"
+          class="inline-flex h-8 min-w-7 items-center justify-center whitespace-nowrap rounded-md border border-transparent px-2.5 sm:px-3 text-sm font-medium outline-none transition-colors hover:text-foreground focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/20 aria-selected:bg-card aria-selected:text-foreground aria-selected:shadow-xs"
         >
-          {client.label}
+          {client.short ? (
+            <>
+              <span class="sm:hidden">{client.short}</span>
+              <span class="hidden sm:inline">{client.label}</span>
+            </>
+          ) : (
+            client.label
+          )}
         </button>
       ))
     }
@@ -67,7 +76,7 @@ const clients = [
       as the tallest panel and switching clients never shifts the page. */}
   {/* Commands wrap only at spaces. A token wider than the box scrolls
       inside it rather than splitting mid-word. */}
-  <div class="mt-3 grid">
+  <div class="mt-3 grid grid-cols-[minmax(0,1fr)]">
   {
     clients.map((client, index) => (
       <div

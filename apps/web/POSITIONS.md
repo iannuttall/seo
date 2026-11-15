@@ -49,6 +49,24 @@ is old SEO spam on new platforms.
 
 - Posts: aeo-vs-seo, how-to-get-cited-by-chatgpt, query-fan-out.
 
+## Pages are made for the reader first
+
+Every change a post recommends should make the page better for the person
+who lands on it. A page ranks, and gets cited, by being the resource that
+serves its reader. Don't open an article with a stock definition ("What is
+lifecycle email marketing?") or add a question block only to match a search;
+a good guide on the topic answers it already. An FAQ belongs at the end, for
+the follow-up questions a reader would actually ask. Using the words people
+search with in a title, heading or section is fine when it reads naturally
+and helps the reader find what they came for; stuffing them in isn't. So
+posts don't recommend a new page per question, titled with the question and
+opening with a one-line answer, as a way to rank or get cited; they
+recommend making the page that covers the topic serve its reader better.
+
+- Exceptions: a page about the company's own product that answers a
+  question its buyers ask, such as its price, its plans or how to set it up.
+- Posts: how-id-grow-bannerbear.
+
 ## One page per question group, never a page per fan-out query
 
 Cover related questions as sections on the page that already ranks. Google's

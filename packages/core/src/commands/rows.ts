@@ -222,6 +222,25 @@ export function rowTextFilters(input: RowTextFilters): RowFilter[] {
 
 // Search Console answers an expression it can't read with no rows, which
 // looks like a real zero, so reject what RE2 lacks before asking.
+// The seo_data arguments that rebuild these filters: rowTextFilters in
+// reverse.
+const FILTER_ARGS: Record<string, string> = {
+  'page contains': 'page',
+  'query contains': 'query',
+  'page includingRegex': 'page_regex',
+  'query includingRegex': 'query_regex',
+  'query excludingRegex': 'exclude_query_regex',
+}
+
+function filterArgs(filters: RowFilter[]): Record<string, string> {
+  const args: Record<string, string> = {}
+  for (const filter of filters) {
+    const name = FILTER_ARGS[`${filter.dimension} ${filter.operator}`]
+    if (name) args[name] = filter.expression
+  }
+  return args
+}
+
 function checkRegex(expression: string) {
   if (expression.length > REGEX_MAX_CHARS) {
     throw new SeoError(
@@ -421,11 +440,16 @@ export async function runRows(
       detail,
       notes,
       origin: originOf(input.site),
+      // The next page keeps this call's filters and dates, so it continues
+      // the same list instead of starting an unfiltered one.
       more: (offset) =>
         deps.call('data', {
           site: input.site,
           dimensions: dimensions.join(','),
           ...(searchType === 'web' ? {} : { search_type: searchType }),
+          ...filterArgs(filters),
+          start_date: range.startDate,
+          end_date: range.endDate,
           detail: 'rows',
           offset,
         }),

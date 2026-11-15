@@ -1,5 +1,15 @@
 # Changelog
 
+## 0.21.1
+
+### Fixed
+
+- `seo data` keeps its filters and dates in the "More" hint for the next
+  page of rows. Following it after `--query-regex`, `--page-regex`,
+  `--query`, `--page` or `--exclude-query-regex` used to list unfiltered
+  rows. The CLI now quotes values in single quotes, so a regex's `$` and
+  backslashes reach the command as typed.
+
 ## 0.21.0
 
 ### Added

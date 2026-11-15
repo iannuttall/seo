@@ -1,0 +1,78 @@
+---
+title: How to find long-tail keywords in Search Console with regex
+description: Two regex filters find the long questions your pages already show for in Search Console. Use them to improve the pages that rank and find topics for new posts.
+heading: How to find long-tail keywords in Search Console with regex
+lead: The long-tail keywords worth your time are the ones your pages already show for. Search Console lists them, and two regex filters pull them out.
+date: '2026-11-15'
+draft: false
+cover:
+  alt: "A Victorian engraved prospector, seen over his shoulder, kneeling at a stream and looking into the gold pan he holds, with a few lime green flecks shining among the gravel."
+  title: left
+---
+
+In 2023 I [shared two regex filters](https://x.com/iannuttall/status/1643246625442222087) for finding long-tail keywords in Search Console, and the post had 79,000 views. I still use them for the same two jobs: improving the page that already ranks, and finding topics worth their own post. These days I ask my agent to run the filters for me.
+
+A long, specific search your page already shows for tells you what a reader wanted from that page. Improving the page for them gives it a better chance to move up for that search and the ones around it. When several of those searches point at a topic the page doesn't cover, that's your next post.
+
+## Start with the searches at positions 4 to 20
+
+I start with searches at average positions 4 to 20, because Google already shows the page for them. On 24 of my sites over the 28 days to 10 November 2026, those positions held a median 53% of each site's listed searches and 62% of its listed impressions.
+
+<AgentStep setup prompt="Which searches does example.com show for at positions 4 to 20 in Search Console? Group them by page, then read each page and tell me which searches it doesn't answer yet." cli="seo data --site example.com --dimensions query,page --detail full" />
+
+The agent keeps the rows at positions 4 to 20 and reads each page to judge what's missing. The report also has two ready-made lists: `quick-wins` for searches at positions 4 to 10 that get fewer clicks than your site's usual rate, and `second-page` for pages at positions 11 to 20 with their searches.
+
+## Use regex to pull out long searches and questions
+
+Search Console's query filter takes regular expressions: click + Add filter, choose Query, then Custom (regex). These are the two I use.
+
+This one finds searches of seven words or more:
+
+```text
+^(\S+\s+){6,}\S+$
+```
+
+This one finds searches that start with a question word:
+
+```text
+^(what|why|where|when|how|who|which|can|does|is|are|should)\b
+```
+
+Your agent can run them with the page beside each search:
+
+<AgentStep prompt="Show me every Google search with seven or more words that example.com appears for, with the page, impressions and position. Then do the same for searches that start with a question word." cli="seo data --site example.com --dimensions query,page --query-regex '^(\S+\s+){6,}\S+$' --detail full" />
+
+## Expect a short list, because Google hides most of the long tail
+
+Long searches are a small share of what Search Console lists. On the same 24 sites, searches of seven words or more were a median 6% of listed searches and 2.7% of listed impressions. Searches starting with a question word were a median 8% of listed searches and 5% of listed impressions.
+
+Most of the rest are anonymized queries, which Google keeps out of the list to protect privacy. On these 24 sites, a median 63% of each site's impressions came from searches Search Console didn't name. That's a slightly different set of sites from my Bing post, where it was 59%. My post on [the long-tail searches Search Console hides](/blog/bing-long-tail) shows how Bing's query report fills in many of them.
+
+Across the 24 sites there were 4,302 searches of seven words or more at positions 4 to 20. Most got only a few impressions each, and 3,885 of them (90%) got no clicks in the 28 days. Each one is small, but together they show what readers wanted from your pages.
+
+## Decide what each search needs from the page
+
+Read each long search as a reader telling you what they hoped to find. Then decide what would serve them, in this order:
+
+1. If the search is part of the page's topic, give the page that ranks a better section that answers it. Use the reader's words in the heading where they read naturally.
+2. If it's a small follow-up question a reader of that page would actually ask, answer it in an FAQ at the end.
+3. If several searches point at a topic nothing on your site covers, write a new post on that topic, and link to it from the page that showed for them. Expanding into topics readers already search for is how I grow a site. Write one post per topic, not one per search. Google's [spam policies](https://developers.google.com/search/docs/essentials/spam-policies) call it scaled content abuse when many pages are made "for the primary purpose of manipulating search rankings and not helping users".
+
+Have your agent sort them before anything changes:
+
+<AgentStep prompt="For each of these searches, say whether the page that ranks should get a new or better section or an FAQ entry. Then group the searches no page on example.com covers into topics, and suggest one new post for each topic with the searches it would answer. Don't change anything yet." />
+
+## Check the result after a few weeks
+
+Change one thing per page, note the date, and wait three to four weeks. Then compare equal periods before and after:
+
+<AgentStep prompt="Compare example.com in equal periods before and after 1 December 2026, with the pages and searches that moved." cli="seo compare --site example.com --date 2026-12-01" />
+
+The comparison lists any Google ranking update that ran in either period. If one did, the change may come from the update.
+
+## How this was checked
+
+- The figures come from 24 of the Search Console sites I run, over the 28 days from 14 October to 10 November 2026, using Google's final data and web search only.
+- I kept sites with at least 1,000 impressions and left out sites whose query list hit the 25,000 rows the API returns in one call, because their shares would be incomplete.
+- Shares of listed searches and impressions count only the searches Search Console names. The anonymized share is each site's total impressions minus the impressions in its listed searches.
+- Searches were counted by words separated by spaces, and questions by the same question-word filter as above.

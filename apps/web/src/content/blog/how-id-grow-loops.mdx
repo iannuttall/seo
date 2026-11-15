@@ -1,0 +1,469 @@
+---
+title: How I'd grow Loops, the SaaS email platform, with SEO
+description: An SEO teardown of Loops, the email platform for SaaS, and how I'd get its new guides, tools and templates ranking.
+heading: How I'd grow Loops
+lead: Loops has already built the pages software companies search for. This is how I'd aim them at the right searches and add the comparisons it's missing.
+date: '2026-11-15'
+company: Loops
+x:
+  company: loops
+draft: false
+cover:
+  alt: "A mail sorter in a burnt orange shirt and a cap with the Loops ring slides an envelope into a wall of wooden pigeonholes in a 1970s post office, one hand resting on a stack of letters still to sort."
+  title: left
+---
+
+export const beforeDocs = `<pre>GET app.loops.so/docs/
+    transactional/guide
+301 Moved Permanently
+Lands on: loops.so/docs
+
+GET app.loops.so/docs/
+    integrations/stripe
+301 Moved Permanently
+Lands on: loops.so/docs</pre>`
+
+export const afterDocs = `<pre>GET app.loops.so/docs/
+    transactional/guide
+301 Moved Permanently
+Lands on: loops.so/docs/
+    transactional
+
+GET app.loops.so/docs/
+    integrations/stripe
+301 Moved Permanently
+Lands on: loops.so/docs/
+    integrations/stripe</pre>`
+
+export const beforeSpf = `<pre>&lt;!-- loops.so/glossary/spf --&gt;
+&lt;a href="/tools/dmarc-generator"&gt;
+  …&lt;/a&gt;
+&lt;a href="/tools/dns-checker"&gt;
+  …&lt;/a&gt;</pre>`
+
+export const afterSpf = `<pre>&lt;!-- loops.so/glossary/spf --&gt;
+Check yours now with the
+&lt;a href="/tools/spf-checker"&gt;
+  free SPF checker&lt;/a&gt;,
+which counts your DNS lookups
+against the limit of 10.</pre>`
+
+[Loops](https://loops.so/) is email for software companies. Marketing campaigns, product and lifecycle emails, and transactional email like password resets all come from one contact record, set up by a marketer in the editor or by a developer through the API. It's free up to 1,000 contacts, and the Growth plan starts at $49 a month, priced by subscribed contacts with unlimited sends on paid plans. Chris Frantz and Adam Kaczmarek started it in 2022 through Y Combinator.
+
+People already look for it by name. The homepage ranks first for "loops email", "loops login" and "loops email marketing". Earlier this month Chris posted that October was Loops' best month yet for new paid users, with growth still coming entirely from word of mouth. Search is the obvious second channel, for the people who need a SaaS email tool and haven't heard of Loops yet.
+
+The upside is that most of the work is done. Since July, Loops has added 33 guides and 8 free tools, on top of 18 integration pages, 32 email templates and 16 email example pages. Google ranks a lot of them, mostly on pages two to five. Here's how I'd move them up, and the comparisons with Resend, SendGrid, Customer.io and Postmark I'd add, since Loops has no page for those searches yet.
+
+## Where Loops' search traffic lands
+
+Outside brand searches, the email examples and the glossary bring almost all of Loops' search visits.
+
+<TrafficMap
+  caption="Estimated monthly US Google visits to the 100 loops.so pages with the most traffic, by kind of page, rounded down per page (DataForSEO, 14 November 2026). The whole site is estimated at 1,764. Blue pages show emails people send with Loops, the pages closest to a sale."
+  items={[
+    { label: "Email examples", value: 555, tone: "sells", note: "Waitlist, account verification and notification emails lead" },
+    { label: "Glossary", value: 582, tone: "other", note: "353 of it to the Recipient page, mostly from people looking up what \"recipient\" means" },
+    { label: "Homepage", value: 496, tone: "brand", note: "Mostly brand searches such as \"loops email\"" },
+    { label: "Docs", value: 23, tone: "other" },
+    { label: "Free tools", value: 22, tone: "sells" },
+    { label: "Privacy, terms and careers", value: 24, tone: "other" },
+    { label: "Pricing", value: 12, tone: "brand" },
+    { label: "Guides (resources)", value: 3, tone: "sells" },
+  ]}
+/>
+
+The glossary visits are mostly people looking up a word, and I'd leave them alone. They don't hurt, and the glossary is where the site's search visitors already are, which makes it the best place to link from (more on that below).
+
+DataForSEO estimates the 33 guides and 8 tools at about 25 visits a month between them. That's a floor, since it only counts searches in DataForSEO's database and misses the long tail, so Loops' Search Console will show more. The guides are four months old and most of the tools a few weeks, and Google already ranks the guides for 73 searches and the tools for 88, and 148 of those rankings sit between positions 11 and 50. My read is that pages in that range are past the hard part, since Google has placed them, and what they need most now is links, from inside the site and from other sites. Some also need to use the words people search with, as the next sections show.
+
+One caveat on the examples. DataForSEO's ranking data puts the waitlist examples page second for "waitlist email" (5,400 US searches a month) and credits it with about 232 visits. When I checked the live results on 14 November, on desktop and on mobile, there was no Loops result I could identify in the top 16. Loops' own Search Console will say whether that page has slipped, and it's the first thing I'd look at.
+
+## How Sequenzy gets more search traffic with fewer links
+
+Loops isn't small in search because its competitors are giants. Sequenzy, another email platform aimed at SaaS, has fewer linking sites than Loops and more estimated search visits.
+
+<CompareBars
+  caption="Estimated monthly US Google visits to each site, with the number of sites linking to it (DataForSEO, 14 November 2026). Third-party estimates, so read them for proportions. Most of Resend's visits are brand searches to its homepage."
+  unit="visits"
+  highlight="loops.so"
+  rows={[
+    { label: "resend.com", value: 20016, note: "14,894 linking sites" },
+    { label: "customer.io", value: 4489, note: "7,434 linking sites" },
+    { label: "postmarkapp.com", value: 3046, note: "7,726 linking sites" },
+    { label: "sequenzy.com", value: 2899, note: "666 linking sites" },
+    { label: "loops.so", value: 1764, note: "1,781 linking sites" },
+  ]}
+/>
+
+Most of Sequenzy's visits come from two kinds of page, and Loops already has both.
+
+**Free tools.** Tools make up 27 of Sequenzy's 100 most visited pages and bring an estimated 1,245 visits, 828 of them to an email name generator. Loops' 8 tools bring about 22, and most of them already have 670 to 1,000 words around the tool, so the gap is in which jobs they cover and how many links point at them. Sequenzy's biggest tools sit next to email, such as naming an address, checking a domain and testing a subject line. Loops can do the same from what it already runs, which is what the tools section below lays out.
+
+**Best-of lists.** Sequenzy's "best email marketing software" list ranks ninth for "email marketing platforms" (33,100 searches a month) and thirteenth for "email marketing software" (165,000). It puts Sequenzy first and Loops tenth. Loops has lists of its own, such as "8 Best Transactional Email Services and APIs", but they sit in positions 29 to 37 for their searches. I'd make Loops' lists the credible version: test each option, say who it suits, and put a rival first where it's the better fit. Then link them from the guides and the comparison pages so they have a chance against Sequenzy's.
+
+Sequenzy also has a Sequenzy vs Loops comparison and a page explaining Loops' pricing, so it's already writing for people who are looking at Loops. The comparison pages below are how Loops answers those people on its own site.
+
+## Page-two searches Loops' pages don't name
+
+Some of the cheapest changes on a site like this are on pages that already sit just off the first page of Google for a search, where the page never uses the words people searched. Google has decided the page is relevant. Using the searcher's words where a reader would expect them, in a heading or a section that answers what they asked, is often the nudge that moves it up. I'd never stuff a phrase in for its own sake. Each change should make the page better for the person who searched.
+
+From outside, DataForSEO puts Loops' pages at positions 11 to 20 for at least 149 searches with 50 or more US searches a month. Many are dictionary lookups for "recipient", which I'd leave. I compared the rest with each page's title, main heading and text, and a few stand out.
+
+<KeywordTable
+  caption="Loops pages at positions 11 to 20 in DataForSEO's US ranking data, November 2026, and where the search appears on the page (title, main heading and text checked 14 and 15 November 2026)."
+  sortBy="volume"
+  columns={[{ key: 'keyword', label: 'Search', format: 'text' }, { key: 'volume', label: 'US searches', format: 'number', short: 'US' }, { key: 'position', label: 'Position', format: 'number', short: 'Pos' }, { key: 'page', label: 'Loops page, and where it says it', format: 'text', short: 'Page' }]}
+  rows={[
+    { keyword: 'mailto hyperlink', volume: 4400, position: 14, page: 'Mailto generator: nowhere' },
+    { keyword: 'email verification code', volume: 480, position: 18, page: 'Verification examples: one example and its note' },
+    { keyword: 'bimi record', volume: 480, position: 13, page: 'BIMI docs: text only' },
+    { keyword: 'how to view eml files', volume: 320, position: 14, page: 'EML viewer: nowhere' },
+  ]}
+/>
+
+Each one points at something the page could do better for its reader:
+
+- People searching "mailto hyperlink" want to write the link into their own HTML. The mailto page could add a short section on the hyperlink itself, with the markup to copy.
+- Plenty of apps send a code instead of a link. The account verification page could add a section on verification code emails, covering how long the code lasts and what to say when it expires.
+- The BIMI guide is titled "What is BIMI?", and it already explains how to set up the record. A title that says so, such as "What is BIMI? How to set up a BIMI record", tells the searcher the page has the step they came for.
+- The EML viewer is titled "How to Open an EML File". Adding "view" to the title and the first paragraph matches how people ask.
+
+This list comes from a third party's estimates. Loops' own Search Console has the real one: every query where a page averages positions 11 to 20, with impressions. SEO Skill's striking-distance report lists those queries by page (`seo report --site loops.so --section striking-distance`), and `seo page` shows a page's title and headings beside its queries, so an agent can go through them one page at a time.
+
+## Comparison pages for Resend, SendGrid, Customer.io and Postmark
+
+The searches closest to a sale are the ones people make when they're leaving another tool, and Loops has the content for them already. It has six migration guides, for SendGrid, Mailgun, Postmark, Customer.io, Mailchimp and Brevo, each titled "Migrate from SendGrid to Loops" and so on. People leaving a tool search for an alternative.
+
+<KeywordTable
+  caption="DataForSEO volumes and difficulty, US, November 2026. Who ranks: two names from the top live US desktop results, 14 November 2026. No result I could identify in the top 10 was a Loops page."
+  sortBy="volume"
+  columns={[{ key: 'keyword', label: 'Search', format: 'text' }, { key: 'volume', label: 'US searches', format: 'number', short: 'US' }, { key: 'difficulty', label: 'Difficulty', format: 'number', short: 'KD' }, { key: 'who', label: 'Who ranks', format: 'text', short: 'Top' }]}
+  rows={[
+    { keyword: 'sendgrid alternatives', volume: 480, difficulty: 0, who: 'Infraforge, SendLayer' },
+    { keyword: 'mailgun alternatives', volume: 210, difficulty: 0, who: 'EngageBay, PhotonConsole' },
+    { keyword: 'resend alternative', volume: 170, difficulty: 0, who: 'Bluey Email, FreeResend' },
+    { keyword: 'brevo alternatives', volume: 170, difficulty: 0, who: 'Zixflow, LaunchStall' },
+    { keyword: 'postmark alternative', volume: 90, difficulty: 0, who: 'Sequenzy, Emailtooltester' },
+    { keyword: 'customer.io alternatives', volume: 40, difficulty: 0, who: 'Unomok, Softwares.com' },
+  ]}
+/>
+
+Every one of those searches has a difficulty of 0, and email vendors already rank in them with their own pages. Sequenzy is first for "postmark alternative", Keplars third for "resend alternative", Plunk sixth for "sendgrid alternatives", Courier sixth for "customer.io alternatives". The rivals do it to each other too. Resend's "Migrate from Postmark" page ranks first for "resend vs postmark", and Postmark's own Resend alternative page ranks second.
+
+Loops has one comparison page, "The agent-first Marketo alternative", and no page in a 538-page crawl links to it.
+
+**The fix:** a comparison page for each rival at loops.so/compare/, starting with the ones Loops' customers actually move from. I'd lead with Resend, SendGrid, Customer.io and Postmark, the developer-first tools a SaaS team is choosing between today, then Mailgun and Brevo. Each page:
+
+- is titled with the search, such as "Resend alternative for SaaS: Loops vs Resend"
+- says honestly who each tool suits. Resend is an email API with React Email behind it. Loops puts marketing, lifecycle and transactional email on one contact record, so a marketer can write the campaign the developer's events trigger.
+- compares pricing on the same contact count, since "resend pricing" (1,600 searches a month) and "sendgrid pricing" (1,900) show how many people are weighing cost. Those searches will keep going to the vendors' own pricing pages, but the comparison is where the answer belongs.
+- ends with the migration guide that already exists, linked as the next step
+
+Then link every comparison page from the footer and the pricing page, so the Marketo page stops being an orphan. I'd write a handful of these well, one for each tool Loops' customers actually leave, rather than one for every pair of tools.
+
+<UrlMap
+  caption="Loops' migration guides and the comparison page each one supports (checked 14 November 2026)."
+  rows={[
+    { url: "loops.so/compare/resend", action: "New", tone: "change", note: "No migration guide yet. The one I'd write first" },
+    { url: "loops.so/resources/migrate-sendgrid-to-loops", action: "Link", tone: "keep", to: "loops.so/compare/sendgrid", note: "Becomes the last section of the comparison page" },
+    { url: "loops.so/resources/migrate-customerio-to-loops", action: "Link", tone: "keep", to: "loops.so/compare/customer-io" },
+    { url: "loops.so/resources/migrate-postmark-to-loops", action: "Link", tone: "keep", to: "loops.so/compare/postmark" },
+    { url: "loops.so/resources/migrate-mailgun-to-loops", action: "Link", tone: "keep", to: "loops.so/compare/mailgun" },
+    { url: "loops.so/resources/migrate-brevo-to-loops", action: "Link", tone: "keep", to: "loops.so/compare/brevo" },
+    { url: "loops.so/compare/marketo", action: "Link", tone: "change", note: "Live, with no internal links in the crawl. Add it to the footer with the rest" },
+  ]}
+/>
+
+The AI answers point the same way. For "Loops vs Resend: which should I use?", the answers I collected cite other sites, such as Vero (a rival email tool) and Mailflow Authority, and ChatGPT linked Resend's pricing page in one run. Loops' homepage and pricing page were cited too, but there's no Loops page titled with that question.
+
+### Comparisons between two rivals, with Loops as the third option
+
+People also compare the tools Loops competes with against each other, without Loops in the search. Each of these searches is small, but all have a difficulty of 0, and the people making them are picking an email provider right now and may not know Loops yet.
+
+<KeywordTable
+  caption="DataForSEO volumes and difficulty, US, November 2026. Each row adds both word orders, such as sendgrid vs mailgun and mailgun vs sendgrid."
+  sortBy="volume"
+  columns={[{ key: 'keyword', label: 'Search', format: 'text' }, { key: 'volume', label: 'US searches', format: 'number', short: 'US' }, { key: 'difficulty', label: 'Difficulty', format: 'number', short: 'KD' }]}
+  rows={[
+    { keyword: 'sendgrid vs mailgun', volume: 520, difficulty: 0 },
+    { keyword: 'resend vs sendgrid', volume: 370, difficulty: 0 },
+    { keyword: 'resend vs postmark', volume: 230, difficulty: 0 },
+    { keyword: 'postmark vs sendgrid', volume: 180, difficulty: 0 },
+    { keyword: 'resend vs mailgun', volume: 70, difficulty: 0 },
+  ]}
+/>
+
+I'd start where neither vendor owns the result. For "sendgrid vs mailgun", a Venture Harbour list and a Hacker News thread rank above Mailgun's own compare page, and a post comparing Mailgun, SendGrid and Amazon SES ranks eighth, so a page with a third option fits what Google already shows. "resend vs postmark" can wait, since Resend and Postmark hold the top two places with their own pages.
+
+Each page compares the two tools honestly and gives a verdict for each kind of team. Loops comes in as the third option only where it fits, for teams that want marketing and transactional email on one contact record. A page that reads as an ad for Loops won't rank or get cited. I'd keep it to these few pairs, the email APIs SaaS developers actually weigh against each other, and link each one from the matching Loops comparison page.
+
+## Loops' free tools and the searches they could win
+
+Loops' eight free tools are aimed at real searches. The mailto link generator ranks ninth for "mailto link generator" and the EML viewer is 30th for "eml file viewer". Customer.io built the same two tools, and DataForSEO's ranking data has them third and seventh, though its EML viewer wasn't in the live results I checked.
+
+<KeywordTable
+  caption="Where Loops' tools rank today (DataForSEO ranking data for loops.so/tools/, US, November 2026). In the Wayback Machine the subject line tester first appears in July 2026 and the other tools from late October."
+  sortBy="volume"
+  columns={[{ key: 'keyword', label: 'Search', format: 'text' }, { key: 'volume', label: 'US searches', format: 'number', short: 'US' }, { key: 'position', label: 'Loops position', format: 'number', short: 'Pos' }, { key: 'page', label: 'Loops tool', format: 'text', short: 'Tool' }]}
+  rows={[
+    { keyword: 'mailto hyperlink', volume: 4400, position: 14, page: 'Mailto link generator' },
+    { keyword: 'mailto link generator', volume: 2400, position: 9, page: 'Mailto link generator' },
+    { keyword: 'utm link', volume: 1600, position: 38, page: 'UTM generator' },
+    { keyword: 'eml file viewer', volume: 1000, position: 30, page: 'EML viewer' },
+    { keyword: 'dmarc record generator', volume: 880, position: 19, page: 'DMARC generator' },
+    { keyword: 'spam words', volume: 320, position: 11, page: 'Spam word checker' },
+  ]}
+/>
+
+The difference between the two companies' tools is links and time. Customer.io's mailto generator has links from 17 sites and its EML viewer from 6, and both have been live since December 2024. None of Loops' tools has links from more than three sites, and customer.io as a whole has about four times as many linking sites as loops.so. I'd fix that from both ends, with links from Loops' own busiest pages now and outreach to the sites that link to Customer.io's tools (in the links section below).
+
+### Link the glossary to the tools
+
+The glossary has Loops' most visited non-brand pages, and many of its terms have a tool to go with them. The SPF, DKIM and DMARC entries link to the DNS checker, and the spam entry links to the spam word checker. But the SPF page skips the SPF checker.
+
+<BeforeAfter
+  caption="The tool links on the SPF glossary page today, and the link I'd add to its first paragraph (checked 14 November 2026)."
+  before={{ label: "Today", html: beforeSpf }}
+  after={{ label: "With the link", html: afterSpf }}
+/>
+
+When the DKIM, DMARC and MX checkers below exist, link those terms to them too. It's the cheapest change on this list, and it sends Google from pages it already ranks to the pages that need help.
+
+### Give each DNS check its own page
+
+The DNS checker checks SPF, DKIM, DMARC and MX records in one go, and it's titled "Free DNS Checker for Email". People search for each record on its own, and those searches are bigger than everything the tools rank for today.
+
+<KeywordTable
+  caption="DataForSEO volumes and difficulty, US, November 2026. Who ranks: two names from the top live US desktop results, 14 November 2026."
+  sortBy="volume"
+  columns={[{ key: 'keyword', label: 'Search', format: 'text' }, { key: 'volume', label: 'US searches', format: 'number', short: 'US' }, { key: 'difficulty', label: 'Difficulty', format: 'number', short: 'KD' }, { key: 'who', label: 'Who ranks', format: 'text', short: 'Top' }]}
+  rows={[
+    { keyword: 'mx lookup', volume: 9900, difficulty: 31, who: 'SBThemes, MailSleuth' },
+    { keyword: 'spf checker', volume: 8100, difficulty: 57, who: 'NetInspector, MXGuardian' },
+    { keyword: 'dmarc checker', volume: 6600, difficulty: 52, who: 'Microsoft Learn, dmarcian' },
+    { keyword: 'dkim checker', volume: 5400, difficulty: 53, who: 'EasyDMARC, MxToolbox' },
+  ]}
+/>
+
+Loops already has an SPF checker on its own page, which counts DNS lookups against the limit of 10 and shows every include. It doesn't rank for "spf checker" yet, and only two pages link to it. Sequenzy has built the same set of checkers, and its MX lookup ranks 31st, so a tool alone doesn't win these. I'd add an MX lookup, a DMARC checker and a DKIM checker the same way, and give each one something the combined checker doesn't do: a selector lookup for DKIM, and the policy explained in plain words for DMARC. Keep the DNS checker as the page that checks everything at once, and link all four from it.
+
+The results for these are mostly small tool sites and the email security companies, and with difficulty between 31 and 57 they're harder than the comparison searches. I'd treat them as a bet that pays off once the glossary links and outreach are in place. The people running these checks are setting up a domain to send email from, which is the moment they pick an email tool. In both AI runs, none of the answers to "How do I set up SPF, DKIM and DMARC for my domain?" named Loops; they cited MxToolbox, dmarcian and Google's help pages, among others.
+
+### Treat every tool page as a landing page
+
+A tool ranks when the page around it answers what the person needs. That means what the check does, how to read the result, the problems it solves, what it can't tell you, and what to do next, which is where Loops comes in. Most of Loops' tool pages already carry about 670 to 1,000 words of that. Two don't. The subject line tester has about 400 words, and the UTM generator about 390. I'd bring those up to the standard of the mailto page, and build every new checker below to it from day one.
+
+### Two more tools Loops can build from what it has
+
+- **Email header analyzer** (3,600 searches, difficulty 33; MxToolbox and Trustifi rank). The EML viewer page already explains Received lines and authentication headers, and the viewer opens the files they come from. A page that takes pasted headers and shows the route, the SPF, DKIM and DMARC results and the delays between hops is the same parser with a different input.
+- **Blacklist checker** (2,900 searches, difficulty 0; small tool sites rank). It's a set of DNS lookups against the public blocklists, the same kind of query the DNS checker already runs, and it answers the question every sender asks when mail stops arriving.
+
+## Templates that match what people search for
+
+Loops has 32 email templates, from welcome and password reset to failed payment and investor update. They first appear in the Wayback Machine in February 2025, and DataForSEO finds no US search that any of them ranks for.
+
+They're short (mostly 110 to 160 words each) and titled after the email's job without saying it's a template, such as "Reset Password | Templates | Loops". People search for "password reset email template".
+
+<SearchResult
+  caption="The password reset template in Google today, and titled for the search. The page and its URL stay as they are."
+  before={{
+    url: "https://loops.so/templates/reset-password",
+    site: "Loops",
+    title: "Reset Password | Templates | Loops",
+    description: "Guide users through resetting their password with clear next steps. A free, ready-to-use transactional email template you can customize and send in Loops.",
+  }}
+  after={{
+    url: "https://loops.so/templates/reset-password",
+    site: "Loops",
+    title: "Password Reset Email Template for SaaS (Free)",
+    description: "A password reset email you can copy, with the subject line, the button, the expiry note and the security line. Edit it in Loops and send it from your app's API.",
+  }}
+/>
+
+<KeywordTable
+  caption="DataForSEO volumes and difficulty, US, November 2026, with the Loops template that already exists for each search."
+  sortBy="volume"
+  columns={[{ key: 'keyword', label: 'Search', format: 'text' }, { key: 'volume', label: 'US searches', format: 'number', short: 'US' }, { key: 'difficulty', label: 'Difficulty', format: 'number', short: 'KD' }, { key: 'page', label: 'Loops template', format: 'text', short: 'Page' }]}
+  rows={[
+    { keyword: 'invoice email template', volume: 880, difficulty: 12, page: 'Payment Invoice' },
+    { keyword: 'password reset email template', volume: 320, difficulty: 0, page: 'Reset Password' },
+    { keyword: 'welcome email template', volume: 320, difficulty: 3, page: 'Welcome' },
+    { keyword: 'product update email template', volume: 110, difficulty: 0, page: 'Monthly Update' },
+    { keyword: 'onboarding email template', volume: 90, difficulty: 0, page: 'Onboarding Drip' },
+    { keyword: 'waitlist email template', volume: 50, difficulty: 0, page: 'Welcome to the Waitlist' },
+  ]}
+/>
+
+**The fix:** rename each template after its search, and add the few hundred words a template page needs, covering when to send it, the subject line, what it must include and what to leave out. Then link each template from its examples page. The waitlist template links to the waitlist examples page, but the examples page doesn't link back, and by DataForSEO's estimate it gets more search visits than any page on the site except the homepage and the Recipient entry.
+
+The template and example libraries can grow into a few searches Loops already has the emails for:
+
+- "newsletter examples" (3,600 searches, difficulty 28), from the community newsletter and monthly update templates
+- "welcome email subject lines" (720, difficulty 0), which the welcome examples page's "Welcome email subject-line ideas" section could answer with a plainer heading and more of the lines from its 17 emails
+- "order confirmation email" (480, difficulty 4), which is the payment confirmation examples page under the name people use
+- "apology email to customer" (140, difficulty 0), from the service disruption template
+
+## A guide to SaaS email marketing that links the rest
+
+The biggest searches in Loops' market are "email marketing software" (165,000 US searches a month) and "email marketing platforms" (33,100), and both have a difficulty over 60. Lists rank there. Mailtrap's "email marketing platforms for startups" list ranks seventh for both and gets about 1,400 estimated visits a month. It names more than 20 products, and Loops isn't one of them.
+
+I wouldn't try to rank a Loops page for those. I'd get Loops onto the lists (below), and go after the smaller searches where Loops is the answer:
+
+<KeywordTable
+  caption="DataForSEO volumes and difficulty, US, November 2026, mapped to the sections of one guide. The Loops page in the last column already exists and would be linked from that section."
+  sortBy="volume"
+  columns={[{ key: 'keyword', label: 'Search', format: 'text' }, { key: 'volume', label: 'US searches', format: 'number', short: 'US' }, { key: 'difficulty', label: 'Difficulty', format: 'number', short: 'KD' }, { key: 'page', label: 'Existing Loops page', format: 'text', short: 'Page' }]}
+  rows={[
+    { keyword: 'lifecycle marketing', volume: 1600, difficulty: 6, page: 'Lifecycle Email' },
+    { keyword: 'onboarding emails', volume: 260, difficulty: 0, page: 'Onboarding emails' },
+    { keyword: 'email marketing for saas', volume: 140, difficulty: 0, page: 'None yet' },
+    { keyword: 'dunning emails', volume: 140, difficulty: 0, page: 'Dunning Emails' },
+    { keyword: 'transactional vs marketing email', volume: 140, difficulty: 12, page: 'Transactional email best practices' },
+    { keyword: 'saas email marketing', volume: 110, difficulty: 6, page: 'None yet' },
+  ]}
+/>
+
+The results for "email marketing for saas" are agency posts and strategy lists. Loops' homepage title already says "Email Platform for SaaS", and its guides cover lifecycle email, onboarding, dunning and churn, each on its own page with between 3 and 28 internal links. Nothing pulls them together.
+
+**The page:** "SaaS email marketing: every email a software company sends", at loops.so/resources/saas-email-marketing. One section per stage, from signup and onboarding to trial ending, failed payments and win-back, each with the trigger, the example from Loops' library and a link to the full guide. It gives the guides a page above them that links down to each one, and it's the page I'd pitch to the list writers.
+
+## AI answers cite Loops for its product and miss it on how-to questions
+
+I asked ChatGPT search, Google AI Mode and Google's AI Overviews the same ten questions for Loops and for Resend (`seo research ai_answers`, DataForSEO, US, 14 November 2026). Three were about Loops' product, four asked how to do something Loops helps with, and three asked which tool to choose.
+
+<KeywordTable
+  caption="Answers that cite (link to) or name each company, by kind of question and engine, one run each (DataForSEO, US, 14 November 2026). The product questions were about Loops, so Resend's low counts there are expected."
+  sortBy="kind"
+  columns={[{ key: 'kind', label: 'Questions', format: 'text' }, { key: 'chatgpt', label: 'ChatGPT', format: 'text', short: 'GPT' }, { key: 'mode', label: 'AI Mode', format: 'text', short: 'Mode' }, { key: 'overview', label: 'AI Overview', format: 'text', short: 'AIO' }]}
+  rows={[
+    { kind: '1. Product (3): Loops', chatgpt: '3 cited', mode: '3 cited', overview: '3 cited' },
+    { kind: '1. Product (3): Resend', chatgpt: '1 named', mode: '1 named', overview: 'None' },
+    { kind: '2. How-to (4): Loops', chatgpt: 'None', mode: 'None', overview: 'None' },
+    { kind: '2. How-to (4): Resend', chatgpt: '1 named', mode: '1 cited', overview: '1 named' },
+    { kind: '3. Choice (3): Loops', chatgpt: '2 cited, 1 named', mode: '1 cited, 2 named', overview: '1 cited, 1 named' },
+    { kind: '3. Choice (3): Resend', chatgpt: '2 cited', mode: '2 named', overview: '3 named' },
+  ]}
+/>
+
+Google's two engines answer Loops' product questions from the right pages, which are pricing, the transactional email docs and the Stripe integration docs. ChatGPT cites older addresses for two of them, a changelog post for the price and an old app docs address for transactional email (see the technical fixes). The choice questions name Loops on every engine, which is normal for that kind of question.
+
+The how-to questions are the gap. Resend's three hits there all came from one question, "How do I send a welcome email after signup in Next.js?", and AI Mode linked resend.com for it in both runs. Loops has two pages near it, a welcome email guide built around its JavaScript SDK and a Next.js transactional email guide, and no engine cited either in either run. For "What is lifecycle email marketing?", no answer cited either company. The one how-to answer that touched Loops was for the waitlist question, where AI Mode listed loops.so among its sources in the Resend run.
+
+GPTBot, OAI-SearchBot, ClaudeBot and PerplexityBot user agents get a 200 with the full content (on the pricing page, GPTBot, OAI-SearchBot and PerplexityBot get a Markdown copy), and robots.txt allows everything, so access isn't the problem.
+
+**The fix:** make the existing guides answer what the person asking needs, and let them rank on that. I wouldn't write a page per question or open a guide with a stock definition. AI answers mostly cite pages that rank, and pages rank by serving the reader.
+
+- Loops already has Next.js docs and a Next.js email guide. I'd add a Next.js version of the welcome email example to the welcome guide, with the signup handler that sends it, and link it from the Next.js guide.
+- The lifecycle guide already explains lifecycle email to SaaS teams. It needs links and the SaaS email marketing guide above it more than a new opening. If readers have follow-up questions, an FAQ at the end can answer them.
+- "Loops vs Resend" is the first comparison page above.
+
+## Links: Loops' own sending data is the report to publish
+
+Loops has far fewer linking sites than the companies it's compared with, and almost all of them point at the homepage, privacy policy, pricing and docs.
+
+<CompareBars
+  caption="Referring domains to each site (DataForSEO backlinks, 14 November 2026)."
+  unit="sites"
+  highlight="loops.so"
+  rows={[
+    { label: "resend.com", value: 14894 },
+    { label: "postmarkapp.com", value: 7726 },
+    { label: "customer.io", value: 7434 },
+    { label: "loops.so", value: 1781 },
+  ]}
+/>
+
+Loops has something the list writers don't. Chris posted in September that Loops had sent almost 2 billion emails in nine months. Its "best time to send email" guide quotes Brevo's advice and a MailerLite study of 2,138,817 campaigns instead. A rival's data set is what Loops reaches for when it needs a number, which is exactly why a data report earns links.
+
+**The report:** "When SaaS emails get clicked", from Loops' own sends, by kind of email (transactional, lifecycle, campaign) and by hour and day in the recipient's time zone. I'd report clicks and leave opens out, since Apple's Mail Privacy Protection loads tracking images for the reader and records opens nobody made. It would rebuild the best time to send guide around Loops' data, and it targets "best time to send marketing emails" (880 searches, difficulty 14) and "best time to send email" (590, difficulty 10).
+
+The headlines would read like this, with Loops' real numbers in place of the letters: "Password reset emails sent through Loops in 2026 were clicked within N minutes" and "Lifecycle emails sent on X got the most clicks across N million sends". Loops' "125 SaaS email examples analyzed" study shows the team already works this way, with the sample size and the date stated.
+
+The outreach list an agent can work through, with Loops approving each email:
+
+- The sites that link to Customer.io's tools. Maizzle, Email on Acid, Inbox Collective, HubSpot and ListOfFreeware link to its mailto generator. Each gets a note pointing at Loops' version.
+- Developer sites that link to two or more rivals. DataForSEO's link gap lists sites such as laravel.com, tailwindcss.com and dev.to that link to Resend and Postmark and not to Loops. Laravel's mail docs link Resend and Postmark as drivers, and Loops already has a Laravel SMTP guide to point at.
+- The lists ranking for the comparison searches in the table above, such as Bluey Email's Resend alternatives and Zixflow's Brevo alternatives. Some of these sell placements. I'd only pay where the list's readers would click through, and I'd have the link marked sponsored, since Google's spam policies and Bing's guidelines both count bought links against you when they aren't qualified.
+
+## Technical fixes
+
+The crawl of 538 pages found little to fix, and every page returned 200. Three things are worth an afternoon.
+
+### Old app docs addresses lose their path
+
+Loops' docs used to live on the app subdomain. Each old docs address I tried there redirects to the docs homepage, whatever page it was for. ChatGPT still links one of those old addresses, the transactional email guide, when asked whether Loops can send transactional email.
+
+<BeforeAfter
+  caption="Two old docs addresses on app.loops.so today, and redirected to the same page on loops.so (checked 14 November 2026)."
+  before={{ label: "Today", html: beforeDocs }}
+  after={{ label: "After the fix", html: afterDocs }}
+/>
+
+**The fix:** redirect app.loops.so/docs/ plus any path to loops.so/docs/ plus the same path, and keep the docs homepage only as the fallback for pages that no longer exist. To confirm it worked, request the two addresses above and the old API reference intro and check each lands on the current page for its old path in one hop. The transactional guide has since moved to loops.so/docs/transactional, so its redirect should point there directly.
+
+### Housekeeping
+
+- Three pairs of docs pages share a title: "Workflows", "Components" and "Contact properties", each once in the CLI docs and once in the main docs. Add "CLI" to the CLI ones.
+- The Novu integration docs link to a Novu page that returns 404.
+
+## What I'd change to win the searches Loops already has pages for
+
+Chris asked on X this week what people would do with $10,000 to grow Loops. Most of this list costs time, and the money I'd spend goes on the data report and on outreach for the tools.
+
+<PlanSteps
+  steps={[{"title": "Page-two searches", "body": "Go through every query where a page sits at positions 11 to 20 in Search Console, and add the section or wording that reader needs, starting with the mailto, verification, BIMI and EML pages."}, {"title": "Comparison pages", "body": "A handful written well: Resend, SendGrid, Customer.io and Postmark first, then Mailgun and Brevo, each ending with its migration guide. Then pages for SendGrid vs Mailgun, Resend vs SendGrid, Postmark vs SendGrid and Resend vs Mailgun, with Loops as the third option where it fits. Link them all, and the Marketo page, from the footer and pricing page."}, {"title": "Glossary to tools", "body": "Link every glossary term that has a tool to it in the first paragraph, starting with SPF to the SPF checker."}, {"title": "DNS check pages", "body": "MX lookup, DMARC checker and DKIM checker pages built as full landing pages, then the header analyzer and blacklist checker. Bring the subject line tester and UTM generator pages up to the same standard."}, {"title": "Templates", "body": "Rename the 32 templates after their searches, add the copy each needs, and link every examples page down to its template."}, {"title": "SaaS email guide", "body": "One guide to SaaS email marketing that links every lifecycle, onboarding, dunning and churn guide."}, {"title": "Guides for the how-to questions", "body": "A Next.js example in the welcome email guide, and links into the lifecycle guide from the SaaS email guide."}, {"title": "Data report", "body": "When SaaS emails get clicked, from Loops' own sends, then outreach to the sites in the links section."}, {"title": "Redirects and housekeeping", "body": "Path-preserving redirects from app.loops.so/docs/, the duplicate docs titles and the broken Novu link."}]}
+/>
+
+Then check the results:
+
+<PlanSteps
+  steps={[{"marker": "Day 0", "title": "Ask Google to recrawl", "body": "Submit every new and retitled page to Index My Site, and check whether the waitlist examples page has lost its ranking."}, {"marker": "Day 3", "title": "Check the redirects", "body": "The old app docs addresses each land on their own page in one hop."}, {"marker": "Day 14", "title": "Template and tool searches", "body": "Search Console positions for the page-two searches, impressions for the template searches, the DNS check searches and the alternative searches, and clicks from the glossary to the tools."}, {"marker": "Day 30", "title": "AI answers", "body": "Ask the same ten questions again and check whether the Next.js and lifecycle answers cite Loops' guides."}]}
+/>
+
+## Get the changes seen quickly
+
+Retitled pages only rank under their new names once Google recrawls them, and there are 32 templates and every glossary term with a new link. I'd submit the new and changed pages and the fixed redirects to [Index My Site](https://indexmysite.app/) the day they ship, so Google is asked to crawl them straight away.
+
+## How I ran this
+
+The data in this teardown came from SEO Skill, run by an agent. By hand I checked page titles and links with curl, old pages in the Wayback Machine, and Chris's and Loops' posts on X. You can run the same audit on your own site.
+
+**1. Connect the hosted MCP server.** It's free. You sign in with Google, and there's no password and nothing to install. In Claude Code:
+
+```sh
+claude mcp add --transport http seoskill https://seoskill.dev/mcp
+```
+
+Codex, Cursor and Claude on the web work too. The [MCP guide](/docs/mcp) has the steps for each one.
+
+**2. Add a research key.** On your [account page](/account), save an Ahrefs or DataForSEO key. The key gives your agent search volumes, rankings and results pages, like the tables above. With DataForSEO it can also ask ChatGPT and Google's AI answers your questions and check who they cite.
+
+**3. Install the CLI for crawling.** The crawl runs on your machine, so it can read any site:
+
+```sh
+npm i -g seo
+seo login
+seo crawl https://example.com/ --max-pages 1500
+```
+
+**4. Ask your agent.** This is close to the prompt I used:
+
+```text
+Audit example.com for US search and AI answers.
+Group our estimated search traffic by kind of page.
+For each section (guides, tools, templates,
+integrations), list the searches it ranks for and
+the position, and the searches it should rank for.
+Compare our free tools with our competitors' tools:
+positions, linking sites and age.
+Find the "alternative" and "vs" searches for our
+competitors and who ranks for them.
+Ask ai_answers ten questions about our product,
+how-to topics and which tool to choose, for us and
+our closest rival, and say who gets cited.
+Rank the fixes by how close each is to a sale.
+```
+
+On your own site, the hosted server adds your real Search Console clicks and queries, which I couldn't see from outside. With those you'd know straight away whether the waitlist page slipped, and which guides on page two are closest to page one.
+
+If you're at Loops, I'm happy to talk any of this through. And if you'd like the same teardown for your company, [SEO Skill](/) will run it for you.

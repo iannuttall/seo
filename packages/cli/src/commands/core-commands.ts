@@ -79,12 +79,19 @@ const FLAGS: Record<string, string> = {
   mark: '--mark',
   issues: '--issues',
   note: '--note',
+  start_date: '--start-date',
   end_date: '--end-date',
   search_type: '--search-type',
+  page_regex: '--page-regex',
+  query_regex: '--query-regex',
+  exclude_query_regex: '--exclude-query-regex',
 }
 
+// Single quotes, so a regex's $, \ and backticks reach the command as typed.
 const quote = (value: string | number) =>
-  /^[\w:/.,<>@#?=&%+-]+$/.test(String(value)) ? String(value) : `"${value}"`
+  /^[\w:/.,<>@#?=&%+-]+$/.test(String(value))
+    ? String(value)
+    : `'${String(value).replaceAll("'", `'\\''`)}'`
 
 // seo submit's own shape: URLs as arguments, key, status and approve as
 // subcommands, and Index My Site's connect under providers.

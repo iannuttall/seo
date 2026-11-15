@@ -1,0 +1,95 @@
+---
+title: How to check whether AI crawlers can reach your site
+description: Robots.txt can allow AI search crawlers while your firewall blocks them. Which bots to let in, and how to check both sides with your server logs.
+heading: How to check whether AI crawlers can reach your site
+lead: An AI search engine can only cite a page its crawler can fetch. That takes two things, a robots.txt that allows the crawler and a firewall that lets it through, and plenty of sites get only the first right.
+date: '2026-11-15'
+draft: false
+cover:
+  alt: "A Victorian engraved gatekeeper at an iron gate, seen from behind, checking a lime green pass held out by a visitor before letting him through."
+  title: left
+---
+
+AI search engines cite pages their own crawlers have fetched. If OpenAI's search crawler can't reach a page, ChatGPT search won't cite it: OpenAI's [crawler documentation](https://platform.openai.com/docs/bots) says sites "opted out of OAI-SearchBot will not be shown in ChatGPT search answers, though can still appear as navigational links."
+
+Two things decide whether a crawler gets in. Your robots.txt says which crawlers may fetch which pages, and your firewall or CDN decides which requests actually arrive. I'd check both, because a site can allow a crawler in robots.txt and still block it at the firewall.
+
+## AI companies let you opt out of training separately from search
+
+OpenAI and Anthropic run separate crawlers for search and training. Google and Apple crawl once and give you a robots.txt token to opt out of training. Either way, you can stay in their search answers and keep your pages out of model training:
+
+| Company | Search and user fetches | Training |
+| --- | --- | --- |
+| OpenAI | OAI-SearchBot finds pages for ChatGPT search. ChatGPT-User opens a page when someone asks ChatGPT to. | GPTBot |
+| Anthropic | Claude-SearchBot indexes pages for Claude's search results. Claude-User fetches a page for a person's question. | ClaudeBot |
+| Google | Googlebot, whose index [AI Overviews and AI Mode draw on](https://developers.google.com/search/docs/appearance/ai-features) | Google-Extended, a robots.txt token, not a separate crawler. It also covers grounding in Gemini Apps. |
+| Apple | Applebot | Applebot-Extended, a robots.txt token |
+
+Google says Google-Extended "does not impact a site's inclusion in Google Search nor is it used as a ranking signal in Google Search" ([Google's crawler list](https://developers.google.com/crawling/docs/crawlers-fetchers/google-common-crawlers)). The same page says it also controls whether Gemini Apps can use your pages to ground their answers, so blocking it can keep you out of Gemini answers as well as training. Anthropic says blocking Claude-SearchBot or Claude-User "may reduce your site's visibility" in Claude's search results ([Anthropic's crawler help](https://support.claude.com/en/articles/8896518-does-anthropic-crawl-data-from-the-web-and-how-can-site-owners-block-the-crawler)).
+
+## Which AI crawlers I'd allow
+
+If you want AI answers to cite you, allow the search crawlers and the user fetchers. That's Googlebot, Bingbot, OAI-SearchBot, ChatGPT-User, Claude-SearchBot, Claude-User, PerplexityBot and Applebot.
+
+Training is mostly your call. Google-Extended is the exception I'd leave alone if you want Gemini to cite you. Blocking GPTBot or ClaudeBot doesn't remove you from their search answers. AI answers also recommend brands from what the model learned in training, though, so a site that blocks training gives up one slow route into those answers. Weigh that against how you feel about your pages being used to train models.
+
+This robots.txt keeps OpenAI's search crawler in and its training crawler out:
+
+```txt
+User-agent: OAI-SearchBot
+Allow: /
+
+User-agent: GPTBot
+Disallow: /
+```
+
+## What the top 1,000 domains block in robots.txt
+
+I ran SEO Skill's robots.txt check on the top 1,000 domains in the public [Tranco list](https://tranco-list.eu/list/947V2) on 15 November 2026. 499 of them had a robots.txt I could read:
+
+- 105 of the 499 (21%) block GPTBot on their home page, and 50 of those still allow OAI-SearchBot. In robots.txt, they kept search and refused training.
+- 55 (11%) block OAI-SearchBot on their home page, which keeps those pages out of ChatGPT search answers. 33 of them name the crawler, including the New York Times, the BBC, the Daily Mail, CNBC and Amazon's stores.
+- The other 22 block it with a rule that turns away every crawler not on an allow list, as Reddit, X and Facebook do. Those sites didn't pick out OpenAI. They only let in the crawlers they listed.
+
+A catch-all rule like that blocks every new AI crawler until someone adds it to the list. If your robots.txt has one, check that the search crawlers above are on it.
+
+## Check what your robots.txt allows for each AI crawler
+
+SEO Skill checks your robots.txt rules for each AI crawler's user-agent token on your home page and labels each one search or training:
+
+<AgentStep setup prompt="Check which AI crawlers my site's robots.txt allows on its home page, with search crawlers and training crawlers listed separately." cli="seo crawl --mode sites --urls example.com --json" local="Crawls fetch pages from your site, so they run on your own machine." />
+
+Two crawlers don't follow the plain rules. Applebot follows your Googlebot rules when robots.txt doesn't name Applebot, and OpenAI says robots.txt rules may not apply to ChatGPT-User, because a person asked for the page.
+
+You can also paste the file into the [robots.txt validator](/tools/robots-txt-validator).
+
+## Check that your firewall lets AI crawlers through
+
+A firewall decides from the request itself, so robots.txt can't overrule it. On Cloudflare, two settings can block AI crawlers you meant to allow.
+
+Cloudflare changed what its Training setting does on 15 September 2026. Setting Training to Block or "Block on pages with ads" now also stops crawlers that do both search and training. Cloudflare's [announcement](https://blog.cloudflare.com/accountable-mixed-use-ai-crawlers/) says Block "will stop Applebot, Bingbot, and Googlebot from reaching your site", search included. To keep search and refuse training, choose Disallow AI Training instead. Cloudflare says Bing doesn't read that preference from robots.txt yet, and Microsoft is aiming to support it in early 2027.
+
+Cloudflare's Agent setting covers user fetchers such as ChatGPT-User and Claude-User. Domains that had the old "Block AI bots" switch on and never used the newer controls were moved to Agent "Block on pages with ads", which the September announcement also suggested for new sites that carry ads. With that setting, ChatGPT-User and Claude-User are blocked on any page where Cloudflare detects an ad, unless you allow them under Personal Agents. Cloudflare's docs recommend allowing Personal Agents.
+
+Bot protection in general blocks a lot of automated requests. When I ran the check above, SEO Skill requested 638 home pages, and 97 of them turned it away, including openai.com, linkedin.com and forbes.com. 95 answered with a 403 or 401 and 2 with a 429. That doesn't show they block OAI-SearchBot, since a firewall can let verified crawlers through and block everything else. It does show how often an automated request gets turned away.
+
+## Use your server logs to see what reached your pages
+
+Don't test by sending requests with a crawler's user agent yourself. Cloudflare treats a request that claims to be GPTBot but doesn't come from OpenAI as an unverified bot, and other bot rules can block it even when the real GPTBot gets through.
+
+Your server logs show what the real crawlers asked for and what they got:
+
+1. Export a few days of access logs and load them into the [server log analyzer](/tools/server-log-analyzer). It runs in your browser.
+2. The analyzer groups each company's crawlers together and shows how many requests got 2xx, 3xx, 4xx or 5xx responses. A run of 4xx for OpenAI or Anthropic is the sign to dig in. To split OAI-SearchBot from GPTBot, or a 403 from a 429, filter the raw log by user agent.
+3. Check the IP addresses against the lists the companies publish, such as [OpenAI's search crawler IPs](https://openai.com/searchbot.json) and [Anthropic's](https://claude.com/crawling/bots.json), because anyone can claim to be a crawler.
+
+Requests blocked at a CDN never reach your server, so they don't show up in your server logs at all. On Cloudflare, the crawlers tab in AI Crawl Control shows each AI crawler's allowed and unsuccessful requests.
+
+If the search crawlers aren't in your server logs at all, check the CDN or firewall first. Allowing a crawler in robots.txt doesn't help when the request never reaches your server.
+
+## How this was checked
+
+- The sample is the top 1,000 domains in Tranco list 947V2, checked with `seo crawl --mode sites` from SEO Skill 0.21.1 on 15 November 2026. The 499 sites counted had a robots.txt that returned 200. I counted robots.txt rules on all 499, whether or not the home page loaded.
+- Blocking means the site's robots.txt disallows that crawler on the home page. A site can still allow a crawler on other pages. A block names the crawler when the crawler has its own group in the file. Otherwise it comes from the `*` group.
+- SEO Skill skipped the home page on 362 domains, where robots.txt couldn't be read or disallowed SEO Skill. Of the 638 it requested, 97 refused it: 94 with a 403, 1 with a 401 and 2 with a 429. It identifies itself as SEO Skill, and I didn't send requests as any AI crawler.
+- Cloudflare's settings come from its 15 September 2026 announcement and its [AI crawler policy docs](https://developers.cloudflare.com/bots/additional-configurations/block-ai-bots/).

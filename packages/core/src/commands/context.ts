@@ -147,6 +147,6 @@ export function contextGuide(site: string, call: Caller): string {
       '## Voice',
       '## Notes',
     ].join('\n'),
-    `Send the person the draft in one message with three questions: is the conversion right, which customers do they want more of, and who do they lose deals to. Wait for their reply before you save, even when the site or its code seems to answer everything: only the person knows which customers they want. Change what they correct, then save it with ${call('next', { site, context: '<the Markdown>' })}, which replaces any earlier version and returns the next step.`,
+    `Send the person the draft in one message, with up to three questions on what your research left unsure, such as what counts as a conversion, which customers they want more of, or who they lose deals to. Wait for their reply before you save, even when the site or its code seems to answer everything: only the person can confirm which customers they want. Change what they correct, then save it with ${call('next', { site, context: '<the Markdown>' })}, which replaces any earlier version and returns the next step.`,
   ].join('\n\n')
 }

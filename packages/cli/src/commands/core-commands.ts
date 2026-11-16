@@ -1,4 +1,4 @@
-import { existsSync } from 'node:fs'
+import { existsSync, readFileSync } from 'node:fs'
 import {
   cloudLinked,
   installedProviderSerp,
@@ -45,6 +45,7 @@ import {
   runCompare,
   runLint,
   runLostPages,
+  runNext,
   runPage,
   runReport,
   runResearch,
@@ -121,12 +122,17 @@ function submitCall(args: Record<string, string | number | undefined>) {
   }
 }
 
+// seo research takes its action as an argument, not a flag.
 export const cliCall: Caller = (command, args) =>
   command === 'submit'
     ? submitCall(args ?? {})
     : [
         `seo ${command}`,
+        ...(command === 'research' && args?.action !== undefined
+          ? [String(args.action)]
+          : []),
         ...Object.entries(args ?? {})
+          .filter(([key]) => !(command === 'research' && key === 'action'))
           .filter(([, value]) => value !== undefined)
           .map(
             ([key, value]) =>
@@ -199,6 +205,50 @@ export async function run(
     throw localError(error)
   }
 }
+
+export const nextCommand = defineCommand({
+  meta: {
+    name: 'next',
+    description:
+      'Start here to work on a site: where it is in the SEO loop and the one step to do next',
+  },
+  args: {
+    site: {
+      type: 'string',
+      description: 'Site, URL or Search Console property.',
+      required: true,
+    },
+    context: {
+      type: 'string',
+      description:
+        'Optional. The business context to save, as Markdown, replacing the old one.',
+    },
+    'context-file': {
+      type: 'string',
+      description: 'Optional instead of --context: a Markdown file to save.',
+    },
+    ...common,
+  },
+  run: async ({ args }) => {
+    const file = stringArg(args['context-file'])
+    if (file && stringArg(args.context) !== undefined) {
+      throw new SeoError(
+        'INVALID_INPUT',
+        'Pass --context or --context-file, not both.',
+      )
+    }
+    let context = stringArg(args.context)
+    if (file) {
+      try {
+        context = readFileSync(file, 'utf8')
+      } catch {
+        throw new SeoError('INVALID_INPUT', `Could not read ${file}.`)
+      }
+    }
+    const site = await property(args, requireSite(stringArg(args.site)))
+    await run(args, (deps) => runNext({ site, context }, deps))
+  },
+})
 
 export const reportCommand = defineCommand({
   meta: {
@@ -743,7 +793,7 @@ export const researchCommand = defineCommand({
               country,
               detail: 'rows',
               offset,
-            }).replace('--action ', ''),
+            }),
         ),
       )
       return
@@ -786,7 +836,7 @@ export const researchCommand = defineCommand({
               country,
               detail: 'rows',
               offset,
-            }).replace('--action ', ''),
+            }),
         },
       ),
     )

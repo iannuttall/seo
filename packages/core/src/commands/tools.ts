@@ -20,6 +20,7 @@ import {
 } from './audit-checks.js'
 import { runBingRows } from './bing.js'
 import { clickyLabel, clickySites, runClickyRows } from './clicky.js'
+import { CONTEXT_MAX } from './context.js'
 import { INSPECT_LIMIT, MAX_INSPECT_LIMIT } from './indexing.js'
 import {
   ISSUE_MARKS,
@@ -29,6 +30,7 @@ import {
   SAVED_MAX,
 } from './issues.js'
 import { type LintSource, runLint } from './lint.js'
+import { NEXT_TEXT, runNext } from './next.js'
 import type { Detail } from './present.js'
 import { runBingReport, runReport, SECTION_IDS, SECTIONS } from './report.js'
 import {
@@ -324,10 +326,38 @@ export const SHARED_TOOLS: SharedTool[] = [
     },
   }),
   tool({
+    name: 'seo_next',
+    command: 'next',
+    title: 'What to do next',
+    description: `Start here when the person asks you to work on a site's SEO, to use SEO Skill, or what to do next. ${NEXT_TEXT} Do the step, then call it again. With context: saves the business context the first step asks for, replacing the old one, then returns the next step.`,
+    input: z.object({
+      site,
+      context: z
+        .string()
+        .max(CONTEXT_MAX)
+        .optional()
+        .describe(
+          'Optional. The business context to save, as Markdown under the headings the context step gives. Only after the person has seen it.',
+        ),
+      saved: marks.saved.describe(
+        'Optional, only where this server is not storing the issues list: the JSON the issues section or seo_next returned last time, as the agent saved it.',
+      ),
+    }),
+    run: async (surface, input) =>
+      runNext(
+        {
+          site: await surface.resolveSite(input.site),
+          context: input.context,
+          saved: input.saved,
+        },
+        surface.deps,
+      ),
+  }),
+  tool({
     name: 'seo_report',
     command: 'report',
     title: 'Search Console report',
-    description: `Start here. Without site: a short summary of every site in the person's weekly site audit for last week, with each site's Google index, weekly crawl and search clicks, sites with changes first, ending with the site to ask about next; an account without the audit gets its site list to pick from. With site: the main report for that Search Console property, the overview plus each section's row count and top rows. With site and section: that section's rows; page sections also check their top 20 URLs live. Sections:\n${Object.entries(
+    description: `Start here for questions about a site's search traffic. Without site: a short summary of every site in the person's weekly site audit for last week, with each site's Google index, weekly crawl and search clicks, sites with changes first, ending with the site to ask about next; an account without the audit gets its site list to pick from. With site: the main report for that Search Console property, the overview plus each section's row count and top rows. With site and section: that section's rows; page sections also check their top 20 URLs live. Sections:\n${Object.entries(
       SECTIONS,
     )
       .map(([id, text]) => `- ${id}: ${text}`)

@@ -122,6 +122,7 @@ test('the packed package installs globally into an isolated prefix', {
     mcp.tools.map((tool) => tool.name),
     [
       'seo_sites',
+      'seo_next',
       'seo_report',
       'seo_page',
       'seo_compare',

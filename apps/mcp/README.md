@@ -66,6 +66,11 @@ The Monday summary measures what is due first (at most 20 calls an
 account) and lists the results whose days after ended in the latest 7 days
 of final data.
 
+`seo_next` keeps each site's business context (`src/context.ts`) in D1's
+`site_context`, one row per account and property, for every site, audited
+or not, and deleted with the account. It reads the issues list the same way
+`seo_report` does, so an unaudited site's list still comes back as JSON.
+
 ## Paid plan
 
 The weekly site audit is $50 a month per site (`src/billing.ts`), with

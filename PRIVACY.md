@@ -1,6 +1,6 @@
 # Privacy policy
 
-Last updated: 3 November 2026
+Last updated: 16 November 2026
 
 This policy covers SEO Skill: the `seo` command-line tool and library, the
 local and hosted MCP servers, your account at seoskill.dev, the paid weekly
@@ -45,6 +45,10 @@ encrypted before they are written.
   weekly message to the maintainer and on the public
   [stats page](https://seoskill.dev/stats), where any value shared by fewer
   than three sign-ups shows as Other.
+- **Business context.** The notes your agent saves for a site with
+  `seo next`: what the business sells, who buys it, its money pages and
+  competitors, and when they were saved. Kept for any site, audited or
+  not, until your agent replaces them or you delete your account.
 - **Usage totals.** One number a day for each kind of paid-for work we do
   for you, such as browser time, Google index checks and research calls. No
   URLs or results.
@@ -170,7 +174,8 @@ send your reports or data to us.
 - **Stored on your machine.** Settings, Google tokens, provider keys, logs
   and a cache, in your user folders with private file permissions. Tokens
   and keys use your system keychain when it is available. Reports and crawls
-  are not saved, except the issues list you ask for.
+  are not saved, except the issues list you ask for and the business
+  context `seo next` saves, in `context.json`.
 - **Cache.** Google and Clicky answers are reused for up to 24 hours, and
   Google index checks for up to 7 days. Old cache rows are removed after 30
   days.

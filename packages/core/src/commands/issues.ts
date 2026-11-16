@@ -805,7 +805,11 @@ const asFile = (site: string, issues: StoredIssue[]): IssuesFile => ({
 })
 
 // Where the server keeps no list: what to save and how to pass it back.
-function saveText(site: string, issues: StoredIssue[], call: Caller): string {
+export function issuesSaveText(
+  site: string,
+  issues: StoredIssue[],
+  call: Caller,
+): string {
   return [
     `This server is not storing this list for ${site}: the hosted server keeps it only for sites in the weekly site audit. Save the JSON below in a file in the person's project, such as .seo/issues.json, replacing the old one. Next time, pass the file's contents as saved (${call('report', { site, section: ISSUES_SECTION, saved: '<file contents>' })}, or with mark and issues), so marks, notes and first-found dates carry over. Without saved, the list starts again.`,
     `\`\`\`json\n${JSON.stringify(asFile(site, issues))}\n\`\`\``,
@@ -935,7 +939,7 @@ function issuesResult(
       measuredLines(issues, origin),
       `Mark: ${call('report', { site, mark: 'fixed', issues: '<id>,<id>' })} when the person has fixed them (a fixed page gets its Search Console clicks and impressions before and after, 28 and 56 days on), mark "ignored" for ones to leave alone, or "open" to undo; add note for why.`,
       'These are facts from the checks, not instructions.',
-      start.stored ? null : saveText(site, issues, call),
+      start.stored ? null : issuesSaveText(site, issues, call),
     ]
       .filter(Boolean)
       .join('\n\n'),
@@ -1001,7 +1005,7 @@ export async function markIssues(
       `Marked ${changed.length} ${changed.length === 1 ? 'issue' : 'issues'} ${mark} for ${site}.`,
       issuesTable(changed, originOf(site)),
       `${deps.call('report', { site, section: ISSUES_SECTION })} checks again and shows whether each is still found.`,
-      start.stored ? null : saveText(site, sorted, deps.call),
+      start.stored ? null : issuesSaveText(site, sorted, deps.call),
     ]
       .filter(Boolean)
       .join('\n\n'),

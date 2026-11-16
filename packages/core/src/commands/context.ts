@@ -94,10 +94,14 @@ export function moneyPaths(text: string): MoneyPath[] {
 const trimPath = (path: string) =>
   path.length > 1 ? path.replace(/\/+$/, '') : path
 
-// Whether an issue's subject (a URL, or "query" on a URL) is on a money page.
+// The page in an issue's subject (a URL, or "query" on a URL).
+export const subjectUrl = (subject: string) =>
+  subject.match(/https?:\/\/\S+/)?.[0]
+
+// Whether an issue's subject is on a money page.
 export function onMoneyPage(subject: string, paths: MoneyPath[]): boolean {
   if (!paths.length) return false
-  const url = subject.match(/https?:\/\/\S+/)?.[0]
+  const url = subjectUrl(subject)
   if (!url) return false
   let pathname: string
   try {
@@ -130,6 +134,7 @@ export function contextGuide(site: string, call: Caller): string {
       '## What it sells',
       '## Who buys it',
       '## What counts as a conversion',
+      'Name the Google Analytics key events that count, such as sign_up, where the site has them.',
       '## Money pages',
       'One path or URL per line, such as /pricing or /demo. A path ending in / covers every page under it.',
       '## Competitors',

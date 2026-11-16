@@ -1,5 +1,35 @@
 # Changelog
 
+## 0.22.0
+
+### Added
+
+- `seo next` (`seo_next` in MCP) is where to start when you ask your agent
+  to work on a site's SEO. It returns the one step that is due, with its
+  instructions and its first jobs, and the call that marks each job done.
+  The steps: write the business context, unblock pages (crawl and Google
+  index problems), improve the pages that rank (quick wins, low
+  click-through rates, striking distance), then find new pages for buying
+  searches. It runs the issues checks when the list is more than a day old.
+- The business context: what the site sells, who buys it, what counts as a
+  conversion, its conversion pages, competitors, markets and voice. With no
+  context, or one older than 90 days, `seo next` gives your agent a short
+  research guide and the headings to fill in, and your agent shows it to
+  you before saving it with `seo next --context-file <file>` (`context` in
+  MCP). The CLI and local MCP keep it in `context.json` in the config
+  folder. The hosted MCP keeps it for every site, not only audited ones,
+  and deletes it with your account.
+- Jobs on pages with Google Analytics key events from Organic Search in the
+  last 28 days come first, then the conversion pages in the business
+  context. Each job shows its key events, or a blank when Google Analytics
+  cannot say.
+- The skill now starts work on a site with `seo next`.
+
+### Changed
+
+- When no Google Analytics property is set up for a site, `seo report` and
+  `seo next` say so in plain words, with how many properties were checked.
+
 ## 0.21.1
 
 ### Fixed

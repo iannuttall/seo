@@ -51,6 +51,7 @@ import { readBingApiKey } from './providers/bing/credentials.js'
 import { readProviderCache, writeProviderCache } from './providers/cache.js'
 import { readDataForSeoCredentials } from './providers/dataforseo/credentials.js'
 import { readSimpleAnalyticsKey } from './simple-analytics/credentials.js'
+import { localContext } from './storage/context.js'
 import { localIssues } from './storage/issues.js'
 
 // The core commands' functions for the CLI and the local MCP: Search Console
@@ -97,6 +98,7 @@ export function nodeCommandDeps(options: {
     bingConnect: LOCAL_BING_CONNECT,
     analytics: { accounts: localAccounts, signIn: LOCAL_SIGN_IN.signIn },
     issues: localIssues,
+    context: localContext,
     submit: localSubmitAccess(),
     ...(cloudLinked() ? { week: cloudWeek } : {}),
   }

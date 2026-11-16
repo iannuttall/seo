@@ -27,6 +27,7 @@ import {
   dataCommand,
   indexCommand,
   lintCommand,
+  nextCommand,
   pageCommand,
   reportCommand,
   researchCommand,
@@ -105,6 +106,7 @@ const helpSections: HelpSection[] = [
     title: 'Start here',
     commands: [
       ['seo start', 'Sign in with Google, then add the MCP server and skill'],
+      ['seo next --site <site>', 'What to do next for the site, step by step'],
       ['seo report', 'Last week across your audited sites (after seo login)'],
       ['seo report --site <site>', 'One site: overview and every section'],
       [
@@ -247,6 +249,7 @@ const main = defineCommand({
     site: siteCommand,
     login: loginCommand,
     logout: logoutCommand,
+    next: nextCommand,
     report: reportCommand,
     page: pageCommand,
     compare: compareCommand,

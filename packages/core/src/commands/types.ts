@@ -4,16 +4,22 @@ import type { SearchAnalyticsQuery } from '../gsc/client/types.js'
 import type { ProgressReporter } from '../progress.js'
 import type { AnalyticsAccess } from './analytics-site.js'
 import type { AuditAccess } from './audit.js'
+import type { ContextStore } from './context.js'
 import type { IssueStore } from './issues.js'
 import type { LiveCheck } from './page-facts.js'
 import type { SubmitAccess } from './submit.js'
 import type { WeekData } from './week.js'
 
-// The ten public commands. Each runs the same core code in the CLI, the
+// The eleven public commands. Each runs the same core code in the CLI, the
 // local MCP and the hosted MCP; only the functions that reach Google and the
 // web differ. "local" commands need the person's machine (a crawl).
 
 export const COMMANDS = {
+  next: {
+    where: 'anywhere',
+    summary:
+      'Where a site is in the SEO loop and the one step to do next, with its instructions and jobs.',
+  },
   report: {
     where: 'anywhere',
     summary:
@@ -209,6 +215,9 @@ export type CommandDeps = {
   // Each site's list of issues and what the person marked them: a file on
   // this machine, or the hosted account.
   issues?: IssueStore
+  // Each site's business context: a file on this machine, or the hosted
+  // account.
+  context?: ContextStore
   // IndexNow keys and the person's Index My Site connection, for seo
   // submit.
   submit?: SubmitAccess

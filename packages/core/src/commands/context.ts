@@ -125,12 +125,12 @@ export function onConversionPage(
 // site has none, or when its context is older than CONTEXT_DAYS.
 export function contextGuide(site: string, call: Caller): string {
   return [
-    `Write the business context for ${site}: what the business sells, who buys it, and which pages turn a visit into a customer. Every later step uses it to put the pages that bring customers first and to judge whether a search fits the product.`,
+    `Write the business context for ${site}, which says what the business sells, who buys it, and which pages turn a visit into a customer. Every later step uses it to put the pages that bring customers first and to judge whether a search fits the product.`,
     `Research it in this order, and stop once each heading below has an answer:`,
     [
       `1. Read the home page, the pricing page and the main product or feature pages (${call('page', { url: '<url>' })} reads one live).`,
-      `2. Read the pages and queries that already bring clicks: ${call('report', { site })}.`,
-      `3. Find the competitors: ${call('research', { action: 'competitors', target: new URL(originOf(site)).hostname })}, plus the companies the site's own comparison or alternatives pages name. Without a research key, use any SEO tool or signed-in browser the person has.`,
+      `2. Read the pages and queries that already bring clicks with ${call('report', { site })}.`,
+      `3. Find the competitors with ${call('research', { action: 'competitors', target: new URL(originOf(site)).hostname })}, plus the companies the site's own comparison or alternatives pages name. Without a research key, use any SEO tool or signed-in browser the person has.`,
       `4. Read what customers say, where the business has reviews (G2, Capterra, Trustpilot, app stores, Reddit), and note the words buyers use for their problem.`,
     ].join('\n'),
     `Write it in Markdown under these headings, short and factual, at most ${CONTEXT_MAX.toLocaleString('en-US')} characters:`,
@@ -140,13 +140,13 @@ export function contextGuide(site: string, call: Caller): string {
       '## What counts as a conversion',
       'Name the Google Analytics key events that count, such as sign_up, where the site has them.',
       '## Conversion pages',
-      'The pages where a visitor signs up, starts a trial, books a demo or buys, and the pricing page. Jobs on these pages come first, so leave out docs, blog posts and free tools, even when they link to the sign-up. One path or URL per line, such as /pricing or /demo. A path ending in / covers every page under it, such as /features/.',
+      'The pages whose main job is to get a visitor to sign up, start a trial, book a demo or buy, and the pricing page. A docs page counts when it is the sign-up or install step itself. Jobs on these pages come first, so name single pages rather than whole sections. One path or URL per line, such as /pricing or /demo. A path ending in / covers every page under it, such as /features/. Use it only when every page there does that job.',
       '## Competitors',
       'One domain per line.',
       '## Markets',
       '## Voice',
       '## Notes',
     ].join('\n'),
-    `Send the person the draft in one message, with up to three questions on what your research left unsure, such as what counts as a conversion, which customers they want more of, or who they lose deals to. Wait for their reply before you save, even when the site or its code seems to answer everything: only the person can confirm which customers they want. Change what they correct, then save it with ${call('next', { site, context: '<the Markdown>' })}, which replaces any earlier version and returns the next step.`,
+    `Send the person the draft in one message, with up to three questions on what your research left unsure, such as what counts as a conversion, which customers they want more of, or who they lose deals to. Wait for their reply before you save, even when the site or its code seems to answer everything, because only the person can confirm which customers they want. Change what they correct, then save it with ${call('next', { site, context: '<the Markdown>' })}, which replaces any earlier version and returns the next step.`,
   ].join('\n\n')
 }

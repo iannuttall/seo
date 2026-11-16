@@ -46,7 +46,7 @@ encrypted before they are written.
   [stats page](https://seoskill.dev/stats), where any value shared by fewer
   than three sign-ups shows as Other.
 - **Business context.** The notes your agent saves for a site with
-  `seo next`: what the business sells, who buys it, its money pages and
+  `seo next`: what the business sells, who buys it, its conversion pages and
   competitors, and when they were saved. Kept for any site, audited or
   not, until your agent replaces them or you delete your account.
 - **Usage totals.** One number a day for each kind of paid-for work we do

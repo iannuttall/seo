@@ -180,9 +180,9 @@ async function lookProperty(
   }
   const checked =
     order.length < candidates.length
-      ? `the first ${order.length} of ${candidates.length} properties, named like the site first`
+      ? `the first ${order.length} of ${candidates.length} properties, those named like the site first`
       : `${candidates.length} ${candidates.length === 1 ? 'property' : 'properties'}`
-  return `no web stream matches ${site} in ${checked}${failures ? ` (${failures} could not be read)` : ''}.`
+  return `none of the properties you can read is set up for ${hostOf(site)} (checked ${checked}${failures ? `, ${failures} could not be read` : ''}).`
 }
 
 type Totals = { sessions: number; keyEvents: number }

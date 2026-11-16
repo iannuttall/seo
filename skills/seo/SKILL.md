@@ -41,7 +41,7 @@ a site, then a `--section` (`section`), then `--detail rows` or `full`.
 
 When the person asks you to use `seo` or improve a site's SEO without a
 narrower question, run `seo next`. It keeps the site's business context
-(what it sells, who buys, money pages) and its issues list, and returns one
+(what it sells, who buys, conversion pages) and its issues list, and returns one
 step: research the business context, unblock pages, improve pages that rank,
 or plan new pages. Do the step's jobs, ask the person before anything goes
 live, mark each job, then run `seo next` again.

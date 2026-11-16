@@ -1,13 +1,19 @@
 import {
+  type OrganicPages,
+  organicPages,
+  weighByKeyEvents,
+} from './analytics-site.js'
+import {
   CONTEXT_DAYS,
+  type ConversionPath,
   contextGuide,
   contextIsStale,
   contextReviewOn,
   contextText,
-  type MoneyPath,
-  moneyPaths,
-  onMoneyPage,
+  conversionPaths,
+  onConversionPage,
   type SiteContext,
+  subjectUrl,
 } from './context.js'
 import {
   ISSUES_SECTION,
@@ -17,19 +23,23 @@ import {
   type StoredIssue,
 } from './issues.js'
 import { runReport } from './report.js'
+import { dateWindow } from './shared.js'
 import {
   type Caller,
   type CommandDeps,
   CommandError,
   type CommandResult,
+  type DateRange,
 } from './types.js'
 
 // seo next: where a site is in the SEO loop and the one step that is due.
 // The loop is know the business, unblock pages, improve the pages that
 // rank, then find new pages; each step is due only when the one before has
-// nothing left. It reads the business context and the issues list, runs the
+// nothing left. It reads the business context, the issues list and the
+// Google Analytics key events from Organic Search by landing page, runs the
 // issues checks when the list is more than a day old, and returns the due
-// step's instructions and its first jobs, money pages first.
+// step's instructions and its first jobs: pages with key events first, then
+// conversion pages.
 
 export const NEXT_STEPS = [
   'context',
@@ -40,12 +50,15 @@ export const NEXT_STEPS = [
 export type NextStep = (typeof NEXT_STEPS)[number]
 
 export const NEXT_TEXT =
-  'Where the site is in the SEO loop and the one step that is due, with its instructions, its first jobs (money pages first) and the call that marks each done. The steps: write the business context (when there is none, or it is more than 90 days old), unblock pages (crawl and Google index problems), improve the pages that rank (quick wins, low click-through rates, striking distance), then find new pages for buying searches. It runs the issues checks when the list is more than a day old.'
+  'Where the site is in the SEO loop and the one step that is due, with its instructions, its first jobs (pages with Google Analytics key events from Organic Search first, then the conversion pages in the business context) and the call that marks each done. The steps: write the business context (when there is none, or it is more than 90 days old), unblock pages (crawl and Google index problems), improve the pages that rank (quick wins, low click-through rates, striking distance), then find new pages for buying searches. It runs the issues checks when the list is more than a day old.'
 
 // Jobs shown for the due step.
 const JOBS_SHOWN = 5
 // The issues list is checked again when its last check is older than this.
 const FRESH_MS = 86_400_000
+// Days of Google Analytics key events that order the jobs, the same days the
+// report's page sections use.
+const KEY_EVENT_DAYS = 28
 
 const SEARCH_KINDS = ['low-ctr', 'quick-wins', 'striking-distance']
 
@@ -62,7 +75,10 @@ type Job = {
   kind: string
   subject: string
   evidence: string
-  money_page: boolean
+  conversion_page: boolean
+  // Google Analytics key events from Organic Search on the job's page in the
+  // last KEY_EVENT_DAYS; null when Google Analytics cannot say.
+  key_events: number | null
 }
 
 export async function runNext(
@@ -92,19 +108,25 @@ export async function runNext(
     return contextStep(site, context, call)
   }
 
-  const list = await issuesList(site, saved, deps, now)
-  const money = moneyPaths(context.text)
+  const range = dateWindow({}, KEY_EVENT_DAYS)
+  const [list, ga] = await Promise.all([
+    issuesList(site, saved, deps, now),
+    organicPages(deps.analytics, site, range),
+  ])
+  const pages = conversionPaths(context.text)
   const open = list.issues.filter((issue) => issue.mark === 'open')
   const active = open.filter((issue) => issue.seen !== 'not-found')
   const gone = open.filter((issue) => issue.seen === 'not-found')
   const unblock = jobs(
     active.filter((issue) => !SEARCH_KINDS.includes(issue.kind)),
-    money,
+    pages,
+    ga,
     (kind) => (kind === 'index-drop' ? 0 : 1),
   )
   const improve = jobs(
     active.filter((issue) => SEARCH_KINDS.includes(issue.kind)),
-    money,
+    pages,
+    ga,
     (kind) => SEARCH_KINDS.indexOf(kind),
   )
   const step: NextStep = unblock.length
@@ -120,6 +142,7 @@ export async function runNext(
 
   const loop = [
     `- Business context: saved ${context.updated_at.slice(0, 10)}, checked again after ${contextReviewOn(context)}.`,
+    conversionsLine(ga, range),
     `- Issues list: ${list.ranChecks ? 'checked just now' : `last checked ${checked?.slice(0, 10) ?? 'never'}`}, ${open.length} open, ${fixed.length} fixed.`,
     `- Unblock pages: ${unblock.length} open${due('unblock')}.`,
     `- Improve the pages that rank: ${improve.length} open${due('improve')}.`,
@@ -134,7 +157,7 @@ export async function runNext(
       `The loop:\n${loop.join('\n')}`,
       `## ${heading(step)}\n${stepGuide(step, site, call)}`,
       shown.length
-        ? `Jobs ${shown.length} of ${step === 'unblock' ? unblock.length : improve.length}, money pages first:\n${jobsTable(shown)}`
+        ? `Jobs ${shown.length} of ${step === 'unblock' ? unblock.length : improve.length}, pages with key events first, then conversion pages:\n${jobsTable(shown)}`
         : null,
       shown.length
         ? `When a job is done and live: ${call('report', { site, mark: 'fixed', issues: '<id>,<id>' })}. Mark a job that does not fit the business "ignored" with a note. Then ${call('next', { site })}.`
@@ -147,9 +170,9 @@ export async function runNext(
               ', ',
             )}${gone.length > 10 ? ' and more' : ''}): if the person fixed them, mark them fixed so their results are measured.`
         : null,
-      money.length
+      pages.length
         ? null
-        : 'The business context lists no money pages, so jobs are in the list order. Add them under "## Money pages" and save the context again.',
+        : 'The business context lists no conversion pages, so jobs without key events are in the list order. Add them under "## Conversion pages" and save the context again.',
       `## Business context (saved ${context.updated_at.slice(0, 10)})\n${context.text}`,
       list.stored
         ? null
@@ -171,6 +194,17 @@ export async function runNext(
         fixed: fixed.length,
         measured: measured.length,
       },
+      conversions:
+        ga && typeof ga !== 'string'
+          ? {
+              property: ga.property,
+              key_events: keyEventTotal(ga),
+              ...range,
+              capped: ga.capped,
+            }
+          : ga
+            ? { error: ga }
+            : null,
       counts: { unblock: unblock.length, improve: improve.length },
       jobs: shown,
       ...(list.stored
@@ -235,13 +269,15 @@ function stepGuide(step: NextStep, site: string, call: Caller): string {
   }
 }
 
-// Open issues as jobs: money pages first, then by kind, then list order.
+// Open issues as jobs: pages with key events first, most first, then
+// conversion pages, then by kind, then list order.
 function jobs(
   issues: StoredIssue[],
-  money: MoneyPath[],
+  pages: ConversionPath[],
+  ga: OrganicPages | string | null,
   kindOrder: (kind: string) => number,
 ): Job[] {
-  return issues
+  const sorted = issues
     .map((issue, index) => ({
       index,
       job: {
@@ -249,27 +285,70 @@ function jobs(
         kind: issue.kind,
         subject: issue.subject,
         evidence: issue.evidence,
-        money_page: onMoneyPage(issue.subject, money),
+        conversion_page: onConversionPage(issue.subject, pages),
+        key_events: null as number | null,
       },
     }))
     .sort(
       (a, b) =>
-        Number(b.job.money_page) - Number(a.job.money_page) ||
+        Number(b.job.conversion_page) - Number(a.job.conversion_page) ||
         kindOrder(a.job.kind) - kindOrder(b.job.kind) ||
         a.index - b.index,
     )
     .map(({ job }) => job)
+  if (!ga || typeof ga === 'string') return sorted
+  // The report's own weighing: key events most first, keeping this order
+  // otherwise, and unknown (another host, or not listed when capped) as null.
+  const weighed: Record<string, unknown> = {
+    items: sorted.map((job) => ({ ...job, url: subjectUrl(job.subject) })),
+  }
+  weighByKeyEvents(weighed, ga)
+  return (weighed.items as (Job & { keyEvents: number | null })[]).map(
+    ({ id, kind, subject, evidence, conversion_page, keyEvents }) => ({
+      id,
+      kind,
+      subject,
+      evidence,
+      conversion_page,
+      key_events: keyEvents,
+    }),
+  )
+}
+
+const keyEventTotal = (ga: OrganicPages) =>
+  [...ga.pages.values()].reduce((total, page) => total + page.keyEvents, 0)
+
+// The loop's line for conversions: Google Analytics key events from Organic
+// Search, or why there are none, in which case the conversion pages in the
+// business context decide the order.
+function conversionsLine(
+  ga: OrganicPages | string | null,
+  range: DateRange,
+): string {
+  const days = `${range.startDate} to ${range.endDate}`
+  if (!ga) {
+    return '- Conversions: Google Analytics is not available here, so jobs on the conversion pages in the business context come first.'
+  }
+  if (typeof ga === 'string') {
+    return `- Conversions from Google Analytics: ${ga.replace(/^Google Analytics: /, '')} Jobs on the conversion pages in the business context come first instead.`
+  }
+  const total = keyEventTotal(ga)
+  const pages = [...ga.pages.values()].filter((page) => page.keyEvents).length
+  if (!total) {
+    return `- Conversions: no Google Analytics key events from Organic Search, ${days} (property ${ga.propertyName}, ${ga.property}). If the business tracks sign-ups or purchases, ask the person to mark them as key events in Google Analytics. Until then, jobs on the conversion pages in the business context come first.`
+  }
+  return `- Conversions: ${total} Google Analytics key events from Organic Search on ${pages} landing ${pages === 1 ? 'page' : 'pages'}, ${days} (property ${ga.propertyName}, ${ga.property}).${ga.capped ? ' Google Analytics did not list every landing page, so a blank key events cell is unknown, not zero.' : ''}`
 }
 
 function jobsTable(shown: Job[]): string {
   const cell = (text: string) =>
     text.replaceAll('|', '\\|').replaceAll('\n', ' ')
   return [
-    '| id | kind | subject | evidence | money page |',
-    '| --- | --- | --- | --- | --- |',
+    '| id | kind | subject | evidence | key events | conversion page |',
+    '| --- | --- | --- | --- | --- | --- |',
     ...shown.map(
       (job) =>
-        `| ${job.id} | ${job.kind} | ${cell(job.subject)} | ${cell(job.evidence)} | ${job.money_page ? 'yes' : ''} |`,
+        `| ${job.id} | ${job.kind} | ${cell(job.subject)} | ${cell(job.evidence)} | ${job.key_events ?? ''} | ${job.conversion_page ? 'yes' : ''} |`,
     ),
   ].join('\n')
 }

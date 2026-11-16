@@ -132,7 +132,6 @@ export function contextGuide(site: string, call: Caller): string {
       `2. Read the pages and queries that already bring clicks: ${call('report', { site })}.`,
       `3. Find the competitors: ${call('research', { action: 'competitors', target: new URL(originOf(site)).hostname })}, plus the companies the site's own comparison or alternatives pages name. Without a research key, use any SEO tool or signed-in browser the person has.`,
       `4. Read what customers say, where the business has reviews (G2, Capterra, Trustpilot, app stores, Reddit), and note the words buyers use for their problem.`,
-      `5. Ask the person, in one message, only what the site cannot tell you: what counts as a conversion, which customers they want more of, and who they lose deals to.`,
     ].join('\n'),
     `Write it in Markdown under these headings, short and factual, at most ${CONTEXT_MAX.toLocaleString('en-US')} characters:`,
     [
@@ -141,13 +140,13 @@ export function contextGuide(site: string, call: Caller): string {
       '## What counts as a conversion',
       'Name the Google Analytics key events that count, such as sign_up, where the site has them.',
       '## Conversion pages',
-      'The pages where a visitor signs up, starts a trial, books a demo or buys. One path or URL per line, such as /pricing or /demo. A path ending in / covers every page under it.',
+      'The pages where a visitor signs up, starts a trial, books a demo or buys, and the pricing page. Jobs on these pages come first, so leave out docs, blog posts and free tools, even when they link to the sign-up. One path or URL per line, such as /pricing or /demo. A path ending in / covers every page under it, such as /features/.',
       '## Competitors',
       'One domain per line.',
       '## Markets',
       '## Voice',
       '## Notes',
     ].join('\n'),
-    `Show it to the person and change what they correct. Then save it with ${call('next', { site, context: '<the Markdown>' })}, which replaces any earlier version and returns the next step.`,
+    `Send the person the draft in one message with three questions: is the conversion right, which customers do they want more of, and who do they lose deals to. Wait for their reply before you save, even when the site or its code seems to answer everything: only the person knows which customers they want. Change what they correct, then save it with ${call('next', { site, context: '<the Markdown>' })}, which replaces any earlier version and returns the next step.`,
   ].join('\n\n')
 }

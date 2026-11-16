@@ -259,7 +259,7 @@ function contextStep(
 function stepGuide(step: NextStep, site: string, call: Caller): string {
   switch (step) {
     case 'unblock':
-      return `These stop Google from crawling, reading or indexing pages. For each job, find the cause in the site's code or CMS, make the smallest change that fixes it, and open a pull request for the person to review (or push where they have said that is fine). Ask the person before you delete, redirect or noindex a page. Once the change is live, check the page with ${call('page', { url: '<url>' })}.`
+      return `These stop Google from crawling, reading or indexing pages. For each job, find the cause in the site's code or CMS, make the smallest change that fixes it, and open a pull request for the person to review (or push where they have said that is fine). Ask the person before you delete, redirect or noindex a page. Once the change is live, check the page with ${call('page', { url: '<url>' })}. When the live page is already fine and only Google's last reading is out of date, mark the job fixed with a note that says so; the next check shows whether Google agrees.`
     case 'improve':
       return `These pages already rank for a search but get fewer clicks than they could. For each job, first judge from the business context whether the search fits what the business sells and how close the searcher is to buying; mark a search that does not fit "ignored" with a note. For the rest, rewrite the title and description for that searcher and make the page answer what they came for, with what only this business knows. Open a pull request for each page, and check the new copy with ${call('lint', {})}.`
     case 'new-pages':

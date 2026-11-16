@@ -4,7 +4,7 @@ import { type Caller, CommandError } from './types.js'
 // The business context of a site: what the business sells, to whom, which
 // pages turn a visit into a customer and who it competes with. The person's
 // agent writes it by following contextGuide, the person corrects it in chat,
-// and seo next reads it to put money pages first and to know when to look
+// and seo next reads it to put conversion pages first and to know when to look
 // again. One per Search Console property: context.json on this machine, or
 // with the hosted account.
 
@@ -56,16 +56,18 @@ export function contextText(text: string): string {
   return trimmed
 }
 
-// The paths listed under "## Money pages": a path or URL at the start of
+// The paths listed under "## Conversion pages": a path or URL at the start of
 // each line, as a pathname. A path ending in / or * covers every page under
 // it; any other path is one page.
-export type MoneyPath = { path: string; prefix: boolean }
+export type ConversionPath = { path: string; prefix: boolean }
 
-export function moneyPaths(text: string): MoneyPath[] {
+export function conversionPaths(text: string): ConversionPath[] {
   const lines = text.split('\n')
-  const start = lines.findIndex((line) => /^##\s+money pages\s*$/i.test(line))
+  const start = lines.findIndex((line) =>
+    /^##\s+conversion pages\s*$/i.test(line),
+  )
   if (start < 0) return []
-  const paths: MoneyPath[] = []
+  const paths: ConversionPath[] = []
   for (const line of lines.slice(start + 1)) {
     if (/^#{1,2}\s/.test(line)) break
     const token = line
@@ -98,8 +100,11 @@ const trimPath = (path: string) =>
 export const subjectUrl = (subject: string) =>
   subject.match(/https?:\/\/\S+/)?.[0]
 
-// Whether an issue's subject is on a money page.
-export function onMoneyPage(subject: string, paths: MoneyPath[]): boolean {
+// Whether an issue's subject is on a conversion page.
+export function onConversionPage(
+  subject: string,
+  paths: ConversionPath[],
+): boolean {
   if (!paths.length) return false
   const url = subjectUrl(subject)
   if (!url) return false
@@ -109,10 +114,10 @@ export function onMoneyPage(subject: string, paths: MoneyPath[]): boolean {
   } catch {
     return false
   }
-  return paths.some((money) =>
-    money.prefix
-      ? pathname === money.path || pathname.startsWith(`${money.path}/`)
-      : pathname === money.path,
+  return paths.some((page) =>
+    page.prefix
+      ? pathname === page.path || pathname.startsWith(`${page.path}/`)
+      : pathname === page.path,
   )
 }
 
@@ -120,7 +125,7 @@ export function onMoneyPage(subject: string, paths: MoneyPath[]): boolean {
 // site has none, or when its context is older than CONTEXT_DAYS.
 export function contextGuide(site: string, call: Caller): string {
   return [
-    `Write the business context for ${site}: what the business sells, who buys it, and which pages turn a visit into a customer. Every later step uses it to put the pages that make money first and to judge whether a search fits the product.`,
+    `Write the business context for ${site}: what the business sells, who buys it, and which pages turn a visit into a customer. Every later step uses it to put the pages that bring customers first and to judge whether a search fits the product.`,
     `Research it in this order, and stop once each heading below has an answer:`,
     [
       `1. Read the home page, the pricing page and the main product or feature pages (${call('page', { url: '<url>' })} reads one live).`,
@@ -135,8 +140,8 @@ export function contextGuide(site: string, call: Caller): string {
       '## Who buys it',
       '## What counts as a conversion',
       'Name the Google Analytics key events that count, such as sign_up, where the site has them.',
-      '## Money pages',
-      'One path or URL per line, such as /pricing or /demo. A path ending in / covers every page under it.',
+      '## Conversion pages',
+      'The pages where a visitor signs up, starts a trial, books a demo or buys. One path or URL per line, such as /pricing or /demo. A path ending in / covers every page under it.',
       '## Competitors',
       'One domain per line.',
       '## Markets',

@@ -156,6 +156,8 @@ export type View =
             text: string
             email: boolean
             webhook: boolean
+            // Per-site types only: each audited site's email switch.
+            sites?: { property: string; name: string; email: boolean }[]
           }[]
           webhookUrl: string | null
           webhookSecret: string | null

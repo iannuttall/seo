@@ -106,64 +106,91 @@ async function measureSites(env: Env, userId: string, now: number) {
 }
 
 // From the hourly cron once the Search Console Monday starts (07:17 or
-// 08:17 UTC), so Sunday's index checks are done: one summary per beta
-// account that was sent its first report, a few accounts a tick. It carries the day's index
-// roundup (audit/index-roundup.ts), whose pages are marked sent only when
-// the summary is queued; otherwise Tuesday's roundup has them.
-// weekly_summaries records each account's week before it is queued, so an
-// account is never sent the same week twice; delivery then retries through
-// the alerts table like any alert.
+// 08:17 UTC), so Sunday's index checks are done: one summary per audited
+// site that was sent its first report, like Search Console's email per
+// property, a few accounts a tick. Each carries its site's part of the
+// day's index roundup (audit/index-roundup.ts), whose pages are marked sent
+// only when that summary is queued; otherwise Tuesday's roundup has them.
+// site_summaries records each site's week before it is queued, so a site
+// is never sent the same week twice; delivery then retries through the
+// alerts table like any alert.
 export async function sendWeeklySummaries(env: Env, now = Date.now()) {
   if (!isMonday(searchConsoleDay(now))) return
   const week = previousWeek(now)
   const due = await env.DB.prepare(
-    `SELECT DISTINCT s.user_id FROM audit_sites s
-     WHERE ${hasWeeklyAudit('s.user_id')}
-       AND EXISTS (SELECT 1 FROM weekly_summaries w WHERE w.user_id = s.user_id)
-       AND NOT EXISTS (SELECT 1 FROM weekly_summaries w WHERE w.user_id = s.user_id AND w.week = ?)
-     ORDER BY s.user_id LIMIT ?`,
+    `SELECT s.user_id, s.property FROM audit_sites s
+     WHERE s.user_id IN (
+       SELECT DISTINCT d.user_id FROM audit_sites d
+       WHERE ${hasWeeklyAudit('d.user_id')} AND ${weekDue('d')}
+       ORDER BY d.user_id LIMIT ?)
+       AND ${weekDue('s')}
+     ORDER BY s.user_id, s.property`,
   )
-    .bind(week.start, ACCOUNTS_PER_TICK)
-    .all<{ user_id: string }>()
-  for (const { user_id: userId } of due.results) {
-    await sendSummary(env, userId, now, week)
+    .bind(week.start, ACCOUNTS_PER_TICK, week.start)
+    .all<{ user_id: string; property: string }>()
+  for (const [userId, properties] of byAccount(due.results)) {
+    await sendSummaries(env, userId, properties, now, week)
   }
-  // The first report's row stays, so it is never sent twice.
+  // Each site's first report row stays, so it is never sent twice.
   await env.DB.prepare(
-    "DELETE FROM weekly_summaries WHERE sent_at < ? AND week <> 'first'",
+    "DELETE FROM site_summaries WHERE sent_at < ? AND week <> 'first'",
   )
     .bind(now - 90 * 86_400_000)
     .run()
 }
 
-// From the hourly cron: an account's first summary, of the 7 days to now,
-// as soon as a site's first crawl is done and its first competitor check is
-// in (or FIRST_WAIT_MS has passed), so a new account sees its results the
-// day it joins, not the next Monday. A crawl that has not finished a day
-// after the site was added does not hold it back. Only accounts never sent
-// a summary; the Monday summaries start after it.
+// SQL that is true when the audit_sites row (alias) was sent its first
+// report and not yet the week bound in its place.
+const weekDue = (alias: string) =>
+  `EXISTS (SELECT 1 FROM site_summaries w WHERE w.user_id = ${alias}.user_id AND w.property = ${alias}.property AND w.week = 'first')
+   AND NOT EXISTS (SELECT 1 FROM site_summaries w WHERE w.user_id = ${alias}.user_id AND w.property = ${alias}.property AND w.week = ?)`
+
+const byAccount = (rows: { user_id: string; property: string }[]) => {
+  const accounts = new Map<string, string[]>()
+  for (const row of rows) {
+    accounts.set(row.user_id, [
+      ...(accounts.get(row.user_id) ?? []),
+      row.property,
+    ])
+  }
+  return accounts
+}
+
+// From the hourly cron: a site's first summary, of the 7 days to now, as
+// soon as its first crawl is done and its first competitor check is in (or
+// FIRST_WAIT_MS has passed), so a new site's results come the day it is
+// added, not the next Monday. A crawl that has not finished a day after
+// the site was added does not hold it back. Only sites never sent a
+// summary; their Monday summaries start after it.
 export async function sendFirstSummaries(env: Env, now = Date.now()) {
+  const ready = (alias: string) =>
+    `((${alias}.last_finished_at IS NOT NULL AND (${alias}.opportunities IS NOT NULL OR ${alias}.last_finished_at < ?1))
+       OR ${alias}.added_at < ?2)
+     AND NOT EXISTS (SELECT 1 FROM site_summaries w WHERE w.user_id = ${alias}.user_id AND w.property = ${alias}.property)`
   const due = await env.DB.prepare(
-    `SELECT DISTINCT s.user_id FROM audit_sites s
-     WHERE ${hasWeeklyAudit('s.user_id')}
-       AND ((s.last_finished_at IS NOT NULL AND (s.opportunities IS NOT NULL OR s.last_finished_at < ?))
-         OR s.added_at < ?)
-       AND NOT EXISTS (SELECT 1 FROM weekly_summaries w WHERE w.user_id = s.user_id)
-     ORDER BY s.user_id LIMIT ?`,
+    `SELECT s.user_id, s.property FROM audit_sites s
+     WHERE s.user_id IN (
+       SELECT DISTINCT d.user_id FROM audit_sites d
+       WHERE ${hasWeeklyAudit('d.user_id')} AND ${ready('d')}
+       ORDER BY d.user_id LIMIT ?3)
+       AND ${ready('s')}
+     ORDER BY s.user_id, s.property`,
   )
     .bind(now - FIRST_WAIT_MS, now - FIRST_LATEST_MS, ACCOUNTS_PER_TICK)
-    .all<{ user_id: string }>()
-  for (const { user_id: userId } of due.results) {
-    await sendSummary(env, userId, now, lastSevenDays(now), true)
+    .all<{ user_id: string; property: string }>()
+  for (const [userId, properties] of byAccount(due.results)) {
+    await sendSummaries(env, userId, properties, now, lastSevenDays(now), true)
   }
 }
 
-// Builds one account's summary for the window and queues it once: the
-// row in weekly_summaries is claimed first (the window's Monday, or
-// "first"). The Monday summary also carries the day's index roundup.
-async function sendSummary(
+// Builds one account's week once and queues one summary for each of the
+// named sites, each once: its row in site_summaries is claimed first (the
+// window's Monday, or "first"). A Monday summary also carries its site's
+// part of the day's index roundup.
+async function sendSummaries(
   env: Env,
   userId: string,
+  properties: string[],
   now: number,
   week: Window,
   first = false,
@@ -177,22 +204,28 @@ async function sendSummary(
   const withUpdates = await withWeekUpdates(env, userId, summary, now).catch(
     () => summary,
   )
-  const data = {
-    ...withUpdates,
-    index_changes: unsent?.sites ?? [],
-    ...(first ? { first: true } : {}),
+  for (const site of withUpdates.sites) {
+    if (!properties.includes(site.property)) continue
+    const data = {
+      ...withUpdates,
+      sites: [site],
+      index_changes: (unsent?.sites ?? []).filter(
+        (changes) => changes.property === site.property,
+      ),
+      ...(first ? { first: true } : {}),
+    }
+    const claimed = await env.DB.prepare(
+      `INSERT INTO site_summaries (user_id, property, week, sent_at) VALUES (?, ?, ?, ?)
+       ON CONFLICT DO NOTHING RETURNING week`,
+    )
+      .bind(userId, site.property, first ? 'first' : week.start, now)
+      .first()
+    if (!claimed) continue
+    const queued = await queueAlert(
+      env,
+      { userId, type: 'weekly-summary', site: site.property, data },
+      now,
+    ).catch(() => null)
+    if (queued && unsent) await unsent.markSent([site.property])
   }
-  const claimed = await env.DB.prepare(
-    `INSERT INTO weekly_summaries (user_id, week, sent_at) VALUES (?, ?, ?)
-     ON CONFLICT DO NOTHING RETURNING week`,
-  )
-    .bind(userId, first ? 'first' : week.start, now)
-    .first()
-  if (!claimed) return
-  const queued = await queueAlert(
-    env,
-    { userId, type: 'weekly-summary', site: '', data },
-    now,
-  ).catch(() => null)
-  if (queued && unsent) await unsent.markSent()
 }

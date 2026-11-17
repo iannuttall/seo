@@ -20,7 +20,8 @@ export const isMonday = (day: string) =>
   new Date(`${day}T00:00:00Z`).getUTCDay() === 1
 
 // Every site's index changes not sent yet (only sites with changes), and
-// how to mark them sent once an alert with them is queued.
+// how to mark them sent once an alert with them is queued: every site's, or
+// only the named ones'.
 export async function unsentIndexChanges(env: Env, userId: string) {
   const found = await Promise.all(
     (await auditSites(env, userId)).map(async ({ property }) => {
@@ -34,11 +35,15 @@ export async function unsentIndexChanges(env: Env, userId: string) {
   const changed = found.filter((item) => item !== null)
   return {
     sites: changed.map((item): IndexSiteChanges => item.changes),
-    markSent: () =>
+    markSent: (properties?: string[]) =>
       Promise.all(
-        changed.map(({ site, upto }) =>
-          site.markIndexAlerted(upto).catch(() => null),
-        ),
+        changed
+          .filter(
+            (item) => !properties || properties.includes(item.changes.property),
+          )
+          .map(({ site, upto }) =>
+            site.markIndexAlerted(upto).catch(() => null),
+          ),
       ),
   }
 }

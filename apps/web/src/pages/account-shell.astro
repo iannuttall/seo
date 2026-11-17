@@ -781,6 +781,18 @@ const keys: { name: string; label: string; type: 'text' | 'password' }[] = [
             <input type="checkbox" class="size-4 accent-primary" data-alert-webhook /> Webhook
           </label>
         </span>
+        <fieldset class="w-full" data-alert-sites hidden>
+          <legend class="text-foreground-muted">Email for each site</legend>
+          <ul class="mt-1.5 flex flex-col gap-1.5" data-alert-site-list></ul>
+        </fieldset>
+      </li>
+    </template>
+    <template data-alert-site-row>
+      <li>
+        <input type="hidden" data-alert-site-shown />
+        <label class="flex items-center gap-1.5 text-foreground">
+          <input type="checkbox" class="size-4 accent-primary" data-alert-site /> <span data-alert-site-name></span>
+        </label>
       </li>
     </template>
     <template data-machine-row>
@@ -868,7 +880,14 @@ const keys: { name: string; label: string; type: 'text' | 'password' }[] = [
       }
       alerts?: {
         email: string | null
-        types: { id: string; title: string; text: string; email: boolean; webhook: boolean }[]
+        types: {
+          id: string
+          title: string
+          text: string
+          email: boolean
+          webhook: boolean
+          sites?: { property: string; name: string; email: boolean }[]
+        }[]
         webhookUrl: string | null
         webhookSecret: string | null
         webhookLast: { at: number; result: string } | null
@@ -1518,6 +1537,26 @@ const keys: { name: string; label: string; type: 'text' | 'password' }[] = [
               webhook.name = `webhook:${type.id}`
               webhook.checked = type.webhook
             }
+            const siteRow = root.querySelector<HTMLTemplateElement>('[data-alert-site-row]')
+            const siteList = copy.querySelector('[data-alert-site-list]')
+            for (const site of type.sites ?? []) {
+              const line = siteRow?.content.cloneNode(true) as DocumentFragment
+              const shown = line.querySelector<HTMLInputElement>('[data-alert-site-shown]')
+              if (shown) {
+                shown.name = `email-sites:${type.id}`
+                shown.value = site.property
+              }
+              const box = line.querySelector<HTMLInputElement>('[data-alert-site]')
+              if (box) {
+                box.name = `email-site:${type.id}`
+                box.value = site.property
+                box.checked = site.email
+              }
+              const name = line.querySelector('[data-alert-site-name]')
+              if (name) name.textContent = site.name
+              siteList?.append(line)
+            }
+            if (type.sites?.length) show(copy.querySelector('[data-alert-sites]'))
             alertList?.append(copy)
           }
           const url = root.querySelector<HTMLInputElement>('[data-alerts-url]')

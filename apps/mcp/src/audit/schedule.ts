@@ -232,6 +232,9 @@ export async function removeAuditSite(
     env.DB.prepare(
       'DELETE FROM audit_sites WHERE user_id = ? AND property = ?',
     ).bind(userId, property),
+    env.DB.prepare(
+      'DELETE FROM site_summaries WHERE user_id = ? AND property = ?',
+    ).bind(userId, property),
   ])
 }
 

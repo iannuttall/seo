@@ -61,11 +61,11 @@ To see every page the email could not list, ask your agent for [`seo index`](/do
 
 ## Weekly summary
 
-Every Monday at about 8am UK time (once Sunday is over in California) you get last week across all your audited sites: each site's Google index checks, its weekly crawl and new issues, its search clicks against the week before, and any Google update that ran or got its result that week. Monday's index changes go in this email instead of a separate one.
+Every Monday at about 8am UK time (once Sunday is over in California) you get one email for each audited site, the way Google Search Console sends one per property. Each covers last week on that site: its Google index checks, its weekly crawl and new issues, its search clicks against the week before, and any Google update that ran or got its result that week. Monday's index changes for the site go in its email instead of a separate one.
 
-Your first summary does not wait for Monday. It comes once your first site's crawl is done, within a day of adding it, and covers the 7 days to then.
+A site's first summary does not wait for Monday. It comes once the site's first crawl is done, within a day of adding it, and covers the 7 days to then.
 
-Your agent can read the same summary at any time. Ask it for the SEO report with no site, or run:
+Your agent can read every site's summary together at any time. Ask it for the SEO report with no site, or run:
 
 ```sh
 seo report
@@ -77,7 +77,9 @@ On a machine, run `seo login` first so the CLI uses your seoskill.dev account.
 
 Alerts go to the email address of the first Google account you linked. Under **Alerts** on your [account page](https://seoskill.dev/account#alerts), each kind of alert has its own email and webhook switch. Both are on until you change them, and the webhook only sends once you save a URL.
 
-Every email also has a link at the bottom that turns that kind of email off.
+The weekly summary also lists your audited sites, so you can keep the Monday email for some sites and stop it for others. These switches change email only: the webhook still gets every site.
+
+Every email also has a link at the bottom that turns that kind of email off. In a weekly summary, the link stops the email for that site only.
 
 ## Send alerts to a webhook
 

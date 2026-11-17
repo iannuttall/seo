@@ -183,8 +183,10 @@ beta feature), each
 alert type has its own email and webhook switch; both are on by default, and
 the webhook only once a URL is saved. Email goes to the first linked Google
 account from `alerts@e.seoskill.dev`, through PostShiba, at most 550 a day
-for all accounts; the rest wait for the next day and say so. Every email has
-a link that turns that type's email off.
+for all accounts; the rest wait for the next day and say so. The weekly
+summary also has an email switch per audited site (`sitesOff` in the type's
+prefs; the webhook is not affected). Every email has a link that turns that
+type's email off; in a weekly summary it turns off that site's email only.
 
 ### Alert webhooks
 
@@ -246,21 +248,22 @@ are Google's own words.
 
 `weekly-summary` goes out on Monday morning (07:17 UTC in summer, 08:17 in
 winter, once the Pacific Sunday is over) for the week from the
-Monday before to Sunday. It covers every audited site, so `site` is `null`.
-`data` is what `seo report` and `seo_report` summarise with no site: `start` and `end`, and per
-site `property`, `link`, `crawl` (the last finished crawl, with `new_issues`
+Monday before to Sunday. Each audited site gets its own, like Search
+Console's email per property, so `site` is the property and `data.sites`
+holds that one site. `data` is in the shape `seo report` and `seo_report`
+summarise with no site: `start` and `end`, and per site `property`, `link`, `crawl` (the last finished crawl, with `new_issues`
 first seen or back that week), `index` (the week's `checked`, `dropped` and
 `returned`, with up to 5 `dropped_pages`) and `clicks` (the latest 7 days
 of final Search Console data against the 7 before). Each is `null` when it
 is not known yet. A site's `google_updates` lists Google ranking updates
 that ran that week or whose result became ready in the last 7 days, each
 with `ready` and a `result` (`verdict`, `clicks`, `previous`, `days`) for
-up to 20 sites once final data covers it, else `null`. `index_changes` is Monday's daily roundup, the same
-list as `index-changes` `data.sites`, empty when nothing changed.
-An account's first `weekly-summary` does not wait for Monday: it goes out
-within the hour once a site's first crawl and competitor check are done
+up to 20 sites once final data covers it, else `null`. `index_changes` is the site's part of Monday's daily roundup, in the shape of
+`index-changes` `data.sites`, empty when nothing changed.
+A site's first `weekly-summary` does not wait for Monday: it goes out
+within the hour once its first crawl and competitor check are done
 (at most a day after the site was added), for the 7 days to then, with
-`first: true` and an empty `index_changes`. The Monday summaries start after it.
+`first: true` and an empty `index_changes`. Its Monday summaries start after it.
 
 `google-update` goes out within the hour of Google's
 [Search Status Dashboard](https://status.search.google.com/) posting that a

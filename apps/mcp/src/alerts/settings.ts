@@ -6,14 +6,23 @@ import { ALERTS, type AlertTypeId, type Channel } from './registry.ts'
 // webhook, and the webhook URL with its signing secret.
 
 export type AlertSettings = {
-  // Only the types the account may get, each with both channels resolved.
-  types: { id: AlertTypeId; email: boolean; webhook: boolean }[]
+  // Only the types the account may get, each with both channels resolved,
+  // and the sites whose email of that type is off (per-site alerts only,
+  // such as the weekly summary).
+  types: {
+    id: AlertTypeId
+    email: boolean
+    webhook: boolean
+    sitesOff: string[]
+  }[]
   webhookUrl: string | null
   webhookSecret: string | null
   webhookLast: { at: number; result: string } | null
 }
 
-type Prefs = Partial<Record<string, Partial<Record<Channel, boolean>>>>
+type Prefs = Partial<
+  Record<string, Partial<Record<Channel, boolean>> & { sitesOff?: string[] }>
+>
 
 type Row = {
   prefs: string
@@ -47,6 +56,7 @@ export async function alertSettings(
       id,
       email: prefs[id]?.email ?? ALERTS[id].defaults.email,
       webhook: prefs[id]?.webhook ?? ALERTS[id].defaults.webhook,
+      sitesOff: prefs[id]?.sitesOff ?? [],
     }))
   return {
     types,
@@ -68,14 +78,23 @@ export async function saveAlertSettings(
   env: Env,
   userId: string,
   input: {
-    types: { id: AlertTypeId; email: boolean; webhook: boolean }[]
+    types: {
+      id: AlertTypeId
+      email: boolean
+      webhook: boolean
+      sitesOff: string[]
+    }[]
     webhookUrl: string | null
   },
 ): Promise<void> {
   const saved = await row(env, userId)
   const prefs = JSON.parse(saved?.prefs ?? '{}') as Prefs
   for (const item of input.types) {
-    prefs[item.id] = { email: item.email, webhook: item.webhook }
+    prefs[item.id] = {
+      email: item.email,
+      webhook: item.webhook,
+      ...(item.sitesOff.length ? { sitesOff: item.sitesOff } : {}),
+    }
   }
   const secret =
     saved?.webhook_secret ?? (input.webhookUrl ? await newSecret(env) : null)
@@ -94,16 +113,21 @@ export async function saveAlertSettings(
     .run()
 }
 
-// One channel of one type off, from the link in an alert email.
+// One channel of one type off, from the link in an alert email; with a
+// site, only that site's email of the type.
 export async function turnOff(
   env: Env,
   userId: string,
   type: AlertTypeId,
   channel: Channel,
+  site?: string,
 ): Promise<void> {
   const saved = await row(env, userId)
   const prefs = JSON.parse(saved?.prefs ?? '{}') as Prefs
-  prefs[type] = { ...prefs[type], [channel]: false }
+  const sitesOff = prefs[type]?.sitesOff ?? []
+  prefs[type] = site
+    ? { ...prefs[type], sitesOff: [...new Set([...sitesOff, site])].sort() }
+    : { ...prefs[type], [channel]: false }
   await env.DB.prepare(
     `INSERT INTO alert_settings (user_id, prefs, updated_at) VALUES (?, ?, ?)
      ON CONFLICT (user_id) DO UPDATE SET prefs = excluded.prefs, updated_at = excluded.updated_at`,

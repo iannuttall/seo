@@ -25,6 +25,8 @@ export type AlertType<Data> = {
   flag: BetaFlag
   // On or off before the person changes it.
   defaults: Record<Channel, boolean>
+  // One alert per site, so its email can be turned off site by site.
+  perSite?: boolean
   email(
     data: Data,
     site: string,
@@ -179,25 +181,29 @@ const autopilot = (account: string) =>
     '- Any agent connected to SEO Skill can read this week with seo_report and no site.',
   ].join('\n')
 
-// weekly-summary: every audited site's last full week, Monday to Sunday,
-// sent on Monday morning (audit/week.ts). The same Markdown as seo report
-// with no site, then Monday's index roundup (pages that dropped out of or
-// got into Google's index since Sunday's), then how to automate it. An
-// account's first one goes out once its first results are in, for the 7
-// days to then, with first set and no index roundup.
+// weekly-summary: one audited site's last full week, Monday to Sunday,
+// sent on Monday morning, one alert per site like Search Console's email
+// per property (audit/week.ts). The same Markdown as seo report with no
+// site, for that site alone, then its part of Monday's index roundup (pages
+// that dropped out of or got into Google's index since Sunday's), then how
+// to automate it. A site's first one goes out once its first results are
+// in, for the 7 days to then, with first set and no index roundup.
 export type WeeklySummary = WeekData & { index_changes?: IndexSiteChanges[] }
 
 const weeklySummary: AlertType<WeeklySummary> = {
   title: 'Weekly summary',
-  text: 'Every Monday, what happened on each of your sites last week.',
+  text: 'Every Monday, one email for each site with what happened on it last week.',
   flag: 'weekly-audit',
   defaults: { email: true, webhook: true },
+  perSite: true,
   email(data) {
-    const roundup = (data.index_changes ?? []).flatMap((site) => [
-      '',
-      `### ${siteName(site.property)}`,
-      ...siteChanges(site, '####'),
-    ])
+    // A summary of one site, as each is now, needs no heading per site.
+    const one = data.sites.length === 1
+    const roundup = (data.index_changes ?? []).flatMap((site) =>
+      one
+        ? siteChanges(site, '###')
+        : ['', `### ${siteName(site.property)}`, ...siteChanges(site, '####')],
+    )
     const index = roundup.length
       ? [
           '',
@@ -214,8 +220,9 @@ const weeklySummary: AlertType<WeeklySummary> = {
     const markdown = `${weekMarkdown(data)}${index}${first}${data.sites.length ? autopilot(data.account) : ''}`
     // The verdict line, for the inbox preview.
     const verdict = markdown.split('\n')[2] ?? ''
+    const site = data.sites.length === 1 && data.sites[0]
     const subject = data.first
-      ? `Your first SEO Skill report, ${weekLabel(data.start, data.end)}`
+      ? `Your first SEO Skill report${site ? ` for ${siteName(site.property)}` : ''}, ${weekLabel(data.start, data.end)}`
       : weekTitle(data)
     return { subject, preview: verdict, markdown }
   },

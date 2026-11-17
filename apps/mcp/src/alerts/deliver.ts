@@ -1,3 +1,4 @@
+import { siteName } from '@seo/core/commands'
 import { readJsonOrUndefined } from '@seo/core/hosted'
 import { betaFlags } from '../beta.ts'
 import { seal } from '../seal.ts'
@@ -72,7 +73,8 @@ export async function queueAlert<T extends AlertTypeId>(
   if (!(await betaFlags(env, input.userId)).has(type.flag)) return null
   const settings = await alertSettings(env, input.userId)
   const wants = settings.types.find((item) => item.id === input.type)
-  const email: State = wants?.email ? 'pending' : 'off'
+  const email: State =
+    wants?.email && !wants.sitesOff.includes(input.site) ? 'pending' : 'off'
   const webhook: State =
     wants?.webhook && settings.webhookUrl ? 'pending' : 'off'
   if (email === 'off' && webhook === 'off') return null
@@ -194,7 +196,12 @@ async function sendEmail(env: Env, row: Row, now: number): Promise<Outcome> {
   const message = ALERTS[type].email(JSON.parse(row.data), row.site)
   const off = `${env.PUBLIC_URL}/account/alerts/off?t=${await seal(
     env.SEAL_KEY,
-    { k: 'alert-off', userId: row.user_id, type },
+    {
+      k: 'alert-off',
+      userId: row.user_id,
+      type,
+      ...(ALERTS[type].perSite && row.site ? { site: row.site } : {}),
+    },
   )}`
   const { html, text } = renderEmail({
     subject: message.subject,
@@ -209,7 +216,7 @@ async function sendEmail(env: Env, row: Row, now: number): Promise<Outcome> {
         : []),
     ].join('\n'),
     footer: {
-      why: `You got this email because “${ALERTS[type].title}” is on in your SEO Skill alerts.`,
+      why: `You got this email because “${ALERTS[type].title}” is on${ALERTS[type].perSite && row.site ? ` for ${siteName(row.site)}` : ''} in your SEO Skill alerts.`,
       prefs: `${env.PUBLIC_URL}/account#alerts`,
       unsubscribe: off,
     },
@@ -291,7 +298,7 @@ export function webhookBody(
   return JSON.stringify({
     id: row.id,
     type: row.type,
-    // null for an alert about the whole account, such as the weekly summary.
+    // null for an alert about the whole account, such as a Google update.
     site: row.site || null,
     created_at: new Date(row.created_at).toISOString(),
     data: JSON.parse(row.data),

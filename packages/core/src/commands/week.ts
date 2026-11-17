@@ -207,8 +207,9 @@ const dayLabel = (date: string) =>
     timeZone: 'UTC',
   })
 
-export const weekTitle = (data: Pick<WeekData, 'start' | 'end'>) =>
-  `Your SEO Skill week, ${weekLabel(data.start, data.end)}`
+// Names the site when the week holds only one, as each Monday email does.
+export const weekTitle = (data: Pick<WeekData, 'start' | 'end' | 'sites'>) =>
+  `Your SEO Skill week${data.sites.length === 1 && data.sites[0] ? ` for ${siteName(data.sites[0].property)}` : ''}, ${weekLabel(data.start, data.end)}`
 
 // A property as people say it: example.com, or shop.example.org/blog.
 export const siteName = (property: string) =>

@@ -12,6 +12,7 @@ import {
   isSimpleAnalyticsKey,
   listBingSites,
   SIMPLE_ANALYTICS_KEY,
+  siteName,
 } from '@seo/core/commands'
 import { ALERTS, isAlertType } from './alerts/registry.ts'
 import {
@@ -259,10 +260,20 @@ async function accountPage(
               email:
                 accounts.find((item) => item.provider === 'google')?.label ??
                 null,
-              types: alerts.types.map((item) => ({
+              types: alerts.types.map(({ sitesOff, ...item }) => ({
                 ...item,
                 title: ALERTS[item.id].title,
                 text: ALERTS[item.id].text,
+                // A per-site type's email switch for each audited site.
+                ...(ALERTS[item.id].perSite
+                  ? {
+                      sites: audits.map((site) => ({
+                        property: site.property,
+                        name: siteName(site.property),
+                        email: !sitesOff.includes(site.property),
+                      })),
+                    }
+                  : {}),
               })),
               webhookUrl: alerts.webhookUrl,
               webhookSecret: alerts.webhookSecret,
@@ -679,12 +690,30 @@ export async function account(
       if (problem) {
         return accountPage(env, userId, problem, { tab: 'beta' })
       }
+      // A per-site type's email: the form lists the sites it showed and
+      // the ones left ticked, so a site added since the page loaded keeps
+      // its email on.
+      const audited = new Set(
+        (await auditSites(env, userId)).map((site) => site.property),
+      )
+      const values = (name: string) =>
+        (data?.getAll(name) ?? []).map(String).filter((p) => audited.has(p))
       await saveAlertSettings(env, userId, {
-        types: settings.types.map((item) => ({
-          id: item.id,
-          email: data?.get(`email:${item.id}`) === 'on',
-          webhook: data?.get(`webhook:${item.id}`) === 'on',
-        })),
+        types: settings.types.map((item) => {
+          const shown = values(`email-sites:${item.id}`)
+          const on = values(`email-site:${item.id}`)
+          return {
+            id: item.id,
+            email: data?.get(`email:${item.id}`) === 'on',
+            webhook: data?.get(`webhook:${item.id}`) === 'on',
+            sitesOff: [
+              ...item.sitesOff.filter(
+                (p) => audited.has(p) && !shown.includes(p),
+              ),
+              ...shown.filter((p) => !on.includes(p)),
+            ].sort(),
+          }
+        }),
         webhookUrl: url,
       })
       return accountPage(env, userId, 'Saved your alert settings.', {
@@ -948,13 +977,13 @@ async function alertsOff(request: Request, env: Env): Promise<Response> {
       404,
     )
   }
-  await turnOff(env, off.userId, off.type, 'email')
+  await turnOff(env, off.userId, off.type, 'email', off.site)
   if (request.method === 'POST') return new Response(null, { status: 204 })
   return view(env, {
     view: 'notice',
     notice: {
       title: 'Alert emails off',
-      text: `You will get no more ${ALERTS[off.type].title.toLowerCase()} emails. Turn them back on under Alerts on your account page.`,
+      text: `You will get no more ${ALERTS[off.type].title.toLowerCase()} emails${off.site ? ` for ${siteName(off.site)}` : ''}. Turn them back on under Alerts on your account page.`,
     },
   })
 }

@@ -1,8 +1,8 @@
 ---
 title: Free Google Search Console MCP server
-description: Connect Claude Code, Codex or any remote MCP client to the free SEO Skill server at seoskill.dev/mcp. Sign in with Google. Only your sign-ins and keys are kept, encrypted, and never your data.
+description: Connect Claude Code, Codex or any remote MCP client to the free SEO Skill server at seoskill.dev/mcp, and sign in with Google.
 heading: Hosted MCP
-lead: A free remote MCP server at seoskill.dev/mcp. Sign in with Google and your agent can read your Search Console and Google Analytics data. Your data is never stored.
+lead: A free remote MCP server at seoskill.dev/mcp. Sign in with Google and your agent can read your Search Console and Google Analytics data, fetched each time it asks.
 ---
 
 There is nothing to install and no password to create. Your agent connects to `https://seoskill.dev/mcp`, you sign in with Google once, and the tools read your own data on each request. The [Google Search Console MCP](/features/search-console) page shows the questions it answers from Search Console.
@@ -59,27 +59,29 @@ Each request uses the linked Google account that can read the site. If none can,
 
 | Tool | What it returns |
 | --- | --- |
-| `seo_sites` | The Search Console and Google Analytics properties your linked Google accounts can read, and which keys are set. |
+| `seo_sites` | The Search Console and Google Analytics properties your linked Google accounts can read, and which keys are set. It can also add a site to the [weekly site audit](/docs/weekly-site-audit) when you ask. |
+| `seo_next` | [The next step](/docs/next) in the SEO loop for a site, with its first jobs. |
 | `seo_report` | The [main report](/docs/report). With a site, an overview first, then one section. With no site, last week across the sites in your [weekly site audit](/docs/weekly-site-audit). |
 | `seo_page` | [One URL](/docs/page): live page facts, Google index status and its queries. |
 | `seo_compare` | [Before and after a date](/docs/compare), with Google updates in the window. |
-| `seo_index` | [Pages that lost their clicks](/docs/indexing), checked live and with URL Inspection. |
+| `seo_index` | [Google's indexing reasons](/docs/indexing) for your pages, checked live and labelled, and pages that lost their clicks. |
+| `seo_submit` | [Ask search engines to crawl pages](/docs/submit): IndexNow keys for Bing and others, or Index My Site for Google from your own credits. It shows the cost before it sends anything. |
 | `seo_research` | [Keyword and competitor data](/docs/research) from your own provider key. |
 | `seo_data` | [Raw rows](/docs/data) from Search Console, or Google Analytics, Clicky and Simple Analytics landing pages. |
 | `seo_lint` | [Lines in your copy](/docs/lint) that read as AI-written, each with a fix. |
 
-Each tool takes a site or URL and optional dates. Results start as a short summary, and your agent can ask for more rows when it needs them. Every result names the tool to run next.
+Most tools take a site or URL and optional dates. Results start as a short summary, and your agent can ask for more rows when it needs them. Every result names the tool to run next.
 
 The site crawl, internal links, [Bing Webmaster Tools](/docs/bing), and analytics tools other than Google Analytics, Clicky and Simple Analytics run on your own machine, so they are only in the [CLI](/docs/cli). The hosted server tells your agent to use the CLI for them.
 
 ## What the server keeps
 
-Only your linked Google and Bing accounts, any keys, Clicky sites, Clicky account login and Simple Analytics key you save, encrypted, and the names of the machines you link. They are used to fetch your own data when your agent asks. The server keeps no reports, no Search Console or analytics rows, no site lists and no request logs, except what the paid weekly audit keeps for its sites. The token your agent keeps holds only a random person id.
+Only your linked Google and Bing accounts, any keys, Clicky sites, Clicky account login and Simple Analytics key you save, encrypted, and the names of the machines you link. They are used to fetch your own data when your agent asks. It also keeps, for any site you use it on, the issues list your agent asks for with the `issues` section of the [report](/docs/report#keep-a-list-of-issues) and the business context it saves with [`seo next`](/docs/next). Otherwise the server keeps no reports, no Search Console or analytics rows, no site lists and no request logs, except what the paid weekly audit keeps for its sites. The token your agent keeps holds only a random person id.
 
 The only other thing kept is an anonymous count of what ran: the event, report, agent, version and week. [What is stored](/docs/privacy) has the details.
 
 ## Remove access
 
-Sign in on your [account page](https://seoskill.dev/account) and choose **Delete everything**. It deletes your linked accounts and keys and revokes the Google sign-ins, so your agents will ask you to sign in again. Then remove the server from your agent.
+Sign in on your [account page](https://seoskill.dev/account) and choose **Delete everything**. It deletes your linked accounts, keys, issues lists and business context, and revokes the Google sign-ins, so your agents will ask you to sign in again. Then remove the server from your agent.
 
 You can also revoke SEO Skill in your [Google account connections](https://myaccount.google.com/connections). That stops the stored Google tokens working.

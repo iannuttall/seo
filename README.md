@@ -142,25 +142,29 @@ ends with the command to run next, so your agent always knows where to go.
 
 | Command | What it returns |
 | --- | --- |
+| [`seo next`](https://seoskill.dev/docs/next) | Where a site is in the SEO loop and the one step to do now, with its first jobs |
 | [`seo report`](https://seoskill.dev/docs/report) | Your Search Console overview for `--site`, then the top rows of each section |
 | [`seo page`](https://seoskill.dev/docs/page) | One URL: the live page, its Google index status and its queries |
 | [`seo compare`](https://seoskill.dev/docs/compare) | Before and after a date, with Google updates |
 | [`seo index`](https://seoskill.dev/docs/indexing) | Google's indexing reasons for known URLs, labelled from live checks, and pages that lost their clicks |
 | [`seo submit`](https://seoskill.dev/docs/submit) | Ask Bing and others to crawl pages with IndexNow (free), or send them to Google with Index My Site (your own credits) |
-| [`seo research`](https://seoskill.dev/docs/research) | Keywords, search results, competitors and backlinks from your own key |
-| [`seo data`](https://seoskill.dev/docs/data) | Raw Search Console or Bing rows |
+| [`seo research`](https://seoskill.dev/docs/research) | Keywords, search results, competitors, backlinks and AI answer citations from your own key |
+| [`seo data`](https://seoskill.dev/docs/data) | Raw Search Console or Bing rows, or Clicky and Simple Analytics landing pages |
 | [`seo analytics`](https://seoskill.dev/docs/analytics) | Landing pages from Google Analytics, Clicky or Simple Analytics |
 | [`seo crawl`](https://seoskill.dev/docs/crawl) | Technical issues and AI agent access across a site (CLI only) |
 | [`seo internal-links`](https://seoskill.dev/docs/internal-links) | Internal links to add across a site or to one page (CLI only) |
+| [`seo lint`](https://seoskill.dev/docs/lint) | Lines in a draft, title or description that read as AI-written, each with a fix |
 
-Every command is also an MCP tool, such as `seo_report`. Add `--json` to any
+Every command is also an MCP tool, such as `seo_report`. Crawls and internal links are tools on the local MCP server only (`seo mcp serve`). Add `--json` to any
 command when you're scripting it.
 
 ## What it keeps
 
 As little as possible. The hosted server keeps your linked Google accounts
-and any keys you save, encrypted. It doesn't keep your Search Console data,
-your reports or request logs. The CLI keeps your sign-in in your system
+and any keys you save, encrypted, plus the issues list and business context
+your agent saves for a site. It doesn't keep your reports, Search Console
+rows or request logs, except what the paid
+[weekly site audit](https://seoskill.dev/docs/weekly-site-audit) keeps. The CLI keeps your sign-in in your system
 keychain. The [privacy policy](https://seoskill.dev/privacy) has the details.
 
 ## Links

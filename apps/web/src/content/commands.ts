@@ -2,17 +2,28 @@ import {
   Alert02Icon,
   Analytics01Icon,
   Calendar03Icon,
+  Compass01Icon,
   Database01Icon,
   FileSearchIcon,
   Link01Icon,
   Route01Icon,
   SearchList01Icon,
+  SentIcon,
   TextCheckIcon,
 } from '@hugeicons/core-free-icons'
 
-// The nine commands, in the order people need them. The hosted MCP runs the
+// The commands, in the order people need them. The hosted MCP runs the
 // same reports under the tool names listed here.
 export const commands = [
+  {
+    id: 'next',
+    needs: 'Search Console',
+    command: 'seo next',
+    tool: 'seo_next',
+    path: '/docs/next',
+    icon: Compass01Icon,
+    text: 'Where a site is in the SEO loop and the one step to do now, starting with the pages that bring customers.',
+  },
   {
     id: 'report',
     needs: 'Search Console',
@@ -50,6 +61,15 @@ export const commands = [
     text: 'Why Google does or does not index your pages, with a live check of each one, and pages that lost their clicks.',
   },
   {
+    id: 'submit',
+    needs: 'Page URLs',
+    command: 'seo submit',
+    tool: 'seo_submit',
+    path: '/docs/submit',
+    icon: SentIcon,
+    text: 'Ask Bing and others to crawl pages for free with IndexNow, or send them to Google with Index My Site from your own credits.',
+  },
+  {
     id: 'research',
     needs: 'A DataForSEO or Ahrefs key',
     command: 'seo research',
@@ -60,12 +80,12 @@ export const commands = [
   },
   {
     id: 'data',
-    needs: 'Search Console, or Google Analytics on the hosted MCP',
+    needs: 'Search Console, Bing or an analytics tool',
     command: 'seo data',
     tool: 'seo_data',
     path: '/docs/data',
     icon: Database01Icon,
-    text: 'Raw Search Console rows for any dimensions. The hosted MCP also reads Google Analytics landing pages.',
+    text: 'Raw Search Console rows for any dimensions, Bing rows, or landing pages from Google Analytics, Clicky or Simple Analytics.',
   },
   {
     id: 'crawl',

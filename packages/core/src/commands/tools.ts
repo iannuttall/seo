@@ -32,7 +32,9 @@ import {
 import { type LintSource, runLint } from './lint.js'
 import { NEXT_TEXT, runNext } from './next.js'
 import type { Detail } from './present.js'
-import { runBingReport, runReport, SECTION_IDS, SECTIONS } from './report.js'
+import { PROGRESS_SECTION, PROGRESS_SECTION_TEXT } from './progress.js'
+import { researchProgress } from './progress-track.js'
+import { runBingReport, runReport, SECTIONS, SITE_SECTIONS } from './report.js'
 import {
   type InstalledSerp,
   RESEARCH_ACTIONS,
@@ -363,7 +365,7 @@ export const SHARED_TOOLS: SharedTool[] = [
       .map(([id, text]) => `- ${id}: ${text}`)
       .join(
         '\n',
-      )}\n- ${ISSUES_SECTION}: ${ISSUES_SECTION_TEXT}\n- ${UPDATES_SECTION}: ${UPDATES_SECTION_TEXT}\nWith site, mark and issues: records what the person decided about those issue ids (fixed, ignored, or open to undo) and runs no checks.`,
+      )}\n- ${ISSUES_SECTION}: ${ISSUES_SECTION_TEXT}\n- ${UPDATES_SECTION}: ${UPDATES_SECTION_TEXT}\n- ${PROGRESS_SECTION}: ${PROGRESS_SECTION_TEXT}\nWith site, mark and issues: records what the person decided about those issue ids (fixed, ignored, or open to undo) and runs no checks.`,
     input: z.object({
       site: site
         .optional()
@@ -371,7 +373,7 @@ export const SHARED_TOOLS: SharedTool[] = [
           'Leave it out for the summary of every site in the weekly site audit. Otherwise a Search Console property or site, such as sc-domain:example.com, https://example.com/ or example.com.',
         ),
       section: z
-        .enum([...SECTION_IDS, ISSUES_SECTION, UPDATES_SECTION])
+        .enum(SITE_SECTIONS)
         .optional()
         .describe(
           'Optional, needs site. Leave it out first; then ask for one section.',
@@ -623,7 +625,7 @@ export const SHARED_TOOLS: SharedTool[] = [
     name: 'seo_research',
     command: 'research',
     title: 'Keyword, competitor, backlink and AI answer data',
-    description: `Data from the person’s own DataForSEO or Ahrefs account, which costs them credits. It uses the key the person saved on their seoskill.dev account (or on this machine for the CLI). Actions: ${RESEARCH_HELP}`,
+    description: `Data from the person’s own DataForSEO or Ahrefs account, which costs them credits. It uses the key the person saved on their seoskill.dev account (or on this machine for the CLI). serp or ai_answers with a site as target and no keywords checks the tracked searches or AI questions in the site's business context and keeps the result in its progress. Actions: ${RESEARCH_HELP}`,
     input: z.object({
       provider: z
         .string()
@@ -698,6 +700,8 @@ export const SHARED_TOOLS: SharedTool[] = [
     run: async (surface, input) => {
       const more = (offset: number) =>
         `seo_research with the same input, detail "rows", offset ${offset}`
+      const tracked = await researchProgress(input, surface)
+      if (tracked) return tracked
       if (input.action === 'ai_answers') {
         if (input.provider && input.provider !== 'dataforseo') {
           throw new CommandError('INVALID_INPUT', 'ai_answers uses dataforseo.')
@@ -954,12 +958,7 @@ export const AUDIT_TOOLS: SharedTool[] = SHARED_TOOLS.map((shared) =>
           description: `${shared.description}\n- ${AUDIT_SECTION}: ${AUDIT_SECTION_TEXT}`,
           input: shared.input.extend({
             section: z
-              .enum([
-                ...SECTION_IDS,
-                ISSUES_SECTION,
-                UPDATES_SECTION,
-                AUDIT_SECTION,
-              ])
+              .enum([...SITE_SECTIONS, AUDIT_SECTION])
               .optional()
               .describe(
                 'Optional. Leave it out first; then ask for one section.',

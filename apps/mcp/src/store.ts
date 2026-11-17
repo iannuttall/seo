@@ -247,6 +247,8 @@ export async function deleteUser(env: Env, userId: string): Promise<void> {
     env.DB.prepare('DELETE FROM billing WHERE user_id = ?').bind(userId),
     env.DB.prepare('DELETE FROM site_issues WHERE user_id = ?').bind(userId),
     env.DB.prepare('DELETE FROM site_context WHERE user_id = ?').bind(userId),
+    env.DB.prepare('DELETE FROM site_progress WHERE user_id = ?').bind(userId),
+    env.DB.prepare('DELETE FROM progress_runs WHERE user_id = ?').bind(userId),
     env.DB.prepare('DELETE FROM indexmysite WHERE user_id = ?').bind(userId),
     env.DB.prepare('DELETE FROM indexnow_keys WHERE user_id = ?').bind(userId),
     env.DB.prepare('DELETE FROM users WHERE id = ?').bind(userId),

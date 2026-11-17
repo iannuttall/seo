@@ -82,6 +82,24 @@ account has nothing for a site that the machine kept locally, the CLI moves
 its local list or context up and removes it from `issues.json` or
 `context.json`. An unlinked CLI keeps both files on its own machine.
 
+`seo_next` and `seo_report` also save one progress point a week for any
+site with a business context (`src/progress.ts`, D1's `site_progress`): Search
+Console totals split by the context's brand names and category regex, weekly
+clicks, conversion pages with Google's index status and tracked searches. The
+first point is the baseline, and `seo_report` section `progress` compares the
+latest numbers with it, reading weeks Search Console has dropped from the saved
+points. `seo_research` `serp` or `ai_answers` with the site as target and no
+keywords checks the context's tracked searches or AI questions for the site and
+its competitors, and keeps each check in `progress_runs`. Both tables are
+deleted with the account.
+
+A CLI linked with `seo login` or `SEO_TOKEN` keeps progress in the same tables
+through `/account/cli/progress` (`GET` with `?property=`, `POST` with
+`{property, point}` or `{property, run}`; a point is only ever added);
+the first time the account has none for a site, the points saved on that
+machine move to the account and leave the machine. An unlinked CLI keeps them
+in `progress.json` on the machine.
+
 ## Paid plan
 
 The weekly site audit is $50 a month per site (`src/billing.ts`), with

@@ -12,6 +12,7 @@ import { billingOn, startAuditSite } from '../billing.ts'
 import { siteContext } from '../context.ts'
 import { accountUrl, signInHint } from '../google.ts'
 import { hostedSubmitAccess } from '../indexmysite.ts'
+import { siteProgress } from '../progress.ts'
 import { addUsage } from '../usage.ts'
 import type { ToolContext } from './registry.ts'
 
@@ -65,6 +66,7 @@ export function deps({
     // to save.
     issues: siteIssues(env, userId),
     context: siteContext(env, userId),
+    siteProgress: siteProgress(env, userId),
     submit: hostedSubmitAccess(env, userId),
     analytics: {
       accounts: async () => directory.accounts(),

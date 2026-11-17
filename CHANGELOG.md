@@ -1,9 +1,14 @@
 # Changelog
 
-## Unreleased
+## 0.22.4
 
 ### Added
 
+- `seo next` and `seo report` save one progress point a week for a site with
+  a business context: Search Console clicks split into brand and non-brand,
+  conversion pages with their Google index status, and the searches you
+  track. The first point is the baseline, and `seo report --section
+  progress` compares the latest week with it.
 - `seo report --section teardown` (`section "teardown"` in MCP) gives your
   agent what it needs to write a full teardown of a site, like the How I'd
   grow posts on seoskill.dev. It has what to write and in what order, the rules
@@ -25,6 +30,15 @@
 - New docs page for `seo next`, and the docs now cover the `issues` section,
   `seo submit` in the tool lists, the weekly AI answer check and what each
   surface keeps.
+- `seo research competitors` on one of your sites lists the competitors in
+  its business context first, marked `in_context`, and says the other rows
+  may share only a word with the site. `link_gap` with no competitors
+  compares the first five from the context.
+
+### Fixed
+
+- `seo crawl` on a bare domain that redirects to www, or the other way,
+  crawls the whole site instead of stopping after the home page.
 
 ## 0.22.3
 

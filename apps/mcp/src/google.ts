@@ -23,6 +23,13 @@ export function signInHint(env: Env): string {
   )
 }
 
+export function bingSignInHint(env: Env): string {
+  return openForPerson(
+    `${accountUrl(env)}#bing`,
+    'press Reconnect on the Bing Webmaster account',
+  )
+}
+
 // A current access token for a linked account, refreshed and saved when it
 // has expired.
 export async function freshAccess(
@@ -39,10 +46,13 @@ export async function freshAccess(
         : await refreshBing(env, account.refresh)
     await saveAccess(env, account, fresh.access, fresh.accessExp, fresh.refresh)
     return { token: fresh.access, expiresAt: fresh.accessExp }
-  } catch {
+  } catch (error) {
+    console.error(`${account.provider} refresh failed`, String(error))
     throw new CommandError(
       'NOT_CONNECTED',
-      `The ${account.provider === 'google' ? 'Google' : 'Bing'} sign-in for ${account.label} expired or was removed. ${signInHint(env)}`,
+      account.provider === 'google'
+        ? `The Google sign-in for ${account.label} expired or was removed. ${signInHint(env)}`
+        : `The Bing sign-in for ${account.label} expired or was removed. ${bingSignInHint(env)}`,
     )
   }
 }
@@ -70,7 +80,7 @@ export function directory(env: Env, accounts: Account[]): LinkedAccounts {
         .map((account) =>
           bingCall(
             { accessToken: tokenFor(env, account) },
-            { signIn: signInHint(env) },
+            { signIn: bingSignInHint(env) },
           ),
         ),
     },

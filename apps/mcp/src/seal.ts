@@ -30,8 +30,9 @@ export type Sealed =
   // The "turn these emails off" link in an alert email. It does not expire,
   // so an old email's link still works.
   | { k: 'alert-off'; userId: string; type: string }
-  // A Bing sign-in from the account page.
-  | { k: 'bing'; userId: string; exp: number }
+  // A Bing sign-in from the account page. subject names the linked Bing
+  // account it reconnects, when it is a Reconnect.
+  | { k: 'bing'; userId: string; subject?: string; exp: number }
   // An Index My Site connection from the account page, with its PKCE
   // verifier.
   | { k: 'indexmysite'; userId: string; verifier: string; exp: number }

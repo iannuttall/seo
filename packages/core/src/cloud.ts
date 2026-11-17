@@ -222,7 +222,7 @@ export async function cloudBing(): Promise<BingCall | null> {
             return tokenOf(item, 'Bing sign-in')
           },
         },
-        { signIn: `Reconnect Bing at ${account}.` },
+        { signIn: `Reconnect Bing at ${account}#bing.` },
       ),
     ),
   )

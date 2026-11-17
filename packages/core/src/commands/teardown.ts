@@ -1,4 +1,8 @@
-import { isBrandQuery } from '../brand.js'
+import {
+  isBrandQuery,
+  normalizeBrandText,
+  registrableDomain,
+} from '../brand.js'
 import { brandTermsFromQueryRows } from '../brand-evidence.js'
 import {
   landingPage,
@@ -120,15 +124,23 @@ export async function runTeardown(
   const days = `${range.startDate} to ${range.endDate}`
 
   // Brand and non-brand clicks among the queries Search Console lists.
+  // Besides the report's brand terms, a domain name that is one word, such
+  // as example in example.com, is brand wherever it is a word of its own in
+  // the search, even when the site is not the top answer for it. It is never
+  // split: "exam ple" is not brand for example.com.
   const brand = brandTermsFromQueryRows({ siteUrl: site, rows: queryRows.rows })
+  const stem = registrableDomain(site)?.stem
+  const word = stem && /^[\p{L}\p{N}]+$/u.test(stem) ? stem : null
+  const isBrand = (query: string) =>
+    isBrandQuery(query, brand.terms) ||
+    (word !== null && normalizeBrandText(query).split(' ').includes(word))
+  const terms = [...new Set([...brand.terms, ...(word ? [word] : [])])]
   const listed = sum(queries, 'clicks')
   const brandClicks = sum(
-    queries.filter((row) => isBrandQuery(row.keys[0] ?? '', brand.terms)),
+    queries.filter((row) => isBrand(row.keys[0] ?? '')),
     'clicks',
   )
-  const nonBrand = queries.filter(
-    (row) => !isBrandQuery(row.keys[0] ?? '', brand.terms),
-  )
+  const nonBrand = queries.filter((row) => !isBrand(row.keys[0] ?? ''))
   const topNonBrand = nonBrand.slice(0, QUERIES_SHOWN).map((row) => ({
     query: row.keys[0],
     clicks: row.clicks,
@@ -163,7 +175,9 @@ export async function runTeardown(
   } else {
     const items = (
       (pageTwo.items as Record<string, unknown>[] | undefined) ?? []
-    ).slice(0, PAGE_TWO_SHOWN)
+    )
+      .filter((item) => !isBrand(String(item.query ?? '')))
+      .slice(0, PAGE_TWO_SHOWN)
     const urls = [...new Set(items.map((item) => String(item.url)))]
     const live = new Map<string, PageFacts>(
       (urls.length ? await deps.checkPages(urls) : []).map((page) => [
@@ -180,7 +194,7 @@ export async function runTeardown(
       h1: live.get(String(item.url))?.h1 ?? '',
     }))
     pageTwoNote = pageTwoRows.length
-      ? `Searches where a page has an average position past 10 and up to 20, searches with a brand term left out, in the striking-distance section's order, with each page's title and main heading fetched now. The full list: ${call('report', { site, section: 'striking-distance' })}.`
+      ? `Searches where a page has an average position past 10 and up to 20, brand searches left out, in the striking-distance section's order, with each page's title and main heading fetched now. The full list: ${call('report', { site, section: 'striking-distance' })}.`
       : 'No page has searches at positions 11 to 20 with enough impressions in these dates.'
   }
 
@@ -193,7 +207,7 @@ export async function runTeardown(
   const data = [
     `## Search Console and Google Analytics data, ${days}`,
     `Totals: clicks ${now.clicks} (previous period ${then.clicks}, ${change(pct(now.clicks, then.clicks))}), impressions ${now.impressions} (was ${then.impressions}, ${change(pct(now.impressions, then.impressions))}), average position ${round(now.position)}.`,
-    `Search Console lists queries for ${listed} of the ${now.clicks} clicks. ${brandClicks} come from searches that contain a brand term and ${listed - brandClicks} from the rest. The other ${Math.max(0, now.clicks - listed)} come from queries Search Console hides for privacy${queriesCapped ? ` or that fall outside the ${ROWS.toLocaleString('en-US')} queries listed` : ''}, so neither share is complete. Brand terms: ${brand.terms.join(', ') || 'none found'}${brand.excluded.length ? ` (${brand.excluded.map((item) => item.term).join(' and ')} ${brand.excluded.length === 1 ? 'was' : 'were'} not treated as brand)` : ''}. Brand terms come from the domain, plus the bare name when Search Console shows the site as the top answer for it.`,
+    `Search Console lists queries for ${listed} of the ${now.clicks} clicks. ${brandClicks} come from searches that contain a brand term and ${listed - brandClicks} from non-brand searches. The other ${Math.max(0, now.clicks - listed)} come from queries Search Console hides for privacy${queriesCapped ? ` or that fall outside the ${ROWS.toLocaleString('en-US')} queries listed` : ''}, so neither share is complete. Brand terms: ${terms.join(', ') || 'none found'}.${word ? ` A search is brand when it has "${word}" as a word of its own, so a search that splits the name into words is not.` : ''}`,
     topNonBrand.length
       ? `Top non-brand searches by clicks:\n${table(
           topNonBrand,
@@ -272,7 +286,7 @@ export async function runTeardown(
         position: round(now.position),
       },
       brand: {
-        terms: brand.terms,
+        terms,
         listedClicks: listed,
         brandClicks,
         nonBrandClicks: listed - brandClicks,

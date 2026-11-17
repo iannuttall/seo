@@ -25,6 +25,7 @@ import {
   enginesText,
   NO_BING_HERE,
 } from './bing.js'
+import { brandNames } from './context.js'
 import { imageChecksText, imageSearchReport } from './image-search.js'
 import {
   ISSUES_SECTION,
@@ -335,6 +336,12 @@ export function overviewText(
   ].join('\n\n')
 }
 
+// The brand names the person confirmed in the site's business context.
+async function brandOf(deps: CommandDeps, site: string): Promise<string[]> {
+  const context = deps.context ? await deps.context.read(site) : null
+  return context ? brandNames(context.text) : []
+}
+
 function once<T>(make: () => Promise<T>): () => Promise<T> {
   let made: Promise<T> | undefined
   return () => {
@@ -429,8 +436,9 @@ function labelShapes(report: Record<string, unknown>, count: boolean): void {
   if (line) report.queryShapes = line
 }
 
-// One way to run each section: brand terms, minimums and the comparison
-// period are automatic and shown in the output.
+// One way to run each section: minimums and the comparison period are
+// automatic and shown in the output. Brand terms are the brand names in the
+// site's business context, or else a guess from the domain and its queries.
 async function build(
   read: SearchAnalyticsQuery,
   site: string,
@@ -438,9 +446,11 @@ async function build(
   range: DateRange,
   now: () => Date,
   bing: () => Promise<BingSource>,
+  brand: string[],
 ): Promise<Record<string, unknown>> {
   const dependencies = { searchAnalytics: read, now }
-  const common = { site, limit: 100, includeBrand: false, ...range }
+  const brandTerms = brand.length ? brand : undefined
+  const common = { site, limit: 100, includeBrand: false, brandTerms, ...range }
   const run = {
     overview: () => siteOverview(read, site, range, earlierRange(range)),
     'quick-wins': () =>
@@ -495,7 +505,7 @@ async function build(
         googleUpdates: await googleUpdates(window),
       }
     },
-    'ai-queries': () => aiQueriesReport({ site, ...range }, read),
+    'ai-queries': () => aiQueriesReport({ site, brandTerms, ...range }, read),
     'image-search': () => imageSearchReport(site, range, read),
     bing: async () => bingSection(await bing(), read, site, range),
   }[section]
@@ -597,6 +607,7 @@ async function allSections(
   const read = sharedReader(deps.searchAnalytics)
   const origin = originOf(input.site)
   const bing = once(() => bingFor(deps, input.site))
+  const confirmed = await brandOf(deps, input.site)
   // A surface without Bing leaves the bing section out.
   const ids = SECTION_IDS.filter((id) => id !== 'bing' || deps.bing)
   const range = dateWindow(input, DEFAULT_DAYS.overview)
@@ -621,6 +632,7 @@ async function allSections(
         dateWindow(input, DEFAULT_DAYS[id]),
         now,
         bing,
+        confirmed,
       ).catch((error: unknown) =>
         error instanceof Error ? error : new Error(String(error)),
       ),
@@ -727,6 +739,7 @@ async function oneSection(
   const ga = MONEY.has(section)
     ? organicPages(deps.analytics, site, range)
     : null
+  const confirmed = await brandOf(deps, site)
   let report = await build(
     sharedReader(deps.searchAnalytics),
     site,
@@ -734,6 +747,7 @@ async function oneSection(
     range,
     now,
     bing,
+    confirmed,
   )
   let money = ''
   const weigh = async () => {
@@ -804,6 +818,7 @@ async function oneSection(
         range,
         now,
         bing,
+        confirmed,
       )
       await weigh()
     }
@@ -894,8 +909,9 @@ export function runReport(
     const now = deps.now ?? (() => new Date())
     const read = sharedReader(deps.searchAnalytics)
     const bing = once(() => bingFor(deps, input.site))
-    return runIssues(input, deps, (section, range) =>
-      build(read, input.site, section, range, now, bing),
+    const confirmed = brandOf(deps, input.site)
+    return runIssues(input, deps, async (section, range) =>
+      build(read, input.site, section, range, now, bing, await confirmed),
     )
   }
   if (input.section === UPDATES_SECTION) {

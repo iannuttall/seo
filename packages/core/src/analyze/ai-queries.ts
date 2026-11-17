@@ -347,7 +347,12 @@ const round = (value: number, places: number) =>
   Math.round(value * 10 ** places) / 10 ** places
 
 export async function aiQueriesReport(
-  input: { site: string; startDate: string; endDate: string },
+  input: {
+    site: string
+    startDate: string
+    endDate: string
+    brandTerms?: string[]
+  },
   searchAnalytics: SearchAnalyticsQuery,
 ): Promise<Record<string, unknown>> {
   const range = { startDate: input.startDate, endDate: input.endDate }
@@ -413,6 +418,7 @@ export async function aiQueriesReport(
   const brand = resolveReportBrandTerms({
     siteUrl: input.site,
     rows: named.rows,
+    brandTerms: input.brandTerms,
   })
 
   // Biggest first, so each group is named after its most seen wording.

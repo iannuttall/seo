@@ -1,6 +1,6 @@
 # Privacy policy
 
-Last updated: 16 November 2026
+Last updated: 17 November 2026
 
 This policy covers SEO Skill: the `seo` command-line tool and library, the
 local and hosted MCP servers, your account at seoskill.dev, the paid weekly
@@ -45,6 +45,9 @@ encrypted before they are written.
   weekly message to the maintainer and on the public
   [stats page](https://seoskill.dev/stats), where any value shared by fewer
   than three sign-ups shows as Other.
+- **Issues lists.** For any site you ask about, the issues the checks
+  found, with what you marked each one and the before and after Search
+  Console numbers for fixed ones. Kept until you delete your account.
 - **Business context.** The notes your agent saves for a site with
   `seo next`: what the business sells, who buys it, its conversion pages and
   competitors, and when they were saved. Kept for any site, audited or
@@ -82,7 +85,6 @@ browser so we can read what JavaScript builds. For each site we keep:
   each day, with when it dropped out of or came back to the index;
 - each page's Search Console clicks and impressions for the last 28 days,
   replaced daily;
-- the issues list, if you ask for it, with what you marked each issue;
 - which parts of the site need a browser to read, for 28 days.
 
 **Alerts.** Your alert settings, webhook address and signing secret, and the

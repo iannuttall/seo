@@ -232,9 +232,6 @@ export async function removeAuditSite(
     env.DB.prepare(
       'DELETE FROM audit_sites WHERE user_id = ? AND property = ?',
     ).bind(userId, property),
-    env.DB.prepare(
-      'DELETE FROM site_issues WHERE user_id = ? AND property = ?',
-    ).bind(userId, property),
   ])
 }
 
@@ -381,23 +378,13 @@ export async function startDue(env: Env, now = Date.now(), userId?: string) {
   return { due: due.results.length, started, stale: stale.results.length }
 }
 
-// The account's issues list for each audited site, one JSON row per
-// property in D1 (migrations/0012_site_issues.sql). The hosted server keeps
-// it only for sites in the weekly site audit, with the rest of their data,
-// and deletes it when the site is removed. For any other site read gives
-// null, and the agent saves the list itself.
+// The account's issues list for each site, one JSON row per property in D1
+// (migrations/0012_site_issues.sql). It is kept for every site, audited or
+// not, like the business context, and stays when a site leaves the audit;
+// it is deleted with the account.
 export function siteIssues(env: Env, userId: string): IssueStore {
-  const audited = async (property: string) =>
-    Boolean(
-      await env.DB.prepare(
-        'SELECT 1 AS n FROM audit_sites WHERE user_id = ? AND property = ?',
-      )
-        .bind(userId, property)
-        .first(),
-    )
   return {
     read: async (property) => {
-      if (!(await audited(property))) return null
       const row = await env.DB.prepare(
         'SELECT issues FROM site_issues WHERE user_id = ? AND property = ?',
       )
@@ -406,9 +393,6 @@ export function siteIssues(env: Env, userId: string): IssueStore {
       return row ? (JSON.parse(row.issues) as StoredIssue[]) : []
     },
     write: async (property, issues) => {
-      if (!(await audited(property))) {
-        throw new Error(`${property} is not in the weekly site audit.`)
-      }
       await env.DB.prepare(
         `INSERT INTO site_issues (user_id, property, issues, updated_at)
          VALUES (?, ?, ?, ?)

@@ -159,7 +159,7 @@ const marks = {
     .max(SAVED_MAX)
     .optional()
     .describe(
-      'Optional, with section issues or mark, only where this server is not storing the list: the JSON the issues section returned last time, as the agent saved it.',
+      "Optional, with section issues or mark: a list saved in the person's project before, such as .seo/issues.json, to carry over its marks once. This server keeps the list from then on.",
     ),
 }
 
@@ -340,7 +340,7 @@ export const SHARED_TOOLS: SharedTool[] = [
           'Optional. The business context to save, as Markdown under the headings the context step gives. Only after the person has seen it.',
         ),
       saved: marks.saved.describe(
-        'Optional, only where this server is not storing the issues list: the JSON the issues section or seo_next returned last time, as the agent saved it.',
+        "Optional: an issues list saved in the person's project before, such as .seo/issues.json, to carry over its marks once. This server keeps the list from then on.",
       ),
     }),
     run: async (surface, input) =>

@@ -29,6 +29,7 @@ import { brandNames } from './context.js'
 import { imageChecksText, imageSearchReport } from './image-search.js'
 import {
   ISSUES_SECTION,
+  ISSUES_SECTION_TEXT,
   type IssueMark,
   issuesPreview,
   markIssues,
@@ -36,7 +37,12 @@ import {
 } from './issues.js'
 import { temporaryRedirectNote } from './page-facts.js'
 import { type Detail, presentReport, preview, table } from './present.js'
-import { PROGRESS_SECTION, recordWeek, runProgress } from './progress.js'
+import {
+  PROGRESS_SECTION,
+  PROGRESS_SECTION_TEXT,
+  recordWeek,
+  runProgress,
+} from './progress.js'
 import {
   type DateInput,
   dateWindow,
@@ -52,6 +58,11 @@ import {
 } from './shared.js'
 import { surfacesLine } from './surfaces.js'
 import {
+  runTeardown,
+  TEARDOWN_SECTION,
+  TEARDOWN_SECTION_TEXT,
+} from './teardown.js'
+import {
   type Caller,
   type CommandDeps,
   CommandError,
@@ -59,7 +70,7 @@ import {
   type DateRange,
   type PageFacts,
 } from './types.js'
-import { runUpdates, UPDATES_SECTION } from './updates.js'
+import { runUpdates, UPDATES_SECTION, UPDATES_SECTION_TEXT } from './updates.js'
 
 // The main report: one overview plus sections, each from the same report
 // code. Without a section it shows every section's count and top rows; with
@@ -91,13 +102,27 @@ export const SECTIONS = {
 
 export type SectionId = keyof typeof SECTIONS
 export const SECTION_IDS = Object.keys(SECTIONS) as [SectionId, ...SectionId[]]
-// Every section seo report takes with a site (the audit section aside).
-export const SITE_SECTIONS = [
+// Every section seo report takes by name, with the ones that run on their
+// own. The weekly-audit section is added where the audit runs.
+export const REPORT_SECTIONS = [
   ...SECTION_IDS,
   ISSUES_SECTION,
   UPDATES_SECTION,
   PROGRESS_SECTION,
+  TEARDOWN_SECTION,
 ] as const
+
+// What each section in REPORT_SECTIONS returns, for the tool description.
+export const REPORT_SECTION_TEXTS: Record<
+  (typeof REPORT_SECTIONS)[number],
+  string
+> = {
+  ...SECTIONS,
+  [ISSUES_SECTION]: ISSUES_SECTION_TEXT,
+  [UPDATES_SECTION]: UPDATES_SECTION_TEXT,
+  [PROGRESS_SECTION]: PROGRESS_SECTION_TEXT,
+  [TEARDOWN_SECTION]: TEARDOWN_SECTION_TEXT,
+}
 
 // Sections whose top URLs are checked live. Same-site redirects found there
 // are merged into their targets and the section runs again.
@@ -595,6 +620,7 @@ export type ReportInput = DateInput & {
     | typeof AUDIT_SECTION
     | typeof ISSUES_SECTION
     | typeof UPDATES_SECTION
+    | typeof TEARDOWN_SECTION
     | typeof PROGRESS_SECTION
   detail?: Detail
   offset?: number
@@ -934,6 +960,23 @@ export function runReport(
   }
   if (input.section === UPDATES_SECTION) {
     return runUpdates(input, deps)
+  }
+  if (input.section === TEARDOWN_SECTION) {
+    const now = deps.now ?? (() => new Date())
+    const read = sharedReader(deps.searchAnalytics)
+    const bing = once(() => bingFor(deps, input.site))
+    const confirmed = brandOf(deps, input.site)
+    return runTeardown(input, deps, async (range) =>
+      build(
+        read,
+        input.site,
+        'striking-distance',
+        range,
+        now,
+        bing,
+        await confirmed,
+      ),
+    )
   }
   if (input.section === PROGRESS_SECTION) {
     return runProgress(input, deps)

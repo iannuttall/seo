@@ -17,7 +17,6 @@ import {
   type Dimension,
   INSPECT_LIMIT,
   ISSUE_MARKS,
-  ISSUES_SECTION,
   type IssueMark,
   LINT_CATEGORIES,
   LINT_FORMATS,
@@ -29,7 +28,7 @@ import {
   type LintMetaKind,
   type LintPreset,
   MAX_INSPECT_LIMIT,
-  PROGRESS_SECTION,
+  REPORT_SECTIONS,
   RESEARCH_ACTIONS,
   RESEARCH_DEVICES,
   RESEARCH_PROVIDERS,
@@ -54,9 +53,10 @@ import {
   runRows,
   runSimpleAnalyticsRows,
   SEARCH_TYPES,
-  SECTION_IDS,
   type SearchType,
   type SectionId,
+  TEARDOWN_SECTION,
+  teardownBrief,
   tracksProgress,
   UPDATES_SECTION,
 } from '@seo/core/commands'
@@ -267,7 +267,7 @@ export const reportCommand = defineCommand({
     },
     section: {
       type: 'string',
-      description: `Optional, needs --site. One of ${[...SECTION_IDS, ISSUES_SECTION, UPDATES_SECTION, PROGRESS_SECTION].join(', ')}. issues keeps a list of what was found for the site, on this machine. ${UPDATES_SECTION} lays the latest Google ranking update (or the latest that started by --end-date) over the site.`,
+      description: `Optional, needs --site. One of ${REPORT_SECTIONS.join(', ')}. issues keeps a list of what was found for the site, on this machine. ${UPDATES_SECTION} lays the latest Google ranking update (or the latest that started by --end-date) over the site. ${TEARDOWN_SECTION} returns the brief and the data for your agent to write a full teardown of the site, for any domain.`,
     },
     mark: {
       type: 'string',
@@ -285,16 +285,10 @@ export const reportCommand = defineCommand({
   },
   run: async ({ args }) => {
     const section = stringArg(args.section)
-    const sections = [
-      ...SECTION_IDS,
-      ISSUES_SECTION,
-      UPDATES_SECTION,
-      PROGRESS_SECTION,
-    ]
-    if (section && !sections.includes(section)) {
+    if (section && !(REPORT_SECTIONS as readonly string[]).includes(section)) {
       throw new SeoError(
         'INVALID_INPUT',
-        `--section is one of ${sections.join(', ')}.`,
+        `--section is one of ${REPORT_SECTIONS.join(', ')}.`,
       )
     }
     const target = stringArg(args.site)
@@ -327,6 +321,20 @@ export const reportCommand = defineCommand({
     if (!target && !section && cloudLinked()) {
       await run(args, (deps) => runAllSites(deps))
       return
+    }
+    // A teardown works for any domain: without a property, the brief.
+    if (section === TEARDOWN_SECTION) {
+      const domain = requireSite(target)
+      const found = await property(args, domain).catch(
+        (error: unknown) =>
+          new Error(error instanceof Error ? error.message : String(error)),
+      )
+      if (found instanceof Error) {
+        await run(args, async () =>
+          teardownBrief(domain, found.message, cliCall),
+        )
+        return
+      }
     }
     // The bing section needs only Bing: without a Google property it shows
     // the Bing rows and says Google was not available.

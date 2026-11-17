@@ -120,6 +120,10 @@ const helpSections: HelpSection[] = [
     commands: [
       ['seo page --url <url>', 'One page: live facts, index status, queries'],
       ['seo compare --date <date>', 'Before and after a date'],
+      [
+        'seo report --site <site> --section teardown',
+        'The brief and data for your agent to write a teardown of any site',
+      ],
       ['seo index', 'Pages that lost most of their clicks'],
       [
         'seo research <action>',

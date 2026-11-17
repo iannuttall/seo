@@ -22,19 +22,17 @@ import { runBingRows } from './bing.js'
 import { clickyLabel, clickySites, runClickyRows } from './clicky.js'
 import { CONTEXT_MAX } from './context.js'
 import { INSPECT_LIMIT, MAX_INSPECT_LIMIT } from './indexing.js'
-import {
-  ISSUE_MARKS,
-  ISSUES_SECTION,
-  ISSUES_SECTION_TEXT,
-  NOTE_MAX,
-  SAVED_MAX,
-} from './issues.js'
+import { ISSUE_MARKS, NOTE_MAX, SAVED_MAX } from './issues.js'
 import { type LintSource, runLint } from './lint.js'
 import { NEXT_TEXT, runNext } from './next.js'
 import type { Detail } from './present.js'
-import { PROGRESS_SECTION, PROGRESS_SECTION_TEXT } from './progress.js'
 import { researchProgress } from './progress-track.js'
-import { runBingReport, runReport, SECTIONS, SITE_SECTIONS } from './report.js'
+import {
+  REPORT_SECTION_TEXTS,
+  REPORT_SECTIONS,
+  runBingReport,
+  runReport,
+} from './report.js'
 import {
   type InstalledSerp,
   RESEARCH_ACTIONS,
@@ -60,6 +58,7 @@ import {
 } from './site.js'
 import { type GoogleAccount, runSites } from './sites.js'
 import { runSubmit, SUBMIT_ACTIONS, SUBMIT_HELP } from './submit.js'
+import { TEARDOWN_SECTION, teardownBrief } from './teardown.js'
 import {
   type Caller,
   type CommandDeps,
@@ -68,7 +67,6 @@ import {
   type CommandResult,
   type StartAudit,
 } from './types.js'
-import { UPDATES_SECTION, UPDATES_SECTION_TEXT } from './updates.js'
 import { runAllSites } from './week.js'
 
 // The MCP tools for the shared commands, defined once for the hosted MCP and
@@ -360,12 +358,12 @@ export const SHARED_TOOLS: SharedTool[] = [
     command: 'report',
     title: 'Search Console report',
     description: `Start here for questions about a site's search traffic. Without site: a short summary of every site in the person's weekly site audit for last week, with each site's Google index, weekly crawl and search clicks, sites with changes first, ending with the site to ask about next; an account without the audit gets its site list to pick from. With site: the main report for that Search Console property, the overview plus each section's row count and top rows. With site and section: that section's rows; page sections also check their top 20 URLs live. Sections:\n${Object.entries(
-      SECTIONS,
+      REPORT_SECTION_TEXTS,
     )
       .map(([id, text]) => `- ${id}: ${text}`)
       .join(
         '\n',
-      )}\n- ${ISSUES_SECTION}: ${ISSUES_SECTION_TEXT}\n- ${UPDATES_SECTION}: ${UPDATES_SECTION_TEXT}\n- ${PROGRESS_SECTION}: ${PROGRESS_SECTION_TEXT}\nWith site, mark and issues: records what the person decided about those issue ids (fixed, ignored, or open to undo) and runs no checks.`,
+      )}\nWith site, mark and issues: records what the person decided about those issue ids (fixed, ignored, or open to undo) and runs no checks.`,
     input: z.object({
       site: site
         .optional()
@@ -373,7 +371,7 @@ export const SHARED_TOOLS: SharedTool[] = [
           'Leave it out for the summary of every site in the weekly site audit. Otherwise a Search Console property or site, such as sc-domain:example.com, https://example.com/ or example.com.',
         ),
       section: z
-        .enum(SITE_SECTIONS)
+        .enum(REPORT_SECTIONS)
         .optional()
         .describe(
           'Optional, needs site. Leave it out first; then ask for one section.',
@@ -430,6 +428,10 @@ export const SHARED_TOOLS: SharedTool[] = [
         ).catch(() => {
           throw resolved
         })
+      }
+      // A teardown works for any domain: without a property, the brief.
+      if (resolved instanceof Error && input.section === TEARDOWN_SECTION) {
+        return teardownBrief(target, resolved.message, surface.deps.call)
       }
       // The bing section needs only Bing: without a Google property it shows
       // the Bing rows and says Google was not available.
@@ -958,7 +960,7 @@ export const AUDIT_TOOLS: SharedTool[] = SHARED_TOOLS.map((shared) =>
           description: `${shared.description}\n- ${AUDIT_SECTION}: ${AUDIT_SECTION_TEXT}`,
           input: shared.input.extend({
             section: z
-              .enum([...SITE_SECTIONS, AUDIT_SECTION])
+              .enum([...REPORT_SECTIONS, AUDIT_SECTION])
               .optional()
               .describe(
                 'Optional. Leave it out first; then ask for one section.',

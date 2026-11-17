@@ -20,7 +20,7 @@ link for them to approve, then run it again.
 | CLI | MCP tool | Returns |
 |---|---|---|
 | `seo next --site <site>` | `seo_next` | The next step in the SEO loop for the site, with its jobs; start here when asked to work on a site's SEO |
-| `seo report --site <site>` | `seo_report` | Search Console overview and sections; with no site, last week across the sites in the weekly site audit |
+| `seo report --site <site>` | `seo_report` | Search Console overview and sections; with no site, last week across the sites in the weekly site audit; `--section teardown` when asked to write a teardown of any site |
 | `seo page --url <url>` | `seo_page` | One URL: live page, index status, queries |
 | `seo compare --site <site> --date <date>` | `seo_compare` | Before and after a date, with Google updates |
 | `seo index --site <site>` | `seo_index` | Google's indexing reasons, labelled, and pages that lost their clicks |

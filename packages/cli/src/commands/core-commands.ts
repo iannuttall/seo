@@ -55,6 +55,7 @@ import {
   SEARCH_TYPES,
   type SearchType,
   type SectionId,
+  savedCompetitors,
   TEARDOWN_SECTION,
   teardownBrief,
   tracksProgress,
@@ -717,7 +718,8 @@ export const researchCommand = defineCommand({
     },
     competitors: {
       type: 'string',
-      description: 'link_gap only: 2 to 5 comma-separated competitor domains.',
+      description:
+        'link_gap only: 2 to 5 comma-separated competitor domains. Default: the business context.',
     },
     country: {
       type: 'string',
@@ -840,7 +842,7 @@ export const researchCommand = defineCommand({
     const zeroVolume =
       action === 'keyword_metrics' && !keywords.length && target
     const site = zeroVolume ? await property(args, target) : target
-    await run(args, (deps) =>
+    await run(args, async (deps) =>
       runResearch(
         {
           provider,
@@ -859,6 +861,10 @@ export const researchCommand = defineCommand({
         keys,
         {
           searchAnalytics: zeroVolume ? deps.searchAnalytics : undefined,
+          saved: await savedCompetitors(
+            { action, target },
+            { deps, resolveSite: (value) => property(args, value) },
+          ),
           store: localResearchStore(booleanArg(args.refresh)),
           installedSerp: installedProviderSerp,
           call: (offset) =>

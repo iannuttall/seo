@@ -1,4 +1,5 @@
 import { AI_ANSWER_QUESTIONS } from './ai-answers.js'
+import { bareDomain } from './domain-rating.js'
 import { originOf } from './shared.js'
 import { type Caller, CommandError } from './types.js'
 
@@ -95,6 +96,34 @@ export function brandNames(text: string): string[] {
     )
     .filter((name): name is string => Boolean(name))
   return [...new Set(names)]
+}
+
+// The domains under "## Competitors", one per line. A line that does not
+// start with a domain, such as a product name, is left out.
+export function contextCompetitors(text: string): string[] {
+  const domains = headingLines(text, 'competitors')
+    .map((line) => bareDomain(line.split(/\s/)[0]?.replace(/[`<>]/g, '') ?? ''))
+    .filter((domain) => /^[a-z0-9-]+(\.[a-z0-9-]+)+$/.test(domain))
+  return [...new Set(domains)]
+}
+
+// The competitors saved in the business context of a research target, for
+// competitors and link_gap, when the target is one of the person's sites.
+export async function savedCompetitors(
+  input: { action: string; target?: string },
+  from: {
+    deps: { context?: ContextStore }
+    resolveSite: (target: string) => Promise<string>
+  },
+): Promise<string[]> {
+  const { action, target } = input
+  const store = from.deps.context
+  if (!store || !target || !['competitors', 'link_gap'].includes(action)) {
+    return []
+  }
+  const site = await from.resolveSite(target).catch(() => null)
+  const context = site ? await store.read(site) : null
+  return context ? contextCompetitors(context.text) : []
 }
 
 // The paths listed under "## Conversion pages": a path or URL at the start of

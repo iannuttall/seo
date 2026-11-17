@@ -5,6 +5,8 @@ import { type BingCall, bingCall } from './bing/api.js'
 import type { ContextStore, SiteContext } from './commands/context.js'
 import type { IssueStore, StoredIssue } from './commands/issues.js'
 import { bingRouter, LinkedAccounts } from './commands/linked.js'
+import type { ProgressPoint, ProgressStore } from './commands/progress.js'
+import type { ProgressRun } from './commands/progress-track.js'
 import type { WeekData } from './commands/week.js'
 import { SeoError } from './errors.js'
 import { readJson } from './http/read-json.js'
@@ -150,7 +152,7 @@ export async function cloudWeek(): Promise<WeekData | null> {
 // A request to the account's issues list or business context store, with
 // the same answers to an unlinked or failing account as the other calls.
 async function storeCall<T>(
-  kind: 'issues' | 'context',
+  kind: 'issues' | 'context' | 'progress',
   init: RequestInit & { property?: string } = {},
 ): Promise<T> {
   const token = cloudToken()
@@ -209,6 +211,30 @@ export const cloudContext: ContextStore = {
       method: 'PUT',
       body: JSON.stringify({ property: site, context }),
     })
+  },
+}
+
+// Each site's weekly progress points and tracking runs, kept with the
+// linked account (seo report section progress). Points are added, never
+// replaced, so the baseline stays as it was saved.
+const readProgress = (site: string) =>
+  storeCall<{ points: ProgressPoint[]; runs: ProgressRun[] }>('progress', {
+    property: site,
+  })
+
+const addProgress = (body: Record<string, unknown>) =>
+  storeCall<{ added?: boolean }>('progress', {
+    method: 'POST',
+    body: JSON.stringify(body),
+  })
+
+export const cloudProgress: ProgressStore = {
+  points: async (site) => (await readProgress(site)).points,
+  addPoint: async (site, point) =>
+    (await addProgress({ property: site, point })).added === true,
+  runs: async (site) => (await readProgress(site)).runs,
+  saveRun: async (site, run) => {
+    await addProgress({ property: site, run })
   },
 }
 

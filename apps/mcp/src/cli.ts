@@ -124,7 +124,7 @@ export async function finishLogin(
 }
 
 // A linked CLI's token, and the link it names, or null.
-async function linkOf(request: Request, env: Env) {
+export async function linkOf(request: Request, env: Env) {
   const bearer = request.headers.get('authorization')?.match(/^Bearer (.+)$/i)
   const token = await unseal(env.SEAL_KEY, bearer?.[1], 'cli')
   const link = token ? await cliLinkById(env, token.linkId) : null
@@ -142,7 +142,7 @@ export async function newToken(env: Env, userId: string): Promise<string> {
   return seal(env.SEAL_KEY, { k: 'cli', linkId })
 }
 
-const unlinked = () =>
+export const unlinked = () =>
   error(
     'unlinked',
     'This machine is not linked any more. Run `seo login` again.',

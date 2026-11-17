@@ -7,6 +7,7 @@ import type { AuditAccess } from './audit.js'
 import type { ContextStore } from './context.js'
 import type { IssueStore } from './issues.js'
 import type { LiveCheck } from './page-facts.js'
+import type { ProgressStore } from './progress.js'
 import type { SubmitAccess } from './submit.js'
 import type { WeekData } from './week.js'
 
@@ -218,6 +219,9 @@ export type CommandDeps = {
   // Each site's business context: a file on this machine, or the hosted
   // account.
   context?: ContextStore
+  // Each site's weekly progress points and tracking runs: a file on this
+  // machine, or the hosted account.
+  siteProgress?: ProgressStore
   // IndexNow keys and the person's Index My Site connection, for seo
   // submit.
   submit?: SubmitAccess

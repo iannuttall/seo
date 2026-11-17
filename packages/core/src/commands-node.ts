@@ -9,6 +9,7 @@ import {
   cloudGoogleToken,
   cloudKeys,
   cloudLinked,
+  cloudProgress,
   cloudWeek,
 } from './cloud.js'
 import type {
@@ -53,6 +54,7 @@ import { readDataForSeoCredentials } from './providers/dataforseo/credentials.js
 import { readSimpleAnalyticsKey } from './simple-analytics/credentials.js'
 import { linkedContext, localContext } from './storage/context.js'
 import { linkedIssues, localIssues } from './storage/issues.js'
+import { linkedProgress, localProgress } from './storage/progress.js'
 
 // The core commands' functions for the CLI and the local MCP: Search Console
 // with the local Google sign-in and cache, and live page checks from this
@@ -100,6 +102,8 @@ export function nodeCommandDeps(options: {
     ...(cloudLinked()
       ? { issues: linkedIssues, context: linkedContext }
       : { issues: localIssues, context: localContext }),
+    // A linked CLI keeps progress with the account; an unlinked one here.
+    siteProgress: cloudLinked() ? linkedProgress(cloudProgress) : localProgress,
     submit: localSubmitAccess(),
     ...(cloudLinked() ? { week: cloudWeek } : {}),
   }

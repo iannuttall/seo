@@ -36,6 +36,7 @@ import {
 } from './issues.js'
 import { temporaryRedirectNote } from './page-facts.js'
 import { type Detail, presentReport, preview, table } from './present.js'
+import { PROGRESS_SECTION, recordWeek, runProgress } from './progress.js'
 import {
   type DateInput,
   dateWindow,
@@ -90,6 +91,13 @@ export const SECTIONS = {
 
 export type SectionId = keyof typeof SECTIONS
 export const SECTION_IDS = Object.keys(SECTIONS) as [SectionId, ...SectionId[]]
+// Every section seo report takes with a site (the audit section aside).
+export const SITE_SECTIONS = [
+  ...SECTION_IDS,
+  ISSUES_SECTION,
+  UPDATES_SECTION,
+  PROGRESS_SECTION,
+] as const
 
 // Sections whose top URLs are checked live. Same-site redirects found there
 // are merged into their targets and the section runs again.
@@ -587,6 +595,7 @@ export type ReportInput = DateInput & {
     | typeof AUDIT_SECTION
     | typeof ISSUES_SECTION
     | typeof UPDATES_SECTION
+    | typeof PROGRESS_SECTION
   detail?: Detail
   offset?: number
   // Marks these issue ids instead of running a report.
@@ -623,6 +632,8 @@ async function allSections(
     input.site,
     dateWindow(input, DEFAULT_DAYS['quick-wins']),
   )
+  // This week's progress point, saved beside the report.
+  const week = recordWeek(input.site, deps)
   const runs = await Promise.all(
     ids.map((id) =>
       build(
@@ -705,11 +716,18 @@ async function allSections(
     `## ${ISSUES_SECTION}\n${issuesPreview(kept, deps.call, input.site)}`,
   )
   sections[ISSUES_SECTION] = { total: kept?.length ?? null, stored: !!kept }
+  const saved = await week
+  if (deps.siteProgress) {
+    parts.push(
+      `## ${PROGRESS_SECTION}\n${saved ?? `Progress since the baseline, measured as the business context says: ${deps.call('report', { site: input.site, section: PROGRESS_SECTION })}.`}`,
+    )
+  }
   const names = [
     ...ids,
     ...(deps.audit ? [AUDIT_SECTION] : []),
     ISSUES_SECTION,
     UPDATES_SECTION,
+    ...(deps.siteProgress ? [PROGRESS_SECTION] : []),
   ]
   parts.push(
     `More: ${deps.call('report', { site: input.site, section: '<section>' })} for its rows (${names.join(', ')}). Page sections also check their top 20 URLs live and merge same-site redirects.`,
@@ -916,6 +934,9 @@ export function runReport(
   }
   if (input.section === UPDATES_SECTION) {
     return runUpdates(input, deps)
+  }
+  if (input.section === PROGRESS_SECTION) {
+    return runProgress(input, deps)
   }
   if (input.section === AUDIT_SECTION) {
     const audit = deps.audit

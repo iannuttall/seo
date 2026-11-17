@@ -35,6 +35,7 @@ import {
   token,
   userOf,
 } from './oauth.ts'
+import { cliProgress } from './progress.ts'
 import { unseal } from './seal.ts'
 import { sendSignupReport, sendTelegram } from './signup-report.ts'
 import { accountsOf, keysOf } from './store.ts'
@@ -134,6 +135,9 @@ async function route(
       env,
       pathname === '/account/cli/issues' ? 'issues' : 'context',
     )
+  }
+  if (pathname === '/account/cli/progress') {
+    return cliProgress(request, env)
   }
   if (pathname === '/account/cli/logout' && method === 'POST') {
     return logout(request, env)

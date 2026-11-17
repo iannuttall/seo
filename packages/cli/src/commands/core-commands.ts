@@ -29,6 +29,7 @@ import {
   type LintMetaKind,
   type LintPreset,
   MAX_INSPECT_LIMIT,
+  PROGRESS_SECTION,
   RESEARCH_ACTIONS,
   RESEARCH_DEVICES,
   RESEARCH_PROVIDERS,
@@ -36,6 +37,7 @@ import {
   type ResearchAction,
   type ResearchDevice,
   type ResearchScope,
+  researchProgress,
   rowTextFilters,
   runAiAnswers,
   runAllSites,
@@ -55,6 +57,7 @@ import {
   SECTION_IDS,
   type SearchType,
   type SectionId,
+  tracksProgress,
   UPDATES_SECTION,
 } from '@seo/core/commands'
 import { defineCommand } from 'citty'
@@ -264,7 +267,7 @@ export const reportCommand = defineCommand({
     },
     section: {
       type: 'string',
-      description: `Optional, needs --site. One of ${[...SECTION_IDS, ISSUES_SECTION, UPDATES_SECTION].join(', ')}. issues keeps a list of what was found for the site, on this machine. ${UPDATES_SECTION} lays the latest Google ranking update (or the latest that started by --end-date) over the site.`,
+      description: `Optional, needs --site. One of ${[...SECTION_IDS, ISSUES_SECTION, UPDATES_SECTION, PROGRESS_SECTION].join(', ')}. issues keeps a list of what was found for the site, on this machine. ${UPDATES_SECTION} lays the latest Google ranking update (or the latest that started by --end-date) over the site.`,
     },
     mark: {
       type: 'string',
@@ -282,7 +285,12 @@ export const reportCommand = defineCommand({
   },
   run: async ({ args }) => {
     const section = stringArg(args.section)
-    const sections = [...SECTION_IDS, ISSUES_SECTION, UPDATES_SECTION]
+    const sections = [
+      ...SECTION_IDS,
+      ISSUES_SECTION,
+      UPDATES_SECTION,
+      PROGRESS_SECTION,
+    ]
     if (section && !sections.includes(section)) {
       throw new SeoError(
         'INVALID_INPUT',
@@ -756,6 +764,28 @@ export const researchCommand = defineCommand({
     const target = stringArg(args.target)
     const competitors = csvArg(args.competitors) ?? []
     const country = stringArg(args.country)
+    // A site's own tracked searches or AI questions, kept as progress.
+    const own = !keywords.length && !args.tasks && target
+    const tracked = own && (await property(args, target).catch(() => null))
+    const plain = nodeCommandDeps({ call: cliCall })
+    if (tracked && (await tracksProgress(action, tracked, plain))) {
+      const input = {
+        action,
+        target: tracked,
+        keywords,
+        country: country ?? 'us',
+        device,
+      }
+      return run(
+        args,
+        async (deps) =>
+          (await researchProgress(input, {
+            deps,
+            resolveSite: async (value) => value,
+            keys: async () => keys,
+          })) as CommandResult,
+      )
+    }
     if (action === 'ai_answers') {
       if (provider && provider !== 'dataforseo') {
         throw new SeoError('INVALID_INPUT', 'ai_answers uses dataforseo.')

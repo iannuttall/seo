@@ -30,7 +30,7 @@ import {
 export const ISSUES_SECTION = 'issues'
 
 export const ISSUES_SECTION_TEXT =
-  'A list kept for the site between sessions: issues the striking-distance, low-ctr and quick-wins checks found (and the weekly crawl and Google index checks for an audited site), each with its id, the latest check and what the person marked it (open, fixed or ignored). A fixed page, or query on a page, gets its Search Console clicks and impressions for the 28 and 56 days from the day it was marked fixed against the same days before, once final data covers them. Asking for it runs those checks again. To mark issues, add mark and issues instead of section. The hosted server keeps the list only for sites in the weekly site audit; for any other site it returns the list as JSON for the agent to save and pass back as saved.'
+  'A list kept for the site between sessions: issues the striking-distance, low-ctr and quick-wins checks found (and the weekly crawl and Google index checks for an audited site), each with its id, the latest check and what the person marked it (open, fixed or ignored). A fixed page, or query on a page, gets its Search Console clicks and impressions for the 28 and 56 days from the day it was marked fixed against the same days before, once final data covers them. Asking for it runs those checks again. To mark issues, add mark and issues instead of section. The CLI and local MCP keep the list on this machine and the hosted server keeps it with the account, for every site. A list the agent saved in the project before can be passed once as saved to carry it over.'
 
 export const ISSUE_MARKS = ['open', 'fixed', 'ignored'] as const
 export type IssueMark = (typeof ISSUE_MARKS)[number]
@@ -811,18 +811,27 @@ export function issuesSaveText(
   call: Caller,
 ): string {
   return [
-    `This server is not storing this list for ${site}: the hosted server keeps it only for sites in the weekly site audit. Save the JSON below in a file in the person's project, such as .seo/issues.json, replacing the old one. Next time, pass the file's contents as saved (${call('report', { site, section: ISSUES_SECTION, saved: '<file contents>' })}, or with mark and issues), so marks, notes and first-found dates carry over. Without saved, the list starts again.`,
+    `This server is not storing this list for ${site}. Save the JSON below in a file in the person's project, such as .seo/issues.json, replacing the old one. Next time, pass the file's contents as saved (${call('report', { site, section: ISSUES_SECTION, saved: '<file contents>' })}, or with mark and issues), so marks, notes and first-found dates carry over. Without saved, the list starts again.`,
     `\`\`\`json\n${JSON.stringify(asFile(site, issues))}\n\`\`\``,
   ].join('\n')
 }
 
-// The site's list from the surface, else from saved, else empty.
+// The site's list from the surface, else from saved, else empty. A surface
+// that keeps no list yet takes a saved one in, so a list saved in the
+// person's project carries over once.
 async function startingList(
   site: string,
   saved: string | undefined,
   deps: CommandDeps,
 ): Promise<{ issues: StoredIssue[]; stored: boolean; note: string | null }> {
   const kept = deps.issues ? await deps.issues.read(site) : null
+  if (kept && !kept.length && saved) {
+    return {
+      issues: parseSaved(saved, site),
+      stored: true,
+      note: 'Took in the saved list. This surface keeps it from now on, so the saved file is no longer needed.',
+    }
+  }
   if (kept) {
     return {
       issues: kept,

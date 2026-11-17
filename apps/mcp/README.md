@@ -53,11 +53,11 @@ is not audited yet is added, which starts its crawl and checks. `seo_page`
 uses a stored result while it is current. Every other account sees the tools
 unchanged.
 
-For an audited site, `seo_report` with section `issues` also keeps the
-issues list (`packages/core/src/commands/issues.ts`) in D1's `site_issues`,
-one row per account and property, deleted with the site or the account.
-For any other site the section stores nothing and returns the list as JSON
-for the agent to save and pass back as `saved`. An issue marked fixed whose
+`seo_report` with section `issues` keeps the issues list
+(`packages/core/src/commands/issues.ts`) in D1's `site_issues`, one row per
+account and property, for every site, audited or not. It stays when a site
+leaves the audit and is deleted with the account. A list an agent saved
+before can be passed once as `saved` to carry it over. An issue marked fixed whose
 subject is a page, or a query on a page, gets Search Console clicks,
 impressions and position for the 28 and 56 days from the day it was marked
 fixed (Search Console's calendar) against the same days before, once final

@@ -12,9 +12,10 @@ lead: The hosted MCP keeps your linked accounts and any keys you save, encrypted
 | Your Google sign-ins | The email and tokens for each Google account you link, encrypted. Used only to fetch your own data when you ask. |
 | API keys | Encrypted if you save them on your [account page](https://seoskill.dev/account). A key sent as a header is used for that request only and never saved. |
 | Reports, site lists and request logs | Not kept. Request logs are turned off. |
+| Issues lists | For any site you ask about: the issues the checks found, what you marked each one and the before and after numbers for fixed ones. Kept until you delete your account. |
 | Business context | The notes your agent saves for a site with `seo next`: what it sells, who buys it, its conversion pages, competitors. Kept for any site until you replace them or delete your account. |
 | How you signed up | Written once: the sign-in path, the agent or app, and the site that sent you. No IP address or email. |
-| Sites in the weekly audit | The last two crawls, Google's index check for each known page with its clicks and impressions, the issues list, alerts from the last 30 days and the weekly competitor check. Deleted when you remove the site. |
+| Sites in the weekly audit | The last two crawls, Google's index check for each known page with its clicks and impressions, alerts from the last 30 days and the weekly competitor check. Deleted when you remove the site. |
 | Internal linking tool runs | When you run it on the website, the crawl is deleted once the result is ready, and the result after 24 hours. Page text goes to TypeSafe so Jev can judge links. |
 | Payments | Stripe keeps your card. The server keeps only your Stripe ids and how many sites you pay for. |
 | Pages checked live | Fetched for the request and not kept. |

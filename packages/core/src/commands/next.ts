@@ -66,7 +66,7 @@ export type NextInput = {
   site: string
   // The business context to save first, as Markdown.
   context?: string
-  // The issues list the agent saved, where the server keeps none.
+  // An issues list saved in the person's project, carried over once.
   saved?: string
 }
 

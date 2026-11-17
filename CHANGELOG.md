@@ -1,5 +1,25 @@
 # Changelog
 
+## 0.22.1
+
+### Fixed
+
+- `seo next` has your agent send you the business context draft, with up to
+  three questions on what its research left unsure, and wait for your reply
+  before saving it.
+- Conversion pages are named one page at a time. A docs page counts when it
+  is the sign-up or install step itself, and `/` on its own is the home page.
+- Your agent marks a job ignored on its own only when it is not a real
+  opportunity, such as a junk search, a URL that redirects or a page kept out
+  of Google on purpose. When the search fits the product, it asks you first.
+- An unblock job whose live page is already fine is marked fixed with a
+  note, so the loop moves on and the next check shows whether Google agrees.
+
+### Changed
+
+- Each release also publishes `server.json` to the MCP Registry.
+- Dependency updates, including wrangler, biome, tsdown and tailwind.
+
 ## 0.22.0
 
 ### Added

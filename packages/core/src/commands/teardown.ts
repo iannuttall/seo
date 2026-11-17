@@ -10,6 +10,7 @@ import {
   organicPages,
 } from './analytics-site.js'
 import {
+  brandNames,
   type ConversionPath,
   conversionPaths,
   onConversionPage,
@@ -123,18 +124,25 @@ export async function runTeardown(
   const origin = host ? `https://${host}` : originOf(site)
   const days = `${range.startDate} to ${range.endDate}`
 
-  // Brand and non-brand clicks among the queries Search Console lists.
-  // Besides the report's brand terms, a domain name that is one word, such
-  // as example in example.com, is brand wherever it is a word of its own in
-  // the search, even when the site is not the top answer for it. It is never
-  // split: "exam ple" is not brand for example.com.
-  const brand = brandTermsFromQueryRows({ siteUrl: site, rows: queryRows.rows })
+  // Brand and non-brand clicks among the queries Search Console lists. The
+  // brand names the person confirmed in the business context decide, as in
+  // every report section. Without them, the report's guess from the domain
+  // counts, and a domain name that is one word, such as example in
+  // example.com, is brand wherever it is a word of its own in the search,
+  // even when the site is not the top answer for it. It is never split:
+  // "exam ple" is not brand for example.com.
+  const confirmed = context ? brandNames(context.text) : []
+  const guess = confirmed.length
+    ? null
+    : brandTermsFromQueryRows({ siteUrl: site, rows: queryRows.rows })
   const stem = registrableDomain(site)?.stem
-  const word = stem && /^[\p{L}\p{N}]+$/u.test(stem) ? stem : null
+  const word = guess && stem && /^[\p{L}\p{N}]+$/u.test(stem) ? stem : null
   const isBrand = (query: string) =>
-    isBrandQuery(query, brand.terms) ||
+    isBrandQuery(query, guess ? guess.terms : confirmed) ||
     (word !== null && normalizeBrandText(query).split(' ').includes(word))
-  const terms = [...new Set([...brand.terms, ...(word ? [word] : [])])]
+  const terms = guess
+    ? [...new Set([...guess.terms, ...(word ? [word] : [])])]
+    : confirmed
   const listed = sum(queries, 'clicks')
   const brandClicks = sum(
     queries.filter((row) => isBrand(row.keys[0] ?? '')),
@@ -207,7 +215,7 @@ export async function runTeardown(
   const data = [
     `## Search Console and Google Analytics data, ${days}`,
     `Totals: clicks ${now.clicks} (previous period ${then.clicks}, ${change(pct(now.clicks, then.clicks))}), impressions ${now.impressions} (was ${then.impressions}, ${change(pct(now.impressions, then.impressions))}), average position ${round(now.position)}.`,
-    `Search Console lists queries for ${listed} of the ${now.clicks} clicks. ${brandClicks} come from searches that contain a brand term and ${listed - brandClicks} from non-brand searches. The other ${Math.max(0, now.clicks - listed)} come from queries Search Console hides for privacy${queriesCapped ? ` or that fall outside the ${ROWS.toLocaleString('en-US')} queries listed` : ''}, so neither share is complete. Brand terms: ${terms.join(', ') || 'none found'}.${word ? ` A search is brand when it has "${word}" as a word of its own, so a search that splits the name into words is not.` : ''}`,
+    `Search Console lists queries for ${listed} of the ${now.clicks} clicks. ${brandClicks} come from searches that contain a brand term and ${listed - brandClicks} from non-brand searches. The other ${Math.max(0, now.clicks - listed)} come from queries Search Console hides for privacy${queriesCapped ? ` or that fall outside the ${ROWS.toLocaleString('en-US')} queries listed` : ''}, so neither share is complete. ${confirmed.length ? `Brand names from the business context: ${terms.join(', ')}.` : `The business context names no brand names, so these brand terms are guessed from the domain: ${terms.join(', ') || 'none found'}.${word ? ` A search is brand when it has "${word}" as a word of its own, so a search that splits the name into words is not.` : ''}`}`,
     topNonBrand.length
       ? `Top non-brand searches by clicks:\n${table(
           topNonBrand,

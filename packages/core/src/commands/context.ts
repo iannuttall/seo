@@ -1,3 +1,4 @@
+import { AI_ANSWER_QUESTIONS } from './ai-answers.js'
 import { originOf } from './shared.js'
 import { type Caller, CommandError } from './types.js'
 
@@ -19,6 +20,13 @@ export type ContextStore = {
 export type ContextFile = { version: 1; sites: Record<string, SiteContext> }
 
 export const CONTEXT_MAX = 8_000
+// How much of the context progress reads (progress.ts).
+export const PROGRESS_LIMITS = {
+  pages: 25,
+  searches: 30,
+  questions: AI_ANSWER_QUESTIONS,
+  competitors: 5,
+} as const
 // Days before seo next asks for the context to be checked again.
 export const CONTEXT_DAYS = 90
 
@@ -58,7 +66,7 @@ export function contextText(text: string): string {
 
 // The lines under a "## <heading>" of the context, without list markers,
 // up to the next heading. Empty lines are left out.
-function headingLines(text: string, heading: string): string[] {
+export function headingLines(text: string, heading: string): string[] {
   const lines = text.split('\n')
   const start = lines.findIndex(
     (line) =>
@@ -167,7 +175,13 @@ export function contextGuide(site: string, call: Caller): string {
       '## Brand names',
       `The names people type when they look for this business by name, one per line: the product or company name, and the domain as people type it, such as example.com. The reports leave out every search that contains one of these names, with or without a space inside it, so "openbook" also catches "open book". Before you propose a name, list the searches it would catch with ${call('data', { site, query: '<name>' })}. Propose it only when those searches are about this business: the name with words such as login, pricing, app, download or a competitor's name, clicks that land on the home page, or a top position with a high click rate. Leave a name out when it is also the words people use for the product category or the service itself, such as a recipe site called Easy Recipes, because it would hide the searches that bring new customers. The domain alone is enough then. Show the person each name with its evidence and the clicks it would hide, and they confirm or remove them when they reply to the draft.`,
       '## Competitors',
-      'One domain per line.',
+      'One domain per line, then the name buyers use when it differs from the domain, such as example.com Example App.',
+      '## Category searches',
+      'One RE2 regex for the searches the SEO work should grow, such as (?i)(invoice|billing software). Brand searches are left out of it.',
+      '## Tracked searches',
+      `Up to ${PROGRESS_LIMITS.searches} buying searches to follow in Google and Search Console, one per line.`,
+      '## AI questions',
+      `Up to ${PROGRESS_LIMITS.questions} questions buyers ask AI assistants, one per line, to check who the answers cite.`,
       '## Markets',
       '## Voice',
       '## Notes',

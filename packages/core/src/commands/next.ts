@@ -22,6 +22,7 @@ import {
   parseSaved,
   type StoredIssue,
 } from './issues.js'
+import { recordWeek } from './progress.js'
 import { runReport } from './report.js'
 import { dateWindow } from './shared.js'
 import {
@@ -109,9 +110,10 @@ export async function runNext(
   }
 
   const range = dateWindow({}, KEY_EVENT_DAYS)
-  const [list, ga] = await Promise.all([
+  const [list, ga, week] = await Promise.all([
     issuesList(site, saved, deps, now),
     organicPages(deps.analytics, site, range),
+    recordWeek(site, deps),
   ])
   const pages = conversionPaths(context.text)
   const open = list.issues.filter((issue) => issue.mark === 'open')
@@ -153,6 +155,7 @@ export async function runNext(
   return {
     text: [
       savedNote,
+      week,
       `The next step for ${site} is to ${STEP_TITLES[step]}.`,
       `The loop:\n${loop.join('\n')}`,
       `## ${heading(step)}\n${stepGuide(step, site, call)}`,

@@ -53,8 +53,9 @@ site again and keeps a list of what it found, each with an id, the latest
 check and what the person marked it. Record what the person decided:
 `--mark fixed` or `--mark ignored` with `--issues <id>,<id>` (`mark`,
 `issues`, optional `note`). "Fixed" is the person's word; the list says
-when the check still finds it. The CLI and local MCP keep the list on this
-machine, and the hosted server keeps it with the account, for every site.
+when the check still finds it. The hosted server, and a CLI linked with
+`seo login`, keep the list with the account, for every site; an unlinked CLI
+keeps it on this machine.
 If the person has a list saved from before, such as `.seo/issues.json`,
 pass its contents once as `saved` to carry its marks over.
 

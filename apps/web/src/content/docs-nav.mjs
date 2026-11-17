@@ -57,6 +57,12 @@ export const docsSections = [
     title: 'Commands',
     items: [
       {
+        path: '/docs/next',
+        label: 'seo next',
+        description:
+          'Where a site is in the SEO loop and the one step to do now.',
+      },
+      {
         path: '/docs/report',
         label: 'seo report',
         description:

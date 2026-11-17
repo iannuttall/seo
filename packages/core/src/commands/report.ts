@@ -38,6 +38,12 @@ import {
 import { temporaryRedirectNote } from './page-facts.js'
 import { type Detail, presentReport, preview, table } from './present.js'
 import {
+  PROGRESS_SECTION,
+  PROGRESS_SECTION_TEXT,
+  recordWeek,
+  runProgress,
+} from './progress.js'
+import {
   type DateInput,
   dateWindow,
   earlierRange,
@@ -96,13 +102,13 @@ export const SECTIONS = {
 
 export type SectionId = keyof typeof SECTIONS
 export const SECTION_IDS = Object.keys(SECTIONS) as [SectionId, ...SectionId[]]
-
 // Every section seo report takes by name, with the ones that run on their
 // own. The weekly-audit section is added where the audit runs.
 export const REPORT_SECTIONS = [
   ...SECTION_IDS,
   ISSUES_SECTION,
   UPDATES_SECTION,
+  PROGRESS_SECTION,
   TEARDOWN_SECTION,
 ] as const
 
@@ -114,6 +120,7 @@ export const REPORT_SECTION_TEXTS: Record<
   ...SECTIONS,
   [ISSUES_SECTION]: ISSUES_SECTION_TEXT,
   [UPDATES_SECTION]: UPDATES_SECTION_TEXT,
+  [PROGRESS_SECTION]: PROGRESS_SECTION_TEXT,
   [TEARDOWN_SECTION]: TEARDOWN_SECTION_TEXT,
 }
 
@@ -614,6 +621,7 @@ export type ReportInput = DateInput & {
     | typeof ISSUES_SECTION
     | typeof UPDATES_SECTION
     | typeof TEARDOWN_SECTION
+    | typeof PROGRESS_SECTION
   detail?: Detail
   offset?: number
   // Marks these issue ids instead of running a report.
@@ -650,6 +658,8 @@ async function allSections(
     input.site,
     dateWindow(input, DEFAULT_DAYS['quick-wins']),
   )
+  // This week's progress point, saved beside the report.
+  const week = recordWeek(input.site, deps)
   const runs = await Promise.all(
     ids.map((id) =>
       build(
@@ -732,11 +742,18 @@ async function allSections(
     `## ${ISSUES_SECTION}\n${issuesPreview(kept, deps.call, input.site)}`,
   )
   sections[ISSUES_SECTION] = { total: kept?.length ?? null, stored: !!kept }
+  const saved = await week
+  if (deps.siteProgress) {
+    parts.push(
+      `## ${PROGRESS_SECTION}\n${saved ?? `Progress since the baseline, measured as the business context says: ${deps.call('report', { site: input.site, section: PROGRESS_SECTION })}.`}`,
+    )
+  }
   const names = [
     ...ids,
     ...(deps.audit ? [AUDIT_SECTION] : []),
     ISSUES_SECTION,
     UPDATES_SECTION,
+    ...(deps.siteProgress ? [PROGRESS_SECTION] : []),
   ]
   parts.push(
     `More: ${deps.call('report', { site: input.site, section: '<section>' })} for its rows (${names.join(', ')}). Page sections also check their top 20 URLs live and merge same-site redirects.`,
@@ -960,6 +977,9 @@ export function runReport(
         await confirmed,
       ),
     )
+  }
+  if (input.section === PROGRESS_SECTION) {
+    return runProgress(input, deps)
   }
   if (input.section === AUDIT_SECTION) {
     const audit = deps.audit

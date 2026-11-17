@@ -65,6 +65,7 @@ The quick wins, low CTR, striking distance and content decay sections are covere
 | `google-updates` | The latest Google ranking update laid over your clicks: the update's days against the same number of days before, whether that is more movement than usual for your site, and the folders, pages and queries that moved most. Add an end date for an earlier update. |
 | `teardown` | A brief for your agent to write a full teardown of the site, in the shape of our [How I'd grow posts](/blog), with the research to run and your clicks by folder and page, brand and non-brand clicks, conversion pages and page-two searches. Works for any domain. |
 | `bing` | Bing's top queries and pages with Google's numbers for the same rows beside them, how many queries each engine lists, and pages that one engine shows and the other doesn't. Needs [Bing connected](/docs/bing) in the CLI or the local MCP server. |
+| `issues` | A list of what the quick wins, low CTR and striking distance checks found, kept between sessions, with what you marked each one. See [keep a list of issues](#keep-a-list-of-issues). |
 
 Ask for a section by name:
 
@@ -81,6 +82,25 @@ seo report --site example.com --section low-ctr
 The first answer is a summary. Add `--detail rows` for the next page of rows, with `--offset` to move through them, or `--detail full` for every field. Add `--json` for structured output.
 
 Sections that list pages also check their top 20 URLs live, so you can see a page that now redirects or returns an error before you spend time on it.
+
+## Keep a list of issues
+
+The `issues` section runs the quick wins, low CTR and striking distance checks again and keeps what they found in a list for the site. For a site in the [weekly site audit](/docs/weekly-site-audit), the list also has what the weekly crawl and the Google index checks found. Each issue has an id, what the latest check saw and whether you marked it open, fixed or ignored.
+
+```sh
+seo report --site example.com --section issues
+```
+
+Once you've fixed something, or decided to leave it, record it with the issue ids. Marking runs no checks:
+
+```sh
+seo report --site example.com --mark fixed --issues <id>,<id>
+seo report --site example.com --mark ignored --issues <id> --note "Not for us"
+```
+
+"Fixed" is your word for it. The list still says when a later check finds the issue again. For a fixed page, or a query on a page, the list adds its Search Console clicks and impressions for the 28 and 56 days after the day you marked it against the same days before, once final data covers them. That shows what changed after the fix, not that the fix caused it.
+
+The hosted MCP keeps the list with your account, for any site, until you delete your account. So does the CLI, or the local MCP server, once you link it to your account with `seo login`, so every machine and agent works from the same list. Without an account, the CLI keeps the list on your machine. [`seo next`](/docs/next) reads the same list to pick its jobs.
 
 ## Dates
 

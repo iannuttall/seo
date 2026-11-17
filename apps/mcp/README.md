@@ -2,8 +2,10 @@
 
 A free remote MCP server at `https://seoskill.dev/mcp`. It reads your own
 Search Console, Google Analytics and Clicky data, plus optional keyword
-accounts, and returns facts. It gives no advice. It keeps only your sign-ins,
-saved keys and Clicky sites, encrypted, and never your data.
+accounts, and returns facts. It gives no advice. It keeps your sign-ins,
+saved keys and Clicky sites, encrypted, the issues list and business context
+an agent saves for a site, and what the paid weekly site audit needs. It
+keeps no reports or request logs.
 
 ## Connect
 
@@ -70,6 +72,33 @@ of final data.
 `site_context`, one row per account and property, for every site, audited
 or not, and deleted with the account. It reads the issues list the same way
 `seo_report` does, so an unaudited site's list still comes back as JSON.
+
+A CLI or local MCP linked with `seo login` uses the same two rows, through
+`GET` and `PUT /account/cli/issues` and `/account/cli/context` (`src/cli.ts`,
+with `?property=` to read and `{property, issues}` or `{property, context}`
+to replace). A write is checked as strictly as a `saved` list or a
+`seo_next` context, and refused whole when it fails. The first time the
+account has nothing for a site that the machine kept locally, the CLI moves
+its local list or context up and removes it from `issues.json` or
+`context.json`. An unlinked CLI keeps both files on its own machine.
+
+`seo_next` and `seo_report` also save one progress point a week for any
+site with a business context (`src/progress.ts`, D1's `site_progress`): Search
+Console totals split by the context's brand names and category regex, weekly
+clicks, conversion pages with Google's index status and tracked searches. The
+first point is the baseline, and `seo_report` section `progress` compares the
+latest numbers with it, reading weeks Search Console has dropped from the saved
+points. `seo_research` `serp` or `ai_answers` with the site as target and no
+keywords checks the context's tracked searches or AI questions for the site and
+its competitors, and keeps each check in `progress_runs`. Both tables are
+deleted with the account.
+
+A CLI linked with `seo login` or `SEO_TOKEN` keeps progress in the same tables
+through `/account/cli/progress` (`GET` with `?property=`, `POST` with
+`{property, point}` or `{property, run}`; a point is only ever added);
+the first time the account has none for a site, the points saved on that
+machine move to the account and leave the machine. An unlinked CLI keeps them
+in `progress.json` on the machine.
 
 ## Paid plan
 
@@ -335,14 +364,15 @@ repository.
 
 | Tool | What it returns |
 | --- | --- |
-| `seo_sites` | Search Console and Google Analytics properties from every linked Google account, which keys are set and the saved Clicky sites |
-| `seo_report` | The main report. Without a section: the overview plus each section's count and top rows. Sections: overview, quick-wins, low-ctr, striking-distance, second-page, content-decay, cannibalization, traffic-drop. Section teardown returns the brief and data for the agent to write a full teardown of a site, for any domain. Page sections check their top 20 URLs live and merge same-site redirects. |
+| `seo_sites` | Search Console and Google Analytics properties from every linked Google account, which keys are set and the saved Clicky sites. With `add`, starts the weekly site audit of a site, or returns a Stripe Checkout link for the person to pay |
+| `seo_next` | Where the site is in the SEO loop and the one step that is due, with its first jobs; with `context`, saves the site's business context |
+| `seo_report` | The main report. Without a section: the overview plus each section's count and top rows. Sections: overview, quick-wins, low-ctr, striking-distance, second-page, content-decay, cannibalization, traffic-drop, ai-queries, image-search, bing (CLI and local server only), issues and google-updates, plus weekly-audit for audited sites. Section teardown returns the brief and data for the agent to write a full teardown of a site, for any domain. With `mark` and `issues`, records what the person decided about those issues. Page sections check their top 20 URLs live and merge same-site redirects. |
 | `seo_page` | One URL: live page facts, Google index status and its queries against the previous period. The page's main content as Markdown is CLI and local server only; with detail `full` this server says how to get it. |
 | `seo_compare` | Equal periods before and after a date, for the site or URLs that contain some text, with Google updates |
 | `seo_index` | Google's indexing reasons for 100 known URLs a run, checked live and labelled, and pages that lost most of their clicks |
 | `seo_submit` | Sends URLs to Google through the person's own Index My Site account, with Bing as an option. Index My Site calls return the cost and send nothing until `confirm` is true. It makes and checks IndexNow keys, but IndexNow limits requests from Cloudflare's network, so sending to IndexNow points to `seo submit` in the CLI. The only tool that is not read-only. |
-| `seo_research` | Keyword metrics, ranked keywords, top pages, SERPs, competitors, backlinks and pages by backlinks for a site, subfolder or page, from whichever DataForSEO or Ahrefs key is saved (DataForSEO when both are), with a free Ahrefs Domain Rating column |
-| `seo_data` | Raw Search Console rows, search landing pages from Google Analytics, Clicky visits by landing page with traffic sources and search engines, or Simple Analytics visitors by landing page with referrers and AI tools. |
+| `seo_research` | Keyword metrics and ideas, ranked keywords, top pages, SERPs and SERP overlap, index checks, competitors, backlinks, pages by backlinks, link gaps, unlinked mentions and AI answer citations for a site, subfolder or page, from whichever DataForSEO or Ahrefs key is saved (DataForSEO when both are), with a free Ahrefs Domain Rating column |
+| `seo_data` | Raw Search Console rows (web, image, video, news, Discover or Google News), search landing pages from Google Analytics, Clicky visits by landing page with traffic sources and search engines, or Simple Analytics visitors by landing page with referrers and AI tools. |
 | `seo_lint` | Checks copy sent as text (up to 200,000 characters) for patterns common in AI-written text, weak copy and title and description length, with a fix for each finding and a list of lines to judge. Reads no account data. |
 
 Bing Webmaster Tools runs only in the CLI and the local MCP server, because
@@ -356,7 +386,7 @@ in `src/tools/deps.ts`.
 
 Reports run the same `@seo/core` code as the CLI, through
 `@seo/core/hosted`. Advice fields are removed before the agent sees them.
-Each tool takes its target and optional dates, nothing more. Start with the
+Most tools take a target and optional dates. Start with the
 summary; ask for `rows` or `full` only when you need more. Each result names
 the tool to run next.
 
@@ -382,6 +412,9 @@ A small Cloudflare D1 database (`migrations/`) keeps only:
   the grant at Index My Site,
 - IndexNow keys that `seo_submit` made, by host (`indexnow_keys`); a key is
   public once the site serves it,
+- each site's issues list (`site_issues`) and business context
+  (`site_context`), for any site the person or a linked CLI uses them on,
+  until they are replaced or the account is deleted,
 - machines linked with `seo login` (a name from the host name and the date
   last used).
 - beta features granted to the account, and when (`beta_flags`). Only a

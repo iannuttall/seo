@@ -37,20 +37,23 @@ If you use the [hosted MCP](/docs/mcp), link the CLI to the same account. Your G
 seo login
 ```
 
-It opens a page on seoskill.dev where you approve this machine. The CLI then asks the account for short-lived tokens and makes the Google and Bing requests itself (Bing blocks the hosted server, so this is how Bing works with an account). Nothing it fetches goes back to seoskill.dev. Your linked machines are listed on your [account page](https://seoskill.dev/account), where you can remove them. `seo logout` unlinks this one.
+It opens a page on seoskill.dev where you approve this machine. The CLI then asks the account for short-lived tokens and makes the Google and Bing requests itself (Bing blocks the hosted server, so this is how Bing works with an account). Reports and rows it fetches don't go back to seoskill.dev. The issues list and business context do: the account keeps them, so this machine and the hosted MCP work from the same ones. Your linked machines are listed on your [account page](https://seoskill.dev/account), where you can remove them. `seo logout` unlinks this one.
 
 ## Run the commands
 
 | Command | What it does |
 | --- | --- |
+| `seo next` | [The next step](/docs/next) in the SEO loop for a site, with its first jobs |
 | `seo report` | The [main report](/docs/report): with `--site`, an overview first, then one section |
 | `seo page` | [One URL](/docs/page): live page facts, Google index status and its queries |
 | `seo compare` | [Before and after a date](/docs/compare), with Google updates |
-| `seo index` | [Pages that lost their clicks](/docs/indexing), checked live |
+| `seo index` | [Google's indexing reasons](/docs/indexing) for your pages, checked live, and pages that lost their clicks |
+| `seo submit` | [Ask search engines to crawl pages](/docs/submit) with IndexNow, or send them to Google with Index My Site |
 | `seo research` | [Keyword and competitor data](/docs/research) from your own key |
-| `seo data` | [Raw Search Console rows](/docs/data) for any dimensions |
+| `seo data` | [Raw rows](/docs/data) from Search Console, Bing, Clicky or Simple Analytics |
 | `seo crawl` | [Crawl your site](/docs/crawl) and list technical issues |
 | `seo internal-links` | [Internal links to add](/docs/internal-links) across a site or to one page |
+| `seo lint` | [Lines in your copy](/docs/lint) that read as AI-written, each with a fix |
 
 A few examples:
 
@@ -93,7 +96,7 @@ On a machine that is rebuilt each time, such as Amp, Codex cloud or CI, make a t
 
 ## Where your data lives
 
-Your Google tokens, settings, keys and a short cache of responses stay on your machine. Reports and crawls are not saved. Nothing is sent to SEO Skill except the [anonymous usage counts](/telemetry), which you can turn off:
+Your Google tokens, settings, keys and a short cache of responses stay on your machine. Reports and crawls are not saved, except the issues list you ask for and the business context `seo next` saves. Those stay on your machine too, unless you [use your seoskill.dev account](#use-your-seoskilldev-account). Nothing else is sent to SEO Skill except the [anonymous usage counts](/telemetry), which you can turn off:
 
 ```sh
 seo telemetry disable

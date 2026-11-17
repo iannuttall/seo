@@ -26,6 +26,7 @@ import { ISSUE_MARKS, NOTE_MAX, SAVED_MAX } from './issues.js'
 import { type LintSource, runLint } from './lint.js'
 import { NEXT_TEXT, runNext } from './next.js'
 import type { Detail } from './present.js'
+import { researchProgress } from './progress-track.js'
 import {
   REPORT_SECTION_TEXTS,
   REPORT_SECTIONS,
@@ -626,7 +627,7 @@ export const SHARED_TOOLS: SharedTool[] = [
     name: 'seo_research',
     command: 'research',
     title: 'Keyword, competitor, backlink and AI answer data',
-    description: `Data from the person’s own DataForSEO or Ahrefs account, which costs them credits. It uses the key the person saved on their seoskill.dev account (or on this machine for the CLI). Actions: ${RESEARCH_HELP}`,
+    description: `Data from the person’s own DataForSEO or Ahrefs account, which costs them credits. It uses the key the person saved on their seoskill.dev account (or on this machine for the CLI). serp or ai_answers with a site as target and no keywords checks the tracked searches or AI questions in the site's business context and keeps the result in its progress. Actions: ${RESEARCH_HELP}`,
     input: z.object({
       provider: z
         .string()
@@ -701,6 +702,8 @@ export const SHARED_TOOLS: SharedTool[] = [
     run: async (surface, input) => {
       const more = (offset: number) =>
         `seo_research with the same input, detail "rows", offset ${offset}`
+      const tracked = await researchProgress(input, surface)
+      if (tracked) return tracked
       if (input.action === 'ai_answers') {
         if (input.provider && input.provider !== 'dataforseo') {
           throw new CommandError('INVALID_INPUT', 'ai_answers uses dataforseo.')

@@ -175,13 +175,10 @@ function onSite(url: string, domain: string): boolean {
 }
 
 type Answer = {
-  result:
-    | 'cited'
-    | 'mentioned'
-    | 'neither'
-    | 'no_answer'
-    | 'pending'
-    | 'unavailable'
+  // Each other site's result for the same answer, by its domain, when the
+  // run was asked to judge others.
+  others?: Record<string, AnswerResult>
+  result: AnswerResult
   cited_url: string | null
   // For a mentioned answer, the domain or brand name its text names.
   mentioned_as: string | null
@@ -195,6 +192,14 @@ type Answer = {
   answered_at: string | null
   error?: string
 }
+
+type AnswerResult =
+  | 'cited'
+  | 'mentioned'
+  | 'neither'
+  | 'no_answer'
+  | 'pending'
+  | 'unavailable'
 
 const MAX_SOURCES = 8
 const hostOf = (url: string) => {
@@ -242,6 +247,49 @@ const empty = {
 // The site an answer is judged for: every domain a citation can be on, and
 // the domains and brand names its text can mention it by.
 type Site = { domains: string[]; names: string[]; terms: string[] }
+
+// The site an answer is judged for, from its domain, its other domains and
+// the brand names that count as a mention (default: each domain's name).
+function siteFor(target: string, also: string[], brand: string[]): Site {
+  const domain = registrableDomain(target)?.domain
+  if (!domain) {
+    throw new CommandError(
+      'INVALID_INPUT',
+      `ai_answers needs a site with a domain, not "${target}".`,
+    )
+  }
+  const domains = [domain]
+  for (const value of also) {
+    const other = registrableDomain(value)?.domain
+    if (!other) {
+      throw new CommandError(
+        'INVALID_INPUT',
+        `ai_answers takes domains in also, not "${value}".`,
+      )
+    }
+    if (!domains.includes(other)) domains.push(other)
+  }
+  if (domains.length > AI_ANSWER_DOMAINS) {
+    throw new CommandError(
+      'INVALID_INPUT',
+      `ai_answers takes up to ${AI_ANSWER_DOMAINS - 1} other domains in also.`,
+    )
+  }
+  // A placeholder, such as example.com, is never cited or mentioned.
+  const names = domains.filter((name) => !isPlaceholder(name))
+  const given = [...new Set(brand.map((b) => b.trim()).filter(Boolean))]
+  return {
+    domains,
+    names,
+    terms: [
+      ...new Set(
+        given.length
+          ? given.flatMap((name) => deriveBrandTerms({ name, siteUrl: '' }))
+          : names.flatMap((name) => deriveBrandTerms({ siteUrl: name })),
+      ),
+    ],
+  }
+}
 
 // What a finished task says about the site.
 function judge(engine: Engine, task: DataForSeoQueued, site: Site): Answer {
@@ -404,6 +452,9 @@ export async function runAiAnswers(
     // The names that count as a mention. Default: each domain's name, such
     // as "datadoghq" for datadoghq.com.
     brand?: string[]
+    // Other sites, such as competitors, to judge on the same answers: each
+    // row's others has their result by domain.
+    others?: { domain: string; brand?: string[] }[]
   },
   headers: Headers,
   deps: Pick<CommandDeps, 'searchAnalytics'>,
@@ -412,46 +463,16 @@ export async function runAiAnswers(
   more: (offset: number, tasks: string[]) => string,
 ): Promise<CommandResult> {
   const keys = dataForSeoKeys(headers)
-  const domain = registrableDomain(input.site)?.domain
-  if (!domain) {
-    throw new CommandError(
-      'INVALID_INPUT',
-      `ai_answers needs a site with a domain, not "${input.site}".`,
-    )
-  }
-  const domains = [domain]
-  for (const value of input.also ?? []) {
-    const other = registrableDomain(value)?.domain
-    if (!other) {
-      throw new CommandError(
-        'INVALID_INPUT',
-        `ai_answers takes domains in also, not "${value}".`,
-      )
-    }
-    if (!domains.includes(other)) domains.push(other)
-  }
-  if (domains.length > AI_ANSWER_DOMAINS) {
-    throw new CommandError(
-      'INVALID_INPUT',
-      `ai_answers takes up to ${AI_ANSWER_DOMAINS - 1} other domains in also.`,
-    )
-  }
-  // A placeholder, such as example.com, is never cited or mentioned.
-  const names = domains.filter((name) => !isPlaceholder(name))
+  const site = siteFor(input.site, input.also ?? [], input.brand ?? [])
+  const { domains, names } = site
   const brand = [
     ...new Set((input.brand ?? []).map((b) => b.trim()).filter(Boolean)),
   ]
-  const site: Site = {
-    domains,
-    names,
-    terms: [
-      ...new Set(
-        brand.length
-          ? brand.flatMap((name) => deriveBrandTerms({ name, siteUrl: '' }))
-          : names.flatMap((name) => deriveBrandTerms({ siteUrl: name })),
-      ),
-    ],
-  }
+  // Other sites judged on the same answers, at no extra cost.
+  const others = (input.others ?? []).map((other) => ({
+    domain: other.domain,
+    site: siteFor(other.domain, [], other.brand ?? []),
+  }))
   const given = [
     ...new Set((input.questions ?? []).map((q) => q.trim()).filter(Boolean)),
   ]
@@ -598,6 +619,16 @@ export async function runAiAnswers(
           }
           Object.assign(item.row, judge(item.engine, task, site), {
             task: null,
+            ...(others.length
+              ? {
+                  others: Object.fromEntries(
+                    others.map((other) => [
+                      other.domain,
+                      judge(item.engine, task, other.site).result,
+                    ]),
+                  ),
+                }
+              : {}),
           })
         } catch (error) {
           if (error instanceof CommandError && error.code === 'NO_KEY') {

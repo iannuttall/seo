@@ -1,0 +1,67 @@
+---
+title: What to do next for a site's SEO
+heading: seo next
+description: Ask seo next where a site is in the SEO loop and get the one step that is due, with its first jobs, starting from the pages that bring customers.
+lead: Where a site is in the SEO loop and the one step to do now, with the pages to work on first.
+---
+
+Use it when you want your agent to work on a site's SEO and you don't have a narrower question. Instead of a pile of reports, you get one step, the jobs for it, and how to mark each job done. Your agent does the step, then asks again.
+
+## Start the loop
+
+Ask your agent:
+
+```text
+Use SEO Skill to work on example.com
+```
+
+The hosted MCP runs `seo_next`. In a terminal, run:
+
+```sh
+seo next --site example.com
+```
+
+`--site` takes a domain, a URL or a Search Console property.
+
+## The four steps
+
+The loop moves through four steps in order. A step is due only when the one before it has nothing left.
+
+| Step | What your agent does |
+| --- | --- |
+| Business context | Writes down what the site sells, who buys it and which pages turn a visit into a customer. Due when there is none, or it is more than 90 days old. |
+| Unblock pages | Fixes what stops Google crawling, reading or indexing pages. For a site in the [weekly site audit](/docs/weekly-site-audit), these are the problems its crawl and Google index checks found. |
+| Improve pages that rank | Works through quick wins, low click-through rates and striking distance searches from the [SEO report](/docs/report), after checking each search fits what you sell. |
+| Find new pages | Looks for buying searches the site has no page for yet, such as comparisons and alternatives, from your competitors' keywords. It needs a [research key](/docs/research). Your agent shows you at most three and builds only the ones you approve. |
+
+Each step comes with its instructions and its first five jobs. Pages with Google Analytics key events from Organic Search come first, then the conversion pages in the business context, so the work starts where search already brings customers.
+
+## Write the business context
+
+The first time, `seo next` asks your agent to research the business: the home, pricing and product pages, the pages and queries that already get clicks, the competitors and what customers say in reviews. It then drafts the context in Markdown under fixed headings, such as what it sells, who buys it, what counts as a conversion and the conversion pages, one path per line. It also proposes the brand names people search for, each with its evidence. Once you confirm them, every report section counts searches with those names as brand searches.
+
+Your agent sends you the draft with up to three questions and waits for your answer before it saves anything. Only you can say which customers you want more of. Once you've corrected it, your agent saves it:
+
+```sh
+seo next --site example.com --context-file context.md
+```
+
+Saving replaces the old context and returns the next step. In the MCP tools, the context goes in `context`.
+
+## Mark jobs as you go
+
+Jobs come from the site's issues list, the same list the `issues` section of the [SEO report](/docs/report#keep-a-list-of-issues) keeps. Your agent asks you before anything goes live. Once a change is live, it marks the job fixed, and `seo next` moves on:
+
+```sh
+seo report --site example.com --mark fixed --issues <id>,<id>
+```
+
+A search that doesn't fit what you sell can be marked `ignored` instead, and your agent asks you first. A page marked fixed later shows its Search Console clicks for the 28 and 56 days after the fix against the same days before, once Search Console's final data covers them. That shows what changed after the fix, though not on its own that the fix caused it.
+
+`seo next` checks the site again when the list is more than a day old, so asking twice in an hour doesn't repeat the work.
+
+## Where the context and list are kept
+
+The hosted MCP keeps the business context and the issues list with your account, for any site you use it on, until you replace them or delete your account. A CLI or local MCP server linked to your account with `seo login` uses the same ones, and the first time it runs for a site it moves any list or context it kept on your machine to the account. Without an account, the CLI keeps both on your machine. [What is stored](/docs/privacy) has the details.
+
+For a question about one part of the data, go straight to the [SEO report](/docs/report) or [`seo page`](/docs/page).

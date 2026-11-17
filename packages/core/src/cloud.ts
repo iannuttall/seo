@@ -2,7 +2,11 @@ import { hostname } from 'node:os'
 import { join } from 'node:path'
 import open from 'open'
 import { type BingCall, bingCall } from './bing/api.js'
+import type { ContextStore, SiteContext } from './commands/context.js'
+import type { IssueStore, StoredIssue } from './commands/issues.js'
 import { bingRouter, LinkedAccounts } from './commands/linked.js'
+import type { ProgressPoint, ProgressStore } from './commands/progress.js'
+import type { ProgressRun } from './commands/progress-track.js'
 import type { WeekData } from './commands/week.js'
 import { SeoError } from './errors.js'
 import { readJson } from './http/read-json.js'
@@ -13,8 +17,8 @@ import { SEO_VERSION } from './version.js'
 
 // A CLI linked to a seoskill.dev account with `seo login`. The account keeps
 // the person's Google and Bing sign-ins and research keys; this machine asks
-// for short-lived tokens and makes the Google and Bing calls itself. Nothing
-// is sent back. SEO_TOKEN, made on the account page, links a cloud agent
+// for short-lived tokens and makes the Google and Bing calls itself. Only the
+// issues list and business context go back, to be kept with the account. SEO_TOKEN, made on the account page, links a cloud agent
 // without a login step.
 
 export const CLOUD_URL = 'https://seoskill.dev'
@@ -143,6 +147,95 @@ export async function cloudWeek(): Promise<WeekData | null> {
     )
   }
   return result.body
+}
+
+// A request to the account's issues list or business context store, with
+// the same answers to an unlinked or failing account as the other calls.
+async function storeCall<T>(
+  kind: 'issues' | 'context' | 'progress',
+  init: RequestInit & { property?: string } = {},
+): Promise<T> {
+  const token = cloudToken()
+  if (!token) throw new SeoError('AUTH_REQUIRED', notSignedIn())
+  const query = init.property
+    ? `?property=${encodeURIComponent(init.property)}`
+    : ''
+  const result = await call<T & { message?: string }>(
+    `/account/cli/${kind}${query}`,
+    { ...init, token },
+  )
+  if (result.status === 401) {
+    throw new SeoError(
+      'AUTH_EXPIRED',
+      `This machine is not linked to a seoskill.dev account any more. ${CLOUD_SIGN_IN}`,
+    )
+  }
+  if (result.status === 400) {
+    throw new SeoError(
+      'INVALID_INPUT',
+      result.body.message ?? 'seoskill.dev refused the request.',
+    )
+  }
+  if (!result.ok) {
+    throw new SeoError(
+      'PROVIDER_UNAVAILABLE',
+      `seoskill.dev returned ${result.status}. Try again in a minute.`,
+    )
+  }
+  return result.body
+}
+
+// Each site's issues list and business context, kept with the linked
+// account, so this machine and the hosted MCP work from the same ones.
+export const cloudIssues: IssueStore = {
+  read: async (site) =>
+    (await storeCall<{ issues?: StoredIssue[] }>('issues', { property: site }))
+      .issues ?? [],
+  write: async (site, issues) => {
+    await storeCall('issues', {
+      method: 'PUT',
+      body: JSON.stringify({ property: site, issues }),
+    })
+  },
+}
+
+export const cloudContext: ContextStore = {
+  read: async (site) =>
+    (
+      await storeCall<{ context?: SiteContext | null }>('context', {
+        property: site,
+      })
+    ).context ?? null,
+  write: async (site, context) => {
+    await storeCall('context', {
+      method: 'PUT',
+      body: JSON.stringify({ property: site, context }),
+    })
+  },
+}
+
+// Each site's weekly progress points and tracking runs, kept with the
+// linked account (seo report section progress). Points are added, never
+// replaced, so the baseline stays as it was saved.
+const readProgress = (site: string) =>
+  storeCall<{ points: ProgressPoint[]; runs: ProgressRun[] }>('progress', {
+    property: site,
+  })
+
+const addProgress = (body: Record<string, unknown>) =>
+  storeCall<{ added?: boolean }>('progress', {
+    method: 'POST',
+    body: JSON.stringify(body),
+  })
+
+export const cloudProgress: ProgressStore = {
+  points: async (site) => (await readProgress(site)).points,
+  addPoint: async (site, point) =>
+    (await addProgress({ property: site, point })).added === true,
+  runs: async (site) => (await readProgress(site)).runs,
+  saveRun: async (site, run) => {
+    await addProgress({ property: site, run })
+  },
 }
 
 // What to tell someone with no sign-in on this machine.

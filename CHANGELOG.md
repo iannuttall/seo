@@ -15,6 +15,17 @@
   heading. Any other domain gets the brief alone. The default report is
   unchanged.
 
+### Changed
+
+- A CLI linked to your seoskill.dev account with `seo login` keeps each
+  site's issues list and business context with the account, so it and the
+  hosted MCP work from the same ones. The first time it runs for a site, it
+  moves the list and context it kept on your machine to the account. Without
+  an account, the CLI still keeps them on your machine.
+- New docs page for `seo next`, and the docs now cover the `issues` section,
+  `seo submit` in the tool lists, the weekly AI answer check and what each
+  surface keeps.
+
 ## 0.22.3
 
 ### Changed

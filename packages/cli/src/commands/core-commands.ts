@@ -17,7 +17,6 @@ import {
   type Dimension,
   INSPECT_LIMIT,
   ISSUE_MARKS,
-  ISSUES_SECTION,
   type IssueMark,
   LINT_CATEGORIES,
   LINT_FORMATS,
@@ -37,6 +36,7 @@ import {
   type ResearchAction,
   type ResearchDevice,
   type ResearchScope,
+  researchProgress,
   rowTextFilters,
   runAiAnswers,
   runAllSites,
@@ -53,11 +53,11 @@ import {
   runRows,
   runSimpleAnalyticsRows,
   SEARCH_TYPES,
-  SECTION_IDS,
   type SearchType,
   type SectionId,
   TEARDOWN_SECTION,
   teardownBrief,
+  tracksProgress,
   UPDATES_SECTION,
 } from '@seo/core/commands'
 import { defineCommand } from 'citty'
@@ -772,6 +772,28 @@ export const researchCommand = defineCommand({
     const target = stringArg(args.target)
     const competitors = csvArg(args.competitors) ?? []
     const country = stringArg(args.country)
+    // A site's own tracked searches or AI questions, kept as progress.
+    const own = !keywords.length && !args.tasks && target
+    const tracked = own && (await property(args, target).catch(() => null))
+    const plain = nodeCommandDeps({ call: cliCall })
+    if (tracked && (await tracksProgress(action, tracked, plain))) {
+      const input = {
+        action,
+        target: tracked,
+        keywords,
+        country: country ?? 'us',
+        device,
+      }
+      return run(
+        args,
+        async (deps) =>
+          (await researchProgress(input, {
+            deps,
+            resolveSite: async (value) => value,
+            keys: async () => keys,
+          })) as CommandResult,
+      )
+    }
     if (action === 'ai_answers') {
       if (provider && provider !== 'dataforseo') {
         throw new SeoError('INVALID_INPUT', 'ai_answers uses dataforseo.')

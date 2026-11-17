@@ -56,25 +56,48 @@ export function contextText(text: string): string {
   return trimmed
 }
 
+// The lines under a "## <heading>" of the context, without list markers,
+// up to the next heading. Empty lines are left out.
+function headingLines(text: string, heading: string): string[] {
+  const lines = text.split('\n')
+  const start = lines.findIndex(
+    (line) =>
+      /^##\s/.test(line) && line.slice(2).trim().toLowerCase() === heading,
+  )
+  if (start < 0) return []
+  const found: string[] = []
+  for (const line of lines.slice(start + 1)) {
+    if (/^#{1,2}\s/.test(line)) break
+    const item = line.replace(/^\s*(?:[-*+]|\d+[.)])\s+/, '').trim()
+    if (item) found.push(item)
+  }
+  return found
+}
+
+// The names under "## Brand names", one per line. Whatever follows the name
+// in brackets or after a dash is a note, not part of the name. The reports
+// count a search that contains one of them as a brand search.
+export function brandNames(text: string): string[] {
+  const names = headingLines(text, 'brand names')
+    .map((line) =>
+      line
+        .split(/\s+[(\u2013\u2014-]\s*|\s*[\u2013\u2014:]\s+/)[0]
+        ?.replace(/[`"“”*]/g, '')
+        .trim(),
+    )
+    .filter((name): name is string => Boolean(name))
+  return [...new Set(names)]
+}
+
 // The paths listed under "## Conversion pages": a path or URL at the start of
 // each line, as a pathname. A path ending in / or * covers every page under
 // it; any other path is one page.
 export type ConversionPath = { path: string; prefix: boolean }
 
 export function conversionPaths(text: string): ConversionPath[] {
-  const lines = text.split('\n')
-  const start = lines.findIndex((line) =>
-    /^##\s+conversion pages\s*$/i.test(line),
-  )
-  if (start < 0) return []
   const paths: ConversionPath[] = []
-  for (const line of lines.slice(start + 1)) {
-    if (/^#{1,2}\s/.test(line)) break
-    const token = line
-      .replace(/^\s*(?:[-*+]|\d+[.)])\s+/, '')
-      .trim()
-      .split(/\s/)[0]
-      ?.replace(/[`<>]/g, '')
+  for (const line of headingLines(text, 'conversion pages')) {
+    const token = line.split(/\s/)[0]?.replace(/[`<>]/g, '')
     if (!token) continue
     let path: string | null = null
     if (token.startsWith('/')) path = token
@@ -141,6 +164,8 @@ export function contextGuide(site: string, call: Caller): string {
       'Name the Google Analytics key events that count, such as sign_up, where the site has them.',
       '## Conversion pages',
       'The pages whose main job is to get a visitor to sign up, start a trial, book a demo or buy, and the pricing page. A docs page counts when it is the sign-up or install step itself. Jobs on these pages come first, so name single pages rather than whole sections. One path or URL per line, such as /pricing or /demo. A path ending in / covers every page under it, such as /features/, but / on its own is the home page. Use a section path only when every page there does that job.',
+      '## Brand names',
+      "The names people type when they look for this business by name, one per line, such as the product name, the company name and the domain. The reports count every search that contains one of them as a brand search and leave it out, so a name that is also an everyday word belongs here only when the searches show people mean this business. Propose them from the queries in the report, and give the evidence for each: the name with words such as login, pricing, app, download or a competitor's name, clicks that land on the home page, or a top position with a high click rate. The person confirms or removes them when they reply to the draft.",
       '## Competitors',
       'One domain per line.',
       '## Markets',

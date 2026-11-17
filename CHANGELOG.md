@@ -1,5 +1,29 @@
 # Changelog
 
+## 0.22.2
+
+### Added
+
+- The business context has a Brand names heading. Your agent proposes the
+  names people type to find the business, with the searches that show it,
+  and you confirm them when you reply to the draft. Every report section
+  then counts searches with those names as brand searches and leaves them
+  out. Without brand names, the reports guess from the domain as before.
+
+### Changed
+
+- The hosted MCP keeps the issues list for every site, not only audited
+  ones, so your agent no longer saves it in your project. A list your agent
+  saved before is taken in once, with its marks and notes.
+- When several improve jobs are on pages that share one template, your agent
+  asks you, changes the template once and marks those jobs fixed together.
+
+### Fixed
+
+- A Bing connection on the hosted MCP stays signed in instead of dropping
+  after two hours, and each Bing account on the account page has a
+  Reconnect button.
+
 ## 0.22.1
 
 ### Fixed

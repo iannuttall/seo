@@ -1,5 +1,20 @@
 # Changelog
 
+## 0.22.3
+
+### Changed
+
+- The weekly summary on the hosted MCP is one email per audited site, each
+  with its own switch under Alerts. The unsubscribe link in a weekly email
+  turns off that site's email only.
+
+### Fixed
+
+- Your agent no longer proposes a brand name that is also what people search
+  for the service itself, which would have left nearly every search out of
+  the reports. It lists the searches each name would catch, keeps the domain
+  in that case, and shows you the clicks each name would hide.
+
 ## 0.22.2
 
 ### Added

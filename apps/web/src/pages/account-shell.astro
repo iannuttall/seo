@@ -8,6 +8,7 @@ import FormInput from '@/components/FormInput.astro'
 import FormTextarea from '@/components/FormTextarea.astro'
 import PageHeader from '@/components/PageHeader.astro'
 import { getButtonClasses } from '@/components/ui/button'
+import Checkbox from '@/components/ui/checkbox.astro'
 import BaseLayout from '@/layouts/BaseLayout.astro'
 
 const primary = getButtonClasses('default')
@@ -774,11 +775,11 @@ const keys: { name: string; label: string; type: 'text' | 'password' }[] = [
           <span class="block text-foreground-muted" data-alert-text></span>
         </span>
         <span class="flex shrink-0 gap-4">
-          <label class="flex items-center gap-1.5 text-foreground">
-            <input type="checkbox" class="size-4 accent-primary" data-alert-email /> Email
+          <label class="flex cursor-pointer items-center gap-2 text-foreground">
+            <Checkbox data-alert-email /> Email
           </label>
-          <label class="flex items-center gap-1.5 text-foreground">
-            <input type="checkbox" class="size-4 accent-primary" data-alert-webhook /> Webhook
+          <label class="flex cursor-pointer items-center gap-2 text-foreground">
+            <Checkbox data-alert-webhook /> Webhook
           </label>
         </span>
         <fieldset class="w-full" data-alert-sites hidden>
@@ -790,8 +791,8 @@ const keys: { name: string; label: string; type: 'text' | 'password' }[] = [
     <template data-alert-site-row>
       <li>
         <input type="hidden" data-alert-site-shown />
-        <label class="flex items-center gap-1.5 text-foreground">
-          <input type="checkbox" class="size-4 accent-primary" data-alert-site /> <span data-alert-site-name></span>
+        <label class="flex cursor-pointer items-center gap-2 text-foreground">
+          <Checkbox data-alert-site /> <span data-alert-site-name></span>
         </label>
       </li>
     </template>

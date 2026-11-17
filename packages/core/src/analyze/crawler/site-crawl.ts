@@ -76,9 +76,15 @@ function normalizeUrl(value: string, base?: string): string | undefined {
   }
 }
 
-function sameOrigin(url: string, origin: string): boolean {
+// The crawl's scope: the start URL's origin, where a leading www. on either
+// host does not count, so a bare domain that redirects to www (or the other
+// way) is crawled as one site.
+function inScope(url: string, origin: string): boolean {
   try {
-    return new URL(url).origin === origin
+    const a = new URL(url)
+    const b = new URL(origin)
+    const host = (value: URL) => value.host.replace(/^www\./, '')
+    return a.protocol === b.protocol && host(a) === host(b)
   } catch {
     return false
   }
@@ -246,7 +252,7 @@ export async function crawlSite(
         queue.decreaseDepth(normalized, depth)
         return
       }
-      if (!sameOrigin(normalized, origin)) {
+      if (!inScope(normalized, origin)) {
         recordSkip('off-origin')
         emitStatus('url_skipped', {
           url: normalized,
@@ -608,7 +614,7 @@ export async function crawlSite(
         })
         continue
       }
-      if (!sameOrigin(finalUrl, origin) && !seedUrls.has(task.url)) {
+      if (!inScope(finalUrl, origin) && !seedUrls.has(task.url)) {
         // A redirect may not widen the crawl scope that links obey. The
         // request evidence stays; the off-origin destination is not a page.
         recordSkip('off-origin')
@@ -745,7 +751,7 @@ export async function crawlSite(
             const normalized = normalizeUrl(value, finalUrl)
             if (
               normalized &&
-              sameOrigin(normalized, origin) &&
+              inScope(normalized, origin) &&
               !isCdnUtilityUrl(normalized) &&
               !isLikelyAsset(normalized) &&
               passesFilters(normalized, config.include, config.exclude) &&

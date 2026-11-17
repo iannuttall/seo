@@ -119,14 +119,21 @@ jobs:
           git tag --annotate "$RELEASE_TAG" --message "Release seo@$RELEASE_VERSION"
           git push origin "$RELEASE_TAG"
       # The MCP Registry checks that the npm package exists, so this runs
-      # after npm publish. seoskill.dev/.well-known/mcp-registry-auth holds
+      # after npm publish and waits until npm lists the new version, which
+      # can take a few minutes. seoskill.dev/.well-known/mcp-registry-auth holds
       # the public half of MCP_REGISTRY_PRIVATE_KEY.
       - name: Publish to the MCP Registry
         if: steps.release.outputs.published == 'false' && (github.event_name == 'push' || inputs.dryRun == 'false')
         env:
           MCP_PUBLISHER_VERSION: 1.8.9
           MCP_REGISTRY_PRIVATE_KEY: ${{ secrets.MCP_REGISTRY_PRIVATE_KEY }}
+          RELEASE_VERSION: ${{ steps.release.outputs.version }}
         run: |
+          for attempt in $(seq 1 40); do
+            npm view "seo@${RELEASE_VERSION}" version >/dev/null 2>&1 && break
+            [ "$attempt" = 40 ] && { echo "npm does not list seo@${RELEASE_VERSION} after 10 minutes." >&2; exit 1; }
+            sleep 15
+          done
           base="https://github.com/modelcontextprotocol/registry/releases/download/v${MCP_PUBLISHER_VERSION}"
           curl --fail --silent --show-error --location --remote-name "${base}/mcp-publisher_linux_amd64.tar.gz"
           curl --fail --silent --show-error --location --remote-name "${base}/registry_${MCP_PUBLISHER_VERSION}_checksums.txt"

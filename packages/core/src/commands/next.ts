@@ -153,14 +153,14 @@ export async function runNext(
   return {
     text: [
       savedNote,
-      `Next for ${site}: ${STEP_TITLES[step]}.`,
+      `The next step for ${site} is to ${STEP_TITLES[step]}.`,
       `The loop:\n${loop.join('\n')}`,
       `## ${heading(step)}\n${stepGuide(step, site, call)}`,
       shown.length
         ? `Jobs ${shown.length} of ${step === 'unblock' ? unblock.length : improve.length}, pages with key events first, then conversion pages:\n${jobsTable(shown)}`
         : null,
       shown.length
-        ? `When a job is done and live: ${call('report', { site, mark: 'fixed', issues: '<id>,<id>' })}. Mark a job that does not fit the business "ignored" with a note. Then ${call('next', { site })}.`
+        ? `When a job is done and live, run ${call('report', { site, mark: 'fixed', issues: '<id>,<id>' })}. Mark a job "ignored" with a note on your own only when it is not a real opportunity, such as a junk search, a URL that redirects or a page kept out of Google on purpose. When the search fits the product, ask the person first. Then ${call('next', { site })}.`
         : null,
       gone.length
         ? `${gone.length} open ${gone.length === 1 ? 'issue was' : 'issues were'} not found by the last check (${gone
@@ -168,7 +168,7 @@ export async function runNext(
             .map((issue) => issue.id)
             .join(
               ', ',
-            )}${gone.length > 10 ? ' and more' : ''}): if the person fixed them, mark them fixed so their results are measured.`
+            )}${gone.length > 10 ? ' and more' : ''}). If the person fixed them, mark them fixed so their results are measured.`
         : null,
       pages.length
         ? null
@@ -230,11 +230,11 @@ function contextStep(
   call: Caller,
 ): CommandResult {
   const why = context
-    ? `The business context was saved ${context.updated_at.slice(0, 10)}, more than ${CONTEXT_DAYS} days ago, so check it again: read it below, look for what changed on the site, its prices and its competitors, and save it again with the changes.`
+    ? `The business context was saved ${context.updated_at.slice(0, 10)}, more than ${CONTEXT_DAYS} days ago, so check it again. Read it below, look for what changed on the site, its prices and its competitors, and save it again with the changes.`
     : `There is no business context for ${site} yet.`
   return {
     text: [
-      `Next for ${site}: ${STEP_TITLES.context}.`,
+      `The next step for ${site} is to ${STEP_TITLES.context}.`,
       why,
       `## ${heading('context')}\n${contextGuide(site, call)}`,
       context
@@ -259,11 +259,11 @@ function contextStep(
 function stepGuide(step: NextStep, site: string, call: Caller): string {
   switch (step) {
     case 'unblock':
-      return `These stop Google from crawling, reading or indexing pages. For each job, find the cause in the site's code or CMS, make the smallest change that fixes it, and open a pull request for the person to review (or push where they have said that is fine). Ask the person before you delete, redirect or noindex a page. Once the change is live, check the page with ${call('page', { url: '<url>' })}.`
+      return `These stop Google from crawling, reading or indexing pages. For each job, find the cause in the site's code or CMS, make the smallest change that fixes it, and open a pull request for the person to review (or push where they have said that is fine). Ask the person before you delete, redirect or noindex a page. Once the change is live, check the page with ${call('page', { url: '<url>' })}. When the live page is already fine and only Google's last reading is out of date, mark the job fixed with a note that says so; the next check shows whether Google agrees.`
     case 'improve':
-      return `These pages already rank for a search but get fewer clicks than they could. For each job, first judge from the business context whether the search fits what the business sells and how close the searcher is to buying; mark a search that does not fit "ignored" with a note. For the rest, rewrite the title and description for that searcher and make the page answer what they came for, with what only this business knows. Open a pull request for each page, and check the new copy with ${call('lint', {})}.`
+      return `These pages already rank for a search but get fewer clicks than they could. For each job, first judge from the business context whether the search fits what the business sells and how close the searcher is to buying. List the real searches that do not fit for the person, with why, and mark them "ignored" once they agree. For the rest, rewrite the title and description for that searcher and make the page answer what they came for, with what only this business knows. Open a pull request for each page, and check the new copy with ${call('lint', {})}.`
     case 'new-pages':
-      return `Nothing open is blocking or holding back the pages that rank, so look for buying searches the site has no page for. Run ${call('research', { action: 'ranked_keywords', target: '<competitor>' })} for the competitors in the business context, and keep searches that fit the product and show someone comparing options or ready to buy: comparisons, alternatives, use cases, industries and integrations. Check each with ${call('research', { action: 'serp', keywords: '<keyword>' })} and ${call('report', { site, section: 'striking-distance' })} so you do not duplicate a page the site already has. Show the person at most 3, each with the search, its volume and the page you would build, and build only the ones they approve, as landing pages rather than blog posts. Run ${call('next', { site })} again in a week.`
+      return `Nothing open is blocking or holding back the pages that rank, so look for buying searches the site has no page for. Run ${call('research', { action: 'ranked_keywords', target: '<competitor>' })} for the competitors in the business context, and keep searches that fit the product and show someone comparing options or ready to buy, such as comparisons, alternatives, use cases, industries and integrations. Check each with ${call('research', { action: 'serp', keywords: '<keyword>' })} and ${call('report', { site, section: 'striking-distance' })} so you do not duplicate a page the site already has. Show the person at most 3, each with the search, its volume and the page you would build, and build only the ones they approve, as landing pages rather than blog posts. Run ${call('next', { site })} again in a week.`
     default:
       return contextGuide(site, call)
   }

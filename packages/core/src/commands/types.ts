@@ -76,7 +76,7 @@ export type CommandId = keyof typeof COMMANDS
 // `seo_page with url "<url>"` in an MCP client.
 export type Caller = (
   command: CommandId,
-  args?: Record<string, string | number | undefined>,
+  args?: Record<string, string | number | boolean | undefined>,
 ) => string
 
 export type DateRange = { startDate: string; endDate: string }

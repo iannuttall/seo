@@ -25,7 +25,7 @@ link for them to approve, then run it again.
 | `seo compare --site <site> --date <date>` | `seo_compare` | Before and after a date, with Google updates |
 | `seo index --site <site>` | `seo_index` | Google's indexing reasons, labelled, and pages that lost their clicks |
 | `seo submit <url...>`, `--indexmysite` | `seo_submit` | Ask Bing and others to crawl pages (IndexNow, free, after `seo submit key <site>`), or send them to Google with Index My Site (the person's credits; quote first, send with `--yes` or `confirm: true` only after they agree) |
-| `seo research <action>` | `seo_research` | Keywords, keyword ideas, SERP (organic position, mobile) and SERP overlap, whether Google indexed any URL (`index_check`), top pages, competitors, backlinks, pages by backlinks, link gaps, AI answer citations, for a site, subfolder (`example.com/blog/`) or page; provider optional; next pages are free for a day |
+| `seo research <action>` | `seo_research` | Keywords, keyword ideas, SERP (organic position, mobile) and SERP overlap, whether Google indexed any URL (`index_check`), top pages, competitors, backlinks, pages by backlinks, link gaps, AI answer citations, link and listicle targets (`--pages`, or `ai_answers` with competitors), for a site, subfolder (`example.com/blog/`) or page; provider optional; next pages are free for a day |
 | `seo data --site <site>` | `seo_data` | Raw Search Console, Bing, Clicky, Simple Analytics or Google Analytics rows |
 | `seo crawl --url <url>` | `seo_crawl` | Technical issues across a site |
 | `seo internal-links --site <site>` or `--url <url>` | `seo_internal_links` | Links to add across a site, or to one page |
@@ -43,7 +43,7 @@ When the person asks you to use `seo` or improve a site's SEO without a
 narrower question, run `seo next`. It keeps the site's business context
 (what it sells, who buys, conversion pages) and its issues list, and returns one
 step: research the business context, unblock pages, improve pages that rank,
-or plan new pages. Do the step's jobs, ask the person before anything goes
+or plan new pages and earn links. Do the step's jobs, ask the person before anything goes
 live, mark each job, then run `seo next` again.
 
 ## Issues kept between sessions

@@ -28,6 +28,7 @@ import {
   type LintMetaKind,
   type LintPreset,
   MAX_INSPECT_LIMIT,
+  PAGES_HELP,
   REPORT_SECTIONS,
   RESEARCH_ACTIONS,
   RESEARCH_DEVICES,
@@ -100,7 +101,7 @@ const quote = (value: string | number) =>
 
 // seo submit's own shape: URLs as arguments, key, status and approve as
 // subcommands, and Index My Site's connect under providers.
-function submitCall(args: Record<string, string | number | undefined>) {
+function submitCall(args: Parameters<Caller>[1] & object) {
   const flags = [
     args.fast === 'true' ? '--fast' : null,
     args.bing === 'true' ? '--bing' : null,
@@ -137,10 +138,10 @@ export const cliCall: Caller = (command, args) =>
           : []),
         ...Object.entries(args ?? {})
           .filter(([key]) => !(command === 'research' && key === 'action'))
-          .filter(([, value]) => value !== undefined)
-          .map(
-            ([key, value]) =>
-              `${FLAGS[key] ?? `--${key}`} ${quote(value ?? '')}`,
+          .filter(([, value]) => value !== undefined && value !== false)
+          .map(([key, value]) => [FLAGS[key] ?? `--${key}`, value])
+          .map(([flag, value]) =>
+            value === true ? flag : `${flag} ${quote(String(value ?? ''))}`,
           ),
       ].join(' ')
 
@@ -719,8 +720,9 @@ export const researchCommand = defineCommand({
     competitors: {
       type: 'string',
       description:
-        'link_gap only: 2 to 5 comma-separated competitor domains. Default: the business context.',
+        'link_gap: 2 to 5 comma-separated competitor domains. Default: the business context. ai_answers: up to 3.',
     },
+    pages: { type: 'boolean', default: false, description: PAGES_HELP },
     country: {
       type: 'string',
       description: 'Two-letter country code. Default us.',
@@ -775,7 +777,7 @@ export const researchCommand = defineCommand({
     const competitors = csvArg(args.competitors) ?? []
     const country = stringArg(args.country)
     // A site's own tracked searches or AI questions, kept as progress.
-    const own = !keywords.length && !args.tasks && target
+    const own = !keywords.length && !args.tasks && !competitors.length && target
     const tracked = own && (await property(args, target).catch(() => null))
     const plain = nodeCommandDeps({ call: cliCall })
     if (tracked && (await tracksProgress(action, tracked, plain))) {
@@ -796,7 +798,7 @@ export const researchCommand = defineCommand({
           })) as CommandResult,
       )
     }
-    if (action === 'ai_answers') {
+    if (action === 'ai_answers' && !competitors.length) {
       if (provider && provider !== 'dataforseo') {
         throw new SeoError('INVALID_INPUT', 'ai_answers uses dataforseo.')
       }
@@ -854,6 +856,7 @@ export const researchCommand = defineCommand({
           target: site,
           competitors,
           brand: csvArg(args.brand),
+          pages: booleanArg(args.pages),
           country,
           detail: detailArg(args),
           offset: numberArg(args.offset),
@@ -877,6 +880,7 @@ export const researchCommand = defineCommand({
               keywords: keywords.join(',') || undefined,
               target,
               competitors: competitors.join(',') || undefined,
+              pages: booleanArg(args.pages),
               country,
               detail: 'rows',
               offset,

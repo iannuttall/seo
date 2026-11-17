@@ -44,6 +44,7 @@ import {
   SERP_DEPTH,
 } from './research.js'
 import type { ResearchStore } from './research-cache.js'
+import { LINK_INPUTS } from './research-link-targets.js'
 import { DIMENSIONS, rowsInput, rowTextFilters, runRows } from './rows.js'
 import {
   runSimpleAnalyticsRows,
@@ -651,11 +652,7 @@ export const SHARED_TOOLS: SharedTool[] = [
         .describe(
           'Optional: domain, prefix or exact, to read the target another way than its shape says.',
         ),
-      competitors: z
-        .array(z.string().min(1))
-        .max(5)
-        .default([])
-        .describe('link_gap only: 2 to 5 competitor domains.'),
+      ...LINK_INPUTS,
       tasks: z
         .array(z.string().regex(AI_ANSWER_TASK_PATTERN))
         .max(30)
@@ -704,7 +701,7 @@ export const SHARED_TOOLS: SharedTool[] = [
         `seo_research with the same input, detail "rows", offset ${offset}`
       const tracked = await researchProgress(input, surface)
       if (tracked) return tracked
-      if (input.action === 'ai_answers') {
+      if (input.action === 'ai_answers' && !input.competitors.length) {
         if (input.provider && input.provider !== 'dataforseo') {
           throw new CommandError('INVALID_INPUT', 'ai_answers uses dataforseo.')
         }
@@ -1040,7 +1037,7 @@ export const mcpCall: Caller = (command, args) => {
     ([, value]) => value !== undefined,
   )
   return shown.length
-    ? `${name} with ${shown.map(([key, value]) => `${key} ${typeof value === 'number' ? value : `"${value}"`}`).join(', ')}`
+    ? `${name} with ${shown.map(([key, value]) => `${key} ${typeof value === 'string' ? `"${value}"` : value}`).join(', ')}`
     : name
 }
 
@@ -1057,7 +1054,7 @@ export const SKILL_RESOURCE = {
 } as const
 
 // seo_submit with its list and true/false inputs written as such.
-function submitMcpCall(args: Record<string, string | number | undefined>) {
+function submitMcpCall(args: Parameters<Caller>[1] & object) {
   const parts = Object.entries(args)
     .filter(([, value]) => value !== undefined)
     .map(([key, value]) =>

@@ -401,12 +401,15 @@ export async function researchProgress(
     target: string
     keywords: string[]
     tasks?: string[]
+    // ai_answers with competitors reads cited pages instead.
+    competitors?: string[]
     country: string
     device?: ResearchDevice
   },
   surface: Pick<ToolSurface, 'deps' | 'resolveSite' | 'keys'>,
 ): Promise<CommandResult | null> {
-  if (!input.target || input.keywords.length || input.tasks?.length) {
+  const asked = [input.keywords, input.tasks, input.competitors]
+  if (!input.target || asked.some((list) => list?.length)) {
     return null
   }
   const site = await surface.resolveSite(input.target).catch(() => null)

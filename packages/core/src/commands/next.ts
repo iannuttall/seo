@@ -24,7 +24,8 @@ import {
 } from './issues.js'
 import { recordWeek } from './progress.js'
 import { runReport } from './report.js'
-import { dateWindow } from './shared.js'
+import { OUTREACH_GUIDE } from './research-link-targets.js'
+import { dateWindow, originOf } from './shared.js'
 import {
   type Caller,
   type CommandDeps,
@@ -51,7 +52,7 @@ export const NEXT_STEPS = [
 export type NextStep = (typeof NEXT_STEPS)[number]
 
 export const NEXT_TEXT =
-  'Where the site is in the SEO loop and the one step that is due, with its instructions, its first jobs (pages with Google Analytics key events from Organic Search first, then the conversion pages in the business context) and the call that marks each done. The steps: write the business context (when there is none, or it is more than 90 days old), unblock pages (crawl and Google index problems), improve the pages that rank (quick wins, low click-through rates, striking distance), then find new pages for buying searches. It runs the issues checks when the list is more than a day old.'
+  'Where the site is in the SEO loop and the one step that is due, with its instructions, its first jobs (pages with Google Analytics key events from Organic Search first, then the conversion pages in the business context) and the call that marks each done. The steps: write the business context (when there is none, or it is more than 90 days old), unblock pages (crawl and Google index problems), improve the pages that rank (quick wins, low click-through rates, striking distance), then find new pages for buying searches and earn links. It runs the issues checks when the list is more than a day old.'
 
 // Jobs shown for the due step.
 const JOBS_SHOWN = 5
@@ -149,6 +150,7 @@ export async function runNext(
     `- Unblock pages: ${unblock.length} open${due('unblock')}.`,
     `- Improve the pages that rank: ${improve.length} open${due('improve')}.`,
     `- New pages: ${step === 'new-pages' ? 'due now' : 'after the steps above'}.`,
+    `- Earn links: ${step === 'new-pages' ? 'due now, beside new pages' : 'after the steps above, unless the person asks for links now'}.`,
     `- Results: ${measured.length} fixed ${measured.length === 1 ? 'issue' : 'issues'} measured, ${fixed.length - measured.length} waiting for 28 days of Search Console data${measured.length ? `; ${call('report', { site, section: ISSUES_SECTION })} shows them` : ''}.`,
   ]
 
@@ -159,6 +161,7 @@ export async function runNext(
       `The next step for ${site} is to ${STEP_TITLES[step]}.`,
       `The loop:\n${loop.join('\n')}`,
       `## ${heading(step)}\n${stepGuide(step, site, call)}`,
+      step === 'new-pages' ? `## Earn links\n${linksGuide(site, call)}` : null,
       shown.length
         ? `Jobs ${shown.length} of ${step === 'unblock' ? unblock.length : improve.length}, pages with key events first, then conversion pages:\n${jobsTable(shown)}`
         : null,
@@ -270,6 +273,13 @@ function stepGuide(step: NextStep, site: string, call: Caller): string {
     default:
       return contextGuide(site, call)
   }
+}
+
+// Link and listicle targets beside the competitors in the business
+// context, and how to pitch them.
+function linksGuide(site: string, call: Caller): string {
+  const target = new URL(originOf(site)).hostname.replace(/^www\./, '')
+  return `Find the pages that already send links and AI answers to the competitors in the business context. Tell the person the cost first, about $0.40 a competitor. Run ${call('research', { action: 'ai_answers', target, competitors: '<up to 3 competitors>' })} for the pages AI answers cite beside them, ${call('research', { action: 'link_gap', target, competitors: '<2 to 5 competitors>', pages: true })} for pages that link to two or more of them, and ${call('research', { action: 'mentions', target })} for pages that name the site without a link. ${OUTREACH_GUIDE}`
 }
 
 // Open issues as jobs: pages with key events first, most first, then

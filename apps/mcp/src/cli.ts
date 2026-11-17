@@ -1,7 +1,15 @@
-import { CLICKY_ACCOUNT_KEY } from '@seo/core/commands'
+import {
+  CLICKY_ACCOUNT_KEY,
+  CommandError,
+  contextText,
+  parseSaved,
+  SAVED_MAX,
+} from '@seo/core/commands'
+import { siteIssues } from './audit/schedule.ts'
 import { weekData } from './audit/week.ts'
 import { betaFlags } from './beta.ts'
 import { refreshClicky } from './clicky.ts'
+import { siteContext } from './context.ts'
 import { freshAccess } from './google.ts'
 import { indexMySiteAccess, indexNowKeysOf } from './indexmysite.ts'
 import { seal, unseal } from './seal.ts'
@@ -26,6 +34,10 @@ import {
 // 2. The person opens /account?link=<code> and approves it (account.ts).
 // 3. POST /account/cli/token swaps the device value for the CLI's token once.
 // 4. GET /account/cli/credentials returns current tokens and keys.
+//
+// A linked CLI also keeps each site's issues list and business context with
+// the account, through /account/cli/issues and /account/cli/context, so it
+// and the hosted MCP work from the same ones.
 
 const json = (body: unknown, status = 200) =>
   Response.json(body, { status, headers: { 'cache-control': 'no-store' } })
@@ -199,6 +211,77 @@ export async function cliWeek(request: Request, env: Env): Promise<Response> {
     )
   }
   return json(await weekData(env, link.userId))
+}
+
+// The most a store request body can hold: the longest saved issues list,
+// with room for the property.
+const STORE_BODY_MAX = SAVED_MAX + 1_000
+
+// GET ?property= reads the site's issues list or business context; PUT with
+// {property, issues} or {property, context} replaces it. Both are kept per
+// account and property, like the hosted MCP's, and checked as strictly.
+export async function cliStore(
+  request: Request,
+  env: Env,
+  kind: 'issues' | 'context',
+): Promise<Response> {
+  const link = await linkOf(request, env)
+  if (!link) return unlinked()
+  const validProperty = (value: unknown): value is string =>
+    typeof value === 'string' && value.length > 0 && value.length <= 300
+  if (request.method === 'GET') {
+    const property = new URL(request.url).searchParams.get('property')
+    if (!validProperty(property)) {
+      return error('invalid_input', 'property is missing or too long.')
+    }
+    return kind === 'issues'
+      ? json({ issues: await siteIssues(env, link.userId).read(property) })
+      : json({ context: await siteContext(env, link.userId).read(property) })
+  }
+  const text = await request.text()
+  if (text.length > STORE_BODY_MAX) {
+    return error('invalid_input', 'The body is too long. Nothing was saved.')
+  }
+  let body: { property?: unknown; issues?: unknown; context?: unknown }
+  try {
+    body = JSON.parse(text) ?? {}
+  } catch {
+    return error('invalid_input', 'The body is not JSON. Nothing was saved.')
+  }
+  const { property } = body
+  if (!validProperty(property)) {
+    return error('invalid_input', 'property is missing or too long.')
+  }
+  try {
+    if (kind === 'issues') {
+      const issues = parseSaved(
+        JSON.stringify({ version: 1, sites: { [property]: body.issues } }),
+        property,
+      )
+      await siteIssues(env, link.userId).write(property, issues)
+    } else {
+      const context = (body.context ?? {}) as {
+        text?: unknown
+        updated_at?: unknown
+      }
+      const updatedAt =
+        typeof context.updated_at === 'string' &&
+        Number.isFinite(Date.parse(context.updated_at))
+          ? new Date(context.updated_at).toISOString()
+          : new Date().toISOString()
+      await siteContext(env, link.userId).write(property, {
+        text: contextText(String(context.text ?? '')),
+        updated_at: updatedAt,
+      })
+    }
+  } catch (failure) {
+    if (failure instanceof CommandError) {
+      return error('invalid_input', failure.message)
+    }
+    throw failure
+  }
+  await touchCliLink(env, link.id)
+  return json({ ok: true })
 }
 
 export async function logout(request: Request, env: Env): Promise<Response> {

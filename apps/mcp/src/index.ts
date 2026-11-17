@@ -11,7 +11,14 @@ import { startDue } from './audit/schedule.ts'
 import { sendFirstSummaries, sendWeeklySummaries } from './audit/week.ts'
 import { betaFlags } from './beta.ts'
 import { stripeWebhook } from './billing.ts'
-import { cliWeek, credentials, finishLogin, logout, startLogin } from './cli.ts'
+import {
+  cliStore,
+  cliWeek,
+  credentials,
+  finishLogin,
+  logout,
+  startLogin,
+} from './cli.ts'
 import { checkCosts, sendCostReport } from './cost-report.ts'
 import { failureReport } from './failure-report.ts'
 import { directory } from './google.ts'
@@ -116,6 +123,17 @@ async function route(
   }
   if (pathname === '/account/cli/week' && method === 'GET') {
     return cliWeek(request, env)
+  }
+  if (
+    (pathname === '/account/cli/issues' ||
+      pathname === '/account/cli/context') &&
+    (method === 'GET' || method === 'PUT')
+  ) {
+    return cliStore(
+      request,
+      env,
+      pathname === '/account/cli/issues' ? 'issues' : 'context',
+    )
   }
   if (pathname === '/account/cli/logout' && method === 'POST') {
     return logout(request, env)

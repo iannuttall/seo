@@ -23,6 +23,7 @@ import { runMentions } from './research-mentions.js'
 import {
   type AiOverview,
   dataForSeoLanguage,
+  GAP_COMPETITORS,
   type PeopleAlsoAsk,
   type ResearchAction,
   type ResearchDevice,
@@ -75,7 +76,7 @@ export const RESEARCH_PROVIDERS = [
   'ahrefs',
 ] as const satisfies readonly ResearchProvider[]
 
-export const RESEARCH_HELP = `provider is optional: without it the call uses the saved key, DataForSEO when both are saved. In the CLI and the local MCP server, serp can also use a provider package installed on this machine that supplies live search results: pass its id as provider. The target is a domain (the whole site), a path ending in / such as example.com/blog/ (every URL under it), or one page; scope overrides that. keyword_metrics (keywords: volume, difficulty, CPC; or target a Search Console site with no keywords: its top queries by impressions that the provider rates at zero or does not know, zero-volume keywords, in one call of up to 700 queries, about $0.10 on DataForSEO or 100 on Ahrefs), keyword_ideas (up to 5 seed keywords: searches that contain each seed, by volume), ranked_keywords (target: keywords a site, subfolder or page ranks for, with the provider's traffic total for the whole target), top_pages (target: the pages with the most estimated organic traffic), serp (keywords, up to 5: the ranking pages with their organic position beside DataForSEO's rank_absolute, which also counts AI Overviews and other blocks, plus the AI Overview's sources and the People Also Ask questions; device desktop or mobile, DataForSEO only; each with its domain's authority: DataForSEO domain_rank 0 to 100, Ahrefs domain_rating; depth sets results per keyword, default ${SERP_DEPTH}; rows run position by position across the keywords), index_check (DataForSEO only; target: one page URL; keywords: up to ${INDEX_CHECK_PHRASES} exact phrases from the page, default its H1 or title. Searches Google for site:<url> and each "<phrase>" on desktop and mobile, retries failed searches, treats Google's fallback to unrelated sites as no match, and says indexed, not found or unknown with each search's evidence; about $0.01 a page), serp_overlap (2 to 10 keywords: for each pair, how many of their top 10 pages and sites are the same, to decide one page or several; results behind a Google redirect link are compared by their breadcrumb's site and path, and counted, not compared, when it is shortened), mentions (DataForSEO only; target: a domain; brand: up to 3 brand names. Pages on other sites that name the domain or brand, one per site, from DataForSEO's content index, and whether each site already links to the target in DataForSEO's backlink index; sites with no link come first, to ask for the link. About $0.03 a term plus one backlinks call, under $0.10 a run), competitors (target: domains that share keywords), backlinks (target: referring domains), pages_by_backlinks (target: the pages with the most referring domains), link_gap (target and 2 to 5 competitors: referring domains that link to two or more competitors and not the target, highest authority first, from each site's top 1,000 referring domains; costs one backlinks call per site), ai_answers (DataForSEO only; target: the site. Without keywords it takes the site’s top ${AI_ANSWER_QUESTIONS} chat-style and long questions from Search Console’s AI-shaped queries itself. With up to ${AI_ANSWER_QUESTIONS} questions in keywords it asks those instead, and the target can be any domain, such as a competitor's. Each answer row also lists the other sites it cites, and the notes rank them. Answers come from DataForSEO's queue: answers not ready after about 40 seconds are returned as tasks, already paid for; call again with the same target and those tasks to read them at no cost. It asks ChatGPT search, Google AI Mode and Google AI Overviews each one and says whether the answer cites or mentions the site. Each ChatGPT row lists the web searches ChatGPT ran (fan-out), and the notes rank the most common; to see them for any questions, pass the questions in keywords with any target. Web search is not forced: forcing costs the same but makes ChatGPT search questions it answers from memory, so "none returned" means it answered without searching. AI Mode and AI Overviews do not report their searches. DataForSEO’s queue prices are about $0.0072 a question across the three engines, so about $0.07 a run: tell the person before running it). Rows with a domain, and the target, get a free Ahrefs domain_rating column. Numbers are provider estimates, not Search Console data.`
+export const RESEARCH_HELP = `provider is optional: without it the call uses the saved key, DataForSEO when both are saved. In the CLI and the local MCP server, serp can also use a provider package installed on this machine that supplies live search results: pass its id as provider. The target is a domain (the whole site), a path ending in / such as example.com/blog/ (every URL under it), or one page; scope overrides that. keyword_metrics (keywords: volume, difficulty, CPC; or target a Search Console site with no keywords: its top queries by impressions that the provider rates at zero or does not know, zero-volume keywords, in one call of up to 700 queries, about $0.10 on DataForSEO or 100 on Ahrefs), keyword_ideas (up to 5 seed keywords: searches that contain each seed, by volume), ranked_keywords (target: keywords a site, subfolder or page ranks for, with the provider's traffic total for the whole target), top_pages (target: the pages with the most estimated organic traffic), serp (keywords, up to 5: the ranking pages with their organic position beside DataForSEO's rank_absolute, which also counts AI Overviews and other blocks, plus the AI Overview's sources and the People Also Ask questions; device desktop or mobile, DataForSEO only; each with its domain's authority: DataForSEO domain_rank 0 to 100, Ahrefs domain_rating; depth sets results per keyword, default ${SERP_DEPTH}; rows run position by position across the keywords), index_check (DataForSEO only; target: one page URL; keywords: up to ${INDEX_CHECK_PHRASES} exact phrases from the page, default its H1 or title. Searches Google for site:<url> and each "<phrase>" on desktop and mobile, retries failed searches, treats Google's fallback to unrelated sites as no match, and says indexed, not found or unknown with each search's evidence; about $0.01 a page), serp_overlap (2 to 10 keywords: for each pair, how many of their top 10 pages and sites are the same, to decide one page or several; results behind a Google redirect link are compared by their breadcrumb's site and path, and counted, not compared, when it is shortened), mentions (DataForSEO only; target: a domain; brand: up to 3 brand names. Pages on other sites that name the domain or brand, one per site, from DataForSEO's content index, and whether each site already links to the target in DataForSEO's backlink index; sites with no link come first, to ask for the link. About $0.03 a term plus one backlinks call, under $0.10 a run), competitors (target: domains that share keywords; when the target is one of the person's sites, the competitors in its business context come first, with in_context true), backlinks (target: referring domains), pages_by_backlinks (target: the pages with the most referring domains), link_gap (target and 2 to 5 competitors, or none to use the first 5 in the target's business context: referring domains that link to two or more competitors and not the target, highest authority first, from each site's top 1,000 referring domains; costs one backlinks call per site), ai_answers (DataForSEO only; target: the site. Without keywords it takes the site’s top ${AI_ANSWER_QUESTIONS} chat-style and long questions from Search Console’s AI-shaped queries itself. With up to ${AI_ANSWER_QUESTIONS} questions in keywords it asks those instead, and the target can be any domain, such as a competitor's. Each answer row also lists the other sites it cites, and the notes rank them. Answers come from DataForSEO's queue: answers not ready after about 40 seconds are returned as tasks, already paid for; call again with the same target and those tasks to read them at no cost. It asks ChatGPT search, Google AI Mode and Google AI Overviews each one and says whether the answer cites or mentions the site. Each ChatGPT row lists the web searches ChatGPT ran (fan-out), and the notes rank the most common; to see them for any questions, pass the questions in keywords with any target. Web search is not forced: forcing costs the same but makes ChatGPT search questions it answers from memory, so "none returned" means it answered without searching. AI Mode and AI Overviews do not report their searches. DataForSEO’s queue prices are about $0.0072 a question across the three engines, so about $0.07 a run: tell the person before running it). Rows with a domain, and the target, get a free Ahrefs domain_rating column. Numbers are provider estimates, not Search Console data.`
 
 // Platforms that share keywords with almost every site. Competitor lists
 // leave them out, with the target itself, and say how many rows went.
@@ -128,6 +129,28 @@ function realCompetitors(
       return !isSelf(domain) && !isPlatform(domain)
     }),
     note: `Left out ${gone} ${gone === 1 ? 'row' : 'rows'}: ${reasons.join(' and ')}. The fixed platform list is ${GENERIC_PLATFORMS.join(', ')}.`,
+  }
+}
+
+// competitors rows with the business context's competitors first, marked
+// in_context, and a note on the rest: they share keywords with the target,
+// which for a name that is also an everyday word can mean only that word.
+function contextFirst(
+  rows: Row[],
+  saved: string[],
+): { rows: Row[]; note: string } {
+  const domainOf = (row: Row) =>
+    bareDomain(String(row.domain ?? row.competitor_domain ?? ''))
+  const listed = (row: Row) =>
+    saved.some((domain) => within(domainOf(row), domain))
+  const marked = rows.map((row) => ({ ...row, in_context: listed(row) }))
+  const found = marked.filter((row) => row.in_context)
+  const missing = saved.filter(
+    (domain) => !found.some((row) => within(domainOf(row), domain)),
+  )
+  return {
+    rows: [...found, ...marked.filter((row) => !row.in_context)],
+    note: `The business context lists ${saved.length} competitors. ${found.length} of them are in these rows, first, with in_context true.${missing.length ? ` Not returned by the provider: ${missing.join(', ')}.` : ''} The other rows share keywords with the target but may not compete with it: when the name is also an everyday word, they can share only that word. Check them against the business context before you treat them as competitors.`,
   }
 }
 
@@ -206,6 +229,9 @@ export async function runResearch(
     installedSerp?: InstalledSerp
     // keyword_metrics with a site and no keywords reads the site's queries.
     searchAnalytics?: SearchAnalyticsQuery
+    // The competitors in the target's business context, for competitors
+    // and link_gap.
+    saved?: string[]
   },
 ): Promise<CommandResult> {
   const country = input.country ?? 'us'
@@ -281,12 +307,19 @@ export async function runResearch(
   ].includes(input.action)
   const scope = scoped && target ? researchScope(target, input.scope) : null
   const limit = Math.min(1000, Math.max(100, offset + PAGE_SIZE))
+  const saved = options.saved ?? []
+  // link_gap without competitors compares the ones in the business context.
+  const fromContext =
+    input.action === 'link_gap' && !input.competitors?.length && saved.length
+  const competitors = fromContext
+    ? saved.slice(0, GAP_COMPETITORS)
+    : (input.competitors ?? [])
   const request = {
     action: input.action,
     keywords: input.keywords ?? [],
     target,
     ...(scope ? { scope } : {}),
-    competitors: input.competitors ?? [],
+    competitors,
     country,
     ...(input.action === 'serp' ? { depth: input.depth ?? SERP_DEPTH } : {}),
     // Desktop keeps the earlier cache key, so saved desktop results still
@@ -302,9 +335,9 @@ export async function runResearch(
   // an installed provider's results are kept by provider and request.
   const credential = builtIn ? keys.get(KEY_HEADER[builtIn]) : null
   const key = await researchKey([provider, credential, request])
-  const saved = await readResearch(store, key, limit)
+  const kept = await readResearch(store, key, limit)
   const result =
-    saved?.result ??
+    kept?.result ??
     (builtIn
       ? await research(builtIn, keys, { ...request, limit })
       : await installedSerpResearch(
@@ -312,7 +345,7 @@ export async function runResearch(
           { ...request, limit },
           options.installedSerp,
         ))
-  if (!saved) {
+  if (!kept) {
     await saveResearch(store, key, {
       limit,
       savedAt: new Date().toISOString(),
@@ -336,7 +369,7 @@ export async function runResearch(
     warnings,
   } = result
   // A saved result costs nothing now; its first cost is in the note.
-  const costUsd = saved ? 0 : paid
+  const costUsd = kept ? 0 : paid
   // Several SERPs read best side by side: every keyword's first result,
   // then every second result, so each page shows all the keywords.
   const order = new Map(request.keywords.map((word, index) => [word, index]))
@@ -350,10 +383,16 @@ export async function runResearch(
               (order.get(String(b.keyword)) ?? 0),
         )
       : fetched
-  const { rows, note } =
+  const real =
     input.action === 'competitors'
       ? realCompetitors(found, target)
       : { rows: found, note: null }
+  const { note } = real
+  const known =
+    input.action === 'competitors' && saved.length
+      ? contextFirst(real.rows, saved)
+      : null
+  const rows = known?.rows ?? real.rows
   const unresolved = rows.filter(
     (row) => row.url === null && row.url_hint !== undefined,
   ).length
@@ -390,6 +429,12 @@ export async function runResearch(
       detail,
       notes: [
         `${provider} estimates, in the provider’s own units.`,
+        ...(known ? [known.note] : []),
+        ...(fromContext
+          ? [
+              `Competitors from the business context: ${competitors.join(', ')}.`,
+            ]
+          : []),
         ...(compared
           ? [
               `Compared: ${compared.withPage} of ${compared.results} top results by page, so shared_pages counts only those${compared.fromBreadcrumb ? `; ${compared.fromBreadcrumb} of them came back as Google redirect links and were matched by Google's breadcrumb (site and path), which names the page but can't tell apart two pages with the same breadcrumb` : ''}. ${compared.results - compared.withPage} had no page to compare (a shortened or site-only breadcrumb). ${compared.withSite} had a known site for shared_sites. Unique pages and sites are counted per keyword. Each keyword is one live snapshot, and live results can change a lot from one pull to the next, so a low overlap is weak evidence on its own; where the site already ranks, Search Console queries that land on the same page are a steadier sign of one topic.${compared.withPage < compared.results / 2 && provider === 'dataforseo' ? ' With this few pages, shared_pages cannot settle one page or several; provider ahrefs returns real pages.' : ''}`,
@@ -444,9 +489,9 @@ export async function runResearch(
               'The result is kept for a day, so the next pages, and the same rows in full, cost nothing more.',
             ]
           : []),
-        ...(saved
+        ...(kept
           ? [
-              `Read from the result saved at ${saved.savedAt}, at no new cost${paid ? ` (it cost $${paid} then)` : ''}. Results are kept for a day.`,
+              `Read from the result saved at ${kept.savedAt}, at no new cost${paid ? ` (it cost $${paid} then)` : ''}. Results are kept for a day.`,
             ]
           : costUsd !== null
             ? [
@@ -518,14 +563,14 @@ export async function runResearch(
       attribution: rated.added || hasTargetDr ? DR_ATTRIBUTION : null,
       leftOut: note,
       costUsd,
-      savedAt: saved?.savedAt ?? null,
+      savedAt: kept?.savedAt ?? null,
       partial,
       missedKeywords: missed,
       noDataKeywords: noData,
       ...(warnings?.length ? { warnings } : {}),
       ...(input.action === 'link_gap'
         ? {
-            competitors: input.competitors ?? [],
+            competitors,
             cutAt: floor ?? null,
             leftOut: leftOut ?? [],
           }

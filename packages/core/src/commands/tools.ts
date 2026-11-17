@@ -20,7 +20,7 @@ import {
 } from './audit-checks.js'
 import { runBingRows } from './bing.js'
 import { clickyLabel, clickySites, runClickyRows } from './clicky.js'
-import { CONTEXT_MAX } from './context.js'
+import { CONTEXT_MAX, savedCompetitors } from './context.js'
 import { INSPECT_LIMIT, MAX_INSPECT_LIMIT } from './indexing.js'
 import { ISSUE_MARKS, NOTE_MAX, SAVED_MAX } from './issues.js'
 import { type LintSource, runLint } from './lint.js'
@@ -743,6 +743,7 @@ export const SHARED_TOOLS: SharedTool[] = [
             ? surface.deps.searchAnalytics
             : undefined,
           drKey: surface.drKey,
+          saved: await savedCompetitors(input, surface),
           store: surface.researchStore,
           installedSerp: surface.installedSerp,
           call: more,

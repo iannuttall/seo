@@ -1009,7 +1009,7 @@ async function serpOverlap(
 // How many referring domains link_gap reads per site, highest authority
 // first, and how many competitors it compares.
 const GAP_DOMAINS = 1000
-const GAP_COMPETITORS = 5
+export const GAP_COMPETITORS = 5
 
 // Hosts that link to every site because they list or redirect links, not
 // because they chose to: URL shorteners, free app hosting used for login

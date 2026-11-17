@@ -564,6 +564,29 @@ export async function organicPages(
   }
 }
 
+// A URL's Organic Search sessions and key events as a landing page. A page
+// Google Analytics did not list is 0 when every landing page was read;
+// undefined when Google Analytics cannot say (another host, or not listed
+// when capped).
+export function landingPage(
+  ga: OrganicPages,
+  url: unknown,
+): { sessions: number; keyEvents: number } | undefined {
+  if (typeof url !== 'string') return undefined
+  let parsed: URL
+  try {
+    parsed = new URL(url)
+  } catch {
+    return undefined
+  }
+  if (parsed.hostname.replace(/^www\./, '') !== ga.host) return undefined
+  const path = parsed.pathname
+  const other = path.endsWith('/') ? path.slice(0, -1) || '/' : `${path}/`
+  const found = ga.pages.get(path) ?? ga.pages.get(other)
+  if (found) return found
+  return ga.capped ? undefined : { sessions: 0, keyEvents: 0 }
+}
+
 // Adds each row's landing page keyEvents and organicSessions (Google
 // Analytics, Organic Search, same dates) to a page section's items, then
 // puts the pages that converted first, most key events first, keeping the
@@ -577,26 +600,8 @@ export function weighByKeyEvents(
   if (typeof ga === 'string') return `Not ranked by key events. ${ga}`
   const items = report.items
   if (!Array.isArray(items) || !items.length) return ''
-  const lookup = (url: unknown) => {
-    if (typeof url !== 'string') return undefined
-    let parsed: URL
-    try {
-      parsed = new URL(url)
-    } catch {
-      return undefined
-    }
-    if (parsed.hostname.replace(/^www\./, '') !== ga.host) return undefined
-    const path = parsed.pathname
-    const other = path.endsWith('/') ? path.slice(0, -1) || '/' : `${path}/`
-    return ga.pages.get(path) ?? ga.pages.get(other) ?? null
-  }
   const weighed = (items as Record<string, unknown>[]).map((item, index) => {
-    const found = lookup(item.url ?? item.page)
-    // undefined: another host, so Google Analytics cannot say.
-    const known =
-      found === undefined || (found === null && ga.capped)
-        ? undefined
-        : (found ?? { sessions: 0, keyEvents: 0 })
+    const known = landingPage(ga, item.url ?? item.page)
     const keyEvents = known?.keyEvents ?? null
     return {
       index,

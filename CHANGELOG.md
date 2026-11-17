@@ -1,5 +1,20 @@
 # Changelog
 
+## Unreleased
+
+### Added
+
+- `seo report --section teardown` (`section "teardown"` in MCP) gives your
+  agent what it needs to write a full teardown of a site, like the How I'd
+  grow posts on seoskill.dev. It has what to write and in what order, the rules
+  that keep each finding backed by numbers, the research calls to make,
+  and the data SEO Skill already has. For a site in your Search Console
+  that is clicks by folder and by page with Google Analytics key events,
+  brand and non-brand clicks, the conversion pages in the business
+  context, and page-two searches with each page's live title and main
+  heading. Any other domain gets the brief alone. The default report is
+  unchanged.
+
 ## 0.22.3
 
 ### Changed

@@ -63,6 +63,7 @@ The quick wins, low CTR, striking distance and content decay sections are covere
 | `ai-queries` | Queries that look like AI conversations and agent searches: replies such as "yes", follow-ups such as "what about…" or "how much is it", agent prompts, search operators and long chat-style questions. Rewordings are grouped into one question, and follow-ups that reach one page on one day are joined into trails. A heuristic, covering the last 90 days. |
 | `image-search` | Pages that show in Google Images, most image impressions first, with their clicks against the previous period. The top 20 are fetched live and checked for images with no alt text or empty alt text, file names such as IMG_0023, background images set in CSS, and a missing og:image. |
 | `google-updates` | The latest Google ranking update laid over your clicks: the update's days against the same number of days before, whether that is more movement than usual for your site, and the folders, pages and queries that moved most. Add an end date for an earlier update. |
+| `teardown` | A brief for your agent to write a full teardown of the site, in the shape of our [How I'd grow posts](/blog), with the research to run and your clicks by folder and page, brand and non-brand clicks, conversion pages and page-two searches. Works for any domain. |
 | `bing` | Bing's top queries and pages with Google's numbers for the same rows beside them, how many queries each engine lists, and pages that one engine shows and the other doesn't. Needs [Bing connected](/docs/bing) in the CLI or the local MCP server. |
 
 Ask for a section by name:
@@ -118,5 +119,19 @@ seo report --site example.com --section google-updates
 ```
 
 For an earlier update, add `--end-date` with a day in or after it, and the section picks the latest update that started by then. Sites in the weekly site audit get the same result [by email](/docs/alerts) once Google's update has finished and Search Console has caught up. It shows timing only, never proof that the update caused a change.
+
+## Write a teardown of a site
+
+The `teardown` section is for when you want the long version, a written review of what a site could win from Google and AI answers, with every finding backed by a number and ending in a change. Your agent writes it. SEO Skill gives it the brief, the research to run in order, and the data it already has.
+
+```text
+Write a teardown of example.com with SEO Skill
+```
+
+```sh
+seo report --site example.com --section teardown
+```
+
+For your own site, the data comes from Search Console and Google Analytics. It covers clicks by folder and by page, brand and non-brand clicks, how much search traffic reaches your conversion pages, and the searches where a page sits on page two, with each page's title and main heading. For a site you can't read in Search Console, such as a prospect or a competitor, you get the brief alone, and every number comes from keyword and backlink research, which spends your DataForSEO or Ahrefs credit. Your agent asks before it runs those calls.
 
 For one page, use [`seo page`](/docs/page). To check a release or an update, use [`seo compare`](/docs/compare).

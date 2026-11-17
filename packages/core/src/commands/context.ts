@@ -140,7 +140,7 @@ export function contextGuide(site: string, call: Caller): string {
       '## What counts as a conversion',
       'Name the Google Analytics key events that count, such as sign_up, where the site has them.',
       '## Conversion pages',
-      'The pages whose main job is to get a visitor to sign up, start a trial, book a demo or buy, and the pricing page. A docs page counts when it is the sign-up or install step itself. Jobs on these pages come first, so name single pages rather than whole sections. One path or URL per line, such as /pricing or /demo. A path ending in / covers every page under it, such as /features/. Use it only when every page there does that job.',
+      'The pages whose main job is to get a visitor to sign up, start a trial, book a demo or buy, and the pricing page. A docs page counts when it is the sign-up or install step itself. Jobs on these pages come first, so name single pages rather than whole sections. One path or URL per line, such as /pricing or /demo. A path ending in / covers every page under it, such as /features/, but / on its own is the home page. Use a section path only when every page there does that job.',
       '## Competitors',
       'One domain per line.',
       '## Markets',

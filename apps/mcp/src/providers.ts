@@ -133,9 +133,11 @@ async function bingToken(
     access_token?: unknown
     refresh_token?: unknown
     expires_in?: unknown
+    error?: unknown
   }>(response, 'Bing sign-in')
   if (!response.ok || typeof json?.access_token !== 'string') {
-    throw new Error(`Bing sign-in failed with ${response.status}.`)
+    const reason = typeof json?.error === 'string' ? ` (${json.error})` : ''
+    throw new Error(`Bing sign-in failed with ${response.status}${reason}.`)
   }
   return {
     access: json.access_token,
@@ -156,6 +158,17 @@ export function bingSignedIn(env: Env, code: string) {
   })
 }
 
-export function refreshBing(env: Env, refresh: string) {
-  return bingToken(env, { grant_type: 'refresh_token', refresh_token: refresh })
+// Bing sends a new refresh token with every refresh, but that new token
+// fails with invalid_grant the next time it is used, while the one from the
+// sign-in keeps working. So the sign-in's refresh token is kept and Bing's
+// new one is dropped. https://learn.microsoft.com/en-us/answers/questions/5659086
+export async function refreshBing(
+  env: Env,
+  refresh: string,
+): Promise<{ access: string; accessExp: number; refresh?: string }> {
+  const { access, accessExp } = await bingToken(env, {
+    grant_type: 'refresh_token',
+    refresh_token: refresh,
+  })
+  return { access, accessExp }
 }

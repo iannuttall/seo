@@ -437,6 +437,8 @@ export async function account(
           await seal(env.SEAL_KEY, {
             k: 'bing',
             userId,
+            // Reconnect sends the account it replaces.
+            ...(field('subject') ? { subject: field('subject') } : {}),
             exp: Date.now() + STATE_TTL,
           }),
         ),
@@ -835,11 +837,15 @@ export async function bingCallback(
     )
   }
   // Bing's sign-in names no account, so each link gets its own id and is
-  // named by its sites. Linking the same sites again replaces that link.
+  // named by its sites. Reconnect, or linking the same sites again,
+  // replaces that link.
   const label = await bingLabel(tokens.access)
-  const existing = (await accountsOf(env, state.userId)).find(
-    (item) => item.provider === 'bing' && item.label === label,
+  const bing = (await accountsOf(env, state.userId)).filter(
+    (item) => item.provider === 'bing',
   )
+  const existing =
+    bing.find((item) => item.subject === state.subject) ??
+    bing.find((item) => item.label === label)
   await linkAccount(env, state.userId, {
     provider: 'bing',
     subject: existing?.subject ?? crypto.randomUUID(),

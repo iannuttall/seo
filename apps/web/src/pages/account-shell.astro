@@ -678,13 +678,20 @@ const keys: { name: string; label: string; type: 'text' | 'password' }[] = [
 
     <template data-account-row>
       <li class="flex items-center justify-between gap-4 py-2.5">
-        <span class="min-w-0 break-all text-foreground" data-email></span>
-        <form method="post" data-action="/account/remove" data-remove>
-          <input type="hidden" name="form" />
-          <input type="hidden" name="provider" data-provider />
-          <input type="hidden" name="subject" data-subject />
-          <button type="submit" class={quiet}>Remove</button>
-        </form>
+        <span class="min-w-0 break-words text-foreground" data-email></span>
+        <span class="flex shrink-0 items-center gap-4">
+          <form method="post" data-action="/account/bing" data-reconnect>
+            <input type="hidden" name="form" />
+            <input type="hidden" name="subject" data-subject />
+            <button type="submit" class={quiet}>Reconnect</button>
+          </form>
+          <form method="post" data-action="/account/remove" data-remove>
+            <input type="hidden" name="form" />
+            <input type="hidden" name="provider" data-provider />
+            <input type="hidden" name="subject" data-subject />
+            <button type="submit" class={quiet}>Remove</button>
+          </form>
+        </span>
       </li>
     </template>
     <template data-clicky-row>
@@ -1347,9 +1354,13 @@ const keys: { name: string; label: string; type: 'text' | 'password' }[] = [
           if (label) label.textContent = item.label
           const kind = copy.querySelector<HTMLInputElement>('[data-provider]')
           if (kind) kind.value = provider
-          const subject = copy.querySelector<HTMLInputElement>('[data-subject]')
-          if (subject) subject.value = item.subject
+          for (const subject of copy.querySelectorAll<HTMLInputElement>('[data-subject]')) {
+            subject.value = item.subject
+          }
           if (!removable) copy.querySelector('[data-remove]')?.remove()
+          // Reconnect runs Bing's sign-in again for this row. Google rows
+          // reconnect through Add a Google account.
+          if (provider !== 'bing') copy.querySelector('[data-reconnect]')?.remove()
           list?.append(copy)
         }
       }

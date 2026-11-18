@@ -662,6 +662,7 @@ export const SHARED_TOOLS: SharedTool[] = [
             brand: input.brand,
             store: surface.researchStore,
             refresh: input.refresh,
+            resolveSite: surface.resolveSite,
           },
           await surface.keys(),
           surface.deps,

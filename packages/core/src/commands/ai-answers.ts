@@ -210,6 +210,8 @@ type AnswerResult =
   | 'unavailable'
 
 const MAX_SOURCES = 8
+// Results that say what the answer showed.
+const READ = new Set(['cited', 'mentioned', 'neither', 'no_answer'])
 const hostOf = (url: string) => {
   try {
     return new URL(url).hostname.toLowerCase().replace(/^www\./, '')
@@ -297,6 +299,23 @@ function siteFor(target: string, also: string[], brand: string[]): Site {
       ),
     ],
   }
+}
+
+// The competitors in the business context of the target's site, or none
+// when it is not one of the person's sites or has no business context.
+async function contextCompetitors(
+  input: { site: string; resolveSite?: (target: string) => Promise<string> },
+  deps: Pick<CommandDeps, 'context'>,
+) {
+  if (!input.resolveSite || !deps.context || !input.site) return []
+  // Loaded here: progress.js imports this module, and context.js reads
+  // AI_ANSWER_QUESTIONS when it loads, so a static import is a cycle.
+  const { contextDefinition } = await import('./progress.js')
+  const site = await input.resolveSite(input.site).catch(() => null)
+  const context = site ? await deps.context.read(site).catch(() => null) : null
+  return site && context
+    ? (contextDefinition(site, context).definition.competitors ?? [])
+    : []
 }
 
 // What a finished task says about the site.
@@ -463,6 +482,9 @@ export async function runAiAnswers(
     // Other sites, such as competitors, to judge on the same answers: each
     // row's others has their result by domain.
     others?: { domain: string; brand?: string[] }[]
+    // Finds the target's site, so the competitors in its business context
+    // are judged on the same answers when others is not given.
+    resolveSite?: (target: string) => Promise<string>
     // Where today's runs are remembered. Default: the Workers cache, where
     // there is one.
     store?: ResearchStore | null
@@ -470,7 +492,7 @@ export async function runAiAnswers(
     refresh?: boolean
   },
   headers: Headers,
-  deps: Pick<CommandDeps, 'searchAnalytics'>,
+  deps: Pick<CommandDeps, 'searchAnalytics' | 'context'>,
   // How to ask for the next page: the same target with these tasks, which
   // reads every answer back at no cost instead of asking again.
   more: (offset: number, tasks: string[]) => string,
@@ -482,10 +504,12 @@ export async function runAiAnswers(
     ...new Set((input.brand ?? []).map((b) => b.trim()).filter(Boolean)),
   ]
   // Other sites judged on the same answers, at no extra cost.
-  const others = (input.others ?? []).map((other) => ({
-    domain: other.domain,
-    site: siteFor(other.domain, [], other.brand ?? []),
-  }))
+  const others = (input.others ?? (await contextCompetitors(input, deps))).map(
+    (other) => ({
+      domain: other.domain,
+      site: siteFor(other.domain, [], other.brand ?? []),
+    }),
+  )
   const given = [
     ...new Set((input.questions ?? []).map((q) => q.trim()).filter(Boolean)),
   ]
@@ -736,6 +760,36 @@ export async function runAiAnswers(
           : 'none returned.'
       } ${silent.map((engine) => engine.name).join(' and ')} do not report their searches, so their searches column says not available.`
     : null
+  // Share of voice: for the site and each other site judged on the same
+  // answers, how many answers read cite it or name it, most first after
+  // the site itself.
+  const read = rows.filter((row) => READ.has(row.result))
+  const voice = (domain: string, result: (row: Row) => string | undefined) => {
+    const results = read.map(result).filter((r) => r && READ.has(r))
+    return {
+      domain,
+      read: results.length,
+      cited: results.filter((r) => r === 'cited').length,
+      mentioned: results.filter((r) => r === 'mentioned').length,
+    }
+  }
+  const named = (v: { cited: number; mentioned: number }) =>
+    v.cited + v.mentioned
+  const shareOfVoice = others.length
+    ? [
+        voice(domains[0] as string, (row) => row.result),
+        ...others
+          .map((other) =>
+            voice(other.domain, (row) => row.others?.[other.domain]),
+          )
+          .sort(
+            (a, b) => named(b) - named(a) || a.domain.localeCompare(b.domain),
+          ),
+      ]
+    : []
+  const voiceNote = shareOfVoice.length
+    ? `Share of voice, in ${read.length} ${read.length === 1 ? 'answer' : 'answers'} read: ${shareOfVoice.map((v) => `${v.domain} in ${named(v)} (cited ${v.cited}, named ${v.mentioned})`).join(', ')}. Competitors are judged on the same answers at no extra cost, by domain and the name beside it in the business context's "## Competitors".`
+    : null
   const questionCount = new Set(rows.map((row) => row.question)).size
   const picked = `The top ${questionCount} askable questions in Search Console’s AI-shaped queries for ${range.startDate} to ${range.endDate}, by impressions. They are picked again on each call, so they can change; to check the same questions every time, list them under "## AI questions" in the site's business context.`
   const notes = [
@@ -751,6 +805,7 @@ export async function runAiAnswers(
     ...(rows.length
       ? [
           `Cited ${count('cited')}, mentioned ${count('mentioned')}, neither ${count('neither')}, no answer shown ${count('no_answer')}, unavailable ${count('unavailable')}, not ready ${count('pending')}. DataForSEO cost: $${cost}.`,
+          ...(voiceNote ? [voiceNote] : []),
           ...(searchesNote ? [searchesNote] : []),
           ...(topCited.length
             ? [
@@ -782,6 +837,15 @@ export async function runAiAnswers(
     result: row.result,
     cited_url: row.cited_url,
     mentioned_as: row.mentioned_as,
+    ...(others.length
+      ? {
+          competitors:
+            Object.entries(row.others ?? {})
+              .filter(([, r]) => r === 'cited' || r === 'mentioned')
+              .map(([domain, r]) => `${domain} ${r}`)
+              .join(', ') || null,
+        }
+      : {}),
     sources: row.sources.join(', '),
     searches: searchesText(row),
     model: row.model,
@@ -825,6 +889,8 @@ export async function runAiAnswers(
       // Every answer's task: pass them as tasks to page through these
       // answers again at no cost.
       tasks: refs,
+      // The site and each competitor judged on the same answers.
+      shareOfVoice,
       citedSites: topCited.map(([host, answers]) => ({ host, answers })),
       searches: topSearches.map(([query, answers]) => ({ query, answers })),
       total: rows.length,

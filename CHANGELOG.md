@@ -1,5 +1,27 @@
 # Changelog
 
+## 0.22.5
+
+### Added
+
+- `seo research backlinks --pages` and `seo research link_gap --pages`
+  (`pages true` in MCP) list the pages that link to a site or its
+  competitors instead of the domains. Each page comes with its title, the
+  words around the link, how many competitors it links to and a guess at
+  what kind of page it is, such as a listicle, review, directory or GitHub
+  list. There is one row per site, sites that publish lists in bulk come
+  after one-off pages, and spam is left out and counted. `link_gap` with no
+  competitors uses the ones in the business context. DataForSEO only, about
+  $0.03 to $0.06 a run.
+- `seo research ai_answers` with up to 3 competitors lists the pages that
+  ChatGPT and Google AI Overviews cite when they answer buyer questions
+  about those competitors, from DataForSEO's database of AI answers. These
+  are the pages to get your site onto. About $0.35 a site.
+- `seo next` adds an "Earn links" step beside new pages. It runs these
+  lookups and walks your agent through outreach: read each page, quote the
+  paragraph where your link fits, and send nothing until you approve each
+  email.
+
 ## 0.22.4
 
 ### Added

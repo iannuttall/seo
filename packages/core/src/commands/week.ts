@@ -116,6 +116,15 @@ export type WeekAiAnswers = {
   // kept.
   pinned?: boolean
   fixed_at?: number | null
+  // The site, then each business context competitor judged on the same
+  // answers: answers read, and how many cite or name it. Empty with no
+  // competitors; missing from checks before it was kept.
+  share_of_voice?: {
+    domain: string
+    read: number
+    cited: number
+    mentioned: number
+  }[]
   // The latest check's answers by result, across every question and
   // engine (the results ai_answers gives).
   counts: Record<
@@ -484,6 +493,16 @@ function aiAnswerLines(site: WeekSite): string[] {
   } else {
     lines.push(
       '  - The first check of these questions, so there is nothing to compare yet.',
+    )
+  }
+  if (found.share_of_voice?.length) {
+    lines.push(
+      `  - Share of voice (answers that cite or name each): ${found.share_of_voice
+        .map(
+          (v) =>
+            `${v.domain} in ${count(v.cited + v.mentioned)} of ${count(v.read)} (cited ${count(v.cited)})`,
+        )
+        .join(', ')}.`,
     )
   }
   if (found.cited_sites.length) {

@@ -386,3 +386,88 @@ test('ai_answers reads back today’s run of the same questions instead of payin
   await ask(['best crm for a small team', 'how to import contacts'], true)
   assert.equal(posts.length, 9)
 })
+
+// Share of voice: the competitors in the site's business context are
+// judged on the same answers, by the name beside each domain, so a brand
+// whose domain does not spell its name (Wispr Flow on wisprflow.example)
+// still counts, and a citation counts once, as cited.
+test('ai_answers counts the business context competitors in each answer', async () => {
+  const answers: Record<string, { markdown: string; sources: string[] }> = {
+    '00000000-0000-0000-0000-000000000001': {
+      markdown:
+        'Top picks are Wispr Flow and Superwhisper. Wispr Flow is the fastest.',
+      sources: ['https://superwhisper.example/pricing'],
+    },
+    '00000000-0000-0000-0000-000000000002': {
+      markdown: 'Most people use Wispr Flow for this.',
+      sources: ['https://www.example.org/guide'],
+    },
+  }
+  globalThis.fetch = (async (input: Request) => {
+    const id = input.url.split('/').pop() as string
+    return Response.json({
+      tasks: [
+        {
+          id,
+          status_code: 20000,
+          status_message: 'Ok.',
+          cost: 0,
+          data: { keyword: `question ${id.slice(-1)}` },
+          result: [
+            {
+              datetime: '2026-11-17 10:00:00 +00:00',
+              markdown: answers[id]?.markdown,
+              sources: answers[id]?.sources.map((url) => ({ url })),
+            },
+          ],
+        },
+      ],
+    })
+  }) as typeof fetch
+
+  const out = await runAiAnswers(
+    {
+      site: 'example.com',
+      country: 'us',
+      detail: 'rows',
+      offset: 0,
+      tasks: Object.keys(answers).map((id) => `chatgpt:${id}`),
+      waitSeconds: 0,
+      resolveSite: async (target) => `sc-domain:${target}`,
+    },
+    new Headers({
+      'x-dataforseo-login': 'login',
+      'x-dataforseo-password': 'password',
+    }),
+    {
+      context: {
+        read: async (site: string) =>
+          site === 'sc-domain:example.com'
+            ? {
+                text: '## Competitors\n\n- superwhisper.example (Superwhisper)\n- wisprflow.example Wispr Flow\n',
+                updated_at: '2026-11-17',
+              }
+            : null,
+        write: async () => undefined,
+      },
+    } as unknown as CommandDeps,
+    () => 'next page',
+  )
+  const data = out.data as {
+    shareOfVoice: {
+      domain: string
+      read: number
+      cited: number
+      mentioned: number
+    }[]
+  }
+  assert.deepEqual(data.shareOfVoice, [
+    { domain: 'example.com', read: 2, cited: 0, mentioned: 0 },
+    { domain: 'wisprflow.example', read: 2, cited: 0, mentioned: 2 },
+    { domain: 'superwhisper.example', read: 2, cited: 1, mentioned: 0 },
+  ])
+  assert.match(
+    out.text,
+    /Share of voice, in 2 answers read: example\.com in 0 \(cited 0, named 0\), wisprflow\.example in 2/,
+  )
+})

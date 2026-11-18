@@ -1,4 +1,8 @@
-import { AI_STATE_ADDED, TABLES as AI_TABLES } from './ai-answers.ts'
+import {
+  AI_ANSWERS_ADDED,
+  AI_STATE_ADDED,
+  TABLES as AI_TABLES,
+} from './ai-answers.ts'
 import { TABLES as GAP_TABLES } from './competitors.ts'
 
 // The site object's tables. Two kinds:
@@ -279,6 +283,7 @@ export function migrate(sql: SqlStorage): void {
   add('run', RUN_ADDED)
   add('pages', PAGES_ADDED)
   add('ai_state', AI_STATE_ADDED)
+  add('ai_answers', AI_ANSWERS_ADDED)
   // Changes from before alerts existed are not alerted.
   if (!have.has('alerted_at')) {
     sql.exec('UPDATE checks SET alerted_at = transition_at')

@@ -1,6 +1,7 @@
 import {
   type AnswersData,
   answerRun,
+  bareDomain,
   contextDefinition,
   type ProgressRun,
   runAiAnswers,
@@ -74,9 +75,16 @@ CREATE TABLE IF NOT EXISTS ai_answers (
   -- JSON list of the other hosts the answer cites.
   sources TEXT NOT NULL DEFAULT '[]',
   previous_result TEXT,
+  -- JSON: each context competitor's result for the same answer, by domain.
+  others TEXT NOT NULL DEFAULT '{}',
   PRIMARY KEY (question, engine)
 );
 `
+
+// Columns an older ai_answers lacks (schema.ts adds them).
+export const AI_ANSWERS_ADDED: [string, string][] = [
+  ['others', "TEXT NOT NULL DEFAULT '{}'"],
+]
 
 // Columns an older ai_state lacks (schema.ts adds them).
 export const AI_STATE_ADDED: [string, string][] = [
@@ -105,6 +113,7 @@ type AnswerRow = {
   cited_url: string | null
   sources: string
   previous_result: string | null
+  others: string
 }
 
 const aiState = (meter: Meter) => meter.one<State>('SELECT * FROM ai_state')
@@ -255,26 +264,30 @@ export async function runAiCheck(
   const store = (rows: Answered[], fresh: boolean) => {
     for (const row of rows) {
       const sources = JSON.stringify(row.sources ?? [])
+      const others = JSON.stringify(row.others ?? {})
       if (fresh) {
         meter.run(
-          `INSERT INTO ai_answers (question, engine, result, cited_url, sources, previous_result)
-           VALUES (?, ?, ?, ?, ?, NULL)
+          `INSERT INTO ai_answers (question, engine, result, cited_url, sources, previous_result, others)
+           VALUES (?, ?, ?, ?, ?, NULL, ?)
            ON CONFLICT (question, engine) DO UPDATE SET previous_result = ai_answers.result,
-             result = excluded.result, cited_url = excluded.cited_url, sources = excluded.sources`,
+             result = excluded.result, cited_url = excluded.cited_url, sources = excluded.sources,
+             others = excluded.others`,
           row.question,
           row.engine,
           row.result,
           row.cited_url,
           sources,
+          others,
         )
       } else {
         // A late answer replaces its own pending row and keeps the week
         // before.
         meter.run(
-          'UPDATE ai_answers SET result = ?, cited_url = ?, sources = ? WHERE question = ? AND engine = ?',
+          'UPDATE ai_answers SET result = ?, cited_url = ?, sources = ?, others = ? WHERE question = ? AND engine = ?',
           row.result,
           row.cited_url,
           sources,
+          others,
           row.question,
           row.engine,
         )
@@ -422,7 +435,47 @@ export async function runAiCheck(
 }
 
 // The latest check for D1, in the weekly summary's shape.
-export function aiResult(meter: Meter): WeekAiAnswers {
+// For the site and each competitor judged on the same answers: answers
+// read, and how many cite or name each, the site first, then the most
+// named.
+function shareOfVoice(
+  property: string,
+  rows: AnswerRow[],
+): WeekAiAnswers['share_of_voice'] {
+  const read = rows.filter((row) => KNOWN.has(row.result))
+  const others = read.map(
+    (row) => JSON.parse(row.others || '{}') as Record<string, string>,
+  )
+  const domains = [...new Set(others.flatMap((o) => Object.keys(o)))]
+  if (!domains.length) return []
+  const voice = (domain: string, results: (string | undefined)[]) => {
+    const known = results.filter((r): r is string => Boolean(r && KNOWN.has(r)))
+    return {
+      domain,
+      read: known.length,
+      cited: known.filter((r) => r === 'cited').length,
+      mentioned: known.filter((r) => r === 'mentioned').length,
+    }
+  }
+  const named = (v: { cited: number; mentioned: number }) =>
+    v.cited + v.mentioned
+  return [
+    voice(
+      bareDomain(property),
+      read.map((row) => row.result),
+    ),
+    ...domains
+      .map((domain) =>
+        voice(
+          domain,
+          others.map((o) => o[domain]),
+        ),
+      )
+      .sort((a, b) => named(b) - named(a) || a.domain.localeCompare(b.domain)),
+  ]
+}
+
+export function aiResult(meter: Meter, property: string): WeekAiAnswers {
   const state = aiState(meter)
   const rows = meter.all<AnswerRow>(
     'SELECT * FROM ai_answers ORDER BY question, engine',
@@ -452,6 +505,7 @@ export function aiResult(meter: Meter): WeekAiAnswers {
       ? (JSON.parse(state.questions) as string[])
       : [],
     pinned: Boolean(state?.pinned),
+    share_of_voice: shareOfVoice(property, rows),
     fixed_at: state?.fixed_at ?? null,
     counts,
     changes: rows
@@ -510,7 +564,11 @@ export async function aiWake(
     await env.DB.prepare(
       'UPDATE audit_sites SET ai_answers = ? WHERE user_id = ? AND property = ?',
     )
-      .bind(JSON.stringify(aiResult(meter)), site.user_id, site.property)
+      .bind(
+        JSON.stringify(aiResult(meter, site.property)),
+        site.user_id,
+        site.property,
+      )
       .run()
       .catch(() => null)
   }

@@ -2,6 +2,8 @@ import { z } from 'zod'
 import { LINT_MAX_CHARS } from '../lint/types.js'
 import {
   AI_ANSWER_DOMAINS,
+  AI_ANSWER_QUESTIONS,
+  AI_ANSWER_SAMPLES,
   AI_ANSWER_TASK_PATTERN,
   runAiAnswers,
 } from './ai-answers.js'
@@ -591,7 +593,7 @@ export const SHARED_TOOLS: SharedTool[] = [
       ...LINK_INPUTS,
       tasks: z
         .array(z.string().regex(AI_ANSWER_TASK_PATTERN))
-        .max(30)
+        .max(AI_ANSWER_QUESTIONS * 3 * AI_ANSWER_SAMPLES)
         .default([])
         .describe(
           'ai_answers only: the tasks an earlier run returned as not ready, to read back at no cost.',
@@ -609,6 +611,15 @@ export const SHARED_TOOLS: SharedTool[] = [
         .default([])
         .describe(
           "ai_answers and mentions: the brand names that count as a mention, such as Datadog for datadoghq.com. Default: each domain's name for ai_answers; mentions searches the domain itself plus up to 3 names.",
+        ),
+      samples: z
+        .number()
+        .int()
+        .min(1)
+        .max(AI_ANSWER_SAMPLES)
+        .optional()
+        .describe(
+          'ai_answers only: how many times to ask each question, to report how often answers cite or name the site. Each sample costs a full run.',
         ),
       refresh: z
         .boolean()
@@ -662,6 +673,7 @@ export const SHARED_TOOLS: SharedTool[] = [
             brand: input.brand,
             store: surface.researchStore,
             refresh: input.refresh,
+            samples: input.samples,
             resolveSite: surface.resolveSite,
           },
           await surface.keys(),

@@ -471,3 +471,96 @@ test('ai_answers counts the business context competitors in each answer', async 
     /Share of voice, in 2 answers read: example\.com in 0 \(cited 0, named 0\), wisprflow\.example in 2/,
   )
 })
+
+// Three runs the same day named the site in different answers. samples
+// asks each question n times and reports how often the answers name it.
+test('ai_answers with samples asks each question n times and reports a rate', async () => {
+  const bodies: unknown[][] = []
+  const text: Record<string, string> = {
+    '00000000-0000-0000-0000-000000000001': 'Try Notely for this.',
+    '00000000-0000-0000-0000-000000000002': 'Most people use Notely.',
+    '00000000-0000-0000-0000-000000000003': 'Use a notes app.',
+  }
+  globalThis.fetch = (async (input: Request) => {
+    if (input.method === 'POST') {
+      const body = (await input.json()) as unknown[]
+      bodies.push(body)
+      return Response.json({
+        tasks: body.map(() => ({ status_code: 40000, status_message: 'No.' })),
+      })
+    }
+    if (input.url.endsWith('/languages') || input.url.endsWith('/locations')) {
+      return Response.json({
+        tasks: [
+          {
+            status_code: 20000,
+            result: [
+              {
+                location_code: 2840,
+                location_type: 'Country',
+                country_iso_code: 'US',
+                language_code: 'en',
+              },
+            ],
+          },
+        ],
+      })
+    }
+    const id = input.url.split('/').pop() as string
+    return Response.json({
+      tasks: [
+        {
+          id,
+          status_code: 20000,
+          status_message: 'Ok.',
+          cost: 0,
+          data: { keyword: 'best notes app' },
+          result: [
+            { datetime: '2026-11-18 10:00:00 +00:00', markdown: text[id] },
+          ],
+        },
+      ],
+    })
+  }) as typeof fetch
+  const keys = new Headers({
+    'x-dataforseo-login': 'login',
+    'x-dataforseo-password': 'password',
+  })
+  const base = {
+    site: 'notely.example',
+    country: 'us',
+    detail: 'rows' as const,
+    offset: 0,
+    waitSeconds: 0,
+    store: null,
+  }
+
+  await runAiAnswers(
+    { ...base, questions: ['best notes app', 'best todo app'], samples: 3 },
+    keys,
+    {} as CommandDeps,
+    () => '',
+  )
+  assert.deepEqual(
+    bodies.map((body) => body.length),
+    [6, 6, 6],
+  )
+
+  const out = await runAiAnswers(
+    { ...base, tasks: Object.keys(text).map((id) => `chatgpt:${id}`) },
+    keys,
+    {} as CommandDeps,
+    () => '',
+  )
+  const data = out.data as { rates: unknown[] }
+  assert.deepEqual(data.rates, [
+    {
+      question: 'best notes app',
+      engine: 'chatgpt',
+      read: 3,
+      appeared: 2,
+      cited: 0,
+    },
+  ])
+  assert.match(out.text, /cited or named in 2 of 3 answers read \(67%\)/)
+})

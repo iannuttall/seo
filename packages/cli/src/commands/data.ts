@@ -1,5 +1,25 @@
-import { inspectUrl, localError, querySearchAnalytics } from '@seo/core'
-import { dateWindow } from '@seo/core/commands'
+import {
+  inspectUrl,
+  localError,
+  localRefreshClicky,
+  localResearchKeys,
+  querySearchAnalytics,
+  SeoError,
+} from '@seo/core'
+import {
+  DIMENSIONS,
+  type Dimension,
+  dateWindow,
+  rowTextFilters,
+  runBingRows,
+  runClickyRows,
+  runRows,
+  runSimpleAnalyticsRows,
+  SEARCH_TYPES,
+  type SearchType,
+  SORTS,
+  type Sort,
+} from '@seo/core/commands'
 import { defineCommand } from 'citty'
 import {
   booleanArg,
@@ -7,10 +27,21 @@ import {
   jsonBodyArg,
   jsonFlag,
   numberArg,
+  strictNumberArg,
   stringArg,
 } from '../args.js'
 import { requireSite } from '../selection.js'
 import { printJson, printTable } from '../utils.js'
+import {
+  cliCall,
+  common,
+  dates,
+  detail,
+  detailArg,
+  property,
+  run,
+  SIMPLE_ANALYTICS_CONNECT,
+} from './core-commands.js'
 import { printReportSummary } from './output.js'
 
 export const gscQueryCommand = defineCommand({
@@ -194,5 +225,210 @@ export const urlInspectCommand = defineCommand({
         },
       ],
     })
+  },
+})
+
+export const dataCommand = defineCommand({
+  meta: {
+    name: 'data',
+    description:
+      'Raw Search Console or Bing rows beside the previous period, or Clicky or Simple Analytics landing pages',
+  },
+  args: {
+    site: {
+      type: 'string',
+      description: 'Site, URL or Search Console property.',
+    },
+    source: {
+      type: 'string',
+      description:
+        'search_console (default), bing, clicky or simple_analytics. Bing takes the first dimension, query or page. Clicky takes the site or its Clicky site ID. Simple Analytics takes the site.',
+    },
+    dimensions: {
+      type: 'string',
+      description: `Comma-separated: ${DIMENSIONS.join(', ')}. Default query (page for discover and google_news).`,
+    },
+    page: {
+      type: 'string',
+      description: 'Optional: only rows for pages whose URL contains this.',
+    },
+    query: {
+      type: 'string',
+      description: 'Optional: only rows for queries that contain this.',
+    },
+    'page-regex': {
+      type: 'string',
+      description:
+        'Optional: only rows for pages whose URL matches this RE2 regular expression.',
+    },
+    'query-regex': {
+      type: 'string',
+      description:
+        'Optional: only rows for queries that match this RE2 regular expression.',
+    },
+    'exclude-query-regex': {
+      type: 'string',
+      description:
+        'Optional: leave out queries that match this RE2 regular expression, such as your brand.',
+    },
+    'search-type': {
+      type: 'string',
+      description: `Optional: ${Object.keys(SEARCH_TYPES).join(', ')}. Default web. discover and google_news have pages but no queries or positions.`,
+    },
+    sort: {
+      type: 'string',
+      description: `Optional row order: ${SORTS.join(', ')}. Default clicks (date order when grouped by date). position puts the best first; the gains and losses compare with the previous period.`,
+    },
+    'min-impressions': {
+      type: 'string',
+      description:
+        'Optional: leave out rows with fewer impressions than this, so ctr and position sorts skip rows seen once or twice.',
+    },
+    ...dates,
+    ...detail,
+    ...common,
+  },
+  run: async ({ args }) => {
+    const asked = csvArg(args.dimensions)
+    const dimensions = asked ?? ['query']
+    const unknown = dimensions.filter(
+      (dimension) => !DIMENSIONS.includes(dimension as Dimension),
+    )
+    if (unknown.length) {
+      throw new SeoError(
+        'INVALID_INPUT',
+        `Unknown dimensions: ${unknown.join(', ')}. Use ${DIMENSIONS.join(', ')}.`,
+      )
+    }
+    const source = stringArg(args.source) ?? 'search_console'
+    if (
+      !['search_console', 'bing', 'clicky', 'simple_analytics'].includes(source)
+    ) {
+      throw new SeoError(
+        'INVALID_INPUT',
+        '--source is search_console, bing, clicky or simple_analytics.',
+      )
+    }
+    if (source === 'simple_analytics') {
+      const site = requireSite(stringArg(args.site))
+      await run(args, async () =>
+        runSimpleAnalyticsRows(
+          {
+            site,
+            startDate: stringArg(args['start-date']),
+            endDate: stringArg(args['end-date']),
+            detail: detailArg(args),
+            offset: numberArg(args.offset),
+          },
+          await localResearchKeys(),
+          {
+            connect: SIMPLE_ANALYTICS_CONNECT,
+            call: (offset) =>
+              cliCall('data', {
+                source: 'simple_analytics',
+                site,
+                detail: 'rows',
+                offset,
+              }),
+          },
+        ),
+      )
+      return
+    }
+    if (source === 'clicky') {
+      const site = requireSite(stringArg(args.site))
+      await run(args, async () =>
+        runClickyRows(
+          {
+            site,
+            startDate: stringArg(args['start-date']),
+            endDate: stringArg(args['end-date']),
+            detail: detailArg(args),
+            offset: numberArg(args.offset),
+          },
+          await localResearchKeys(),
+          {
+            connect:
+              'save it at https://seoskill.dev/account#keys and run `seo login`, or run `seo analytics clicky connect` to keep it on this machine only.',
+            refresh: localRefreshClicky,
+            call: (offset) =>
+              cliCall('data', {
+                source: 'clicky',
+                site,
+                detail: 'rows',
+                offset,
+              }),
+          },
+        ),
+      )
+      return
+    }
+    // Bing needs only Bing: its own site list matches the site.
+    if (source === 'bing') {
+      const site = requireSite(stringArg(args.site))
+      await run(args, (deps) =>
+        runBingRows(
+          {
+            site,
+            dimension: dimensions[0] === 'page' ? 'page' : 'query',
+            startDate: stringArg(args['start-date']),
+            endDate: stringArg(args['end-date']),
+            detail: detailArg(args),
+            offset: numberArg(args.offset),
+          },
+          deps,
+        ),
+      )
+      return
+    }
+    const searchType = stringArg(args['search-type']) ?? 'web'
+    if (!(searchType in SEARCH_TYPES)) {
+      throw new SeoError(
+        'INVALID_INPUT',
+        `--search-type is ${Object.keys(SEARCH_TYPES).join(', ')}.`,
+      )
+    }
+    const sort = stringArg(args.sort)
+    if (sort && !SORTS.includes(sort as Sort)) {
+      throw new SeoError('INVALID_INPUT', `--sort is ${SORTS.join(', ')}.`)
+    }
+    const minImpressions = strictNumberArg(
+      args['min-impressions'],
+      '--min-impressions',
+    )
+    if (
+      minImpressions !== undefined &&
+      !(Number.isInteger(minImpressions) && minImpressions >= 1)
+    ) {
+      throw new SeoError(
+        'INVALID_INPUT',
+        '--min-impressions is a whole number of 1 or more.',
+      )
+    }
+    const site = await property(args, stringArg(args.site))
+    const filters = rowTextFilters({
+      page: stringArg(args.page),
+      query: stringArg(args.query),
+      pageRegex: stringArg(args['page-regex']),
+      queryRegex: stringArg(args['query-regex']),
+      excludeQueryRegex: stringArg(args['exclude-query-regex']),
+    })
+    await run(args, (deps) =>
+      runRows(
+        {
+          site,
+          dimensions: asked as Dimension[] | undefined,
+          filters,
+          searchType: searchType as SearchType,
+          sort: sort as Sort | undefined,
+          minImpressions,
+          startDate: stringArg(args['start-date']),
+          endDate: stringArg(args['end-date']),
+          detail: detailArg(args),
+          offset: numberArg(args.offset),
+        },
+        deps,
+      ),
+    )
   },
 })

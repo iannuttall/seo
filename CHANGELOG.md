@@ -1,5 +1,23 @@
 # Changelog
 
+## Unreleased
+
+### Added
+
+- `seo data --sort` (`sort` in MCP) orders Search Console rows by
+  `impressions`, `ctr`, `ctr_low`, `position` (best first), `clicks_gain`,
+  `clicks_loss`, `impressions_gain` or `impressions_loss` instead of clicks.
+  The next page keeps the order. Search Console hands rows over with the
+  most clicks first, so when a site has more rows than `seo data` reads, it
+  says the order covers only the rows read.
+- `seo data --min-impressions` (`min_impressions`) leaves out rows seen too
+  rarely to judge, such as `--sort ctr_low --min-impressions 100` for
+  queries with many impressions and few clicks.
+- Search Console rows from `seo data` show impressions in the previous
+  period and the change, beside the clicks.
+- `seo report` lists the pages and queries with the biggest impression
+  gains, beside the impression losses.
+
 ## 0.22.5
 
 ### Added

@@ -355,19 +355,19 @@ test('ai_answers reads back today’s run of the same questions instead of payin
     'best crm for a small team',
     'how to import contacts',
   ])
-  assert.equal(posts.length, 3)
+  assert.equal(posts.length, 4)
   const firstData = first.data as { pendingTasks: string[]; reused: boolean }
-  assert.equal(firstData.pendingTasks.length, 6)
+  assert.equal(firstData.pendingTasks.length, 8)
   assert.equal(firstData.reused, false)
   // The free read-back is in the text even with detail full.
-  assert.match(first.text, /6 answers aren't ready yet/)
+  assert.match(first.text, /8 answers aren't ready yet/)
 
   // Same questions in another order: no new paid task.
   const second = await ask([
     'how to import contacts',
     'best crm for a small team',
   ])
-  assert.equal(posts.length, 3)
+  assert.equal(posts.length, 4)
   const secondData = second.data as {
     pendingTasks: string[]
     reused: boolean
@@ -382,9 +382,9 @@ test('ai_answers reads back today’s run of the same questions instead of payin
 
   // Other questions, or refresh, ask and pay.
   await ask(['best crm for a small team'])
-  assert.equal(posts.length, 6)
+  assert.equal(posts.length, 8)
   await ask(['best crm for a small team', 'how to import contacts'], true)
-  assert.equal(posts.length, 9)
+  assert.equal(posts.length, 12)
 })
 
 // Share of voice: the competitors in the site's business context are
@@ -543,7 +543,7 @@ test('ai_answers with samples asks each question n times and reports a rate', as
   )
   assert.deepEqual(
     bodies.map((body) => body.length),
-    [6, 6, 6],
+    [6, 6, 6, 6],
   )
 
   const out = await runAiAnswers(
@@ -563,4 +563,68 @@ test('ai_answers with samples asks each question n times and reports a rate', as
     },
   ])
   assert.match(out.text, /cited or named in 2 of 3 answers read \(67%\)/)
+})
+
+// Gemini app answers are read like ChatGPT's: the Markdown and the sources
+// Gemini cited.
+test('ai_answers reads a Gemini app answer and its cited sources', async () => {
+  const paths: string[] = []
+  globalThis.fetch = (async (input: Request) => {
+    paths.push(new URL(input.url).pathname)
+    return Response.json({
+      tasks: [
+        {
+          id: input.url.split('/').pop(),
+          status_code: 20000,
+          status_message: 'Ok.',
+          cost: 0,
+          data: { keyword: 'best notes app' },
+          result: [
+            {
+              datetime: '2026-11-18 10:00:00 +00:00',
+              markdown: 'Many people like Notely and Example Notes.',
+              sources: [
+                { url: 'https://www.notely.example/pricing' },
+                { url: 'https://reviews.example/notes' },
+              ],
+            },
+          ],
+        },
+      ],
+    })
+  }) as typeof fetch
+  const out = await runAiAnswers(
+    {
+      site: 'notely.example',
+      country: 'us',
+      detail: 'full',
+      offset: 0,
+      tasks: ['gemini:00000000-0000-0000-0000-000000000009'],
+      waitSeconds: 0,
+      store: null,
+    },
+    new Headers({
+      'x-dataforseo-login': 'login',
+      'x-dataforseo-password': 'password',
+    }),
+    {} as CommandDeps,
+    () => '',
+  )
+  assert.deepEqual(paths, [
+    '/v3/ai_optimization/gemini/llm_scraper/task_get/advanced/00000000-0000-0000-0000-000000000009',
+  ])
+  const row = (
+    out.data as {
+      rows: {
+        engine: string
+        result: string
+        cited_url: string
+        sources: string[]
+      }[]
+    }
+  ).rows[0]
+  assert.equal(row?.engine, 'gemini')
+  assert.equal(row?.result, 'cited')
+  assert.equal(row?.cited_url, 'https://www.notely.example/pricing')
+  assert.deepEqual(row?.sources, ['reviews.example'])
 })

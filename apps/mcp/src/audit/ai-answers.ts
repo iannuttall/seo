@@ -18,7 +18,7 @@ import type { Meter } from './meter.ts'
 
 // The weekly audit's AI answer check, on SEO Skill's own DataForSEO
 // account: once a week, the same questions are asked in ChatGPT search,
-// Google AI Mode and AI Overviews (ai_answers in seo_research), and each
+// the Gemini app, Google AI Mode and AI Overviews (ai_answers in seo_research), and each
 // answer's result is kept beside the one from the week before, so the
 // summary can say which answers started or stopped citing the site. The
 // questions are the ones pinned under "## AI questions" in the site's
@@ -32,7 +32,7 @@ const HOUR_MS = 3_600_000
 const DAY_MS = 24 * HOUR_MS
 const WEEK_MS = 7 * DAY_MS
 // DataForSEO spend per site a month (UTC), and the worst case of one run
-// of 10 questions on three engines (a run cost about $0.07 in testing).
+// of 10 questions on four engines (about $0.10 at DataForSEO's prices).
 export const AI_MONTH_BUDGET_USD = 1
 const RUN_ESTIMATE_USD = 0.2
 // How long a run waits for queued answers; the rest are read back, free,

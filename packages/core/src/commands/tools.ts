@@ -2,6 +2,7 @@ import { z } from 'zod'
 import { LINT_MAX_CHARS } from '../lint/types.js'
 import {
   AI_ANSWER_DOMAINS,
+  AI_ANSWER_ENGINES,
   AI_ANSWER_QUESTIONS,
   AI_ANSWER_SAMPLES,
   AI_ANSWER_TASK_PATTERN,
@@ -593,7 +594,7 @@ export const SHARED_TOOLS: SharedTool[] = [
       ...LINK_INPUTS,
       tasks: z
         .array(z.string().regex(AI_ANSWER_TASK_PATTERN))
-        .max(AI_ANSWER_QUESTIONS * 3 * AI_ANSWER_SAMPLES)
+        .max(AI_ANSWER_QUESTIONS * AI_ANSWER_ENGINES * AI_ANSWER_SAMPLES)
         .default([])
         .describe(
           'ai_answers only: the tasks an earlier run returned as not ready, to read back at no cost.',

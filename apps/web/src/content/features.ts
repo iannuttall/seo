@@ -55,7 +55,7 @@ export const features = [
   {
     path: '/features/ai-visibility-checker',
     title: 'AI visibility checker',
-    text: 'Whether ChatGPT search, Google AI Mode and AI Overviews cite or mention your site for up to 10 questions, and which sites they cite instead.',
+    text: 'Whether ChatGPT search, Gemini, Google AI Mode and AI Overviews cite or mention your site for up to 10 questions, and which sites they cite instead.',
     icon: AiSearch02Icon,
   },
   {

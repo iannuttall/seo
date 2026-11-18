@@ -460,6 +460,7 @@ function opportunityLines(site: WeekSite): string[] {
 
 const ENGINE_NAMES: Record<string, string> = {
   chatgpt: 'ChatGPT search',
+  gemini: 'Gemini',
   google_ai_mode: 'Google AI Mode',
   google_ai_overview: 'AI Overviews',
 }

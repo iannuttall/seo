@@ -38,6 +38,8 @@ import { type CommandDeps, CommandError, type CommandResult } from './types.js'
 // first run back for free instead of paying twice.
 
 export const AI_ANSWER_QUESTIONS = 10
+// The most times one question is asked of each engine in a run.
+export const AI_ANSWER_SAMPLES = 5
 // The most domains one brand is checked under: the target and the rest.
 export const AI_ANSWER_DOMAINS = 5
 const QUESTION_DAYS = 90
@@ -490,6 +492,9 @@ export async function runAiAnswers(
     store?: ResearchStore | null
     // Ask again and pay, even when the same questions were asked today.
     refresh?: boolean
+    // How many times each question is asked of each engine, to report how
+    // often an answer cites or names the site. Default 1; each costs a run.
+    samples?: number
   },
   headers: Headers,
   deps: Pick<CommandDeps, 'searchAnalytics' | 'context'>,
@@ -517,6 +522,17 @@ export async function runAiAnswers(
     throw new CommandError(
       'INVALID_INPUT',
       `ai_answers takes up to ${AI_ANSWER_QUESTIONS} questions, not ${given.length}.`,
+    )
+  }
+  const samples = input.samples ?? 1
+  if (
+    !Number.isInteger(samples) ||
+    samples < 1 ||
+    samples > AI_ANSWER_SAMPLES
+  ) {
+    throw new CommandError(
+      'INVALID_INPUT',
+      `ai_answers takes 1 to ${AI_ANSWER_SAMPLES} samples, not ${samples}.`,
     )
   }
   // Tasks the person passed, to read back.
@@ -562,6 +578,8 @@ export async function runAiAnswers(
         keys,
         input.country,
         questions.map((question) => question.query).sort(),
+        // One sample keeps the earlier key.
+        ...(samples > 1 ? [samples] : []),
         new Date().toISOString().slice(0, 10),
       ])
     : null
@@ -603,9 +621,13 @@ export async function runAiAnswers(
     const markets = questions.length
       ? await marketsFor(keys, input.country)
       : new Map<string, Market | string>()
+    // Each question once per sample.
+    const asks = questions.flatMap((question) =>
+      Array.from({ length: samples }, () => question),
+    )
     await Promise.all(
       ENGINES.map(async (engine) => {
-        const engineRows: Row[] = questions.map((question) => ({
+        const engineRows: Row[] = asks.map((question) => ({
           ...blank(question.query, question.impressions),
           engine: engine.name,
           result: 'unavailable',
@@ -624,7 +646,7 @@ export async function runAiAnswers(
           queuedTasks = await dataForSeoPost(
             keys,
             engine.post,
-            questions.map((question) => ({
+            asks.map((question) => ({
               ...engine.task(question.query, market),
               // High priority: about 15 seconds instead of minutes.
               priority: 2,
@@ -787,6 +809,41 @@ export async function runAiAnswers(
           ),
       ]
     : []
+  // With several samples of a question, how often each question and
+  // engine's answers cite or name the site: a rate, not one sample.
+  const groups = new Map<string, Row[]>()
+  for (const row of read) {
+    const key = `${row.question}|${row.engine}`
+    groups.set(key, [...(groups.get(key) ?? []), row])
+  }
+  const appears = (row: Row) =>
+    row.result === 'cited' || row.result === 'mentioned'
+  const rates = [...groups.values()].some((group) => group.length > 1)
+    ? [...groups.values()].map((group) => ({
+        question: group[0]?.question as string,
+        engine: group[0]?.engine as string,
+        read: group.length,
+        appeared: group.filter(appears).length,
+        cited: group.filter((row) => row.result === 'cited').length,
+      }))
+    : []
+  const mixed = rates.filter((r) => r.appeared > 0 && r.appeared < r.read)
+  const appeared = read.filter(appears).length
+  const ratesNote = rates.length
+    ? `Rate over the samples: cited or named in ${appeared} of ${read.length} answers read (${Math.round((appeared / read.length) * 100)}%). ${
+        mixed.length
+          ? `The samples disagreed for ${mixed.length} of ${rates.length} question and engine pairs: ${mixed
+              .slice(0, 10)
+              .map(
+                (r) =>
+                  `"${r.question}" in ${r.engine} ${r.appeared} of ${r.read}`,
+              )
+              .join(
+                ', ',
+              )}${mixed.length > 10 ? `, and ${mixed.length - 10} more` : ''}.`
+          : 'Every question and engine gave the same result in each sample.'
+      }`
+    : null
   const voiceNote = shareOfVoice.length
     ? `Share of voice, in ${read.length} ${read.length === 1 ? 'answer' : 'answers'} read: ${shareOfVoice.map((v) => `${v.domain} in ${named(v)} (cited ${v.cited}, named ${v.mentioned})`).join(', ')}. Competitors are judged on the same answers at no extra cost, by domain and the name beside it in the business context's "## Competitors".`
     : null
@@ -805,6 +862,7 @@ export async function runAiAnswers(
     ...(rows.length
       ? [
           `Cited ${count('cited')}, mentioned ${count('mentioned')}, neither ${count('neither')}, no answer shown ${count('no_answer')}, unavailable ${count('unavailable')}, not ready ${count('pending')}. DataForSEO cost: $${cost}.`,
+          ...(ratesNote ? [ratesNote] : []),
           ...(voiceNote ? [voiceNote] : []),
           ...(searchesNote ? [searchesNote] : []),
           ...(topCited.length
@@ -891,6 +949,9 @@ export async function runAiAnswers(
       tasks: refs,
       // The site and each competitor judged on the same answers.
       shareOfVoice,
+      // With several samples: each question and engine's answers read, and
+      // how many cite or name the site.
+      rates,
       citedSites: topCited.map(([host, answers]) => ({ host, answers })),
       searches: topSearches.map(([query, answers]) => ({ query, answers })),
       total: rows.length,

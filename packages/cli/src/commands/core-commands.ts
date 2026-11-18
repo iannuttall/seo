@@ -518,6 +518,11 @@ export const researchCommand = defineCommand({
       description:
         'ai_answers only: comma-separated tasks an earlier run returned as not ready.',
     },
+    samples: {
+      type: 'string',
+      description:
+        'ai_answers only: how many times to ask each question (1 to 5), to report a rate. Each sample costs a full run.',
+    },
     also: {
       type: 'string',
       description:
@@ -635,6 +640,7 @@ export const researchCommand = defineCommand({
             brand,
             waitSeconds: 240, // No MCP client to time out.
             store: localResearchStore(booleanArg(args.refresh)),
+            samples: numberArg(args.samples),
             resolveSite: (value) => property(args, value),
           },
           keys,

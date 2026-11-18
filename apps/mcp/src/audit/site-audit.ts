@@ -31,6 +31,7 @@ import {
 } from './checks.ts'
 import { gapWake } from './competitors.ts'
 import { extractPage, resolveUrl } from './extract.ts'
+import { fetchLlms } from './llms.ts'
 import { Meter } from './meter.ts'
 import { type RenderState, renderForRun, saveRendering } from './render.ts'
 import { analyse, type RunSummary } from './rules.ts'
@@ -496,6 +497,8 @@ export class SiteAudit extends DurableObject<Env> {
       await this.fetchSitemap(wake, run, site, robots, sitemap.url)
     }
     await gap()
+    const llms = await fetchLlms(origin, robots, get, wake, meter)
+    this.enqueue(wake, run, site, robots, llms?.links ?? [], 1)
     meter.run('UPDATE run SET seeded = 1')
     run.seeded = 1
   }
@@ -838,7 +841,7 @@ export class SiteAudit extends DurableObject<Env> {
     const run = this.run(meter)
     if (!run) return
     const now = Date.now()
-    const summary = await analyse(meter, run, status, now)
+    const summary = await analyse(meter, run, status, now, this.env, site)
     meter.transaction(() => {
       syncKnown(meter, run.id, summary.complete, now)
       // New and changed URLs are checked from the next wake.

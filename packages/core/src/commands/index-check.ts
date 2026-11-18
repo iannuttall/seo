@@ -1,4 +1,5 @@
 import { liveCheck } from './page-facts.js'
+import { inParallel, LIVE_PARALLEL } from './parallel.js'
 import {
   dataForSeoKeys,
   dataForSeoLanguage,
@@ -100,10 +101,16 @@ export async function runIndexCheck(
     // site: filter as soon as a search term is added.
     ...phrases.map((phrase) => `"${phrase.replace(/"/g, '')}"`),
   ]
-  const rows: IndexCheckRow[] = []
   let cost = 0
-  for (const query of queries) {
-    for (const device of DEVICES) {
+  // Each search on each device, five at once: one at a time, a page's six
+  // live searches outlast an MCP client's wait.
+  const searches = queries.flatMap((query) =>
+    DEVICES.map((device) => ({ query, device })),
+  )
+  const rows = await inParallel(
+    searches,
+    LIVE_PARALLEL,
+    async ({ query, device }) => {
       const row: IndexCheckRow = {
         query,
         device,
@@ -171,9 +178,9 @@ export async function runIndexCheck(
         row.result = 'error'
         row.error = (error as Error).message
       }
-      rows.push(row)
-    }
-  }
+      return row
+    },
+  )
   const has = (result: IndexCheckRow['result']) =>
     rows.some((row) => row.result === result)
   const verdict: IndexVerdict = has('page')

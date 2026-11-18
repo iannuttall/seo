@@ -1,4 +1,5 @@
 import { readJson } from '../http/read-json.js'
+import { eachKeyword, LIVE_PARALLEL } from './parallel.js'
 import { ahrefs } from './research-ahrefs.js'
 import {
   type AiOverview,
@@ -223,29 +224,6 @@ export type SiteTotal = {
   metric: 'etv' | 'org_traffic'
   traffic: number
   keywords: number | null
-}
-
-// Each keyword's rows in order. A keyword that fails is listed in missed
-// and the others still count; it throws only when every keyword failed, or
-// at once when the key is missing or rejected.
-export async function eachKeyword(
-  keywords: string[],
-  missed: string[],
-  rowsFor: (keyword: string) => Promise<Row[]>,
-): Promise<Row[]> {
-  const rows: Row[] = []
-  let failure: unknown
-  for (const keyword of keywords) {
-    try {
-      rows.push(...(await rowsFor(keyword)))
-    } catch (error) {
-      if (error instanceof CommandError && error.code === 'NO_KEY') throw error
-      failure ??= error
-      missed.push(keyword)
-    }
-  }
-  if (missed.length === keywords.length) throw failure
-  return rows
 }
 
 export async function research(
@@ -731,8 +709,13 @@ async function dataForSeoRows(
     )
   }
   if (input.action === 'serp') {
+    const keywords = input.keywords.slice(0, serpKeywords(input))
+    // Kept by keyword, so their order never depends on which search
+    // finished first.
+    const overviews = new Map<string, AiOverview>()
+    const asked = new Map<string, PeopleAlsoAsk>()
     const rows = await eachKeyword(
-      input.keywords.slice(0, serpKeywords(input)),
+      keywords,
       spent.missed,
       async (keyword) => {
         const items = await post(
@@ -753,13 +736,16 @@ async function dataForSeoRows(
           2,
         )
         const { rows, overview, questions } = dataForSeoSerp(keyword, items)
-        if (overview)
-          spent.aiOverviews = [...(spent.aiOverviews ?? []), overview]
-        if (questions)
-          spent.peopleAlsoAsk = [...(spent.peopleAlsoAsk ?? []), questions]
+        if (overview) overviews.set(keyword, overview)
+        if (questions) asked.set(keyword, questions)
         return rows
       },
+      LIVE_PARALLEL,
     )
+    const inOrder = <T>(found: Map<string, T>) =>
+      found.size ? keywords.flatMap((k) => found.get(k) ?? []) : undefined
+    spent.aiOverviews = inOrder(overviews)
+    spent.peopleAlsoAsk = inOrder(asked)
     return input.noRank ? rows : withDomainRank(keys, rows, spent)
   }
   if (input.action === 'top_pages') {

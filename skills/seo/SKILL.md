@@ -30,6 +30,7 @@ link for them to approve, then run it again.
 | `seo crawl --url <url>` | `seo_crawl` | Technical issues across a site |
 | `seo internal-links --site <site>` or `--url <url>` | `seo_internal_links` | Links to add across a site, or to one page |
 | `seo lint <files>` or `--url <url>` | `seo_lint` | Lines in a draft, title, description or live page that read as AI-written, each with a fix; `--only ai` for AI patterns alone; no sign-in |
+| `seo feedback` | `seo_feedback` | Send a bug or idea about these tools, with your proposed fix, to the maintainer; show the person the text and send only if they agree |
 | `seo sites` | `seo_sites` | The properties the person can read |
 | `seo site new <folder>`, then `seo site guide <step>` | CLI only | Build a new data-driven site on Astro and Cloudflare, one step at a time. Its build runs `seo site check` |
 

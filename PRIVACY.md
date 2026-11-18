@@ -1,6 +1,6 @@
 # Privacy policy
 
-Last updated: 17 November 2026
+Last updated: 18 November 2026
 
 This policy covers SEO Skill: the `seo` command-line tool and library, the
 local and hosted MCP servers, your account at seoskill.dev, the paid weekly
@@ -9,7 +9,8 @@ site audit, and the seoskill.dev website and its free tools.
 ## In short
 
 - The command-line tool runs on your machine. Your tokens, settings and
-  cache stay there. We only receive anonymous usage counts.
+  cache stay there. We only receive anonymous usage counts, and feedback
+  you choose to send.
 - The hosted server keeps your sign-ins and keys, encrypted, so it can fetch
   your own data when you ask. It does not keep your Search Console or
   analytics data, your reports or a log of your requests.
@@ -245,6 +246,25 @@ stay private and reach the maintainer in a weekly message.
 
 Turn it off with `seo telemetry disable`, `DO_NOT_TRACK=1` or
 `SEO_TELEMETRY_DISABLED=1`. It is off in CI.
+
+## Feedback
+
+`seo feedback` and the `seo_feedback` tool send a bug report or idea about
+SEO Skill to the maintainer. Your agent writes it and should show it to you
+before it sends. A report holds:
+
+- the summary and details your agent wrote, and the tool it is about;
+- the version, and the agent or MCP client name;
+- your account id and its Google email address, when you use the hosted
+  server or a machine linked with `seo login`. Otherwise it is anonymous.
+
+Anything in the text shaped like a key, token or password is removed
+before it is sent, but the details can still name a site or URL, so read
+them first. The hosted server forwards each report to the maintainer's
+workspace in [Amp](https://ampcode.com), where he and an AI agent read it,
+and keeps only a daily count per sender, as a one-way hash, to limit how
+many it accepts. It is sent even with usage counts turned off, because you
+send it on purpose.
 
 ## Delete your data
 

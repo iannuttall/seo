@@ -35,3 +35,6 @@ TYPESAFE_API_KEY=
 # INDEXMYSITE_CLIENT_ID var), for Connect Index My Site on the account page.
 # seo submit's Index My Site actions stay off on this server without it.
 INDEXMYSITE_CLIENT_SECRET=
+# Optional. The Amp webhook URL that seo_feedback reports go to (the
+# feedback-intake plugin). Without it seo_feedback points to GitHub issues.
+FEEDBACK_WEBHOOK_URL=

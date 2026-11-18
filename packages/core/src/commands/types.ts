@@ -5,13 +5,14 @@ import type { ProgressReporter } from '../progress.js'
 import type { AnalyticsAccess } from './analytics-site.js'
 import type { AuditAccess } from './audit.js'
 import type { ContextStore } from './context.js'
+import type { FeedbackSend } from './feedback.js'
 import type { IssueStore } from './issues.js'
 import type { LiveCheck } from './page-facts.js'
 import type { ProgressStore } from './progress.js'
 import type { SubmitAccess } from './submit.js'
 import type { WeekData } from './week.js'
 
-// The eleven public commands. Each runs the same core code in the CLI, the
+// The twelve public commands. Each runs the same core code in the CLI, the
 // local MCP and the hosted MCP; only the functions that reach Google and the
 // web differ. "local" commands need the person's machine (a crawl).
 
@@ -67,6 +68,11 @@ export const COMMANDS = {
     where: 'anywhere',
     summary:
       'Ask search engines to crawl pages: IndexNow for free (Bing, Yandex and others), or Index My Site for Google, paid.',
+  },
+  feedback: {
+    where: 'anywhere',
+    summary:
+      'Send a bug or idea about SEO Skill, with a proposed fix, to its maintainer.',
   },
 } as const
 
@@ -228,6 +234,9 @@ export type CommandDeps = {
   // Short lines while a command waits on slow calls. The CLI prints them to
   // stderr; MCP surfaces leave it unset.
   progress?: ProgressReporter
+  // Sends seo feedback to the maintainer: the hosted server forwards it,
+  // the CLI and the local MCP post it to the hosted server.
+  feedback?: FeedbackSend
   now?: () => Date
 }
 

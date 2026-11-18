@@ -39,6 +39,7 @@ import {
   updateCorrelateCommand,
 } from './commands/diagnosis-reports.js'
 import { exportCommand } from './commands/export/index.js'
+import { feedbackCommand } from './commands/feedback.js'
 import { initCommand } from './commands/init.js'
 import { loginCommand, logoutCommand } from './commands/login.js'
 import { logsCommand } from './commands/logs.js'
@@ -145,6 +146,7 @@ const helpSections: HelpSection[] = [
         'seo site new <folder>',
         'Start a data-driven site on Astro and Cloudflare',
       ],
+      ['seo feedback', 'Send a bug or idea about SEO Skill to its maintainer'],
     ],
   },
   {
@@ -262,6 +264,7 @@ const main = defineCommand({
     research: researchCommand,
     lint: lintCommand,
     submit: submitCommand,
+    feedback: feedbackCommand,
     reports: reportCatalogCommand,
     'segment-impact': segmentImpactCommand,
     'striking-distance': strikingDistanceCommand,

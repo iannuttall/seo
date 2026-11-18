@@ -154,6 +154,7 @@ ends with the command to run next, so your agent always knows where to go.
 | [`seo crawl`](https://seoskill.dev/docs/crawl) | Technical issues and AI agent access across a site (CLI only) |
 | [`seo internal-links`](https://seoskill.dev/docs/internal-links) | Internal links to add across a site or to one page (CLI only) |
 | [`seo lint`](https://seoskill.dev/docs/lint) | Lines in a draft, title or description that read as AI-written, each with a fix |
+| `seo feedback` | Send a bug or idea about SEO Skill, with a proposed fix, to the maintainer |
 
 Every command is also an MCP tool, such as `seo_report`. Crawls and internal links are tools on the local MCP server only (`seo mcp serve`). Add `--json` to any
 command when you're scripting it.

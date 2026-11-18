@@ -137,6 +137,7 @@ const mcpSource = [
   await text('packages/mcp/src/shared-tools.ts'),
   await text('packages/mcp/src/provider-extension-tools.ts'),
   await text('packages/core/src/commands/tools.ts'),
+  await text('packages/core/src/commands/feedback.ts'),
 ].join('\n')
 const mcpTools = new Set(
   [

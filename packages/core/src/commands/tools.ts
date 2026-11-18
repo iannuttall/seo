@@ -1,11 +1,5 @@
 import { z } from 'zod'
-import {
-  LINT_CATEGORIES,
-  LINT_FORMATS,
-  LINT_MAX_CHARS,
-  LINT_META_KINDS,
-  LINT_PRESETS,
-} from '../lint/types.js'
+import { LINT_MAX_CHARS } from '../lint/types.js'
 import {
   AI_ANSWER_DOMAINS,
   AI_ANSWER_TASK_PATTERN,
@@ -21,9 +15,10 @@ import {
 import { runBingRows } from './bing.js'
 import { clickyLabel, clickySites, runClickyRows } from './clicky.js'
 import { CONTEXT_MAX, savedCompetitors } from './context.js'
+import { FEEDBACK_TOOL } from './feedback.js'
 import { INSPECT_LIMIT, MAX_INSPECT_LIMIT } from './indexing.js'
 import { ISSUE_MARKS, NOTE_MAX, SAVED_MAX } from './issues.js'
-import { type LintSource, runLint } from './lint.js'
+import { type LintSource, lintInput, runLint } from './lint.js'
 import { NEXT_TEXT, runNext } from './next.js'
 import type { Detail } from './present.js'
 import { researchProgress } from './progress-track.js'
@@ -223,65 +218,6 @@ const listSites = async (surface: ToolSurface) =>
     bing: surface.deps.bing ? await surface.deps.bing() : undefined,
     connect: surface.connect,
   })
-
-const lintInput = {
-  text: z
-    .string()
-    .max(LINT_MAX_CHARS)
-    .optional()
-    .describe(
-      `The copy to check: a page, post, title or description, up to ${LINT_MAX_CHARS.toLocaleString('en-US')} characters. Markdown, MDX or HTML as written, so line numbers match.`,
-    ),
-  url: z
-    .url()
-    .optional()
-    .describe(
-      'Optional instead of text: a live page. Its main content is extracted as Markdown (as seo_page with detail full shows it) and checked with the blog preset. Only the CLI and the local MCP server read pages.',
-    ),
-  format: z
-    .enum(LINT_FORMATS)
-    .optional()
-    .describe(
-      'Optional. md (default for text), mdx, html, astro or text. Code, tags and URLs are skipped; captions and titles are checked.',
-    ),
-  preset: z
-    .enum(LINT_PRESETS)
-    .optional()
-    .describe(
-      'Optional. blog (default for Markdown), landing (default for HTML: stricter on buzzwords, weak links and claims with no number), docs, or meta (one title or description per line; start a line with "title:" or "description:" to say which).',
-    ),
-  meta_kind: z
-    .enum(LINT_META_KINDS)
-    .optional()
-    .describe(
-      'Optional, with the meta preset: title or description, what a line with no "title:" or "description:" label is. Default: a line up to 70 characters is a title, a longer one a description.',
-    ),
-  ignore_rules: z
-    .array(z.string().min(1).max(60))
-    .max(50)
-    .optional()
-    .describe('Optional rule ids or review lenses to skip.'),
-  only: z
-    .array(z.enum(LINT_CATEGORIES))
-    .max(LINT_CATEGORIES.length)
-    .optional()
-    .describe(
-      'Optional categories to check: ai (patterns common in AI-written text), copy (weak copy and house style, such as dashes) or seo (titles, descriptions, headings). Default: all.',
-    ),
-  ignore_phrases: z
-    .array(z.string().min(1).max(200))
-    .max(50)
-    .optional()
-    .describe(
-      'Optional phrases to allow, such as a product name a rule keeps matching.',
-    ),
-  rules: z
-    .boolean()
-    .optional()
-    .describe(
-      'Optional. true lists every rule with its id, category, level and description instead of checking text; only limits the list, such as only ["ai"].',
-    ),
-}
 
 export const SHARED_TOOLS: SharedTool[] = [
   tool({
@@ -900,6 +836,7 @@ export const SHARED_TOOLS: SharedTool[] = [
       )
     },
   }),
+  FEEDBACK_TOOL,
 ]
 
 // seo_index for an account in the weekly site audit beta: it answers at once

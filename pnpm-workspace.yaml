@@ -29,6 +29,13 @@ overrides:
   "undici@>=8 <8.12.2": 8.12.3
   "@emnapi/runtime": 1.11.3
 
+# picomatch has no fixed version yet (4.0.7 is the latest), and the published
+# seo package does not ship it: it reaches only build tools and the site.
+# Remove this once picomatch publishes a fix and override it instead.
+auditConfig:
+  ignoreGhsas:
+    - GHSA-fc5q-39xc-vjpf
+
 # Exact transitive versions with upstream deprecation notices. Keep this list
 # narrow so upgrades surface new notices instead of hiding them globally.
 allowedDeprecatedVersions:

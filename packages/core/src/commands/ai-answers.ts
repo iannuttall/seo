@@ -3,6 +3,12 @@ import { queryShape } from '../analyze/query-shape.js'
 import { deriveBrandTerms, isBrandQuery, registrableDomain } from '../brand.js'
 import type { Detail } from './present.js'
 import {
+  RESEARCH_TTL_SECONDS,
+  type ResearchStore,
+  researchKey,
+  workersResearchStore,
+} from './research-cache.js'
+import {
   DATAFORSEO_NO_RESULTS,
   DATAFORSEO_NOT_READY,
   type DataForSeoQueued,
@@ -27,7 +33,9 @@ import { type CommandDeps, CommandError, type CommandResult } from './types.js'
 // only wait on six requests at once, so 30 live calls outlast any MCP
 // client. Queued answers are read back until waitSeconds runs out; any
 // still in the queue are returned as task ids, already paid for, to read
-// later at no cost.
+// later at no cost. A run is remembered for the UTC day by its questions,
+// country and key, so asking the same questions again that day reads the
+// first run back for free instead of paying twice.
 
 export const AI_ANSWER_QUESTIONS = 10
 // The most domains one brand is checked under: the target and the rest.
@@ -455,6 +463,11 @@ export async function runAiAnswers(
     // Other sites, such as competitors, to judge on the same answers: each
     // row's others has their result by domain.
     others?: { domain: string; brand?: string[] }[]
+    // Where today's runs are remembered. Default: the Workers cache, where
+    // there is one.
+    store?: ResearchStore | null
+    // Ask again and pay, even when the same questions were asked today.
+    refresh?: boolean
   },
   headers: Headers,
   deps: Pick<CommandDeps, 'searchAnalytics'>,
@@ -482,7 +495,8 @@ export async function runAiAnswers(
       `ai_answers takes up to ${AI_ANSWER_QUESTIONS} questions, not ${given.length}.`,
     )
   }
-  const tasks = [...new Set(input.tasks ?? [])]
+  // Tasks the person passed, to read back.
+  const asked = [...new Set(input.tasks ?? [])]
   const range = dateWindow({}, QUESTION_DAYS)
   const rows: Row[] = []
   const waiting: Waiting[] = []
@@ -494,6 +508,51 @@ export async function runAiAnswers(
     cost_usd: 0,
     ...empty,
   })
+
+  let questions: { query: string; impressions: number | null }[] = []
+  if (!asked.length) {
+    if (given.length) {
+      questions = given.map((query) => ({ query, impressions: null }))
+    } else {
+      const report = await aiQueriesReport(
+        { site: input.site, ...range },
+        deps.searchAnalytics,
+      )
+      // Only questions that stand on their own (the report's askable rows).
+      const items = (report.items ?? []) as {
+        query: string
+        askable: boolean
+        impressions: number
+      }[]
+      questions = items
+        .filter((item) => item.askable)
+        .slice(0, AI_ANSWER_QUESTIONS)
+    }
+  }
+  // Today's run of the same questions, when there is one: its tasks are
+  // read back at no cost instead of asking and paying again.
+  const store = input.store === undefined ? workersResearchStore() : input.store
+  const runKey = questions.length
+    ? await researchKey([
+        'ai_answers',
+        keys,
+        input.country,
+        questions.map((question) => question.query).sort(),
+        new Date().toISOString().slice(0, 10),
+      ])
+    : null
+  const earlier =
+    runKey && store && !input.refresh
+      ? await store
+          .get(runKey)
+          .then((text) => (text ? (JSON.parse(text) as string[]) : null))
+          .catch(() => null)
+      : null
+  const reused = Boolean(earlier?.length)
+  const tasks = reused ? (earlier as string[]) : asked
+  const impressionsOf = new Map(
+    questions.map((question) => [question.query, question.impressions]),
+  )
 
   if (tasks.length) {
     // Reading back costs nothing; the tasks were paid for when queued.
@@ -517,24 +576,6 @@ export async function runAiAnswers(
       waiting.push({ row, engine, id: match[2] as string })
     }
   } else {
-    let questions: { query: string; impressions: number | null }[]
-    if (given.length) {
-      questions = given.map((query) => ({ query, impressions: null }))
-    } else {
-      const report = await aiQueriesReport(
-        { site: input.site, ...range },
-        deps.searchAnalytics,
-      )
-      // Only questions that stand on their own (the report's askable rows).
-      const items = (report.items ?? []) as {
-        query: string
-        askable: boolean
-        impressions: number
-      }[]
-      questions = items
-        .filter((item) => item.askable)
-        .slice(0, AI_ANSWER_QUESTIONS)
-    }
     const markets = questions.length
       ? await marketsFor(keys, input.country)
       : new Map<string, Market | string>()
@@ -591,6 +632,17 @@ export async function runAiAnswers(
         })
       }),
     )
+    // Remembered before the wait, so a call the client gives up on is
+    // still read back by the next one.
+    if (runKey && store && waiting.length) {
+      await store
+        .put(
+          runKey,
+          JSON.stringify(waiting.map((item) => item.row.task)),
+          RESEARCH_TTL_SECONDS,
+        )
+        .catch(() => undefined)
+    }
   }
 
   // Read back in rounds until every answer is in or the wait is used up.
@@ -612,6 +664,7 @@ export async function runAiAnswers(
           const task = await dataForSeoGet(keys, `${item.engine.get}${item.id}`)
           if (!item.row.question) {
             item.row.question = String(task.data.keyword ?? '')
+            item.row.impressions = impressionsOf.get(item.row.question) ?? null
           }
           if (DATAFORSEO_NOT_READY.has(task.status_code)) {
             still.push(item)
@@ -684,22 +737,20 @@ export async function runAiAnswers(
       } ${silent.map((engine) => engine.name).join(' and ')} do not report their searches, so their searches column says not available.`
     : null
   const questionCount = new Set(rows.map((row) => row.question)).size
+  const picked = `The top ${questionCount} askable questions in Search Console’s AI-shaped queries for ${range.startDate} to ${range.endDate}, by impressions. They are picked again on each call, so they can change; to check the same questions every time, list them under "## AI questions" in the site's business context.`
   const notes = [
-    tasks.length
-      ? `${tasks.length === 1 ? 'One answer' : `${tasks.length} answers`} queued by an earlier run, read back at no cost.`
-      : given.length
-        ? `The ${given.length} questions you gave, asked as written. Impressions are blank because they don't come from Search Console.`
-        : questionCount
-          ? `The top ${questionCount} askable questions in Search Console’s AI-shaped queries for ${range.startDate} to ${range.endDate}, by impressions. No calls were made for other questions.`
-          : `No askable questions in Search Console’s AI-shaped queries for ${range.startDate} to ${range.endDate}, so no answers were checked and nothing was spent.`,
+    reused
+      ? `${given.length ? 'These questions were' : `${picked} They were`} already asked today (UTC) with this DataForSEO key, so the ${tasks.length} answers from that run were read back at no cost. Pass refresh to ask again and pay.`
+      : asked.length
+        ? `${asked.length === 1 ? 'One answer' : `${asked.length} answers`} queued by an earlier run, read back at no cost.`
+        : given.length
+          ? `The ${given.length} questions you gave, asked as written. Impressions are blank because they don't come from Search Console.`
+          : questionCount
+            ? `${picked} No calls were made for other questions.`
+            : `No askable questions in Search Console’s AI-shaped queries for ${range.startDate} to ${range.endDate}, so no answers were checked and nothing was spent.`,
     ...(rows.length
       ? [
           `Cited ${count('cited')}, mentioned ${count('mentioned')}, neither ${count('neither')}, no answer shown ${count('no_answer')}, unavailable ${count('unavailable')}, not ready ${count('pending')}. DataForSEO cost: $${cost}.`,
-          ...(left.length
-            ? [
-                `${left.length === 1 ? "One answer wasn't" : `${left.length} answers weren't`} ready yet. They're paid for: ask ai_answers again with the same target and tasks ${JSON.stringify(left)} in a minute to read them at no cost (DataForSEO keeps them for 30 days).`,
-              ]
-            : []),
           ...(searchesNote ? [searchesNote] : []),
           ...(topCited.length
             ? [
@@ -718,6 +769,11 @@ export async function runAiAnswers(
         ]
       : []),
   ]
+  // First in every detail, full included, so the free read-back is never
+  // missed and the questions are never asked and paid for again.
+  const notReady = left.length
+    ? `${left.length === 1 ? "One answer isn't" : `${left.length} answers aren't`} ready yet. They're paid for: in a minute, call ai_answers again with the same target and tasks ${JSON.stringify(left)} to read them at no cost (DataForSEO keeps them for 30 days).`
+    : null
   const shown = rows.map((row) => ({
     question: row.question,
     shape: queryShape(row.question),
@@ -736,7 +792,9 @@ export async function runAiAnswers(
   }))
   return {
     text: rowsText({
-      title: `AI answers for ${input.site}, ${input.country}.`,
+      title: [`AI answers for ${input.site}, ${input.country}.`, notReady]
+        .filter(Boolean)
+        .join('\n\n'),
       rows: shown,
       offset: input.offset,
       limit: PAGE_SIZE,
@@ -749,7 +807,7 @@ export async function runAiAnswers(
       action: 'ai_answers',
       site: input.site,
       country: input.country,
-      questionsFrom: tasks.length
+      questionsFrom: asked.length
         ? { section: 'tasks' }
         : given.length
           ? { section: 'given' }
@@ -761,6 +819,8 @@ export async function runAiAnswers(
       brandTerms: site.terms,
       brandTermsFrom: brand.length ? 'given' : 'domains',
       costUsd: cost,
+      // Whether this read back today's earlier run of the same questions.
+      reused,
       pendingTasks: left,
       // Every answer's task: pass them as tasks to page through these
       // answers again at no cost.

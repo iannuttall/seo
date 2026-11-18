@@ -610,6 +610,12 @@ export const SHARED_TOOLS: SharedTool[] = [
         .describe(
           "ai_answers and mentions: the brand names that count as a mention, such as Datadog for datadoghq.com. Default: each domain's name for ai_answers; mentions searches the domain itself plus up to 3 names.",
         ),
+      refresh: z
+        .boolean()
+        .default(false)
+        .describe(
+          'ai_answers only: ask again and pay, instead of reading back the run of the same questions from earlier today.',
+        ),
       country: z
         .string()
         .regex(/^[a-z]{2}$/)
@@ -654,6 +660,8 @@ export const SHARED_TOOLS: SharedTool[] = [
             tasks: input.tasks,
             also: input.also,
             brand: input.brand,
+            store: surface.researchStore,
+            refresh: input.refresh,
           },
           await surface.keys(),
           surface.deps,

@@ -803,8 +803,7 @@ export const researchCommand = defineCommand({
         throw new SeoError('INVALID_INPUT', 'ai_answers uses dataforseo.')
       }
       const tasks = csvArg(args.tasks) ?? []
-      const also = csvArg(args.also)
-      const brand = csvArg(args.brand)
+      const [also, brand] = [csvArg(args.also), csvArg(args.brand)]
       const site =
         keywords.length || tasks.length
           ? (target ?? '')
@@ -820,8 +819,8 @@ export const researchCommand = defineCommand({
             tasks,
             also,
             brand,
-            // No MCP client to time out, so wait for the queue.
-            waitSeconds: 240,
+            waitSeconds: 240, // No MCP client to time out.
+            store: localResearchStore(booleanArg(args.refresh)),
           },
           keys,
           deps,

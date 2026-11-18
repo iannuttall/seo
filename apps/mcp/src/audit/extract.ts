@@ -9,7 +9,9 @@ export const MAX_HTML_BYTES = 2_000_000
 const MAX_ANCHOR_CHARS = 100
 const MAX_LINKS = 500
 
-export type Link = { u: string; a: string; n?: 1 }
+// m: the page's Markdown copy (<link rel="alternate" type="text/markdown">),
+// fetched like a link so a broken one is found, but not a link in the page.
+export type Link = { u: string; a: string; n?: 1; m?: 1 }
 
 export type PageFacts = {
   title: string | null
@@ -88,6 +90,16 @@ export async function extractPage(
           }
           if (metaName === 'googlebot' && attributes.content) {
             googlebot.push(attributes.content)
+          }
+        } else if (
+          name === 'link' &&
+          attributes.rel?.toLowerCase().split(/\s+/).includes('alternate') &&
+          /^text\/(x-)?markdown\b/i.test(attributes.type ?? '') &&
+          attributes.href
+        ) {
+          const to = resolveUrl(attributes.href, base)
+          if (to?.origin === origin && internal.size < MAX_LINKS) {
+            internal.set(to.href, { u: to.href, a: '', m: 1 })
           }
         } else if (
           name === 'link' &&

@@ -113,7 +113,7 @@ export type AuditAccess = {
 export const AUDIT_SECTION = 'weekly-audit'
 
 export const AUDIT_SECTION_TEXT =
-  'What the weekly crawl of the site found (broken and redirected internal links, missing, empty or duplicate titles and descriptions, missing H1s, noindex for Google, canonicals to another page, sitemap URLs that do not return 200, thin pages, tags that JavaScript changes), with what is new, back or resolved since the crawl before. Only for sites in the weekly site audit.'
+  'What the weekly crawl of the site found (broken and redirected internal links, missing, empty or duplicate titles and descriptions, missing H1s, noindex for Google, canonicals to another page, sitemap URLs that do not return 200, thin pages, tags that JavaScript changes, a missing llms.txt, broken links in it and conversion pages it does not list, and broken Markdown copies of pages), with what is new, back or resolved since the crawl before. Only for sites in the weekly site audit.'
 
 // Plain names for each rule. Heuristics say so.
 export const AUDIT_RULES: Record<string, string> = {
@@ -134,6 +134,12 @@ export const AUDIT_RULES: Record<string, string> = {
   thin_page: 'Pages under 100 words (heuristic)',
   js_changed_tags:
     'Pages whose raw HTML has another title, canonical or robots tag than the page after JavaScript runs',
+  llms_txt_missing: 'No /llms.txt file',
+  llms_txt_broken_link: 'Links in llms.txt to a page that returns an error',
+  llms_txt_conversion_page_missing:
+    'Conversion pages from the business context that llms.txt does not list',
+  markdown_copy_broken:
+    'Markdown copies of pages that return an error or an HTML page',
 }
 
 const PAGE_SIZE = 50

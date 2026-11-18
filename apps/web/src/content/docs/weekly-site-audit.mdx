@@ -37,6 +37,8 @@ The crawl starts from your sitemaps and follows links inside the property. It lo
 - Sitemap URLs that do not return 200.
 - Thin pages under 100 words (a heuristic, not a Google rule).
 - Pages where JavaScript changes the title, canonical or robots tag.
+- A missing `/llms.txt`, links in it that return an error, and conversion pages from your business context that it doesn't list.
+- Markdown copies of pages (linked with `rel="alternate"`) that return an error or an HTML page.
 
 Sections of the site that need JavaScript are rendered in a real browser, so the crawl sees what Google sees. Each finding is compared with the crawl before, which makes a release that broke something stand out from problems you already knew about.
 

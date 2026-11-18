@@ -1,3 +1,4 @@
+import { conversionOf, type Llms, llmsMissing } from './llms.ts'
 import type { Meter } from './meter.ts'
 import type { Run } from './site-audit.ts'
 
@@ -95,7 +96,10 @@ const NOINDEX = `coalesce(google_noindex,
 
 // Every rule, as SQL that returns rule, subject and a JSON details string,
 // ordered by subject so the cap keeps the same rows each week.
-function rules(rendering: Run['render']): { rule: string; sql: string }[] {
+function rules(
+  rendering: Run['render'],
+  llms: Llms | null,
+): { rule: string; sql: string; bindings?: unknown[] }[] {
   const HTML_OK = htmlOk(rendering)
   const linkTargets = (where: string) => `
     SELECT t.url AS subject, json_object('status', t.status, 'location', t.location,
@@ -103,7 +107,7 @@ function rules(rendering: Run['render']): { rule: string; sql: string }[] {
       'examples', json_group_array(DISTINCT p.url)) AS details
     FROM pages p, json_each(p.links) j
     JOIN pages t ON t.url = j.value ->> 'u'
-    WHERE p.state = 'fetched' AND ${where}
+    WHERE p.state = 'fetched' AND j.value ->> 'm' IS NULL AND ${where}
     GROUP BY t.url ORDER BY t.url`
   return [
     { rule: 'link_to_error', sql: linkTargets('t.status >= 400') },
@@ -189,6 +193,41 @@ function rules(rendering: Run['render']): { rule: string; sql: string }[] {
         ORDER BY url`,
     },
     {
+      // A Markdown copy a page links to that does not load as Markdown:
+      // an error, a failed fetch, or an HTML page in its place.
+      rule: 'markdown_copy_broken',
+      sql: `SELECT t.url AS subject, json_object('status', t.status, 'state', t.state,
+          'content_type', t.content_type, 'pages', count(DISTINCT p.url),
+          'examples', json_group_array(DISTINCT p.url)) AS details
+        FROM pages p, json_each(p.links) j
+        JOIN pages t ON t.url = j.value ->> 'u'
+        WHERE p.state = 'fetched' AND j.value ->> 'm' = 1 AND ( t.state = 'failed' OR (t.state = 'fetched' AND (t.status >= 400
+          OR (t.status = 200 AND t.content_type LIKE 'text/html%'))))
+        GROUP BY t.url ORDER BY t.url`,
+    },
+    ...(llms && llms.status === 200 && !llms.html
+      ? [
+          {
+            rule: 'llms_txt_broken_link',
+            sql: `SELECT t.url AS subject, json_object('status', t.status, 'state', t.state,
+                'llms_txt', ?) AS details
+              FROM json_each(?) j JOIN pages t ON t.url = j.value
+              WHERE t.state = 'failed' OR (t.state = 'fetched' AND t.status >= 400)
+              ORDER BY t.url`,
+            bindings: [llms.url, JSON.stringify(llms.links)],
+          },
+        ]
+      : []),
+    ...(llms && (llms.status !== 200 || llms.html)
+      ? [
+          {
+            rule: 'llms_txt_missing',
+            sql: `SELECT ? AS subject, json_object('status', ?, 'html', ?) AS details`,
+            bindings: [llms.url, llms.status, Number(llms.html)],
+          },
+        ]
+      : []),
+    {
       rule: 'thin_page',
       sql: `SELECT url AS subject, json_object('words', words) AS details FROM pages
         WHERE ${HTML_OK} AND words < 100 AND NOT ${NOINDEX}
@@ -202,7 +241,12 @@ export async function analyse(
   run: Run,
   status: 'done' | 'failed',
   now: number,
+  // Where the business context's conversion pages, which llms.txt should
+  // list, are read from.
+  env: Env,
+  site: { user_id: string; property: string },
 ): Promise<RunSummary> {
+  const conversion = await conversionOf(env, site)
   const counts = { queued: 0, fetched: 0, failed: 0, blocked: 0 }
   const renders = { rendered: 0, failed: 0 }
   for (const row of meter.all<{ render: keyof typeof renders; n: number }>(
@@ -226,10 +270,27 @@ export async function analyse(
   const detected: Detected[] = []
   const byRule: Record<string, number> = {}
   const cappedRules: string[] = []
-  for (const { rule, sql } of rules(run.render)) {
-    const rows = meter.all<{ subject: string; details: string }>(
-      `${sql} LIMIT ${MAX_PER_RULE + 1}`,
-    )
+  const saved = meter.one<{ llms: string | null }>('SELECT llms FROM run')
+  const llms = saved?.llms ? (JSON.parse(saved.llms) as Llms) : null
+  const listed =
+    llms && llms.status === 200 && !llms.html && conversion.length
+      ? [
+          {
+            rule: 'llms_txt_conversion_page_missing',
+            rows: llmsMissing(llms, conversion),
+          },
+        ]
+      : []
+  for (const { rule, sql, bindings } of rules(run.render, llms)) {
+    listed.push({
+      rule,
+      rows: meter.all<{ subject: string; details: string }>(
+        `${sql} LIMIT ${MAX_PER_RULE + 1}`,
+        ...(bindings ?? []),
+      ),
+    })
+  }
+  for (const { rule, rows } of listed) {
     if (rows.length > MAX_PER_RULE) {
       cappedRules.push(rule)
       rows.length = MAX_PER_RULE
@@ -308,6 +369,8 @@ export async function analyse(
           )
     for (const [id, before] of stored) {
       if (before.state !== 'open' || seen.has(id)) continue
+      // llms.txt could not be read this run, so its findings stand.
+      if (!llms && before.rule.startsWith('llms_txt_')) continue
       // A finding resolves only after a complete crawl, or when this run
       // fetched its page again.
       if (

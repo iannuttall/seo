@@ -35,6 +35,9 @@ CREATE TABLE IF NOT EXISTS run (
   seeded INTEGER NOT NULL DEFAULT 0,
   robots_status INTEGER,
   robots_txt TEXT,
+  -- JSON: /llms.txt at the start of the run (site-audit.ts llmsOf), or
+  -- null when it could not be read conclusively.
+  llms TEXT,
   crawl_delay_ms INTEGER NOT NULL DEFAULT 0,
   pause_until INTEGER NOT NULL DEFAULT 0,
   -- URLs claimed by a wake that has not finished; retried, then given up.
@@ -245,6 +248,7 @@ export const RUN_ADDED: [string, string][] = [
   ['render_probes', 'INTEGER NOT NULL DEFAULT 0'],
   ['render_errors', 'INTEGER NOT NULL DEFAULT 0'],
   ['browser_ms', 'INTEGER NOT NULL DEFAULT 0'],
+  ['llms', 'TEXT'],
 ]
 
 export const PAGES_ADDED: [string, string][] = [

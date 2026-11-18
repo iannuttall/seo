@@ -21,6 +21,7 @@ import {
 } from './cli.ts'
 import { checkCosts, sendCostReport } from './cost-report.ts'
 import { failureReport } from './failure-report.ts'
+import { cliFeedback } from './feedback.ts'
 import { directory } from './google.ts'
 import { indexMySiteHandOff } from './indexmysite.ts'
 import { serveMcp, serverCard } from './mcp.ts'
@@ -158,6 +159,10 @@ async function route(
       status: 301,
       headers: { location: '/docs/keys' },
     })
+  }
+  // seo feedback from the CLI and the local MCP. See feedback.ts.
+  if (pathname === '/mcp/feedback' && method === 'POST') {
+    return cliFeedback(request, env)
   }
   if (pathname === '/mcp') {
     const userId = await userOf(request, env)

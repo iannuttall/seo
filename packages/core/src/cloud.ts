@@ -3,6 +3,7 @@ import { join } from 'node:path'
 import open from 'open'
 import { type BingCall, bingCall } from './bing/api.js'
 import type { ContextStore, SiteContext } from './commands/context.js'
+import type { FeedbackReport } from './commands/feedback.js'
 import type { IssueStore, StoredIssue } from './commands/issues.js'
 import { bingRouter, LinkedAccounts } from './commands/linked.js'
 import type { ProgressPoint, ProgressStore } from './commands/progress.js'
@@ -345,6 +346,35 @@ export async function cloudIndexNowKeys(): Promise<Record<string, string>> {
 }
 
 export const cloudAccountUrl = () => `${CLOUD_URL}/account`
+
+// seo feedback from the CLI or the local MCP: one POST to the hosted
+// server, which forwards it to the maintainer. A linked machine sends its
+// token so the report names the account; otherwise it is anonymous.
+export async function cloudFeedback(report: FeedbackReport): Promise<void> {
+  const result = await call<{ message?: string }>('/mcp/feedback', {
+    method: 'POST',
+    token: cloudToken(),
+    body: JSON.stringify({ ...report, agent: detectAgentName() ?? undefined }),
+  })
+  if (result.status === 429) {
+    throw new SeoError(
+      'RATE_LIMITED',
+      'Too much feedback from here today. Try again tomorrow, or open an issue at https://github.com/iannuttall/seo/issues.',
+    )
+  }
+  if (result.status === 400) {
+    throw new SeoError(
+      'INVALID_INPUT',
+      result.body.message ?? 'seoskill.dev refused the feedback.',
+    )
+  }
+  if (!result.ok) {
+    throw new SeoError(
+      'PROVIDER_UNAVAILABLE',
+      `seoskill.dev returned ${result.status}. Try again in a minute.`,
+    )
+  }
+}
 
 // `seo login`, step one: a code for the person to approve on the account
 // page. The pending login is kept until it is approved or expires. The agent

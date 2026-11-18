@@ -5,6 +5,7 @@ import { readClickySiteKeys } from './clicky/credentials.js'
 import {
   cloudBing,
   cloudCredentials,
+  cloudFeedback,
   cloudGoogleEmails,
   cloudGoogleToken,
   cloudKeys,
@@ -105,6 +106,7 @@ export function nodeCommandDeps(options: {
     // A linked CLI keeps progress with the account; an unlinked one here.
     siteProgress: cloudLinked() ? linkedProgress(cloudProgress) : localProgress,
     submit: localSubmitAccess(),
+    feedback: cloudFeedback,
     ...(cloudLinked() ? { week: cloudWeek } : {}),
   }
 }

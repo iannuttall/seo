@@ -1,8 +1,12 @@
+import { z } from 'zod'
 import {
   defaultPreset,
   formatFromPath,
   LINT_CATEGORIES,
+  LINT_FORMATS,
   LINT_MAX_CHARS,
+  LINT_META_KINDS,
+  LINT_PRESETS,
   LINT_RULES,
   type LintCategory,
   type LintFileResult,
@@ -14,6 +18,66 @@ import {
   lintText,
 } from '../lint/index.js'
 import { CommandError, type CommandResult, type PageMarkdown } from './types.js'
+
+// seo_lint's input, shared by every MCP surface.
+export const lintInput = {
+  text: z
+    .string()
+    .max(LINT_MAX_CHARS)
+    .optional()
+    .describe(
+      `The copy to check: a page, post, title or description, up to ${LINT_MAX_CHARS.toLocaleString('en-US')} characters. Markdown, MDX or HTML as written, so line numbers match.`,
+    ),
+  url: z
+    .url()
+    .optional()
+    .describe(
+      'Optional instead of text: a live page. Its main content is extracted as Markdown (as seo_page with detail full shows it) and checked with the blog preset. Only the CLI and the local MCP server read pages.',
+    ),
+  format: z
+    .enum(LINT_FORMATS)
+    .optional()
+    .describe(
+      'Optional. md (default for text), mdx, html, astro or text. Code, tags and URLs are skipped; captions and titles are checked.',
+    ),
+  preset: z
+    .enum(LINT_PRESETS)
+    .optional()
+    .describe(
+      'Optional. blog (default for Markdown), landing (default for HTML: stricter on buzzwords, weak links and claims with no number), docs, or meta (one title or description per line; start a line with "title:" or "description:" to say which).',
+    ),
+  meta_kind: z
+    .enum(LINT_META_KINDS)
+    .optional()
+    .describe(
+      'Optional, with the meta preset: title or description, what a line with no "title:" or "description:" label is. Default: a line up to 70 characters is a title, a longer one a description.',
+    ),
+  ignore_rules: z
+    .array(z.string().min(1).max(60))
+    .max(50)
+    .optional()
+    .describe('Optional rule ids or review lenses to skip.'),
+  only: z
+    .array(z.enum(LINT_CATEGORIES))
+    .max(LINT_CATEGORIES.length)
+    .optional()
+    .describe(
+      'Optional categories to check: ai (patterns common in AI-written text), copy (weak copy and house style, such as dashes) or seo (titles, descriptions, headings). Default: all.',
+    ),
+  ignore_phrases: z
+    .array(z.string().min(1).max(200))
+    .max(50)
+    .optional()
+    .describe(
+      'Optional phrases to allow, such as a product name a rule keeps matching.',
+    ),
+  rules: z
+    .boolean()
+    .optional()
+    .describe(
+      'Optional. true lists every rule with its id, category, level and description instead of checking text; only limits the list, such as only ["ai"].',
+    ),
+}
 
 // seo lint: checks copy for patterns common in AI-written text, weak copy and
 // SEO length rules. Runs offline on text; the CLI and the local MCP also read

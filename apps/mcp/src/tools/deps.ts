@@ -10,6 +10,7 @@ import { auditAccess, siteIssues } from '../audit/schedule.ts'
 import { weekData } from '../audit/week.ts'
 import { billingOn, startAuditSite } from '../billing.ts'
 import { siteContext } from '../context.ts'
+import { hostedFeedback } from '../feedback.ts'
 import { accountUrl, signInHint } from '../google.ts'
 import { hostedSubmitAccess } from '../indexmysite.ts'
 import { siteProgress } from '../progress.ts'
@@ -31,9 +32,10 @@ export function deps({
   directory,
   beta,
   waitUntil,
+  headers,
 }: Pick<
   ToolContext,
-  'env' | 'userId' | 'directory' | 'beta' | 'waitUntil'
+  'env' | 'userId' | 'directory' | 'beta' | 'waitUntil' | 'headers'
 >): CommandDeps {
   const audit = beta.has('weekly-audit') ? auditAccess(env, userId) : null
   return {
@@ -68,6 +70,8 @@ export function deps({
     context: siteContext(env, userId),
     siteProgress: siteProgress(env, userId),
     submit: hostedSubmitAccess(env, userId),
+    feedback: (report) =>
+      hostedFeedback(env, userId, headers.get('user-agent'), report),
     analytics: {
       accounts: async () => directory.accounts(),
       signIn: signInHint(env),

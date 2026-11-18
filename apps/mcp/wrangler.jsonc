@@ -95,5 +95,6 @@
   // DATAFORSEO_LOGIN, DATAFORSEO_PASSWORD and TYPESAFE_API_KEY for its
   // competitor check on SEO Skill's own accounts. The DataForSEO keys also
   // give the cost report its balance and spend. TYPESAFE_API_KEY also
-  // judges links for the internal linking tool page.
+  // judges links for the internal linking tool page. Optionally
+  // FEEDBACK_WEBHOOK_URL, the Amp webhook seo_feedback reports go to.
 }

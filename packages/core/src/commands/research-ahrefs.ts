@@ -2,9 +2,9 @@
 // Ahrefs API v3 key, with Ahrefs' own metric names.
 
 import { readJson } from '../http/read-json.js'
+import { eachKeyword } from './parallel.js'
 import {
   call,
-  eachKeyword,
   IDEA_SEEDS,
   type ResearchInput,
   type SiteTotal,

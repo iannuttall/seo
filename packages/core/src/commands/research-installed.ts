@@ -1,6 +1,6 @@
+import { eachKeyword } from './parallel.js'
 import {
   dataForSeoMarket,
-  eachKeyword,
   type ResearchDevice,
   type ResearchInput,
   type ResearchRows,

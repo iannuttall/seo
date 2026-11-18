@@ -1,6 +1,6 @@
 # Changelog
 
-## Unreleased
+## 0.23.0
 
 ### Added
 
@@ -17,6 +17,9 @@
   period and the change, beside the clicks.
 - `seo report` lists the pages and queries with the biggest impression
   gains, beside the impression losses.
+- `seo feedback` (`seo_feedback` in MCP) lets your agent send a bug or idea
+  about SEO Skill, with its proposed fix, once you agree. Keys and tokens
+  are removed before it is sent.
 
 ## 0.22.5
 

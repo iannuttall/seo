@@ -50,6 +50,15 @@ export type WeekSite = {
   // The latest weekly AI answer check, or null before the first one (or
   // when the check is off on this server).
   ai_answers?: WeekAiAnswers | null
+  // Google Analytics sessions from AI assistants (ChatGPT, Perplexity,
+  // Gemini, Copilot and others) in the week and the week before, by source,
+  // or null when no Google Analytics property matches the site or it could
+  // not be read.
+  ai_visits?: {
+    sessions: number
+    previous: number
+    by_source: { source: string; sessions: number }[]
+  } | null
   // Google ranking updates that ran during the week or whose result
   // became ready in it (Monday email only), each with the site's result
   // once final data covers it, else null.
@@ -519,6 +528,20 @@ function aiAnswerLines(site: WeekSite): string[] {
   return lines
 }
 
+// Visits from AI assistants in Google Analytics. Nothing when the site has
+// no matching property, so a missing read never reads as zero.
+function aiVisitLines(site: WeekSite): string[] {
+  const visits = site.ai_visits
+  if (!visits) return []
+  const sources = visits.by_source
+    .filter((row) => row.sessions)
+    .slice(0, 5)
+    .map((row) => `${row.source} ${count(row.sessions)}`)
+  return [
+    `- Visits from AI assistants (Google Analytics sessions): ${count(visits.sessions)}, was ${count(visits.previous)} the week before${sources.length ? ` (${sources.join(', ')})` : ''}. Only visits that pass a referrer or utm_source count.`,
+  ]
+}
+
 // A site's measures whose days after the fix ended in the latest 7 days
 // of final Search Console data, so each one is in exactly one weekly
 // summary.
@@ -608,6 +631,7 @@ export function weekMarkdown(data: WeekData): string {
       ...siteLines(site, startMs, endMs, data.first).map((line) => `- ${line}`),
       ...opportunityLines(site),
       ...aiAnswerLines(site),
+      ...aiVisitLines(site),
       ...measuredLines(site),
       ...updateLines(site),
       ...(site.link ? [`- [View site](${site.link})`] : []),

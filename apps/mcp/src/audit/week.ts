@@ -1,4 +1,5 @@
 import {
+  analyticsBeside,
   MEASURES_PER_RUN,
   measureFixed,
   previousWeek,
@@ -8,7 +9,7 @@ import {
 } from '@seo/core/commands'
 import { queueAlert } from '../alerts/deliver.ts'
 import { hasWeeklyAudit } from '../beta.ts'
-import { directory } from '../google.ts'
+import { directory, signInHint } from '../google.ts'
 import { accountsOf } from '../store.ts'
 import { withWeekUpdates } from './google-updates.ts'
 import { isMonday, unsentIndexChanges } from './index-roundup.ts'
@@ -41,6 +42,18 @@ export async function weekData(
 ): Promise<WeekData> {
   const sites = await auditSites(env, userId)
   const issues = siteIssues(env, userId)
+  // A failed account read leaves out AI visits, never the summary.
+  const google = directory(env, await accountsOf(env, userId).catch(() => []))
+  const analytics = {
+    accounts: async () => google.accounts(),
+    signIn: signInHint(env),
+  }
+  const day = (ms: number) => new Date(ms).toISOString().slice(0, 10)
+  const range = { startDate: week.start, endDate: week.end }
+  const before = {
+    startDate: day(Date.parse(week.start) - 7 * 86_400_000),
+    endDate: day(Date.parse(week.end) - 7 * 86_400_000),
+  }
   return {
     start: week.start,
     end: week.end,
@@ -73,9 +86,36 @@ export async function weekData(
               .map(({ surfaced_at: _, ...item }) => item),
           },
           ai_answers: site.aiAnswers,
+          ai_visits: await aiVisits(analytics, site.property, range, before),
         }
       }),
     ),
+  }
+}
+
+// Google Analytics sessions from AI assistants for the summary, or null
+// when no property matches the site or it could not be read.
+async function aiVisits(
+  ...args: Parameters<typeof analyticsBeside>
+): Promise<WeekData['sites'][number]['ai_visits']> {
+  const found = await analyticsBeside(...args).catch(() => null)
+  const ai = (
+    found?.data as {
+      aiAssistants?: {
+        sessions: number
+        previousSessions: number
+        bySource: { source?: unknown; sessions: number }[]
+      }
+    } | null
+  )?.aiAssistants
+  if (!ai) return null
+  return {
+    sessions: ai.sessions,
+    previous: ai.previousSessions,
+    by_source: ai.bySource.map((row) => ({
+      source: String(row.source ?? ''),
+      sessions: row.sessions,
+    })),
   }
 }
 

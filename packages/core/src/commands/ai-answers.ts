@@ -70,6 +70,9 @@ type Engine = {
   get: string
   // DataForSEO's free list of the languages this engine takes.
   languages: string
+  // An app scraper's own free list of countries; it is asked only in
+  // those. Google's engines take any country.
+  locations?: string
   task: (question: string, market: Market) => Record<string, unknown>
   // What the engine showed, or null when it showed no AI answer.
   shown: (result: Record<string, unknown>) => Shown | null
@@ -109,6 +112,7 @@ const ENGINES: Engine[] = [
     post: 'v3/ai_optimization/chat_gpt/llm_scraper/task_post',
     get: 'v3/ai_optimization/chat_gpt/llm_scraper/task_get/advanced/',
     languages: 'v3/ai_optimization/chat_gpt/llm_scraper/languages',
+    locations: 'v3/ai_optimization/chat_gpt/llm_scraper/locations',
     // Web search is not forced: a forced search costs the same but makes
     // ChatGPT search, and cite, questions it answers from memory for a
     // person. With no search it reports no fan-out searches.
@@ -138,6 +142,29 @@ const ENGINES: Engine[] = [
     searches: true,
   },
   {
+    name: 'gemini',
+    means: 'the Gemini app, read by DataForSEO',
+    post: 'v3/ai_optimization/gemini/llm_scraper/task_post',
+    get: 'v3/ai_optimization/gemini/llm_scraper/task_get/advanced/',
+    languages: 'v3/ai_optimization/gemini/llm_scraper/languages',
+    locations: 'v3/ai_optimization/gemini/llm_scraper/locations',
+    task: (question, market) => ({ keyword: question, ...market }),
+    // The answer as Markdown and the sources Gemini cited.
+    shown: (result) => {
+      const markdown =
+        typeof result.markdown === 'string' ? result.markdown : ''
+      const sources = urls(list(result.sources))
+      if (!markdown && !sources.length) return null
+      return {
+        markdown,
+        sources,
+        model: typeof result.model === 'string' ? result.model : null,
+        searches: null,
+      }
+    },
+    searches: false,
+  },
+  {
     name: 'google_ai_mode',
     means: 'Google AI Mode',
     post: 'v3/serp/google/ai_mode/task_post',
@@ -163,6 +190,9 @@ const ENGINES: Engine[] = [
     searches: false,
   },
 ]
+
+// How many engines each question is asked of.
+export const AI_ANSWER_ENGINES = ENGINES.length
 
 // The answer's own words: citation pills such as [1](url) or
 // [example.com](url) and bare links go, so a citation is never also counted
@@ -387,24 +417,34 @@ async function marketsFor(
   const code = country.toUpperCase()
   const language =
     dataForSeoLanguage(country) ?? dataForSeoMarket(country, null).language_code
-  const [locations, ...languages] = await Promise.all([
-    dataForSeoList(keys, 'v3/ai_optimization/chat_gpt/llm_scraper/locations'),
-    ...ENGINES.map((engine) => dataForSeoList(keys, engine.languages)),
+  const [locations, languages] = await Promise.all([
+    Promise.all(
+      ENGINES.map((engine) =>
+        engine.locations ? dataForSeoList(keys, engine.locations) : [],
+      ),
+    ),
+    Promise.all(
+      ENGINES.map((engine) => dataForSeoList(keys, engine.languages)),
+    ),
   ])
-  const place = locations.find(
-    (row) => row.location_type === 'Country' && row.country_iso_code === code,
-  )
-  const where = place
-    ? { location_code: Number(place.location_code) }
-    : { location_name: dataForSeoMarket(country, null).location_name }
+  const placeIn = (rows: Record<string, unknown>[] | undefined) =>
+    rows?.find(
+      (row) => row.location_type === 'Country' && row.country_iso_code === code,
+    )
+  // Google's engines use ChatGPT's location code when it has the country.
+  const shared = placeIn(locations[0])
   return new Map(
     ENGINES.map((engine, index) => {
-      if (engine.name === 'chatgpt' && !place) {
+      const place = engine.locations ? placeIn(locations[index]) : shared
+      if (engine.locations && !place) {
         return [
           engine.name,
-          `DataForSEO's ChatGPT search has no data for country "${country}".`,
+          `DataForSEO's ${engine.means.replace(/, read by DataForSEO$/, '')} has no data for country "${country}".`,
         ]
       }
+      const where = place
+        ? { location_code: Number(place.location_code) }
+        : { location_name: dataForSeoMarket(country, null).location_name }
       const known = (languages[index] ?? []).some(
         (row) => row.language_code === language,
       )
@@ -780,7 +820,7 @@ export async function runAiAnswers(
         topSearches.length
           ? `${topSearches.map(([query, n]) => `"${query}" (${n})`).join(', ')}${searched.size > TOP_SEARCHES ? `, and ${searched.size - TOP_SEARCHES} more in the rows` : ''}.`
           : 'none returned.'
-      } ${silent.map((engine) => engine.name).join(' and ')} do not report their searches, so their searches column says not available.`
+      } ${silent.map((engine) => engine.name).join(', ')} do not report their searches, so their searches column says not available.`
     : null
   // Share of voice: for the site and each other site judged on the same
   // answers, how many answers read cite it or name it, most first after

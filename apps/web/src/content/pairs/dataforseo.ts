@@ -25,7 +25,7 @@ export const pairs: Record<string, PairPage> = {
       {
         question: 'Do ChatGPT and Google AI Mode mention my site?',
         answer:
-          'Your top chat-style questions from Search Console, asked in ChatGPT search, Google AI Mode and AI Overviews. A run costs about 7 cents of DataForSEO credit, and Claude is asked to tell you before it starts.',
+          'Your top chat-style questions from Search Console, asked in ChatGPT search, Gemini, Google AI Mode and AI Overviews. A run costs about 10 cents of DataForSEO credit, and Claude is asked to tell you before it starts.',
       },
     ],
     sections: [

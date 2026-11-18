@@ -275,7 +275,7 @@ export const sources: Source[] = [
       {
         question: 'Do AI answers cite my site?',
         answer:
-          'Your top AI-style questions from Search Console, checked in ChatGPT search, Google AI Mode and AI Overviews. A full run costs about 7 cents of credit.',
+          'Your top AI-style questions from Search Console, checked in ChatGPT search, Gemini, Google AI Mode and AI Overviews. A full run costs about 10 cents of credit.',
       },
     ],
     limit:

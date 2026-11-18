@@ -301,11 +301,13 @@ async function issue(
   env: Env,
   input: { clientId: string; userId: string },
 ): Promise<Response> {
+  const client = await unseal(env.SEAL_KEY, input.clientId, 'client')
   return json({
     access_token: await seal(env.SEAL_KEY, {
       k: 'user-access',
       userId: input.userId,
       exp: Date.now() + ACCESS_TTL,
+      ...(client ? { client: client.name } : {}),
     }),
     token_type: 'Bearer',
     expires_in: ACCESS_TTL / 1000,
@@ -365,6 +367,18 @@ export async function userOf(
   const bearer = request.headers.get('authorization')?.match(/^Bearer (.+)$/i)
   return (
     (await unseal(env.SEAL_KEY, bearer?.[1], 'user-access'))?.userId ?? null
+  )
+}
+
+// The name the bearer token's MCP client registered with, or null for a
+// token issued before tokens carried it. The client chose the name itself.
+export async function clientNameOf(
+  env: Env,
+  headers: Headers,
+): Promise<string | null> {
+  const bearer = headers.get('authorization')?.match(/^Bearer (.+)$/i)
+  return (
+    (await unseal(env.SEAL_KEY, bearer?.[1], 'user-access'))?.client ?? null
   )
 }
 

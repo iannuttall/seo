@@ -13,6 +13,7 @@ import { siteContext } from '../context.ts'
 import { hostedFeedback } from '../feedback.ts'
 import { accountUrl, signInHint } from '../google.ts'
 import { hostedSubmitAccess } from '../indexmysite.ts'
+import { clientNameOf } from '../oauth.ts'
 import { siteProgress } from '../progress.ts'
 import { addUsage } from '../usage.ts'
 import type { ToolContext } from './registry.ts'
@@ -70,8 +71,13 @@ export function deps({
     context: siteContext(env, userId),
     siteProgress: siteProgress(env, userId),
     submit: hostedSubmitAccess(env, userId),
-    feedback: (report) =>
-      hostedFeedback(env, userId, headers.get('user-agent'), report),
+    feedback: async (report) =>
+      hostedFeedback(
+        env,
+        userId,
+        (await clientNameOf(env, headers)) ?? headers.get('user-agent'),
+        report,
+      ),
     analytics: {
       accounts: async () => directory.accounts(),
       signIn: signInHint(env),

@@ -110,13 +110,14 @@ async function forward(
 export async function hostedFeedback(
   env: Env,
   userId: string,
-  userAgent: string | null,
+  // The MCP client's registered name, else its user agent.
+  client: string | null,
   report: FeedbackReport,
 ): Promise<void> {
   await count(env, `u:${userId}`)
   await forward(env, cleanFeedback(report), {
     surface: 'hosted',
-    client: userAgent?.slice(0, 200) ?? null,
+    client: client?.slice(0, 200) ?? null,
     version: SEO_VERSION,
     account: { id: userId, email: await emailOf(env, userId) },
   })

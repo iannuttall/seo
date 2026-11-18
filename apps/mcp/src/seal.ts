@@ -45,7 +45,9 @@ export type Sealed =
       userId: string
       exp: number
     }
-  | { k: 'user-access'; userId: string; exp: number }
+  // client: the name the MCP client registered with, absent on tokens
+  // issued before it was added.
+  | { k: 'user-access'; userId: string; exp: number; client?: string }
   | { k: 'user-refresh'; clientId: string; userId: string }
   // The account page's sign-in cookie, and its form token.
   | { k: 'session'; userId: string; exp: number }

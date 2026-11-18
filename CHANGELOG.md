@@ -1,5 +1,36 @@
 # Changelog
 
+## 0.24.0
+
+### Added
+
+- `seo research ai_answers` asks the Gemini app too, beside ChatGPT search,
+  Google AI Mode and AI Overviews. A run of 10 questions now costs about
+  $0.10 of DataForSEO credit.
+- `ai_answers` gives the share of voice: when the target is one of your
+  sites, the competitors in its business context are checked on the same
+  answers at no extra cost, and each row lists the ones it cites or names.
+- `seo research ai_answers --samples` (`samples` in MCP, 1 to 5) asks each
+  question that many times and reports how often the answers cite or name
+  the site, with the questions where the samples disagreed. Each sample
+  costs a full run.
+- `seo research ai_answers` without questions says that its picked
+  questions can change between calls, and points to `## AI questions` in
+  the business context to check the same ones every time.
+- The weekly site audit asks the `## AI questions` from the business
+  context, checks llms.txt (missing, broken links, conversion pages it
+  doesn't list) and Markdown copies of pages, and the Monday email shows
+  the share of voice and visits from AI assistants in Google Analytics.
+
+### Fixed
+
+- Asking `ai_answers` the same questions again on the same day reads the
+  first run back at no cost instead of paying again. `--refresh`
+  (`refresh` in MCP) asks again and pays. Answers that aren't ready yet are
+  listed first, with the tasks to read them free.
+- `seo research serp` with several keywords and `index_check` run their
+  live searches five at once, so they no longer time out in MCP clients.
+
 ## 0.23.0
 
 ### Added

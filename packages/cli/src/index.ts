@@ -24,7 +24,6 @@ import { cacheCommand } from './commands/cache.js'
 import { contentCommand } from './commands/content.js'
 import {
   compareCommand,
-  dataCommand,
   indexCommand,
   lintCommand,
   nextCommand,
@@ -33,7 +32,11 @@ import {
   researchCommand,
 } from './commands/core-commands.js'
 import { crawlCommand } from './commands/crawl.js'
-import { gscQueryCommand, urlInspectCommand } from './commands/data.js'
+import {
+  dataCommand,
+  gscQueryCommand,
+  urlInspectCommand,
+} from './commands/data.js'
 import {
   trafficAnomalyCommand,
   updateCorrelateCommand,

@@ -281,6 +281,7 @@ export async function siteOverview(
       biggestLosses: by('clicksChange', -1),
       biggestGains: by('clicksChange', 1),
       biggestImpressionLosses: by('impressionsChange', -1),
+      biggestImpressionGains: by('impressionsChange', 1),
     }
   }
   const devices = new Map(deviceBefore.rows.map((r) => [r.keys[0], r]))
@@ -355,6 +356,10 @@ export function overviewText(
         group.biggestImpressionLosses ?? [],
       ),
       part(`Biggest ${name} click gains`, group.biggestGains ?? []),
+      part(
+        `Biggest ${name} impression gains`,
+        group.biggestImpressionGains ?? [],
+      ),
     ]
       .filter(Boolean)
       .join('\n\n')

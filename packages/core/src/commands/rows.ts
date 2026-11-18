@@ -153,6 +153,39 @@ export type RowFilter = {
   expression: string
 }
 
+// Orders for Search Console rows. Search Console itself returns rows by
+// clicks only, so every other order sorts the rows fetched.
+export const SORTS = [
+  'clicks',
+  'impressions',
+  'ctr',
+  'ctr_low',
+  'position',
+  'clicks_gain',
+  'clicks_loss',
+  'impressions_gain',
+  'impressions_loss',
+] as const
+
+export type Sort = (typeof SORTS)[number]
+
+// Each order as the value that puts a row first, highest first.
+const SORT_VALUE: Record<Sort, (row: Row) => number> = {
+  clicks: (row) => Number(row.clicks ?? 0),
+  impressions: (row) => Number(row.impressions ?? 0),
+  ctr: (row) => Number(row.ctr ?? 0),
+  ctr_low: (row) => -Number(row.ctr ?? 0),
+  // Best (lowest) position first; rows with no position go last.
+  position: (row) =>
+    row.position === null || row.position === undefined
+      ? Number.NEGATIVE_INFINITY
+      : -Number(row.position),
+  clicks_gain: (row) => Number(row.clicks_change ?? 0),
+  clicks_loss: (row) => -Number(row.clicks_change ?? 0),
+  impressions_gain: (row) => Number(row.impressions_change ?? 0),
+  impressions_loss: (row) => -Number(row.impressions_change ?? 0),
+}
+
 // Search Console takes RE2 expressions of at most 4,096 characters.
 export const REGEX_MAX_CHARS = 4096
 
@@ -193,6 +226,20 @@ export const rowsInput = {
     .optional()
     .describe(
       'search_console only: RE2 for queries to leave out, such as the brand.',
+    ),
+  sort: z
+    .enum(SORTS)
+    .optional()
+    .describe(
+      'search_console only. Row order: clicks (default; date order when grouped by date), impressions, ctr (highest first), ctr_low (lowest first; pair with min_impressions), position (best first), or clicks_gain, clicks_loss, impressions_gain, impressions_loss against the previous period.',
+    ),
+  min_impressions: z
+    .number()
+    .int()
+    .min(1)
+    .optional()
+    .describe(
+      'search_console only: leave out rows with fewer impressions in the current period, so ctr and position sorts skip rows seen once or twice.',
     ),
 }
 
@@ -263,6 +310,8 @@ export type RowsInput = DateInput & {
   searchType?: SearchType
   detail?: Detail
   offset?: number
+  sort?: Sort
+  minImpressions?: number
 }
 
 // Most Search Console rows read per period.
@@ -291,6 +340,12 @@ export async function runRows(
     throw new SeoError(
       'INVALID_INPUT',
       `${surface} has no queries in Search Console, only pages. Ask for dimensions page, date, country, device or searchAppearance, without query filters.`,
+    )
+  }
+  if (noQueries && input.sort === 'position') {
+    throw new SeoError(
+      'INVALID_INPUT',
+      `${surface} has no positions in Search Console. Sort by clicks, impressions, ctr or a gain or loss instead.`,
     )
   }
   const range = dateWindow(input, 28)
@@ -350,6 +405,8 @@ export async function runRows(
       ...(dateAt >= 0 ? { previous_date: old?.keys[dateAt] ?? null } : {}),
       previous_clicks: old?.clicks ?? 0,
       clicks_change: row.clicks - (old?.clicks ?? 0),
+      previous_impressions: old?.impressions ?? 0,
+      impressions_change: row.impressions - (old?.impressions ?? 0),
       ...before_(old?.position ?? null),
     }
   })
@@ -364,21 +421,36 @@ export async function runRows(
         ...at(null),
         previous_clicks: old.clicks,
         clicks_change: -old.clicks,
+        previous_impressions: old.impressions,
+        impressions_change: -old.impressions,
         ...before_(old.position),
       })
     }
   }
-  // Most clicks first, then most impressions, so surfaces with few clicks
-  // such as image search still sort by size; keys break the last ties.
+  const minImpressions = input.minImpressions
+  const kept = minImpressions
+    ? rows.filter((row) => Number(row.impressions ?? 0) >= minImpressions)
+    : rows
+  // The asked order, then most clicks, then most impressions, so surfaces
+  // with few clicks such as image search still sort by size; keys break
+  // the last ties. Grouped by date with no order asked, rows stay in date
+  // order.
+  const sort = input.sort
   const keysOf = (row: Row) => dimensions.map((d) => String(row[d])).join(' ')
-  rows.sort((a, b) =>
-    dateAt >= 0
+  kept.sort((a, b) =>
+    dateAt >= 0 && !sort
       ? String(a.date).localeCompare(String(b.date))
-      : Number(b.clicks ?? 0) - Number(a.clicks ?? 0) ||
+      : (sort ? SORT_VALUE[sort](b) - SORT_VALUE[sort](a) : 0) ||
+        Number(b.clicks ?? 0) - Number(a.clicks ?? 0) ||
         Number(b.impressions ?? 0) - Number(a.impressions ?? 0) ||
         keysOf(a).localeCompare(keysOf(b)),
   )
   const notes: string[] = []
+  if (minImpressions) {
+    notes.push(
+      `${rows.length - kept.length} of ${rows.length} rows had fewer than ${minImpressions} impressions and are left out.`,
+    )
+  }
   // Spam-looking queries keep their numbers and get a label, so totals stay
   // Search Console's own.
   const queryAt = dimensions.indexOf('query')
@@ -401,7 +473,7 @@ export async function runRows(
     const sum = (key: string) =>
       rows.reduce((total, row) => total + Number(row[key] ?? 0), 0)
     notes.push(
-      `Totals: clicks ${sum('clicks')}, impressions ${sum('impressions')}; previous period clicks ${sum('previous_clicks')}.`,
+      `Totals: clicks ${sum('clicks')}, impressions ${sum('impressions')}; previous period clicks ${sum('previous_clicks')}, impressions ${sum('previous_impressions')}.`,
     )
   }
   notes.push(
@@ -420,7 +492,7 @@ export async function runRows(
   }
   if (current.rowsFetched >= ROWS) {
     notes.push(
-      `Search Console has more than ${ROWS} rows; add a filter to narrow it.`,
+      `Search Console has more than ${ROWS} rows; add a filter to narrow it.${sort && sort !== 'clicks' ? ` It returns rows by clicks, so the rows left out are those with the fewest clicks, often ones with impressions but no clicks; this ${sort} order covers only the ${ROWS} rows read, not the whole site.` : ''}`,
     )
   }
   if (!noQueries) {
@@ -433,8 +505,8 @@ export async function runRows(
   const detail = input.detail ?? 'summary'
   return {
     text: `${rowsText({
-      title: `Search Console ${input.site}, ${range.startDate} to ${range.endDate}, ${surface}, by ${dimensions.join(' and ')}.`,
-      rows,
+      title: `Search Console ${input.site}, ${range.startDate} to ${range.endDate}, ${surface}, by ${dimensions.join(' and ')}${sort ? `, sorted by ${sort}` : ''}.`,
+      rows: kept,
       offset: input.offset ?? 0,
       limit: PAGE_SIZE,
       detail,
@@ -448,6 +520,8 @@ export async function runRows(
           dimensions: dimensions.join(','),
           ...(searchType === 'web' ? {} : { search_type: searchType }),
           ...filterArgs(filters),
+          sort,
+          min_impressions: minImpressions,
           start_date: range.startDate,
           end_date: range.endDate,
           detail: 'rows',
@@ -458,9 +532,9 @@ export async function runRows(
       range,
       comparisonRange: previous,
       searchType,
-      total: rows.length,
+      total: kept.length,
       offset: input.offset ?? 0,
-      rows: rows.slice(input.offset ?? 0, (input.offset ?? 0) + PAGE_SIZE),
+      rows: kept.slice(input.offset ?? 0, (input.offset ?? 0) + PAGE_SIZE),
     },
   }
 }

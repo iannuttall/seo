@@ -258,17 +258,25 @@ async function askAnswers(
     deps,
     () => '',
   )
-  const data = result.data as {
-    costUsd: number
-    rows: {
-      question: string
-      engine: string
-      result: AnswerResult
-      cited_url: string | null
-      others?: Record<string, AnswerResult>
-      task: string | null
-    }[]
-  }
+  return answerRun(country, result.data as AnswersData)
+}
+
+// The rows ai_answers returns with detail full, as far as a run keeps them.
+export type AnswersData = {
+  costUsd: number
+  rows: {
+    question: string
+    engine: string
+    result: AnswerResult
+    cited_url: string | null
+    others?: Record<string, AnswerResult>
+    task: string | null
+  }[]
+}
+
+// An ai_answers result as a tracking run, so the weekly audit's answers
+// join the same trend as the ones seo research checks.
+export function answerRun(country: string, data: AnswersData): AnswerRun {
   return {
     kind: 'ai_answers',
     country,

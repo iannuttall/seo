@@ -1,5 +1,14 @@
-import { runAiAnswers, type WeekAiAnswers } from '@seo/core/commands'
+import {
+  type AnswersData,
+  answerRun,
+  contextDefinition,
+  type ProgressRun,
+  runAiAnswers,
+  type WeekAiAnswers,
+} from '@seo/core/commands'
+import { siteContext } from '../context.ts'
 import { directory } from '../google.ts'
+import { siteProgress } from '../progress.ts'
 import { accountsOf } from '../store.ts'
 import { addUnmetered, flushUnmetered } from '../usage.ts'
 import type { Google } from './checks.ts'
@@ -7,12 +16,16 @@ import { type GapSite, included, topCountry } from './competitors.ts'
 import type { Meter } from './meter.ts'
 
 // The weekly audit's AI answer check, on SEO Skill's own DataForSEO
-// account: once a week, the same questions from the site's Search Console
-// are asked in ChatGPT search, Google AI Mode and AI Overviews (ai_answers
-// in seo_research), and each answer's result is kept beside the one from
-// the week before, so the summary can say which answers started or
-// stopped citing the site. Only paid sites and unlimited-sites accounts
-// get it. Spend is capped per site a month before each run.
+// account: once a week, the same questions are asked in ChatGPT search,
+// Google AI Mode and AI Overviews (ai_answers in seo_research), and each
+// answer's result is kept beside the one from the week before, so the
+// summary can say which answers started or stopped citing the site. The
+// questions are the ones pinned under "## AI questions" in the site's
+// business context, else the Search Console questions fixed at the first
+// check; a new set starts the comparison again. Each run also joins the
+// site's progress, with the context's competitors judged on the same
+// answers. Only paid sites and unlimited-sites accounts get it. Spend is
+// capped per site a month before each run.
 
 const HOUR_MS = 3_600_000
 const DAY_MS = 24 * HOUR_MS
@@ -40,9 +53,14 @@ CREATE TABLE IF NOT EXISTS ai_state (
   checked_at INTEGER,
   previous_checked_at INTEGER,
   blocked TEXT,
-  -- JSON: the questions asked every week, fixed at the first check that
-  -- found any.
+  -- JSON: the questions asked every week: the business context's pinned
+  -- questions, else Search Console's, fixed at the first check that found
+  -- any.
   questions TEXT,
+  -- 1 when the questions are the business context's pinned ones.
+  pinned INTEGER NOT NULL DEFAULT 0,
+  -- When this set of questions was first asked.
+  fixed_at INTEGER,
   country TEXT,
   -- JSON: queued answers not read yet, as ai_answers tasks.
   pending TEXT
@@ -60,6 +78,12 @@ CREATE TABLE IF NOT EXISTS ai_answers (
 );
 `
 
+// Columns an older ai_state lacks (schema.ts adds them).
+export const AI_STATE_ADDED: [string, string][] = [
+  ['pinned', 'INTEGER NOT NULL DEFAULT 0'],
+  ['fixed_at', 'INTEGER'],
+]
+
 type State = {
   next_at: number | null
   month: string | null
@@ -68,6 +92,8 @@ type State = {
   previous_checked_at: number | null
   blocked: string | null
   questions: string | null
+  pinned: number
+  fixed_at: number | null
   country: string | null
   pending: string | null
 }
@@ -92,18 +118,21 @@ function saveState(meter: Meter, fields: Partial<State>): void {
     previous_checked_at: null,
     blocked: null,
     questions: null,
+    pinned: 0,
+    fixed_at: null,
     country: null,
     pending: null,
     ...aiState(meter),
     ...fields,
   }
   meter.run(
-    `INSERT INTO ai_state (id, next_at, month, spent_usd, checked_at, previous_checked_at, blocked, questions, country, pending)
-     VALUES (1, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+    `INSERT INTO ai_state (id, next_at, month, spent_usd, checked_at, previous_checked_at, blocked, questions, pinned, fixed_at, country, pending)
+     VALUES (1, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
      ON CONFLICT (id) DO UPDATE SET next_at = excluded.next_at, month = excluded.month,
        spent_usd = excluded.spent_usd, checked_at = excluded.checked_at,
        previous_checked_at = excluded.previous_checked_at, blocked = excluded.blocked,
-       questions = excluded.questions, country = excluded.country, pending = excluded.pending`,
+       questions = excluded.questions, pinned = excluded.pinned, fixed_at = excluded.fixed_at,
+       country = excluded.country, pending = excluded.pending`,
     next.next_at,
     next.month,
     next.spent_usd,
@@ -111,24 +140,64 @@ function saveState(meter: Meter, fields: Partial<State>): void {
     next.previous_checked_at,
     next.blocked,
     next.questions,
+    next.pinned,
+    next.fixed_at,
     next.country,
     next.pending,
   )
 }
 
 // The rows ai_answers returns with detail full.
-type Answered = {
-  question: string
-  engine: string
-  result: string
-  cited_url: string | null
-  sources: string[]
-}
-type AnswersData = {
+type Answered = AnswersData['rows'][number] & { sources: string[] }
+type Answers = Omit<AnswersData, 'rows'> & {
   questions: string[]
-  costUsd: number
   pendingTasks: string[]
   rows: Answered[]
+}
+
+const sameSet = (a: string[], b: string[]) =>
+  JSON.stringify([...a].sort()) === JSON.stringify([...b].sort())
+
+// The progress run a check is kept as, by when the check ran.
+const runId = (checkedAt: number) =>
+  `ai_answers-${new Date(checkedAt).toISOString()}`
+
+// Keeps the check in the site's progress. An answer not read yet stays
+// pending with no task, because its task is on SEO Skill's DataForSEO
+// account and the person's key cannot read it back; the read-back
+// replaces it here. A failed write never fails the check.
+async function keepProgress(
+  env: Env,
+  site: GapSite,
+  checkedAt: number,
+  country: string,
+  data: Answers,
+  earlier: ProgressRun | null,
+): Promise<void> {
+  const fresh = answerRun(country, data)
+  const answers =
+    earlier?.kind === 'ai_answers'
+      ? (() => {
+          const read = new Map(
+            fresh.answers
+              .filter((a) => a.result !== 'pending')
+              .map((a) => [`${a.question}|${a.engine}`, a]),
+          )
+          return earlier.answers.map(
+            (a) => read.get(`${a.question}|${a.engine}`) ?? a,
+          )
+        })()
+      : fresh.answers
+  const run = {
+    ...fresh,
+    ...(earlier?.kind === 'ai_answers' ? { cost_usd: earlier.cost_usd } : {}),
+    id: runId(checkedAt),
+    ran_at: new Date(checkedAt).toISOString(),
+    answers: answers.map((a) => ({ ...a, task: null })),
+  } as ProgressRun
+  await siteProgress(env, site.user_id)
+    .saveRun(site.property, run)
+    .catch(() => undefined)
 }
 
 // One check when it is due. Returns when it is due next, or null when the
@@ -152,6 +221,15 @@ export async function runAiCheck(
     'x-dataforseo-password': env.DATAFORSEO_PASSWORD,
   })
   const search = google.searchAnalytics()
+  // The business context's pinned questions and competitors, if any.
+  const context = await siteContext(env, site.user_id)
+    .read(site.property)
+    .catch(() => null)
+  const definition = context
+    ? contextDefinition(site.property, context).definition
+    : null
+  const pinned = definition?.questions?.length ? definition.questions : null
+  const others = definition?.competitors ?? []
   const ask = async (input: {
     country: string
     questions?: string[]
@@ -160,12 +238,20 @@ export async function runAiCheck(
   }) =>
     (
       await runAiAnswers(
-        { site: site.property, detail: 'full', offset: 0, ...input },
+        {
+          site: site.property,
+          detail: 'full',
+          offset: 0,
+          others,
+          // The audit keeps its own runs; a retry must not reuse a cached one.
+          store: null,
+          ...input,
+        },
         headers,
         { searchAnalytics: search },
         () => '',
       )
-    ).data as AnswersData
+    ).data as Answers
   const store = (rows: Answered[], fresh: boolean) => {
     for (const row of rows) {
       const sources = JSON.stringify(row.sources ?? [])
@@ -210,6 +296,19 @@ export async function runAiCheck(
       waitSeconds: READ_BACK_SECONDS,
     })
     const left = data.pendingTasks
+    const kept = (
+      await siteProgress(env, site.user_id)
+        .runs(site.property)
+        .catch(() => [] as ProgressRun[])
+    ).find((run) => run.id === runId(state.checked_at as number))
+    await keepProgress(
+      env,
+      site,
+      state.checked_at,
+      state.country,
+      data,
+      kept ?? null,
+    )
     meter.transaction(() => {
       store(
         data.rows.filter((row) => row.result !== 'pending'),
@@ -246,10 +345,18 @@ export async function runAiCheck(
       now + WEEK_MS,
     )
   }
-  const questions = state?.questions
+  // The pinned questions, else the Search Console set fixed earlier. A
+  // set that is not the one asked last week starts the comparison again.
+  const stored = state?.questions
     ? (JSON.parse(state.questions) as string[])
-    : undefined
-  let data: AnswersData
+    : null
+  const keep =
+    stored &&
+    (pinned
+      ? Boolean(state?.pinned) && sameSet(pinned, stored)
+      : !state?.pinned)
+  const questions = pinned ?? (keep ? (stored ?? undefined) : undefined)
+  let data: Answers
   try {
     data = await ask({ country, questions, waitSeconds: WAIT_SECONDS })
   } catch (error) {
@@ -276,19 +383,33 @@ export async function runAiCheck(
       'included_dataforseo_microusd',
       Math.round(data.costUsd * 1_000_000),
     )
-    // A question no longer asked leaves the comparison.
-    meter.run(
-      `DELETE FROM ai_answers WHERE question NOT IN (SELECT value FROM json_each(?))`,
-      JSON.stringify(data.questions),
-    )
+    // A new set of questions starts the comparison again; otherwise a
+    // question no longer asked leaves it.
+    if (keep) {
+      meter.run(
+        `DELETE FROM ai_answers WHERE question NOT IN (SELECT value FROM json_each(?))`,
+        JSON.stringify(data.questions),
+      )
+    } else {
+      meter.run('DELETE FROM ai_answers')
+    }
     store(data.rows, true)
     saveState(meter, {
       month,
       spent_usd: spent + data.costUsd,
-      previous_checked_at: state?.checked_at ?? null,
+      previous_checked_at: keep ? (state?.checked_at ?? null) : null,
       checked_at: now,
       blocked: null,
       questions: JSON.stringify(data.questions),
+      pinned: pinned ? 1 : 0,
+      // A set kept from before this column existed counts from its
+      // earliest known check.
+      fixed_at: keep
+        ? (state?.fixed_at ??
+          state?.previous_checked_at ??
+          state?.checked_at ??
+          now)
+        : now,
       country,
       pending: data.pendingTasks.length
         ? JSON.stringify(data.pendingTasks)
@@ -296,6 +417,7 @@ export async function runAiCheck(
       next_at: data.pendingTasks.length ? now + HOUR_MS : now + WEEK_MS,
     })
   })
+  await keepProgress(env, site, now, country, data, null)
   return data.pendingTasks.length ? now + HOUR_MS : now + WEEK_MS
 }
 
@@ -329,6 +451,8 @@ export function aiResult(meter: Meter): WeekAiAnswers {
     questions: state?.questions
       ? (JSON.parse(state.questions) as string[])
       : [],
+    pinned: Boolean(state?.pinned),
+    fixed_at: state?.fixed_at ?? null,
     counts,
     changes: rows
       .filter(

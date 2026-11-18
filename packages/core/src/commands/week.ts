@@ -107,9 +107,15 @@ export type WeekAiAnswers = {
   previous_checked_at: number | null
   // Why the check could not run this week, as a sentence, or null.
   blocked: string | null
-  // The questions asked every week, fixed at the first check that found
-  // any, so one week compares with the next.
+  // The questions asked every week, so one week compares with the next:
+  // the business context's pinned questions, else Search Console's, fixed
+  // at the first check that found any.
   questions: string[]
+  // Whether the questions are the business context's pinned ones, and
+  // when this set was first asked. Missing from checks before they were
+  // kept.
+  pinned?: boolean
+  fixed_at?: number | null
   // The latest check's answers by result, across every question and
   // engine (the results ai_answers gives).
   counts: Record<
@@ -458,7 +464,7 @@ function aiAnswerLines(site: WeekSite): string[] {
   ].filter(Boolean)
   const engines = list(Object.values(ENGINE_NAMES))
   const lines = [
-    `- AI answers, checked ${day(found.checked_at)}: ${plural(found.questions.length, 'question')} from Search Console asked in ${engines}. Cited in ${count(counts.cited)} of ${plural(answers, 'answer')}, mentioned by name in ${count(counts.mentioned)}, neither in ${count(counts.neither)}, no AI answer shown in ${count(counts.no_answer)}${unknown.length ? `, ${list(unknown)}` : ''}.`,
+    `- AI answers, checked ${day(found.checked_at)}: ${found.pinned ? `${plural(found.questions.length, 'pinned question')} from the business context` : `${plural(found.questions.length, 'Search Console question')}${found.fixed_at ? ` (fixed on ${day(found.fixed_at)})` : ''}`} asked in ${engines}. Cited in ${count(counts.cited)} of ${plural(answers, 'answer')}, mentioned by name in ${count(counts.mentioned)}, neither in ${count(counts.neither)}, no AI answer shown in ${count(counts.no_answer)}${unknown.length ? `, ${list(unknown)}` : ''}.`,
   ]
   if (found.previous_checked_at) {
     const shown = found.changes.slice(0, MAX_AI_CHANGES)
@@ -474,6 +480,10 @@ function aiAnswerLines(site: WeekSite): string[] {
       ...(found.changes.length > shown.length
         ? [`    - And ${plural(found.changes.length - shown.length, 'more')}.`]
         : []),
+    )
+  } else {
+    lines.push(
+      '  - The first check of these questions, so there is nothing to compare yet.',
     )
   }
   if (found.cited_sites.length) {

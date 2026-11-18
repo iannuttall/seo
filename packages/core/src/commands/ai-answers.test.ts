@@ -275,3 +275,114 @@ test('ai_answers lists the searches ChatGPT ran', async () => {
   assert.match(out.text, /none returned/)
   assert.match(out.text, /not available/)
 })
+
+// Asking the same questions twice in a day paid for three runs to read one
+// (Monologue's weekly report). The second call now reads the first run's
+// tasks back for free, and refresh still asks again.
+test('ai_answers reads back today’s run of the same questions instead of paying again', async () => {
+  const posts: string[] = []
+  let id = 0
+  globalThis.fetch = (async (input: Request) => {
+    if (input.method === 'POST') {
+      posts.push(input.url)
+      const body = (await input.json()) as unknown[]
+      return Response.json({
+        tasks: body.map(() => ({
+          id: `00000000-0000-0000-0000-${String(++id).padStart(12, '0')}`,
+          status_code: 20100,
+          status_message: 'Task Created.',
+          cost: 0.0024,
+        })),
+      })
+    }
+    if (input.url.endsWith('/languages') || input.url.endsWith('/locations')) {
+      return Response.json({
+        tasks: [
+          {
+            status_code: 20000,
+            result: [
+              {
+                location_code: 2840,
+                location_type: 'Country',
+                country_iso_code: 'US',
+                language_code: 'en',
+              },
+            ],
+          },
+        ],
+      })
+    }
+    return Response.json({
+      tasks: [
+        {
+          id: input.url.split('/').pop(),
+          status_code: 40602,
+          status_message: 'Task In Queue.',
+          data: { keyword: 'best crm for a small team' },
+        },
+      ],
+    })
+  }) as typeof fetch
+
+  const saved = new Map<string, string>()
+  const store = {
+    get: async (key: string) => saved.get(key) ?? null,
+    put: async (key: string, value: string) => {
+      saved.set(key, value)
+    },
+  }
+  const ask = (questions: string[], refresh = false) =>
+    runAiAnswers(
+      {
+        site: 'example.com',
+        country: 'us',
+        detail: 'full',
+        offset: 0,
+        questions,
+        waitSeconds: 0,
+        store,
+        refresh,
+      },
+      new Headers({
+        'x-dataforseo-login': 'login',
+        'x-dataforseo-password': 'password',
+      }),
+      {} as CommandDeps,
+      () => 'next page',
+    )
+
+  const first = await ask([
+    'best crm for a small team',
+    'how to import contacts',
+  ])
+  assert.equal(posts.length, 3)
+  const firstData = first.data as { pendingTasks: string[]; reused: boolean }
+  assert.equal(firstData.pendingTasks.length, 6)
+  assert.equal(firstData.reused, false)
+  // The free read-back is in the text even with detail full.
+  assert.match(first.text, /6 answers aren't ready yet/)
+
+  // Same questions in another order: no new paid task.
+  const second = await ask([
+    'how to import contacts',
+    'best crm for a small team',
+  ])
+  assert.equal(posts.length, 3)
+  const secondData = second.data as {
+    pendingTasks: string[]
+    reused: boolean
+    costUsd: number
+  }
+  assert.equal(secondData.reused, true)
+  assert.equal(secondData.costUsd, 0)
+  assert.deepEqual(
+    [...secondData.pendingTasks].sort(),
+    [...firstData.pendingTasks].sort(),
+  )
+
+  // Other questions, or refresh, ask and pay.
+  await ask(['best crm for a small team'])
+  assert.equal(posts.length, 6)
+  await ask(['best crm for a small team', 'how to import contacts'], true)
+  assert.equal(posts.length, 9)
+})

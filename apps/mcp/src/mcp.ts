@@ -13,6 +13,7 @@ import {
   SKILL_RESOURCE,
   toolAnnotations,
 } from '@seo/core/commands'
+import { SEO_VERSION } from '@seo/core/hosted'
 import { z } from 'zod'
 // The same skills/seo/SKILL.md that `npx skills add` installs, bundled as
 // text by the Text rule in wrangler.jsonc.
@@ -103,7 +104,8 @@ const instructions = (env: Env, headers: Headers) => `${MCP_INSTRUCTIONS}
 ${savedKeys(env, headers)}
 Crawls, internal links and Bing run on a machine with the open-source CLI, not on this server. ${CLI_LINK} Then run, for example, \`npx -y seo crawl https://example.com --json\`, \`npx -y seo internal-links --url https://example.com/page --json\` or \`npx -y seo report --site <site> --section bing --json\`. When a site or key is missing, open ${accountUrl(env)} in the person's browser (with \`open <url>\` on macOS, \`xdg-open\` on Linux or \`start\` on Windows when you have a shell, otherwise show the link), let them add the Google account or key there, then run the same call again. This server keeps those sign-ins and keys, encrypted, and report data only for sites in the weekly site audit.`
 
-const SERVER_INFO = { ...MCP_SERVER_INFO, version: '1.0.0' }
+// The package version, so clients and logs show which release is live.
+const SERVER_INFO = { ...MCP_SERVER_INFO, version: SEO_VERSION }
 
 // The static server card at /.well-known/mcp/server-card.json, so
 // directories such as Smithery can list the tools without signing in.

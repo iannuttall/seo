@@ -1,0 +1,135 @@
+---
+title: 'What is WebMCP, and does it matter for SEO?'
+description: WebMCP lets a page give AI agents tools to call instead of buttons to guess at. Which agents use it, how to add a tool, and what it does for SEO.
+heading: What WebMCP is and what it means for SEO
+lead: WebMCP won't move your rankings or your AI citations. What it changes is whether an agent can finish a job on your site once it gets there.
+date: '2026-11-24'
+draft: true
+cover:
+  alt: "A Victorian engraved ironmonger's shop where the shopkeeper hands a lime green handled hammer across the counter to a butler, beside a row of lime green handled tools, while the lady he is shopping for watches."
+---
+
+import Callout from '@/components/blog/Callout.astro'
+
+WebMCP is a proposed web standard that lets a page register tools an AI agent in the browser can call, such as "search the catalog" or "add to cart", instead of reading the page and guessing which button to click. By November 2026, one mainstream agent called those tools, the built-in browser in OpenAI's ChatGPT desktop app, starting on [25 August 2026](https://learn.chatgpt.com/docs/changelog). Shopify and BigCommerce have switched it on for their storefronts by default.
+
+None of that touches how Google ranks a page or which pages AI answers cite. I'd still pay attention to it, because it's the first standard for agents acting on a page that a mainstream agent actually calls.
+
+<Callout title="The short version">
+WebMCP is for agents that act on your site, and search engines don't use it. Google hasn't said it's a ranking signal, and it doesn't need to be. If your site sells something or does something, it's worth a test. If your site is mostly articles, fix your forms and HTML first.
+</Callout>
+
+## What WebMCP is
+
+WebMCP gives a web page a JavaScript API to describe what it can do. Each tool has a name, a description, a JSON Schema for its inputs and a function that runs on the page. Chrome's [WebMCP docs](https://developer.chrome.com/docs/ai/webmcp) put the problem this way: "Instead of an agent reviewing the element, such as a button or a field, to understand its purpose, the website declares the element's purpose, so it's used as intended."
+
+A tool looks like this:
+
+```js
+await document.modelContext.registerTool({
+  name: 'search_guides',
+  description: 'Search the guides on example.com by topic. Returns titles and URLs.',
+  inputSchema: {
+    type: 'object',
+    properties: { query: { type: 'string', description: 'What to search for' } },
+    required: ['query'],
+  },
+  annotations: { readOnlyHint: true },
+  execute: async ({ query }) => {
+    const results = await searchGuides(query) // the same function your search box uses
+    return JSON.stringify(results)
+  },
+})
+```
+
+The tool runs in the visitor's tab, with their session and their cookies. That's the big difference from an API. The agent works on the page the person can see, logged in as them, and the person can watch it happen.
+
+The spec is a Draft Community Group Report from the W3C Web Machine Learning Community Group, with editors from Google and Microsoft. The [draft itself says](https://webmachinelearning.github.io/webmcp/) it "is not a W3C Standard nor is it on the W3C Standards Track". Mozilla's position is [neutral](https://github.com/mozilla/standards-positions/issues/1412) and WebKit's is [opposed](https://github.com/WebKit/standards-positions/issues/670), so treat it as a Chromium feature for now.
+
+## WebMCP vs MCP
+
+MCP connects an agent to your server. WebMCP connects an agent to your page while someone has it open. Chrome's [comparison page](https://developer.chrome.com/docs/ai/webmcp/compare-mcp) calls MCP the call center and WebMCP the in-store expert, and that's about right.
+
+|  | MCP | WebMCP |
+| --- | --- | --- |
+| Where the tools live | On your server | In your page's JavaScript |
+| When an agent can use them | Any time the server is up | Only while the page is open |
+| Whose login it uses | Its own credentials | The visitor's current session |
+| Who can call them | Any MCP client someone has connected | An agent in the browser that has the page open |
+| How an agent finds them | Someone adds the server to their agent | The page registers them while it's open |
+
+They don't compete. SEO Skill has a [hosted MCP server](/docs/mcp) because people want their agent to read Search Console from anywhere, and that would make no sense as a page tool. A page tool makes sense when the person and the agent need to look at the same thing, such as a cart, a dashboard or a form.
+
+## Which agents call WebMCP tools in November 2026
+
+ChatGPT's desktop app is the only mainstream agent I could find that calls WebMCP tools for ordinary users. OpenAI calls them [site tools](https://help.openai.com/en/articles/20001423-using-site-tools-in-the-chatgpt-desktop-app) and says they work "only in the ChatGPT desktop app's built-in browser, not in Chrome". When a page has tools, an arrow appears in the address bar, and ChatGPT Work or Codex can use them. OpenAI's [developer page](https://developers.openai.com/codex/webmcp) says the browser finds tools on the top-level page and in iframes, though its help page says tools provided only by embedded content aren't supported yet, so put yours on the top-level page.
+
+The rest, as of 19 November 2026:
+
+- Chrome runs an [origin trial](https://chromestatus.com/feature/5117755740913664) from Chrome 149, extended on 28 September 2026 to Chrome 162, which is due on the stable channel on 2 February 2027. It lets a site's own agent, or an extension, call the tools. Local testing works with a flag.
+- Gemini in Chrome: Google said at I/O on 19 May 2026 that it ["will soon support WebMCP APIs"](https://developer.chrome.com/blog/chrome-at-io26). I found no announcement since saying it does.
+- Edge runs [its own origin trial](https://developer.microsoft.com/en-us/microsoft-edge/origin-trials/trials/0b76fe60-b266-458e-a285-04e375c0c31a), which expires on 30 March 2027.
+- Brave's Leo assistant supports it from Brave 1.102.2, due on 5 January 2027, according to the spec's [implementation status page](https://github.com/webmachinelearning/webmcp/blob/main/implementation-status.md).
+
+On the site side, the big numbers come from platforms. Shopify's [changelog](https://shopify.dev/changelog/webmcp-liquid-hydrogen) says that from 5 August 2026 every Liquid storefront exposes tools such as `search_catalog`, `get_cart` and `proceed_to_checkout`, with "nothing to install or configure". BigCommerce [turned it on by default](https://investors.commerce.com/news-releases/news-release-details/commerce-and-cloudflare-bring-ai-shopping-assistants-bigcommerce) for Stencil storefronts on 21 October 2026, through Cloudflare. Its [docs](https://docs.bigcommerce.com/developer/api-reference/mcp/webmcp) say the shopping tools only appear once the store turns on Storefront MCP. So most shops on either platform already have WebMCP tools, whether they knew it or not.
+
+## Does WebMCP help SEO?
+
+WebMCP doesn't help a page rank in Google or get cited in AI answers, as far as anyone has shown. Google hasn't called it a ranking signal. Google's [guide to its generative AI features](https://developers.google.com/search/docs/fundamentals/ai-optimization-guide) says a page needs to be indexed and eligible for a snippet to appear in AI Overviews or AI Mode, and lists no special markup for AI.
+
+That fits how the two systems work. A search engine reads pages without running anyone's session. WebMCP tools only exist while the page is open in a browser that supports WebMCP, and no search engine says its crawler calls them. So a WebMCP tool doesn't change which pages get found and cited, and anyone selling WebMCP as a way to rank in AI Overviews is mixing up two different jobs.
+
+What WebMCP can change is what happens after the click. When a person asks their agent to "find a waterproof jacket under $150 and add it to my cart", the agent gets there through a search result or an AI answer like any visitor. Then it either calls a tool that works, or it clicks through your pages and hopes. My view is that agents will do a growing share of this kind of task over the next two to three years, and a site that's easy for an agent to finish a task on will convert more of that traffic. That's a conversion argument, not a ranking one, and nobody has published the numbers for it yet.
+
+## The WebMCP API changed a lot in 2026
+
+Most WebMCP guides from the first half of 2026 show code that no longer works. The spec's [commit history](https://github.com/webmachinelearning/webmcp/commits/main) has these changes:
+
+| Date | Change |
+| --- | --- |
+| 5 March 2026 | `provideContext()` and `clearContext()` removed |
+| 27 May 2026 | `modelContext` moved from `navigator` to `document` |
+| 8 June 2026 | `registerTool()` returns a promise |
+| 21 July 2026 | Tool annotations moved into their own object |
+| 8 October 2026 | The declarative API (annotated HTML forms) removed from the spec "for now" |
+| 2 November 2026 | An optional `outputSchema` added to tools |
+
+So `navigator.modelContext` in a guide means it was written before June 2026. The declarative form attributes (`toolname` and `tooldescription`) are a stranger case. The spec dropped them in October 2026, but Chrome's [declarative API page](https://developer.chrome.com/docs/ai/webmcp/declarative-api) still documents them and OpenAI's site tools page still accepts annotated forms. I'd use the JavaScript API for anything new, and keep any WebMCP code in one module so the next change is one edit.
+
+## Which sites should add WebMCP now
+
+A site should add WebMCP tools when an agent would do a task there, such as buying, booking or editing. This is how I'd sort it:
+
+1. Shops on Shopify already have tools, and so do BigCommerce shops once Storefront MCP is on (until then, the only tools are two image scanners). Check them in Chrome's DevTools (below) and make sure your product data is good, because the tools return what your catalog holds.
+2. Web apps, dashboards and editors are the cases ChatGPT's site tools were built around, such as exploring a dashboard or editing a document. If your users work in your app and also use ChatGPT, a few read tools are a cheap test.
+3. On sites with a booking, quote or search flow, a tool that wraps the search or the booking form saves an agent several fragile steps.
+4. On content sites, a search tool is the only tool I'd add, and only if your site search is good. For most blogs I'd spend the time on plain HTML that works without JavaScript, labelled forms and clear headings, which every agent reads today.
+
+Whatever you add, keep the normal page working for people and for browsers without WebMCP. A tool should call the same function the page already uses, so there's one thing to maintain.
+
+## How to add and test a WebMCP tool
+
+You can build and test a tool in Chrome today without the origin trial:
+
+1. In Chrome, open `chrome://flags`, enable `#enable-webmcp-testing` and `#devtools-webmcp-support`, and relaunch.
+2. Register a tool with `document.modelContext.registerTool()`, as in the example above. Check that `document.modelContext` exists first, so other browsers skip it.
+3. Open DevTools, then **Application** and **WebMCP**. The [WebMCP pane](https://developer.chrome.com/docs/devtools/application/webmcp) lists your tools as an agent sees them and lets you run one with your own inputs.
+4. Try it with a real agent. Chrome's Model Context Tool Inspector extension lets a Gemini model call your tools from a prompt. If you have access to site tools in the ChatGPT desktop app, open your page in its built-in browser and look for the arrow in the address bar.
+5. To make the tools reach real visitors, register for [Chrome's origin trial](https://developer.chrome.com/origintrials/#/register_trial/4163014905550602241) and [Edge's](https://developer.microsoft.com/en-us/microsoft-edge/origin-trials/trials/0b76fe60-b266-458e-a285-04e375c0c31a), and add each browser's token to your pages. Put both expiry dates on someone's calendar.
+
+The descriptions matter more than they look. An agent picks a tool by reading its name and description, so say what the tool does, when to use it and what it returns, in plain words.
+
+## What I added to seoskill.dev
+
+{/* TODO(ian): this section waits for the WebMCP build on seoskill.dev (separate thread). Needed: which tools the site registers and why those; how they were tested in DevTools; what ChatGPT's desktop browser (or another agent) did with them on a real prompt, with a screenshot of the site tools arrow and the tool list; anything that broke. Keep it to facts from the build. */}
+
+## The security side of WebMCP
+
+A WebMCP tool runs with the visitor's logged-in session, so a badly written tool can do anything that person can do. OpenAI's [site tools page](https://developers.openai.com/codex/webmcp) treats every tool definition and result as untrusted content and runs a safety review before each call. Chrome's guidance on [secure tools](https://developer.chrome.com/docs/ai/webmcp/secure-tools) says the same thing from the site's side.
+
+In practice, give a tool the narrowest inputs that work, mark purchases, deletions and anything hard to undo with `consequentialHint`, check permissions on the server as you would for a click, and leave the final step of a purchase, a deletion or a message to the person. And check every third-party script on a page with tools, because any script on the page can register one.
+
+## How this was checked
+
+- I read Chrome's WebMCP, DevTools and origin trial pages, the spec and its commit history, OpenAI's site tools pages, and Shopify's and BigCommerce's docs between 19 and 24 November 2026. Every status above is dated, and the spec and the browsers change often, so check the linked pages before you build on any of it.
+- "Only mainstream agent" means I found no announcement from Google, Anthropic, Microsoft or Perplexity of a generally available agent that calls WebMCP tools, as of 19 November 2026. Agents can still use any site the old way, by reading pages and clicking.

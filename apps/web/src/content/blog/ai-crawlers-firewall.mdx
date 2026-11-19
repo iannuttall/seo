@@ -43,6 +43,12 @@ User-agent: GPTBot
 Disallow: /
 ```
 
+## AI agents that browse for a person may skip robots.txt
+
+Some agents that open your pages because a person asked them to, such as ChatGPT-User and Google-Agent, may not follow robots.txt. Google's [list of user-triggered fetchers](https://developers.google.com/crawling/docs/crawlers-fetchers/google-user-triggered-fetchers) says that "because the fetch was requested by a user, these fetchers generally ignore robots.txt rules". Google-Agent is the one to know about. Google says it "is used by agents hosted on Google infrastructure to navigate the web and perform actions upon user request".
+
+So your firewall decides whether these agents get in, and the usual mistake is blocking them there by accident. Google publishes Google-Agent's addresses in a separate file, [user-triggered-agents.json](https://developers.google.com/static/crawling/ipranges/user-triggered-agents.json), and doesn't include them in Googlebot's list. A rule that only lets in Googlebot's addresses will block Google-Agent. Google also says it's testing [Web Bot Auth](https://developers.google.com/crawling/docs/crawlers-fetchers/web-bot-auth) for Google-Agent, which signs some of its requests so your CDN can check who sent them.
+
 ## What the top 1,000 domains block in robots.txt
 
 I ran SEO Skill's robots.txt check on the top 1,000 domains in the public [Tranco list](https://tranco-list.eu/list/947V2) on 15 November 2026. 499 of them had a robots.txt I could read:

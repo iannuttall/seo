@@ -1,0 +1,138 @@
+---
+title: 'Lighthouse agentic browsing audit: what it checks'
+description: Lighthouse's agentic browsing category runs seven audits and reports a pass ratio. I ran it on 21 sites to see what fails and what it can't tell you.
+heading: What Lighthouse's agentic browsing audit checks
+lead: Lighthouse gives your page an agentic browsing ratio such as 3/4. I ran it on 21 well-known sites. Most failures were ordinary accessibility bugs, and two of the three sites that lost points on the newest checks had published something early.
+date: '2026-11-24'
+draft: true
+cover:
+  alt: "A Victorian engraved lighthouse keeper on the gallery holds a lamp up to the great lens, its beam glowing lime green, while a steamship heads into the harbour below."
+  title: left
+---
+
+I ran Lighthouse 13.6.0's agentic browsing category on 21 home pages on 19 November 2026. Etsy blocked the test, so 20 got a result, and 8 of those 20 passed every check that counted, seoskill.dev among them.
+
+The most common failure was the accessibility tree, on 9 of the 19 sites other than mine. Buttons and links had no name, and ARIA roles were used wrongly. That's accessibility work Lighthouse has flagged for years under another heading.
+
+The newer checks behave differently. A missing llms.txt, a missing agent catalog and no WebMCP all come back as not applicable, so they cost nothing. Amazon publishes none of them and scores 2/2. Next.js publishes an agent catalog in an older format and scores 3/4.
+
+## The seven audits in Lighthouse's agentic browsing category
+
+The agentic browsing category first shipped in Lighthouse's default config in [version 13.3.0 on 7 May 2026](https://github.com/GoogleChrome/lighthouse/blob/main/changelog.md), for Chrome 150's DevTools. Version 13.5.0, on 17 September 2026, added a seventh audit for agent catalogs. The category's own description says it "is still under development and subject to change".
+
+These are the seven audits in 13.6.0, read from [the Lighthouse source](https://github.com/GoogleChrome/lighthouse/tree/main/core/audits/agentic) and a real run:
+
+| Audit | What it checks | Not applicable when |
+| --- | --- | --- |
+| Accessibility tree is well-formed | 33 accessibility rules for names, labels, roles and ARIA. One failing rule fails the audit | Always scored |
+| Cumulative Layout Shift | How far the layout moves during the test load. Passes at about 0.1 or less | Always scored |
+| llms.txt follows recommendations | `/llms.txt` has an H1, a Markdown link and at least 50 characters. A server error fails too | The file returns a 404 or another 4xx error other than 429 |
+| ARD manifest is valid | An agent catalog at `/.well-known/ard.json`, or linked from the page, matches the [ARD specification](https://agenticresourcediscovery.org/spec/) | No catalog and no link to one |
+| WebMCP schemas are valid | Forms annotated for WebMCP have a tool name, a description and named fields | The page has no WebMCP, or no tools |
+| WebMCP tools registered | Lists the tools the page offers agents. Information only | The page has no WebMCP |
+| WebMCP form coverage | Lists forms with no WebMCP annotation. Information only | No forms, or no WebMCP |
+
+Chrome's [llms.txt audit page](https://developer.chrome.com/docs/lighthouse/agentic-browsing/llms-txt) confirms the 404 rule. A missing file is "marked as Not Applicable (N/A), as providing the file is optional at the moment." In 13.6.0 it doesn't.
+
+## How the agentic browsing score is counted
+
+The agentic browsing score is a ratio of passed checks to scored checks, not a number out of 100. Chrome's [scoring page](https://developer.chrome.com/docs/lighthouse/agentic-browsing/scoring) says the category "does not have a weighted average score from 0 to 100", because "the standards for the agentic web are still emerging".
+
+Not applicable and information-only audits drop out of both sides of the ratio. An audit counts as passed at a Lighthouse score of 0.9 or more. So a page with nothing for agents can get 2/2, and a page that tried WebMCP can get 3/4.
+
+WebMCP is the part most sites can't test yet. Chrome says the WebMCP audits need the [WebMCP origin trial](https://developer.chrome.com/origintrials#/register_trial/4163014905550602241), and Lighthouse 13.6.0 only scores them when the page exposes the WebMCP API. On 18 of my 20 pages it didn't, so all three WebMCP audits came back not applicable.
+
+## What 19 other sites scored, by type
+
+<KeywordTable
+  caption="Lighthouse 13.6.0 agentic browsing results, home pages, default mobile settings, one run per site, 19 November 2026. Result is passed over scored checks. Etsy returned a 403 to the test browser and isn't scored."
+  sortBy="type"
+  columns={[{ key: 'site', label: 'Site', format: 'text' }, { key: 'type', label: 'Type', format: 'text' }, { key: 'result', label: 'Result', format: 'text' }, { key: 'failed', label: 'Failed checks', format: 'text', short: 'Failed' }]}
+  rows={[
+    { site: 'developer.mozilla.org', type: 'Docs', result: '2/2', failed: 'None' },
+    { site: 'react.dev', type: 'Docs', result: '3/3', failed: 'None' },
+    { site: 'docs.stripe.com', type: 'Docs', result: '2/3', failed: 'Accessibility tree' },
+    { site: 'nextjs.org/docs', type: 'Docs', result: '3/4', failed: 'ARD manifest' },
+    { site: 'docs.python.org', type: 'Docs', result: '1/2', failed: 'Accessibility tree' },
+    { site: 'stripe.com', type: 'SaaS', result: '3/3', failed: 'None' },
+    { site: 'notion.com', type: 'SaaS', result: '3/4', failed: 'ARD manifest' },
+    { site: 'vercel.com', type: 'SaaS', result: '3/4', failed: 'Accessibility tree' },
+    { site: 'linear.app', type: 'SaaS', result: '2/3', failed: 'Accessibility tree' },
+    { site: 'slack.com', type: 'SaaS', result: '2/3', failed: 'Accessibility tree' },
+    { site: 'cnn.com', type: 'News', result: '2/4', failed: 'llms.txt, ARD manifest' },
+    { site: 'bbc.com/news', type: 'News', result: '0/2', failed: 'Accessibility tree, CLS' },
+    { site: 'theguardian.com', type: 'News', result: '0/2', failed: 'Accessibility tree, CLS' },
+    { site: 'nytimes.com', type: 'News', result: '0/2', failed: 'Accessibility tree, CLS' },
+    { site: 'allbirds.com', type: 'Shop', result: '4/4', failed: 'None' },
+    { site: 'target.com', type: 'Shop', result: '4/4', failed: 'None' },
+    { site: 'amazon.com', type: 'Shop', result: '2/2', failed: 'None' },
+    { site: 'ikea.com', type: 'Shop', result: '2/2', failed: 'None' },
+    { site: 'gymshark.com', type: 'Shop', result: '1/2', failed: 'Accessibility tree' },
+  ]}
+/>
+
+News sites did worst. The BBC, the Guardian and the New York Times each scored 0/2, failing both the accessibility tree and layout shift (CLS of 0.645, 0.199 and 0.129 in my single runs). CNN passed both page checks and scored 2/4.
+
+CNN's two failures come from how its server answers. Lighthouse's requests for `/llms.txt` and `/.well-known/ard.json` got a short "Unknown Error" page with a success status, in two runs, while a plain request with curl got a 404. A 404 would have been not applicable.
+
+Docs and SaaS sites mostly lost one accessibility rule each. Next.js and Notion lost their point to an agent catalog published at the older `/.well-known/ai-catalog.json` address. Next.js uses identifiers that don't match the ARD format, and Notion's entry has no display name.
+
+Shops split by how much they've built. Allbirds registers 12 WebMCP tools, from `search_catalog` to `proceed_to_checkout`, through the origin trial script its Shopify store loads, and scores 4/4. Target registers one tool, `search_products`, and also scores 4/4. Amazon and IKEA offer agents nothing Lighthouse can see and score 2/2.
+
+So the ratio treats publishing nothing more kindly than publishing something slightly wrong. When most audits on a page were not applicable, I'd read a full ratio as "nothing broken" and nothing more.
+
+## seoskill.dev's agentic browsing result
+
+seoskill.dev's home page scored 3/3. The accessibility tree passed, CLS was 0, and its llms.txt passed. The three WebMCP audits and the ARD audit were not applicable, because the site has neither yet.
+
+Cloudflare's [isitagentready.com](https://isitagentready.com/) scanned seoskill.dev on the same day and gave it level 5 of 5, "Agent-Native", while listing WebMCP and ARD as fails. Cloudflare mostly checks the files around the page, such as robots.txt rules for AI bots, Markdown copies and an MCP server card. Lighthouse checks the page itself. "Agent ready" means whatever the tool you ran decides it means.
+
+{/* TODO(ian): After the WebMCP build ships on seoskill.dev, rerun `npx lighthouse https://seoskill.dev/ --only-categories=agentic-browsing` with Lighthouse 13.6.0 or later and add the before and after: the new ratio, the tools Lighthouse lists, the form coverage count and any schema errors. The WebMCP audits only score when the page exposes the WebMCP API, so the origin trial token has to be live on the page or all three stay not applicable. A screenshot of the Lighthouse report would help. */}
+
+## How to fix each failed agentic browsing check
+
+Each fix below is for a failure I saw in these runs. Lighthouse lists the first element that breaks each rule, so fix that one and run it again.
+
+| Failure | Sites | Fix |
+| --- | --- | --- |
+| Buttons with no name | BBC, Guardian, Linear, Gymshark | Give each icon button visible text or an `aria-label` |
+| Links with no name | Python docs, Vercel | Put text inside the link, or alt text on the image inside it |
+| A tabindex above zero | Stripe docs | Use `0` or `-1` and fix the order in the HTML instead |
+| ARIA role that doesn't fit the element | Slack, Guardian, Gymshark | Use the native element, such as a real `<button>`, or a role the element allows |
+| Presentational element that can take focus | Slack | Remove `role="presentation"` from anything focusable |
+| ARIA role missing its children or parent | Guardian, NYT, Gymshark | A `role="list"` needs `listitem` children, and a `tab` needs a `tablist` around it |
+| Dialog or input with no name | Gymshark | Add `aria-label` or `aria-labelledby` |
+| Layout shift | BBC, Guardian, NYT | Reserve space for ads, banners and late images, and set width and height on images |
+| llms.txt | CNN | Serve a real 404 if there's no file, or a Markdown file with an H1 and links. The [llms.txt validator](/tools/llms-txt-validator) checks the structure |
+| ARD manifest | Next.js, Notion, CNN | Move the catalog to `/.well-known/ard.json`, use `urn:air:` identifiers and give every entry a display name |
+
+If no agent reads your catalog yet, taking it down scores the same as fixing it. That says more about the ratio than about your site.
+
+## What the agentic browsing score doesn't measure
+
+The agentic browsing score says nothing about rankings or AI citations. Google's [guide to generative AI features in Search](https://developers.google.com/search/docs/fundamentals/ai-optimization-guide) says you don't need llms.txt or other "AI text files" to appear in Google Search, "as Google Search itself doesn't use them", and OpenAI's search help pages don't mention the file. An llms.txt can help an agent read your docs. It won't get you cited.
+
+The score also doesn't show whether agents visit your site, or whether they finish a task there. It's one lab load of one URL, so a home page result says nothing about your product or checkout pages.
+
+## How to run the agentic browsing audit on your own pages
+
+In Chrome 159 or later, which runs the same audits as Lighthouse 13.6.0, open DevTools on the page, go to the Lighthouse tab, tick Agentic Browsing and run it. From a terminal, the Lighthouse CLI runs the same category and opens the report when it's done:
+
+```sh
+npx lighthouse https://example.com/ --only-categories=agentic-browsing --view
+```
+
+Test the pages where people act, such as a product page, a sign-up form or a search page, as well as the home page. The WebMCP form check looks at forms, and a home page often has one at most. It counts forms without the declarative attributes the WebMCP spec dropped in October 2026, so read it as information. Run it twice before you trust a CLS failure, because one slow ad can move the number.
+
+Lighthouse only looks at the page. To see what agents can fetch from the whole site, crawl it. `seo crawl` reports your robots.txt rules for AI bots, Markdown copies, llms.txt links and the agent files under `/.well-known/`, which covers much of what Cloudflare's scanner checks:
+
+<AgentStep setup prompt="Crawl my site and tell me what AI agents can read: robots.txt rules for AI bots, Markdown copies, llms.txt and any files under /.well-known/." cli="seo crawl https://example.com" local="Crawls fetch pages from your site, so they run on your own machine." />
+
+If the crawl and Lighthouse both come back clean, I'd spend the time on the pages themselves. In my experience, a page people find easy to use is most of what an agent needs too.
+
+## How this was checked
+
+- Lighthouse 13.6.0 from npm with Chrome for Testing 157, headless, default mobile settings, one run per home page on 19 November 2026. CNN was run twice.
+- The ratio counts audits the way Lighthouse's report does. Not applicable and information-only audits are left out, and a score of 0.9 or more is a pass.
+- Lighthouse warned that four pages loaded too slowly to finish (Stripe docs, Stripe, Target and Gymshark), so their results may be incomplete. CLS from a single lab load can differ from what real visitors see.
+- Etsy returned a 403 to the test browser, so it has no result rather than a zero.

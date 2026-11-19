@@ -1,0 +1,98 @@
+---
+title: ChatGPT Business Hub mentions and clicks vs your analytics
+description: How to claim your business in ChatGPT Business Hub, and how to check its 28-day mentions and clicks against the ChatGPT visits your own analytics recorded.
+heading: ChatGPT Business Hub mentions and clicks
+lead: ChatGPT Business Hub shows how often ChatGPT mentioned your website and how many clicks it sent. Claim it, then put those numbers next to your own analytics for the same 28 days, because the two are unlikely to match.
+date: '2026-11-24'
+draft: true
+cover:
+  alt: "A Victorian engraved shop where a messenger boy hands the shopkeeper a long lime green tally strip, which he holds beside the open ledger he is checking it against."
+---
+
+OpenAI opened [Businesses in ChatGPT](https://openai.com/index/introducing-businesses-chatgpt/) in beta on 10 November 2026. Through Business Hub, you claim your business, verify it, and get an Insights tab with mentions, website clicks and discovery topics for the past 28 days.
+
+SEJ's guide, like most, covers the claim, and suggests comparing the figures with your analytics for the same dates. That's the part I'd spend time on. Once Insights fills in, you have two counts of ChatGPT traffic, OpenAI's and your analytics', and they're unlikely to agree. Read the reasons below before you report either number.
+
+## How to claim your business in ChatGPT Business Hub
+
+You claim a business in [Business Hub](https://chatgpt.com/business-hub) if you own it or are authorised to represent it. You don't need an ads account or a ChatGPT Enterprise agreement. These are the steps in OpenAI's [setup guide](https://help.openai.com/en/articles/20001635-setting-up-your-business-on-chatgpt):
+
+1. Open Business Hub, search for your business, select the listing that matches it and confirm which ChatGPT account will manage it. If there's no listing and you run an eligible online business, you may see an option to add it. Local stores and restaurants can only claim an existing US listing.
+2. Verify with one of the methods offered. They include a code by text or call to the business phone, a code to the business email, a TXT record in your domain's DNS, or your Shopify store.
+3. Wait for OpenAI to review the claim. It emails you a decision or asks for more information.
+4. Complete identity verification with Persona. You may need a government-issued ID, business registration details and proof that you can represent the business. Insights stay locked until Persona approves you.
+
+The guide also warns that a new profile created through Persona is published automatically once it's approved. Check the description, category and policies before you submit.
+
+Search Engine Journal's [walkthrough of claiming searchenginejournal.com](https://www.searchenginejournal.com/submit-website-chatgpt/596785) shows the screens. The domain route worked for SEJ, while a test of a new physical location hit a waitlist.
+
+## What Business Hub counts as a mention and a click
+
+Business Hub counts a mention for an online business only when ChatGPT references the business's website. OpenAI's guide says "The brand name alone doesn't count." For a local business, a mention counts when ChatGPT shows a result for that location.
+
+Website clicks are described as "how often people click through to your website." Discovery topics are common themes in answers that mentioned or cited your business. OpenAI says they don't reveal individual prompts or directly measure intent.
+
+Two more lines from the guide matter when you read the numbers. "Counts may be incomplete", and a blank metric can mean activity hasn't reached the reporting threshold, data is still being collected or reporting is unavailable, so a blank doesn't mean zero. The [announcement](https://openai.com/index/introducing-businesses-chatgpt/) adds that insights only appear "when there are enough conversations or interactions to meet certain thresholds."
+
+## SEJ's numbers show how far apart mentions and clicks are
+
+Search Engine Journal reported 353,356 mentions and 2,663 website clicks for searchenginejournal.com from 14 October to 10 November 2026, in [Vahan Petrosyan's guide](https://www.searchenginejournal.com/submit-website-chatgpt/596785) and SEJ's [14 November SEO Pulse](https://www.searchenginejournal.com/seo-pulse-core-update-chatgpt-business-hub-ai-modes-new-model/597135/). That's about 1 click for every 133 mentions (0.75%).
+
+That ratio is one publisher's, over one 28-day window, so don't treat it as a benchmark. It does show why the mention count can't sit next to anything in your analytics. Only the click count can.
+
+## Compare Business Hub clicks with your analytics for the same 28 days
+
+The comparison only works when the dates match. Note the 28 days the Insights tab covers. SEJ's screenshot said its data ran through 10 November in UTC, so Business Hub's days are probably UTC days, and remember your analytics reports days in its own time zone.
+
+With SEO Skill, pull the ChatGPT visits your analytics recorded for those dates. For Google Analytics, the [SEO report](/docs/report) overview lists visits from AI assistants by source, ChatGPT included, beside your search numbers:
+
+<AgentStep setup prompt="Run the SEO report for example.com from 2026-10-14 to 2026-11-10. How many Google Analytics sessions came from ChatGPT, and which pages did they land on?" cli="seo report --site example.com --start-date 2026-10-14 --end-date 2026-11-10" />
+
+For Simple Analytics, raw data from [`seo data`](/docs/data) includes visitors from AI tools such as ChatGPT, and it says when a visitor with both a chatgpt.com referrer and the `utm_source=chatgpt.com` tag might be counted twice:
+
+<AgentStep prompt="Show the Simple Analytics visitors from ChatGPT on example.com from 2026-10-14 to 2026-11-10." cli="seo data --site example.com --source simple_analytics --start-date 2026-10-14 --end-date 2026-11-10" />
+
+Clicky's landing pages don't split out AI assistants, but [`seo compare`](/docs/compare) (`seo compare --site example.com --date 2026-10-14`) shows Clicky visits from AI assistants for the periods it compares. The [analytics guide](/docs/analytics) covers connecting each tool.
+
+Each tool keeps its own metric. A Google Analytics session, a Clicky visit and a Simple Analytics visitor are different counts, and none of them is a Business Hub click.
+
+{/* TODO(ian): Claim Business Hub for one of my sites (say which, or "one of my sites"), wait for Persona approval and for Insights to show numbers. Then add: the Business Hub screenshot with its exact 28-day date range; mentions and website clicks; ChatGPT sessions or visits from my analytics for the same dates (and which tool); the gap as a ratio; and how many ChatGPT-attributed sessions landed with utm_source=chatgpt.com vs a chatgpt.com referrer, if GA shows it. One or two paragraphs on what surprised me. */}
+
+## Why Business Hub clicks and analytics visits differ
+
+I'd expect the two counts to differ on most sites, for five reasons.
+
+**A click isn't a visit.** Business Hub records the click in ChatGPT. Your analytics only records a visit if the page loads, the tag runs and, where you ask for consent, the person allows it. SEJ's Pulse puts it plainly: "A recorded click isn't a confirmed visit." OpenAI's setup guide says nothing about what happens after the click, so a click isn't a sale either.
+
+**Referrers get stripped.** A click from an app or a privacy-minded browser can arrive with no referrer. Google Analytics counts a session as Direct when its source is "(direct)", so a ChatGPT visit with nothing to identify it lands in Direct, where the [AI Assistant channel](https://support.google.com/analytics/answer/9756891) can't see it.
+
+**The `utm_source=chatgpt.com` tag can still identify them.** OpenAI's [publishers FAQ](https://help.openai.com/en/articles/12627856-publishers-and-developers-faq) says ChatGPT adds `utm_source=chatgpt.com` to referral URLs from its search results. The tag sits in the link, so it survives when the referrer doesn't. It also travels with the link, so a URL someone copies out of ChatGPT and shares elsewhere can still be credited to ChatGPT, which would push your analytics count above Business Hub's clicks. (That last part is my reading of how tags work. OpenAI doesn't say it.)
+
+{/* TODO(ian): before publishing, recheck the publishers FAQ link above. A direct fetch on 19 November 2026 returned an unrelated page, and the FAQ may have been withdrawn in October 2026. If it is gone, cite another primary source for the utm_source=chatgpt.com tag or cut the line. */}
+
+**Thresholds and gaps.** A small site may see a blank where analytics shows a handful of ChatGPT visits. OpenAI's guide says that blank isn't a zero.
+
+**Dates and time zones.** Business Hub's days, probably UTC, won't line up exactly with a property in another time zone. Over 28 days the edges are small, but they matter on a small site.
+
+So read the comparison as a range. If analytics shows far fewer ChatGPT visits than Business Hub shows clicks, I'd look for the missing ones in Direct first. Check how much Direct traffic lands on the pages ChatGPT visitors land on.
+
+## What Business Hub numbers can't tell you
+
+For an online business, mentions don't count answers that name your brand without referencing your website. ChatGPT answers many questions, including a lot of brand recommendations, from the model's training without searching or citing anything, as I cover in [how to get cited by ChatGPT](/blog/how-to-get-cited-by-chatgpt#why-some-questions-get-no-citation-at-all). From OpenAI's definition, I'd expect most of those to sit outside the mention count for an online business.
+
+Business Hub doesn't show prompts. OpenAI says businesses don't receive individual prompts or conversations, and discovery topics are grouped themes that OpenAI says don't directly measure intent.
+
+Claiming doesn't change your visibility. OpenAI's FAQ says claiming "doesn't guarantee increased visibility" and that advertising doesn't influence ChatGPT's independent answers. If you want more mentions, the work is the same as before. Let OAI-SearchBot crawl your site, rank for the longer searches ChatGPT runs, and get named on the pages it already cites. That's what [how to get cited by ChatGPT](/blog/how-to-get-cited-by-chatgpt) walks through.
+
+## What to do once Insights shows numbers
+
+Claim your business, wait for Persona, and write down the 28-day window the first time Insights fills in. Pull your analytics for the same dates and record both numbers.
+
+Then do it again every 28 days. One comparison gives you the size of the gap. A few in a row tell you whether your citation work is moving mentions, and whether the clicks it brings are reaching pages your analytics can see.
+
+## How this was checked
+
+- Business Hub's steps, definitions and limits come from OpenAI's [setup guide](https://help.openai.com/en/articles/20001635-setting-up-your-business-on-chatgpt) and [announcement](https://openai.com/index/introducing-businesses-chatgpt/), both read on 19 November 2026.
+- SEJ's figures are as SEJ reported them. The click ratio is my arithmetic from those two numbers.
+
+{/* TODO(ian): add a line on the comparison: which site (or "one of my sites"), which analytics tool, the exact dates, and the date the Business Hub screenshot was taken. */}

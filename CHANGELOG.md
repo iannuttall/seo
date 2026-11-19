@@ -1,5 +1,53 @@
 # Changelog
 
+## 0.25.0
+
+### Added
+
+- Brand and not brand by Google's own classification. `seo report` (the
+  overview), `seo compare` and the `google-updates` section split clicks
+  both ways: by Google's classification and by the brand names in the
+  business context. Google's count leads, because what Google counts as
+  brand is brand. Google classifies only whole-site properties with enough
+  searches, from 21 February 2026; a property it doesn't classify says
+  "not classified", never zero brand searches.
+- `seo data --brand branded|non_branded` (`brand` in MCP) and a
+  `brandedClassification` dimension.
+- `seo data --search-type multimodal`: searches made with an image, from
+  Google Lens, Circle to Search and image uploads. The report overview
+  lists them with the other Google surfaces.
+- `seo data --country fra,bel,che` and `--device mobile,tablet` keep rows
+  from any of several countries or devices.
+- Market groups: lines such as `Europe: FRA, BEL, CHE` under `## Markets`
+  in the business context give each group's clicks in the overview,
+  `seo compare` and `google-updates`.
+- The `google-updates` section adds brand and not brand, devices, market
+  groups, the pages that moved on searches not about the brand, and the
+  top Google Lens pages. Small rows are marked "too small to judge", and
+  results are marked early until a week after the update finishes.
+- Progress points save Google's brand split beside the brand-name split.
+- Hosted: each site's result for each Google update is kept, so
+  `google-updates` lists earlier updates after Search Console drops their
+  days. The weekly summary and the Google update email show not-brand
+  clicks.
+
+### Changed
+
+- When Google's brand count and the saved brand names differ, the report
+  names the brand searches that are safe to add to `## Brand names`: ones
+  where Google counts at least 80% of the clicks the name would hide as
+  brand. Once none are left, the note is one short line.
+- The business context guide starts brand names from the searches Google
+  counts as brand.
+- Hosted: the daily index roundup is one email per site, with an email
+  switch per site under Alerts.
+
+### Fixed
+
+- The site check accepts llms.txt files at any path, as the revised
+  llms.txt proposal allows, and resolves each file's links from its own
+  folder.
+
 ## 0.24.1
 
 ### Fixed

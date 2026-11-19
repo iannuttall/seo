@@ -2,7 +2,7 @@
 title: 'Lighthouse agentic browsing audit: what it checks'
 description: Lighthouse's agentic browsing category runs seven audits and reports a pass ratio. I ran it on 21 sites to see what fails and what it can't tell you.
 heading: What Lighthouse's agentic browsing audit checks
-lead: Lighthouse gives your page an agentic browsing ratio such as 3/4. I ran it on 21 well-known sites. Most failures were ordinary accessibility bugs, and two of the three sites that lost points on the newest checks had published something early.
+lead: Lighthouse gives your page an agentic browsing ratio such as 3/4. I ran it on 21 well-known sites. Most failures were ordinary accessibility bugs. The newer agent checks only cost points when a site served something at their addresses, so publishing nothing scored better than publishing it slightly wrong.
 date: '2026-11-19'
 draft: false
 cover:
@@ -51,7 +51,7 @@ These are the seven audits in 13.6.0, read from [the Lighthouse source](https://
 | WebMCP tools registered | Lists the tools the page offers agents. Information only | The page has no WebMCP |
 | WebMCP form coverage | Lists forms with no WebMCP annotation. Information only | No forms, or no WebMCP |
 
-Chrome's [llms.txt audit page](https://developer.chrome.com/docs/lighthouse/agentic-browsing/llms-txt) confirms the 404 rule. A missing file is "marked as Not Applicable (N/A), as providing the file is optional at the moment." In 13.6.0 it doesn't.
+Chrome's [llms.txt audit page](https://developer.chrome.com/docs/lighthouse/agentic-browsing/llms-txt) confirms the 404 rule. A missing file is "marked as Not Applicable (N/A), as providing the file is optional at the moment."
 
 ## How the agentic browsing score is counted
 
@@ -134,7 +134,7 @@ CNN's two failures come from how its server answers. Lighthouse's requests for `
 
 Lighthouse reads that body as a catalog and as an llms.txt, and fails both: the catalog isn't valid JSON, and the llms.txt has no H1 and no links.
 
-Docs and SaaS sites mostly lost one accessibility rule each. Next.js and Notion lost their point to an agent catalog published at the older `/.well-known/ai-catalog.json` address. Next.js uses identifiers that don't match the ARD format, and Notion's entry has no display name.
+Docs and SaaS sites mostly lost one accessibility rule each. Next.js and Notion lost their point on what their catalogs contain. Both sit at the older `/.well-known/ai-catalog.json` address, which only draws a warning (Vercel's is there too and passes). Next.js uses identifiers that don't match the ARD format, and Notion's entry has no display name. Next.js uses identifiers that don't match the ARD format, and Notion's entry has no display name.
 
 Shops split by how much they've built. Allbirds registers 12 WebMCP tools, from `search_catalog` to `proceed_to_checkout`, through the origin trial script its Shopify store loads, and scores 4/4. Target registers one tool, `search_products`, and also scores 4/4. Amazon and IKEA offer agents nothing Lighthouse can see and score 2/2.
 
@@ -170,8 +170,6 @@ Buttons with no name were the most common rule, on four sites. On Linear it was 
 | Layout shift | BBC, Guardian, NYT | Reserve space for ads, banners and late images, and set width and height on images |
 | llms.txt | CNN | Serve a real 404 if there's no file, or a Markdown file with an H1 and links. The [llms.txt validator](/tools/llms-txt-validator) checks the structure |
 | ARD manifest | Next.js, Notion, CNN | Move the catalog to `/.well-known/ard.json`, use `urn:air:` identifiers and give every entry a display name |
-
-If no agent reads your catalog yet, taking it down scores the same as fixing it. That says more about the ratio than about your site.
 
 ## What the agentic browsing score doesn't measure
 

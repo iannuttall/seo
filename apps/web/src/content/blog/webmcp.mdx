@@ -37,7 +37,7 @@ WebMCP is a proposed web standard that lets a page register tools an AI agent in
 None of that touches how Google ranks a page or which pages AI answers cite. I'd still pay attention to it, because it's the first standard for agents acting on a page that a mainstream agent actually calls.
 
 <Callout title="The short version">
-WebMCP is for agents that act on your site, and search engines don't use it. Google hasn't said it's a ranking signal, and it doesn't need to be. If your site sells something or does something, it's worth a test. If your site is mostly articles, fix your forms and HTML first.
+WebMCP is for agents that act on your site, and search engines don't use it. If your site sells something or does something, it's worth a test. If your site is mostly articles, fix your forms and HTML first.
 </Callout>
 
 ## What WebMCP is
@@ -67,8 +67,6 @@ The tool runs in the visitor's tab, with their session and their cookies. That's
 
 The spec is a Draft Community Group Report from the W3C Web Machine Learning Community Group, with editors from Google and Microsoft. The [draft itself says](https://webmachinelearning.github.io/webmcp/) it "is not a W3C Standard nor is it on the W3C Standards Track". Mozilla's position is [neutral](https://github.com/mozilla/standards-positions/issues/1412) and WebKit's is [opposed](https://github.com/WebKit/standards-positions/issues/670), so treat it as a Chromium feature for now.
 
-For anything this post doesn't cover, Chrome's own WebMCP docs are the place to start.
-
 ## WebMCP vs MCP
 
 MCP connects an agent to your server. WebMCP connects an agent to your page while someone has it open. Chrome's [comparison page](https://developer.chrome.com/docs/ai/webmcp/compare-mcp) calls MCP the call center and WebMCP the in-store expert, and that's about right.
@@ -94,7 +92,7 @@ The rest, as of 19 November 2026:
 - Edge runs [its own origin trial](https://developer.microsoft.com/en-us/microsoft-edge/origin-trials/trials/0b76fe60-b266-458e-a285-04e375c0c31a), which expires on 30 March 2027.
 - Brave's Leo assistant supports it from Brave 1.102.2, due on 5 January 2027, according to the spec's [implementation status page](https://github.com/webmachinelearning/webmcp/blob/main/implementation-status.md).
 
-On the site side, the big numbers come from platforms. Shopify's [changelog](https://shopify.dev/changelog/webmcp-liquid-hydrogen) says that from 5 August 2026 every Liquid storefront exposes tools such as `search_catalog`, `get_cart` and `proceed_to_checkout`, with "nothing to install or configure". BigCommerce [turned it on by default](https://investors.commerce.com/news-releases/news-release-details/commerce-and-cloudflare-bring-ai-shopping-assistants-bigcommerce) for Stencil storefronts on 21 October 2026, through Cloudflare. Its [docs](https://docs.bigcommerce.com/developer/api-reference/mcp/webmcp) say the shopping tools only appear once the store turns on Storefront MCP. So most shops on either platform already have WebMCP tools, whether they knew it or not.
+On the site side, the big numbers come from platforms. Shopify's [changelog](https://shopify.dev/changelog/webmcp-liquid-hydrogen) says that from 5 August 2026 every Liquid storefront exposes tools such as `search_catalog`, `get_cart` and `proceed_to_checkout`, with "nothing to install or configure". BigCommerce [turned it on by default](https://investors.commerce.com/news-releases/news-release-details/commerce-and-cloudflare-bring-ai-shopping-assistants-bigcommerce) for Stencil storefronts on 21 October 2026, through Cloudflare. Its [docs](https://docs.bigcommerce.com/developer/api-reference/mcp/webmcp) say the shopping tools only appear once the store turns on Storefront MCP. So every Liquid shop on Shopify already has shopping tools, whether it knew or not, and BigCommerce shops get them once Storefront MCP is on.
 
 ## Does WebMCP help SEO?
 
@@ -102,7 +100,7 @@ WebMCP doesn't help a page rank in Google or get cited in AI answers, as far as 
 
 That fits how the two systems work. A search engine reads pages without running anyone's session. WebMCP tools only exist while the page is open in a browser that supports WebMCP, and no search engine says its crawler calls them. So a WebMCP tool doesn't change which pages get found and cited, and anyone selling WebMCP as a way to rank in AI Overviews is mixing up two different jobs.
 
-What WebMCP can change is what happens after the click. When a person asks their agent to "find a waterproof jacket under $150 and add it to my cart", the agent gets there through a search result or an AI answer like any visitor. Then it either calls a tool that works, or it clicks through your pages and hopes. My view is that agents will do a growing share of this kind of task over the next two to three years, and a site that's easy for an agent to finish a task on will convert more of that traffic. That's a conversion argument, not a ranking one, and nobody has published the numbers for it yet.
+What WebMCP can change is what happens after the click. When a person asks their agent to "find a waterproof jacket under $150 and add it to my cart", the agent gets there through a search result or an AI answer like any visitor. Then it either calls a tool that works, or it clicks through your pages and hopes. My view is that agents will do a growing share of this kind of task over the next two to three years, and a site that's easy for an agent to finish a task on will convert more of that traffic. That's a conversion argument, not a ranking one.
 
 ## The WebMCP API changed a lot in 2026
 
@@ -119,7 +117,7 @@ Most WebMCP guides from the first half of 2026 show code that no longer works. T
   ]}
 />
 
-So `navigator.modelContext` in a guide means it was written before June 2026. This is the same tool written the old way and the current way:
+So a guide that uses `navigator.modelContext` is out of date. This is the same tool written the old way and the current way:
 
 <BeforeAfter
   caption="One tool registered as guides from early 2026 show it, and as the spec has it on 19 November 2026 (WebMCP draft and commit history)."
@@ -127,7 +125,7 @@ So `navigator.modelContext` in a guide means it was written before June 2026. Th
   after={{ label: 'Current spec', code: newTool, note: 'registerTool() returns a promise from 8 June, and annotations sit in their own object from 21 July.' }}
 />
 
-The declarative form attributes (`toolname` and `tooldescription`) are a stranger case. The spec dropped them in October 2026, but Chrome's [declarative API page](https://developer.chrome.com/docs/ai/webmcp/declarative-api) still documents them and OpenAI's site tools page still accepts annotated forms. I'd use the JavaScript API for anything new, and keep any WebMCP code in one module so the next change is one edit.
+The declarative form attributes (`toolname` and `tooldescription`) are a stranger case. The spec dropped them in October 2026, but Chrome's [declarative API page](https://developer.chrome.com/docs/ai/webmcp/declarative-api) still documents them and OpenAI's developer page still accepts annotated forms. I'd use the JavaScript API for anything new, and keep any WebMCP code in one module so the next change is one edit.
 
 ## Which sites should add WebMCP now
 
@@ -160,7 +158,7 @@ The descriptions matter more than they look. An agent picks a tool by reading it
 
 ## The security side of WebMCP
 
-A WebMCP tool runs with the visitor's logged-in session, so a badly written tool can do anything that person can do. OpenAI's [site tools page](https://developers.openai.com/codex/webmcp) treats every tool definition and result as untrusted content and runs a safety review before each call. Chrome's guidance on [secure tools](https://developer.chrome.com/docs/ai/webmcp/secure-tools) says the same thing from the site's side.
+A WebMCP tool runs with the visitor's logged-in session, so a badly written tool can do anything that person can do. OpenAI's [developer page](https://developers.openai.com/codex/webmcp) treats every tool definition and result as untrusted content and runs a safety review before each call. Chrome's guidance on [secure tools](https://developer.chrome.com/docs/ai/webmcp/secure-tools) says the same thing from the site's side.
 
 In practice, give a tool the narrowest inputs that work, mark purchases, deletions and anything hard to undo with `consequentialHint`, check permissions on the server as you would for a click, and leave the final step of a purchase, a deletion or a message to the person. And check every third-party script on a page with tools, because any script on the page can register one.
 

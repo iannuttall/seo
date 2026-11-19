@@ -4,7 +4,7 @@ description: One real SEO session in Claude Code or Codex, from Search Console d
 heading: How to do SEO with Claude Code and Codex
 lead: Most guides to Claude Code SEO are lists of prompts. This is one real session on seoskill.dev, from Search Console data to a fix, with what each prompt returned and where I stopped the agent to check its work.
 date: '2026-11-19'
-draft: false
+draft: true
 cover:
   alt: "A Victorian engraved study where a clockwork automaton holds a magnifying glass over a survey map while the engineer beside it draws one route in lime green."
 ---
@@ -33,7 +33,7 @@ The session in six steps:
 
 <PlanSteps
   steps={[
-    { title: 'Ask what is due', body: 'seo next found four pages that had dropped out of Google\'s index. They get their own session.' },
+    { title: 'Ask what is due', body: 'seo next found four pages that had dropped out of Google\'s index. They are a separate job.' },
     { title: 'Read the overview', body: 'The home page took 490 of the site\'s 614 clicks in four weeks.' },
     { title: 'Check the quick wins', body: '"ai seo skill" topped the list at position 7.74, with 172 impressions and no clicks.' },
     { title: 'Check the SERP', body: 'Other people\'s skills ranked above the home page, so I parked the title change.' },
@@ -87,7 +87,7 @@ The next step for sc-domain:seoskill.dev is to unblock pages.
 | index-drop | /tools/word-combiner                      | dropped out 2026-11-14, Crawled - currently not indexed |
 ```
 
-Four pages had dropped out of Google's index between 14 and 16 November 2026. That's the right thing to fix first, and it's a job I'd hand to the agent with a pull request at the end. One of the four says "Excluded by 'noindex' tag", which may be deliberate, so I'd want the agent to ask before it touches that tag. I'll take those four in their own session, because this one is about the step after it, improving pages that already rank.
+Four pages had dropped out of Google's index between 14 and 16 November 2026. That's the right thing to fix first, and it's a job I'd hand to the agent with a pull request at the end. One of the four says "Excluded by 'noindex' tag", which may be deliberate, so I'd want the agent to ask before it touches that tag. Those four are a separate job. This session is about the step after it, improving pages that already rank.
 
 ## Read the SEO report before picking anything
 
@@ -127,7 +127,7 @@ skills for seo            | /                       | 0      | 43          | 9.3
 
 Thirteen of the 17 rows were on the SERP checker tool and carried a "likely-automated" flag. Those searches follow the pattern of rank tracker tests, so they probably came from software rather than people. An agent working alone could easily rewrite a page for bots. The flag is there so it doesn't, but it's still worth a glance from you.
 
-The top real row was "ai seo skill", with 172 impressions for the home page at an average position of 7.74 and no clicks. The home page title is "SEO Skill | Open source SEO for agent-native teams", and "agent-native" isn't a phrase I'd expect anyone to search for. The obvious move, and the one this row invites, is a new home page title with "AI SEO skill" in it.
+The top real row was "ai seo skill", with 172 impressions for the home page at an average position of 7.74 and no clicks. The home page title is "SEO Skill | Open source SEO for agent-native teams". The obvious move, and the one this row invites, is a new home page title with "AI SEO skill" in it.
 
 Before agreeing, I asked who else ranks:
 
@@ -140,7 +140,7 @@ Nearly every result on page one was a skill file or a list of skills. Search Con
 The history agreed. Until 20 October 2026, the home page title was "Free SEO data for AI agents", and in the four weeks before the change the same query got no clicks then either.
 
 <SearchResult
-  caption={'The home page in Google before and after its title changed on 20 October 2026. Titles and descriptions from the site\'s repository; impressions and positions for "ai seo skill" from Search Console, four weeks each side.'}
+  caption={'The home page in Google before and after its title changed on 20 October 2026. Titles and descriptions from the site\'s repository; impressions and positions for "ai seo skill" from Search Console, 21 September to 18 October and 19 October to 15 November 2026.'}
   before={{
     label: 'Until 20 October',
     url: 'https://seoskill.dev/',
@@ -161,27 +161,27 @@ The history agreed. Until 20 October 2026, the home page title was "Free SEO dat
 
 A title with "AI" in it didn't earn a click for "ai seo skill" any more than one without. That points at who is searching.
 
-So I parked it. DataForSEO puts "ai seo skill" at 20 US searches a month, and those people are probably looking for someone else's skill. I wouldn't risk a title change on the page that brings in four of every five clicks for them. That judgement call is yours to make, and an agent shouldn't make it for you.
+So I parked it. People searching "ai seo skill" are probably looking for someone else's skill. I wouldn't risk a title change on the page that brings in four of every five clicks for them. That judgement call is yours to make, and an agent shouldn't make it for you.
 
 ## Find the searches the home page can't win
 
 The quick win pointed at something bigger, though. If the home page shows up for "ai seo skill", what else does it show up for that it isn't written for?
 
-<AgentStep prompt="Which searches with Claude, Codex or AI in them show pages on example.com, and where do they rank?" cli="seo data --site example.com --dimensions query,page --query-regex '(^| )(claude|codex|ai)( |$)' --sort impressions" />
+<AgentStep prompt="Which searches with Claude, Codex or AI in them show pages on example.com, and which page does Google show for each?" cli="seo data --site example.com --dimensions query,page --query-regex '(^| )(claude|codex|ai)( |$)' --sort impressions" />
 
 ```text
-query                    | page | clicks | impressions | position
-claude seo skills        | /    | 0      | 251         | 57.98
-claude code seo skill    | /    | 0      | 204         | 61.7
-claude code seo skills   | /    | 0      | 178         | 65.48
-ai seo skill             | /    | 0      | 172         | 7.74
-claude skills seo        | /    | 0      | 166         | 70.55
-claude seo skill         | /    | 0      | 155         | 54.12
+query                    | page | clicks | impressions
+claude seo skills        | /    | 0      | 251
+claude code seo skill    | /    | 0      | 204
+claude code seo skills   | /    | 0      | 178
+ai seo skill             | /    | 0      | 172
+claude skills seo        | /    | 0      | 166
+claude seo skill         | /    | 0      | 155
 ...
-codex seo skill          | /    | 2      | 23          | 4.3
+codex seo skill          | /    | 2      | 23
 ```
 
-Searches that name Claude land on the home page around page six of the results. The one Codex search in the list ranks at 4.3 and gets clicks, which suggests the home page can rank for an agent's name when there's less competition for it.
+Every search that names Claude lands on the home page.
 
 Then by page, for every search with "claude" in it:
 
@@ -192,13 +192,13 @@ Then by page, for every search with "claude" in it:
   caption="Google Search Console, seoskill.dev, 19 October to 15 November 2026."
   highlight="/features/claude-seo"
   rows={[
-    { label: '/', value: 1565, note: '1 click at position 58.78, up from 613 impressions the four weeks before' },
-    { label: '/alternatives/claude-seo', value: 20, note: 'No clicks, position 66.55' },
-    { label: '/features/claude-seo', value: 1, note: 'No clicks, position 21. The page written for these searches' },
+    { label: '/', value: 1565, note: '1 click, up from 613 impressions the four weeks before' },
+    { label: '/alternatives/claude-seo', value: 20, note: 'No clicks' },
+    { label: '/features/claude-seo', value: 1, note: 'The page written for these searches' },
   ]}
 />
 
-That's the real finding. Between 19 October and 15 November 2026, Google showed the home page 1,565 times for searches with "claude" in them, at an average position of 58.78, for one click. Position 58 is around the sixth page of results, so few of those impressions were people reading the page (my reading of the position, not something Search Console reports). Meanwhile the page written for those searches, the Claude SEO skill page, got one impression.
+That's the real finding. Between 19 October and 15 November 2026, Google showed the home page 1,565 times for searches with "claude" in them, and the page written for those searches, the Claude SEO skill page, once.
 
 ## Check the page Google should have picked
 
@@ -213,7 +213,7 @@ verdict: PASS | Submitted and indexed | last_crawl 2026-11-03T15:28:28Z
 Query totals: clicks 0, impressions 1.
 ```
 
-The page is indexed and its title matches the searches. But Google last crawled it on 3 November 2026, and the page was rebuilt on 11 November 2026. Google is judging a version of the page that no longer exists. There's real demand behind those searches. On 19 November 2026, DataForSEO put "claude seo" at 720 US searches a month and "claude code for seo" at 110, both with a keyword difficulty of 8 out of 100.
+The page is indexed and its title matches the searches. But Google last crawled it on 3 November 2026, and the page was rebuilt on 11 November 2026. Google is judging a version of the page that no longer exists.
 
 ## The fix: send Claude searches to the Claude page
 
@@ -236,9 +236,7 @@ In Claude Code or Codex, that's one more prompt in the same session, and the age
 
 <AgentStep prompt="Point the founders card on the home page at the Claude SEO skill page, and open a pull request. Don't change the title." />
 
-I shipped the home page change with this post on 19 November 2026. The same day, Request indexing for the Claude page failed with "Something went wrong" in Search Console, so I'll ask again. I'll add the clicks and impressions for "claude" searches on both pages here once two weeks of data are in.
-
-A before and after on one page shows timing, not cause. If the Claude page starts getting impressions after the recrawl, that fits the stale crawl being the problem, but a Google update in the same weeks could move it too.
+I shipped the home page change with this post on 19 November 2026. Once a change is live, mark its issue fixed, and SEO Skill compares the page's clicks and impressions for the 28 and 56 days after against the same days before. Read that comparison as timing, not cause, because a Google update in the same weeks could move the numbers too.
 
 ## What to let the agent do alone, and what to check yourself
 
@@ -271,6 +269,6 @@ Start with the step `seo next` says is due. On seoskill.dev that was four pages 
 ## How this was checked
 
 - The session ran on 19 November 2026 through the hosted MCP, on the seoskill.dev Search Console property. Search Console data covers 19 October to 15 November 2026 against 21 September to 18 October 2026, Google web search only.
-- The SERPs came from DataForSEO, US desktop, on 19 November 2026. Keyword volumes and difficulty are DataForSEO's US estimates from November 2026. The research cost about $0.14 in total.
+- The SERPs came from DataForSEO, US desktop, on 19 November 2026. The research cost about $0.14 in total.
 - The title history and the rebuild date of the Claude SEO skill page come from the site's own repository.
 - Search Console hides rare queries, so query rows don't add up to page totals, and every impression count above is a minimum.

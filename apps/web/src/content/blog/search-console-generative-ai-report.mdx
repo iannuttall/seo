@@ -19,8 +19,6 @@ The Generative AI performance report counts impressions of your pages in two Goo
 
 Google's [help page for the report](https://support.google.com/webmasters/answer/16984139) defines an impression as each time "links to your site were shown to a user in a generative AI feature on Google Search". You can group those impressions by page, country, date or device, and filter between text searches and multimodal searches (Google Lens, Circle to Search and image uploads).
 
-Google's announcement and help page are the pages to check when a third-party write-up (this one included) disagrees with them.
-
 The report is a slice of numbers you already have. The help page says it "includes data from the Web search type in the Performance report", so AI impressions sit inside your normal web impressions too. Never add the two together.
 
 The chart counts by property, so two of your links in one AI answer make one impression, while the Pages table counts each page. That's why the chart and table totals can differ.
@@ -51,7 +49,7 @@ The Generative AI performance report has no route out of Search Console except t
 
 The other place AI data could show up is the search appearance dimension, which marks results such as product snippets and videos. I grouped all 35 Search Console properties I have access to by search appearance for 17 August to 15 November 2026. 22 returned no search appearance rows at all. The other 13 returned only translated results, product snippets and video. Not one returned anything for AI Overviews or AI Mode.
 
-No dashboard, connector or agent built on the API can read this report, SEO Skill included. To keep its history, export it by hand each month.
+No dashboard, connector or agent built on the API can read this report. To keep its history, export it by hand each month.
 
 The exported table stops at 1,000 rows. And values the report shows as ~ or a hyphen (not available) download as zeros, so a zero in the export can be missing data.
 
@@ -60,7 +58,7 @@ The exported table stops at 1,000 rows. And values the report shows as ~ or a hy
 I read the report on two of my sites. One is seoskill.dev, which had 208,508 web impressions from 17 August to 15 November 2026, and the other is [keep.md](https://keep.md), which had 457,512 over the same 91 days.
 
 <BrowserFrame
-  url="https://search.google.com/search-console/performance/generative-ai"
+  url="https://search.google.com/search-console/performance/search-analytics/ai"
   tab="Generative AI features"
   caption="The Generative AI features report for seoskill.dev, web (text) search, 17 August to 15 November 2026, read 19 November 2026. The marker near 9 November is Google's note for the logging error."
 >
@@ -70,24 +68,24 @@ I read the report on two of my sites. One is seoskill.dev, which had 208,508 web
 seoskill.dev had 2,179 AI impressions over those 91 days, about 1% of its web impressions. Both counts include 9 to 11 November, when Google under-logged AI impressions, so the AI figures run a little low. The daily count rose from almost nothing in August to between 60 and 115 a day by mid November. The report spread them across 145 pages, and the home page took 1,476 of them.
 
 <BrowserFrame
-  url="https://search.google.com/search-console/performance/generative-ai"
+  url="https://search.google.com/search-console/performance/search-analytics/ai"
   tab="Generative AI features"
   caption="The Pages tab of the same report, top 10 pages by AI impressions."
 >
   <img src="/blog/images/search-console-ai-report-seoskill-pages.webp" width="1326" height="660" loading="lazy" alt="The Pages tab: the home page with 1,476 AI impressions, then the Google algorithm update checker with 60, the website traffic checker with 48, the skill docs with 39 and the MCP docs with 32." class="w-full rounded-md" />
 </BrowserFrame>
 
-keep.md had 75,749 AI impressions over the same dates, about 17% of its 457,512 web impressions, so Google's AI answers show it far more often than seoskill.dev for its size. Its daily count climbed from about 400 in August to around 1,200 by November, then jumped to over 3,000 on the last days of the range. The report doesn't say why, and a two-day jump this close to the logging error and the core update is too soon to read.
+keep.md had 75,749 AI impressions over the same dates, about 17% of its 457,512 web impressions. Its daily count climbed from about 400 in August to around 1,200 by November, then reached about 3,400 on 15 November, the last day of the range.
 
 <BrowserFrame
-  url="https://search.google.com/search-console/performance/generative-ai"
+  url="https://search.google.com/search-console/performance/search-analytics/ai"
   tab="Generative AI features"
   caption="The Generative AI features report for keep.md, web (text) search, 17 August to 15 November 2026, read 19 November 2026."
 >
   <img src="/blog/images/search-console-ai-report-keepmd-chart.webp" width="1335" height="578" loading="lazy" alt="Search Console's Generative AI features report for keep.md: 75.7K total impressions, rising from about 400 a day in August to around 1,200 in November, then a jump to about 3,400 at the end of the range." class="w-full rounded-md" />
 </BrowserFrame>
 
-The device split surprised me. AI impressions lean further towards desktop than each site's web impressions do. On keep.md, 79% of AI impressions were on desktop (59,781 of 75,749) against 55% of web impressions (250,740 of 457,512). On seoskill.dev it was 90% against 81%. Two sites don't make a rule, so check your own split before you plan for AI answers on phones.
+The device split surprised me. AI impressions lean further towards desktop than each site's web impressions do. On keep.md, 79% of AI impressions were on desktop (59,781 of 75,749) against 55% of web impressions (250,740 of 457,512). On seoskill.dev it was 90% (1,961 of 2,179) against 81% (168,297 of 208,508). Two sites don't make a rule, so check your own split before you plan for AI answers on phones.
 
 The useful number is each page's AI share, which is its AI impressions divided by its web impressions over the same dates. A page with a high share is one that Google's AI answers lean on. Pull the web impressions for the same pages and dates to work it out:
 
@@ -110,38 +108,13 @@ The useful number is each page's AI share, which is its AI impressions divided b
   ]}
 />
 
-The share separates pages that raw counts lump together. keep.md's ChatGPT to PDF tool showed in AI answers for half its web impressions, while its X search tool, with four times the web impressions, showed for 4%. On seoskill.dev, the website traffic checker gets more web impressions than any other page and almost never shows in AI answers. Raw AI impressions would rank it third on the site. The share shows it's mostly ignored.
+The share separates pages that raw counts lump together. keep.md's ChatGPT to PDF tool showed in AI answers for half its web impressions, while its X search tool, with four times the web impressions, showed for 4%. On seoskill.dev, the website traffic checker gets more web impressions than any other page, but only 0.1% of them were in AI answers. Raw AI impressions rank it third on the site; the share puts it last.
 
 ## Leave out 9 to 11 November 2026 when you compare
 
 Leave 9 to 11 November 2026 out of any comparison in this report. Google's [data anomalies page](https://support.google.com/webmasters/answer/6211453) says a logging error "caused a decrease in impressions on the Generative AI performance report in Search" for 9 to 11 November 2026, and that it "affects data logging only".
 
 Two other changes landed in the same week. The [November 2026 core update](https://status.search.google.com/incidents/WLxcJyC6jMWMfryxsKMc) began on 10 November and may take up to two weeks. And on 12 November, Google made [Gemini 4 Hydrogen the default model in AI Mode](https://www.searchenginejournal.com/google-gemini-4-hydrogen-default-ai-mode/597096/). Any before and after across that week spans a logging error, a ranking update and a new model.
-
-Google fixed an earlier gap in the same report. Its anomalies page logs a 13 to 17 August 2026 error, with an update on 21 August: "Missing data for this period has been restored." When I read the page on 19 November 2026, the November entry had no such note.
-
-The main Performance report showed no clear drop on my sites for those days. Here's seoskill.dev's web impressions by day through that week:
-
-<VerticalBars
-  caption="seoskill.dev web impressions by day, 1 to 17 November 2026 (Search Console Performance report, web search, read 19 November 2026). 18 November had no final data yet."
-  unit="impressions"
-  highlight={["9 Nov", "10 Nov", "11 Nov"]}
-  data={[{"label": "1 Nov", "value": 5542}, {"label": "2 Nov", "value": 4319}, {"label": "3 Nov", "value": 5326}, {"label": "4 Nov", "value": 4966}, {"label": "5 Nov", "value": 4059}, {"label": "6 Nov", "value": 4788}, {"label": "7 Nov", "value": 5220}, {"label": "8 Nov", "value": 5146}, {"label": "9 Nov", "value": 5535}, {"label": "10 Nov", "value": 5071}, {"label": "11 Nov", "value": 7009}, {"label": "12 Nov", "value": 7193}, {"label": "13 Nov", "value": 7532}, {"label": "14 Nov", "value": 7131}, {"label": "15 Nov", "value": 6725}, {"label": "16 Nov", "value": 6206}, {"label": "17 Nov", "value": 4376}]}
-  markers={[{"at": "9 Nov", "text": "Generative AI report logging error, 9 to 11 November"}, {"at": "10 Nov", "text": "November 2026 core update begins"}, {"at": "12 Nov", "text": "Gemini 4 Hydrogen becomes AI Mode's default model"}]}
-/>
-
-Nothing dips on 9 to 11 November. The 11th had the most impressions of the month so far, and every day from then to 16 November stayed above 6,000. With a logging error, a core update and a new model in one week, the chart can't say which of them, if any, moved the numbers.
-
-I compared Monday to Wednesday, 9 to 11 November, with the same days a week earlier on both sites:
-
-<CompareBars
-  caption="Web impressions on 9 to 11 November 2026 as a share of 2 to 4 November (Search Console Performance report, web search, read 19 November 2026). 100% would mean no change."
-  unit="% of the week before"
-  highlight="seoskill.dev"
-  rows={[{"label": "seoskill.dev", "value": 121, "note": "14,611 to 17,615 impressions"}, {"label": "keep.md", "value": 98, "note": "15,549 to 15,162 impressions"}]}
-/>
-
-seoskill.dev rose 21% and keep.md fell 2.5%. Neither looks like a logging error, but two sites can't prove the main report was untouched.
 
 ## Pair the report with AI Mode follow-up questions
 
@@ -165,17 +138,14 @@ Google hasn't said what it will ship. On 2 November 2026, Gary Illyes wrote that
 
 ## Use the report for exposure, and read clicks elsewhere
 
-Until clicks arrive, I'd treat the Generative AI report as a list of pages Google's AI answers lean on, and nothing more. Each month I'd do this:
+I treat the Generative AI report as a list of the pages Google's AI answers lean on. Each month I'd do this:
 
 <PlanSteps
   steps={[{"title": "Export the report", "body": "Download the Pages table by hand, since the API can't read it. Leave out any days the data anomalies page names, and remember a zero in the export can be missing data."}, {"title": "Work out each page's AI share", "body": "Divide each page's AI impressions by its web impressions from the normal Performance report, for the same dates."}, {"title": "Read the follow-up questions", "body": "For the pages with the highest AI share, check which AI Mode follow-up questions reach them."}, {"title": "Read clicks in the Performance report", "body": "Clicks from AI answers are counted with every other web click, so read those pages' clicks in the normal report."}]}
 />
 
-If Google adds clicks before 3 December 2026, I'll update this post with what changed.
-
 ## How this was checked
 
 - Google's announcement, both help pages, the data anomalies page and the Search Analytics API reference were read on 19 November 2026.
 - The search appearance check grouped all 35 Search Console properties I have access to by search appearance, web search, 17 August to 15 November 2026, through SEO Skill's raw Search Console rows.
-- The 9 to 11 November comparison uses web impressions by date from the normal Performance report for seoskill.dev and keep.md, Monday to Wednesday against the same days a week earlier.
 - The Generative AI features report was read in Search Console for seoskill.dev and keep.md on 19 November 2026, 17 August to 15 November 2026, web (text) search, with each Pages table exported. Web impressions by page for the same dates came from the Search Console API through SEO Skill.

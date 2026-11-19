@@ -2,7 +2,9 @@ import { queryShape, queryShapeLine } from '../analyze/query-shape.js'
 import { latestFinalGscDate, shiftIsoDate } from '../gsc/dates.js'
 import { analyticsBeside } from './analytics-site.js'
 import { CLI_LINK } from './bing.js'
+import { splitsBeside } from './brand-split.js'
 import { clickyBeside } from './clicky.js'
+import { brandNames } from './context.js'
 import {
   byReason,
   INSPECT_LIMIT,
@@ -446,19 +448,30 @@ export async function runCompare(
     startDate: shiftIsoDate(input.date, -days),
     endDate: shiftIsoDate(input.date, -1),
   }
-  const [report, updates, analytics, clicky, simpleAnalytics] =
+  const read = sharedReader(deps.searchAnalytics)
+  const [report, updates, analytics, clicky, simpleAnalytics, splits] =
     await Promise.all([
-      siteOverview(
-        sharedReader(deps.searchAnalytics),
-        input.site,
-        after,
-        before,
-        input.pages,
-      ),
+      siteOverview(read, input.site, after, before, input.pages),
       googleUpdates({ start: before.startDate, end: after.endDate }),
       analyticsBeside(deps.analytics, input.site, after, before, input.pages),
       clickyBeside(keys, input.site, after, before, input.pages),
       simpleAnalyticsBeside(keys, input.site, after, before, input.pages),
+      // The splits cover the whole site, so a compare narrowed to some
+      // pages leaves them out.
+      input.pages
+        ? null
+        : Promise.resolve(deps.context?.read(input.site))
+            .catch(() => null)
+            .then((context) =>
+              splitsBeside(
+                deps.context,
+                read,
+                input.site,
+                after,
+                before,
+                context ? brandNames(context.text) : [],
+              ),
+            ),
     ])
   return {
     text: [
@@ -471,6 +484,7 @@ export async function runCompare(
       analytics?.text,
       clicky?.text,
       simpleAnalytics?.text,
+      splits?.text,
       listOfUpdates(updates),
       `Next: ${deps.call('page')} for a page that moved.`,
       FACTS_ONLY,
@@ -482,6 +496,7 @@ export async function runCompare(
       ...(analytics ? { analytics: analytics.data } : {}),
       ...(clicky ? { clicky: clicky.data } : {}),
       ...(simpleAnalytics ? { simpleAnalytics: simpleAnalytics.data } : {}),
+      ...splits?.data,
       googleUpdates: updates,
     },
   }

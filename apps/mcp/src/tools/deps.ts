@@ -15,6 +15,7 @@ import { accountUrl, signInHint } from '../google.ts'
 import { hostedSubmitAccess } from '../indexmysite.ts'
 import { clientNameOf } from '../oauth.ts'
 import { siteProgress } from '../progress.ts'
+import { updateLog } from '../update-log.ts'
 import { addUsage } from '../usage.ts'
 import type { ToolContext } from './registry.ts'
 
@@ -70,6 +71,7 @@ export function deps({
     issues: siteIssues(env, userId),
     context: siteContext(env, userId),
     siteProgress: siteProgress(env, userId),
+    updateLog: updateLog(env, userId),
     submit: hostedSubmitAccess(env, userId),
     feedback: async (report) =>
       hostedFeedback(

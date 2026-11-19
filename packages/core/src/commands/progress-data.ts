@@ -1,7 +1,12 @@
 import type { SearchAnalyticsRequest } from '../gsc/client/types.js'
 import { shiftIsoDate } from '../gsc/dates.js'
 import type { ConversionPath } from './context.js'
-import { type RowFilter, rowTextFilters } from './rows.js'
+import {
+  BRAND_DATA_FROM,
+  isFolderProperty,
+  type RowFilter,
+  rowTextFilters,
+} from './rows.js'
 import { originOf } from './shared.js'
 import type { CommandDeps, DateRange } from './types.js'
 
@@ -31,7 +36,18 @@ export type Metrics = {
   position: number | null
 }
 
-export const SEGMENTS = ['all', 'brand', 'non_brand', 'category'] as const
+export const SEGMENTS = [
+  'all',
+  'brand',
+  'non_brand',
+  'category',
+  'google_brand',
+  'google_non_brand',
+] as const
+// Google's own brand classification. Search Console answers a property it
+// does not classify with no rows, so an empty answer is left out of the
+// point rather than saved as zero.
+const GOOGLE_SEGMENTS = new Set<Segment>(['google_brand', 'google_non_brand'])
 export type Segment = (typeof SEGMENTS)[number]
 
 export type WeekRow = {
@@ -226,9 +242,22 @@ export async function takeSnapshot(
   const periods = Promise.all(
     PERIODS.map(async (days) => {
       const range = { startDate: shiftIsoDate(endDate, 1 - days), endDate }
+      const google =
+        !isFolderProperty(site) && range.startDate >= BRAND_DATA_FROM
       const totals = await Promise.all(
         SEGMENTS.flatMap((segment) => {
-          const segmentFilter = filters[segment]
+          const segmentFilter = GOOGLE_SEGMENTS.has(segment)
+            ? google
+              ? [
+                  {
+                    dimension: 'brandedClassification' as const,
+                    operator: 'equals' as const,
+                    expression:
+                      segment === 'google_brand' ? 'BRANDED' : 'NON_BRANDED',
+                  },
+                ]
+              : undefined
+            : filters[segment]
           if (!segmentFilter) return []
           return [
             read({
@@ -236,13 +265,26 @@ export async function takeSnapshot(
               dimensions: [],
               maxRows: 1,
               ...groups(segmentFilter),
-            }).then(
-              ({ rows }) => [segment, metrics(rows.slice(0, 1))] as const,
+            }).then(({ rows }) =>
+              GOOGLE_SEGMENTS.has(segment) && !rows.length
+                ? null
+                : ([segment, metrics(rows.slice(0, 1))] as const),
             ),
           ]
         }),
       )
-      return { days, ...range, totals: Object.fromEntries(totals) }
+      const found = totals.filter((item) => item !== null)
+      // Google's split is kept only when it has both sides.
+      const both = found.filter(([segment]) => GOOGLE_SEGMENTS.has(segment))
+      return {
+        days,
+        ...range,
+        totals: Object.fromEntries(
+          both.length === 2
+            ? found
+            : found.filter(([segment]) => !GOOGLE_SEGMENTS.has(segment)),
+        ),
+      }
     }),
   )
   const sunday = lastSunday(endDate)

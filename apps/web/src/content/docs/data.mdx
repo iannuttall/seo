@@ -37,7 +37,7 @@ seo data --site example.com --search-type image --dimensions page
 seo data --site example.com --search-type discover
 ```
 
-`--search-type` (`search_type` in MCP) takes `web`, `image`, `video`, `news`, `discover` or `google_news`. Image, video and news are the Images, Videos and News tabs in Google Search. `google_news` is the Google News app and news.google.com, not the News tab.
+`--search-type` (`search_type` in MCP) takes `web`, `image`, `video`, `news`, `discover`, `google_news` or `multimodal`. Image, video and news are the Images, Videos and News tabs in Google Search. `google_news` is the Google News app and news.google.com, not the News tab. `multimodal` is searches made with an image: Google Lens, Circle to Search on Android and image uploads in Google Search.
 
 Discover and Google News show pages without a search, so they have no queries and no average position. Rows for them default to pages, and `seo data` refuses a query cut with an error rather than return an empty list that looks like a zero.
 
@@ -54,6 +54,21 @@ You don't need a filter to find questions, comparisons or AI-style searches: the
 | `--page-regex` | `page_regex` | Keeps pages whose URL matches |
 
 A row has to match every filter you pass, including plain `--query` and `--page` text.
+
+### Brand, countries and devices
+
+| CLI | MCP (`seo_data`) | What it does |
+| --- | --- | --- |
+| `--brand` | `brand` | Google's own brand split: `branded` or `non_branded` |
+| `--country` | `country` | Keeps rows from any of these countries, as three-letter codes such as `fra,bel,che` |
+| `--device` | `device` | Keeps rows from any of `desktop`, `mobile` and `tablet` |
+
+Add `brandedClassification` to `--dimensions` to split rows into brand and not brand. Google classifies brand searches only for whole-site properties with enough searches, and only from 21 February 2026. A property it doesn't classify gets no rows, which means not classified, not zero brand searches. Google also refuses a brand split together with a query filter, so for those cuts leave your brand names out with `--exclude-query-regex` instead.
+
+```sh
+# Pages that gained clicks from searches not about the brand, in France, Belgium and Switzerland
+seo data --site example.com --dimensions page --brand non_branded --country fra,bel,che --sort clicks_gain
+```
 
 ```sh
 # Pricing questions without your brand

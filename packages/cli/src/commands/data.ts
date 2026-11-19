@@ -7,6 +7,11 @@ import {
   SeoError,
 } from '@seo/core'
 import {
+  BRAND_CLASSES,
+  BRAND_DATA_FROM,
+  type BrandClass,
+  DEVICES,
+  type Device,
   DIMENSIONS,
   type Dimension,
   dateWindow,
@@ -284,6 +289,19 @@ export const dataCommand = defineCommand({
       description:
         'Optional: leave out rows with fewer impressions than this, so ctr and position sorts skip rows seen once or twice.',
     },
+    brand: {
+      type: 'string',
+      description: `Optional: Google's own brand split, ${BRAND_CLASSES.join(' or ')}. Top-level properties with enough searches only, from ${BRAND_DATA_FROM}, and not with query filters.`,
+    },
+    country: {
+      type: 'string',
+      description:
+        'Optional: comma-separated three-letter country codes, such as fra,bel,che, for rows from any of them.',
+    },
+    device: {
+      type: 'string',
+      description: `Optional: comma-separated ${DEVICES.join(', ')}.`,
+    },
     ...dates,
     ...detail,
     ...common,
@@ -405,6 +423,24 @@ export const dataCommand = defineCommand({
         '--min-impressions is a whole number of 1 or more.',
       )
     }
+    const brand = stringArg(args.brand)
+    if (brand && !BRAND_CLASSES.includes(brand as BrandClass)) {
+      throw new SeoError(
+        'INVALID_INPUT',
+        `--brand is ${BRAND_CLASSES.join(' or ')}.`,
+      )
+    }
+    const countries = csvArg(args.country)
+    if (countries?.some((code) => !/^[A-Za-z]{3}$/.test(code))) {
+      throw new SeoError(
+        'INVALID_INPUT',
+        '--country takes three-letter country codes, such as fra,bel,che.',
+      )
+    }
+    const devices = csvArg(args.device)?.map((device) => device.toLowerCase())
+    if (devices?.some((device) => !DEVICES.includes(device as Device))) {
+      throw new SeoError('INVALID_INPUT', `--device is ${DEVICES.join(', ')}.`)
+    }
     const site = await property(args, stringArg(args.site))
     const filters = rowTextFilters({
       page: stringArg(args.page),
@@ -420,6 +456,9 @@ export const dataCommand = defineCommand({
           dimensions: asked as Dimension[] | undefined,
           filters,
           searchType: searchType as SearchType,
+          brand: brand as BrandClass | undefined,
+          countries,
+          devices: devices as Device[] | undefined,
           sort: sort as Sort | undefined,
           minImpressions,
           startDate: stringArg(args['start-date']),

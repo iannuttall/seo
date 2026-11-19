@@ -83,6 +83,13 @@ export function headingLines(text: string, heading: string): string[] {
   return found
 }
 
+// The brand names as one RE2 regex: a search that contains any of them, as
+// the reports count brand searches.
+export const brandRegex = (names: string[]) =>
+  names.length
+    ? `(?i)(${names.map((name) => name.replace(/[\\^$.|?*+()[\]{}]/g, '\\$&')).join('|')})`
+    : undefined
+
 // The names under "## Brand names", one per line. Whatever follows the name
 // in brackets or after a dash is a note, not part of the name. The reports
 // count a search that contains one of them as a brand search.
@@ -212,6 +219,7 @@ export function contextGuide(site: string, call: Caller): string {
       '## AI questions',
       `Up to ${PROGRESS_LIMITS.questions} questions buyers ask AI assistants, one per line, to check who the answers cite.`,
       '## Markets',
+      'Optional groups of the countries the business cares about, one group per line as a name and three-letter country codes, such as Europe: FRA, BEL, CHE. Reports and Google update results split clicks by these groups. Leave it out for a business that sells in one country.',
       '## Voice',
       '## Notes',
     ].join('\n'),

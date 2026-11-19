@@ -2,6 +2,7 @@ import { registrableDomain } from '../brand.js'
 import { latestFinalGscDate, shiftIsoDate } from '../gsc/dates.js'
 import {
   brandNames,
+  brandRegex,
   conversionPaths,
   headingLines,
   PROGRESS_LIMITS,
@@ -21,7 +22,7 @@ import {
   type WeekRow,
 } from './progress-data.js'
 import { type ProgressRun, runsText } from './progress-track.js'
-import { rowTextFilters } from './rows.js'
+import { BRAND_DATA_FROM, rowTextFilters } from './rows.js'
 import { realIsoDate } from './shared.js'
 import { type CommandDeps, CommandError, type CommandResult } from './types.js'
 
@@ -65,13 +66,6 @@ export type ProgressStore = {
 const KEPT_DAYS = 480
 
 const now = (deps: CommandDeps) => deps.now?.() ?? new Date()
-
-// The brand names as one RE2 regex: a search that contains any of them, as
-// the reports count brand searches.
-const brandRegex = (names: string[]) =>
-  names.length
-    ? `(?i)(${names.map((name) => name.replace(/[\\^$.|?*+()[\]{}]/g, '\\$&')).join('|')})`
-    : undefined
 
 // What progress measures, read from the business context, and why any part
 // was left out.
@@ -190,6 +184,8 @@ const SEGMENT_NAMES: Record<Segment, string> = {
   brand: 'Brand',
   non_brand: 'Not brand',
   category: 'Category',
+  google_brand: 'Brand, by Google',
+  google_non_brand: 'Not brand, by Google',
 }
 
 // The host a page was read on, when it is not the one the others were.
@@ -209,6 +205,7 @@ function definitionText(definition: ProgressDefinition): string {
     definition.brand_regex || definition.category_regex
       ? 'Brand, not brand and category count only the searches Search Console shows, so they leave out anonymized searches and add up to less than all searches.'
       : null,
+    `"By Google" is Google's own brand classification, read only for top-level properties with enough searches and dates from ${BRAND_DATA_FROM}; a point without it was not classified, not zero.`,
   ]
     .filter(Boolean)
     .join(' ')

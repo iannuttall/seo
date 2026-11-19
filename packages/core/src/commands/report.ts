@@ -25,6 +25,7 @@ import {
   enginesText,
   NO_BING_HERE,
 } from './bing.js'
+import { splitsBeside } from './brand-split.js'
 import { brandNames } from './context.js'
 import { imageChecksText, imageSearchReport } from './image-search.js'
 import {
@@ -78,7 +79,7 @@ import { runUpdates, UPDATES_SECTION, UPDATES_SECTION_TEXT } from './updates.js'
 
 export const SECTIONS = {
   overview:
-    'Site totals (clicks, impressions, CTR, position) against the previous period, by device, with the top pages and queries and their change, Google Analytics sessions for the same dates from the property whose web stream matches the site, and clicks and impressions from image search, video search, the News tab, Discover and Google News.',
+    'Site totals (clicks, impressions, CTR, position) against the previous period, by device, with the top pages and queries and their change, Google Analytics sessions for the same dates from the property whose web stream matches the site, clicks and impressions from image search, video search, the News tab, Discover, Google News and Google Lens and Circle to Search, and brand against not brand by the saved brand names and by Google’s own classification, and each market group saved in the business context.',
   'quick-wins':
     'Query and page pairs at average positions 4 to 10 with a click-through rate below the site’s own curve for that position.',
   'low-ctr':
@@ -688,6 +689,17 @@ async function allSections(
   parts.push(deps.bing ? await enginesLine(overview, bing) : NO_BING_HERE)
   const surfaces = await surfacesLine(read, input.site, overview, deps.call)
   parts.push(surfaces.text)
+  const splits = await splitsBeside(
+    deps.context,
+    read,
+    input.site,
+    overview.range as DateRange,
+    overview.comparisonRange as DateRange,
+    confirmed,
+    deps.call,
+  )
+  Object.assign(overview, splits.data)
+  if (splits.text) parts.push(splits.text)
   const bingFirst = deps.bing ? await bingLead(overview, bing, origin, 5) : null
   if (bingFirst) parts.push(bingFirst.text)
   const ga = await analytics
@@ -813,6 +825,16 @@ async function oneSection(
       deps.call,
     )
     report.surfaces = surfaces.data
+    const splits = await splitsBeside(
+      deps.context,
+      sharedReader(deps.searchAnalytics),
+      site,
+      report.range as DateRange,
+      report.comparisonRange as DateRange,
+      confirmed,
+      deps.call,
+    )
+    Object.assign(report, splits.data)
     const ga = await analyticsBeside(
       deps.analytics,
       site,
@@ -830,6 +852,7 @@ async function oneSection(
           overviewText(report, `overview of ${site}`, origin, 10),
           deps.bing ? await enginesLine(report, bing) : NO_BING_HERE,
           surfaces.text,
+          splits.text,
           bingFirst?.text,
           ga?.text,
           `More: ${deps.call('report', { site, section, detail: 'full' })} for every row.`,

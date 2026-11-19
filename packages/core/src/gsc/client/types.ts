@@ -4,7 +4,14 @@ export interface SearchAnalyticsRequest {
   startDate: string
   endDate: string
   dimensions?: string[]
-  type?: 'web' | 'image' | 'video' | 'news' | 'discover' | 'googleNews'
+  type?:
+    | 'web'
+    | 'image'
+    | 'video'
+    | 'news'
+    | 'discover'
+    | 'googleNews'
+    | 'webMultimodal'
   dataState?: 'final' | 'all'
   rowLimit?: number
   maxRows?: number
@@ -22,6 +29,12 @@ export interface SearchAnalyticsRequest {
         | 'excludingRegex'
         | 'notEquals'
       expression: string
+    }>
+    // Several exact values for one dimension (country or device). A request
+    // cannot filter the same dimension here and in filters.
+    filterLists?: Array<{
+      dimension: 'country' | 'device'
+      expressions: string[]
     }>
   }>
 }

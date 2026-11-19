@@ -1,18 +1,25 @@
 import {
   asImpactUpdate,
+  brandNames,
+  impactKept,
   impactReady,
+  notBrand,
   rankingUpdates,
+  type SearchAnalyticsQuery,
   type UpdateImpact,
   updateImpact,
   type WeekData,
   type WeekGoogleUpdate,
+  withImpactBrand,
 } from '@seo/core/commands'
 import { readJson, searchUpdatesFromIncidents } from '@seo/core/hosted'
 import { queueAlert } from '../alerts/deliver.ts'
 import type { GoogleUpdate, GoogleUpdateAlert } from '../alerts/registry.ts'
 import { hasWeeklyAudit } from '../beta.ts'
+import { siteContext } from '../context.ts'
 import { directory } from '../google.ts'
 import { accountsOf } from '../store.ts'
+import { updateLog } from '../update-log.ts'
 import { auditSites } from './schedule.ts'
 
 // Google ranking update alerts: each hourly tick reads Google's Search
@@ -184,6 +191,31 @@ export async function sendGoogleUpdateAlerts(env: Env, now = Date.now()) {
     .run()
 }
 
+// A result with its brand split (the saved brand names and Google's
+// classification), kept in the account's update log once it covers the
+// whole update. A failed brand read or write leaves the result as it was.
+async function keepWithBrand(
+  env: Env,
+  userId: string,
+  impact: UpdateImpact,
+  read: SearchAnalyticsQuery,
+): Promise<UpdateImpact> {
+  const context = await siteContext(env, userId)
+    .read(impact.site)
+    .catch(() => null)
+  const found = await withImpactBrand(
+    impact,
+    read,
+    context ? brandNames(context.text) : [],
+  )
+  if (impactKept(found)) {
+    await updateLog(env, userId)
+      .write(found)
+      .catch(() => undefined)
+  }
+  return found
+}
+
 // Each audited site's result for one update, in order, up to IMPACT_SITES.
 async function impactsFor(
   env: Env,
@@ -196,9 +228,9 @@ async function impactsFor(
   const impacts: UpdateImpact[] = []
   const unread: string[] = []
   for (const site of sites.slice(0, IMPACT_SITES)) {
-    const found = await updateImpact(site, update, read, new Date(now)).catch(
-      () => null,
-    )
+    const found = await updateImpact(site, update, read, new Date(now))
+      .then((impact) => keepWithBrand(env, userId, impact, read))
+      .catch(() => null)
     if (found) impacts.push(found)
     else unread.push(site)
   }
@@ -244,9 +276,10 @@ export async function withWeekUpdates(
           const found =
             ready && index < WEEK_SITES
               ? await updateImpact(site.property, update, read, new Date(now))
-                  .then((impact) => impact)
+                  .then((impact) => keepWithBrand(env, userId, impact, read))
                   .catch(() => null)
               : null
+          const side = found?.brand ? notBrand(found.brand) : null
           return {
             name: update.name,
             start: update.start,
@@ -264,6 +297,13 @@ export async function withWeekUpdates(
                           Date.parse(found.after.startDate)) /
                           86_400_000,
                       ) + 1,
+                    non_brand: side
+                      ? {
+                          by: side.by,
+                          clicks: side.current.clicks,
+                          previous: side.previous.clicks,
+                        }
+                      : null,
                   }
                 : null,
           }

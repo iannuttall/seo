@@ -1,14 +1,19 @@
 import {
   analyticsBeside,
+  brandNames,
+  brandSplit,
   MEASURES_PER_RUN,
   measureFixed,
+  notBrand,
   previousWeek,
+  type SearchAnalyticsQuery,
   searchConsoleDay,
   type WeekData,
   weekMeasured,
 } from '@seo/core/commands'
 import { queueAlert } from '../alerts/deliver.ts'
 import { hasWeeklyAudit } from '../beta.ts'
+import { siteContext } from '../context.ts'
 import { directory, signInHint } from '../google.ts'
 import { accountsOf } from '../store.ts'
 import { withWeekUpdates } from './google-updates.ts'
@@ -75,6 +80,15 @@ export async function weekData(
           start_error: site.lastError,
           index: found?.index ?? null,
           clicks: found?.clicks ?? null,
+          not_brand: found?.clicks
+            ? await weekNotBrand(
+                env,
+                userId,
+                google.searchAnalytics(),
+                site.property,
+                found.clicks,
+              )
+            : null,
           opportunities: site.opportunities && {
             ...site.opportunities,
             items: site.opportunities.items
@@ -91,6 +105,38 @@ export async function weekData(
       }),
     ),
   }
+}
+
+// Not-brand clicks for the site's 7 days of clicks and the 7 before: the
+// shared brand split (Google's classification, else the saved brand
+// names), or null without either or when it could not be read.
+async function weekNotBrand(
+  env: Env,
+  userId: string,
+  read: SearchAnalyticsQuery,
+  property: string,
+  clicks: { start: string; end: string },
+): Promise<WeekData['sites'][number]['not_brand']> {
+  const context = await siteContext(env, userId)
+    .read(property)
+    .catch(() => null)
+  const shift = (date: string) =>
+    new Date(Date.parse(date) - 7 * 86_400_000).toISOString().slice(0, 10)
+  const split = await brandSplit(
+    read,
+    property,
+    { startDate: clicks.start, endDate: clicks.end },
+    { startDate: shift(clicks.start), endDate: shift(clicks.end) },
+    context ? brandNames(context.text) : [],
+  ).catch(() => null)
+  const side = split ? notBrand(split) : null
+  return side
+    ? {
+        by: side.by,
+        clicks: side.current.clicks,
+        previous: side.previous.clicks,
+      }
+    : null
 }
 
 // Google Analytics sessions from AI assistants for the summary, or null

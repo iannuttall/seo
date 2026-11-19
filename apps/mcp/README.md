@@ -93,6 +93,12 @@ keywords checks the context's tracked searches or AI questions for the site and
 its competitors, and keeps each check in `progress_runs`. Both tables are
 deleted with the account.
 
+Each site's result for a Google ranking update (`src/update-log.ts`, D1's
+`update_results`) is kept once final data covers the whole update, from
+`seo_report` section `google-updates`, the impact email and the Monday
+summary. The section lists the kept results for earlier updates, so they
+outlast Search Console's 16 months. Deleted with the account.
+
 A CLI linked with `seo login` or `SEO_TOKEN` keeps progress in the same tables
 through `/account/cli/progress` (`GET` with `?property=`, `POST` with
 `{property, point}` or `{property, run}`; a point is only ever added);
@@ -417,6 +423,8 @@ A small Cloudflare D1 database (`migrations/`) keeps only:
 - each site's issues list (`site_issues`) and business context
   (`site_context`), for any site the person or a linked CLI uses them on,
   until they are replaced or the account is deleted,
+- each site's result for each Google ranking update (`update_results`),
+  until the account is deleted,
 - machines linked with `seo login` (a name from the host name and the date
   last used).
 - beta features granted to the account, and when (`beta_flags`). Only a

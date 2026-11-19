@@ -10,6 +10,7 @@ import type { IssueStore } from './issues.js'
 import type { LiveCheck } from './page-facts.js'
 import type { ProgressStore } from './progress.js'
 import type { SubmitAccess } from './submit.js'
+import type { UpdateLogStore } from './updates.js'
 import type { WeekData } from './week.js'
 
 // The twelve public commands. Each runs the same core code in the CLI, the
@@ -228,6 +229,9 @@ export type CommandDeps = {
   // Each site's weekly progress points and tracking runs: a file on this
   // machine, or the hosted account.
   siteProgress?: ProgressStore
+  // Each site's kept results for past Google updates. Only the hosted
+  // server sets it.
+  updateLog?: UpdateLogStore
   // IndexNow keys and the person's Index My Site connection, for seo
   // submit.
   submit?: SubmitAccess

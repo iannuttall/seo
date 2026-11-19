@@ -83,6 +83,13 @@ export function headingLines(text: string, heading: string): string[] {
   return found
 }
 
+// The brand names as one RE2 regex: a search that contains any of them, as
+// the reports count brand searches.
+export const brandRegex = (names: string[]) =>
+  names.length
+    ? `(?i)(${names.map((name) => name.replace(/[\\^$.|?*+()[\]{}]/g, '\\$&')).join('|')})`
+    : undefined
+
 // The names under "## Brand names", one per line. Whatever follows the name
 // in brackets or after a dash is a note, not part of the name. The reports
 // count a search that contains one of them as a brand search.
@@ -202,7 +209,7 @@ export function contextGuide(site: string, call: Caller): string {
       '## Conversion pages',
       'The pages whose main job is to get a visitor to sign up, start a trial, book a demo or buy, and the pricing page. A docs page counts when it is the sign-up or install step itself. Jobs on these pages come first, so name single pages rather than whole sections. One path or URL per line, such as /pricing or /demo. A path ending in / covers every page under it, such as /features/, but / on its own is the home page. Use a section path only when every page there does that job.',
       '## Brand names',
-      `The names people type when they look for this business by name, one per line: the product or company name, and the domain as people type it, such as example.com. The reports leave out every search that contains one of these names, with or without a space inside it, so "openbook" also catches "open book". Before you propose a name, list the searches it would catch with ${call('data', { site, query: '<name>' })}. Propose it only when those searches are about this business: the name with words such as login, pricing, app, download or a competitor's name, clicks that land on the home page, or a top position with a high click rate. Leave a name out when it is also the words people use for the product category or the service itself, such as a recipe site called Easy Recipes, because it would hide the searches that bring new customers. The domain alone is enough then. Show the person each name with its evidence and the clicks it would hide, and they confirm or remove them when they reply to the draft.`,
+      `The names people type when they look for this business by name, one per line: the product or company name, and the domain as people type it, such as example.com. The reports leave out every search that contains one of these names, with or without a space inside it, so "openbook" also catches "open book". Start with the searches Google itself counts as brand: ${call('data', { site, dimensions: 'query', brand: 'branded' })}. Those searches are brand, even when one looks generic, and the reports go by Google's count. A name here works differently: it hides every search that contains it, so list the searches each name would catch with ${call('data', { site, query: '<name>' })}. When Google classifies the site, propose a name only when Google counts most of the clicks it would catch as brand: "easyrecipes" for easyrecipes.example, but not "easy recipes", which would also catch "easy recipes for dinner". Google classifies only top-level properties with enough searches; when it returns no rows, propose a name only when the searches it catches are about this business: the name with words such as login, pricing, app, download or a competitor's name, clicks that land on the home page, or a top position with a high click rate. Without Google's classification, leave a name out when it is also the words people use for the product category or the service itself, such as a recipe site called Easy Recipes, because it would hide the searches that bring new customers; the domain alone is enough then. Show the person each name with its evidence and the clicks it would hide, and they confirm or remove them when they reply to the draft.`,
       '## Competitors',
       'One domain per line, then the name buyers use when it differs from the domain, such as example.com Example App.',
       '## Category searches',
@@ -212,6 +219,7 @@ export function contextGuide(site: string, call: Caller): string {
       '## AI questions',
       `Up to ${PROGRESS_LIMITS.questions} questions buyers ask AI assistants, one per line, to check who the answers cite.`,
       '## Markets',
+      'Optional groups of the countries the business cares about, one group per line as a name and three-letter country codes, such as Europe: FRA, BEL, CHE. Reports and Google update results split clicks by these groups. Leave it out for a business that sells in one country.',
       '## Voice',
       '## Notes',
     ].join('\n'),

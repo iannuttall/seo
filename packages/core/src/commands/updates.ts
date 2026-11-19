@@ -2,6 +2,21 @@ import type { SearchAnalyticsQuery } from '../gsc/client/types.js'
 import { latestFinalGscDate, shiftIsoDate } from '../gsc/dates.js'
 import type { SearchUpdate } from '../updates/search-updates.js'
 import {
+  type BrandSplit,
+  brandSplit,
+  NOT_BRAND_BY,
+  notBrand,
+} from './brand-split.js'
+import { brandNames, brandRegex } from './context.js'
+import {
+  type Market,
+  type MarketTotals,
+  marketGroups,
+  marketLine,
+  marketTotals,
+} from './markets.js'
+import { rowTextFilters } from './rows.js'
+import {
   type DateInput,
   originOf,
   rankingUpdates,
@@ -26,7 +41,7 @@ import {
 export const UPDATES_SECTION = 'google-updates'
 
 export const UPDATES_SECTION_TEXT =
-  'One Google ranking update (core, spam and similar, from Google’s Search Status Dashboard) laid over the site’s Search Console data: clicks and impressions from the day it started against the same number of days just before (whole weeks, up to 28 days), whether that change is outside the site’s own movement in the 8 comparisons before it (a heuristic), and the folders, pages and queries that gained or lost most. The latest update by default; with end_date, the latest update that started on or before it. Timing only, not cause.'
+  'One Google ranking update (core, spam and similar, from Google’s Search Status Dashboard) laid over the site’s Search Console data: clicks and impressions from the day it started against the same number of days just before (whole weeks, up to 28 days), whether that change is outside the site’s own movement in the 8 comparisons before it (a heuristic), and the folders, pages and queries that gained or lost most; brand against not brand (Google’s own classification when it covers the dates, else the saved brand names), devices, the market groups saved in the business context, the pages that moved on searches not about the brand, and the top Google Lens and Circle to Search pages. Early until a full week after the update finishes. The latest update by default; with end_date, the latest update that started on or before it. Timing only, not cause.'
 
 // Bounds, set before any call: days compared, earlier comparisons for the
 // normal range, rows read per period and rows listed.
@@ -37,6 +52,11 @@ const LISTED = 10
 const SHOWN = 5
 // Fewer clicks than this before the update is too little to judge.
 const MIN_CLICKS = 50
+// A row with fewer clicks than this on both sides is too small to judge.
+const SMALL_ROW = 10
+// Google's guidance for core updates: wait at least a full week after one
+// finishes before judging it (developers.google.com/search/updates/core-updates).
+const SETTLE_DAYS = 7
 
 export type ImpactUpdate = {
   id: string
@@ -74,7 +94,38 @@ export type UpdateImpact = {
   folders: ImpactRow[]
   pages: { lost: ImpactRow[]; gained: ImpactRow[] }
   queries: { lost: ImpactRow[]; gained: ImpactRow[] }
+  // Still rolling out, or finished less than SETTLE_DAYS before the latest
+  // final day: early to judge.
+  settling: boolean
+  // The splits the report section adds (ImpactExtras); the hosted alerts
+  // leave them out to keep to five calls a site.
+  brand?: BrandSplit | null
+  devices?: ImpactRow[] | null
+  markets?: MarketTotals[] | null
+  non_brand_pages?: {
+    by: 'google' | 'brand_names'
+    lost: ImpactRow[]
+    gained: ImpactRow[]
+  } | null
+  lens_pages?: ImpactRow[] | null
 }
+
+// Each site's results for past updates, kept by the hosted server so they
+// outlast Search Console's 16 months. A result is kept once it covers the
+// whole update (window full); a later one for the same update replaces it.
+export type UpdateLogStore = {
+  // The site's kept results, newest update first.
+  read: (site: string) => Promise<UpdateImpact[]>
+  write: (impact: UpdateImpact) => Promise<void>
+}
+
+// Whether a result is the whole update and worth keeping.
+export const impactKept = (impact: UpdateImpact) =>
+  impact.window === 'full' && impact.before !== null && impact.after !== null
+
+// What the report section reads beyond the five calls: the saved brand
+// names and market groups.
+export type ImpactExtras = { names: string[]; markets: Market[] }
 
 const days = (from: string, to: string) =>
   Math.round((Date.parse(to) - Date.parse(from)) / 86_400_000) + 1
@@ -151,6 +202,90 @@ function extremes(rows: ImpactRow[]) {
   }
 }
 
+// The brand, device, market, non-brand page and Lens splits for the two
+// periods. Each failed read leaves its part null.
+async function impactExtras(
+  site: string,
+  read: SearchAnalyticsQuery,
+  before: DateRange,
+  after: DateRange,
+  extras: ImpactExtras,
+) {
+  const call = (
+    range: DateRange,
+    dimension: string,
+    more: Partial<Parameters<SearchAnalyticsQuery>[1]> = {},
+  ) =>
+    read(site, {
+      ...range,
+      dimensions: [dimension],
+      type: 'web',
+      dataState: 'final',
+      maxRows: ROWS,
+      ...more,
+    })
+  const pair = (dimension: string, more = {}) =>
+    Promise.all([
+      call(before, dimension, more),
+      call(after, dimension, more),
+    ]).then(([was, is]) => joined(was.rows, is.rows))
+  const [brand, devices, markets, lens] = await Promise.all([
+    brandSplit(read, site, after, before, extras.names).catch(() => null),
+    pair('device').catch(() => null),
+    extras.markets.length
+      ? marketTotals(read, site, extras.markets, after, before).catch(
+          () => null,
+        )
+      : null,
+    pair('page', { type: 'webMultimodal' })
+      .then((rows) =>
+        rows
+          .filter((row) => row.clicks > 0 || row.impressions > 0)
+          .sort(
+            (a, b) =>
+              b.clicks - a.clicks ||
+              b.impressions - a.impressions ||
+              byKey(a, b),
+          )
+          .slice(0, LISTED),
+      )
+      .catch(() => null),
+  ])
+  // Non-brand pages: Google's classification when it covers both periods,
+  // else the saved brand names left out by regex.
+  const regex = brandRegex(extras.names)
+  const by =
+    brand?.current.google && brand.previous.google
+      ? ('google' as const)
+      : regex
+        ? ('brand_names' as const)
+        : null
+  const filters =
+    by === 'google'
+      ? [
+          {
+            dimension: 'brandedClassification',
+            operator: 'equals' as const,
+            expression: 'NON_BRANDED',
+          },
+        ]
+      : rowTextFilters({ excludeQueryRegex: regex })
+  const nonBrand = by
+    ? await pair('page', { dimensionFilterGroups: [{ filters }] })
+        .then((rows) => ({ by, ...extremes(rows) }))
+        .catch(() => null)
+    : null
+  return {
+    brand,
+    devices: devices
+      ? devices.sort((a, b) => b.clicks - a.clicks || byKey(a, b))
+      : null,
+    markets,
+    non_brand_pages: nonBrand,
+    lens_pages: lens,
+  }
+}
+
 // The first folder of a page's path, such as /blog/, or / for a page at
 // the top level.
 function folderOf(url: string): string {
@@ -214,8 +349,11 @@ export async function updateImpact(
   update: ImpactUpdate,
   read: SearchAnalyticsQuery,
   now: Date,
+  extras?: ImpactExtras,
 ): Promise<UpdateImpact> {
-  const { start, end, wanted, n } = windowDays(update, latestFinalGscDate(now))
+  const latest = latestFinalGscDate(now)
+  const { start, end, wanted, n } = windowDays(update, latest)
+  const settling = !end || latest < shiftIsoDate(end, SETTLE_DAYS)
   const empty = {
     update,
     site,
@@ -227,6 +365,7 @@ export async function updateImpact(
     folders: [],
     pages: { lost: [], gained: [] },
     queries: { lost: [], gained: [] },
+    settling,
   }
   if (n < 7) return { ...empty, window: 'waiting' }
   const after = { startDate: start, endDate: shiftIsoDate(start, n - 1) }
@@ -300,7 +439,11 @@ export async function updateImpact(
         ? 'outside-normal'
         : 'within-normal'
   const pageRows = joined(pagesBefore.rows, pagesAfter.rows)
+  const more = extras
+    ? await impactExtras(site, shared, before, after, extras)
+    : {}
   return {
+    ...more,
     ...empty,
     window: end && n === wanted ? 'full' : 'partial',
     before: was,
@@ -342,7 +485,52 @@ function rowText(row: ImpactRow, origin: string): string {
     ? row.key.slice(origin.length) || '/'
     : row.key
   const diff = moved(row)
-  return `${name} ${count(row.clicks)} (${diff > 0 ? '+' : ''}${count(diff)})`
+  const small = Math.max(row.clicks, row.previous) < SMALL_ROW
+  return `${name} ${count(row.clicks)} (${diff > 0 ? '+' : ''}${count(diff)}${small ? ', too small to judge' : ''})`
+}
+
+// Brand and not brand before and after: Google's classification when it
+// covers both periods, else the saved brand names.
+function brandLine(split: BrandSplit): string | null {
+  const side = notBrand(split)
+  if (!side) {
+    return 'Not brand: no split, because Google does not classify brand searches for this property or these dates and no brand names are saved in the business context.'
+  }
+  return `Not brand (${NOT_BRAND_BY[side.by]}): clicks ${count(side.current.clicks)}, ${trend(side.current.clicks, side.previous.clicks)}; impressions ${count(side.current.impressions)}, ${trend(side.current.impressions, side.previous.impressions)}. Brand: clicks ${count(side.brand.clicks)}, ${trend(side.brand.clicks, side.previous_brand.clicks)}.`
+}
+
+// The brand split alone for a result, for the hosted alerts and the Monday
+// summary, which skip the other extras to save calls. Up to eight more
+// Search Console calls; a failed read leaves the result as it was.
+export async function withImpactBrand(
+  impact: UpdateImpact,
+  read: SearchAnalyticsQuery,
+  names: string[],
+): Promise<UpdateImpact> {
+  if (!impact.before || !impact.after) return impact
+  const brand = await brandSplit(
+    sharedReader(read),
+    impact.site,
+    impact.after,
+    impact.before,
+    names,
+  ).catch(() => null)
+  return brand ? { ...impact, brand } : impact
+}
+
+const VERDICT_TEXT: Record<UpdateImpact['verdict'], string> = {
+  'outside-normal': 'more than the site usually moves',
+  'within-normal': 'within the site’s normal movement',
+  'not-enough-data': 'too little data to say if that is unusual',
+}
+
+// One kept result as one line, for the list of past updates.
+export function impactSummary(impact: UpdateImpact): string {
+  const { before, after } = impact
+  if (!before || !after) return 'nothing compared'
+  const n = days(after.startDate, after.endDate)
+  const side = impact.brand ? notBrand(impact.brand) : null
+  return `clicks ${count(after.clicks)}, ${trend(after.clicks, before.clicks)} over the ${n} days from its start, ${VERDICT_TEXT[impact.verdict]}${side ? `; not brand ${count(side.current.clicks)}, ${trend(side.current.clicks, side.previous.clicks)} (${NOT_BRAND_BY[side.by]})` : ''}`
 }
 
 // The update over one site as Markdown lines, the same in the report and
@@ -385,6 +573,62 @@ export function impactLines(impact: UpdateImpact): string[] {
     ...list('Queries that lost most', impact.queries.lost),
     ...list('Queries that gained most', impact.queries.gained),
   )
+  if (impact.brand) {
+    const line = brandLine(impact.brand)
+    if (line) lines.push(line)
+  }
+  if (impact.devices?.length) {
+    lines.push(
+      `By device: ${impact.devices
+        .map(
+          (row) =>
+            `${row.key.toLowerCase()} clicks ${count(row.clicks)}, ${trend(row.clicks, row.previous)}`,
+        )
+        .join('; ')}.`,
+    )
+  }
+  if (impact.markets) {
+    const line = marketLine(impact.markets)
+    if (line) lines.push(line)
+  }
+  if (impact.non_brand_pages) {
+    const by =
+      impact.non_brand_pages.by === 'google'
+        ? 'by Google’s classification'
+        : 'leaving out your brand names'
+    // A list the same as the one for all searches, as on a site with few
+    // brand searches, says nothing new, so it is left out.
+    const shown = (rows: ImpactRow[]) =>
+      rows
+        .slice(0, SHOWN)
+        .map((row) => rowText(row, origin))
+        .join()
+    const differs = (rows: ImpactRow[], all: ImpactRow[]) =>
+      shown(rows) !== shown(all)
+    const { lost, gained } = impact.non_brand_pages
+    lines.push(
+      ...(differs(lost, impact.pages.lost)
+        ? list(
+            `Pages that lost most from searches not about the brand (${by})`,
+            lost,
+          )
+        : []),
+      ...(differs(gained, impact.pages.gained)
+        ? list(
+            `Pages that gained most from searches not about the brand (${by})`,
+            gained,
+          )
+        : []),
+    )
+  }
+  if (impact.lens_pages?.length) {
+    lines.push(
+      ...list(
+        'Top pages in Google Lens and Circle to Search',
+        impact.lens_pages,
+      ),
+    )
+  }
   const capped = [
     impact.capped.pages ? 'pages' : null,
     impact.capped.queries ? 'queries' : null,
@@ -392,6 +636,13 @@ export function impactLines(impact: UpdateImpact): string[] {
   if (capped.length) {
     lines.push(
       `Search Console returned the row limit for ${capped.join(' and ')}, so those lists may miss rows.`,
+    )
+  }
+  if (impact.settling) {
+    lines.push(
+      update.end
+        ? `The update finished less than ${SETTLE_DAYS} days before the latest final data. For core updates, Google suggests waiting at least a full week after one finishes before judging it, so this is early.`
+        : 'The update is still rolling out, so this is early. For core updates, Google suggests waiting at least a full week after one finishes before judging it.',
     )
   }
   lines.push(
@@ -425,19 +676,34 @@ export async function runUpdates(
       `Google’s Search Status Dashboard lists no ranking update that started on or before ${cutoff}.`,
     )
   }
+  const context = deps.context
+    ? await deps.context.read(input.site).catch(() => null)
+    : null
   const impact = await updateImpact(
     input.site,
     asImpactUpdate(chosen),
     deps.searchAnalytics,
     now,
+    {
+      names: context ? brandNames(context.text) : [],
+      markets: context ? marketGroups(context.text) : [],
+    },
+  )
+  if (deps.updateLog && impactKept(impact)) {
+    await deps.updateLog.write(impact).catch(() => undefined)
+  }
+  const kept = new Map(
+    ((await deps.updateLog?.read(input.site).catch(() => null)) ?? []).map(
+      (item) => [item.update.id, item],
+    ),
   )
   const others = sorted
     .filter((update) => update.id !== chosen.id)
     .slice(0, 5)
-    .map(
-      (update) =>
-        `${update.name} (${update.start.slice(0, 10)}): ${deps.call('report', { site: input.site, section: UPDATES_SECTION, end_date: update.start.slice(0, 10) })}`,
-    )
+    .map((update) => {
+      const saved = kept.get(update.id)
+      return `${update.name} (${update.start.slice(0, 10)}): ${saved ? `${impactSummary(saved)}. Details: ` : ''}${deps.call('report', { site: input.site, section: UPDATES_SECTION, end_date: update.start.slice(0, 10) })}`
+    })
   return {
     text: [
       `Google update on ${input.site}`,

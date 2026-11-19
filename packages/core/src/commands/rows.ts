@@ -82,6 +82,7 @@ export const DIMENSIONS = [
   'country',
   'device',
   'searchAppearance',
+  'brandedClassification',
 ] as const
 
 export type Dimension = (typeof DIMENSIONS)[number]
@@ -95,6 +96,7 @@ export const SEARCH_TYPES = {
   news: 'news',
   discover: 'discover',
   google_news: 'googleNews',
+  multimodal: 'webMultimodal',
 } as const
 
 export type SearchType = keyof typeof SEARCH_TYPES
@@ -106,6 +108,7 @@ export const SEARCH_TYPE_NAMES: Record<SearchType, string> = {
   news: 'the News tab',
   discover: 'Discover',
   google_news: 'Google News',
+  multimodal: 'Google Lens and Circle to Search',
 }
 
 // Discover and Google News have no queries and no average position.
@@ -122,6 +125,8 @@ const SURFACE_NOTES: Partial<Record<SearchType, string>> = {
     'Discover is Google’s feed: pages shown without a search, so there are no queries or positions.',
   google_news:
     'Google News is news.google.com and the Google News app, not the News tab in Google Search. It has no queries or positions.',
+  multimodal:
+    'Google Lens and Circle to Search: searches made with an image, from Google Lens, Circle to Search on Android and image uploads in Google Search. Web search totals do not include them.',
 }
 
 // From Google's Discover guide: the report needs a minimum of impressions.
@@ -139,6 +144,8 @@ export const SURFACE_GUIDES: Partial<Record<SearchType, string>> = {
     'there are no queries to target. Ask the person whether Discover matters to them before suggesting work.',
   google_news:
     'these matter when the person publishes news; for other sites they need no work.',
+  multimodal:
+    'these are pages people reached by searching with a photo or a screenshot, often of a product. Ask the person whether those visits matter to them before suggesting work.',
 }
 
 export type RowFilter = {
@@ -152,6 +159,16 @@ export type RowFilter = {
     | 'excludingRegex'
   expression: string
 }
+
+// Google's brand classification of queries (brandedClassification).
+export const BRAND_CLASSES = ['branded', 'non_branded'] as const
+export type BrandClass = (typeof BRAND_CLASSES)[number]
+
+// The first day Google classifies queries as brand or not.
+export const BRAND_DATA_FROM = '2026-02-21'
+
+export const DEVICES = ['desktop', 'mobile', 'tablet'] as const
+export type Device = (typeof DEVICES)[number]
 
 // Orders for Search Console rows. Search Console itself returns rows by
 // clicks only, so every other order sorts the rows fetched.
@@ -205,7 +222,7 @@ export const rowsInput = {
     .enum(Object.keys(SEARCH_TYPES) as [SearchType, ...SearchType[]])
     .default('web')
     .describe(
-      'search_console only. web (default) is the All tab; image, video and news are the Images, Videos and News tabs; discover is the Discover feed; google_news is the Google News app and site. discover and google_news have pages but no queries or positions.',
+      'search_console only. web (default) is the All tab; image, video and news are the Images, Videos and News tabs; discover is the Discover feed; google_news is the Google News app and site; multimodal is Google Lens, Circle to Search and image uploads. discover and google_news have pages but no queries or positions.',
     ),
   page_regex: z
     .string()
@@ -233,6 +250,26 @@ export const rowsInput = {
     .describe(
       'search_console only. Row order: clicks (default; date order when grouped by date), impressions, ctr (highest first), ctr_low (lowest first; pair with min_impressions), position (best first), or clicks_gain, clicks_loss, impressions_gain, impressions_loss against the previous period.',
     ),
+  brand: z
+    .enum(BRAND_CLASSES)
+    .optional()
+    .describe(
+      "search_console only: Google's own brand split, branded or non_branded. Google classifies only top-level properties with enough searches, from 2026-02-21, and not with query, query_regex or exclude_query_regex.",
+    ),
+  country: z
+    .array(z.string().regex(/^[A-Za-z]{3}$/))
+    .min(1)
+    .max(50)
+    .optional()
+    .describe(
+      'search_console only: three-letter country codes, such as fra, bel and che, for rows from any of them.',
+    ),
+  device: z
+    .array(z.enum(DEVICES))
+    .min(1)
+    .max(3)
+    .optional()
+    .describe('search_console only: desktop, mobile or tablet, one or more.'),
   min_impressions: z
     .number()
     .int()
@@ -312,10 +349,27 @@ export type RowsInput = DateInput & {
   offset?: number
   sort?: Sort
   minImpressions?: number
+  brand?: BrandClass
+  countries?: string[]
+  devices?: Device[]
 }
 
 // Most Search Console rows read per period.
 const ROWS = 25_000
+
+// Google classifies brand searches only for top-level properties, so a
+// property for one folder, such as https://example.com/blog/, gets none.
+export function isFolderProperty(site: string): boolean {
+  if (site.startsWith('sc-domain:')) return false
+  try {
+    return new URL(site).pathname.replace(/\/+$/, '') !== ''
+  } catch {
+    return false
+  }
+}
+
+// What a brand split needs to be read right, beside the rows.
+export const BRAND_SPLIT_NOTE = `Google classifies brand searches only for top-level properties with enough searches, and only from ${BRAND_DATA_FROM}. A property it does not classify gets no rows, which means unclassified, not zero brand searches.`
 
 // Search Console rows for any dimensions and filters, each beside the same
 // rows from the previous period.
@@ -330,18 +384,67 @@ export async function runRows(
     ? input.dimensions
     : [noQueries ? 'page' : 'query']
   const filters = input.filters ?? []
+  const brandSplit =
+    input.brand !== undefined || dimensions.includes('brandedClassification')
   // A query cut of Discover can only come back empty, which would look like
   // a real zero.
   if (
     NO_QUERIES.has(searchType) &&
     (dimensions.includes('query') ||
+      brandSplit ||
       filters.some((filter) => filter.dimension === 'query'))
   ) {
     throw new SeoError(
       'INVALID_INPUT',
-      `${surface} has no queries in Search Console, only pages. Ask for dimensions page, date, country, device or searchAppearance, without query filters.`,
+      `${surface} has no queries in Search Console, only pages. Ask for dimensions page, date, country, device or searchAppearance, without query filters or a brand split.`,
     )
   }
+  if (brandSplit && filters.some((filter) => filter.dimension === 'query')) {
+    throw new SeoError(
+      'INVALID_INPUT',
+      'Google does not split brand searches in a request that also filters queries. Leave out query, query_regex and exclude_query_regex, or drop brand and leave out the brand names with exclude_query_regex.',
+    )
+  }
+  if (brandSplit && isFolderProperty(input.site)) {
+    throw new SeoError(
+      'INVALID_INPUT',
+      `Google classifies brand searches only for top-level properties, not a folder such as ${input.site}. Leave out the brand names with exclude_query_regex instead, or ask for the top-level property.`,
+    )
+  }
+  const lists = [
+    ...(input.countries?.length
+      ? [
+          {
+            dimension: 'country' as const,
+            expressions: [
+              ...new Set(input.countries.map((code) => code.toUpperCase())),
+            ],
+          },
+        ]
+      : []),
+    ...(input.devices?.length
+      ? [
+          {
+            dimension: 'device' as const,
+            expressions: [
+              ...new Set(input.devices.map((device) => device.toUpperCase())),
+            ],
+          },
+        ]
+      : []),
+  ]
+  const allFilters: RowFilter[] = [
+    ...filters,
+    ...(input.brand
+      ? [
+          {
+            dimension: 'brandedClassification' as const,
+            operator: 'equals' as const,
+            expression: input.brand.toUpperCase(),
+          },
+        ]
+      : []),
+  ]
   if (noQueries && input.sort === 'position') {
     throw new SeoError(
       'INVALID_INPUT',
@@ -354,8 +457,16 @@ export async function runRows(
     dimensions,
     type: SEARCH_TYPES[searchType],
     maxRows: ROWS,
-    ...(filters.length
-      ? { dimensionFilterGroups: [{ groupType: 'and' as const, filters }] }
+    ...(allFilters.length || lists.length
+      ? {
+          dimensionFilterGroups: [
+            {
+              groupType: 'and' as const,
+              filters: allFilters,
+              ...(lists.length ? { filterLists: lists } : {}),
+            },
+          ],
+        }
       : {}),
   }
   const [current, before] = await Promise.all([
@@ -481,6 +592,13 @@ export async function runRows(
   )
   const surfaceNote = SURFACE_NOTES[searchType]
   if (surfaceNote) notes.push(surfaceNote)
+  if (brandSplit) {
+    notes.push(
+      previous.startDate < BRAND_DATA_FROM
+        ? `${BRAND_SPLIT_NOTE} These dates reach back before ${BRAND_DATA_FROM}, so those days are missing, not zero.`
+        : BRAND_SPLIT_NOTE,
+    )
+  }
   // Seen live: a Discover total of 1 impression with no page rows.
   if (noQueries) {
     notes.push(
@@ -520,6 +638,9 @@ export async function runRows(
           dimensions: dimensions.join(','),
           ...(searchType === 'web' ? {} : { search_type: searchType }),
           ...filterArgs(filters),
+          brand: input.brand,
+          country: input.countries?.join(','),
+          device: input.devices?.join(','),
           sort,
           min_impressions: minImpressions,
           start_date: range.startDate,
@@ -532,6 +653,9 @@ export async function runRows(
       range,
       comparisonRange: previous,
       searchType,
+      ...(input.brand ? { brand: input.brand } : {}),
+      ...(input.countries?.length ? { countries: input.countries } : {}),
+      ...(input.devices?.length ? { devices: input.devices } : {}),
       total: kept.length,
       offset: input.offset ?? 0,
       rows: kept.slice(input.offset ?? 0, (input.offset ?? 0) + PAGE_SIZE),

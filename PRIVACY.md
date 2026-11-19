@@ -53,6 +53,11 @@ encrypted before they are written.
   `seo next`: what the business sells, who buys it, its conversion pages and
   competitors, and when they were saved. Kept for any site, audited or
   not, until your agent replaces them or you delete your account.
+- **Google update results.** For any site you ask about, and each audited
+  site, what moved in Search Console during each Google ranking update:
+  clicks and impressions before and after, brand and not brand, and the
+  pages and searches that moved most. Kept until you delete your account,
+  so they stay after Search Console drops those days.
 - **Usage totals.** One number a day for each kind of paid-for work we do
   for you, such as browser time, Google index checks and research calls. No
   URLs or results.

@@ -83,6 +83,9 @@ const FLAGS: Record<string, string> = {
   exclude_query_regex: '--exclude-query-regex',
   sort: '--sort',
   min_impressions: '--min-impressions',
+  brand: '--brand',
+  country: '--country',
+  device: '--device',
 }
 
 // Single quotes, so a regex's $, \ and backticks reach the command as typed.

@@ -21,6 +21,8 @@ const SURFACE_QUESTION: Partial<
     `Google Discover showed your pages ${count(i)} times and sent ${count(c)} clicks. Does Discover matter to you? I can look at the pages behind them.`,
   google_news: (i, c) =>
     `Google News showed your pages ${count(i)} times and sent ${count(c)} clicks. Do you publish news? I can look at the pages behind them.`,
+  multimodal: (i, c) =>
+    `Google Lens and Circle to Search showed your pages ${count(i)} times when people searched with a photo or screenshot, and sent ${count(c)} clicks. Do those visits matter to you? I can look at the pages behind them.`,
 }
 
 // Google's other surfaces for the overview's dates, each its own count, and

@@ -415,7 +415,7 @@ export const SHARED_TOOLS: SharedTool[] = [
     command: 'compare',
     title: 'Before and after a date',
     description:
-      'Compares equal periods before and after a date, such as a site change or a Google update: totals, devices, and the pages and queries that moved, Google Analytics sessions from the property whose web stream matches the site, Clicky visits from a saved Clicky site with the same domain, Simple Analytics visitors when an API key is saved and it has the site, and Google updates in the window. Optional pages narrows it to URLs that contain that text, such as /blog/.',
+      'Compares equal periods before and after a date, such as a site change or a Google update: totals, devices, and the pages and queries that moved, Google Analytics sessions from the property whose web stream matches the site, Clicky visits from a saved Clicky site with the same domain, Simple Analytics visitors when an API key is saved and it has the site, brand against not brand by the saved brand names and by Google’s own classification, each market group saved in the business context, and Google updates in the window. Optional pages narrows it to URLs that contain that text, such as /blog/.',
     input: z.object({
       site,
       date: z
@@ -710,7 +710,7 @@ export const SHARED_TOOLS: SharedTool[] = [
     name: 'seo_data',
     command: 'data',
     title: 'Raw rows',
-    description: `Raw rows for questions the report does not answer. search_console (default): rows for any dimensions, each with the previous period and the change, from web search or with search_type from image, video, news, Discover or Google News; page and query narrow to rows whose URL or query contains that text; page_regex, query_regex and exclude_query_regex take RE2 regexes for custom cuts; sort orders rows by impressions, ctr, position or a gain or loss instead of clicks, and min_impressions drops rows seen too rarely to judge. google_analytics: landing pages for visits from search, with Google Analytics’ own metric names. bing: Bing Webmaster query or page rows (first dimension) for the same site, by week. clicky: landing-page visits, traffic sources and search engines from a Clicky site the person saved (site is its domain or Clicky site ID; at most 31 days). simple_analytics: landing-page visitors, referrers, utm_source tags and AI tools from Simple Analytics with the API key the person saved (site is its domain).`,
+    description: `Raw rows for questions the report does not answer. search_console (default): rows for any dimensions, each with the previous period and the change, from web search or with search_type from image, video, news, Discover, Google News or multimodal (Google Lens and Circle to Search); brand narrows to Google’s own branded or non_branded searches, and the brandedClassification dimension splits by it; country and device take lists; page and query narrow to rows whose URL or query contains that text; page_regex, query_regex and exclude_query_regex take RE2 regexes for custom cuts; sort orders rows by impressions, ctr, position or a gain or loss instead of clicks, and min_impressions drops rows seen too rarely to judge. google_analytics: landing pages for visits from search, with Google Analytics’ own metric names. bing: Bing Webmaster query or page rows (first dimension) for the same site, by week. clicky: landing-page visits, traffic sources and search engines from a Clicky site the person saved (site is its domain or Clicky site ID; at most 31 days). simple_analytics: landing-page visitors, referrers, utm_source tags and AI tools from Simple Analytics with the API key the person saved (site is its domain).`,
     input: z.object({
       source: z.enum(DATA_SOURCES).default('search_console'),
       site: z
@@ -812,6 +812,9 @@ export const SHARED_TOOLS: SharedTool[] = [
             excludeQueryRegex: input.exclude_query_regex,
           }),
           searchType: input.search_type,
+          brand: input.brand,
+          countries: input.country,
+          devices: input.device,
           sort: input.sort,
           minImpressions: input.min_impressions,
           startDate: input.start_date,

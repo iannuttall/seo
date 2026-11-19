@@ -1,5 +1,6 @@
 import { latestFinalGscDate, shiftIsoDate } from '../gsc/dates.js'
 import { AUDIT_RULES } from './audit.js'
+import { NOT_BRAND_BY } from './brand-split.js'
 import type { IssueMeasure, StoredIssue } from './issues.js'
 import { type CommandDeps, CommandError, type CommandResult } from './types.js'
 
@@ -41,6 +42,14 @@ export type WeekSite = {
   clicks: {
     start: string
     end: string
+    clicks: number
+    previous: number
+  } | null
+  // Not-brand clicks for the same 7 days and the 7 before, by Google's
+  // brand classification when it covers both weeks, else the saved brand
+  // names; null without either, or when they could not be read.
+  not_brand?: {
+    by: 'google' | 'brand_names'
     clicks: number
     previous: number
   } | null
@@ -180,6 +189,12 @@ export type WeekGoogleUpdate = {
     clicks: number
     previous: number
     days: number
+    // Not-brand clicks for the same days, by the same rule as not_brand.
+    non_brand?: {
+      by: 'google' | 'brand_names'
+      clicks: number
+      previous: number
+    } | null
   } | null
 }
 const DAY_MS = 86_400_000
@@ -391,7 +406,22 @@ function siteLines(
   } else {
     lines.push('Search clicks: not available this week.')
   }
+  const other = site.not_brand
+  if (clicks && other) {
+    lines.push(
+      `Not brand: ${count(other.clicks)} clicks, ${change(other.clicks, other.previous)} the 7 days before (${NOT_BRAND_BY[other.by]}).`,
+    )
+  }
   return lines
+}
+
+// "up 12% on 1,000", "level with 1,000" or "from 0".
+function change(now: number, before: number): string {
+  if (before <= 0) return `from ${count(before)}`
+  const pct = Math.round(((now - before) / before) * 100)
+  return pct === 0
+    ? `level with ${count(before)}`
+    : `${pct > 0 ? 'up' : 'down'} ${Math.abs(pct)}% on ${count(before)}`
 }
 
 // The competitor opportunities line, and one line per keyword under it.
@@ -423,7 +453,11 @@ function updateLines(site: WeekSite): string[] {
       'within-normal': 'within this site’s normal movement',
       'not-enough-data': 'too little data to say if that is unusual',
     }[result.verdict]
-    return `- Google update: the ${update.name}, ${moved} over the ${result.days} days from its start against the ${result.days} before, ${verdict} (timing only, not cause).`
+    const other = result.non_brand
+    const notBrandText = other
+      ? `; not brand ${count(other.clicks)} clicks, ${change(other.clicks, other.previous)} (${NOT_BRAND_BY[other.by]})`
+      : ''
+    return `- Google update: the ${update.name}, ${moved} over the ${result.days} days from its start against the ${result.days} before, ${verdict}${notBrandText} (timing only, not cause).`
   })
 }
 

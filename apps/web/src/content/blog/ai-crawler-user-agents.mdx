@@ -1,0 +1,222 @@
+---
+title: 'AI crawler user agents: GPTBot, ClaudeBot and more'
+description: The user agent, purpose, robots.txt rule and official IP list for GPTBot, OAI-SearchBot, ClaudeBot, PerplexityBot, Google-Extended and other AI bots.
+heading: AI crawler user agents and what each bot does
+lead: Most AI bots in your logs do one of three jobs. Each collects pages for training, builds a search index, or opens a page because a person asked. The job decides what blocking it costs you.
+date: '2026-11-19'
+draft: false
+cover:
+  alt: "A Victorian engraved doorman at a library door checks his ledger and waves in a messenger boy with a lime green satchel, while a man with a magnifying glass, a clerk with a stack of papers and a clockwork automaton wait their turn."
+---
+
+export const blockAll = `User-agent: GPTBot
+User-agent: OAI-SearchBot
+User-agent: ChatGPT-User
+User-agent: ClaudeBot
+User-agent: Claude-SearchBot
+User-agent: Claude-User
+User-agent: PerplexityBot
+User-agent: Google-Extended
+User-agent: Applebot-Extended
+Disallow: /`
+
+export const searchNotTraining = `# AI search and user fetches
+User-agent: OAI-SearchBot
+User-agent: ChatGPT-User
+User-agent: Claude-SearchBot
+User-agent: Claude-User
+User-agent: PerplexityBot
+User-agent: Perplexity-User
+Allow: /
+
+# Model training
+User-agent: GPTBot
+User-agent: ClaudeBot
+User-agent: Applebot-Extended
+User-agent: Meta-ExternalAgent
+Disallow: /
+
+# Everyone else, Googlebot, Bingbot
+# and Applebot included
+User-agent: *
+Allow: /`
+
+The bots that matter for AI answers are the search crawlers and the user fetchers: OAI-SearchBot and ChatGPT-User for ChatGPT, Claude-SearchBot and Claude-User for Claude, PerplexityBot and Perplexity-User for Perplexity. Block the search crawlers and you can drop out of their answers: OpenAI says sites that block OAI-SearchBot "will not be shown in ChatGPT search answers". The training crawlers, GPTBot and ClaudeBot among them, are a separate choice.
+
+Every fact below comes from the company's own crawler page, read on 19 November 2026 and linked in each section. Where a company doesn't publish something, the table says so.
+
+<KeywordTable
+  title="AI crawlers and fetchers"
+  caption="Each company's own crawler documentation, read on 19 November 2026. Token means a robots.txt name that controls how pages are used and never sends a request itself."
+  sortBy="bot"
+  columns={[{ key: 'bot', label: 'Bot', format: 'text' }, { key: 'company', label: 'Company', format: 'text' }, { key: 'purpose', label: 'Purpose', format: 'text' }, { key: 'robots', label: 'Follows robots.txt', format: 'text', short: 'Robots' }, { key: 'ips', label: 'IP list', format: 'text', short: 'IPs' }]}
+  rows={[
+    { bot: 'GPTBot', company: 'OpenAI', purpose: 'Training', robots: 'Yes', ips: 'gptbot.json' },
+    { bot: 'OAI-SearchBot', company: 'OpenAI', purpose: 'Search index', robots: 'Yes', ips: 'searchbot.json' },
+    { bot: 'ChatGPT-User', company: 'OpenAI', purpose: 'User fetch', robots: 'May not apply', ips: 'chatgpt-user.json' },
+    { bot: 'ClaudeBot', company: 'Anthropic', purpose: 'Training', robots: 'Yes', ips: 'bots.json' },
+    { bot: 'Claude-SearchBot', company: 'Anthropic', purpose: 'Search index', robots: 'Yes', ips: 'bots.json' },
+    { bot: 'Claude-User', company: 'Anthropic', purpose: 'User fetch', robots: 'Yes', ips: 'bots.json' },
+    { bot: 'PerplexityBot', company: 'Perplexity', purpose: 'Search index', robots: 'Yes', ips: 'perplexitybot.json' },
+    { bot: 'Perplexity-User', company: 'Perplexity', purpose: 'User fetch', robots: 'Generally ignores', ips: 'perplexity-user.json' },
+    { bot: 'Google-Extended', company: 'Google', purpose: 'Training and Gemini grounding (token)', robots: 'Token', ips: 'None, no crawler' },
+    { bot: 'Google-Agent', company: 'Google', purpose: 'Agent acting for a user', robots: 'Generally ignores', ips: 'user-triggered-agents.json' },
+    { bot: 'Applebot-Extended', company: 'Apple', purpose: 'Training (token)', robots: 'Token', ips: 'None, no crawler' },
+    { bot: 'Meta-ExternalAgent', company: 'Meta', purpose: 'Training and product indexing', robots: 'Yes', ips: 'Not published' },
+    { bot: 'CCBot', company: 'Common Crawl', purpose: 'Public web dataset', robots: 'Yes', ips: 'ccbot.json' },
+    { bot: 'Bytespider', company: 'ByteDance', purpose: 'Search index (Toutiao); SEO Skill counts it as training', robots: 'Not stated', ips: 'Ten ranges on its docs page' },
+  ]}
+/>
+
+Three of the 14, ChatGPT-User, Perplexity-User and Google-Agent, may skip robots.txt because a person asked for the page. For those three, your firewall decides whether they get in, not your robots.txt.
+
+## Allow AI search and block training in robots.txt
+
+This robots.txt lets the AI search crawlers and user fetchers in and keeps the training crawlers out. It matches the setup I recommend in [how to check whether AI crawlers can reach your site](/blog/ai-crawlers-firewall#which-ai-crawlers-id-allow): search crawlers in, Google-Extended left alone so Gemini can still ground answers in your pages, and training your call.
+
+<BeforeAfter
+  title="Block the main AI bots, or only training"
+  caption="Robots.txt tokens from OpenAI, Anthropic, Perplexity, Google and Apple's crawler pages, 19 November 2026. Several User-agent lines can share one group of rules."
+  before={{ label: 'Blocks the main AI bots', code: blockAll, note: 'OpenAI says a site that blocks OAI-SearchBot won\'t be shown in ChatGPT search answers, and Anthropic says blocking Claude-SearchBot may reduce your visibility in Claude. Blocking Google-Extended can keep you out of Gemini answers too.' }}
+  after={{ label: 'Allows search, blocks training', code: searchNotTraining, note: 'Googlebot, Bingbot and Applebot fall under the last group. Leaving Google-Extended out of the file allows it.' }}
+/>
+
+You only need the Allow group if a `User-agent: *` group disallows those pages. I'd keep it anyway, so a catch-all rule added later doesn't shut them out.
+
+## GPTBot
+
+GPTBot is OpenAI's training crawler: it collects pages that may be used to train OpenAI's generative AI foundation models, and disallowing it in robots.txt tells OpenAI not to use your content for that. OpenAI's [crawler documentation](https://platform.openai.com/docs/bots) gives this example user agent, and says the version number may change:
+
+```txt
+Mozilla/5.0 AppleWebKit/537.36 (KHTML, like Gecko); compatible; GPTBot/1.4; +https://openai.com/gptbot
+```
+
+GPTBot's addresses are in [gptbot.json](https://openai.com/gptbot.json). Blocking GPTBot doesn't remove you from ChatGPT search, because OpenAI says each robots.txt setting "is independent of the others". When a site allows both GPTBot and OAI-SearchBot, OpenAI says it "may use the results from just one crawl for both use cases".
+
+## OAI-SearchBot
+
+OAI-SearchBot is the crawler that finds pages for ChatGPT search, and OpenAI says sites that block it "will not be shown in ChatGPT search answers, though can still appear as navigational links." It follows robots.txt, and OpenAI says a change can take about 24 hours to reach its search systems. The example user agent:
+
+```txt
+Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36; compatible; OAI-SearchBot/1.4; +https://openai.com/searchbot
+```
+
+When OAI-SearchBot and GPTBot fetch robots.txt itself, they may add a `robots.txt` marker to the string, so you can tell those requests apart in logs that don't record paths. OAI-SearchBot's addresses are in [searchbot.json](https://openai.com/searchbot.json), and OpenAI recommends allowing requests from them.
+
+## ChatGPT-User
+
+ChatGPT-User is the agent ChatGPT and custom GPTs use to open a page when a person's question needs it, and OpenAI says "because these actions are initiated by a user, robots.txt rules may not apply." It doesn't crawl the web on its own, and OpenAI says it isn't used to decide whether content appears in ChatGPT search. The full user agent:
+
+```txt
+Mozilla/5.0 AppleWebKit/537.36 (KHTML, like Gecko); compatible; ChatGPT-User/1.0; +https://openai.com/bot
+```
+
+Its addresses are in [chatgpt-user.json](https://openai.com/chatgpt-user.json). Since robots.txt may not stop it, your firewall is what lets it in or keeps it out.
+
+## ClaudeBot
+
+ClaudeBot is Anthropic's training crawler, and blocking it in robots.txt signals that your site's future pages should be left out of Anthropic's training data. Anthropic's [crawler help page](https://support.claude.com/en/articles/8896518-does-anthropic-crawl-data-from-the-web-and-how-can-site-owners-block-the-crawler) gives the robots.txt token but not a full user agent string, and it supports the Crawl-delay rule:
+
+```txt
+User-agent: ClaudeBot
+Disallow: /
+```
+
+Anthropic publishes one IP list, [bots.json](https://claude.com/crawling/bots.json), for all three of its bots. It also says blocking its addresses instead of using robots.txt "may not work correctly", because that stops it reading your robots.txt. On 30 October 2026 Anthropic began recognising a "no AI training" preference signal based on an IETF draft, and is rolling it out over time. A robots.txt rule that names ClaudeBot takes priority over that signal.
+
+## Claude-SearchBot
+
+Claude-SearchBot is the crawler that indexes pages for Claude's search results, and Anthropic says blocking it "may reduce your site's visibility and accuracy in user search results." It follows robots.txt, like Anthropic's other two bots, and comes from the addresses in [bots.json](https://claude.com/crawling/bots.json). Anthropic doesn't publish its full user agent string, so match the `Claude-SearchBot` token in your logs.
+
+## Claude-User
+
+Claude-User is the agent Claude uses to open a page when a person asks it a question, and unlike ChatGPT-User, it follows robots.txt. Anthropic says Claude-User lets site owners "control which sites can be accessed through these user-initiated requests", and that blocking it stops Claude retrieving your pages for a user's question, which "may reduce your site's visibility for user-directed web search." Its addresses are in the same [bots.json](https://claude.com/crawling/bots.json).
+
+Claude-User isn't the same as Claude-Agent, the token Anthropic adds to the browser it hosts for agentic tasks. Anthropic's [page on hosted browsers](https://support.claude.com/en/articles/18234133) says that traffic carries the browser's own user agent plus `Claude-Agent`, comes from the addresses in [claude.com/.well-known/sail](https://claude.com/.well-known/sail), and is controlled separately from the robots.
+
+## PerplexityBot
+
+PerplexityBot is the crawler that finds and links websites in Perplexity's search results, and Perplexity says it "is not used to crawl content for AI foundation models." Perplexity's [crawler page](https://docs.perplexity.ai/guides/bots) recommends allowing it in robots.txt and says changes can take up to 24 hours. The example user agent:
+
+```txt
+Mozilla/5.0 (compatible; PerplexityBot/1.0; +https://perplexity.ai/perplexitybot)
+```
+
+Its addresses are in [perplexitybot.json](https://www.perplexity.ai/perplexitybot.json). The same page has step by step rules for letting it through Cloudflare's and AWS's firewalls.
+
+## Perplexity-User
+
+Perplexity-User is the agent Perplexity uses to open a page when someone asks a question, and Perplexity says that because a user asked for the page, "this fetcher generally ignores robots.txt rules." Perplexity says it isn't used for crawling or for training, and its addresses are in [perplexity-user.json](https://www.perplexity.ai/perplexity-user.json). The example user agent:
+
+```txt
+Mozilla/5.0 (compatible; Perplexity-User/1.0; +https://perplexity.ai/perplexity-user)
+```
+
+## Google-Extended
+
+Google-Extended is a robots.txt token, not a crawler: Google says it "doesn't have a separate HTTP request user agent string", and pages are fetched by Google's existing crawlers. The token controls whether those pages can be used to train future Gemini models and to ground answers in Gemini Apps and Grounding with Google Search on Vertex AI, according to [Google's list of common crawlers](https://developers.google.com/crawling/docs/crawlers-fetchers/google-common-crawlers).
+
+Google says Google-Extended "does not impact a site's inclusion in Google Search nor is it used as a ranking signal in Google Search." Because it also covers grounding, blocking it can keep your pages out of Gemini's answers as well as its training. I'd leave it alone if you want Gemini to cite you. Google also says it intends to support the AIPREF training preference signal in early 2027.
+
+## Google-Agent
+
+Google-Agent is the user agent for agents hosted on Google's infrastructure that "navigate the web and perform actions upon user request", and Google says fetchers like it "generally ignore robots.txt rules" because a user asked for the fetch. Google's [list of user-triggered fetchers](https://developers.google.com/crawling/docs/crawlers-fetchers/google-user-triggered-fetchers) gives two strings, where W.X.Y.Z is the Chrome version:
+
+```txt
+Mozilla/5.0 (Linux; Android 6.0.1; Nexus 5X Build/MMB29P) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/W.X.Y.Z Mobile Safari/537.36 (compatible; Google-Agent; +https://developers.google.com/crawling/docs/crawlers-fetchers/google-agent)
+
+Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko; compatible; Google-Agent; +https://developers.google.com/crawling/docs/crawlers-fetchers/google-agent) Chrome/W.X.Y.Z Safari/537.36
+```
+
+Google-Agent's addresses are in [user-triggered-agents.json](https://developers.google.com/static/crawling/ipranges/user-triggered-agents.json), a separate file from the one its common crawlers use. Google is also testing [Web Bot Auth](https://developers.google.com/crawling/docs/crawlers-fetchers/web-bot-auth) for Google-Agent, but only "a subset of requests" are signed, so Google tells you to keep checking IP addresses too.
+
+## Applebot-Extended
+
+Applebot-Extended is a robots.txt token that lets you opt out of Apple using your pages to train its foundation models, and Apple says it "does not crawl webpages." Pages that disallow Applebot-Extended can still appear in Apple's search results, according to [Apple's Applebot page](https://support.apple.com/en-us/119829).
+
+Applebot does the crawling. Its user agent contains `Applebot` and a link to apple.com/go/applebot, it follows robots.txt, and its addresses are in [applebot.json](https://search.developer.apple.com/applebot.json). When robots.txt doesn't name Applebot but does name Googlebot, Applebot follows the Googlebot rules. Apple's answers in Siri and Search can also use crawled pages as extra context, and the opt out for that is the `nosnippet` meta tag, not Applebot-Extended.
+
+## Meta-ExternalAgent
+
+Meta-ExternalAgent is Meta's crawler "for use cases such as training foundation AI models or improving products by indexing content directly", and you block it with a robots.txt Disallow. [Meta's crawler page](https://developers.facebook.com/docs/sharing/webmasters/web-crawlers) gives these strings:
+
+```txt
+meta-externalagent/1.1 (+/documentation/sharing/webmasters/web-crawlers)
+meta-externalagent/1.1
+```
+
+Meta's page doesn't publish an IP list. It also lists two AI bots of a different kind. Meta-WebIndexer improves Meta AI's search results and "helps us cite and link to your content in Meta AI's responses." Meta-ExternalFetcher fetches links at a user's request and "may bypass robots.txt rules." Meta says robots.txt changes can take up to 24 hours.
+
+## CCBot
+
+CCBot is Common Crawl's crawler, which collects pages for a free public copy of the web that anyone can download for research and analysis. [Common Crawl's CCBot page](https://commoncrawl.org/ccbot) gives this user agent:
+
+```txt
+CCBot/2.0 (https://commoncrawl.org/faq/)
+```
+
+Common Crawl's [FAQ](https://commoncrawl.org/faq) says CCBot checks robots.txt before it fetches a page and obeys Crawl-delay, and `User-agent: CCBot` with `Disallow: /` stops it. Its addresses are in [ccbot.json](https://index.commoncrawl.org/ccbot.json), and its IPv4 addresses have reverse DNS under crawl.commoncrawl.org. Common Crawl says other crawlers falsely call themselves CCBot, so check the address.
+
+## Bytespider
+
+Bytespider is ByteDance's crawler for Toutiao Search, which its webmaster docs describe as crawling pages to build a search index. ByteDance's [Bytespider page](https://zhanzhang.toutiao.com/docs/intro/26899), in Chinese, gives three strings with a capital B, for desktop, Android and iPhone. The desktop one:
+
+```txt
+Mozilla/5.0 (compatible; Bytespider; https://zhanzhang.toutiao.com/) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/70.0.0.0 Safari/537.36
+```
+
+The same page lists ten IPv4 ranges in the text rather than a file, and says real Bytespider hosts reverse resolve to bytedance.com names. It doesn't mention robots.txt. Toutiao's [robots matching page](https://zhanzhang.toutiao.com/docs/intro/520) explains how its search reads robots.txt paths (the way Google does), and to slow the crawler down ByteDance points you to a crawl rate setting in its webmaster tool.
+
+## Check what your robots.txt allows for each AI crawler
+
+SEO Skill reads your robots.txt and reports whether each AI crawler's token may fetch your home page, with search crawlers and training crawlers listed separately:
+
+<AgentStep setup prompt="Check which AI crawlers my site's robots.txt allows on its home page, with search crawlers and training crawlers listed separately." cli="seo crawl --mode sites --urls example.com --json" local="Crawls fetch pages from your site, so they run on your own machine." />
+
+You can also paste the file into the [robots.txt validator](/tools/robots-txt-validator). Robots.txt is only half of it. A firewall rule or a CDN bot setting can still turn away a crawler you allowed, and the fetchers that skip robots.txt are only stopped there.
+
+## Tell a real AI crawler from a fake one
+
+Anyone can send a request that says GPTBot or ClaudeBot, so match the address against the company's IP list before you trust the user agent. Every company above except Meta publishes its addresses, in a JSON file or on its docs page, and Apple, Common Crawl and ByteDance also document reverse DNS checks.
+
+Your server logs show which bots reached you and what they got back. The [server log analyzer](/tools/server-log-analyzer) groups each company's bots together and runs in your browser, and [how to check whether AI crawlers can reach your site](/blog/ai-crawlers-firewall) covers the Cloudflare settings that block crawlers you meant to allow.

@@ -4,6 +4,7 @@ description: ChatGPT and Google AI Mode rewrite your question into their own sea
 heading: What query fan-out searches for and how to rank for it
 lead: ChatGPT and Google AI Mode usually don't search for exactly what you typed. They write their own searches first, and the pages they cite almost always come from those results.
 date: '2026-11-13'
+updated: '2026-11-19'
 draft: false
 cover:
   alt: "A Victorian engraved telegraph office where one clerk's message splits into many lime green wires that run out to clerks reading papers at rows of grey filing cabinets."
@@ -12,7 +13,7 @@ cover:
 
 When ChatGPT searches the web for your question, it usually doesn't search for exactly what you typed. OpenAI's [ChatGPT search help page](https://help.openai.com/articles/9237897-chatgpt-search) says it "typically rewrites your query into one or more targeted queries", and it picks its sources from what those searches return. Google AI Mode does the same thing, splitting a question into several searches at once.
 
-That process is called query fan-out, and it decides which pages get cited. I wanted to see what the searches actually look like, so I asked ChatGPT 27 questions, from passport fees to note-taking apps, and logged every search it ran. They look nothing like the keywords in a keyword tool.
+That process is called query fan-out, and it decides which pages get cited. I wanted to see what the searches actually look like, so I asked ChatGPT 27 questions, from passport fees to note-taking apps, and logged every search it ran. They look nothing like the keywords in a keyword tool. On 19 November 2026 I put 10 buyer and how-to questions to ChatGPT, the Gemini app, Google AI Mode and AI Overviews, to compare the sites each one cited.
 
 ## What query fan-out is
 
@@ -46,9 +47,39 @@ ChatGPT splits comparisons apart. The heat pump question became two searches, an
 
 Those counts match ChatGPT's quick answers. Its thinking mode searches far more: Suganthan [logged 15 to 40 searches](https://suganthan.com/blog/how-chatgpt-picks-sources/) for one product comparison, many of them `site:` lookups aimed at vendors' pricing pages.
 
+## ChatGPT's searches for 10 buyer and how-to questions
+
+ChatGPT searched for 8 of 10 buyer and how-to questions I asked on 19 November 2026, and ran 10 searches in all. The questions covered home services, business software, small business admin, personal finance, running shoes and coffee, and I didn't force a web search. DataForSEO doesn't return the searches the Gemini app, AI Mode and AI Overviews run, so the searches below are ChatGPT's.
+
+<KeywordTable
+  caption="ChatGPT's searches and cited sites for 10 questions, one answer each, US, 19 November 2026, through DataForSEO. A site is a host name, so legal.hubspot.com counts apart from hubspot.com."
+  sortBy="searches"
+  columns={[{ key: 'question', label: 'Question', format: 'text' }, { key: 'searches', label: 'Searches', format: 'number' }, { key: 'search', label: 'What ChatGPT searched for', short: 'Search', format: 'text' }, { key: 'sites', label: 'Sites cited', short: 'Sites', format: 'number' }]}
+  rows={[
+    { question: 'best crm for a small plumbing business', searches: 1, search: 'best CRM software for small plumbing business 2026 Jobber Housecall Pro Workiz pricing features', sites: 7 },
+    { question: 'best espresso machine under 500 dollars', searches: 1, search: 'best espresso machines under $500 2026 reviews Breville Bambino Plus Gaggia Classic Pro DeLonghi', sites: 3 },
+    { question: 'best project management software for remote teams', searches: 1, search: 'best project management software for remote teams 2026 comparison features pricing integrations', sites: 8 },
+    { question: 'best running shoes for flat feet', searches: 1, search: 'best running shoes for flat feet stability shoes 2026 review Brooks Adrenaline ASICS Kayano Saucony Guide Hoka Arahi', sites: 2 },
+    { question: 'how much does it cost to replace a roof on a 2000 sq ft house', searches: 1, search: '2026 roof replacement cost Northern Virginia asphalt shingles per square foot Leesburg VA', sites: 3 },
+    { question: 'how to form an llc in texas', searches: 1, search: 'how to form an LLC in Texas official Secretary of State filing fee registered agent franchise tax Comptroller', sites: 5 },
+    { question: 'how to set up a 401k for a small business', searches: 2, search: 'IRS 2026 401(k) contribution limits small business SECURE 2.0 startup tax credit employer plan setup requirements / Department of Labor small business choosing 401(k) plan fiduciary responsibilities Form 5500 safe harbor', sites: 2 },
+    { question: 'hubspot vs salesforce for a 10 person sales team', searches: 2, search: 'HubSpot Sales Hub pricing 2026 official pricing Starter Professional Enterprise seats onboarding / Salesforce Sales Cloud pricing 2026 official Starter Pro Suite Enterprise per user month', sites: 3 },
+    { question: 'how to get rid of mold on a bathroom ceiling', searches: 0, search: 'No search', sites: 0 },
+    { question: 'is a roth ira better than a traditional ira for a 30 year old', searches: 0, search: 'No search', sites: 0 },
+  ]}
+/>
+
+The new searches look like the first set's. They averaged 14.4 words, and 8 of the 10 included "2026". The two questions with two searches split by publisher: the IRS and the Department of Labor for the 401(k) question, and HubSpot and Salesforce for the CRM comparison.
+
+ChatGPT adds brands the person never typed. Three of the four "best" questions got product names in the search, and the plumbing CRM search named Jobber, Housecall Pro and Workiz. ChatGPT cited all three companies' sites in that answer.
+
+ChatGPT also added a place to a question that named none. The roof question became a search for roof replacement costs in Leesburg, Virginia, and ChatGPT cited three sites that the Gemini app, AI Mode and AI Overviews didn't cite for the same question.
+
+The searches change between runs. Asked the same questions earlier on 19 November 2026, ChatGPT ran two searches instead of one for the plumbing CRM and Texas LLC questions, and searched for Ashburn, Virginia, instead of Leesburg. Read one run as a sample of what ChatGPT searches.
+
 ## Why ChatGPT cites the official page over yours
 
-In my test, when ChatGPT put "official" or a publisher's name in its search, the publisher won. The passport question went to the State Department, and nothing else was cited.
+In my test, when ChatGPT put "official" or a publisher's name in its search, the publisher won. The passport question went to the State Department, and nothing else was cited. The 19 November 2026 run went the same way. Five of ChatGPT's 10 searches named a government body or asked for official pricing, and in the three answers they belonged to, every site ChatGPT cited was a government site or the vendor's own.
 
 I wouldn't try to beat an official source on a search that asks for one. If it answers the question well, ChatGPT is right to cite it.
 
@@ -56,13 +87,15 @@ The publisher names come from what the model already knows, before any result co
 
 Other sites win where no official source answers the exact question. No official body publishes a monthly average rent for one bedroom apartments in Austin, so ChatGPT cited five rental listing sites. That's the useful lesson. Look at the searches ChatGPT runs for your topic, find the part the official source doesn't cover, and make that part the page.
 
-## Comparison searches need a comparison page
+## Comparison questions need a comparison page
 
-A comparison question gets a comparison search, and ChatGPT cites pages that compare. When I asked "notion vs obsidian for personal notes", ChatGPT ran one search: "Notion vs Obsidian personal notes comparison 2026 pricing offline privacy features". All 12 pages it read were "Notion vs Obsidian" articles, and it cited four of them, including Zapier's. Neither notion.so nor obsidian.md came back at all.
+A comparison question often gets a comparison search, and ChatGPT cites pages that compare. When I asked "notion vs obsidian for personal notes", ChatGPT ran one search: "Notion vs Obsidian personal notes comparison 2026 pricing offline privacy features". All 12 pages it read were "Notion vs Obsidian" articles, and it cited four of them, including Zapier's. Neither notion.so nor obsidian.md came back at all.
 
 Ask about one app and the picture flips. For "is obsidian good for personal notes", ChatGPT searched for "Obsidian notes app personal knowledge management features sync privacy markdown mobile official" and cited three pages on obsidian.md.
 
-So a product's own pages win the single-product question and don't even get read for the comparison. If people compare you with a rival, the page that answers that question has to compare the two, and it can be yours as long as the comparison is fair.
+So a product's own pages won the single-product question and weren't even read for the Notion vs Obsidian comparison. If people compare you with a rival, the page that answers that question has to compare the two, and it can be yours as long as the comparison is fair.
+
+For one comparison, HubSpot vs Salesforce, ChatGPT went to the pricing pages instead. On 19 November 2026, "hubspot vs salesforce for a 10 person sales team" became one search for HubSpot's official pricing and one for Salesforce's, and ChatGPT cited only hubspot.com, legal.hubspot.com and salesforce.com.
 
 ## How AI Mode fans out, and why Search Console can't show it
 
@@ -72,13 +105,35 @@ So a page can show up in Search Console for a question it was never written for,
 
 Google hasn't published what AI Mode's searches look like, but Gemini's are a fair guide. Moz [collected 5,333 grounding queries from Gemini](https://moz.com/blog/demystifying-grounding-queries-with-real-data) and found they averaged 6.56 words, and a third mentioned a year. ChatGPT's searches in my test were about twice that length. Both add years and specifics that people leave out.
 
-AI Mode's fan-out changed in November 2026. Google made Gemini 4 Hydrogen AI Mode's default model on 12 November 2026, and Robby Stein, Google's VP of product for Search, [wrote on X](https://x.com/rmstein/status/2120941443359576166) that its "reasoning advancements improve query fan-out to show more links to the web". Google hasn't said how the searches changed, so any AI Mode comparison across that date compares two different models.
+AI Mode's fan-out changed in November 2026. Google made Gemini 4 Hydrogen AI Mode's default model on 12 November 2026, and Robby Stein, Google's VP of product for Search, [wrote on X](https://x.com/rmstein/status/2120941443359576166) that its "reasoning advancements improve query fan-out to show more links to the web". Google hasn't said how the searches changed, so any AI Mode comparison across that date compares two different models. The AI Mode answers in the next section came on 19 November 2026, a week after the switch.
 
-## ChatGPT cited pages that barely show in Google
+## ChatGPT and Google's AI answers rarely cite the same sites
 
-A weak Google ranking didn't stop ChatGPT citing a page. In a separate ChatGPT test with questions about one of my own sites, ChatGPT cited a page that had 2 Google impressions over three months, at an average position of 32.5.
+ChatGPT and Google's AI Overviews shared 2 of 52 cited sites across the 7 questions both answered with sources on 19 November 2026. Google's own engines overlapped more with each other, and AI Mode and AI Overviews shared 14 of 65.
 
-Another page ChatGPT cited in that test does better in Bing than in Google. Over four weeks it averaged position 8 in Google and 3.6 in Bing, with more than twice as many Bing impressions. OpenAI doesn't say how much each search provider is used. Its help page says ChatGPT sends searches to third-party providers and links Microsoft's and Shopify's privacy policies for them (until August 2026 the same page listed Bing and Shopify by name), and Suganthan's traffic captures showed results arriving through several retrieval services, [including one labelled bing](https://suganthan.com/blog/how-chatgpt-picks-sources-part-2/) on some accounts. So a page that ranks well in Bing has one more way into ChatGPT's answers, even when Google buries it.
+<CompareBars
+  caption="Share of cited sites two engines had in common, summed over the questions both cited a site for. 10 questions, one answer per engine, US, 19 November 2026, through DataForSEO. Links to google.com left out."
+  unit="% shared"
+  highlight={['ChatGPT and AI Mode', 'ChatGPT and Gemini app', 'ChatGPT and AI Overviews']}
+  rows={[
+    { label: 'AI Mode and AI Overviews', value: 22, note: '14 of 65 sites. 8 of 9 questions shared at least one.' },
+    { label: 'Gemini app and AI Mode', value: 17, note: '14 of 81 sites. 7 of 9 questions shared at least one.' },
+    { label: 'Gemini app and AI Overviews', value: 13, note: '9 of 71 sites. 7 of 8 questions shared at least one.' },
+    { label: 'ChatGPT and AI Mode', value: 11, note: '7 of 64 sites. 4 of 8 questions shared at least one.' },
+    { label: 'ChatGPT and Gemini app', value: 9, note: '7 of 75 sites. 5 of 8 questions shared at least one.' },
+    { label: 'ChatGPT and AI Overviews', value: 4, note: '2 of 52 sites. 2 of 7 questions shared at least one.' },
+  ]}
+/>
+
+Every pair involving ChatGPT sits at the bottom. For these 10 questions, the site Google's AI answers cited was usually not the site ChatGPT cited, so a citation check on one engine told me little about the other. Check each engine for the questions you care about.
+
+The clearest split was YouTube and Reddit. At least one of Google's three engines cited YouTube or Reddit for 9 of the 10 questions, and ChatGPT cited neither in any of its 8 answers that searched.
+
+The sites the engines did agree on included primary sources. Every engine that cited a site for the Texas LLC question cited the Texas Secretary of State's site, and ChatGPT and AI Mode both cited dol.gov and irs.gov for the 401(k) question.
+
+## ChatGPT's results come from more than Google
+
+OpenAI doesn't say how much each search provider is used. Its help page says ChatGPT sends searches to third-party providers and links Microsoft's and Shopify's privacy policies for them (until August 2026 the same page listed Bing and Shopify by name), and Suganthan's traffic captures showed results arriving through several retrieval services, [including one labelled bing](https://suganthan.com/blog/how-chatgpt-picks-sources-part-2/) on some accounts. So a page that ranks well in Bing has one more way into ChatGPT's answers.
 
 ## How to see the fan-out searches for your own questions
 
@@ -86,12 +141,11 @@ SEO Skill shows you the searches ChatGPT runs for the questions you care about. 
 
 <AgentStep setup prompt="What does ChatGPT search for when people ask: notion vs obsidian for personal notes, and is obsidian good for personal notes?" cli={'seo research ai_answers --target example.com --keywords "notion vs obsidian for personal notes,is obsidian good for personal notes"'} />
 
-Each ChatGPT answer lists the searches it ran and the pages it cited, and says whether it cited or mentioned your site. The notes rank the searches that came up most often across all your questions, which is the list to write for. The same call checks whether Google AI Mode and AI Overviews cite you, but it can't show their searches, because DataForSEO returns none for Google's engines. It runs on your own DataForSEO key, for about $0.007 a question across the three engines.
-
+Each ChatGPT answer lists the searches it ran and the pages it cited, and says whether it cited or mentioned your site. The notes rank the searches that came up most often across all your questions, which is the list to write for. The same call checks whether the Gemini app, Google AI Mode and AI Overviews cite you, and lists the other sites each answer cites. It runs on your own DataForSEO key, for about $0.0096 a question across the four engines (DataForSEO charged $0.0024 an answer on 19 November 2026).
 
 Pick questions your customers really ask, including the comparisons and two-part questions. In my first set, the harder questions produced 17 of the 28 searches.
 
-ChatGPT decides first whether a question needs a search at all. When an answer shows no searches, ChatGPT answered from the model's training, as it would for a person asking the same question. How-tos and definitions often go that way. Those answers cite no page, and the way into them is the model's training: being named next to your topic on pages other sites quote, which [How to get cited by ChatGPT](/blog/how-to-get-cited-by-chatgpt#why-some-questions-get-no-citation-at-all) covers. (My own test above forced a web search on every question, so it shows what ChatGPT searches when it does search.)
+ChatGPT decides first whether a question needs a search at all. When an answer shows no searches, ChatGPT answered from the model's training, as it would for a person asking the same question. How-tos and definitions often go that way. Those answers cite no page, and the way into them is the model's training: being named next to your topic on pages other sites quote, which [How to get cited by ChatGPT](/blog/how-to-get-cited-by-chatgpt#why-some-questions-get-no-citation-at-all) covers. In my 19 November 2026 run, which didn't force a search, ChatGPT answered 2 of 10 questions without searching, the bathroom mold how-to and the Roth IRA question, and neither answer cited a page. (My first set of 27 forced a search on every question, so it shows what ChatGPT searches when it does search.)
 
 Google AI Mode's searches aren't visible anywhere, but the questions that led to them turn up in Search Console. The AI queries section of [`seo report`](/docs/report) finds the conversational questions and follow-ups, such as "how much is it" or "what about the pro plan", and shows which page Google showed for each one:
 
@@ -118,7 +172,9 @@ I'd stop judging a page only by the head term it targets. A page that answers on
 
 ## How this was checked
 
-- I asked ChatGPT a main set of 20 questions, then 7 more for the examples, through DataForSEO's ChatGPT scraper, US location, English, with web search forced on, in November 2026. It cost about $0.03 in total. DataForSEO reported the model as gpt-6, and each answer ran one to three searches, which matches ChatGPT's quick answers rather than its thinking mode. Each question was asked once, so a second run could search differently.
+- I asked ChatGPT a main set of 20 questions, then 7 more for the examples, through DataForSEO's ChatGPT scraper, US location, English, with web search forced on, in November 2026. It cost about $0.03 in total. DataForSEO reported the model as gpt-6, and each answer ran one to three searches, which matches ChatGPT's quick answers rather than its thinking mode. Each question was asked once.
+- On 19 November 2026 I asked the 10 questions in the table through SEO Skill's AI answers research, which uses DataForSEO: ChatGPT search, the Gemini app, Google AI Mode and Google AI Overviews, one answer per engine per question, US location, with web search not forced and example.com as the target site. DataForSEO reported the Gemini app's model as 3.5 Flash-Lite, and no model for AI Mode or AI Overviews. Each run of 40 answers cost $0.096. I asked the questions twice that day. Every number comes from the later run, and the earlier run is used only for how ChatGPT's searches changed.
+- In that test a site is a host name, so a subdomain counts apart from its main domain. Links to google.com in Google's answers are left out. SEO Skill lists up to eight sites an answer. Overlap is the sites two engines shared as a share of all the sites either cited, added up over the questions both engines cited a site for.
 - "Cited" means the page was in ChatGPT's sources for the answer. "Retrieved" means it was in the search results ChatGPT read but not in its sources.
 - The Search Console and Bing numbers come from sites I run, through SEO Skill. Bing only lists its top pages, so a page missing from Bing's list is unknown, not zero.
-- Google AI Mode's searches aren't visible to site owners, so the AI Mode section relies on Google's documentation and Moz's study rather than my own test.
+- The section on how AI Mode fans out relies on Google's documentation and Moz's study. The AI Mode citations come from my 19 November 2026 test.

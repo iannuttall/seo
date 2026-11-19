@@ -1,4 +1,5 @@
 import {
+  CHECKED_SERP,
   dataForSeoLanguage,
   dataForSeoMarket,
   dataForSeoSerp,
@@ -449,6 +450,7 @@ async function answeringPage(
         ...dataForSeoMarket(country, dataForSeoLanguage(country)),
         keyword: question,
         depth: 10,
+        ...CHECKED_SERP,
       },
     )
     const items = (done.result?.items ?? []) as Record<string, unknown>[]

@@ -3,7 +3,9 @@ import { eachKeyword, LIVE_PARALLEL } from './parallel.js'
 import { ahrefs } from './research-ahrefs.js'
 import {
   type AiOverview,
+  CHECKED_SERP,
   dataForSeoSerp,
+  fromWeb,
   overlapKey,
   type PeopleAlsoAsk,
 } from './research-serp.js'
@@ -54,6 +56,8 @@ export type ResearchInput = {
   depth?: number
   // serp: leave out DataForSEO's paid domain_rank lookup.
   noRank?: boolean
+  // serp from DataForSEO: follow goto links (free, about a minute each).
+  resolveGoto?: boolean
   // serp from DataForSEO: desktop (default) or mobile.
   device?: ResearchDevice
   // serp from DataForSEO: how many People Also Ask questions to open for
@@ -87,6 +91,8 @@ function need(headers: Headers, provider: ResearchProvider): string[] {
 // How long one attempt may take. DataForSEO's live tasks, AI answers among
 // them, can take most of a minute; lists and Ahrefs answer in seconds.
 const TASK_TIMEOUT_MS = 60_000
+// DataForSEO caps a live task that follows goto links at 260 seconds.
+const GOTO_TIMEOUT_MS = 270_000
 const READ_TIMEOUT_MS = 30_000
 const RETRY_DELAY_MS = 250
 
@@ -100,9 +106,10 @@ const retryStatus = (status: number) => status === 429 || status >= 500
 export async function call(
   provider: ResearchProvider,
   request: Request,
+  taskTimeoutMs = TASK_TIMEOUT_MS,
 ): Promise<Response> {
   const read = request.method === 'GET'
-  const timeoutMs = read ? READ_TIMEOUT_MS : TASK_TIMEOUT_MS
+  const timeoutMs = read ? READ_TIMEOUT_MS : taskTimeoutMs
   for (let attempt = 1; ; attempt += 1) {
     const last = attempt === 2
     let response: Response
@@ -211,6 +218,8 @@ export type ResearchRows = {
   // serp from DataForSEO: each keyword whose page showed an AI Overview,
   // with the pages it cites.
   aiOverviews?: AiOverview[]
+  // serp from DataForSEO: keywords whose poisoned results were replaced.
+  fromWeb?: string[]
   // serp from DataForSEO: each keyword whose page showed People Also Ask,
   // with its questions.
   peopleAlsoAsk?: PeopleAlsoAsk[]
@@ -378,6 +387,7 @@ async function dataForSeoTaskOnce(
       },
       body: JSON.stringify([task]),
     }),
+    task.resolve_goto_urls ? GOTO_TIMEOUT_MS : TASK_TIMEOUT_MS,
   )
   const data = (await readJson(response, 'DataForSEO')) as {
     tasks?: {
@@ -514,6 +524,7 @@ async function dataForSeo(
     ...(spent.siteTotal ? { siteTotal: spent.siteTotal } : {}),
     ...(spent.aiOverviews ? { aiOverviews: spent.aiOverviews } : {}),
     ...(spent.peopleAlsoAsk ? { peopleAlsoAsk: spent.peopleAlsoAsk } : {}),
+    ...(spent.fromWeb ? { fromWeb: spent.fromWeb } : {}),
     ...(spent.rankFailed ? { rankFailed: true } : {}),
   }
 }
@@ -560,6 +571,7 @@ type Spent = {
   rankFailed?: boolean
   aiOverviews?: AiOverview[]
   peopleAlsoAsk?: PeopleAlsoAsk[]
+  fromWeb?: string[]
 }
 
 async function dataForSeoRows(
@@ -724,6 +736,8 @@ async function dataForSeoRows(
             keyword,
             depth: serpDepth(input),
             device: input.device ?? 'desktop',
+            ...CHECKED_SERP,
+            ...(input.resolveGoto ? { resolve_goto_urls: true } : {}),
             ...(input.peopleAlsoAskDepth
               ? {
                   people_also_ask_click_depth: Math.min(
@@ -738,6 +752,8 @@ async function dataForSeoRows(
         const { rows, overview, questions } = dataForSeoSerp(keyword, items)
         if (overview) overviews.set(keyword, overview)
         if (questions) asked.set(keyword, questions)
+        // In finishing order; research sorts them by keyword.
+        if (fromWeb(items)) spent.fromWeb = [...(spent.fromWeb ?? []), keyword]
         return rows
       },
       LIVE_PARALLEL,

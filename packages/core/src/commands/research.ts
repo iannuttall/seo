@@ -407,6 +407,7 @@ export async function runResearch(
     peopleAlsoAsk,
     warnings,
   } = result
+  const fromWeb = request.keywords.filter((k) => result.fromWeb?.includes(k))
   // A saved result costs nothing now; its first cost is in the note.
   const costUsd = kept ? 0 : paid
   // Several SERPs read best side by side: every keyword's first result,
@@ -490,6 +491,11 @@ export async function runResearch(
           : input.action === 'serp' && provider === 'dataforseo' && rows.length
             ? ['No AI Overview on these results pages.']
             : []),
+        ...(fromWeb.length
+          ? [
+              `Poisoned results replaced for ${fromWeb.join(', ')}: Google showed unrelated sites, so the organic results come from Google's Web tab instead (from_web). The AI Overview and People Also Ask are as Google sent them.`,
+            ]
+          : []),
         ...(peopleAlsoAsk?.length
           ? [peopleAlsoAskNote(peopleAlsoAsk, request.keywords.length)]
           : []),
@@ -596,6 +602,7 @@ export async function runResearch(
         ? {
             aiOverviews: aiOverviews ?? [],
             peopleAlsoAsk: peopleAlsoAsk ?? [],
+            fromWeb,
           }
         : {}),
       targetDomainRating: hasTargetDr ? targetDr : null,

@@ -31,6 +31,23 @@ export type PeopleAlsoAsk = {
 // Google's redirect links, which DataForSEO often leaves unresolved.
 export const GOTO = /^https?:\/\/(www\.)?google\.[a-z.]+\/goto\b/
 
+// Sent with every Google organic SERP task. Since late September 2026
+// Google answers many automated searches with a normal-looking page whose
+// organic results are mostly unrelated sites. With this, DataForSEO also
+// reads Google's Web tab and replaces the organic results when the two
+// differ, marking each replaced item from_web. It costs one more SERP page
+// per task; AI Overviews and People Also Ask stay as Google sent them.
+export const CHECKED_SERP = { resolve_poisoned_results: true } as const
+
+// Whether DataForSEO replaced any organic result with Google's Web tab.
+export const fromWeb = (items: Record<string, unknown>[]) =>
+  items.some(
+    (item) =>
+      item.type === 'organic' &&
+      Array.isArray(item.checks) &&
+      item.checks.includes('from_web'),
+  )
+
 const bare = (host: string) => host.toLowerCase().replace(/^www\./, '')
 
 // A page as host and path, without scheme, www, query or trailing slash,

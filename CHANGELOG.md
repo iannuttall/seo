@@ -1,5 +1,23 @@
 # Changelog
 
+## 0.24.1
+
+### Fixed
+
+- Google results from DataForSEO are checked for poisoning. Since late
+  September 2026, Google has often shown automated searches a normal-looking
+  page full of unrelated sites. `seo research serp`, `serp_overlap`, tracked
+  searches, `index_check` and the weekly site audit now compare each page
+  with Google's Web tab and use its results when the two differ. `serp`
+  names the keywords it replaced. Each search costs one more results page
+  ($0.004 instead of $0.002 for 10 live results).
+- Tracked searches follow Google's redirect links to the real pages, so a
+  tracked site is never counted as missing when it ranks. Each check takes
+  about a minute longer.
+- Tracked search checks saved since 26 September 2026 without the check
+  are marked "may be poisoned", and progress compares from the first
+  checked run instead.
+
 ## 0.24.0
 
 ### Added

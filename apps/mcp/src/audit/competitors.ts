@@ -1,5 +1,6 @@
 import {
   bareDomain,
+  CHECKED_SERP,
   dataForSeoLanguage,
   dataForSeoMarket,
   dataForSeoTask,
@@ -56,7 +57,8 @@ const RESURFACE = 1.5
 const COST = {
   competitors: 0.12 + 20 * 0.0012,
   gap: 0.012 + GAP_ROWS * 0.00012,
-  serp: 0.004,
+  // A live SERP plus the Web-tab check against poisoned results.
+  serp: 0.006,
 }
 const MONEY_INTENTS = new Set(['commercial', 'transactional'])
 // Words that mark a free tool (a heuristic from the words only).
@@ -606,6 +608,7 @@ export async function runGapCheck(
       ...market,
       keyword: item.keyword,
       depth: TOP,
+      ...CHECKED_SERP,
     }).catch(() => null)
     if (items === null) {
       if (partial) break

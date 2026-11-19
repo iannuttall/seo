@@ -3,8 +3,8 @@ title: 'Search Console Generative AI report: what it shows'
 description: What Search Console's Generative AI report shows about AI Overviews and AI Mode, what it leaves out, and how to read it.
 heading: Search Console's Generative AI performance report
 lead: Search Console's Generative AI performance report lists which of your pages Google showed in AI Overviews and AI Mode. It doesn't tell you what people asked or whether anyone clicked, and you can only read it in Search Console itself.
-date: '2026-11-24'
-draft: true
+date: '2026-11-19'
+draft: false
 cover:
   alt: "A Victorian engraved counting house where a clerk points his pencil at a lime green band on a wall chart, beside a shuttered panel that stays closed."
 ---
@@ -57,17 +57,60 @@ The exported table stops at 1,000 rows. And values the report shows as ~ or a hy
 
 ## What the report shows on my own sites
 
-I read the report on two of my sites. One is seoskill.dev, which had 208,508 web impressions from 17 August to 15 November 2026, and the other had about 9.4 million web impressions over the same 91 days.
+I read the report on two of my sites. One is seoskill.dev, which had 208,508 web impressions from 17 August to 15 November 2026, and the other is [keep.md](https://keep.md), which had 457,512 over the same 91 days.
 
-{/* TODO(ian): Screenshot of the Generative AI performance report (Search) for seoskill.dev, 17 Aug to 15 Nov 2026, chart plus Pages tab. Save to public/blog/ and add with BrowserFrame. */}
+<BrowserFrame
+  url="https://search.google.com/search-console/performance/generative-ai"
+  tab="Generative AI features"
+  caption="The Generative AI features report for seoskill.dev, web (text) search, 17 August to 15 November 2026, read 19 November 2026. The marker near 9 November is Google's note for the logging error."
+>
+  <img src="/blog/images/search-console-ai-report-seoskill-chart.webp" width="1326" height="610" loading="lazy" alt="Search Console's Generative AI features report for seoskill.dev: 2.18K total impressions, rising from almost none in August to between 60 and 115 a day in mid November." class="w-full rounded-md" />
+</BrowserFrame>
 
-{/* TODO(ian): From the report UI for seoskill.dev, same dates: total AI impressions, the top 5 pages by AI impressions, and each page's web impressions from the normal Performance report, so the post can give each page's AI share (AI impressions divided by web impressions). */}
+seoskill.dev had 2,179 AI impressions over those 91 days, about 1% of its web impressions. Both counts include 9 to 11 November, when Google under-logged AI impressions, so the AI figures run a little low. The daily count rose from almost nothing in August to between 60 and 115 a day by mid November. The report spread them across 145 pages, and the home page took 1,476 of them.
 
-{/* TODO(ian): Same screenshot and numbers for the larger site (about 9.4 million web impressions, 17 Aug to 15 Nov 2026), described only as "one of my sites". Add one sentence on what surprised you: which pages AI answers show most, or which country or device stands out. */}
+<BrowserFrame
+  url="https://search.google.com/search-console/performance/generative-ai"
+  tab="Generative AI features"
+  caption="The Pages tab of the same report, top 10 pages by AI impressions."
+>
+  <img src="/blog/images/search-console-ai-report-seoskill-pages.webp" width="1326" height="660" loading="lazy" alt="The Pages tab: the home page with 1,476 AI impressions, then the Google algorithm update checker with 60, the website traffic checker with 48, the skill docs with 39 and the MCP docs with 32." class="w-full rounded-md" />
+</BrowserFrame>
+
+keep.md had 75,749 AI impressions over the same dates, about 17% of its 457,512 web impressions, so Google's AI answers show it far more often than seoskill.dev for its size. Its daily count climbed from about 400 in August to around 1,200 by November, then jumped to over 3,000 on the last days of the range. The report doesn't say why, and a two-day jump this close to the logging error and the core update is too soon to read.
+
+<BrowserFrame
+  url="https://search.google.com/search-console/performance/generative-ai"
+  tab="Generative AI features"
+  caption="The Generative AI features report for keep.md, web (text) search, 17 August to 15 November 2026, read 19 November 2026."
+>
+  <img src="/blog/images/search-console-ai-report-keepmd-chart.webp" width="1335" height="578" loading="lazy" alt="Search Console's Generative AI features report for keep.md: 75.7K total impressions, rising from about 400 a day in August to around 1,200 in November, then a jump to about 3,400 at the end of the range." class="w-full rounded-md" />
+</BrowserFrame>
+
+The device split surprised me. AI impressions lean further towards desktop than each site's web impressions do. On keep.md, 79% of AI impressions were on desktop (59,781 of 75,749) against 55% of web impressions (250,740 of 457,512). On seoskill.dev it was 90% against 81%. Two sites don't make a rule, so check your own split before you plan for AI answers on phones.
 
 The useful number is each page's AI share, which is its AI impressions divided by its web impressions over the same dates. A page with a high share is one that Google's AI answers lean on. Pull the web impressions for the same pages and dates to work it out:
 
 <AgentStep setup prompt="Show web impressions and clicks by page for example.com from 2026-08-17 to 2026-11-15, so I can divide each page's AI impressions by them." cli="seo data --site example.com --dimensions page --start-date 2026-08-17 --end-date 2026-11-15" />
+
+<CompareBars
+  title="AI share of web impressions, by page"
+  unit="%"
+  caption="AI impressions from the Generative AI features report divided by web impressions from the Performance report, by page, 17 August to 15 November 2026. Both read 19 November 2026."
+  rows={[
+    { label: 'keep.md: ChatGPT to PDF tool', value: 49.6, note: '7,006 of 14,129' },
+    { label: 'keep.md: AI text cleaner', value: 22.0, note: '15,100 of 68,717, its top page by AI impressions' },
+    { label: 'keep.md: LinkedIn saved posts guide', value: 20.5, note: '10,835 of 52,842' },
+    { label: 'keep.md: X search tool', value: 4.4, note: '2,586 of 58,899' },
+    { label: 'seoskill.dev: /docs/skill', value: 9.8, note: '39 of 397' },
+    { label: 'seoskill.dev: home page', value: 8.6, note: '1,476 of 17,103' },
+    { label: 'seoskill.dev: update checker', value: 4.8, note: '60 of 1,251' },
+    { label: 'seoskill.dev: /docs/mcp', value: 2.3, note: '32 of 1,374' },
+    { label: 'seoskill.dev: traffic checker', value: 0.1, note: '48 of 42,520' },
+  ]}
+/>
+
+The share separates pages that raw counts lump together. keep.md's ChatGPT to PDF tool showed in AI answers for half its web impressions, while its X search tool, with four times the web impressions, showed for 4%. On seoskill.dev, the website traffic checker gets more web impressions than any other page and almost never shows in AI answers. Raw AI impressions would rank it third on the site. The share shows it's mostly ignored.
 
 ## Leave out 9 to 11 November 2026 when you compare
 
@@ -89,16 +132,16 @@ The main Performance report showed no clear drop on my sites for those days. Her
 
 Nothing dips on 9 to 11 November. The 11th had the most impressions of the month so far, and every day from then to 16 November stayed above 6,000. With a logging error, a core update and a new model in one week, the chart can't say which of them, if any, moved the numbers.
 
-I compared Monday to Wednesday, 9 to 11 November, with the same days a week earlier on three of my sites:
+I compared Monday to Wednesday, 9 to 11 November, with the same days a week earlier on both sites:
 
 <CompareBars
   caption="Web impressions on 9 to 11 November 2026 as a share of 2 to 4 November (Search Console Performance report, web search, read 19 November 2026). 100% would mean no change."
   unit="% of the week before"
   highlight="seoskill.dev"
-  rows={[{"label": "Smaller site", "value": 134, "note": "About 144,000 web impressions over 91 days"}, {"label": "seoskill.dev", "value": 121, "note": "14,611 to 17,615 impressions"}, {"label": "Larger site", "value": 95, "note": "482,634 to 460,660 impressions"}]}
+  rows={[{"label": "seoskill.dev", "value": 121, "note": "14,611 to 17,615 impressions"}, {"label": "keep.md", "value": 98, "note": "15,549 to 15,162 impressions"}]}
 />
 
-Only the larger site (about 9.4 million web impressions over 91 days) fell, by 5%, and the other two rose. That fits Google naming only the Generative AI report, but three sites can't prove the main report was untouched.
+seoskill.dev rose 21% and keep.md fell 2.5%. Neither looks like a logging error, but two sites can't prove the main report was untouched.
 
 ## Pair the report with AI Mode follow-up questions
 
@@ -134,4 +177,5 @@ If Google adds clicks before 3 December 2026, I'll update this post with what ch
 
 - Google's announcement, both help pages, the data anomalies page and the Search Analytics API reference were read on 19 November 2026.
 - The search appearance check grouped all 35 Search Console properties I have access to by search appearance, web search, 17 August to 15 November 2026, through SEO Skill's raw Search Console rows.
-- The 9 to 11 November comparison uses web impressions by date from the normal Performance report for three of my sites, Monday to Wednesday against the same days a week earlier.
+- The 9 to 11 November comparison uses web impressions by date from the normal Performance report for seoskill.dev and keep.md, Monday to Wednesday against the same days a week earlier.
+- The Generative AI features report was read in Search Console for seoskill.dev and keep.md on 19 November 2026, 17 August to 15 November 2026, web (text) search, with each Pages table exported. Web impressions by page for the same dates came from the Search Console API through SEO Skill.

@@ -3,8 +3,8 @@ title: Claude Code for SEO, shown as one real session
 description: One real SEO session in Claude Code or Codex, from Search Console data to a fix, with every prompt, what came back and the change I'd make.
 heading: How to do SEO with Claude Code and Codex
 lead: Most guides to Claude Code SEO are lists of prompts. This is one real session on seoskill.dev, from Search Console data to a fix, with what each prompt returned and where I stopped the agent to check its work.
-date: '2026-11-24'
-draft: true
+date: '2026-11-19'
+draft: false
 cover:
   alt: "A Victorian engraved study where a clockwork automaton holds a magnifying glass over a survey map while the engineer beside it draws one route in lime green."
 ---
@@ -222,21 +222,21 @@ I wouldn't retitle the home page for Claude. It serves every agent, and I'd rath
 Two changes, both small:
 
 1. Request indexing for the Claude SEO skill page with Search Console's [URL Inspection tool](https://support.google.com/webmasters/answer/9012289), so Google crawls the rebuilt version. Google says indexing "typically takes only a day or so" but doesn't guarantee it.
-2. Link to it from the home page in words that say what it is. The home page links it only from its list of features. The card for founders who build with agents already names Claude Code and Codex, and links to the getting started guide.
+2. Link to it from the home page in words that say what it is. The home page linked it only from its list of features. The card for founders who build with agents already named Claude Code and Codex, and linked to the getting started guide.
 
-The proposed change to the founders card, in the home page's source:
+The change to the founders card, in the home page's source:
 
 <BeforeAfter
-  caption="The founders card in the home page's source today, and pointing at the Claude SEO skill page. The text, the link and its label change; the title and icon stay."
-  before={{ label: 'Today', html: cardToday }}
-  after={{ label: 'With the change', html: cardProposed }}
+  caption="The founders card in the home page's source before, and after it pointed at the Claude SEO skill page. The text, the link and its label change; the title and icon stay."
+  before={{ label: 'Before', html: cardToday }}
+  after={{ label: 'After (shipped 19 November 2026)', html: cardProposed }}
 />
 
 In Claude Code or Codex, that's one more prompt in the same session, and the agent opens a pull request for you to review:
 
 <AgentStep prompt="Point the founders card on the home page at the Claude SEO skill page, and open a pull request. Don't change the title." />
 
-{/* TODO(ian): Ship both changes (request indexing for /features/claude-seo in URL Inspection, and the home page card diff above or your own version of it), note the date, and about two weeks later report: impressions, clicks and average position for queries containing "claude" by page (/ and /features/claude-seo), for the same number of days before and after, plus the page's new last crawl date from seo page. Then rewrite this section's ending with the result, good or bad. */}
+I shipped the home page change with this post on 19 November 2026. The same day, Request indexing for the Claude page failed with "Something went wrong" in Search Console, so I'll ask again. I'll add the clicks and impressions for "claude" searches on both pages here once two weeks of data are in.
 
 A before and after on one page shows timing, not cause. If the Claude page starts getting impressions after the recrawl, that fits the stale crawl being the problem, but a Google update in the same weeks could move it too.
 

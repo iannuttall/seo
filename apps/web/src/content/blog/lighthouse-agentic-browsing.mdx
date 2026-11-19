@@ -3,8 +3,8 @@ title: 'Lighthouse agentic browsing audit: what it checks'
 description: Lighthouse's agentic browsing category runs seven audits and reports a pass ratio. I ran it on 21 sites to see what fails and what it can't tell you.
 heading: What Lighthouse's agentic browsing audit checks
 lead: Lighthouse gives your page an agentic browsing ratio such as 3/4. I ran it on 21 well-known sites. Most failures were ordinary accessibility bugs, and two of the three sites that lost points on the newest checks had published something early.
-date: '2026-11-24'
-draft: true
+date: '2026-11-19'
+draft: false
 cover:
   alt: "A Victorian engraved lighthouse keeper on the gallery holds a lamp up to the great lens, its beam glowing lime green, while a steamship heads into the harbour below."
   title: left
@@ -142,7 +142,7 @@ So the ratio treats publishing nothing more kindly than publishing something sli
 
 ## seoskill.dev's agentic browsing result
 
-seoskill.dev's home page scored 3/3. The accessibility tree passed, CLS was 0, and its llms.txt passed. The three WebMCP audits and the ARD audit were not applicable, because the site has neither yet.
+seoskill.dev's home page scored 3/3. The accessibility tree passed, CLS was 0, and its llms.txt passed. The three WebMCP audits and the ARD audit were not applicable, because the site has neither.
 
 Cloudflare's [isitagentready.com](https://isitagentready.com/) scanned seoskill.dev on the same day and gave it level 5 of 5, "Agent-Native", while listing WebMCP and ARD as fails. Cloudflare mostly checks the files around the page, such as robots.txt rules for AI bots, Markdown copies and an MCP server card. Lighthouse checks the page itself. "Agent ready" means whatever the tool you ran decides it means.
 

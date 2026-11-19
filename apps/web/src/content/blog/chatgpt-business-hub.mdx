@@ -3,8 +3,8 @@ title: ChatGPT Business Hub mentions and clicks vs your analytics
 description: How to claim your business in ChatGPT Business Hub, and how to check its 28-day mentions and clicks against the ChatGPT visits your own analytics recorded.
 heading: ChatGPT Business Hub mentions and clicks
 lead: ChatGPT Business Hub shows how often ChatGPT mentioned your website and how many clicks it sent. Claim it, then put those numbers next to your own analytics for the same 28 days, because the two are unlikely to match.
-date: '2026-11-24'
-draft: true
+date: '2026-11-19'
+draft: false
 cover:
   alt: "A Victorian engraved shop where a messenger boy hands the shopkeeper a long lime green tally strip, which he holds beside the open ledger he is checking it against."
 ---
@@ -71,21 +71,17 @@ Clicky's landing pages don't split out AI assistants, but [`seo compare`](/docs/
 
 Each tool keeps its own metric. A Google Analytics session, a Clicky visit and a Simple Analytics visitor are different counts, and none of them is a Business Hub click.
 
-{/* TODO(ian): Claim Business Hub for one of my sites (say which, or "one of my sites"), wait for Persona approval and for Insights to show numbers. Then add: the Business Hub screenshot with its exact 28-day date range; mentions and website clicks; ChatGPT sessions or visits from my analytics for the same dates (and which tool); the gap as a ratio; and how many ChatGPT-attributed sessions landed with utm_source=chatgpt.com vs a chatgpt.com referrer, if GA shows it. One or two paragraphs on what surprised me.
+I claimed seoskill.dev in Business Hub before writing this. On 19 November 2026 its Insights tab showed a dash for both mentions and website clicks over the 28 days from 22 October to 18 November, with "No data is available for this timeframe" where the chart and the discovery topics should be. The listing itself still showed as a draft, waiting on identity verification before it can be published.
 
-Placeholder for the comparison, fill in the real numbers and dates, then move it out of this comment:
+<BrowserFrame
+  url="https://chatgpt.com/business-hub"
+  tab="Business Hub"
+  caption="Business Hub Insights for seoskill.dev, 28 days to 18 November 2026 (UTC), read 19 November 2026."
+>
+  <img src="/blog/images/chatgpt-business-hub-insights-seoskill.webp" width="1048" height="923" loading="lazy" alt="ChatGPT Business Hub Insights for seoskill.dev: mentions and website clicks both show a dash, and the mentions chart and top 5 discovery topics both say no data is available for this timeframe." class="mx-auto w-full max-w-xl rounded-md" />
+</BrowserFrame>
 
-<CompareBars
-  caption="example.com, <start> to <end> 2026. Business Hub figures from its Insights tab; analytics figures from <tool>, read <date>."
-  keepOrder
-  highlight="Business Hub website clicks"
-  rows={[
-    { label: 'Business Hub website clicks', value: 0 },
-    { label: 'Google Analytics sessions from ChatGPT', value: 0, note: 'A session, not a click' },
-    { label: 'Of those, tagged utm_source=chatgpt.com', value: 0 },
-  ]}
-/>
-*/}
+The likeliest reason is that the listing hadn't passed identity verification, and OpenAI's setup guide says Insights stay locked until it does. So the blank says nothing yet about seoskill.dev's activity in ChatGPT, and a blank doesn't necessarily mean zero anyway, OpenAI says. I'll run the comparison above once Insights shows numbers.
 
 ## Why Business Hub clicks and analytics visits differ
 
@@ -108,11 +104,11 @@ I'd expect the two counts to differ on most sites, for five reasons. The table s
 
 **Referrers get stripped.** A click from an app or a privacy-minded browser can arrive with no referrer. Google Analytics counts a session as Direct when its source is "(direct)", so a ChatGPT visit with nothing to identify it lands in Direct, where the [AI Assistant channel](https://support.google.com/analytics/answer/9756891) can't see it.
 
-**The `utm_source=chatgpt.com` tag can still identify them.** OpenAI's [publishers FAQ](https://help.openai.com/en/articles/12627856-publishers-and-developers-faq) says ChatGPT adds `utm_source=chatgpt.com` to referral URLs from its search results. The tag sits in the link, so it survives when the referrer doesn't. It also travels with the link, so a URL someone copies out of ChatGPT and shares elsewhere can still be credited to ChatGPT, which would push your analytics count above Business Hub's clicks. (That last part is my reading of how tags work. OpenAI doesn't say it.)
+**The `utm_source=chatgpt.com` tag can still identify them.** ChatGPT has added `utm_source=chatgpt.com` to the links in its answers since June 2026, as [Search Engine Land](https://searchengineland.com/chatgpt-appears-to-drop-utm-tracking-making-ai-referral-traffic-harder-to-measure-496552) reports. The tag sits in the link, so it survives when the referrer doesn't. It also travels with the link, so a URL someone copies out of ChatGPT and shares elsewhere can still be credited to ChatGPT, which would push your analytics count above Business Hub's clicks. (That last part is my reading of how tags work. OpenAI doesn't say it.)
 
-The tag can go missing too. For about a week in October 2026, ChatGPT links carried neither the tag nor a referrer. Adobe's Cedric Huesler reported it, and OpenAI told him it was a bug, with the fix rolling out on 15 October ([Search Engine Land](https://searchengineland.com/chatgpt-appears-to-drop-utm-tracking-making-ai-referral-traffic-harder-to-measure-496552)). SEJ's 28 days start on 14 October, so a comparison over that window may find some ChatGPT visits in Direct.
+The tag can go missing too. For about a week in October 2026, ChatGPT links carried neither the tag nor a referrer ([Search Engine Roundtable](https://www.seroundtable.com/utm-parameters-missing-chatgpt-42299.html)). Adobe's Cedric Huesler reported it, and OpenAI told him it was a bug, with the fix rolling out on 15 October ([Search Engine Land](https://searchengineland.com/chatgpt-appears-to-drop-utm-tracking-making-ai-referral-traffic-harder-to-measure-496552)). SEJ's 28 days start on 14 October, so a comparison over that window may find some ChatGPT visits in Direct.
 
-**Thresholds and gaps.** A small site may see a blank where analytics shows a handful of ChatGPT visits. OpenAI's guide says that blank isn't a zero.
+**Thresholds and gaps.** A small site may see a blank where analytics shows a handful of ChatGPT visits. OpenAI's guide says a blank doesn't necessarily mean zero.
 
 **Dates and time zones.** Business Hub's days, probably UTC, won't line up exactly with a property in another time zone. Over 28 days the edges are small, but they matter on a small site.
 
@@ -136,5 +132,4 @@ Then do it again every 28 days. One comparison gives you the size of the gap. A 
 
 - Business Hub's steps, definitions and limits come from OpenAI's [setup guide](https://help.openai.com/en/articles/20001635-setting-up-your-business-on-chatgpt) and [announcement](https://openai.com/index/introducing-businesses-chatgpt/), both read on 19 November 2026.
 - SEJ's figures are as SEJ reported them. The click ratio is my arithmetic from those two numbers.
-
-{/* TODO(ian): add a line on the comparison: which site (or "one of my sites"), which analytics tool, the exact dates, and the date the Business Hub screenshot was taken. */}
+- seoskill.dev's Insights tab was read on 19 November 2026, with the 28D view selected.

@@ -1,6 +1,12 @@
 import { z } from 'zod'
 import type { Detail } from './present.js'
 import {
+  RESEARCH_TTL_SECONDS,
+  type ResearchStore,
+  researchKey,
+  workersResearchStore,
+} from './research-cache.js'
+import {
   dataForSeoKeys,
   dataForSeoMarket,
   dataForSeoTask,
@@ -243,6 +249,20 @@ function domainList(values: string[]): string[] {
   return [...new Set(values.map(bare).filter((v) => v.includes('.')))]
 }
 
+// What runLinkPages keeps for a day: the rows and the counts its notes give.
+type SavedPages = {
+  savedAt: string
+  cost: number
+  available: number
+  read: number
+  partial: boolean
+  spam: number
+  keptPages: number
+  ownPages: number
+  counts: [string, number][]
+  rows: Omit<PageRow, 'language'>[]
+}
+
 // backlinks or link_gap with pages: the referring pages with the words
 // around each link.
 export async function runLinkPages(
@@ -252,6 +272,8 @@ export async function runLinkPages(
     competitors?: string[]
     offset?: number
     detail?: Detail
+    // Where the result is kept for a day; the Workers cache when unset.
+    store?: ResearchStore | null
   },
   headers: Headers,
   call: (offset: number) => string,
@@ -274,50 +296,89 @@ export async function runLinkPages(
       'link_gap with pages needs 2 to 5 competitors besides the target.',
     )
   }
-  const done = gap
-    ? await dataForSeoTask(keys, 'v3/backlinks/page_intersection/live', {
-        targets: Object.fromEntries(rivals.map((d, i) => [String(i + 1), d])),
-        exclude_targets: [target],
-        intersection_mode: 'partial',
-        rank_scale: 'one_hundred',
-        order_by: ['1.rank,desc'],
-        limit: PAGES,
-      })
-    : await dataForSeoTask(keys, 'v3/backlinks/backlinks/live', {
-        target,
-        mode: 'one_per_domain',
-        rank_scale: 'one_hundred',
-        order_by: ['rank,desc'],
-        limit: PAGES,
-      })
-  const items = (done.result?.items as Record<string, unknown>[] | null) ?? []
-  const available = Number(done.result?.total_count ?? items.length)
-  const all = gap
-    ? intersectionRows(items, rivals)
-    : backlinkRows(items, target)
-  // A page on the target or a rival is the rivals' own site, not a target.
-  const own = [target, ...rivals]
-  const offSite = all.filter((row) => !own.some((d) => within(row.site, d)))
-  const spam = offSite.filter((row) => row.context === 'spam')
-  const kept = offSite
-    .filter((row) => row.context !== 'spam')
-    .filter((row) => !gap || row.rivals_linked >= 2)
-  const rows = bySite(kept).map(({ language: _language, ...row }) => row)
-  const counts = new Map<string, number>()
-  for (const row of rows)
-    counts.set(row.context, (counts.get(row.context) ?? 0) + 1)
-  const cost = Math.round(done.cost * 10_000) / 10_000
+  // The result is kept for a day, so the next page of rows reads it back
+  // instead of paying for, and waiting on, the whole call again.
+  const store = input.store === undefined ? workersResearchStore() : input.store
+  const key = await researchKey([
+    'link_pages',
+    keys,
+    input.action,
+    target,
+    rivals,
+  ])
+  const saved = await store
+    ?.get(key)
+    .then((value) => (value ? (JSON.parse(value) as SavedPages) : null))
+    .catch(() => null)
+  const fetchPages = async (): Promise<SavedPages> => {
+    const done = gap
+      ? await dataForSeoTask(keys, 'v3/backlinks/page_intersection/live', {
+          targets: Object.fromEntries(rivals.map((d, i) => [String(i + 1), d])),
+          exclude_targets: [target],
+          intersection_mode: 'partial',
+          rank_scale: 'one_hundred',
+          order_by: ['1.rank,desc'],
+          limit: PAGES,
+        })
+      : await dataForSeoTask(keys, 'v3/backlinks/backlinks/live', {
+          target,
+          mode: 'one_per_domain',
+          rank_scale: 'one_hundred',
+          order_by: ['rank,desc'],
+          limit: PAGES,
+        })
+    const items = (done.result?.items as Record<string, unknown>[] | null) ?? []
+    const available = Number(done.result?.total_count ?? items.length)
+    const all = gap
+      ? intersectionRows(items, rivals)
+      : backlinkRows(items, target)
+    // A page on the target or a rival is the rivals' own site, not a target.
+    const own = [target, ...rivals]
+    const offSite = all.filter((row) => !own.some((d) => within(row.site, d)))
+    const spam = offSite.filter((row) => row.context === 'spam')
+    const kept = offSite
+      .filter((row) => row.context !== 'spam')
+      .filter((row) => !gap || row.rivals_linked >= 2)
+    const rows = bySite(kept).map(({ language: _language, ...row }) => row)
+    const counts = new Map<string, number>()
+    for (const row of rows)
+      counts.set(row.context, (counts.get(row.context) ?? 0) + 1)
+    const cost = Math.round(done.cost * 10_000) / 10_000
+    return {
+      savedAt: new Date().toISOString(),
+      cost,
+      available,
+      read: items.length,
+      partial: done.partial,
+      spam: spam.length,
+      keptPages: kept.length,
+      ownPages: all.length - offSite.length,
+      counts: [...counts.entries()],
+      rows,
+    }
+  }
+  const found = saved ?? (await fetchPages())
+  if (!saved && store) {
+    await store
+      .put(key, JSON.stringify(found), RESEARCH_TTL_SECONDS)
+      .catch(() => undefined)
+  }
+  const { rows, available, read } = found
+  const cost = saved ? 0 : found.cost
+  const costNote = saved
+    ? `Read from the result saved at ${saved.savedAt}, at no new cost (it cost $${saved.cost} then). Results are kept for a day.`
+    : `DataForSEO cost: $${cost}.`
   const offset = input.offset ?? 0
   const notes = [
     gap
-      ? `Pages that link to two or more of ${rivals.join(', ')} and not to ${target}, from DataForSEO's backlink index (page_intersection). DataForSEO cost: $${cost}.`
-      : `Pages that link to ${target}, one per site, from DataForSEO's backlink index. DataForSEO cost: $${cost}.`,
-    ...(available > items.length
+      ? `Pages that link to two or more of ${rivals.join(', ')} and not to ${target}, from DataForSEO's backlink index (page_intersection). ${costNote}`
+      : `Pages that link to ${target}, one per site, from DataForSEO's backlink index. ${costNote}`,
+    ...(available > read
       ? [
-          `Capped: DataForSEO has ${available.toLocaleString('en-US')} pages; this read the first ${items.length.toLocaleString('en-US')} by rank, so smaller pages can be missing.`,
+          `Capped: DataForSEO has ${available.toLocaleString('en-US')} pages; this read the first ${read.toLocaleString('en-US')} by rank, so smaller pages can be missing.`,
         ]
       : []),
-    `${rows.length} sites from ${kept.length} pages, one row per site with its best page (English first) and pages, the count of its pages here. Sites with ${BULK_PAGES} or more come after one-off pages: they publish lists in bulk, most often a rival app's alternatives pages or a directory. By context: ${[...counts.entries()].map(([k, v]) => `${k} ${v}`).join(', ') || 'none'}. Left out ${spam.length} spam pages and ${all.length - offSite.length} pages on the sites themselves.`,
+    `${rows.length} sites from ${found.keptPages} pages, one row per site with its best page (English first) and pages, the count of its pages here. Sites with ${BULK_PAGES} or more come after one-off pages: they publish lists in bulk, most often a rival app's alternatives pages or a directory. By context: ${found.counts.map(([k, v]) => `${k} ${v}`).join(', ') || 'none'}. Left out ${found.spam} spam pages and ${found.ownPages} pages on the sites themselves.`,
     'context is a guess from the URL and title: listicle (best, top, alternatives, vs), review, article, github_list (awesome lists), directory, podcast, forum, github or app_store. Many lists are on a competing app’s own site; only reading the page tells them apart.',
     'link_text is the words around one link on the page, with the anchor in [brackets]. Read the page before you pitch: the index can be weeks old.',
     "domain_rank is DataForSEO's own authority score, 0 to 100, not Ahrefs' Domain Rating.",
@@ -343,9 +404,9 @@ export async function runLinkPages(
       competitors: gap ? rivals : [],
       costUsd: cost,
       available,
-      read: items.length,
-      partial: done.partial || available > items.length,
-      spam: spam.length,
+      read,
+      partial: found.partial || available > read,
+      spam: found.spam,
       total: rows.length,
       offset,
       rows: rows.slice(offset, offset + pageSize(input.detail, rows.length)),

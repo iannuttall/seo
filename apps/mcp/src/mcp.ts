@@ -20,6 +20,7 @@ import { z } from 'zod'
 import skill from '../../../skills/seo/SKILL.md'
 import { refreshClicky } from './clicky.ts'
 import { accountUrl, openForPerson, signInHint } from './google.ts'
+import { researchStore } from './research-store.ts'
 import { events, send } from './telemetry.ts'
 import { deps } from './tools/deps.ts'
 import { type Tool, type ToolContext, ToolError } from './tools/registry.ts'
@@ -51,6 +52,7 @@ function sharedTool(shared: SharedTool): Tool {
             return keys
           },
           drKey: context.env.AHREFS_DR_KEY,
+          researchStore: researchStore(context.env),
           accounts: async () => context.directory.accounts(),
           signIn: signInHint(context.env),
           connect: `${accountUrl(context.env)}. Crawls, internal links and Bing run in the CLI. ${CLI_LINK}`,

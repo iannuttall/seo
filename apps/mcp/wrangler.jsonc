@@ -4,7 +4,8 @@
   // research keys, sealed with SEAL_KEY, and how each person signed up.
   // No report data and no logs, except the weekly-audit beta's crawl
   // results for the sites a granted account adds (src/audit), and the
-  // internal linking tool's latest result for 24 hours (src/internal-links).
+  // internal linking tool's latest result for 24 hours (src/internal-links),
+  // and seo_research results for 24 hours (src/research-store.ts).
   "name": "seo-mcp",
   "main": "./src/index.ts",
   "account_id": "ab5ec097e2579c5f3639612c755e6f15",

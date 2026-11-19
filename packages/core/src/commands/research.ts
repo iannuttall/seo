@@ -288,6 +288,7 @@ export async function runResearch(
           : (options.saved ?? []).slice(0, GAP_COMPETITORS),
         offset,
         detail: input.detail,
+        store: options.store,
       },
       keys,
       options.call,

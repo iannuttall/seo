@@ -62,10 +62,15 @@ encrypted before they are written.
   for you, such as browser time, Google index checks and research calls. No
   URLs or results.
 - **Beta features** the maintainer turned on for your account.
+- **Research results for a day.** What `seo_research` got from DataForSEO
+  or Ahrefs with your key, and the AI answer tasks it queued, so the next
+  page of rows and the same questions asked again that day cost you
+  nothing more. Each is filed under a hash of your provider key and the
+  request, and deleted after 24 hours.
 
-We keep nothing else. Your Search Console, Google Analytics, Clicky, Simple Analytics and
-provider data is fetched for each request, returned to your agent and not
-kept. Request logs are turned off.
+We keep nothing else. Your Search Console, Google Analytics, Clicky and
+Simple Analytics data is fetched for each request, returned to your agent
+and not kept. Request logs are turned off.
 
 Keys sent as request headers instead of saved are used for that request
 only.

@@ -37,6 +37,7 @@ import {
   userOf,
 } from './oauth.ts'
 import { cliProgress } from './progress.ts'
+import { deleteExpiredResearch } from './research-store.ts'
 import { unseal } from './seal.ts'
 import { sendSignupReport, sendTelegram } from './signup-report.ts'
 import { accountsOf, keysOf } from './store.ts'
@@ -241,6 +242,7 @@ export default {
       ctx.waitUntil(sendIndexRoundups(env, controller.scheduledTime))
       ctx.waitUntil(sendGoogleUpdateAlerts(env, controller.scheduledTime))
       ctx.waitUntil(checkCosts(env, controller.scheduledTime))
+      ctx.waitUntil(deleteExpiredResearch(env, controller.scheduledTime))
       return
     }
     const now = new Date(controller.scheduledTime)

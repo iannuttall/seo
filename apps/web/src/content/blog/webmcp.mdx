@@ -158,10 +158,6 @@ Chrome documents the [WebMCP pane](https://developer.chrome.com/docs/devtools/ap
 
 The descriptions matter more than they look. An agent picks a tool by reading its name and description, so say what the tool does, when to use it and what it returns, in plain words.
 
-## What I added to seoskill.dev
-
-{/* TODO(ian): this section waits for the WebMCP build on seoskill.dev (separate thread). Needed: which tools the site registers and why those; how they were tested in DevTools; what ChatGPT's desktop browser (or another agent) did with them on a real prompt, with a screenshot of the site tools arrow and the tool list; anything that broke. Keep it to facts from the build. */}
-
 ## The security side of WebMCP
 
 A WebMCP tool runs with the visitor's logged-in session, so a badly written tool can do anything that person can do. OpenAI's [site tools page](https://developers.openai.com/codex/webmcp) treats every tool definition and result as untrusted content and runs a safety review before each call. Chrome's guidance on [secure tools](https://developer.chrome.com/docs/ai/webmcp/secure-tools) says the same thing from the site's side.
@@ -170,5 +166,5 @@ In practice, give a tool the narrowest inputs that work, mark purchases, deletio
 
 ## How this was checked
 
-- I read Chrome's WebMCP, DevTools and origin trial pages, the spec and its commit history, OpenAI's site tools pages, and Shopify's and BigCommerce's docs between 19 and 24 November 2026. Every status above is dated, and the spec and the browsers change often, so check the linked pages before you build on any of it.
+- I read Chrome's WebMCP, DevTools and origin trial pages, the spec and its commit history, OpenAI's site tools pages, and Shopify's and BigCommerce's docs on 19 November 2026. Every status above is dated, and the spec and the browsers change often, so check the linked pages before you build on any of it.
 - "Only mainstream agent" means I found no announcement from Google, Anthropic, Microsoft or Perplexity of a generally available agent that calls WebMCP tools, as of 19 November 2026. Agents can still use any site the old way, by reading pages and clicking.

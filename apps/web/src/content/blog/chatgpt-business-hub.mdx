@@ -110,7 +110,7 @@ I'd expect the two counts to differ on most sites, for five reasons. The table s
 
 **The `utm_source=chatgpt.com` tag can still identify them.** OpenAI's [publishers FAQ](https://help.openai.com/en/articles/12627856-publishers-and-developers-faq) says ChatGPT adds `utm_source=chatgpt.com` to referral URLs from its search results. The tag sits in the link, so it survives when the referrer doesn't. It also travels with the link, so a URL someone copies out of ChatGPT and shares elsewhere can still be credited to ChatGPT, which would push your analytics count above Business Hub's clicks. (That last part is my reading of how tags work. OpenAI doesn't say it.)
 
-{/* TODO(ian): before publishing, recheck the publishers FAQ link above. A direct fetch on 19 November 2026 returned an unrelated page, and the FAQ may have been withdrawn in October 2026. If it is gone, cite another primary source for the utm_source=chatgpt.com tag or cut the line. */}
+The tag can go missing too. For about a week in October 2026, ChatGPT links carried neither the tag nor a referrer. Adobe's Cedric Huesler reported it, and OpenAI told him it was a bug, with the fix rolling out on 15 October ([Search Engine Land](https://searchengineland.com/chatgpt-appears-to-drop-utm-tracking-making-ai-referral-traffic-harder-to-measure-496552)). SEJ's 28 days start on 14 October, so a comparison over that window may find some ChatGPT visits in Direct.
 
 **Thresholds and gaps.** A small site may see a blank where analytics shows a handful of ChatGPT visits. OpenAI's guide says that blank isn't a zero.
 

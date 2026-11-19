@@ -146,8 +146,6 @@ seoskill.dev's home page scored 3/3. The accessibility tree passed, CLS was 0, a
 
 Cloudflare's [isitagentready.com](https://isitagentready.com/) scanned seoskill.dev on the same day and gave it level 5 of 5, "Agent-Native", while listing WebMCP and ARD as fails. Cloudflare mostly checks the files around the page, such as robots.txt rules for AI bots, Markdown copies and an MCP server card. Lighthouse checks the page itself. "Agent ready" means whatever the tool you ran decides it means.
 
-{/* TODO(ian): After the WebMCP build ships on seoskill.dev, rerun `npx lighthouse https://seoskill.dev/ --only-categories=agentic-browsing` with Lighthouse 13.6.0 or later and add the before and after: the new ratio, the tools Lighthouse lists, the form coverage count and any schema errors. The WebMCP audits only score when the page exposes the WebMCP API, so the origin trial token has to be live on the page or all three stay not applicable. A screenshot of the Lighthouse report would help. */}
-
 ## How to fix each failed agentic browsing check
 
 Each fix below is for a failure I saw in these runs. Lighthouse lists the first element that breaks each rule, so fix that one and run it again.

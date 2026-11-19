@@ -596,15 +596,29 @@ export function impactLines(impact: UpdateImpact): string[] {
       impact.non_brand_pages.by === 'google'
         ? 'by Google’s classification'
         : 'leaving out your brand names'
+    // A list the same as the one for all searches, as on a site with few
+    // brand searches, says nothing new, so it is left out.
+    const shown = (rows: ImpactRow[]) =>
+      rows
+        .slice(0, SHOWN)
+        .map((row) => rowText(row, origin))
+        .join()
+    const differs = (rows: ImpactRow[], all: ImpactRow[]) =>
+      shown(rows) !== shown(all)
+    const { lost, gained } = impact.non_brand_pages
     lines.push(
-      ...list(
-        `Pages that lost most from searches not about the brand (${by})`,
-        impact.non_brand_pages.lost,
-      ),
-      ...list(
-        `Pages that gained most from searches not about the brand (${by})`,
-        impact.non_brand_pages.gained,
-      ),
+      ...(differs(lost, impact.pages.lost)
+        ? list(
+            `Pages that lost most from searches not about the brand (${by})`,
+            lost,
+          )
+        : []),
+      ...(differs(gained, impact.pages.gained)
+        ? list(
+            `Pages that gained most from searches not about the brand (${by})`,
+            gained,
+          )
+        : []),
     )
   }
   if (impact.lens_pages?.length) {

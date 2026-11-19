@@ -37,9 +37,68 @@ export type BrandSplit = {
   small: boolean
   // The two ways differ by more than DIFFER on brand clicks (a heuristic).
   differ: boolean
+  // With differ: Google's brand searches the saved names miss that are safe
+  // to save as a name (see safeNames), most brand clicks first; null when
+  // they could not be read. checked_all is false when the query rows hit
+  // the row limit, so an empty list is not an all-clear.
+  missing?: {
+    safe: { name: string; clicks: number }[]
+    unsafe: string[]
+    checked_all: boolean
+  } | null
 }
 
 const MIN_CLICKS = 50
+// A name is safe to save when at least this share of the clicks it would
+// hide (every search that contains it) are ones Google counts as brand.
+const SAFE_SHARE = 0.8
+// Fewer brand clicks than this is too small to be worth a name, such as a
+// one-off spelling.
+const MIN_NAME_CLICKS = 5
+const QUERY_ROWS = 25_000
+const LISTED = 5
+
+type QueryRow = { query: string; clicks: number }
+
+// Google's brand searches that the saved names miss, split into names that
+// are safe to save and ones that would hide searches Google counts as not
+// brand. A saved name hides every search that contains it, ignoring case,
+// as brandRegex matches. Pure.
+export function safeNames(
+  branded: QueryRow[],
+  all: QueryRow[],
+  names: string[],
+): { safe: { name: string; clicks: number }[]; unsafe: string[] } {
+  const lower = names.map((name) => name.toLowerCase())
+  const caught = (query: string) =>
+    lower.some((name) => query.toLowerCase().includes(name))
+  const brand = new Map(branded.map((row) => [row.query.toLowerCase(), row]))
+  const share = (candidate: string) => {
+    let hidden = 0
+    let brandClicks = 0
+    for (const row of all) {
+      const query = row.query.toLowerCase()
+      if (!query.includes(candidate)) continue
+      hidden += row.clicks
+      if (brand.has(query)) brandClicks += row.clicks
+    }
+    return hidden > 0 ? brandClicks / hidden : 0
+  }
+  const open = branded
+    .filter((row) => row.clicks > 0 && !caught(row.query))
+    .sort((a, b) => b.clicks - a.clicks || a.query.localeCompare(b.query))
+  const safe: { name: string; clicks: number }[] = []
+  const unsafe: string[] = []
+  for (const row of open) {
+    const name = row.query.toLowerCase()
+    // A longer search that contains a safe name is covered by it.
+    if (safe.some((item) => name.includes(item.name))) continue
+    if (share(name) < SAFE_SHARE) unsafe.push(name)
+    else if (row.clicks >= MIN_NAME_CLICKS)
+      safe.push({ name, clicks: row.clicks })
+  }
+  return { safe: safe.slice(0, LISTED), unsafe: unsafe.slice(0, LISTED) }
+}
 const DIFFER = { clicks: 20, share: 0.25 }
 
 const zero = (): Totals => ({ clicks: 0, impressions: 0 })
@@ -123,6 +182,45 @@ export async function brandSplit(
     a !== undefined &&
     b !== undefined &&
     Math.abs(a - b) > Math.max(DIFFER.clicks, DIFFER.share * Math.max(a, b))
+  // Only a gap needs the query rows: two more Search Console calls.
+  const missing = differ
+    ? await (async () => {
+        const rows = (body: Record<string, unknown>) =>
+          read(site, {
+            ...current,
+            dimensions: ['query'],
+            type: 'web',
+            dataState: 'final',
+            maxRows: QUERY_ROWS,
+            ...body,
+          }).then((result) =>
+            result.rows.map((row) => ({
+              query: String(row.keys?.[0] ?? ''),
+              clicks: row.clicks,
+            })),
+          )
+        const [branded, all] = await Promise.all([
+          rows({
+            dimensionFilterGroups: [
+              {
+                filters: [
+                  {
+                    dimension: 'brandedClassification',
+                    operator: 'equals',
+                    expression: 'BRANDED',
+                  },
+                ],
+              },
+            ],
+          }),
+          rows({}),
+        ])
+        return {
+          ...safeNames(branded, all, names),
+          checked_all: all.length < QUERY_ROWS && branded.length < QUERY_ROWS,
+        }
+      })().catch(() => null)
+    : undefined
   return {
     google: status,
     names,
@@ -130,6 +228,7 @@ export async function brandSplit(
     previous: before,
     small: now.total.clicks < MIN_CLICKS,
     differ,
+    ...(missing === undefined ? {} : { missing }),
   }
 }
 
@@ -211,9 +310,19 @@ export function brandSplitLines(split: BrandSplit, branded?: string): string[] {
       'No brand names are saved in the business context ("## Brand names"), so there is no split by name.',
     )
   }
-  if (split.differ) {
+  const missing = split.missing
+  if (split.differ && missing && !missing.safe.length && missing.checked_all) {
+    // The saved names already hold every name that is safe to save.
     lines.push(
-      `Google counts ${count(now.google?.brand.clicks ?? 0)} brand clicks and your brand names ${count(now.names?.brand.clicks ?? 0)} (a gap of more than 25%, a heuristic). Google’s count is the one to go by. The saved names decide only which searches page and query lists leave out, and a name there hides every search that contains it, so add a name from the searches Google counts as brand only when Google counts most of the searches that name would catch as brand${branded ? `. Google’s brand searches: ${branded}` : ''}.`,
+      `Google counts more brand clicks than your brand names because of searches such as ${missing.unsafe.map((q) => `"${q}"`).join(', ') || 'ones Search Console hides'}, which would also hide searches Google counts as not brand if saved as names.`,
+    )
+  } else if (split.differ && missing?.safe.length) {
+    lines.push(
+      `Google counts ${count(now.google?.brand.clicks ?? 0)} brand clicks and your brand names ${count(now.names?.brand.clicks ?? 0)}. Safe to add to "## Brand names", because Google counts at least ${Math.round(SAFE_SHARE * 100)}% of the clicks each would hide as brand: ${missing.safe.map((item) => `${item.name} (${count(item.clicks)} brand ${item.clicks === 1 ? 'click' : 'clicks'})`).join(', ')}.${missing.checked_all ? '' : ' Search Console returned the row limit, so there may be more.'}`,
+    )
+  } else if (split.differ) {
+    lines.push(
+      `Google counts ${count(now.google?.brand.clicks ?? 0)} brand clicks and your brand names ${count(now.names?.brand.clicks ?? 0)} (a gap of more than 25%, a heuristic). Google’s count is the one to go by. The saved names decide only which searches page and query lists leave out, and a name there hides every search that contains it, so add a name from the searches Google counts as brand only when Google counts at least 80% of the clicks that name would catch as brand${branded ? `. Google’s brand searches: ${branded}` : ''}.`,
     )
   }
   if (split.small) {

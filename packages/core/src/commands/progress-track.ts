@@ -10,6 +10,10 @@ import { type CommandDeps, CommandError, type CommandResult } from './types.js'
 // and the AI answers to its questions, for the site and its competitors,
 // kept on each check so they can be charted from the first on (progress.ts).
 
+// The first day Google served poisoned results pages to automated searches
+// (DataForSEO, 2026-10-23).
+const POISONED_SINCE = '2026-09-26'
+
 // Results read per tracked keyword.
 export const TRACK_DEPTH = 30
 // Runs kept per site and kind: five years of weekly checks.
@@ -26,6 +30,9 @@ export type KeywordRun = {
   device: ResearchDevice
   depth: number
   cost_usd: number | null
+  // Read with DataForSEO's check against poisoned results (CHECKED_SERP)
+  // and goto links followed. Runs from before it lack the field.
+  checked?: true
   results: {
     keyword: string
     // The site's best organic position, null when it is not in the top
@@ -190,6 +197,7 @@ async function trackKeywords(
         device,
         depth: TRACK_DEPTH,
         noRank: true,
+        resolveGoto: true,
         limit: TRACK_DEPTH,
       }),
     ),
@@ -212,6 +220,7 @@ async function trackKeywords(
     country,
     device,
     depth: TRACK_DEPTH,
+    checked: true,
     cost_usd: reads.some((read) => read.costUsd === null)
       ? null
       : reads.reduce((sum, read) => sum + (read.costUsd ?? 0), 0),
@@ -303,25 +312,39 @@ export function runsText(
     (run): run is ProgressRun & KeywordRun =>
       run.kind === 'keywords' && only !== 'ai_answers',
   )
-  const first = keywordRuns[0]
+  // A run from the poisoned weeks that was read without the check is not a
+  // fair baseline: compare from the first checked run once there is one.
+  const doubtful = keywordRuns.filter(
+    (run) => !run.checked && run.ran_at >= POISONED_SINCE,
+  )
+  const first =
+    keywordRuns[0] && doubtful.includes(keywordRuns[0])
+      ? (keywordRuns.find((run) => run.checked) ?? keywordRuns[0])
+      : keywordRuns[0]
   const last = keywordRuns.at(-1)
   if (first && last) {
+    const several = first !== last
     const was = new Map(first.results.map((r) => [r.keyword, r]))
     const top = (run: KeywordRun, depth: number) =>
       run.results.filter((r) => r.position !== null && r.position <= depth)
         .length
     lines.push(
-      keywordRuns.length > 1
+      several
         ? `Google positions, ${first.ran_at.slice(0, 10)} → ${last.ran_at.slice(0, 10)} (${last.country}, ${last.device}, top ${last.depth}; out is not in the top ${last.depth}):`
         : `Google positions on ${last.ran_at.slice(0, 10)} (${last.country}, ${last.device}, top ${last.depth}; out is not in the top ${last.depth}):`,
-      `In the top 3: ${keywordRuns.length > 1 ? `${top(first, 3)} → ` : ''}${top(last, 3)}. Top 10: ${keywordRuns.length > 1 ? `${top(first, 10)} → ` : ''}${top(last, 10)}. Top ${last.depth}: ${keywordRuns.length > 1 ? `${top(first, last.depth)} → ` : ''}${top(last, last.depth)}, of ${last.results.length}.`,
+      `In the top 3: ${several ? `${top(first, 3)} → ` : ''}${top(last, 3)}. Top 10: ${several ? `${top(first, 10)} → ` : ''}${top(last, 10)}. Top ${last.depth}: ${several ? `${top(first, last.depth)} → ` : ''}${top(last, last.depth)}, of ${last.results.length}.`,
       ...last.results.map((r) => {
         const before = was.get(r.keyword)
         const competitors = Object.entries(r.competitors)
           .filter(([, p]) => p !== null)
           .map(([domain, p]) => `${domain} ${p}`)
-        return `- ${r.keyword}: ${keywordRuns.length > 1 ? `${before ? (before.position ?? 'out') : 'not checked'} → ` : ''}${r.position ?? 'out'}${r.url ? ` (${r.url})` : ''}${competitors.length ? `; ${competitors.join(', ')}` : ''}`
+        return `- ${r.keyword}: ${several ? `${before ? (before.position ?? 'out') : 'not checked'} → ` : ''}${r.position ?? 'out'}${r.url ? ` (${r.url})` : ''}${competitors.length ? `; ${competitors.join(', ')}` : ''}`
       }),
+      ...(doubtful.length
+        ? [
+            `May be poisoned: ${doubtful.length} of ${keywordRuns.length} checks (${doubtful[0]?.ran_at.slice(0, 10)}${doubtful.length > 1 ? ` to ${doubtful.at(-1)?.ran_at.slice(0, 10)}` : ''}) were read before SEO Skill checked Google's results against its Web tab. Since late September 2026 Google often shows automated searches unrelated sites, so those positions may be wrong.${first !== keywordRuns[0] ? ` The comparison starts at ${first.ran_at.slice(0, 10)}, the first checked run.` : ''}`,
+          ]
+        : []),
       ...(last.missed.length
         ? [
             `No result read for ${last.missed.join(', ')}: unknown, not "not ranking".`,

@@ -6,7 +6,12 @@ import {
   dataForSeoMarket,
   dataForSeoTask,
 } from './research-providers.js'
-import { dataForSeoSerp, hintKey, pageKey as key } from './research-serp.js'
+import {
+  CHECKED_SERP,
+  dataForSeoSerp,
+  hintKey,
+  pageKey as key,
+} from './research-serp.js'
 import { CommandError, type CommandResult } from './types.js'
 
 // Is one URL in Google's index? Asks Google through DataForSEO's live SERP,
@@ -130,6 +135,7 @@ export async function runIndexCheck(
             keyword: query,
             depth: DEPTH,
             device,
+            ...CHECKED_SERP,
           },
         )
         cost += done.cost

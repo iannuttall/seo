@@ -45,7 +45,7 @@ export {
   type PeopleAlsoAsk,
   research,
 } from './research-providers.js'
-export { dataForSeoSerp, GOTO } from './research-serp.js'
+export { CHECKED_SERP, dataForSeoSerp, GOTO } from './research-serp.js'
 export * from './rows.js'
 export * from './shared.js'
 export * from './simple-analytics.js'

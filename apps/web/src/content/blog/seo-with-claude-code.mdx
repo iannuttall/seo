@@ -9,9 +9,38 @@ cover:
   alt: "A Victorian engraved study where a clockwork automaton holds a magnifying glass over a survey map while the engineer beside it draws one route in lime green."
 ---
 
+export const cardToday = `<pre style="white-space: pre-wrap"><code>{
+  title: 'Founders who build with agents',
+  icon: Store01Icon,
+  text: 'You already build in Claude Code, Codex or Cursor. Connect one URL and ask about your site in the same session where you ship it.',
+  href: '/docs/getting-started',
+  link: 'Get started',
+},</code></pre>`
+
+export const cardProposed = `<pre style="white-space: pre-wrap"><code>{
+  title: 'Founders who build with agents',
+  icon: Store01Icon,
+  text: 'You already build in Claude Code, Codex or Cursor. Add the SEO skill and ask about your site in the same session where you ship it.',
+  href: '/features/claude-seo',
+  link: 'Claude SEO skill',
+},</code></pre>`
+
 Claude Code and Codex are good at SEO work once they can see your data. Without it, they guess from what the page looks like. With it, they can tell you which page Google shows for a search, where it ranks and whether anyone clicks.
 
 So instead of another list of prompts, I ran one session on seoskill.dev on 19 November 2026 and wrote down every step. The Search Console data covers 19 October to 15 November 2026, against the four weeks before. The agent's first idea turned out to be the wrong fix, and the right one was two steps further on.
+
+The session in six steps:
+
+<PlanSteps
+  steps={[
+    { title: 'Ask what is due', body: 'seo next found four pages that had dropped out of Google\'s index. They get their own session.' },
+    { title: 'Read the overview', body: 'The home page took 490 of the site\'s 614 clicks in four weeks.' },
+    { title: 'Check the quick wins', body: '"ai seo skill" topped the list at position 7.74, with 172 impressions and no clicks.' },
+    { title: 'Check the SERP', body: 'Other people\'s skills ranked above the home page, so I parked the title change.' },
+    { title: 'Pull the query data', body: 'Searches with "claude" in them showed the home page 1,565 times and the Claude SEO skill page once.' },
+    { title: 'Check the page', body: 'The Claude page was indexed but last crawled before its rebuild. The fix is a recrawl and a home page link.' },
+  ]}
+/>
 
 ## What you need before the first prompt
 
@@ -104,9 +133,50 @@ Before agreeing, I asked who else ranks:
 
 <AgentStep prompt="Who ranks for 'ai seo skill' in the US, and what do their titles say?" cli={'seo research serp --keywords "ai seo skill" --country us'} />
 
-On 19 November 2026, in DataForSEO's US desktop results, number one was a skill file called `ai-seo` in a GitHub repository named marketingskills, and seoskill.dev was ninth. Search Console also had 20 impressions for "ai-seo skill", with the hyphen. Those look like people searching for a skill with that exact name.
+On 19 November 2026, in DataForSEO's US desktop results, number one was a skill file called `ai-seo` in a GitHub repository named marketingskills, and seoskill.dev was ninth.
 
-The history agreed. Until 20 October 2026, the home page title was "Free SEO data for AI agents", and in the four weeks before the change the same query got 110 impressions at position 9.34, also with no clicks. A title with "AI" in it didn't earn a click either.
+<SerpLadder
+  keyword="ai seo skill"
+  volume={20}
+  target="seoskill.dev"
+  targetPosition={null}
+  caption={'Organic results for "ai seo skill" when I checked again later the same day (DataForSEO, US desktop, 19 November 2026). Results DataForSEO couldn\'t name are left out.'}
+  rows={[
+    { position: 1, domain: 'github.com', title: 'marketingskills/skills/ai-seo/SKILL.md at main', tag: 'Skill file' },
+    { position: 2, domain: 'claudeseoskill.com', tag: 'Skill site' },
+    { position: 3, domain: 'claude-seo.md', title: '26 Free AI SEO Skills for Claude Code', tag: 'Skill list' },
+    { position: 5, domain: 'mcpmarket.com', title: 'AI SEO Claude Code Skill | Optimize for AEO and GEO', tag: 'Skill directory' },
+    { position: 7, domain: 'www.context-link.ai', title: 'AI SEO Skill for Claude Cowork', tag: 'Skill page' },
+    { position: 9, domain: 'www.kimi.ai', title: '13 AI SEO Skills to Automate Search Optimization', tag: 'Listicle' },
+    { position: 10, domain: 'seranking.com', title: 'Claude SEO Skills: 26 Open-Source Skills', tag: 'Listicle' },
+  ]}
+/>
+
+By that second check, seoskill.dev wasn't in the top 20 at all, and every top 10 result DataForSEO could name was a skill or a list of skills. A ranking that moves that much in a day is a weak base for a title change. Search Console also had 20 impressions for "ai-seo skill", with the hyphen. Those look like people searching for a skill with that exact name.
+
+The history agreed. Until 20 October 2026, the home page title was "Free SEO data for AI agents", and in the four weeks before the change the same query got no clicks then either.
+
+<SearchResult
+  caption={'The home page in Google before and after its title changed on 20 October 2026. Titles and descriptions from the site\'s repository; impressions and positions for "ai seo skill" from Search Console, four weeks each side.'}
+  before={{
+    label: 'Until 20 October',
+    url: 'https://seoskill.dev/',
+    site: 'SEO Skill',
+    title: 'SEO Skill | Free SEO data for AI agents',
+    description: 'Give your AI agent facts from your own Search Console, Google Analytics and keyword data. Connect the free hosted MCP in one command or install the open source CLI.',
+    note: '"ai seo skill": 110 impressions at position 9.34, no clicks.',
+  }}
+  after={{
+    label: 'Since 20 October',
+    url: 'https://seoskill.dev/',
+    site: 'SEO Skill',
+    title: 'SEO Skill | Open source SEO for agent-native teams',
+    description: 'Give your AI agent your real Search Console, Google Analytics, Bing and Clicky data, Google update dates and a site crawl. Free hosted MCP and open source CLI.',
+    note: '"ai seo skill": 172 impressions at position 7.74, no clicks.',
+  }}
+/>
+
+A title with "AI" in it didn't earn a click for "ai seo skill" any more than one without. That points at who is searching.
 
 So I parked it. DataForSEO puts "ai seo skill" at 20 US searches a month, and those people are probably looking for someone else's skill. I wouldn't risk a title change on the page that brings in four of every five clicks for them. That judgement call is yours to make, and an agent shouldn't make it for you.
 
@@ -134,12 +204,16 @@ Then by page, for every search with "claude" in it:
 
 <AgentStep prompt="Which pages on example.com get impressions for searches with 'claude' in them?" cli="seo data --site example.com --dimensions page --query claude --sort impressions" />
 
-```text
-page                   | clicks | impressions | position | previous_impressions
-/                      | 1      | 1565        | 58.78    | 613
-/alternatives/claude-seo | 0    | 20          | 66.55    | 0
-/features/claude-seo   | 0      | 1           | 21       | 0
-```
+<CompareBars
+  title={'Impressions for searches containing "claude", by page'}
+  caption="Google Search Console, seoskill.dev, 19 October to 15 November 2026."
+  highlight="/features/claude-seo"
+  rows={[
+    { label: '/', value: 1565, note: '1 click at position 58.78, up from 613 impressions the four weeks before' },
+    { label: '/alternatives/claude-seo', value: 20, note: 'No clicks, position 66.55' },
+    { label: '/features/claude-seo', value: 1, note: 'No clicks, position 21. The page written for these searches' },
+  ]}
+/>
 
 That's the real finding. Between 19 October and 15 November 2026, Google showed the home page 1,565 times for searches with "claude" in them, at an average position of 58.78, for one click. Position 58 is around the sixth page of results, so few of those impressions were people reading the page (my reading of the position, not something Search Console reports). Meanwhile the page written for those searches, the Claude SEO skill page, got one impression.
 
@@ -167,20 +241,13 @@ Two changes, both small:
 1. Request indexing for the Claude SEO skill page with Search Console's [URL Inspection tool](https://support.google.com/webmasters/answer/9012289), so Google crawls the rebuilt version. Google says indexing "typically takes only a day or so" but doesn't guarantee it.
 2. Link to it from the home page in words that say what it is. The home page links it only from its list of features. The card for founders who build with agents already names Claude Code and Codex, and links to the getting started guide.
 
-The proposed diff for the second change, in the home page's source:
+The proposed change to the founders card, in the home page's source:
 
-```diff
-   {
-     title: 'Founders who build with agents',
-     icon: Store01Icon,
--    text: 'You already build in Claude Code, Codex or Cursor. Connect one URL and ask about your site in the same session where you ship it.',
--    href: '/docs/getting-started',
--    link: 'Get started',
-+    text: 'You already build in Claude Code, Codex or Cursor. Add the SEO skill and ask about your site in the same session where you ship it.',
-+    href: '/features/claude-seo',
-+    link: 'Claude SEO skill',
-   },
-```
+<BeforeAfter
+  caption="The founders card in the home page's source today, and pointing at the Claude SEO skill page. The text, the link and its label change; the title and icon stay."
+  before={{ label: 'Today', html: cardToday }}
+  after={{ label: 'With the change', html: cardProposed }}
+/>
 
 In Claude Code or Codex, that's one more prompt in the same session, and the agent opens a pull request for you to review:
 

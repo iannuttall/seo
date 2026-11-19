@@ -19,6 +19,25 @@ The Generative AI performance report counts impressions of your pages in two Goo
 
 Google's [help page for the report](https://support.google.com/webmasters/answer/16984139) defines an impression as each time "links to your site were shown to a user in a generative AI feature on Google Search". You can group those impressions by page, country, date or device, and filter between text searches and multimodal searches (Google Lens, Circle to Search and image uploads).
 
+Google's own announcement and help page are the first two results when you search for the report by name, so they're the pages to check when a third-party write-up (this one included) disagrees with them:
+
+<SerpLadder
+  keyword="search console generative ai report"
+  target="seoskill.dev"
+  targetPosition={null}
+  caption="Organic results for &quot;search console generative ai report&quot;, US desktop, 19 November 2026 (DataForSEO live). Positions 3 and 7, which DataForSEO couldn't name, are left out. seoskill.dev had no page in the top 20 that day."
+  rows={[
+    { position: 1, domain: 'developers.google.com', tag: 'Google announcement' },
+    { position: 2, domain: 'support.google.com', tag: 'Google help page' },
+    { position: 4, domain: 'searchenginejournal.com', tag: 'News' },
+    { position: 5, domain: 'scalevise.com', tag: 'Explainer' },
+    { position: 6, domain: 'searchengineland.com', tag: 'News' },
+    { position: 8, domain: 'sandstream.us', tag: 'Explainer' },
+    { position: 9, domain: 'support.google.com', tag: 'Google help page (Discover)' },
+    { position: 10, domain: 'seroundtable.com', tag: 'News' },
+  ]}
+/>
+
 The report is a slice of numbers you already have. The help page says it "includes data from the Web search type in the Performance report", so AI impressions sit inside your normal web impressions too. Never add the two together.
 
 The chart counts by property, so two of your links in one AI answer make one impression, while the Pages table counts each page. That's why the chart and table totals can differ.
@@ -75,7 +94,28 @@ Two other changes landed in the same week. The [November 2026 core update](https
 
 Google fixed an earlier gap in the same report. Its anomalies page logs a 13 to 17 August 2026 error, with an update on 21 August: "Missing data for this period has been restored." When I read the page on 19 November 2026, the November entry had no such note.
 
-The main Performance report showed no clear drop on my sites for those days. Web impressions for Monday to Wednesday, 9 to 11 November, against 2 to 4 November, fell 5% on the larger site above (482,634 to 460,660) and rose on the other two, by 21% on seoskill.dev and 34% on a smaller site with about 144,000 web impressions over 91 days. That fits Google naming only the Generative AI report, but three sites can't prove the main report was untouched.
+The main Performance report showed no clear drop on my sites for those days. Here's seoskill.dev's web impressions by day through that week:
+
+<VerticalBars
+  caption="seoskill.dev web impressions by day, 1 to 17 November 2026 (Search Console Performance report, web search, read 19 November 2026). 18 November had no final data yet."
+  unit="impressions"
+  highlight={["9 Nov", "10 Nov", "11 Nov"]}
+  data={[{"label": "1 Nov", "value": 5542}, {"label": "2 Nov", "value": 4319}, {"label": "3 Nov", "value": 5326}, {"label": "4 Nov", "value": 4966}, {"label": "5 Nov", "value": 4059}, {"label": "6 Nov", "value": 4788}, {"label": "7 Nov", "value": 5220}, {"label": "8 Nov", "value": 5146}, {"label": "9 Nov", "value": 5535}, {"label": "10 Nov", "value": 5071}, {"label": "11 Nov", "value": 7009}, {"label": "12 Nov", "value": 7193}, {"label": "13 Nov", "value": 7532}, {"label": "14 Nov", "value": 7131}, {"label": "15 Nov", "value": 6725}, {"label": "16 Nov", "value": 6206}, {"label": "17 Nov", "value": 4376}]}
+  markers={[{"at": "9 Nov", "text": "Generative AI report logging error, 9 to 11 November"}, {"at": "10 Nov", "text": "November 2026 core update begins"}, {"at": "12 Nov", "text": "Gemini 4 Hydrogen becomes AI Mode's default model"}]}
+/>
+
+Nothing dips on 9 to 11 November. The 11th had the most impressions of the month so far, and every day from then to 16 November stayed above 6,000. With a logging error, a core update and a new model in one week, the chart can't say which of them, if any, moved the numbers.
+
+I compared Monday to Wednesday, 9 to 11 November, with the same days a week earlier on three of my sites:
+
+<CompareBars
+  caption="Web impressions on 9 to 11 November 2026 as a share of 2 to 4 November (Search Console Performance report, web search, read 19 November 2026). 100% would mean no change."
+  unit="% of the week before"
+  highlight="seoskill.dev"
+  rows={[{"label": "Smaller site", "value": 134, "note": "About 144,000 web impressions over 91 days"}, {"label": "seoskill.dev", "value": 121, "note": "14,611 to 17,615 impressions"}, {"label": "Larger site", "value": 95, "note": "482,634 to 460,660 impressions"}]}
+/>
+
+Only the larger site (about 9.4 million web impressions over 91 days) fell, by 5%, and the other two rose. That fits Google naming only the Generative AI report, but three sites can't prove the main report was untouched.
 
 ## Pair the report with AI Mode follow-up questions
 
@@ -99,7 +139,11 @@ Google hasn't said what it will ship. On 2 November 2026, Gary Illyes wrote that
 
 ## Use the report for exposure, and read clicks elsewhere
 
-Until clicks arrive, I'd treat the Generative AI report as a list of pages Google's AI answers lean on, and nothing more. Export it monthly, work out each page's AI share, and read those pages' follow-up questions and clicks in the normal Performance report.
+Until clicks arrive, I'd treat the Generative AI report as a list of pages Google's AI answers lean on, and nothing more. Each month I'd do this:
+
+<PlanSteps
+  steps={[{"title": "Export the report", "body": "Download the Pages table by hand, since the API can't read it. Leave out any days the data anomalies page names, and remember a zero in the export can be missing data."}, {"title": "Work out each page's AI share", "body": "Divide each page's AI impressions by its web impressions from the normal Performance report, for the same dates."}, {"title": "Read the follow-up questions", "body": "For the pages with the highest AI share, check which AI Mode follow-up questions reach them."}, {"title": "Read clicks in the Performance report", "body": "Clicks from AI answers are counted with every other web click, so read those pages' clicks in the normal report."}]}
+/>
 
 If Google adds clicks before 3 December 2026, I'll update this post with what changed.
 

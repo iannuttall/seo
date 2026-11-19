@@ -10,6 +10,25 @@ cover:
   title: left
 ---
 
+export const linearButton = `<button type="button"
+  aria-disabled="false"
+  data-base-ui-click-trigger=""
+  id="base-ui-_R_tfpt9j6l5a_"
+  aria-haspopup="dialog"
+  aria-expanded="false"
+  class="TZTsQG_mobileMenuTrigger
+    hCgVwa_reset-button">`
+
+export const linearButtonFixed = `<button type="button"
+  aria-label="Open menu"
+  aria-disabled="false"
+  data-base-ui-click-trigger=""
+  id="base-ui-_R_tfpt9j6l5a_"
+  aria-haspopup="dialog"
+  aria-expanded="false"
+  class="TZTsQG_mobileMenuTrigger
+    hCgVwa_reset-button">`
+
 I ran Lighthouse 13.6.0's agentic browsing category on 21 home pages on 19 November 2026. Etsy blocked the test, so 20 got a result, and 8 of those 20 passed every check that counted, seoskill.dev among them.
 
 The most common failure was the accessibility tree, on 9 of the 19 sites other than mine. Buttons and links had no name, and ARIA roles were used wrongly. That's accessibility work Lighthouse has flagged for years under another heading.
@@ -44,6 +63,22 @@ WebMCP is the part most sites can't test yet. Chrome says the WebMCP audits need
 
 ## What 19 other sites scored, by type
 
+<CompareBars
+  caption="Pages that failed each scored audit, out of the 20 home pages Lighthouse 13.6.0 could test on 19 November 2026, seoskill.dev included. The note says how many pages the audit was scored on; on the rest it was not applicable."
+  unit="failed"
+  keepOrder
+  highlight="Accessibility tree"
+  rows={[
+    { label: 'Accessibility tree', value: 9, note: 'Scored on all 20 pages' },
+    { label: 'Cumulative Layout Shift', value: 3, note: 'Scored on all 20 pages' },
+    { label: 'ARD manifest', value: 3, note: 'Scored on 4 pages' },
+    { label: 'llms.txt', value: 1, note: 'Scored on 12 pages' },
+    { label: 'WebMCP schemas', value: 0, note: 'Scored on 2 pages' },
+  ]}
+/>
+
+The accessibility tree failed on 9 pages, more than the other four audits put together. The agent checks only count when a site has published something, so the ARD audit was scored on 4 pages and failed on 3 of them.
+
 <KeywordTable
   caption="Lighthouse 13.6.0 agentic browsing results, home pages, default mobile settings, one run per site, 19 November 2026. Result is passed over scored checks. Etsy returned a 403 to the test browser and isn't scored."
   sortBy="type"
@@ -71,9 +106,33 @@ WebMCP is the part most sites can't test yet. Chrome says the WebMCP audits need
   ]}
 />
 
-News sites did worst. The BBC, the Guardian and the New York Times each scored 0/2, failing both the accessibility tree and layout shift (CLS of 0.645, 0.199 and 0.129 in my single runs). CNN passed both page checks and scored 2/4.
+<VerticalBars
+  caption="Percent of scored checks each site type passed, Lighthouse 13.6.0 agentic browsing, home pages, 19 November 2026. seoskill.dev and Etsy are left out."
+  unit="% of checks passed"
+  highlight={['News']}
+  data={[
+    { label: 'Docs', value: 79, note: '11 of 14 checks passed, 5 sites' },
+    { label: 'SaaS', value: 76, note: '13 of 17 checks passed, 5 sites' },
+    { label: 'News', value: 20, note: '2 of 10 checks passed, 4 sites' },
+    { label: 'Shop', value: 93, note: '13 of 14 checks passed, 5 sites' },
+  ]}
+/>
+
+News sites did worst, passing 2 of their 10 scored checks, and they lost them on the page itself. The BBC, the Guardian and the New York Times each scored 0/2, failing both the accessibility tree and layout shift (CLS of 0.645, 0.199 and 0.129 in my single runs). CNN passed both page checks and scored 2/4.
 
 CNN's two failures come from how its server answers. Lighthouse's requests for `/llms.txt` and `/.well-known/ard.json` got a short "Unknown Error" page with a success status, in two runs, while a plain request with curl got a 404. A 404 would have been not applicable.
+
+<BrowserFrame
+  url="https://www.cnn.com/.well-known/ard.json"
+  tab="www.cnn.com/.well-known/ard.json"
+  status="200 OK"
+  bad
+  caption="What headless Chrome got for CNN's agent catalog address when fetched from a loaded cnn.com page, rechecked 19 November 2026. /llms.txt returned the same body with the same status."
+>
+  <p class="font-mono">Unknown Error</p>
+</BrowserFrame>
+
+Lighthouse reads that body as a catalog and as an llms.txt, and fails both: the catalog isn't valid JSON, and the llms.txt has no H1 and no links.
 
 Docs and SaaS sites mostly lost one accessibility rule each. Next.js and Notion lost their point to an agent catalog published at the older `/.well-known/ai-catalog.json` address. Next.js uses identifiers that don't match the ARD format, and Notion's entry has no display name.
 
@@ -92,6 +151,14 @@ Cloudflare's [isitagentready.com](https://isitagentready.com/) scanned seoskill.
 ## How to fix each failed agentic browsing check
 
 Each fix below is for a failure I saw in these runs. Lighthouse lists the first element that breaks each rule, so fix that one and run it again.
+
+Buttons with no name were the most common rule, on four sites. On Linear it was the menu button in the phone layout, and an `aria-label` is the whole fix:
+
+<BeforeAfter
+  caption="The button Lighthouse flagged on linear.app, 19 November 2026, as its report quoted the opening tag, and the same tag with a name a screen reader or an agent can read."
+  before={{ label: 'Flagged', code: linearButton, note: 'Buttons must have discernible text' }}
+  after={{ label: 'With a name', code: linearButtonFixed }}
+/>
 
 | Failure | Sites | Fix |
 | --- | --- | --- |

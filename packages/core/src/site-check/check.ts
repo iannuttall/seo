@@ -509,16 +509,23 @@ async function checkLlmsTxt(
   pagePaths: Set<string>,
   add: Add,
 ): Promise<void> {
-  if (!files.has('llms.txt')) {
+  // An llms.txt can sit at any path and covers the pages under it, such as
+  // docs/llms.txt for /docs/.
+  const llmsFiles = [...files]
+    .filter((file) => file === 'llms.txt' || file.endsWith('/llms.txt'))
+    .sort(byText)
+  if (llmsFiles.length === 0) {
     add('llms_txt_missing', 'llms.txt', '')
     return
   }
-  const text = await site.readText('llms.txt')
-  for (const match of text.matchAll(/\]\(([^)\s]+)\)/g)) {
-    const path = sameOriginFile(match[1] as string, origin)
-    if (path === undefined) continue
-    if (!resolvesInBuild(`/${path}`, pagePaths, files)) {
-      add('llms_txt_broken_link', 'llms.txt', match[1] as string)
+  for (const file of llmsFiles) {
+    const text = await site.readText(file)
+    for (const match of text.matchAll(/\]\(([^)\s]+)\)/g)) {
+      const path = sameOriginFile(match[1] as string, origin, file)
+      if (path === undefined) continue
+      if (!resolvesInBuild(`/${path}`, pagePaths, files)) {
+        add('llms_txt_broken_link', file, match[1] as string)
+      }
     }
   }
 }

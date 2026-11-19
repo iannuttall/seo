@@ -228,17 +228,6 @@ export function validateLlmsTxt(value) {
   }
 
   const optionalSections = sections.filter(({ text }) => text === 'Optional')
-  if (optionalSections.length > 1) {
-    for (const section of optionalSections.slice(1)) {
-      errors.push(
-        issue(
-          'duplicate-optional-section',
-          'Keep one Optional section for secondary links.',
-          section.line,
-        ),
-      )
-    }
-  }
   const optionalCase = sections.filter(
     ({ text }) => text.toLowerCase() === 'optional' && text !== 'Optional',
   )

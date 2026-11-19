@@ -83,6 +83,20 @@ rich results and for making clear who you are.
 
 - Posts: how-to-get-cited-by-chatgpt, aeo-vs-seo, teardowns.
 
+## Agent standards are about agents using a site, not rankings
+
+WebMCP tools, llms.txt and agent readiness scores (Lighthouse's agentic
+browsing category, Cloudflare's Agent Readiness score) describe whether
+agents can read and use a page. Google hasn't called any of them a ranking
+signal, and no search engine says its crawler calls WebMCP tools. The case
+for WebMCP is that agents finish tasks on the site, which is a conversion
+argument nobody has published numbers for yet. A full agentic browsing score
+built mostly from not applicable checks means nothing is broken, not that
+the site is ready.
+
+- Never sell WebMCP or an agent readiness score as a way to rank or get cited.
+- Posts: webmcp, lighthouse-agentic-browsing.
+
 ## AI agents are a growing way people search, as Ian's opinion
 
 Search still sends far more visits than AI today. Ian expects AI agents to
@@ -91,7 +105,8 @@ to three years. Present the shift as real and growing, and the timeline as
 his view, not a finding. Never present the fall in visits per person
 (SparkToro and Similarweb) as proof that AI caused it.
 - Posts: aeo-vs-seo, search-ctr-by-position, indexnow, keyword-clustering,
-  unlinked-brand-mentions, bing-long-tail, ai-mode-follow-up-questions.
+  unlinked-brand-mentions, bing-long-tail, ai-mode-follow-up-questions,
+  webmcp.
 
 ## Google's terms for Google's data
 

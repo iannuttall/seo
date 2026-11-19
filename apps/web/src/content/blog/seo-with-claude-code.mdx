@@ -1,0 +1,274 @@
+---
+title: Claude Code for SEO, shown as one real session
+description: One real SEO session in Claude Code or Codex, from Search Console data to a fix, with every prompt, what came back and the change I'd make.
+heading: How to do SEO with Claude Code and Codex
+lead: Most guides to Claude Code SEO are lists of prompts. This is one real session on seoskill.dev, from Search Console data to a fix, with what each prompt returned and where I stopped the agent to check its work.
+date: '2026-11-19'
+draft: true
+cover:
+  alt: "A Victorian engraved study where a clockwork automaton holds a magnifying glass over a survey map while the engineer beside it draws one route in lime green."
+---
+
+export const cardToday = `<pre style="white-space: pre-wrap"><code>{
+  title: 'Founders who build with agents',
+  icon: Store01Icon,
+  text: 'You already build in Claude Code, Codex or Cursor. Connect one URL and ask about your site in the same session where you ship it.',
+  href: '/docs/getting-started',
+  link: 'Get started',
+},</code></pre>`
+
+export const cardProposed = `<pre style="white-space: pre-wrap"><code>{
+  title: 'Founders who build with agents',
+  icon: Store01Icon,
+  text: 'You already build in Claude Code, Codex or Cursor. Add the SEO skill and ask about your site in the same session where you ship it.',
+  href: '/features/claude-seo',
+  link: 'Claude SEO skill',
+},</code></pre>`
+
+Claude Code and Codex are good at SEO work once they can see your data. Without it, they guess from what the page looks like. With it, they can tell you which page Google shows for a search, where it ranks and whether anyone clicks.
+
+So instead of another list of prompts, I ran one session on seoskill.dev on 19 November 2026 and wrote down every step. The Search Console data covers 19 October to 15 November 2026, against the four weeks before. The agent's first idea turned out to be the wrong fix, and the right one was two steps further on.
+
+The session in six steps:
+
+<PlanSteps
+  steps={[
+    { title: 'Ask what is due', body: 'seo next found four pages that had dropped out of Google\'s index. They are a separate job.' },
+    { title: 'Read the overview', body: 'The home page took 490 of the site\'s 614 clicks in four weeks.' },
+    { title: 'Check the quick wins', body: '"ai seo skill" topped the list at position 7.74, with 172 impressions and no clicks.' },
+    { title: 'Check the SERP', body: 'Other people\'s skills ranked above the home page, so I parked the title change.' },
+    { title: 'Pull the query data', body: 'Searches with "claude" in them showed the home page 1,565 times and the Claude SEO skill page once.' },
+    { title: 'Check the page', body: 'The Claude page was indexed but last crawled before its rebuild. The fix is a recrawl and a home page link.' },
+  ]}
+/>
+
+## What you need before the first prompt
+
+You need Claude Code or Codex and a Google account that can read your site's Search Console property. SEO Skill gives either agent your Search Console data, read only, through a free hosted MCP server. There's nothing to install for that part.
+
+In Claude Code, add the server, then type `/mcp` inside Claude Code, choose seoskill and sign in with Google:
+
+```sh
+claude mcp add --transport http --scope user seoskill https://seoskill.dev/mcp
+```
+
+In Codex, add the server and sign in. The Codex CLI, the IDE extension and the desktop app share this config:
+
+```sh
+codex mcp add seoskill --url https://seoskill.dev/mcp
+codex mcp login seoskill
+```
+
+Add the CLI too if the agent works in your site's repository. It installs the skill, which tells the agent which tool answers which SEO question, and it runs the jobs the hosted server can't, such as a site crawl and Bing:
+
+```sh
+npm i -g seo && seo start
+```
+
+Setup offers to add an MCP server and the skill to the agents it finds. If you skip the skill, `seo skill install` adds it later. In Codex you can name it with `$seo` in a prompt to make sure it loads. The [Claude SEO skill](/features/claude-seo) and [Codex SEO skill](/features/codex-seo) pages cover each agent in more detail.
+
+## Ask the agent what's due first
+
+I started the way the [`seo next`](/docs/next) docs suggest, by asking the agent to work on the site rather than asking for a particular report. Every prompt below uses example.com; swap in your own site.
+
+<AgentStep setup prompt="Use SEO Skill to work on example.com" cli="seo next --site example.com" />
+
+It came back with one step and the pages to work on:
+
+```text
+The next step for sc-domain:seoskill.dev is to unblock pages.
+- Unblock pages: 4 open (due now).
+- Improve the pages that rank: 22 open.
+
+| kind       | subject                                   | evidence                                          |
+| index-drop | /integrations/dataforseo/gemini-cli       | dropped out 2026-11-16, Crawled - currently not indexed |
+| index-drop | /blog/humanizer-skill                     | dropped out 2026-11-14, Excluded by 'noindex' tag |
+| index-drop | /tools/llms-txt-generator                 | dropped out 2026-11-14, Crawled - currently not indexed |
+| index-drop | /tools/word-combiner                      | dropped out 2026-11-14, Crawled - currently not indexed |
+```
+
+Four pages had dropped out of Google's index between 14 and 16 November 2026. That's the right thing to fix first, and it's a job I'd hand to the agent with a pull request at the end. One of the four says "Excluded by 'noindex' tag", which may be deliberate, so I'd want the agent to ask before it touches that tag. Those four are a separate job. This session is about the step after it, improving pages that already rank.
+
+## Read the SEO report before picking anything
+
+The report gives the agent the shape of the site before it chases a single query.
+
+<AgentStep prompt="Run the SEO report for example.com" cli="seo report --site example.com" />
+
+Trimmed, the overview said:
+
+```text
+Report on sc-domain:seoskill.dev, 2026-10-19 to 2026-11-15 against 2026-09-21 to 2026-10-18.
+Totals: clicks 614 (was 310), impressions 135841 (was 23898), average position 54.6 (was 39).
+Biggest pages click gains:
+/        490 clicks (was 258)   position 16.38
+Biggest queries click gains:
+seo skill    207 clicks (was 114)   position 3.92
+seo skills    86 clicks (was 42)    position 6.46
+```
+
+The home page took 490 of the site's 614 clicks in those four weeks. So whatever the home page ranks for, and whatever it doesn't, matters more than anything else on the site.
+
+## Check the agent's top quick win before acting on it
+
+Quick wins are queries at positions 4 to 10 whose click-through rate sits below the site's own curve for that position. They're the obvious place for an agent to start.
+
+<AgentStep prompt="Show me the quick wins for example.com" cli="seo report --site example.com --section quick-wins" />
+
+```text
+quick-wins: 17 rows
+query                     | url                     | clicks | impressions | position
+ai seo skill              | /                       | 0      | 172         | 7.74
+gsc wizard alternatives   | /alternatives/gsc-wizard| 0      | 61          | 6.79
+seo-skills                | /                       | 0      | 40          | 6.18
+skills for seo            | /                       | 0      | 43          | 9.33
+...
+```
+
+Thirteen of the 17 rows were on the SERP checker tool and carried a "likely-automated" flag. Those searches follow the pattern of rank tracker tests, so they probably came from software rather than people. An agent working alone could easily rewrite a page for bots. The flag is there so it doesn't, but it's still worth a glance from you.
+
+The top real row was "ai seo skill", with 172 impressions for the home page at an average position of 7.74 and no clicks. The home page title is "SEO Skill | Open source SEO for agent-native teams". The obvious move, and the one this row invites, is a new home page title with "AI SEO skill" in it.
+
+Before agreeing, I asked who else ranks:
+
+<AgentStep prompt="Who ranks for 'ai seo skill' in the US, and what do their titles say?" cli={'seo research serp --keywords "ai seo skill" --country us'} />
+
+On 19 November 2026, in DataForSEO's US desktop results, number one was a skill file called `ai-seo` in a GitHub repository named marketingskills, and seoskill.dev was ninth.
+
+Nearly every result on page one was a skill file or a list of skills. Search Console also had 20 impressions for "ai-seo skill", with the hyphen. Those look like people searching for a skill with that exact name.
+
+The history agreed. Until 20 October 2026, the home page title was "Free SEO data for AI agents", and in the four weeks before the change the same query got no clicks then either.
+
+<SearchResult
+  caption={'The home page in Google before and after its title changed on 20 October 2026. Titles and descriptions from the site\'s repository; impressions and positions for "ai seo skill" from Search Console, 21 September to 18 October and 19 October to 15 November 2026.'}
+  before={{
+    label: 'Until 20 October',
+    url: 'https://seoskill.dev/',
+    site: 'SEO Skill',
+    title: 'SEO Skill | Free SEO data for AI agents',
+    description: 'Give your AI agent facts from your own Search Console, Google Analytics and keyword data. Connect the free hosted MCP in one command or install the open source CLI.',
+    note: '"ai seo skill": 110 impressions at position 9.34, no clicks.',
+  }}
+  after={{
+    label: 'Since 20 October',
+    url: 'https://seoskill.dev/',
+    site: 'SEO Skill',
+    title: 'SEO Skill | Open source SEO for agent-native teams',
+    description: 'Give your AI agent your real Search Console, Google Analytics, Bing and Clicky data, Google update dates and a site crawl. Free hosted MCP and open source CLI.',
+    note: '"ai seo skill": 172 impressions at position 7.74, no clicks.',
+  }}
+/>
+
+A title with "AI" in it didn't earn a click for "ai seo skill" any more than one without. That points at who is searching.
+
+So I parked it. People searching "ai seo skill" are probably looking for someone else's skill. I wouldn't risk a title change on the page that brings in four of every five clicks for them. That judgement call is yours to make, and an agent shouldn't make it for you.
+
+## Find the searches the home page can't win
+
+The quick win pointed at something bigger, though. If the home page shows up for "ai seo skill", what else does it show up for that it isn't written for?
+
+<AgentStep prompt="Which searches with Claude, Codex or AI in them show pages on example.com, and which page does Google show for each?" cli="seo data --site example.com --dimensions query,page --query-regex '(^| )(claude|codex|ai)( |$)' --sort impressions" />
+
+```text
+query                    | page | clicks | impressions
+claude seo skills        | /    | 0      | 251
+claude code seo skill    | /    | 0      | 204
+claude code seo skills   | /    | 0      | 178
+ai seo skill             | /    | 0      | 172
+claude skills seo        | /    | 0      | 166
+claude seo skill         | /    | 0      | 155
+...
+codex seo skill          | /    | 2      | 23
+```
+
+Searches that name Claude land almost entirely on the home page.
+
+Then by page, for every search with "claude" in it:
+
+<AgentStep prompt="Which pages on example.com get impressions for searches with 'claude' in them?" cli="seo data --site example.com --dimensions page --query claude --sort impressions" />
+
+<CompareBars
+  title={'Impressions for searches containing "claude", by page'}
+  caption="Google Search Console, seoskill.dev, 19 October to 15 November 2026."
+  highlight="/features/claude-seo"
+  rows={[
+    { label: '/', value: 1565, note: '1 click, up from 613 impressions the four weeks before' },
+    { label: '/alternatives/claude-seo', value: 20, note: 'No clicks' },
+    { label: '/features/claude-seo', value: 1, note: 'The page written for these searches' },
+  ]}
+/>
+
+That's the real finding. Between 19 October and 15 November 2026, Google showed the home page 1,565 times for searches with "claude" in them, and the page written for those searches, the Claude SEO skill page, once.
+
+## Check the page Google should have picked
+
+When the right page gets nothing, the first question is what Google has on file for it.
+
+<AgentStep prompt="Check example.com/features/claude-seo: is it indexed, when did Google last crawl it, and what does it rank for?" cli="seo page --url https://example.com/features/claude-seo" />
+
+```text
+title: Claude SEO skill for Claude Code and Claude.ai | SEO Skill
+h1: Claude SEO skill
+verdict: PASS | Submitted and indexed | last_crawl 2026-11-03T15:28:28Z
+Query totals: clicks 0, impressions 1.
+```
+
+The page is indexed and its title matches the searches. But Google last crawled it on 3 November 2026, and the page was rebuilt on 11 November 2026. Google is judging a version of the page that no longer exists.
+
+## The fix: send Claude searches to the Claude page
+
+I wouldn't retitle the home page for Claude. It serves every agent, and I'd rather not have two pages chasing the same searches. The Claude SEO skill page is the better answer for someone who searched "claude seo skill", so the job is to get Google to see it.
+
+Two changes, both small:
+
+1. Request indexing for the Claude SEO skill page with Search Console's [URL Inspection tool](https://support.google.com/webmasters/answer/9012289), so Google crawls the rebuilt version. Google says indexing "typically takes only a day or so" but doesn't guarantee it.
+2. Link to it from the home page in words that say what it is. The home page linked it only from its list of features. The card for founders who build with agents already named Claude Code and Codex, and linked to the getting started guide.
+
+The change to the founders card, in the home page's source:
+
+<BeforeAfter
+  caption="The founders card in the home page's source before, and after it pointed at the Claude SEO skill page. The text, the link and its label change; the title and icon stay."
+  before={{ label: 'Before', html: cardToday }}
+  after={{ label: 'After (shipped 19 November 2026)', html: cardProposed }}
+/>
+
+In Claude Code or Codex, that's one more prompt in the same session, and the agent opens a pull request for you to review:
+
+<AgentStep prompt="Point the founders card on the home page at the Claude SEO skill page, and open a pull request. Don't change the title." />
+
+I shipped the home page change with this post on 19 November 2026. Once a change is live, mark its issue fixed, and SEO Skill compares the page's clicks and impressions for the 28 and 56 days after against the same days before. Read that comparison as timing, not cause, because a Google update in the same weeks could move the numbers too.
+
+## What to let the agent do alone, and what to check yourself
+
+My rule is simple. Let the agent do the data work, which means pulling the rows, running the checks again, cross-checking a SERP and drafting the change. Keep the decisions about what ships, and what the page says, with a person.
+
+| Let the agent do it | Check it yourself |
+| --- | --- |
+| Pull the report, the quick wins and the raw rows | Whether a query is really looking for you, like "ai-seo skill" |
+| Flag rank tracker noise and leave it out | Any change to a page that brings most of your clicks |
+| Check index status and last crawl dates | Removing a noindex, a redirect or a deleted page |
+| Find the file that sets a title and draft the diff | The words on the page and in the title |
+| Run the same check again after the fix | Whether a change in the numbers is the fix or something else |
+
+In this session the agent found every number. It also proposed the wrong first fix, and only the SERP and the title history showed why. That's the part I'd keep for myself.
+
+## Run the same session every week
+
+The session is most useful run the same way each week, because the agent can then tell you what changed. Ask it the same first question:
+
+<AgentStep prompt="Use SEO Skill to work on example.com. What changed since last week, and what's due?" cli="seo next --site example.com" />
+
+SEO Skill keeps a list of issues for each site between sessions. When a change is live, mark it fixed, and the list later shows that page's clicks and impressions for the 28 and 56 days after the fix against the same days before:
+
+<AgentStep prompt="The new title for the pricing page went live today. Mark that issue fixed on example.com." cli="seo report --site example.com --mark fixed --issues <id>" />
+
+Keep the windows comparable from week to week, such as the last 28 days against the 28 before, so a change in the numbers isn't a change in the dates. You can schedule the prompt in your agent or run the CLI from a scheduled job; the [cloud agents guide](/docs/cloud-agents) covers machines that start fresh each time. The paid [weekly site audit](/docs/weekly-site-audit), $50 a month per site, runs the crawl and daily index checks in the background if you'd rather not schedule anything.
+
+Start with the step `seo next` says is due. On seoskill.dev that was four pages out of Google's index, and I'd fix those before any title.
+
+## How this was checked
+
+- The session ran on 19 November 2026 through the hosted MCP, on the seoskill.dev Search Console property. Search Console data covers 19 October to 15 November 2026 against 21 September to 18 October 2026, Google web search only.
+- The SERPs came from DataForSEO, US desktop, on 19 November 2026. The research cost about $0.14 in total.
+- The title history and the rebuild date of the Claude SEO skill page come from the site's own repository.
+- Search Console hides rare queries, so query rows don't add up to page totals, and every impression count above is a minimum.

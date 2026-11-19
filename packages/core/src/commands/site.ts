@@ -470,6 +470,7 @@ export async function runCompare(
                 after,
                 before,
                 context ? brandNames(context.text) : [],
+                deps.call,
               ),
             ),
     ])

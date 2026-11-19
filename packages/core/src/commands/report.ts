@@ -696,6 +696,7 @@ async function allSections(
     overview.range as DateRange,
     overview.comparisonRange as DateRange,
     confirmed,
+    deps.call,
   )
   Object.assign(overview, splits.data)
   if (splits.text) parts.push(splits.text)
@@ -831,6 +832,7 @@ async function oneSection(
       report.range as DateRange,
       report.comparisonRange as DateRange,
       confirmed,
+      deps.call,
     )
     Object.assign(report, splits.data)
     const ga = await analyticsBeside(

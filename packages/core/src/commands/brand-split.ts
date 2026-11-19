@@ -2,7 +2,7 @@ import type { SearchAnalyticsQuery } from '../gsc/client/types.js'
 import { brandRegex, type ContextStore } from './context.js'
 import { marketLine, savedMarketTotals } from './markets.js'
 import { BRAND_DATA_FROM, isFolderProperty, rowTextFilters } from './rows.js'
-import type { DateRange } from './types.js'
+import type { Caller, DateRange } from './types.js'
 
 // Brand and non-brand searches two ways, side by side: by the brand names
 // the person saved in the business context, and by Google's own
@@ -189,14 +189,12 @@ const GOOGLE_MISSING: Record<
 }
 
 // The split as lines, the same in the report, compare and the emails.
-export function brandSplitLines(split: BrandSplit): string[] {
+export function brandSplitLines(split: BrandSplit, branded?: string): string[] {
   const lines: string[] = []
   const { current: now, previous: then } = split
-  if (now.names) {
-    lines.push(
-      `By your brand names (${split.names.join(', ')}): ${sideText(now.names, then.names)}. Counts only the searches Search Console shows.`,
-    )
-  }
+  // Google's classification leads when it has one: what Google counts as
+  // brand is brand. The saved names are the fallback, and what page and
+  // query lists use, since Google does not classify a query-filtered cut.
   if (now.google) {
     lines.push(
       `By Google’s brand classification: ${sideText(now.google, then.google)}.${then.google ? '' : ` The earlier dates have no classification (it starts ${BRAND_DATA_FROM}), so there is no change to show.`}`,
@@ -204,14 +202,18 @@ export function brandSplitLines(split: BrandSplit): string[] {
   } else if (split.google !== 'classified') {
     lines.push(GOOGLE_MISSING[split.google])
   }
-  if (!now.names) {
+  if (now.names) {
+    lines.push(
+      `By your brand names (${split.names.join(', ')})${now.google ? ', used for page and query lists' : ''}: ${sideText(now.names, then.names)}. Counts only the searches Search Console shows.`,
+    )
+  } else {
     lines.push(
       'No brand names are saved in the business context ("## Brand names"), so there is no split by name.',
     )
   }
   if (split.differ) {
     lines.push(
-      'The two ways differ a lot on brand clicks (a heuristic: more than 25%). A brand name may be missing, such as a product name or a misspelling, or one may also be a generic word.',
+      `Google counts ${count(now.google?.brand.clicks ?? 0)} brand clicks and your brand names ${count(now.names?.brand.clicks ?? 0)} (a gap of more than 25%, a heuristic). Google’s count is the one to go by. The saved names decide only which searches page and query lists leave out, and a name there hides every search that contains it, so add a name from the searches Google counts as brand only when Google counts most of the searches that name would catch as brand${branded ? `. Google’s brand searches: ${branded}` : ''}.`,
     )
   }
   if (split.small) {
@@ -234,6 +236,7 @@ export async function splitsBeside(
   current: DateRange,
   previous: DateRange,
   names: string[],
+  call: Caller,
 ) {
   const [split, markets] = await Promise.all([
     brandSplit(read, site, current, previous, names).catch(() => null),
@@ -245,7 +248,12 @@ export async function splitsBeside(
       ...(markets ? { markets } : {}),
     },
     text: [
-      split ? brandSplitLines(split).join('\n') : null,
+      split
+        ? brandSplitLines(
+            split,
+            call('data', { site, dimensions: 'query', brand: 'branded' }),
+          ).join('\n')
+        : null,
       markets ? marketLine(markets) : null,
     ]
       .filter(Boolean)

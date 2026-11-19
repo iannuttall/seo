@@ -12,7 +12,6 @@ cover:
 import BeforeAfter from '@/components/blog/BeforeAfter.astro'
 import Callout from '@/components/blog/Callout.astro'
 import PlanSteps from '@/components/blog/PlanSteps.astro'
-import SerpLadder from '@/components/blog/SerpLadder.astro'
 
 export const oldTool = `navigator.modelContext.provideContext({
   tools: [
@@ -68,25 +67,7 @@ The tool runs in the visitor's tab, with their session and their cookies. That's
 
 The spec is a Draft Community Group Report from the W3C Web Machine Learning Community Group, with editors from Google and Microsoft. The [draft itself says](https://webmachinelearning.github.io/webmcp/) it "is not a W3C Standard nor is it on the W3C Standards Track". Mozilla's position is [neutral](https://github.com/mozilla/standards-positions/issues/1412) and WebKit's is [opposed](https://github.com/WebKit/standards-positions/issues/670), so treat it as a Chromium feature for now.
 
-About 320 people a month search Google in the US for "what is webmcp", and Chrome's own docs are the first result. Most of the rest of page one are explainers from companies that sell something next to WebMCP, such as Cloudflare, Scalekit, Semrush and Frase. I'd start with Chrome's page, because it's the browser's own documentation.
-
-<SerpLadder
-  keyword="what is webmcp"
-  volume={320}
-  target="seoskill.dev"
-  targetPosition={null}
-  caption="Organic results for &quot;what is webmcp&quot;, US desktop, 19 November 2026 (DataForSEO live). The results at 2 and 4, both titled &quot;What is WebMCP?&quot;, are left out because DataForSEO couldn't name their sites."
-  rows={[
-    { position: 1, domain: 'developer.chrome.com', dr: 92, tag: 'Browser docs' },
-    { position: 3, domain: 'scalekit.com', dr: 69, tag: 'Vendor blog' },
-    { position: 5, domain: 'blog.cloudflare.com', dr: 94, tag: 'Vendor blog' },
-    { position: 6, domain: 'mcpservers.org', dr: 72, tag: 'Directory' },
-    { position: 7, domain: 'semrush.com', dr: 92, tag: 'SEO tool blog' },
-    { position: 8, domain: 'webfuse.com', dr: 41, tag: 'Vendor blog' },
-    { position: 9, domain: 'frase.io', dr: 80, tag: 'SEO tool blog' },
-    { position: 10, domain: 'codely.com', dr: 51, tag: 'Course blog' },
-  ]}
-/>
+For anything this post doesn't cover, Chrome's own WebMCP docs are the place to start.
 
 ## WebMCP vs MCP
 

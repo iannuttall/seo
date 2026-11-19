@@ -152,6 +152,21 @@ test('a complete static build passes the site check', async () => {
   assert.equal(result.pagesChecked, 4)
 })
 
+test('an llms.txt under a path counts and its relative links resolve from there', async () => {
+  const files = goodSite()
+  files.delete('llms.txt')
+  files.set(
+    'parks/llms.txt',
+    '# Parks\n\n- [Alder](alder.md)\n- [Gone](gone.md)\n',
+  )
+
+  const result = await check(files)
+  assert.deepEqual(
+    result.issues.map((issue) => `${issue.rule} ${issue.file} ${issue.found}`),
+    ['llms_txt_broken_link parks/llms.txt gone.md'],
+  )
+})
+
 test('a build with broken pages, copy, design and data fails on each rule', async () => {
   const files = goodSite()
   const beacon = String(files.get('parks/beacon.html'))

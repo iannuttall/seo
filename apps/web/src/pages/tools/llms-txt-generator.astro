@@ -17,7 +17,7 @@ const faq = [
   {
     question: "What is llms.txt?",
     answer:
-      "A proposed Markdown file at the root of a site, /llms.txt, that gives AI agents a short summary and a curated list of the site’s most useful pages.",
+      "A proposed Markdown file, at /llms.txt or under a path such as /docs/llms.txt, that gives AI agents a short summary and a curated list of the most useful pages it covers.",
   },
   {
     question: "Does Google use llms.txt?",
@@ -78,8 +78,8 @@ const faq = [
       <p>
         The llms.txt proposal uses Markdown. A file starts with one H1 title and
         can add a short blockquote summary, notes, and H2 sections containing
-        links. A section named Optional identifies secondary pages that can be
-        skipped when a consumer needs a shorter context.
+        links. By convention, a section named Optional holds secondary pages an
+        agent can skip when it needs a shorter context.
       </p>
       <p>
         Read the current{' '}
@@ -132,9 +132,12 @@ const faq = [
 
       <h2>Where to publish the file</h2>
       <p>
-        Save it as <code>/llms.txt</code> at the root of the site, served as
-        plain text or Markdown. It does not replace robots.txt or the
-        sitemap, and it does not control which crawlers can read the site.
+        Save it as <code>/llms.txt</code> at the root of the site, or under a
+        path such as <code>/docs/llms.txt</code> to cover only the pages in{' '}
+        <code>/docs/</code>. Serve it as plain text or Markdown. When more than
+        one file applies to a page, the proposal says agents use the most
+        specific one. It does not replace robots.txt or the sitemap, and it
+        does not control which crawlers can read the site.
       </p>
 
       <h2>Check your llms.txt with your agent</h2>

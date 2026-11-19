@@ -1,0 +1,177 @@
+---
+// A pretend scan of one site, seen by different kinds of visitor. Pick a
+// reader and its lines tick in one by one: each line is a file or a step
+// (llms.txt, Markdown copies, JavaScript) with what that reader does with
+// it, drawn from the sources the post cites. `read` marks a line the
+// reader uses (a filled dot); the rest get a hollow one. All readers are in the HTML, so the Markdown copy and
+// readers without JavaScript get every panel; the tabs only pick one.
+// With reduced motion the lines show at once.
+import Exhibit from './Exhibit.astro'
+
+type Line = { item: string; result: string; read?: boolean }
+type Reader = { label: string; who: string; lines: Line[]; verdict: string }
+
+type Props = {
+  readers: Reader[]
+  title?: string
+  caption?: string
+}
+
+const { readers, title, caption } = Astro.props
+const id = `reader-scan-${Math.random().toString(36).slice(2, 8)}`
+---
+
+<Exhibit title={title} caption={caption}>
+  <div data-reader-scan>
+    <div class="flex flex-wrap gap-1 rounded-lg bg-background p-1" role="tablist" aria-label={title ?? 'Pick a reader'} data-agent-markdown="exclude">
+      {
+        readers.map((reader, index) => (
+          <button
+            type="button"
+            role="tab"
+            id={`${id}-tab-${index}`}
+            aria-controls={`${id}-panel-${index}`}
+            aria-selected={index === 0 ? 'true' : 'false'}
+            tabindex={index === 0 ? 0 : -1}
+            class="rs-tab rounded-md px-3 py-1.5 text-sm/5 text-foreground-muted transition-colors hover:text-foreground focus-visible:outline-none focus-visible:ring-[3px] focus-visible:ring-ring/20"
+            data-tab
+          >
+            {reader.label}
+          </button>
+        ))
+      }
+    </div>
+    <div class="rs-stack mt-4 grid min-w-0">
+      {
+        readers.map((reader, index) => (
+          <div
+            class="rs-panel min-w-0 rounded-lg bg-background p-4 sm:p-5"
+            role="tabpanel"
+            id={`${id}-panel-${index}`}
+            aria-labelledby={`${id}-tab-${index}`}
+            data-active={index === 0 ? 'true' : 'false'}
+            inert={index !== 0}
+            data-panel
+          >
+            <p class="text-sm font-medium text-foreground">{reader.label}</p>
+            <p class="mt-1 text-sm/6 text-foreground-muted">{reader.who}</p>
+            <ul class="mt-4 space-y-3">
+              {reader.lines.map((line) => (
+                <li class="rs-line flex gap-3" data-line>
+                  <span
+                    class:list={['mt-1.5 size-2.5 shrink-0 rounded-full', line.read ? 'bg-primary' : 'rs-dot-off']}
+                    aria-hidden="true"
+                  />
+                  <span class="min-w-0">
+                    <span class="font-mono text-[0.8125rem]/5 text-foreground">{line.item}</span>
+                    <span class="block text-sm/6 text-foreground-muted">{line.result}</span>
+                  </span>
+                </li>
+              ))}
+            </ul>
+            <p class="rs-line mt-4 border-t border-border pt-4 text-[0.9375rem]/6 text-foreground" data-line>
+              {reader.verdict}
+            </p>
+          </div>
+        ))
+      }
+    </div>
+    <p class="mt-3 text-xs text-foreground-muted" aria-live="polite" data-scan-status data-agent-markdown="exclude"></p>
+  </div>
+</Exhibit>
+
+<style>
+  .rs-tab[aria-selected='true'] {
+    background: var(--muted);
+    color: var(--foreground);
+    font-weight: 500;
+  }
+
+  .rs-panel {
+    grid-area: 1 / 1;
+  }
+
+  .rs-dot-off {
+    box-shadow: inset 0 0 0 2px var(--foreground-muted);
+  }
+
+  .rs-panel[data-active='false'] {
+    visibility: hidden;
+  }
+
+  .rs-line {
+    transition:
+      opacity 250ms ease,
+      transform 250ms ease;
+  }
+
+  [data-scanning] .rs-line[data-pending] {
+    opacity: 0;
+    transform: translateY(4px);
+  }
+</style>
+
+<script>
+  const motion = () => document.documentElement.classList.contains('motion')
+
+  for (const root of document.querySelectorAll<HTMLElement>('[data-reader-scan]')) {
+    const tabs = [...root.querySelectorAll<HTMLButtonElement>('[data-tab]')]
+    const panels = [...root.querySelectorAll<HTMLElement>('[data-panel]')]
+    const status = root.querySelector<HTMLElement>('[data-scan-status]')
+    let run = 0
+
+    const scan = async (panel: HTMLElement, label: string) => {
+      const lines = [...panel.querySelectorAll<HTMLElement>('[data-line]')]
+      const current = ++run
+      if (!motion()) {
+        for (const line of lines) delete line.dataset.pending
+        return
+      }
+      root.dataset.scanning = 'true'
+      for (const line of lines) line.dataset.pending = 'true'
+      if (status) status.textContent = `Scanning as ${label}…`
+      for (const line of lines) {
+        await new Promise((resolve) => setTimeout(resolve, 420))
+        if (current !== run) return
+        delete line.dataset.pending
+      }
+      if (status) status.textContent = ''
+    }
+
+    const select = (index: number, focus = false) => {
+      tabs.forEach((tab, i) => {
+        const active = i === index
+        tab.setAttribute('aria-selected', String(active))
+        tab.tabIndex = active ? 0 : -1
+        panels[i]?.setAttribute('data-active', String(active))
+        if (panels[i]) panels[i].inert = !active
+      })
+      if (focus) tabs[index]?.focus()
+      const panel = panels[index]
+      if (panel) void scan(panel, tabs[index]?.textContent?.trim() ?? '')
+    }
+
+    // The first reader scans once when the exhibit scrolls into view.
+    const first = panels[0]
+    if (first && motion()) {
+      root.dataset.scanning = 'true'
+      for (const line of first.querySelectorAll<HTMLElement>('[data-line]')) line.dataset.pending = 'true'
+      const observer = new IntersectionObserver((entries) => {
+        if (!entries.some((entry) => entry.isIntersecting)) return
+        observer.disconnect()
+        if (run === 0) void scan(first, tabs[0]?.textContent?.trim() ?? '')
+      }, { threshold: 0.4 })
+      observer.observe(root)
+    }
+
+    tabs.forEach((tab, index) => {
+      tab.addEventListener('click', () => select(index))
+      tab.addEventListener('keydown', (event) => {
+        const step = event.key === 'ArrowRight' ? 1 : event.key === 'ArrowLeft' ? -1 : 0
+        if (!step) return
+        event.preventDefault()
+        select((index + step + tabs.length) % tabs.length, true)
+      })
+    })
+  }
+</script>

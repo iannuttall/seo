@@ -53,7 +53,7 @@ An update that lines up with a change shows the dates match. It does not prove t
 
 ## Google index alerts
 
-Once a day, after the day's Google index checks are done, you get one email that lists the pages on all your audited sites that dropped out of Google's index or got into it. It comes only when something changed.
+Once a day, after the day's Google index checks are done, each audited site gets its own email that lists its pages that dropped out of Google's index or got into it. A site's email comes only when something changed on it.
 
 Pages are grouped by Google's own reason, such as "Not found (404)" or [crawled, currently not indexed](/features/crawled-currently-not-indexed), and each dropped page has a link to check what Google search shows now. Search results can take a few days to catch up with Google's index checks, so a dropped page may still show in a `site:` search for a while. A top page's drop is sent only after a second check agrees.
 
@@ -77,9 +77,9 @@ On a machine, run `seo login` first so the CLI uses your seoskill.dev account.
 
 Alerts go to the email address of the first Google account you linked. Under **Alerts** on your [account page](https://seoskill.dev/account#alerts), each kind of alert has its own email and webhook switch. Both are on until you change them, and the webhook only sends once you save a URL.
 
-The weekly summary also lists your audited sites, so you can keep the Monday email for some sites and stop it for others. These switches change email only: the webhook still gets every site.
+The weekly summary and the Google index alerts also list your audited sites, so you can keep their emails for some sites and stop them for others. These switches change email only: the webhook still gets every site.
 
-Every email also has a link at the bottom that turns that kind of email off. In a weekly summary, the link stops the email for that site only.
+Every email also has a link at the bottom that turns that kind of email off. In a weekly summary or a Google index alert, the link stops that kind of email for that site only.
 
 ## Send alerts to a webhook
 

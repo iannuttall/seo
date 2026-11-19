@@ -33,10 +33,12 @@ export type AlertType<Data> = {
   ): { subject: string; preview: string; markdown: string }
 }
 
-// index-changes: one roundup a day, once the Search Console day's checks
-// are done (audit/index-roundup.ts), of every audited site's pages that
+// index-changes: one roundup a day per site, once the Search Console day's
+// checks are done (audit/index-roundup.ts), of the site's pages that
 // dropped out of Google's index (a top page's drop is confirmed by a second
 // check) or got into it since the last roundup. Only sites with changes.
+// data.sites holds that one site; alerts queued before it went per site
+// hold every site with changes.
 type IndexPage = {
   url: string
   change: 'dropped' | 'returned'
@@ -120,9 +122,10 @@ const INDEX_NOTE = [
 
 const indexChanges: AlertType<IndexChanges> = {
   title: 'Google index changes',
-  text: 'Once a day, the pages that dropped out of Google’s index or got into it.',
+  text: 'Once a day, one email for each site with pages that dropped out of Google’s index or got into it.',
   flag: 'weekly-audit',
   defaults: { email: true, webhook: true },
+  perSite: true,
   email(saved, site) {
     // Alerts queued before the daily roundup held one site's changes.
     const data =
@@ -147,19 +150,24 @@ const indexChanges: AlertType<IndexChanges> = {
       .filter(Boolean)
       .join(', ')
     const names = data.sites.map((site) => siteName(site.property))
+    // One site's roundup, as each is now, needs no heading per site.
+    const one = names.length === 1
     return {
-      subject:
-        names.length === 1
-          ? `${names[0]}: ${summary}`
-          : `${summary} on ${names.length} sites`,
+      subject: one
+        ? `${names[0]}: ${summary}`
+        : `${summary} on ${names.length} sites`,
       preview: `The daily Google index roundup for ${names.join(', ')}.`,
       markdown: [
-        `Google’s URL Inspection checks since the last roundup found these changes on ${names.length === 1 ? names[0] : 'your sites'}.`,
-        ...data.sites.flatMap((site) => [
-          '',
-          `## ${siteName(site.property)}`,
-          ...siteChanges(site, '###'),
-        ]),
+        `Google’s URL Inspection checks since the last roundup found these changes on ${one ? names[0] : 'your sites'}.`,
+        ...data.sites.flatMap((site) =>
+          one
+            ? siteChanges(site, '##')
+            : [
+                '',
+                `## ${siteName(site.property)}`,
+                ...siteChanges(site, '###'),
+              ],
+        ),
         '',
         ...INDEX_NOTE,
       ].join('\n'),

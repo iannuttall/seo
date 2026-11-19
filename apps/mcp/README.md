@@ -238,7 +238,7 @@ other answer stops that alert. The Alerts tab shows the last call's result.
 {
   "id": "alt_0f4c2a9e8b7d4c1fa3e5b6c7d8e9f001",
   "type": "index-changes",
-  "site": null,
+  "site": "sc-domain:example.com",
   "created_at": "2026-10-22T08:17:03.000Z",
   "data": {
     "sites": [
@@ -268,8 +268,9 @@ other answer stops that alert. The Alerts tab shows the last call's result.
 }
 ```
 
-`type` says what `data` holds. `index-changes` is the daily roundup, so
-`site` is `null`; `data.sites` lists only the sites with changes. Each lists
+`type` says what `data` holds. `index-changes` is the daily roundup. Each
+site with changes gets its own, like the weekly summary, so `site` is the
+property and `data.sites` holds that one site. It lists
 up to 100 pages, drops first; `dropped` and `returned` count them all. A
 `returned` page is indexed now and was not on its last check, which
 includes a new page indexed for the first time. `verdict` and `coverage`

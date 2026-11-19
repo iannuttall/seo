@@ -29,7 +29,7 @@ export type Sealed =
   | { k: 'gsc-write'; userId: string; property: string; exp: number }
   // The "turn these emails off" link in an alert email. It does not expire,
   // so an old email's link still works. site: only that site's email of
-  // the type (the weekly summary).
+  // the type (the weekly summary and index changes).
   | { k: 'alert-off'; userId: string; type: string; site?: string }
   // A Bing sign-in from the account page. subject names the linked Bing
   // account it reconnects, when it is a Reconnect.

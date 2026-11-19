@@ -6,12 +6,13 @@ import { auditSites, siteObject } from './schedule.ts'
 
 // The daily Google index roundup: from the first hourly tick of each Search
 // Console day (Pacific time), once the day before has spent its checks, one
-// index-changes alert per account with every site's drops and newly
-// indexed pages not sent yet. index_roundups records each account's day
-// before the alert is queued, so its sites are read once a day; the pages
-// are marked sent only once the alert is queued, so a failure carries them
-// to the next day. On a Monday the weekly summary carries them instead
-// (audit/week.ts).
+// index-changes alert per site with changes, like the weekly summary, with
+// that site's drops and newly indexed pages not sent yet. index_roundups
+// records each account's day before its alerts are queued, so its sites
+// are read once a day; a site's pages are marked sent only once its alert
+// is queued, so a failure carries them to the next day. Those marks keep a
+// page from going out twice, so the day needs no record per site. On a
+// Monday the weekly summary carries them instead (audit/week.ts).
 
 const ACCOUNTS_PER_TICK = 25
 
@@ -67,21 +68,23 @@ export async function sendIndexRoundups(env: Env, now = Date.now()) {
     )
       .bind(userId, day, now)
       .first()
-    if (!claimed || !unsent.sites.length) continue
-    const queued = await queueAlert(
-      env,
-      {
-        userId,
-        type: 'index-changes',
-        site: '',
-        data: { sites: unsent.sites },
-      },
-      now,
-    ).then(
-      () => true,
-      () => false,
-    )
-    if (queued) await unsent.markSent()
+    if (!claimed) continue
+    for (const changes of unsent.sites) {
+      const queued = await queueAlert(
+        env,
+        {
+          userId,
+          type: 'index-changes',
+          site: changes.property,
+          data: { sites: [changes] },
+        },
+        now,
+      ).then(
+        () => true,
+        () => false,
+      )
+      if (queued) await unsent.markSent([changes.property])
+    }
   }
   await env.DB.prepare('DELETE FROM index_roundups WHERE sent_at < ?')
     .bind(now - 30 * 86_400_000)

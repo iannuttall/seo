@@ -44,8 +44,10 @@ better. A list that puts the publisher first every time is spam.
 ## AEO is mostly SEO
 
 AI engines cite what their search finds and recommend what their training
-learned, so the work is SEO plus brand mentions. Say AEO, not GEO. AEO spam
-is old SEO spam on new platforms.
+learned, so the work is SEO plus brand mentions. AEO is the site's main term.
+GEO (generative engine optimization) is the same work under another label,
+and a page may answer GEO searches, such as GEO vs SEO and AEO vs GEO, by
+saying so. AEO spam is old SEO spam on new platforms.
 
 - Posts: aeo-vs-seo, how-to-get-cited-by-chatgpt, query-fan-out.
 

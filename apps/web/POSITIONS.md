@@ -78,12 +78,14 @@ guide calls a page for every fan-out query scaled content abuse.
 
 ## llms.txt and schema don't win AI citations
 
-Google Search ignores llms.txt, and OpenAI's search docs don't mention it. It
-can help agents read docs, which is why teardowns may recommend it. Adding
+Google Search ignores llms.txt, and OpenAI's search docs don't mention it. AI
+crawlers rarely fetch it, but agents sent to a site with a task do, mostly
+through a link, which is why teardowns may recommend it. An answer that only
+JavaScript shows is a bigger gap for agents than a missing llms.txt. Adding
 schema didn't increase AI citations in Ahrefs' study; keep it for Google's
 rich results and for making clear who you are.
 
-- Posts: how-to-get-cited-by-chatgpt, aeo-vs-seo, teardowns.
+- Posts: how-to-get-cited-by-chatgpt, aeo-vs-seo, llms-txt-seo, teardowns.
 
 ## Agent standards are about agents using a site, not rankings
 
@@ -97,7 +99,7 @@ built mostly from not applicable checks means nothing is broken, not that
 the site is ready.
 
 - Never sell WebMCP or an agent readiness score as a way to rank or get cited.
-- Posts: webmcp, lighthouse-agentic-browsing.
+- Posts: webmcp, lighthouse-agentic-browsing, llms-txt-seo.
 
 ## AI agents are a growing way people search, as Ian's opinion
 

@@ -1,0 +1,165 @@
+---
+title: 'Does llms.txt help SEO? Who actually reads it'
+description: Google ignores llms.txt and AI crawlers barely open it, but agents on a task do. What each reader takes from your site, and what to set up for them.
+heading: What llms.txt does for SEO and AI agents
+lead: llms.txt does nothing for your Google rankings, and AI crawlers barely open it. The readers that use it are agents working through a task, and they lean harder on Markdown and plain HTML than on llms.txt.
+date: '2026-11-19'
+draft: false
+cover:
+  alt: "A Victorian engraved library where a messenger boy in a cap reads a lime green index card the librarian has just handed him across her desk, while a gentleman further along holds an open book and reaches for another on the shelves."
+---
+
+import LlmsTxtValidator from '@/components/tools/LlmsTxtValidator.astro'
+import ReaderScan from '@/components/blog/ReaderScan.astro'
+
+export const shell = `<body>
+  <div id="root"></div>
+  <script src="/assets/app.js"></script>
+</body>`
+
+Google has already answered whether it uses llms.txt (it doesn't), so the more useful SEO question is who else reads your site now, and what each of them takes. llms.txt, the Markdown index of a site's key pages that Jeremy Howard [proposed](https://llmstxt.org/) in September 2024, is only one of the things they look for. Pick a reader below and scan a site the way it does.
+
+<ReaderScan
+  title="Scan a site the way each reader does"
+  caption="Google: Google's AI optimization guide. AI crawlers and assistants: Rankera's logs from 517 sites, 17 to 23 October 2026, and 530 sites, 2 to 8 November 2026. Agents on a task: Vercel and ora.ai, 1,033 agent runs on 25 sites and 190 controlled fetch tests, June to August 2026. JavaScript for crawlers and assistants: Vercel's crawler study, December 2024."
+  readers={[
+    {
+      label: "Google Search",
+      who: "Googlebot, which also feeds AI Overviews and AI Mode.",
+      lines: [
+        { item: "/llms.txt", result: "Not used. Google says Search doesn't use llms.txt or other AI text files." },
+        { item: "Markdown copies", result: "Not needed to appear in Search or its AI features." },
+        { item: "The HTML page", result: "Crawled and indexed as usual.", read: true },
+        { item: "JavaScript", result: "Rendered, so content that JavaScript adds can still be indexed.", read: true },
+      ],
+      verdict: "llms.txt does nothing for rankings in Google or in Google's AI answers.",
+    },
+    {
+      label: "AI crawlers",
+      who: "GPTBot, ClaudeBot, Amazonbot, Applebot, OAI-SearchBot and others, collecting pages for training and AI search.",
+      lines: [
+        { item: "/llms.txt", result: "24 requests in a week, across the 473 sites that had one." },
+        { item: "*.md copies", result: "50,158 requests the same week, and 18,221 three weeks later.", read: true },
+        { item: "The HTML page", result: "Web pages were 76% of all AI bot requests, live-answer bots included, 2 to 8 November.", read: true },
+        { item: "JavaScript", result: "Not run by GPTBot, OAI-SearchBot, ClaudeBot or PerplexityBot. Applebot runs it." },
+      ],
+      verdict: "They took the Markdown copies when they appeared and barely touched llms.txt.",
+    },
+    {
+      label: "Assistants answering",
+      who: "ChatGPT-User, Claude-User, Perplexity-User and DuckAssistBot, opening pages while they answer someone.",
+      lines: [
+        { item: "/llms.txt", result: "0 of 55,310 live fetches in a week." },
+        { item: "*.md copies", result: "42 of those fetches." },
+        { item: "The HTML page", result: "The page people see. That's what they read.", read: true },
+        { item: "JavaScript", result: "Not run by ChatGPT-User." },
+      ],
+      verdict: "When an assistant opens your site mid-answer, it reads the HTML page, so that's the copy to get right.",
+    },
+    {
+      label: "Agents on a task",
+      who: "Coding and research agents sent to a site to answer a question or use a product.",
+      lines: [
+        { item: "/llms.txt", result: "Reached in 329 of 1,033 runs, mostly through a link. 120 of those runs took their answer from it.", read: true },
+        { item: "Markdown", result: "Asked for in 2,259 of 3,470 web fetches (65.1%).", read: true },
+        { item: "The HTML page", result: "The same docs pages people read were the most common source of the answer (394 of 844 traced answers).", read: true },
+        { item: "JavaScript", result: "A client that doesn't run JavaScript found a JavaScript-only answer in 0 of 5 tries." },
+      ],
+      verdict: "This is where llms.txt earns its place: an index an agent can follow, linked from pages it already reads.",
+    },
+  ]}
+/>
+
+## Google Search ignores llms.txt
+
+Google's [AI optimization guide](https://developers.google.com/search/docs/fundamentals/ai-optimization-guide) is blunt about it. You don't need "new machine readable files, AI text files, markup, or Markdown to appear in Google Search (including its generative AI capabilities), as Google Search itself doesn't use them." It lists llms.txt among the "AEO/GEO hacks" you can ignore for Google.
+
+So llms.txt is not a ranking factor, and it won't get you into AI Overviews or AI Mode. The same guide also says it's "completely fine" to keep one "for other services or systems that use these files." That line matters more, because Google isn't the only reader.
+
+## AI crawlers read Markdown copies, not llms.txt
+
+Rankera counted the successful requests for llms.txt and Markdown copies (`.md` files) on 517 content sites in its own publishing network from 17 to 23 October 2026, from Cloudflare's request logs. The [case study](https://rankera.ai/llms-txt-case-study) is the largest public count I've found.
+
+<CompareBars
+  title="AI crawler requests for each file, 517 sites, 17 to 23 October 2026"
+  unit="requests"
+  highlight="llms.txt"
+  rows={[
+    { label: "Markdown copies (.md)", value: 50158, note: "On 460 sites, almost all for inner pages" },
+    { label: "llms.txt", value: 24, note: "On the 473 sites that had one" },
+    { label: "llms-full.txt", value: 1, note: "On 104 sites" },
+  ]}
+  caption="Source: Rankera's llms.txt case study. AI crawlers here are training, AI search and live-answer bots, sorted by user agent."
+/>
+
+Most of llms.txt's 4,695 requests that week came from SEO tools (2,380, mostly SEOJuice) and from visitors with ordinary browser user agents (1,908). AI-visibility checkers asked for it too. The AI companies' own crawlers asked for it 24 times.
+
+The Markdown copies don't keep that pull. Three weeks later, from 2 to 8 November, AI crawlers made 18,221 requests for the same `.md` files, 64% fewer, while all AI crawling on the 479 sites Rankera tracked every day rose 19%. Rankera reads it as a one-time discovery crawl when the copies went up. And a crawl is not a citation. Most of these requests came from crawlers that collect training data.
+
+The assistants that open pages while answering someone (ChatGPT-User, Claude-User, Perplexity-User and DuckAssistBot) made 55,310 live fetches that second week. 42 were for a `.md` file. None were for llms.txt. They read the normal page.
+
+## Agents on a task do open llms.txt
+
+The agent that reads llms.txt is the one sent to a site with a job, such as "find how this API authenticates" or "compare these two plans". Vercel and the ora.ai research lab traced 1,033 of those runs across 25 sites between June and August 2026, and published [the guide](https://vercel.com/kb/guide/make-your-site-readable-by-ai-agents) with the data.
+
+- Agents reached llms.txt in 329 runs. 120 of those runs drew the final answer from it.
+- 86% of llms.txt fetches (356 of 416) arrived through a link, not a guessed path, so link yours.
+- 65.1% of web fetches (2,259 of 3,470) asked for Markdown.
+
+Six sites (Zapier, monday.com, Telnyx, Attio, ora.ai and Stripe) make up 66.9% of those runs (691 of 1,033), so this is mostly how agents read docs-heavy software sites. That's also where llms.txt is used most, according to [the proposal](https://llmstxt.org/). Coding agents ask for Markdown outright, too. Cloudflare [says](https://blog.cloudflare.com/markdown-for-agents/) Claude Code and OpenCode send an `Accept: text/markdown` header with their requests.
+
+The same study has a line that cuts the other way. In its controlled tests, adding llms.txt, Markdown mirrors, JSON-LD or a sitemap "did not change whether the clients could retrieve an answer already present in server-rendered HTML." llms.txt helps an agent find the page. It can't stand in for the page.
+
+## JavaScript hides more from agents than a missing llms.txt
+
+If your pages are drawn by JavaScript, llms.txt is the wrong thing to worry about. Vercel's [crawler study](https://vercel.com/blog/the-rise-of-the-ai-crawler) from December 2024 found that "none of the major AI crawlers currently render JavaScript". That covers OpenAI's three crawlers, ClaudeBot, Meta's crawler, Bytespider and PerplexityBot. Googlebot and Applebot do run it. ChatGPT's and Claude's crawlers fetched the JavaScript files and didn't run them.
+
+<BeforeAfter
+  title="One pricing page, two readers"
+  before={{ label: "What a browser shows", html: "<p><strong>Pro plan</strong></p><p>$49 a month, billed yearly. 10 seats and API access.</p>" }}
+  after={{ label: "What a fetch-only agent gets", code: shell, note: "The price lives in app.js, which these crawlers download but never run." }}
+/>
+
+The Vercel and ora.ai tests show the same thing from the agent's side. A client that doesn't run JavaScript found a JavaScript-only answer in 0 of 5 tries, and one that does run it found it in 5 of 5. Google can render that page and index it. ChatGPT's crawler sees an empty `div`.
+
+## What I'd set up for AI agents
+
+None of this needs to be clever. In order of what it's worth:
+
+<PlanSteps
+  steps={[
+    { title: "Put every answer in the HTML", body: "Prices, plan limits, specs and FAQ answers in the server-rendered page, not loaded by JavaScript or hidden behind a tab that fetches on click." },
+    { title: "Serve a Markdown copy of each page", body: "At the same address plus .md, linked from the page with <link rel=\"alternate\" type=\"text/markdown\">. If you can, also return it for requests that send Accept: text/markdown, with a Vary header set to Accept so caches keep the two apart." },
+    { title: "Keep llms.txt short and linked", body: "A heading, one line on what the site is, then the pages that sell and the docs that answer, each with a line about it. Link it from your pages, in the footer or with <link rel=\"describedby\" href=\"/llms.txt\"> in the head, so agents find it without guessing." },
+    { title: "Check it like any other page", body: "Broken links in llms.txt and Markdown copies that 404 send agents to dead ends. Crawl them with the rest of the site." },
+  ]}
+/>
+
+This is how seoskill.dev does it. Every page has a Markdown copy, and a request that asks for Markdown gets it:
+
+```sh
+curl -sI -H "Accept: text/markdown" https://seoskill.dev/blog/webmcp
+HTTP/2 200
+content-type: text/markdown; charset=utf-8
+vary: Accept
+```
+
+Its [llms.txt](/llms.txt) opens with the product, pricing and getting-started pages before the docs, because agents don't only come for the API reference. If you're starting from nothing, the [llms.txt generator](/tools/llms-txt-generator) builds the file from links you choose.
+
+## Check your llms.txt and Markdown copies
+
+Paste your llms.txt URL below. It checks the file against the llms.txt format, line by line.
+
+<div data-agent-markdown="exclude">
+  <LlmsTxtValidator />
+</div>
+
+The validator reads one file and doesn't open its links. To check that the links load, that each page has a Markdown copy and which AI bots your robots.txt lets in, crawl the site:
+
+<AgentStep setup prompt="Crawl example.com and tell me whether llms.txt exists and its links load, which pages have no Markdown copy, and which AI search bots robots.txt blocks." cli="seo crawl https://example.com --max-pages 200 --json" local="Crawls fetch pages from your site, so they run on your own machine." />
+
+Then find what JavaScript is hiding. With rendering on, the crawl loads each page in a browser as well and reports where the rendered page's titles, headings, links, text or structured data differ from the raw HTML.
+
+<AgentStep prompt="Crawl example.com with JavaScript rendering on and list the pages where headings, links or main text appear only after JavaScript runs." cli="seo crawl https://example.com --rendering on --max-pages 200 --json" local="Rendering needs Chrome or Chromium on your machine." />
+
+If your site is in the weekly [site audit](/pricing), it crawls the site every week and flags a missing llms.txt, broken links in it, conversion pages it doesn't list and broken Markdown copies, with what's new since the last crawl. The [AI crawler user agents](/blog/ai-crawler-user-agents) reference has every bot above, what it does and how to tell it apart from a fake.

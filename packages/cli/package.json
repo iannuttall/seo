@@ -19,7 +19,7 @@
     "typecheck": "tsc -p tsconfig.json --noEmit"
   },
   "dependencies": {
-    "@clack/prompts": "^1.8.1",
+    "@clack/prompts": "^1.9.0",
     "@seo/core": "workspace:*",
     "@seo/mcp": "workspace:*",
     "citty": "^0.2.2",

@@ -1,14 +1,17 @@
 import {
   AiMagicIcon,
+  AiSearchIcon,
   Analytics02Icon,
   ArrowTurnForwardIcon,
   Calendar03Icon,
+  ChartBubble01Icon,
   ChartLineData01Icon,
   CheckListIcon,
   CodeIcon,
   File01Icon,
   FileEditIcon,
   FileValidationIcon,
+  GitForkIcon,
   GitMergeIcon,
   HelpCircleIcon,
   HierarchySquare02Icon,
@@ -26,11 +29,13 @@ import {
   ServerStack01Icon,
   Share08Icon,
   ShuffleIcon,
+  SparklesIcon,
   StarIcon,
   TextFontIcon,
   TranslateIcon,
   UserGroupIcon,
   ViewOffIcon,
+  WebValidationIcon,
 } from '@hugeicons/core-free-icons'
 
 // One icon per free tool, keyed by the tool id in tools/manifest.mjs.
@@ -66,6 +71,11 @@ export const toolIcons = {
   'seo-migration-checklist': Route01Icon,
   'canonical-checker': LinkSquare01Icon,
   'people-also-ask-tool': HelpCircleIcon,
+  'ai-visibility-checker': AiSearchIcon,
+  'ai-overview-checker': SparklesIcon,
+  'query-fan-out-tool': GitForkIcon,
+  'keyword-clustering-tool': ChartBubble01Icon,
+  'google-index-checker': WebValidationIcon,
   'title-tag-word-frequency': TextFontIcon,
 } as const
 

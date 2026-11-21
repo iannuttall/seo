@@ -1,5 +1,50 @@
 export const tools = [
   {
+    id: 'ai-visibility-checker',
+    path: '/tools/ai-visibility-checker',
+    title: 'AI visibility checker',
+    action: 'Open the AI visibility checker',
+    description:
+      'Ask ChatGPT, Gemini, Google AI Mode and AI Overviews your own questions and see whether each answer cites or names your brand, and which competitors it picks instead.',
+    kind: 'protected',
+  },
+  {
+    id: 'ai-overview-checker',
+    path: '/tools/ai-overview-checker',
+    title: 'AI Overview checker',
+    action: 'Open the AI Overview checker',
+    description:
+      'See whether Google shows an AI Overview for up to five keywords, what it says, which pages it cites and where those pages rank.',
+    kind: 'protected',
+  },
+  {
+    id: 'query-fan-out-tool',
+    path: '/tools/query-fan-out-tool',
+    title: 'Query fan-out tool',
+    action: 'Open the query fan-out tool',
+    description:
+      'See the real searches ChatGPT runs behind a prompt, asked three times, with the pages it cites.',
+    kind: 'protected',
+  },
+  {
+    id: 'keyword-clustering-tool',
+    path: '/tools/keyword-clustering-tool',
+    title: 'Keyword clustering tool',
+    action: 'Open the keyword clustering tool',
+    description:
+      'Group up to 50 keywords by the pages Google ranks for each, so you know which ones one page can target.',
+    kind: 'protected',
+  },
+  {
+    id: 'google-index-checker',
+    path: '/tools/google-index-checker',
+    title: 'Google index checker',
+    action: 'Open the Google index checker',
+    description:
+      'Check whether Google shows up to five pages in its results, with the searches as evidence and what could stop each page being indexed.',
+    kind: 'protected',
+  },
+  {
     id: 'google-algorithm-update-checker',
     path: '/tools/google-algorithm-update-checker',
     title: 'Google algorithm update checker',

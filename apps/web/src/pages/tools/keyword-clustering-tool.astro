@@ -1,0 +1,135 @@
+---
+import Breadcrumbs from '@/components/Breadcrumbs.astro'
+import CodeBlock from '@/components/CodeBlock.astro'
+import FaqAccordion from '@/components/FaqAccordion.astro'
+import PageHeader from '@/components/PageHeader.astro'
+import SetupCommands from '@/components/SetupCommands.astro'
+import KeywordClusteringTool from '@/components/tools/KeywordClusteringTool.astro'
+import BaseLayout from '@/layouts/BaseLayout.astro'
+import type { SchemaBreadcrumb } from '@/lib/schema'
+
+const breadcrumbs: SchemaBreadcrumb[] = [
+  { label: 'Home', href: '/' },
+  { label: 'Tools', href: '/tools' },
+  { label: 'Keyword clustering tool' },
+]
+
+const faq = [
+  {
+    question: 'What is keyword clustering?',
+    answer:
+      'Grouping keywords that one page can target together. This tool groups them by the pages Google already ranks for each keyword: when two searches show many of the same pages, Google treats them as one topic.',
+  },
+  {
+    question: 'How many shared pages should I use?',
+    answer:
+      'Start at 4 of the top 10, the setting most SEO teams use. Move it up for tighter groups you can be surer of, or down when a niche has few results. The clusters redraw as you move it, without a new check.',
+  },
+  {
+    question: 'Is this keyword clustering tool free?',
+    answer:
+      'Yes. You get 3 free checks a day of up to 50 keywords each, with no account or email. For bigger lists, your agent can run the same comparison with your own DataForSEO key.',
+  },
+  {
+    question: 'Why did a keyword land in no cluster?',
+    answer:
+      'It shares fewer pages than the setting with every cluster lead. That usually means Google answers it with different pages, so it needs its own page. A keyword the tool could not read is listed separately as not compared, which says nothing about its overlap.',
+  },
+  {
+    question: 'Why do my clusters change when I check again?',
+    answer:
+      'Google results move through the day and by location. A keyword that shares exactly as many pages as the setting can fall either side of the line on the next check. Treat one check as a snapshot and look twice at keywords near the line.',
+  },
+  {
+    question: 'Can a keyword belong to two clusters?',
+    answer:
+      'Not here. Each keyword goes to the first cluster whose lead it shares enough pages with, so the CSV has one row per keyword and you can map each one to a single page.',
+  },
+]
+---
+
+<BaseLayout
+  title="Free keyword clustering tool by SERP overlap"
+  description="Group up to 50 keywords by the pages Google ranks for each, free. See which keywords one page can target, the pages they share, and export the clusters to CSV."
+  canonicalPath="/tools/keyword-clustering-tool"
+  {breadcrumbs}
+>
+  <main data-agent-content>
+    <Breadcrumbs {breadcrumbs} />
+    <PageHeader
+      title="Keyword clustering tool"
+      description="Group keywords by the pages Google ranks for each, so you know which ones one page can target and which need their own."
+    />
+
+    <KeywordClusteringTool />
+
+    <div class="docs-prose mt-16">
+      <h2>How clustering by search results works</h2>
+      <p>
+        The tool searches Google live for every keyword, in the country you
+        pick, through DataForSEO, and reads the top 10 organic results for
+        each. Two keywords are linked when their results share at least as many
+        pages as the setting, 4 by default. The keyword with the most links
+        leads the first cluster and takes every keyword linked to it, then the
+        next best lead takes what is left, until no links remain.
+      </p>
+      <p>
+        Each cluster is named after its lead keyword. Under it you see how many
+        pages each keyword shares with the lead and which pages rank for two or
+        more of them. Add your domain to see where it ranks for each keyword.
+      </p>
+
+      <h2>Search results versus grouping by meaning</h2>
+      <p>
+        Grouping by meaning puts keywords together when the words are related,
+        so "coffee grinder" and "how to grind coffee beans" share a group. Google often disagrees: one search shows shops and
+        reviews, the other shows guides. One page rarely ranks for both.
+      </p>
+      <p>
+        Comparing the ranking pages follows what Google shows today, which is
+        the thing you are trying to rank in. Grouping by meaning is still handy
+        for brainstorming a topic before you have a list. Once you have a list,
+        the shared pages are the better test for which keywords one page can
+        cover.
+      </p>
+
+      <h2>Read one check as a snapshot</h2>
+      <p>
+        Results change through the day and from place to place, so a keyword
+        right at the line can move between checks. A keyword that Google showed
+        no results for, or that the check could not read, is listed as not
+        compared. That is missing evidence, not a sign it shares nothing. Some
+        results come back as Google redirect links; those are matched by the
+        site and path Google shows under the title.
+      </p>
+      <p>
+        Use the clusters to plan pages, then check them against your own data.
+        For two pages of yours already competing for one query, the{' '}
+        <a href="/tools/keyword-cannibalization-checker">keyword cannibalization checker</a>{' '}
+        reads your Search Console export. To see the full results for one
+        keyword, use the <a href="/tools/serp-checker">SERP checker</a>. The{' '}
+        <a href="/blog/keyword-clustering">guide to clustering keywords by search intent</a>{' '}
+        walks through the whole method.
+      </p>
+
+      <h2>Cluster keywords from your agent</h2>
+      <p>
+        With SEO Skill your agent can compare the results for your keywords
+        with <a href="/docs/research">seo research</a> and your own DataForSEO
+        key, then check which ones your pages already get impressions for in
+        Search Console. Ask:
+      </p>
+      <CodeBlock value="Compare the Google results for coffee grinder, best coffee grinder, burr coffee grinder and how to grind coffee beans. Which belong on one page on example.com?" wrap />
+      <p>Add the hosted MCP server to your agent and sign in with Google:</p>
+    </div>
+
+    <SetupCommands id="keyword-clustering-setup" class="mt-6" />
+
+    <div class="docs-prose mt-16">
+      <h2>Keyword clustering tool questions</h2>
+    </div>
+    <div class="mt-6">
+      <FaqAccordion id="keyword-clustering-faq" items={faq} />
+    </div>
+  </main>
+</BaseLayout>

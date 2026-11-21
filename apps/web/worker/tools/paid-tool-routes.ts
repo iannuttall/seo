@@ -98,7 +98,7 @@ function parseTraffic(value: unknown): ProtectedToolParsedInput<TrafficInput> {
   }
 }
 
-function dailyLimit(value: unknown): number {
+export function dailyLimit(value: unknown): number {
   const parsed = Number(value)
   if (!Number.isSafeInteger(parsed) || parsed < 1 || parsed > 100_000) {
     return 0

@@ -12,7 +12,32 @@ export const PAID_TOOL_PROVIDERS = {
   'title-words': 'dataforseo-research',
   'people-also-ask': 'dataforseo-research',
   backlinks: 'dataforseo-backlinks',
+  'ai-visibility': 'dataforseo-ai',
+  'ai-overview': 'dataforseo-ai',
+  'query-fan-out': 'dataforseo-ai',
+  'keyword-clustering': 'dataforseo-ai',
+  'index-checker': 'dataforseo-ai',
 } as const
+
+// What one run costs the provider's daily budget. The AI search tools share
+// one budget counted in US cents, so each run reserves its worst-case
+// DataForSEO cost, rounded up; every other tool counts one call.
+export const PAID_TOOL_COST: Partial<Record<PaidToolId, number>> = {
+  // 3 questions on 4 engines, about $0.0096 a question.
+  'ai-visibility': 4,
+  // 5 keywords, 20 results each, waiting for late AI Overviews.
+  'ai-overview': 4,
+  // 1 prompt asked of ChatGPT 3 times.
+  'query-fan-out': 2,
+  // 50 keywords, 10 results each, about $0.002 a keyword.
+  'keyword-clustering': 10,
+  // 5 URLs at up to $0.04 a URL, with retries.
+  'index-checker': 20,
+}
+
+export function paidToolCost(tool: PaidToolId): number {
+  return PAID_TOOL_COST[tool] ?? 1
+}
 
 export const PUBLIC_WORKER_TOOLS = [
   'llms-txt',
@@ -192,11 +217,16 @@ export function decidePaidToolQuota(input: {
   identityUsed: number
   providerUsed: number
   providerDailyLimit: number
+  // How much of the provider budget this call takes. Default 1.
+  cost?: number
 }): PaidToolQuotaDecision {
   const providerDailyLimit = validateProviderDailyLimit(
     input.providerDailyLimit,
   )
+  const cost = input.cost ?? 1
   if (
+    !Number.isSafeInteger(cost) ||
+    cost < 1 ||
     !Number.isSafeInteger(input.identityUsed) ||
     input.identityUsed < 0 ||
     !Number.isSafeInteger(input.providerUsed) ||
@@ -221,7 +251,7 @@ export function decidePaidToolQuota(input: {
       providerRemaining,
     }
   }
-  if (input.providerUsed >= providerDailyLimit) {
+  if (input.providerUsed + cost > providerDailyLimit) {
     return {
       allowed: false,
       reason: 'provider-limit',
@@ -236,8 +266,8 @@ export function decidePaidToolQuota(input: {
     allowed: true,
     identityUsed: identity.identityUsed,
     identityRemaining: identity.identityRemaining,
-    providerUsed: input.providerUsed + 1,
-    providerRemaining: providerDailyLimit - input.providerUsed - 1,
+    providerUsed: input.providerUsed + cost,
+    providerRemaining: providerDailyLimit - input.providerUsed - cost,
   }
 }
 

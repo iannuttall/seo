@@ -15,9 +15,13 @@ import {
   type Traffic,
 } from './discovery.ts'
 import { founderCounts, refreshFounderCounts } from './founder.ts'
+import { handleAiOverview } from './tools/ai-overview.ts'
+import { handleAiVisibility } from './tools/ai-visibility.ts'
 import { applyDailyToolQuota } from './tools/daily-tool-quota.ts'
 import { handleDomainAge } from './tools/domain-age.ts'
 import { handleFaviconCheck } from './tools/favicon-checker.ts'
+import { handleIndexChecker } from './tools/index-checker.ts'
+import { handleKeywordClustering } from './tools/keyword-clustering.ts'
 import { handleLlmsTxtFetch } from './tools/llms-txt.ts'
 import { handleNoindexCheck } from './tools/noindex-checker.ts'
 import { handleOpenGraphCheck } from './tools/open-graph.ts'
@@ -31,6 +35,7 @@ import {
   handleTitleWords,
   handleWebsiteTraffic,
 } from './tools/paid-tool-routes.ts'
+import { handleQueryFanOut } from './tools/query-fan-out.ts'
 import { handleRedirectMap, REDIRECT_CHECKER } from './tools/redirect-map.ts'
 import { handleRobotsTxtFetch } from './tools/robots-txt.ts'
 import { handleSerpPreviewFetch } from './tools/serp-preview.ts'
@@ -915,6 +920,21 @@ app.all('/api/tools/title-words', (context) =>
 )
 app.all('/api/tools/people-also-ask', (context) =>
   handlePeopleAlsoAsk(context.req.raw, context.env),
+)
+app.all('/api/tools/ai-visibility', (context) =>
+  handleAiVisibility(context.req.raw, context.env),
+)
+app.all('/api/tools/ai-overview', (context) =>
+  handleAiOverview(context.req.raw, context.env),
+)
+app.all('/api/tools/query-fan-out', (context) =>
+  handleQueryFanOut(context.req.raw, context.env),
+)
+app.all('/api/tools/keyword-clustering', (context) =>
+  handleKeywordClustering(context.req.raw, context.env),
+)
+app.all('/api/tools/index-checker', (context) =>
+  handleIndexChecker(context.req.raw, context.env),
 )
 app.all('/api/*', () => jsonResponse({ error: 'Not found' }, 404))
 app.all('*', (context) => context.env.ASSETS.fetch(context.req.raw))

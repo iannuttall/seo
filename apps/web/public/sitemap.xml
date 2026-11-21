@@ -33,8 +33,28 @@
   <url><loc>https://seoskill.dev/guides/astro-seo</loc></url>
   <url><loc>https://seoskill.dev/guides/nextjs-seo</loc></url>
   <url><loc>https://seoskill.dev/blog</loc></url>
+  <url><loc>https://seoskill.dev/blog/ai-crawler-user-agents</loc></url>
+  <url><loc>https://seoskill.dev/blog/lighthouse-agentic-browsing</loc></url>
+  <url><loc>https://seoskill.dev/blog/llms-txt-seo</loc></url>
+  <url><loc>https://seoskill.dev/blog/search-console-generative-ai-report</loc></url>
+  <url><loc>https://seoskill.dev/blog/webmcp</loc></url>
+  <url><loc>https://seoskill.dev/blog/ai-crawlers-firewall</loc></url>
+  <url><loc>https://seoskill.dev/blog/how-id-grow-loops</loc></url>
+  <url><loc>https://seoskill.dev/blog/long-tail-keywords-search-console</loc></url>
+  <url><loc>https://seoskill.dev/blog/agent-link-outreach</loc></url>
+  <url><loc>https://seoskill.dev/blog/how-id-grow-bannerbear</loc></url>
+  <url><loc>https://seoskill.dev/blog/image-search-traffic</loc></url>
+  <url><loc>https://seoskill.dev/blog/not-provided-keywords</loc></url>
   <url><loc>https://seoskill.dev/blog/aeo-vs-seo</loc></url>
+  <url><loc>https://seoskill.dev/blog/ai-mode-follow-up-questions</loc></url>
+  <url><loc>https://seoskill.dev/blog/bing-long-tail</loc></url>
   <url><loc>https://seoskill.dev/blog/how-to-get-cited-by-chatgpt</loc></url>
+  <url><loc>https://seoskill.dev/blog/indexnow</loc></url>
+  <url><loc>https://seoskill.dev/blog/keyword-clustering</loc></url>
+  <url><loc>https://seoskill.dev/blog/people-also-ask</loc></url>
+  <url><loc>https://seoskill.dev/blog/query-fan-out</loc></url>
+  <url><loc>https://seoskill.dev/blog/search-ctr-by-position</loc></url>
+  <url><loc>https://seoskill.dev/blog/unlinked-brand-mentions</loc></url>
   <url><loc>https://seoskill.dev/blog/how-id-grow-posthog</loc></url>
   <url><loc>https://seoskill.dev/blog/humanizer-skill</loc></url>
   <url><loc>https://seoskill.dev/blog/how-id-grow-anthropic</loc></url>
@@ -51,6 +71,11 @@
   <url><loc>https://seoskill.dev/blog/how-id-grow-every</loc></url>
   <url><loc>https://seoskill.dev/blog/how-id-grow-monologue</loc></url>
   <url><loc>https://seoskill.dev/tools</loc></url>
+  <url><loc>https://seoskill.dev/tools/ai-visibility-checker</loc></url>
+  <url><loc>https://seoskill.dev/tools/ai-overview-checker</loc></url>
+  <url><loc>https://seoskill.dev/tools/query-fan-out-tool</loc></url>
+  <url><loc>https://seoskill.dev/tools/keyword-clustering-tool</loc></url>
+  <url><loc>https://seoskill.dev/tools/google-index-checker</loc></url>
   <url><loc>https://seoskill.dev/tools/google-algorithm-update-checker</loc></url>
   <url><loc>https://seoskill.dev/tools/competitor-keyword-research</loc></url>
   <url><loc>https://seoskill.dev/tools/monthly-seo-report</loc></url>
@@ -91,6 +116,7 @@
   <url><loc>https://seoskill.dev/docs/bing</loc></url>
   <url><loc>https://seoskill.dev/docs/cli</loc></url>
   <url><loc>https://seoskill.dev/docs/cloud-agents</loc></url>
+  <url><loc>https://seoskill.dev/docs/next</loc></url>
   <url><loc>https://seoskill.dev/docs/report</loc></url>
   <url><loc>https://seoskill.dev/docs/page</loc></url>
   <url><loc>https://seoskill.dev/docs/compare</loc></url>

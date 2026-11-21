@@ -1,0 +1,465 @@
+---
+import Button from '@/components/Button.astro'
+import Card from '@/components/Card.astro'
+import FormInput from '@/components/FormInput.astro'
+import FormSelect from '@/components/FormSelect.astro'
+import FormTextarea from '@/components/FormTextarea.astro'
+import TurnstileWidget from '@/components/tools/TurnstileWidget.astro'
+
+const markets = [
+  ['us', 'United States'],
+  ['gb', 'United Kingdom'],
+  ['ca', 'Canada'],
+  ['au', 'Australia'],
+  ['in', 'India'],
+  ['de', 'Germany'],
+  ['fr', 'France'],
+  ['es', 'Spain'],
+  ['it', 'Italy'],
+  ['nl', 'Netherlands'],
+]
+const example = 'what is a 401k\nhow to lower cholesterol\nbest running shoes for flat feet'
+---
+
+<section data-ai-overview-checker data-endpoint="/api/tools/ai-overview" class="space-y-6">
+  <Card>
+    <form data-form class="space-y-5 p-5 sm:p-6" novalidate>
+      <div class="space-y-1">
+        <h2 class="text-lg font-medium">Check AI Overviews</h2>
+        <p class="text-sm leading-6 text-foreground-muted">
+          Enter up to five keywords, one per line. Add your domain to see whether Google cites it and where it ranks.
+        </p>
+      </div>
+
+      <label class="block space-y-2 text-sm font-medium">
+        <span>Keywords</span>
+        <FormTextarea
+          data-keywords
+          rows="5"
+          autocapitalize="off"
+          spellcheck="false"
+          maxlength="1100"
+          placeholder={'what is a 401k\nhow to lower cholesterol'}
+          required
+        />
+      </label>
+
+      <div class="grid gap-4 sm:grid-cols-[minmax(0,1fr)_11rem_9rem]">
+        <label class="block space-y-2 text-sm font-medium">
+          <span>Your domain <span class="font-normal text-foreground-muted">(optional)</span></span>
+          <FormInput data-domain type="text" inputmode="url" autocapitalize="off" spellcheck="false" maxlength="253" placeholder="example.com" />
+        </label>
+        <label class="block space-y-2 text-sm font-medium">
+          <span>Country</span>
+          <FormSelect data-country>
+            {markets.map(([code, name]) => <option value={code}>{name}</option>)}
+          </FormSelect>
+        </label>
+        <label class="block space-y-2 text-sm font-medium">
+          <span>Device</span>
+          <FormSelect data-device>
+            <option value="desktop">Desktop</option>
+            <option value="mobile">Mobile</option>
+          </FormSelect>
+        </label>
+      </div>
+
+      <TurnstileWidget action="ai-overview" />
+
+      <div class="flex flex-wrap items-center justify-between gap-4">
+        <p class="text-xs leading-5 text-foreground-muted">
+          3 free checks a day, no signup.
+          <button type="button" data-example={example} class="ml-1 underline underline-offset-4 hover:text-foreground">Try an example</button>
+        </p>
+        <Button data-submit type="submit" class="min-h-10 shrink-0 px-5 text-xs">Check AI Overviews</Button>
+      </div>
+      <p data-error hidden class="text-sm leading-6 text-red-700 dark:text-red-400" role="alert"></p>
+    </form>
+  </Card>
+
+  <div data-results hidden class="space-y-6">
+    <Card inverted>
+      <div class="space-y-5 p-5 sm:p-6">
+        <div class="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+          <div class="space-y-1">
+            <h3 data-title class="text-xl font-medium text-foreground"></h3>
+            <p data-summary class="text-sm leading-6 text-foreground-muted"></p>
+          </div>
+          <Button data-download type="button" class="min-h-10 shrink-0 px-4 text-xs">Download CSV</Button>
+        </div>
+        <div class="-mx-5 overflow-x-auto px-5 sm:-mx-6 sm:px-6">
+          <table class="w-full min-w-[32rem] text-left text-sm">
+            <thead class="text-xs text-foreground-muted">
+              <tr>
+                <th scope="col" class="py-2 pr-3 font-normal">Keyword</th>
+                <th scope="col" class="py-2 pr-3 font-normal">AI Overview</th>
+                <th scope="col" class="py-2 pr-3 font-normal">Sources</th>
+                <th scope="col" data-yours-head class="py-2 pr-3 font-normal">Your site</th>
+              </tr>
+            </thead>
+            <tbody data-overview-body></tbody>
+          </table>
+        </div>
+        <div data-keywords-detail class="space-y-6"></div>
+        <p data-notes class="border-t border-border pt-3 text-xs leading-5 text-foreground-muted"></p>
+      </div>
+    </Card>
+
+    <Card>
+      <div class="space-y-3 p-5 sm:p-6">
+        <h3 class="text-lg font-medium">Run it from your agent with your own key</h3>
+        <p class="text-sm leading-6 text-foreground-muted">
+          This page gives you 3 checks a day. With a free account and your own DataForSEO key, your agent checks the AI Overviews for every keyword you care about, next to the queries your site already gets clicks for in Search Console.
+        </p>
+        <ol class="list-decimal space-y-1 pl-5 text-sm leading-6 text-foreground-muted">
+          <li>Sign in with Google on your account page. That creates the free account.</li>
+          <li>Save your DataForSEO key in the Keys tab. DataForSEO bills you directly.</li>
+          <li>Connect the hosted MCP to your agent and ask it which of your keywords show an AI Overview and who it cites.</li>
+        </ol>
+        <div class="flex flex-wrap gap-2 pt-1">
+          <Button href="/account" class="min-h-10 px-4 text-xs">Get started free</Button>{' '}
+          <Button href="/docs/keys" variant="outline" class="min-h-10 px-4 text-xs">How keys work</Button>
+        </div>
+      </div>
+    </Card>
+  </div>
+</section>
+
+<script>
+  type Source = {
+    order: number
+    title: string | null
+    url: string | null
+    domain: string | null
+    position: number | null
+    matchedBy: 'url' | 'breadcrumb' | null
+    sitePosition: number | null
+    mine: boolean
+  }
+  type Keyword = {
+    keyword: string
+    status: 'overview' | 'none' | 'no_results' | 'failed'
+    text: string | null
+    sources: Source[]
+    organicRead: number
+    yourPosition: number | null
+    yourUrl: string | null
+    yourCited: boolean
+  }
+  type Result = {
+    country: string
+    device: 'desktop' | 'mobile'
+    domain: string | null
+    keywords: Keyword[]
+    partial: boolean
+    checkedAt: string
+  }
+
+  declare global {
+    interface Window {
+      turnstile?: { reset(container?: HTMLElement): void }
+    }
+  }
+
+  const MARKETS: Record<string, string> = {
+    us: 'the United States',
+    gb: 'the United Kingdom',
+    ca: 'Canada',
+    au: 'Australia',
+    in: 'India',
+    de: 'Germany',
+    fr: 'France',
+    es: 'Spain',
+    it: 'Italy',
+    nl: 'the Netherlands',
+  }
+  const STATUS: Record<Keyword['status'], { label: string; className: string }> = {
+    overview: { label: 'Shown', className: 'border border-primary/20 bg-primary-soft text-primary' },
+    none: { label: 'Not shown', className: 'border border-border-subtle bg-secondary text-secondary-foreground' },
+    no_results: { label: 'Unknown, no results', className: 'border border-warning/20 bg-warning-soft text-warning-foreground' },
+    failed: { label: 'Unknown, check failed', className: 'border border-destructive/20 bg-destructive-soft text-destructive' },
+  }
+  const DOMAIN = /^(https?:\/\/)?[a-z0-9.-]+\.[a-z]{2,}\/?$/u
+
+  const el = <K extends keyof HTMLElementTagNameMap>(tag: K, className = '', text?: string) => {
+    const node = document.createElement(tag)
+    if (className) node.className = className
+    if (text !== undefined) node.textContent = text
+    return node
+  }
+  const ordinal = (value: number) => {
+    const tens = value % 100
+    if (tens >= 11 && tens <= 13) return `${value}th`
+    return `${value}${['th', 'st', 'nd', 'rd'][value % 10] ?? 'th'}`
+  }
+  const badge = (status: Keyword['status']) =>
+    el('span', `inline-flex w-fit shrink-0 items-center whitespace-nowrap rounded-md px-2 py-0.5 text-xs font-medium ${STATUS[status].className}`, STATUS[status].label)
+  const csvCell = (value: string | number | boolean | null) => {
+    const text = value === null ? '' : String(value)
+    return /[",\n\r]/u.test(text) ? `"${text.replaceAll('"', '""')}"` : text
+  }
+  // The overview's Markdown as plain reading text: citation pills such as
+  // [1](url) go, other links keep their words.
+  const plain = (markdown: string) =>
+    markdown
+      .replace(/!\[[^\]]*\]\([^)]*\)/gu, '')
+      .replace(/\[\d+\]\([^)]*\)/gu, '')
+      .replace(/\[([^\]]*)\]\([^)]*\)/gu, '$1')
+      .replace(/\*\*|__/gu, '')
+      .replace(/^#+\s*/gmu, '')
+      .replace(/[ \t]+\n/gu, '\n')
+      .replace(/\n{3,}/gu, '\n\n')
+      .trim()
+  const notIn = (item: Keyword) =>
+    item.organicRead >= 20 ? 'Not in top 20' : `Not in the ${item.organicRead} read`
+  const yourSite = (item: Keyword, domain: string) => {
+    if (item.status === 'failed' || item.status === 'no_results') return 'Unknown'
+    const cited = item.sources.find((source) => source.mine)
+    const ranks = item.yourPosition === null ? `not in the top ${Math.min(20, item.organicRead)} organic results` : `ranks ${ordinal(item.yourPosition)}`
+    if (item.status === 'none') return `${domain} ${ranks}`
+    return cited ? `Cited as source ${cited.order}, ${ranks}` : `Not cited, ${ranks}`
+  }
+
+  function initialise(root: HTMLElement): void {
+    if (root.dataset.initialised === 'true') return
+    root.dataset.initialised = 'true'
+    const $ = <T extends HTMLElement>(selector: string) => root.querySelector<T>(selector)
+    const form = $<HTMLFormElement>('[data-form]')
+    const keywords = $<HTMLTextAreaElement>('[data-keywords]')
+    const domain = $<HTMLInputElement>('[data-domain]')
+    const market = $<HTMLSelectElement>('[data-country]')
+    const device = $<HTMLSelectElement>('[data-device]')
+    const submit = $<HTMLButtonElement>('[data-submit]')
+    const error = $<HTMLElement>('[data-error]')
+    const results = $<HTMLElement>('[data-results]')
+    const title = $<HTMLElement>('[data-title]')
+    const summary = $<HTMLElement>('[data-summary]')
+    const overviewBody = $<HTMLElement>('[data-overview-body]')
+    const detail = $<HTMLElement>('[data-keywords-detail]')
+    const yoursHead = $<HTMLElement>('[data-yours-head]')
+    const notes = $<HTMLElement>('[data-notes]')
+    if (!form || !keywords || !domain || !market || !device || !submit || !error || !results || !title || !summary || !overviewBody || !detail || !yoursHead || !notes) return
+    const label = submit.textContent ?? ''
+    let current: Result | null = null
+
+    $<HTMLButtonElement>('[data-example]')?.addEventListener('click', (event) => {
+      keywords.value = (event.currentTarget as HTMLButtonElement).dataset.example ?? ''
+      keywords.focus()
+    })
+
+    const sourceRow = (item: Keyword, source: Source) => {
+      const tr = el('tr', source.mine ? 'border-t border-border bg-primary-soft' : 'border-t border-border')
+      const page = el('td', 'py-2 pr-3 align-top')
+      page.append(el('p', 'max-w-[26rem] text-foreground', source.title ?? source.domain ?? 'Untitled source'))
+      const address = el('p', 'max-w-[26rem] truncate font-mono text-xs text-foreground-muted')
+      if (source.url) {
+        const link = el('a', 'underline-offset-4 hover:underline', source.url.replace(/^https?:\/\//u, ''))
+        link.href = source.url
+        link.rel = 'noreferrer nofollow'
+        link.target = '_blank'
+        address.append(link)
+      } else {
+        address.textContent = 'Page unknown. Google linked it through its own redirect.'
+      }
+      page.append(address)
+      const position = !source.url
+        ? 'Unknown'
+        : source.position === null
+          ? notIn(item)
+          : source.matchedBy === 'breadcrumb'
+            ? `${source.position} (by its address in Google)`
+            : String(source.position)
+      const site = !source.domain ? 'Unknown' : source.sitePosition === null ? notIn(item) : String(source.sitePosition)
+      tr.append(
+        el('td', 'py-2 pr-3 align-top text-foreground-muted', String(source.order)),
+        page,
+        el('td', 'py-2 pr-3 align-top text-foreground-muted', position),
+        el('td', 'py-2 pr-3 align-top text-foreground-muted', site),
+      )
+      return tr
+    }
+
+    const keywordDetail = (item: Keyword, result: Result) => {
+      const block = el('div', 'space-y-3 border-t border-border pt-5')
+      const head = el('div', 'flex flex-wrap items-center gap-2')
+      head.append(el('h4', 'text-base font-medium text-foreground', `“${item.keyword}”`), badge(item.status))
+      block.append(head)
+      if (result.domain && (item.status === 'overview' || item.status === 'none')) {
+        const where = item.yourPosition === null
+          ? `${result.domain} is not in the first ${item.organicRead} organic results.`
+          : `${result.domain} ranks ${ordinal(item.yourPosition)} in the organic results${item.yourUrl ? ` with ${item.yourUrl.replace(/^https?:\/\//u, '')}` : ''}.`
+        const cited = item.status === 'overview' ? (item.yourCited ? ' The overview cites it.' : ' The overview does not cite it.') : ''
+        block.append(el('p', 'text-sm leading-6 text-foreground-muted', `${where}${cited}`))
+      }
+      if (item.status === 'failed') {
+        block.append(el('p', 'text-sm leading-6 text-foreground-muted', 'This search could not be read this time, so whether it shows an AI Overview is unknown. Try it again later.'))
+        return block
+      }
+      if (item.status === 'no_results') {
+        block.append(el('p', 'text-sm leading-6 text-foreground-muted', 'No results came back for this search, so whether it shows an AI Overview is unknown. Check the spelling or try a broader wording.'))
+        return block
+      }
+      if (item.status === 'none') {
+        block.append(el('p', 'text-sm leading-6 text-foreground-muted', 'The results page came back without an AI Overview. Google does not show one on every search, so run it again before you treat this as a no.'))
+        return block
+      }
+      if (item.text) {
+        const text = el('div', 'max-h-72 overflow-y-auto whitespace-pre-line rounded-lg bg-card p-4 text-sm leading-6 text-foreground', plain(item.text))
+        text.tabIndex = 0
+        text.setAttribute('aria-label', `AI Overview text for ${item.keyword}`)
+        block.append(text)
+      } else {
+        block.append(el('p', 'text-sm leading-6 text-foreground-muted', 'Google showed an AI Overview, but its text did not load in this check.'))
+      }
+      if (!item.sources.length) {
+        block.append(el('p', 'text-sm leading-6 text-foreground-muted', 'No cited sources came back with this overview.'))
+        return block
+      }
+      const scroll = el('div', '-mx-5 overflow-x-auto px-5 sm:-mx-6 sm:px-6')
+      const table = el('table', 'w-full min-w-[34rem] text-left text-sm')
+      const thead = el('thead', 'text-xs text-foreground-muted')
+      const row = el('tr')
+      for (const column of ['#', 'Cited source', 'Page position', 'Best on the site']) {
+        const th = el('th', 'py-2 pr-3 font-normal', column)
+        th.scope = 'col'
+        row.append(th)
+      }
+      thead.append(row)
+      const body = el('tbody')
+      for (const source of item.sources) body.append(sourceRow(item, source))
+      table.append(thead, body)
+      scroll.append(table)
+      block.append(scroll)
+      return block
+    }
+
+    const render = (result: Result) => {
+      current = result
+      const where = MARKETS[result.country] ?? result.country
+      const when = new Date(result.checkedAt).toLocaleString('en-GB', { dateStyle: 'medium', timeStyle: 'short' })
+      const shown = result.keywords.filter((item) => item.status === 'overview').length
+      const known = result.keywords.filter((item) => item.status === 'overview' || item.status === 'none').length
+      title.textContent = `AI Overviews for ${result.keywords.length} ${result.keywords.length === 1 ? 'keyword' : 'keywords'}`
+      summary.textContent = `Google showed an AI Overview for ${shown} of the ${known} ${known === 1 ? 'search' : 'searches'} read. Checked ${when} in ${where} on ${result.device}.`
+      yoursHead.hidden = !result.domain
+      overviewBody.replaceChildren()
+      for (const item of result.keywords) {
+        const tr = el('tr', item.yourCited ? 'border-t border-border bg-primary-soft' : 'border-t border-border')
+        const status = el('td', 'py-2 pr-3')
+        status.append(badge(item.status))
+        tr.append(
+          el('td', 'py-2 pr-3 text-foreground', item.keyword),
+          status,
+          el('td', 'py-2 pr-3 text-foreground-muted', item.status === 'overview' ? String(item.sources.length) : 'n/a'),
+        )
+        if (result.domain) tr.append(el('td', 'py-2 pr-3 text-foreground-muted', yourSite(item, result.domain)))
+        overviewBody.append(tr)
+      }
+      detail.replaceChildren(...result.keywords.map((item) => keywordDetail(item, result)))
+      const parts = [
+        'Positions count organic results only, from the same results page as the overview, read 20 results deep. A source Google linked through its own redirect has no known page, so it has no position. ',
+        'AI Overviews change from one search to the next, so this is one snapshot. Run it again before you act on a single result.',
+      ]
+      if (result.partial) parts.push(' Some results pages came back incomplete, so a source shown as not in the top 20 may be there.')
+      notes.replaceChildren(...parts)
+      results.hidden = false
+      results.scrollIntoView({ behavior: 'smooth', block: 'start' })
+    }
+
+    $<HTMLButtonElement>('[data-download]')?.addEventListener('click', () => {
+      if (!current) return
+      const result = current
+      const rows: Array<Array<string | number | boolean | null>> = [
+        ['keyword', 'country', 'device', 'checked_at', 'ai_overview', 'source_order', 'source_title', 'source_url', 'source_domain', 'page_position', 'matched_by', 'best_site_position', 'your_domain', 'your_position', 'your_site_cited', 'overview_text'],
+      ]
+      for (const item of result.keywords) {
+        const base = [item.keyword, result.country, result.device, result.checkedAt, item.status]
+        const yours = [result.domain, item.yourPosition, result.domain && item.status === 'overview' ? item.yourCited : null]
+        const text = item.text ? plain(item.text) : null
+        if (!item.sources.length) {
+          rows.push([...base, null, null, null, null, null, null, null, ...yours, text])
+          continue
+        }
+        item.sources.forEach((source, index) => {
+          rows.push([
+            ...base,
+            source.order,
+            source.title,
+            source.url ?? 'unknown page',
+            source.domain,
+            source.position,
+            source.matchedBy,
+            source.sitePosition,
+            ...yours,
+            index === 0 ? text : null,
+          ])
+        })
+      }
+      const url = URL.createObjectURL(new Blob([rows.map((row) => row.map(csvCell).join(',')).join('\n')], { type: 'text/csv;charset=utf-8' }))
+      const link = document.createElement('a')
+      link.href = url
+      link.download = `ai-overviews-${result.country}-${result.checkedAt.slice(0, 10)}.csv`
+      link.click()
+      URL.revokeObjectURL(url)
+    })
+
+    form.addEventListener('submit', async (event) => {
+      event.preventDefault()
+      error.hidden = true
+      const seen = new Set<string>()
+      const list: string[] = []
+      for (const line of keywords.value.split('\n')) {
+        const keyword = line.trim().replace(/\s+/gu, ' ')
+        if (!keyword || seen.has(keyword.toLowerCase())) continue
+        seen.add(keyword.toLowerCase())
+        list.push(keyword)
+      }
+      const fail = (message: string, field?: HTMLElement) => {
+        error.textContent = message
+        error.hidden = false
+        field?.focus()
+      }
+      if (!list.length) return fail('Enter a keyword.', keywords)
+      if (list.length > 5) return fail('Enter up to five keywords, one per line.', keywords)
+      if (list.some((keyword) => keyword.length > 200)) return fail('Keep each keyword under 200 characters.', keywords)
+      const site = domain.value.trim().toLowerCase()
+      if (site && !DOMAIN.test(site)) return fail('Enter a domain such as example.com.', domain)
+      const token = new FormData(form).get('turnstileToken')
+      if (typeof token !== 'string' || !token) return fail('Complete the security check first.')
+      submit.disabled = true
+      submit.textContent = 'Checking...'
+      try {
+        const response = await fetch(root.dataset.endpoint ?? '', {
+          method: 'POST',
+          headers: { 'content-type': 'application/json' },
+          body: JSON.stringify({
+            keywords: list,
+            ...(site ? { domain: site } : {}),
+            country: market.value,
+            device: device.value,
+            turnstileToken: token,
+          }),
+        })
+        if (!response.headers.get('content-type')?.includes('application/json')) {
+          throw new Error('The check could not be completed.')
+        }
+        const data = (await response.json()) as { result?: Result; error?: string }
+        if (!response.ok || !data.result) throw new Error(data.error || 'The check could not be completed.')
+        render(data.result)
+      } catch (caught) {
+        fail(caught instanceof Error ? caught.message : 'The check could not be completed.')
+      } finally {
+        submit.disabled = false
+        submit.textContent = label
+        const widget = $<HTMLElement>('[data-turnstile-container]')
+        if (widget) window.turnstile?.reset(widget)
+      }
+    })
+  }
+
+  const initialiseAll = () => {
+    for (const root of document.querySelectorAll<HTMLElement>('[data-ai-overview-checker]')) initialise(root)
+  }
+  initialiseAll()
+  document.addEventListener('astro:page-load', initialiseAll)
+</script>

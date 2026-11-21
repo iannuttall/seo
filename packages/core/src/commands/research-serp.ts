@@ -6,6 +6,9 @@ type Row = Record<string, string | number | boolean | null>
 // Google's goto links leave a reference's page unknown (url null).
 export type AiOverview = {
   keyword: string
+  // The overview's own words as Markdown, null when Google showed the block
+  // without text DataForSEO could read.
+  text: string | null
   references: {
     domain: string | null
     url: string | null
@@ -26,6 +29,23 @@ export type PeopleAlsoAsk = {
     domain: string | null
     title: string | null
   }[]
+}
+
+// The AI Overview block's Markdown, or its parts' Markdown joined.
+function overviewText(block: Record<string, unknown>): string | null {
+  const parts = Array.isArray(block.items)
+    ? (block.items as Record<string, unknown>[])
+    : []
+  const markdown =
+    typeof block.markdown === 'string' && block.markdown.trim()
+      ? block.markdown
+      : parts
+          .map((part) =>
+            typeof part.markdown === 'string' ? part.markdown : '',
+          )
+          .filter(Boolean)
+          .join('\n\n')
+  return markdown.trim() ? markdown.trim().slice(0, 8_000) : null
 }
 
 // Google's redirect links, which DataForSEO often leaves unresolved.
@@ -139,6 +159,7 @@ export function dataForSeoSerp(
   const overview = found
     ? {
         keyword,
+        text: overviewText(found),
         references: (
           (found.references as Record<string, unknown>[] | undefined) ?? []
         )

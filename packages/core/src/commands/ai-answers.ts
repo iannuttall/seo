@@ -535,6 +535,8 @@ export async function runAiAnswers(
     // How many times each question is asked of each engine, to report how
     // often an answer cites or names the site. Default 1; each costs a run.
     samples?: number
+    // Only these engines, by name, such as ['chatgpt']. Default: all four.
+    engines?: string[]
   },
   headers: Headers,
   deps: Pick<CommandDeps, 'searchAnalytics' | 'context'>,
@@ -620,6 +622,8 @@ export async function runAiAnswers(
         questions.map((question) => question.query).sort(),
         // One sample keeps the earlier key.
         ...(samples > 1 ? [samples] : []),
+        // All four engines keeps the earlier key.
+        ...(input.engines ? [[...input.engines].sort()] : []),
         new Date().toISOString().slice(0, 10),
       ])
     : null
@@ -666,7 +670,9 @@ export async function runAiAnswers(
       Array.from({ length: samples }, () => question),
     )
     await Promise.all(
-      ENGINES.map(async (engine) => {
+      ENGINES.filter(
+        (engine) => !input.engines || input.engines.includes(engine.name),
+      ).map(async (engine) => {
         const engineRows: Row[] = asks.map((question) => ({
           ...blank(question.query, question.impressions),
           engine: engine.name,

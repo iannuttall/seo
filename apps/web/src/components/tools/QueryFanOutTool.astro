@@ -1,0 +1,425 @@
+---
+import Button from '@/components/Button.astro'
+import Card from '@/components/Card.astro'
+import FormInput from '@/components/FormInput.astro'
+import FormSelect from '@/components/FormSelect.astro'
+import FormTextarea from '@/components/FormTextarea.astro'
+import TurnstileWidget from '@/components/tools/TurnstileWidget.astro'
+
+const markets = [
+  ['us', 'United States'],
+  ['gb', 'United Kingdom'],
+  ['ca', 'Canada'],
+  ['au', 'Australia'],
+  ['in', 'India'],
+  ['de', 'Germany'],
+  ['fr', 'France'],
+  ['es', 'Spain'],
+  ['it', 'Italy'],
+  ['nl', 'Netherlands'],
+]
+const example = 'what is the best crm for a small plumbing business'
+---
+
+<section data-query-fan-out class="space-y-6">
+  <Card>
+    <form data-form class="space-y-5 p-5 sm:p-6" novalidate>
+      <div class="space-y-1">
+        <h2 class="text-lg font-medium">See what ChatGPT searches for</h2>
+        <p class="text-sm leading-6 text-foreground-muted">
+          Enter a prompt the way a person would ask it. ChatGPT search answers it 3 times, and you see every search it ran.
+        </p>
+      </div>
+
+      <label class="block space-y-2 text-sm font-medium">
+        <span>Prompt</span>
+        <FormTextarea data-prompt rows="3" maxlength="300" spellcheck="true" placeholder="what is the best crm for a small team" required />
+      </label>
+
+      <div class="grid gap-4 sm:grid-cols-[minmax(0,1fr)_12rem]">
+        <label class="block space-y-2 text-sm font-medium">
+          <span>Your domain <span class="font-normal text-foreground-muted">(optional, to see if ChatGPT cites it)</span></span>
+          <FormInput data-domain type="text" inputmode="url" autocapitalize="off" spellcheck="false" maxlength="253" placeholder="example.com" />
+        </label>
+        <label class="block space-y-2 text-sm font-medium">
+          <span>Country</span>
+          <FormSelect data-country>
+            {markets.map(([code, name]) => <option value={code}>{name}</option>)}
+          </FormSelect>
+        </label>
+      </div>
+
+      <TurnstileWidget action="query-fan-out" />
+
+      <div class="flex flex-wrap items-center justify-between gap-4">
+        <p class="text-xs leading-5 text-foreground-muted">
+          3 free checks a day. A check takes up to a minute.
+          <button type="button" data-example={example} class="ml-1 underline underline-offset-4 hover:text-foreground">Try “{example}”</button>
+        </p>
+        <Button data-submit type="submit" class="min-h-10 shrink-0 px-5 text-xs">Show searches</Button>
+      </div>
+      <p data-error hidden class="text-sm leading-6 text-red-700 dark:text-red-400" role="alert"></p>
+    </form>
+  </Card>
+
+  <div data-results hidden class="space-y-6">
+    <Card inverted>
+      <div class="space-y-5 p-5 sm:p-6">
+        <div class="flex flex-wrap items-start justify-between gap-4">
+          <div class="min-w-0 space-y-1">
+            <h3 data-title class="text-xl font-medium text-foreground"></h3>
+            <p data-summary class="text-sm leading-6 text-foreground-muted"></p>
+          </div>
+          <Button data-download type="button" class="min-h-10 shrink-0 px-4 text-xs">Download CSV</Button>
+        </div>
+
+        <div class="space-y-2">
+          <p class="text-sm font-medium text-foreground">Searches ChatGPT ran</p>
+          <p data-searches-empty hidden class="text-sm leading-6 text-foreground-muted"></p>
+          <div data-searches-table class="-mx-5 overflow-x-auto px-5 sm:-mx-6 sm:px-6">
+            <table class="w-full min-w-[28rem] text-left text-sm">
+              <thead class="text-xs text-foreground-muted">
+                <tr><th scope="col" class="py-2 pr-3 font-normal">Search</th><th scope="col" class="py-2 pr-3 font-normal">Runs</th></tr>
+              </thead>
+              <tbody data-searches></tbody>
+            </table>
+          </div>
+        </div>
+
+        <div class="space-y-2">
+          <p class="text-sm font-medium text-foreground">Sites ChatGPT cited</p>
+          <p data-sites-empty hidden class="text-sm leading-6 text-foreground-muted"></p>
+          <div data-sites-table class="-mx-5 overflow-x-auto px-5 sm:-mx-6 sm:px-6">
+            <table class="w-full min-w-[24rem] text-left text-sm">
+              <thead class="text-xs text-foreground-muted">
+                <tr><th scope="col" class="py-2 pr-3 font-normal">Site</th><th scope="col" class="py-2 pr-3 font-normal">Runs</th></tr>
+              </thead>
+              <tbody data-sites></tbody>
+            </table>
+          </div>
+        </div>
+
+        <div class="space-y-2">
+          <p class="text-sm font-medium text-foreground">Each run</p>
+          <div class="-mx-5 overflow-x-auto px-5 sm:-mx-6 sm:px-6">
+            <table class="w-full min-w-[32rem] text-left text-sm">
+              <thead data-runs-head class="text-xs text-foreground-muted">
+                <tr>{['Run', 'What happened', 'Searches'].map((column) => <th scope="col" class="py-2 pr-3 font-normal">{column}</th>)}</tr>
+              </thead>
+              <tbody data-runs></tbody>
+            </table>
+          </div>
+        </div>
+
+        <p data-notes class="border-t border-border pt-3 text-xs leading-5 text-foreground-muted"></p>
+      </div>
+    </Card>
+
+    <Card>
+      <div class="space-y-3 p-5 sm:p-6">
+        <h3 class="text-lg font-medium">Run it from your agent with your own key</h3>
+        <p class="text-sm leading-6 text-foreground-muted">
+          This page gives you 3 checks a day. With a free account and your own DataForSEO key, your agent asks ChatGPT the questions your site already gets in Search Console and shows the searches behind each answer.
+        </p>
+        <ol class="list-decimal space-y-1 pl-5 text-sm leading-6 text-foreground-muted">
+          <li>Sign in with Google on your account page. That creates the free account.</li>
+          <li>Save your DataForSEO key in the Keys tab. DataForSEO bills you directly.</li>
+          <li>Connect the hosted MCP to your agent and ask it what ChatGPT searches for when people ask about your topic.</li>
+        </ol>
+        <div class="flex flex-wrap gap-2 pt-1">
+          <Button href="/account" class="min-h-10 px-4 text-xs">Get started free</Button>{' '}
+          <Button href="/docs/keys" variant="outline" class="min-h-10 px-4 text-xs">How keys work</Button>
+        </div>
+      </div>
+    </Card>
+  </div>
+</section>
+
+<script>
+  type Status = 'searched' | 'answered-without-searching' | 'no-answer' | 'pending' | 'unavailable'
+  type Run = {
+    run: number
+    status: Status
+    searches: string[]
+    sites: string[]
+    domainResult: 'cited' | 'named' | 'not-found' | null
+    citedUrl: string | null
+    namedAs: string | null
+    answeredAt: string | null
+  }
+  type Result = {
+    prompt: string
+    country: string
+    domain: string | null
+    runsAsked: number
+    runs: Run[]
+    searches: { query: string; runs: number }[]
+    sites: { host: string; runs: number }[]
+    checkedAt: string
+  }
+
+  declare global {
+    interface Window {
+      turnstile?: { reset(container?: HTMLElement): void }
+    }
+  }
+
+  const MARKETS: Record<string, string> = {
+    us: 'the United States',
+    gb: 'the United Kingdom',
+    ca: 'Canada',
+    au: 'Australia',
+    in: 'India',
+    de: 'Germany',
+    fr: 'France',
+    es: 'Spain',
+    it: 'Italy',
+    nl: 'the Netherlands',
+  }
+
+  const STATUS: Record<Status, string> = {
+    searched: 'Searched',
+    'answered-without-searching': 'Answered without searching',
+    'no-answer': 'No answer shown',
+    pending: 'Not ready in time',
+    unavailable: 'Could not be read',
+  }
+
+  const bare = (value: string) =>
+    value.trim().toLowerCase().replace(/^https?:\/\//u, '').replace(/[/?#].*$/u, '').replace(/^www\./u, '')
+
+  const csvCell = (value: string | number | null) => {
+    const text = value === null ? '' : String(value)
+    return /[",\n]/u.test(text) ? `"${text.replaceAll('"', '""')}"` : text
+  }
+
+  function cell(text: string, className = 'py-2 pr-3 align-top text-foreground-muted'): HTMLTableCellElement {
+    const td = document.createElement('td')
+    td.className = className
+    td.textContent = text
+    return td
+  }
+
+  const domainText = (run: Run) => {
+    if (run.domainResult === 'cited') return 'Cited'
+    if (run.domainResult === 'named') return run.namedAs ? `Named as “${run.namedAs}”, not cited` : 'Named, not cited'
+    if (run.domainResult === 'not-found') return 'Not cited or named'
+    return 'Not known'
+  }
+
+  function initialise(root: HTMLElement): void {
+    if (root.dataset.initialised === 'true') return
+    root.dataset.initialised = 'true'
+    const $ = <T extends HTMLElement>(selector: string) => root.querySelector<T>(selector)
+    const form = $<HTMLFormElement>('[data-form]')
+    const prompt = $<HTMLTextAreaElement>('[data-prompt]')
+    const domain = $<HTMLInputElement>('[data-domain]')
+    const market = $<HTMLSelectElement>('[data-country]')
+    const submit = $<HTMLButtonElement>('[data-submit]')
+    const error = $<HTMLElement>('[data-error]')
+    const results = $<HTMLElement>('[data-results]')
+    const title = $<HTMLElement>('[data-title]')
+    const summary = $<HTMLElement>('[data-summary]')
+    const searchesBody = $<HTMLElement>('[data-searches]')
+    const searchesTable = $<HTMLElement>('[data-searches-table]')
+    const searchesEmpty = $<HTMLElement>('[data-searches-empty]')
+    const sitesBody = $<HTMLElement>('[data-sites]')
+    const sitesTable = $<HTMLElement>('[data-sites-table]')
+    const sitesEmpty = $<HTMLElement>('[data-sites-empty]')
+    const runsHead = $<HTMLElement>('[data-runs-head]')
+    const runsBody = $<HTMLElement>('[data-runs]')
+    const notes = $<HTMLElement>('[data-notes]')
+    if (
+      !form || !prompt || !domain || !market || !submit || !error || !results || !title || !summary ||
+      !searchesBody || !searchesTable || !searchesEmpty || !sitesBody || !sitesTable || !sitesEmpty ||
+      !runsHead || !runsBody || !notes
+    ) return
+    const label = submit.textContent ?? ''
+    let current: Result | null = null
+
+    root.querySelector<HTMLButtonElement>('[data-example]')?.addEventListener('click', (event) => {
+      prompt.value = (event.currentTarget as HTMLButtonElement).dataset.example ?? ''
+      prompt.focus()
+    })
+
+    const render = (result: Result) => {
+      current = result
+      const where = MARKETS[result.country] ?? result.country
+      const read = result.runs.filter((run) => run.status === 'searched' || run.status === 'answered-without-searching')
+      const searched = result.runs.filter((run) => run.status === 'searched').length
+      const without = result.runs.filter((run) => run.status === 'answered-without-searching').length
+      const unread = result.runs.length - read.length
+      const of = `of ${result.runsAsked}`
+
+      title.textContent = `What ChatGPT searched for “${result.prompt}”`
+      const parts = [
+        `ChatGPT search was asked ${result.runsAsked} times in ${where}, checked ${new Date(result.checkedAt).toLocaleString('en-GB', { dateStyle: 'medium', timeStyle: 'short' })}.`,
+        `It searched the web in ${searched} ${of} runs`,
+      ]
+      parts[1] += without ? ` and answered without searching in ${without}.` : '.'
+      if (unread) parts.push(`${unread} ${unread === 1 ? 'run' : 'runs'} could not be read, so ${unread === 1 ? 'it is' : 'they are'} left out of the counts.`)
+      if (result.domain) {
+        const cited = read.filter((run) => run.domainResult === 'cited').length
+        const named = read.filter((run) => run.domainResult === 'named').length
+        parts.push(
+          read.length
+            ? `${result.domain} was cited in ${cited} and named without a citation in ${named} of the ${read.length} ${read.length === 1 ? 'answer' : 'answers'} read.`
+            : `Whether ${result.domain} was cited is not known, because no answer could be read.`,
+        )
+      }
+      summary.textContent = parts.join(' ')
+
+      searchesBody.replaceChildren()
+      for (const item of result.searches) {
+        const tr = document.createElement('tr')
+        tr.className = 'border-t border-border'
+        tr.append(cell(item.query, 'py-2 pr-3 align-top text-foreground'), cell(`${item.runs} ${of}`))
+        searchesBody.append(tr)
+      }
+      searchesTable.hidden = result.searches.length === 0
+      searchesEmpty.hidden = result.searches.length > 0
+      searchesEmpty.textContent = read.length
+        ? 'ChatGPT answered without searching in every run it answered, so there are no searches to show. It answered from what it already knew.'
+        : 'No run could be read, so the searches are not known. Try again in a minute.'
+
+      sitesBody.replaceChildren()
+      for (const item of result.sites) {
+        const tr = document.createElement('tr')
+        const mine = Boolean(result.domain) && (item.host === result.domain || item.host.endsWith(`.${result.domain}`))
+        tr.className = mine ? 'border-t border-border bg-primary-soft' : 'border-t border-border'
+        tr.append(cell(item.host, 'py-2 pr-3 align-top text-foreground'), cell(`${item.runs} ${of}`))
+        sitesBody.append(tr)
+      }
+      sitesTable.hidden = result.sites.length === 0
+      sitesEmpty.hidden = result.sites.length > 0
+      sitesEmpty.textContent = read.length
+        ? 'The answers that were read cited no sites.'
+        : 'No run could be read, so the cited sites are not known.'
+
+      const columns = ['Run', 'What happened', 'Searches', ...(result.domain ? [result.domain] : [])]
+      const head = document.createElement('tr')
+      for (const column of columns) {
+        const th = document.createElement('th')
+        th.scope = 'col'
+        th.className = 'py-2 pr-3 font-normal'
+        th.textContent = column
+        head.append(th)
+      }
+      runsHead.replaceChildren(head)
+      runsBody.replaceChildren()
+      for (const run of result.runs) {
+        const tr = document.createElement('tr')
+        tr.className = 'border-t border-border'
+        const searches = document.createElement('td')
+        searches.className = 'py-2 pr-3 align-top text-foreground-muted'
+        if (run.searches.length) {
+          const list = document.createElement('ul')
+          list.className = 'space-y-1'
+          for (const query of run.searches) {
+            const li = document.createElement('li')
+            li.textContent = query
+            list.append(li)
+          }
+          searches.append(list)
+        } else {
+          searches.textContent = run.status === 'answered-without-searching' ? 'None' : 'Not known'
+        }
+        tr.append(cell(String(run.run)), cell(STATUS[run.status], 'py-2 pr-3 align-top text-foreground'), searches)
+        if (result.domain) tr.append(cell(domainText(run)))
+        runsBody.append(tr)
+      }
+
+      notes.replaceChildren(
+        'These are the searches ChatGPT reported running, read live through DataForSEO, not a prediction. ',
+        'ChatGPT writes different searches and cites different sites from one run to the next, so a search or site in 1 of 3 runs is less settled than one in all 3. ',
+        result.domain
+          ? 'Named means the answer text names the site without citing a page on it. Not known means the run could not be read, not that the site was missing.'
+          : 'Add your domain to see whether each answer cited or named it.',
+      )
+      results.hidden = false
+      results.scrollIntoView({ behavior: 'smooth', block: 'start' })
+    }
+
+    $<HTMLElement>('[data-download]')?.addEventListener('click', () => {
+      if (!current) return
+      const result = current
+      const rows: Array<Array<string | number | null>> = [
+        ['run', 'status', 'search', 'cited_sites', ...(result.domain ? ['domain', 'domain_result', 'cited_url'] : []), 'answered_at', 'checked_at'],
+      ]
+      for (const run of result.runs) {
+        const domainCells = result.domain ? [result.domain, run.domainResult ?? 'not known', run.citedUrl] : []
+        const searches = run.searches.length ? run.searches : [null]
+        for (const search of searches) {
+          rows.push([run.run, run.status, search, run.sites.join(' '), ...domainCells, run.answeredAt, result.checkedAt])
+        }
+      }
+      const url = URL.createObjectURL(new Blob([rows.map((row) => row.map(csvCell).join(',')).join('\n')], { type: 'text/csv;charset=utf-8' }))
+      const link = document.createElement('a')
+      link.href = url
+      link.download = `query-fan-out-${result.prompt.toLowerCase().replace(/[^a-z0-9]+/gu, '-').replace(/^-|-$/gu, '').slice(0, 60) || 'prompt'}.csv`
+      link.click()
+      URL.revokeObjectURL(url)
+    })
+
+    form.addEventListener('submit', async (event) => {
+      event.preventDefault()
+      error.hidden = true
+      const value = prompt.value.trim().replace(/\s+/gu, ' ')
+      if (!value) {
+        error.textContent = 'Enter a prompt.'
+        error.hidden = false
+        prompt.focus()
+        return
+      }
+      if (value.length > 300) {
+        error.textContent = 'Keep the prompt to 300 characters.'
+        error.hidden = false
+        prompt.focus()
+        return
+      }
+      const token = new FormData(form).get('turnstileToken')
+      if (typeof token !== 'string' || !token) {
+        error.textContent = 'Complete the security check first.'
+        error.hidden = false
+        return
+      }
+      const site = bare(domain.value)
+      submit.disabled = true
+      submit.textContent = 'Asking ChatGPT...'
+      try {
+        const response = await fetch('/api/tools/query-fan-out', {
+          method: 'POST',
+          headers: { 'content-type': 'application/json' },
+          body: JSON.stringify({
+            prompt: value,
+            ...(site ? { domain: site } : {}),
+            country: market.value,
+            turnstileToken: token,
+          }),
+        })
+        if (!response.headers.get('content-type')?.includes('application/json')) {
+          throw new Error('The check could not be completed.')
+        }
+        const data = (await response.json()) as { result?: Result; error?: string }
+        if (response.status === 429) throw new Error(data.error || 'Daily check limit reached. Try again tomorrow.')
+        if (response.status === 400) throw new Error('Check the prompt and the domain, then try again.')
+        if (!response.ok || !data.result) throw new Error(data.error || 'The check could not be completed.')
+        render(data.result)
+      } catch (caught) {
+        error.textContent = caught instanceof Error ? caught.message : 'The check could not be completed.'
+        error.hidden = false
+      } finally {
+        submit.disabled = false
+        submit.textContent = label
+        const widget = $<HTMLElement>('[data-turnstile-container]')
+        if (widget) window.turnstile?.reset(widget)
+      }
+    })
+  }
+
+  const initialiseAll = () => {
+    for (const root of document.querySelectorAll<HTMLElement>('[data-query-fan-out]')) initialise(root)
+  }
+  initialiseAll()
+  document.addEventListener('astro:page-load', initialiseAll)
+</script>

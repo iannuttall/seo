@@ -15,7 +15,7 @@ import {
 import { isBrowserRequestFromSameSite } from './sitemap.ts'
 
 export const PROTECTED_TOOL_LIMITS = {
-  bodyBytes: 8_192,
+  bodyBytes: 16_384,
   targetCharacters: 2_048,
   turnstileTokenCharacters: 2_048,
 } as const

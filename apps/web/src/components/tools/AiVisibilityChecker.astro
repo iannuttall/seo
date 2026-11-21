@@ -1,0 +1,498 @@
+---
+import Button from '@/components/Button.astro'
+import Card from '@/components/Card.astro'
+import FormInput from '@/components/FormInput.astro'
+import FormSelect from '@/components/FormSelect.astro'
+import TurnstileWidget from '@/components/tools/TurnstileWidget.astro'
+
+const markets = [
+  ['us', 'United States'],
+  ['gb', 'United Kingdom'],
+  ['ca', 'Canada'],
+  ['au', 'Australia'],
+  ['in', 'India'],
+  ['de', 'Germany'],
+  ['fr', 'France'],
+  ['es', 'Spain'],
+  ['it', 'Italy'],
+  ['nl', 'Netherlands'],
+]
+const questionPlaceholders = [
+  'what is the best crm for a small team',
+  'how do I import contacts into a crm',
+  'example crm vs other crm',
+]
+const head = 'py-2 pr-3 font-normal'
+---
+
+<section data-ai-visibility class="space-y-6">
+  <Card>
+    <form data-form class="space-y-5 p-5 sm:p-6" novalidate>
+      <div class="space-y-1">
+        <h2 class="text-lg font-medium">Check your AI visibility</h2>
+        <p class="text-sm leading-6 text-foreground-muted">
+          Write the questions your customers would ask an AI assistant. Each one is asked live of ChatGPT search, the Gemini app, Google AI Mode and Google AI Overviews.
+        </p>
+      </div>
+
+      <div class="grid gap-4 sm:grid-cols-[minmax(0,1fr)_12rem]">
+        <label class="block space-y-2 text-sm font-medium">
+          <span>Your domain</span>
+          <FormInput data-domain type="text" inputmode="url" autocapitalize="off" spellcheck="false" maxlength="253" placeholder="example.com" required />
+        </label>
+        <label class="block space-y-2 text-sm font-medium">
+          <span>Country</span>
+          <FormSelect data-country>
+            {markets.map(([code, name]) => <option value={code}>{name}</option>)}
+          </FormSelect>
+        </label>
+      </div>
+
+      <fieldset class="space-y-2">
+        <legend class="text-sm font-medium">Questions <span class="font-normal text-foreground-muted">(1 to 3)</span></legend>
+        {questionPlaceholders.map((placeholder, index) => (
+          <FormInput
+            data-question
+            type="text"
+            maxlength="200"
+            placeholder={placeholder}
+            aria-label={`Question ${index + 1}`}
+            required={index === 0}
+          />
+        ))}
+      </fieldset>
+
+      <div class="grid gap-4 sm:grid-cols-2">
+        <label class="block space-y-2 text-sm font-medium">
+          <span>Brand names <span class="font-normal text-foreground-muted">(optional, up to 3)</span></span>
+          <FormInput data-brands type="text" maxlength="200" placeholder="Example, Example CRM" />
+        </label>
+        <label class="block space-y-2 text-sm font-medium">
+          <span>Competitors <span class="font-normal text-foreground-muted">(optional, up to 3)</span></span>
+          <FormInput data-competitors type="text" inputmode="url" autocapitalize="off" spellcheck="false" maxlength="800" placeholder="example.org, example.net" />
+        </label>
+      </div>
+      <p class="text-xs leading-5 text-foreground-muted">Separate brand names and competitors with commas. Without brand names, the name in your domain counts as a mention.</p>
+
+      <TurnstileWidget action="ai-visibility" />
+
+      <div class="flex flex-wrap items-center justify-between gap-4">
+        <p class="text-xs leading-5 text-foreground-muted">3 free checks a day. A check takes up to a minute.</p>
+        <Button data-submit type="submit" class="min-h-10 shrink-0 px-5 text-xs">Check AI answers</Button>
+      </div>
+      <p data-error hidden class="text-sm leading-6 text-red-700 dark:text-red-400" role="alert"></p>
+    </form>
+  </Card>
+
+  <div data-results hidden class="space-y-6">
+    <Card inverted>
+      <div class="space-y-5 p-5 sm:p-6">
+        <div class="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
+          <div class="min-w-0 space-y-1">
+            <h3 data-title class="text-xl font-medium text-foreground [overflow-wrap:anywhere]"></h3>
+            <p data-summary class="text-sm leading-6 text-foreground-muted"></p>
+            <p data-pending hidden class="text-sm leading-6 text-foreground"></p>
+          </div>
+          <Button data-download type="button" class="min-h-10 shrink-0 px-4 text-xs">Download CSV</Button>
+        </div>
+
+        <div class="space-y-2 border-t border-border pt-4">
+          <h4 class="text-sm font-medium">Share of voice</h4>
+          <div class="-mx-5 overflow-x-auto px-5 sm:-mx-6 sm:px-6">
+            <table class="w-full min-w-[28rem] text-left text-sm">
+              <thead class="text-xs text-foreground-muted">
+                <tr><th scope="col" class={head}>Site</th><th scope="col" class={head}>Cited</th><th scope="col" class={head}>Named, no link</th><th scope="col" class={head}>Answers checked</th></tr>
+              </thead>
+              <tbody data-voice></tbody>
+            </table>
+          </div>
+        </div>
+
+        <div class="space-y-2 border-t border-border pt-4">
+          <h4 class="text-sm font-medium">Every answer</h4>
+          <div class="-mx-5 overflow-x-auto px-5 sm:-mx-6 sm:px-6">
+            <table class="w-full min-w-[44rem] text-left text-sm">
+              <thead class="text-xs text-foreground-muted">
+                <tr><th scope="col" class={head}>Question</th><th scope="col" class={head}>Engine</th><th scope="col" class={head}>Your site</th><th scope="col" class={head}>Competitors cited or named</th><th scope="col" class={head}>Other sites cited</th></tr>
+              </thead>
+              <tbody data-body></tbody>
+            </table>
+          </div>
+        </div>
+
+        <div class="grid gap-5 border-t border-border pt-4 md:grid-cols-2">
+          <div class="space-y-2">
+            <h4 class="text-sm font-medium">Sites cited most</h4>
+            <p data-sites-empty hidden class="text-sm text-foreground-muted">No answer that came back cited another site.</p>
+            <table data-sites-table class="w-full text-left text-sm">
+              <thead class="text-xs text-foreground-muted">
+                <tr><th scope="col" class={head}>Site</th><th scope="col" class={head}>Answers</th></tr>
+              </thead>
+              <tbody data-sites></tbody>
+            </table>
+          </div>
+          <div class="space-y-2">
+            <h4 class="text-sm font-medium">What ChatGPT searched for</h4>
+            <p data-searches-note class="text-sm leading-6 text-foreground-muted"></p>
+            <table data-searches-table class="w-full text-left text-sm">
+              <thead class="text-xs text-foreground-muted">
+                <tr><th scope="col" class={head}>Search</th><th scope="col" class={head}>Answers</th></tr>
+              </thead>
+              <tbody data-searches></tbody>
+            </table>
+          </div>
+        </div>
+
+        <p data-notes class="border-t border-border pt-3 text-xs leading-5 text-foreground-muted"></p>
+        <p data-action-status class="text-xs text-foreground-muted" aria-live="polite"></p>
+      </div>
+    </Card>
+
+    <Card>
+      <div class="space-y-3 p-5 sm:p-6">
+        <h3 class="text-lg font-medium">Run it from your agent with your own key</h3>
+        <p class="text-sm leading-6 text-foreground-muted">
+          This page gives you 3 checks a day of up to 3 questions. With a free account and your own DataForSEO key, your agent asks up to 10 questions a run, several times each if you want a rate instead of one snapshot, and can pick the questions from the AI-style searches your site already gets in Search Console.
+        </p>
+        <ol class="list-decimal space-y-1 pl-5 text-sm leading-6 text-foreground-muted">
+          <li>Sign in with Google on your account page. That creates the free account.</li>
+          <li>Save your DataForSEO key in the Keys tab. DataForSEO bills you directly.</li>
+          <li>Connect the hosted MCP to your agent and ask it whether AI answers cite your site.</li>
+        </ol>
+        <div class="flex flex-wrap gap-2 pt-1">
+          <Button href="/account" class="min-h-10 px-4 text-xs">Get started free</Button>{' '}
+          <Button href="/docs/keys" variant="outline" class="min-h-10 px-4 text-xs">How keys work</Button>
+        </div>
+      </div>
+    </Card>
+  </div>
+</section>
+
+<script>
+  type AnswerResult = 'cited' | 'mentioned' | 'neither' | 'no_answer' | 'unavailable' | 'pending'
+  type Row = {
+    question: string
+    engine: string
+    result: AnswerResult
+    citedUrl: string | null
+    mentionedAs: string | null
+    otherSites: string[]
+    competitors: { domain: string; result: 'cited' | 'mentioned' }[]
+    searches: string[] | null
+    answeredAt: string | null
+    reason: string | null
+  }
+  type Voice = { domain: string; read: number; cited: number; mentioned: number; site: boolean }
+  type Result = {
+    domain: string
+    brands: string[]
+    brandTerms: string[]
+    competitors: string[]
+    country: string
+    questions: string[]
+    rows: Row[]
+    counts: Record<AnswerResult, number>
+    shareOfVoice: Voice[]
+    topCitedSites: { host: string; answers: number }[]
+    chatgptSearches: { query: string; answers: number }[]
+    costUsd: number | null
+    checkedAt: string
+  }
+
+  declare global {
+    interface Window {
+      turnstile?: { reset(container?: HTMLElement): void }
+    }
+  }
+
+  const MARKETS: Record<string, string> = {
+    us: 'the United States',
+    gb: 'the United Kingdom',
+    ca: 'Canada',
+    au: 'Australia',
+    in: 'India',
+    de: 'Germany',
+    fr: 'France',
+    es: 'Spain',
+    it: 'Italy',
+    nl: 'the Netherlands',
+  }
+  const ENGINES: Record<string, string> = {
+    chatgpt: 'ChatGPT search',
+    gemini: 'Gemini app',
+    google_ai_mode: 'Google AI Mode',
+    google_ai_overview: 'Google AI Overviews',
+  }
+  const LABELS: Record<AnswerResult, string> = {
+    cited: 'Cited',
+    mentioned: 'Named, no link',
+    neither: 'Not cited or named',
+    no_answer: 'No AI answer shown',
+    unavailable: 'Could not check',
+    pending: 'Not ready',
+  }
+  const TONES: Record<AnswerResult, string> = {
+    cited: 'bg-primary-soft text-foreground',
+    mentioned: 'bg-card text-foreground',
+    neither: 'bg-card text-foreground-muted',
+    no_answer: 'bg-card text-foreground-muted',
+    unavailable: 'bg-card text-foreground-muted',
+    pending: 'bg-card text-foreground-muted',
+  }
+
+  const bare = (value: string) =>
+    value.trim().toLowerCase().replace(/^https?:\/\//, '').replace(/\/.*$/, '').replace(/^www\./, '')
+  const list = (value: string) => value.split(',').map((item) => item.trim()).filter(Boolean)
+  const csvCell = (value: string | number | null) => {
+    const text = value === null ? '' : String(value)
+    return /[",\n]/u.test(text) ? `"${text.replaceAll('"', '""')}"` : text
+  }
+
+  function cell(text: string, className = 'py-2 pr-3 align-top text-foreground-muted'): HTMLTableCellElement {
+    const td = document.createElement('td')
+    td.className = className
+    td.textContent = text
+    return td
+  }
+
+  function initialise(root: HTMLElement): void {
+    if (root.dataset.initialised === 'true') return
+    root.dataset.initialised = 'true'
+    const $ = <T extends HTMLElement>(selector: string) => root.querySelector<T>(selector)
+    const form = $<HTMLFormElement>('[data-form]')
+    const domain = $<HTMLInputElement>('[data-domain]')
+    const market = $<HTMLSelectElement>('[data-country]')
+    const brands = $<HTMLInputElement>('[data-brands]')
+    const competitors = $<HTMLInputElement>('[data-competitors]')
+    const submit = $<HTMLButtonElement>('[data-submit]')
+    const error = $<HTMLElement>('[data-error]')
+    const results = $<HTMLElement>('[data-results]')
+    const title = $<HTMLElement>('[data-title]')
+    const summary = $<HTMLElement>('[data-summary]')
+    const pending = $<HTMLElement>('[data-pending]')
+    const voiceBody = $<HTMLElement>('[data-voice]')
+    const body = $<HTMLElement>('[data-body]')
+    const sites = $<HTMLElement>('[data-sites]')
+    const sitesTable = $<HTMLElement>('[data-sites-table]')
+    const sitesEmpty = $<HTMLElement>('[data-sites-empty]')
+    const searches = $<HTMLElement>('[data-searches]')
+    const searchesTable = $<HTMLElement>('[data-searches-table]')
+    const searchesNote = $<HTMLElement>('[data-searches-note]')
+    const notes = $<HTMLElement>('[data-notes]')
+    const status = $<HTMLElement>('[data-action-status]')
+    if (
+      !form || !domain || !market || !brands || !competitors || !submit || !error || !results || !title ||
+      !summary || !pending || !voiceBody || !body || !sites || !sitesTable || !sitesEmpty || !searches ||
+      !searchesTable || !searchesNote || !notes || !status
+    ) return
+    const questionInputs = [...root.querySelectorAll<HTMLInputElement>('[data-question]')]
+    const label = submit.textContent ?? ''
+    let current: Result | null = null
+
+    const fail = (message: string, focus?: HTMLElement) => {
+      error.textContent = message
+      error.hidden = false
+      focus?.focus()
+    }
+
+    const render = (result: Result) => {
+      current = result
+      const where = MARKETS[result.country] ?? result.country
+      const checked = new Date(result.checkedAt)
+      const when = Number.isFinite(checked.getTime())
+        ? checked.toLocaleString('en-GB', { dateStyle: 'medium', timeStyle: 'short' })
+        : result.checkedAt
+      const site = result.shareOfVoice.find((voice) => voice.site)
+      const read = site?.read ?? 0
+      title.textContent = `AI visibility for ${result.domain}`
+      summary.textContent = read
+        ? `Cited in ${site?.cited ?? 0} and named without a link in ${site?.mentioned ?? 0} of the ${read} answers that came back, asked in ${where} on ${when}. AI answers change from run to run, so this is one snapshot.`
+        : `None of the ${result.rows.length} answers came back in time, asked in ${where} on ${when}. That says nothing about whether they cite you.`
+      const waiting = result.counts.pending
+      pending.hidden = !waiting
+      pending.textContent = waiting
+        ? `${waiting} ${waiting === 1 ? 'answer was' : 'answers were'} not ready in time. They are shown as not ready, not as missing your site, and left out of the counts.`
+        : ''
+
+      voiceBody.replaceChildren()
+      for (const voice of result.shareOfVoice) {
+        const tr = document.createElement('tr')
+        tr.className = voice.site ? 'border-t border-border bg-primary-soft' : 'border-t border-border'
+        tr.append(
+          cell(voice.site ? `${voice.domain} (you)` : voice.domain, 'py-2 pr-3 text-foreground'),
+          cell(String(voice.cited), 'py-2 pr-3 text-foreground-muted'),
+          cell(String(voice.mentioned), 'py-2 pr-3 text-foreground-muted'),
+          cell(String(voice.read), 'py-2 pr-3 text-foreground-muted'),
+        )
+        voiceBody.append(tr)
+      }
+
+      body.replaceChildren()
+      for (const row of result.rows) {
+        const tr = document.createElement('tr')
+        tr.className = 'border-t border-border'
+        const mine = document.createElement('td')
+        mine.className = 'py-2 pr-3 align-top'
+        const badge = document.createElement('span')
+        badge.className = `inline-flex rounded-md px-2 py-0.5 text-xs font-medium ${TONES[row.result]}`
+        badge.textContent = LABELS[row.result]
+        mine.append(badge)
+        const detail = document.createElement('p')
+        detail.className = 'mt-1 max-w-[16rem] truncate font-mono text-xs text-foreground-muted'
+        if (row.citedUrl) {
+          const link = document.createElement('a')
+          link.href = row.citedUrl
+          link.rel = 'noreferrer nofollow'
+          link.target = '_blank'
+          link.className = 'underline-offset-4 hover:underline'
+          link.textContent = row.citedUrl.replace(/^https?:\/\//, '')
+          detail.append(link)
+          mine.append(detail)
+        } else if (row.mentionedAs) {
+          detail.className = 'mt-1 max-w-[16rem] text-xs text-foreground-muted'
+          detail.textContent = `as “${row.mentionedAs}”`
+          mine.append(detail)
+        } else if (row.reason) {
+          detail.className = 'mt-1 max-w-[16rem] text-xs leading-5 text-foreground-muted'
+          detail.textContent = row.reason
+          mine.append(detail)
+        }
+        const answered = row.result === 'cited' || row.result === 'mentioned' || row.result === 'neither'
+        const rivals = !result.competitors.length
+          ? ''
+          : !answered
+            ? 'n/a'
+            : row.competitors.map((item) => `${item.domain} (${item.result === 'cited' ? 'cited' : 'named'})`).join(', ') || 'None'
+        tr.append(
+          cell(row.question, 'max-w-[16rem] py-2 pr-3 align-top text-foreground'),
+          cell(ENGINES[row.engine] ?? row.engine, 'whitespace-nowrap py-2 pr-3 align-top text-foreground-muted'),
+          mine,
+          cell(rivals),
+          cell(answered ? row.otherSites.join(', ') || 'None' : 'n/a', 'max-w-[16rem] py-2 pr-3 align-top text-xs leading-5 text-foreground-muted [overflow-wrap:anywhere]'),
+        )
+        body.append(tr)
+      }
+
+      sites.replaceChildren()
+      for (const item of result.topCitedSites) {
+        const tr = document.createElement('tr')
+        tr.className = 'border-t border-border'
+        tr.append(cell(item.host, 'py-2 pr-3 text-foreground [overflow-wrap:anywhere]'), cell(String(item.answers), 'py-2 pr-3 text-foreground-muted'))
+        sites.append(tr)
+      }
+      sitesTable.hidden = !result.topCitedSites.length
+      sitesEmpty.hidden = Boolean(result.topCitedSites.length)
+      if (!read) sitesEmpty.textContent = 'No answers came back, so there are no cited sites yet.'
+      else sitesEmpty.textContent = 'No answer that came back cited another site.'
+
+      searches.replaceChildren()
+      for (const item of result.chatgptSearches) {
+        const tr = document.createElement('tr')
+        tr.className = 'border-t border-border'
+        tr.append(cell(item.query, 'py-2 pr-3 text-foreground'), cell(String(item.answers), 'py-2 pr-3 text-foreground-muted'))
+        searches.append(tr)
+      }
+      const chatgpt = result.rows.filter((row) => row.engine === 'chatgpt')
+      const reporting = chatgpt.filter((row) => row.searches !== null)
+      const silent = reporting.filter((row) => row.searches?.length === 0).length
+      searchesTable.hidden = !result.chatgptSearches.length
+      searchesNote.textContent = !reporting.length
+        ? 'No ChatGPT answer came back in time, so its searches are not known.'
+        : result.chatgptSearches.length
+          ? `The web searches ChatGPT ran to write ${reporting.length === 1 ? 'its answer' : `its ${reporting.length} answers`}${silent ? ` (${silent} answered from memory without searching)` : ''}. The other engines do not report theirs.`
+          : 'ChatGPT answered from memory without searching the web. The other engines do not report their searches.'
+
+      const names = result.brands.length ? result.brands : result.brandTerms
+      notes.replaceChildren(
+        `Cited means the answer lists or links a page on ${result.domain} or one of its subdomains. Named, no link means the answer text says ${names.length ? names.map((name) => `“${name}”`).join(' or ') : result.domain} but gives no link to the site; it is a text match, so a common word as a brand can match by chance. `,
+        'Could not check means the engine could not be asked in that country or the request failed, and not ready means the answer did not come back within the time limit; neither counts as a no. ',
+        `Answers asked live through DataForSEO, one sample each.${typeof result.costUsd === 'number' ? ` This check cost $${result.costUsd.toFixed(4)} in provider fees.` : ''}`,
+      )
+      status.textContent = ''
+      results.hidden = false
+      results.scrollIntoView({ behavior: 'smooth', block: 'start' })
+    }
+
+    $<HTMLButtonElement>('[data-download]')?.addEventListener('click', () => {
+      if (!current) return
+      const rows: Array<Array<string | number | null>> = [
+        ['question', 'engine', 'result', 'cited_url', 'named_as', 'competitors_cited_or_named', 'other_sites_cited', 'chatgpt_searches', 'country', 'checked_at'],
+        ...current.rows.map((row) => [
+          row.question,
+          ENGINES[row.engine] ?? row.engine,
+          LABELS[row.result],
+          row.citedUrl,
+          row.mentionedAs,
+          row.competitors.map((item) => `${item.domain} ${item.result === 'cited' ? 'cited' : 'named'}`).join('; '),
+          row.otherSites.join('; '),
+          row.searches === null ? null : row.searches.join('; '),
+          current?.country ?? '',
+          current?.checkedAt ?? '',
+        ]),
+      ]
+      const url = URL.createObjectURL(new Blob([rows.map((row) => row.map(csvCell).join(',')).join('\n')], { type: 'text/csv;charset=utf-8' }))
+      const link = document.createElement('a')
+      link.href = url
+      link.download = `${current.domain.replace(/[^a-z0-9.-]+/giu, '-')}-ai-visibility.csv`
+      link.click()
+      URL.revokeObjectURL(url)
+      status.textContent = 'CSV downloaded.'
+    })
+
+    form.addEventListener('submit', async (event) => {
+      event.preventDefault()
+      error.hidden = true
+      const site = bare(domain.value)
+      if (!/^[a-z0-9.-]+\.[a-z]{2,}$/u.test(site)) return fail('Enter a domain, such as example.com.', domain)
+      const questions = questionInputs.map((input) => input.value.trim().replace(/\s+/g, ' ')).filter(Boolean)
+      if (!questions.length) return fail('Enter at least one question.', questionInputs[0])
+      if (questions.some((question) => question.length > 200)) return fail('Keep each question under 200 characters.')
+      const brandNames = list(brands.value)
+      if (brandNames.length > 3) return fail('Enter up to 3 brand names.', brands)
+      if (brandNames.some((name) => name.length > 60)) return fail('Keep each brand name under 60 characters.', brands)
+      const rivals = [...new Set(list(competitors.value).map(bare))]
+      if (rivals.length > 3) return fail('Enter up to 3 competitors.', competitors)
+      if (rivals.some((rival) => !/^[a-z0-9.-]+\.[a-z]{2,}$/u.test(rival))) {
+        return fail('Enter competitors as domains, such as example.org.', competitors)
+      }
+      const token = new FormData(form).get('turnstileToken')
+      if (typeof token !== 'string' || !token) return fail('Complete the security check first.')
+      submit.disabled = true
+      submit.textContent = 'Asking the AI engines...'
+      try {
+        const response = await fetch('/api/tools/ai-visibility', {
+          method: 'POST',
+          headers: { 'content-type': 'application/json' },
+          body: JSON.stringify({
+            domain: site,
+            brands: brandNames,
+            questions,
+            competitors: rivals,
+            country: market.value,
+            turnstileToken: token,
+          }),
+        })
+        if (!response.headers.get('content-type')?.includes('application/json')) {
+          throw new Error('The check could not be completed.')
+        }
+        const data = (await response.json()) as { result?: Result; error?: string }
+        if (response.status === 429) throw new Error(data.error || 'Daily check limit reached. Try again tomorrow.')
+        if (!response.ok || !data.result) throw new Error(data.error || 'The check could not be completed.')
+        render(data.result)
+      } catch (caught) {
+        fail(caught instanceof Error ? caught.message : 'The check could not be completed.')
+      } finally {
+        submit.disabled = false
+        submit.textContent = label
+        const widget = $<HTMLElement>('[data-turnstile-container]')
+        if (widget) window.turnstile?.reset(widget)
+      }
+    })
+  }
+
+  const initialiseAll = () => {
+    for (const root of document.querySelectorAll<HTMLElement>('[data-ai-visibility]')) initialise(root)
+  }
+  initialiseAll()
+  document.addEventListener('astro:page-load', initialiseAll)
+</script>

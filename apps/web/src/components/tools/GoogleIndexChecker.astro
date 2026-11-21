@@ -1,0 +1,415 @@
+---
+import Button from '@/components/Button.astro'
+import Card from '@/components/Card.astro'
+import FormSelect from '@/components/FormSelect.astro'
+import FormTextarea from '@/components/FormTextarea.astro'
+import TurnstileWidget from '@/components/tools/TurnstileWidget.astro'
+
+const markets = [
+  ['us', 'United States'],
+  ['gb', 'United Kingdom'],
+  ['ca', 'Canada'],
+  ['au', 'Australia'],
+  ['in', 'India'],
+  ['de', 'Germany'],
+  ['fr', 'France'],
+  ['es', 'Spain'],
+  ['it', 'Italy'],
+  ['nl', 'Netherlands'],
+]
+---
+
+<section data-index-checker data-endpoint="/api/tools/index-checker" class="space-y-6">
+  <Card>
+    <form data-form class="space-y-5 p-5 sm:p-6" novalidate>
+      <div class="space-y-1">
+        <h2 class="text-lg font-medium">Check if Google has indexed a page</h2>
+        <p class="text-sm leading-6 text-foreground-muted">
+          Enter up to 5 page URLs, one a line. Each page is searched in Google and checked for anything that stops it being indexed.
+        </p>
+      </div>
+
+      <div class="grid gap-4 sm:grid-cols-[minmax(0,1fr)_12rem]">
+        <label class="block space-y-2 text-sm font-medium">
+          <span>Page URLs</span>
+          <FormTextarea
+            data-urls
+            rows="5"
+            class="min-h-36 text-xs"
+            autocapitalize="off"
+            spellcheck="false"
+            maxlength="2000"
+            placeholder={'https://example.com/blog/new-post\nhttps://example.com/pricing'}
+          />
+        </label>
+        <label class="block space-y-2 text-sm font-medium">
+          <span>Country</span>
+          <FormSelect data-country>
+            {markets.map(([code, name]) => <option value={code}>{name}</option>)}
+          </FormSelect>
+        </label>
+      </div>
+
+      <TurnstileWidget action="index-checker" />
+
+      <div class="flex flex-wrap items-center justify-between gap-4">
+        <p class="text-xs leading-5 text-foreground-muted">3 free checks a day, up to 5 URLs each. No sign-up.</p>
+        <Button data-submit type="submit" class="min-h-10 shrink-0 px-5 text-xs">Check indexing</Button>
+      </div>
+      <p data-progress hidden class="text-sm leading-6 text-foreground-muted" role="status">
+        Searching Google on desktop and mobile and reading each page. This takes up to a minute for 5 URLs.
+      </p>
+      <p data-error hidden class="text-sm leading-6 text-red-700 dark:text-red-400" role="alert"></p>
+    </form>
+  </Card>
+
+  <div data-results hidden class="space-y-6">
+    <Card inverted>
+      <div class="space-y-4 p-5 sm:p-6">
+        <div class="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
+          <div class="min-w-0 space-y-1">
+            <h3 data-title class="text-xl font-medium text-foreground"></h3>
+            <p data-summary class="text-sm leading-6 text-foreground-muted"></p>
+          </div>
+          <Button data-download type="button" class="min-h-10 shrink-0 px-4 text-xs">Download CSV</Button>
+        </div>
+        <dl data-counts class="grid grid-cols-3 gap-2 text-sm"></dl>
+        <p class="text-xs leading-5 text-foreground-muted">
+          Found means Google returned the page itself, which is strong evidence. Not found is weaker: Google can hold a page and still leave it out of these searches. If the site is yours, URL Inspection in Search Console gives the definitive answer.
+        </p>
+      </div>
+    </Card>
+
+    <div data-pages class="space-y-6"></div>
+
+    <Card>
+      <div class="space-y-3 p-5 sm:p-6">
+        <h3 class="text-lg font-medium">Run it from your agent with your own key</h3>
+        <p class="text-sm leading-6 text-foreground-muted">
+          This page gives you 3 checks a day. With a free account and your own DataForSEO key, your agent runs the same index check on any page, and for your own site it reads URL Inspection from Search Console too.
+        </p>
+        <ol class="list-decimal space-y-1 pl-5 text-sm leading-6 text-foreground-muted">
+          <li>Sign in with Google on your account page. That creates the free account.</li>
+          <li>Save your DataForSEO key in the Keys tab. DataForSEO bills you directly.</li>
+          <li>Connect the hosted MCP to your agent and ask it whether a page is in Google.</li>
+        </ol>
+        <div class="flex flex-wrap gap-2 pt-1">
+          <Button href="/account" class="min-h-10 px-4 text-xs">Get started free</Button>{' '}
+          <Button href="/docs/keys" variant="outline" class="min-h-10 px-4 text-xs">How keys work</Button>
+        </div>
+      </div>
+    </Card>
+  </div>
+</section>
+
+<script>
+  type Verdict = 'indexed' | 'not_found' | 'unknown'
+  type SearchResult = 'page' | 'unresolved' | 'other_pages' | 'fallback' | 'other_sites' | 'empty' | 'error'
+  type Search = {
+    query: string
+    device: 'desktop' | 'mobile'
+    result: SearchResult
+    position: number | null
+    results: number
+    topDomains: string
+    error: string | null
+  }
+  type Check = { id: string; level: 'pass' | 'warn' | 'fail' | 'info'; message: string; fix?: string }
+  type Page = {
+    url: string
+    search: { verdict: Verdict; reason: string; phrases: string[]; searches: Search[] }
+    indexability:
+      | {
+          state: 'checked'
+          verdict: string
+          headline: string
+          summary: string
+          finalUrl: string
+          status: number | null
+          redirects: number
+          noindex: boolean
+          robotsTxt: string | null
+          canonical: { url: string | null; relation: 'self' | 'other' | 'none' }
+          checks: Check[]
+        }
+      | { state: 'unavailable'; reason: string }
+    reading: string
+  }
+  type Result = {
+    country: string
+    checkedAt: string
+    counts: { indexed: number; notFound: number; unknown: number }
+    pages: Page[]
+  }
+
+  declare global {
+    interface Window {
+      turnstile?: { reset(container?: HTMLElement): void }
+    }
+  }
+
+  const MAX_URLS = 5
+  const MARKETS: Record<string, string> = {
+    us: 'the United States',
+    gb: 'the United Kingdom',
+    ca: 'Canada',
+    au: 'Australia',
+    in: 'India',
+    de: 'Germany',
+    fr: 'France',
+    es: 'Spain',
+    it: 'Italy',
+    nl: 'the Netherlands',
+  }
+  const VERDICTS: Record<Verdict, { label: string; className: string }> = {
+    indexed: { label: 'Found in Google', className: 'bg-success-soft text-success' },
+    not_found: { label: 'Not found', className: 'bg-warning-soft text-warning-foreground' },
+    unknown: { label: 'Not known', className: 'bg-muted text-foreground-muted' },
+  }
+  const RESULTS: Record<SearchResult, string> = {
+    page: 'This page',
+    unresolved: 'Results from the site, page not known',
+    other_pages: 'Other pages of the site only',
+    fallback: 'No match. Google showed unrelated sites',
+    other_sites: 'Other sites only',
+    empty: 'No results',
+    error: 'Search failed',
+  }
+  const LEVELS: Record<Check['level'], string> = {
+    pass: 'Pass',
+    warn: 'Check',
+    fail: 'Problem',
+    info: 'Note',
+  }
+
+  function el<K extends keyof HTMLElementTagNameMap>(tag: K, className = '', text = ''): HTMLElementTagNameMap[K] {
+    const node = document.createElement(tag)
+    if (className) node.className = className
+    if (text) node.textContent = text
+    return node
+  }
+
+  // Quotes a cell when it needs it, and stops a spreadsheet reading a cell
+  // as a formula.
+  function csvCell(value: string | number | boolean | null): string {
+    let text = value === null ? '' : String(value)
+    if (/^[=+\-@]/u.test(text)) text = `'${text}`
+    return /[",\n]/u.test(text) ? `"${text.replaceAll('"', '""')}"` : text
+  }
+
+  function searchLabel(search: Search): string {
+    if (search.result === 'page' && search.position !== null) return `This page, position ${search.position}`
+    if (search.result === 'error') return search.error ? `Search failed: ${search.error}` : 'Search failed'
+    return RESULTS[search.result] ?? search.result
+  }
+
+  function parseUrls(value: string): { urls: string[]; error: string | null } {
+    const lines = value
+      .split(/\r?\n/u)
+      .map((line) => line.trim())
+      .filter(Boolean)
+    if (!lines.length) return { urls: [], error: 'Enter at least one page URL.' }
+    if (lines.length > MAX_URLS) return { urls: [], error: `Enter up to ${MAX_URLS} URLs. You entered ${lines.length}.` }
+    for (const line of lines) {
+      try {
+        const url = new URL(/^[a-z][a-z\d+.-]*:\/\//iu.test(line) ? line : `https://${line}`)
+        if (url.protocol !== 'http:' && url.protocol !== 'https:') throw new Error()
+      } catch {
+        return { urls: [], error: `${line} is not a page URL.` }
+      }
+    }
+    return { urls: lines, error: null }
+  }
+
+  function initialise(root: HTMLElement): void {
+    if (root.dataset.initialised === 'true') return
+    root.dataset.initialised = 'true'
+    const $ = <T extends HTMLElement>(selector: string) => root.querySelector<T>(selector)
+    const form = $<HTMLFormElement>('[data-form]')
+    const input = $<HTMLTextAreaElement>('[data-urls]')
+    const market = $<HTMLSelectElement>('[data-country]')
+    const submit = $<HTMLButtonElement>('[data-submit]')
+    const progress = $<HTMLElement>('[data-progress]')
+    const error = $<HTMLElement>('[data-error]')
+    const results = $<HTMLElement>('[data-results]')
+    const title = $<HTMLElement>('[data-title]')
+    const summary = $<HTMLElement>('[data-summary]')
+    const counts = $<HTMLElement>('[data-counts]')
+    const pages = $<HTMLElement>('[data-pages]')
+    const download = $<HTMLButtonElement>('[data-download]')
+    if (!form || !input || !market || !submit || !progress || !error || !results || !title || !summary || !counts || !pages || !download) return
+    const label = submit.textContent ?? ''
+    let current: Result | null = null
+
+    const fact = (name: string, value: number) => {
+      const box = el('div', 'rounded-lg bg-card p-3')
+      box.append(el('dt', 'text-xs text-foreground-muted', name), el('dd', 'mt-1 text-xl font-medium text-foreground', String(value)))
+      return box
+    }
+
+    const renderPage = (page: Page) => {
+      const card = el('article', 'min-w-0 space-y-5 rounded-lg bg-muted p-5 text-foreground sm:p-6')
+      const head = el('div', 'flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between')
+      const link = el('a', 'min-w-0 break-words font-mono text-sm text-foreground underline-offset-4 hover:underline [overflow-wrap:anywhere]', page.url)
+      link.href = page.url
+      link.rel = 'noreferrer nofollow'
+      link.target = '_blank'
+      const verdict = VERDICTS[page.search.verdict]
+      head.append(link, el('span', `shrink-0 self-start rounded-md px-2 py-1 text-xs font-medium ${verdict.className}`, verdict.label))
+      card.append(head, el('p', 'text-sm leading-6 text-foreground', page.reading))
+
+      const google = el('div', 'space-y-2')
+      google.append(el('p', 'text-sm font-medium text-foreground', 'What Google returned'), el('p', 'text-xs leading-5 text-foreground-muted', page.search.reason))
+      if (page.search.searches.length) {
+        const scroll = el('div', '-mx-5 overflow-x-auto px-5 sm:-mx-6 sm:px-6')
+        const table = el('table', 'w-full min-w-[34rem] text-left text-sm')
+        const thead = el('thead', 'text-xs text-foreground-muted')
+        const headRow = el('tr')
+        for (const column of ['Search', 'Device', 'What came back']) {
+          const th = el('th', 'py-2 pr-3 font-normal', column)
+          th.scope = 'col'
+          headRow.append(th)
+        }
+        thead.append(headRow)
+        const tbody = el('tbody')
+        for (const search of page.search.searches) {
+          const tr = el('tr', 'border-t border-border')
+          const found = search.result === 'page'
+          tr.append(
+            el('td', 'max-w-[18rem] py-2 pr-3 align-top font-mono text-xs break-words text-foreground [overflow-wrap:anywhere]', search.query),
+            el('td', 'py-2 pr-3 align-top text-foreground-muted', search.device === 'mobile' ? 'Mobile' : 'Desktop'),
+            el('td', `py-2 pr-3 align-top ${found ? 'text-success' : 'text-foreground-muted'}`, searchLabel(search)),
+          )
+          tbody.append(tr)
+        }
+        table.append(thead, tbody)
+        scroll.append(table)
+        google.append(scroll)
+      }
+      if (!page.search.phrases.length && page.search.searches.length) {
+        google.append(el('p', 'text-xs leading-5 text-foreground-muted', 'No exact phrase could be read from the page, so only the site: search ran.'))
+      }
+      card.append(google)
+
+      const rules = el('div', 'space-y-2')
+      rules.append(el('p', 'text-sm font-medium text-foreground', 'What the page tells Google'))
+      if (page.indexability.state === 'unavailable') {
+        rules.append(el('p', 'text-sm leading-6 text-foreground-muted', page.indexability.reason))
+      } else {
+        rules.append(el('p', 'text-sm leading-6 text-foreground-muted', `${page.indexability.headline}. ${page.indexability.summary}`))
+        const list = el('ul', 'space-y-2')
+        for (const check of page.indexability.checks.filter((item) => item.id !== 'javascript')) {
+          const item = el('li', 'rounded-lg bg-card p-3 text-sm leading-6')
+          const level = el('span', `mr-2 text-xs font-medium ${check.level === 'fail' ? 'text-destructive' : check.level === 'warn' ? 'text-warning-foreground' : check.level === 'pass' ? 'text-success' : 'text-foreground-muted'}`, LEVELS[check.level])
+          item.append(level, check.message)
+          if (check.fix) item.append(el('p', 'mt-1 text-xs leading-5 text-foreground-muted', check.fix))
+          list.append(item)
+        }
+        rules.append(list)
+      }
+      const more = el('p', 'text-xs leading-5 text-foreground-muted')
+      const noindexLink = el('a', 'underline underline-offset-4 hover:text-foreground', 'noindex checker')
+      noindexLink.href = '/tools/noindex-checker'
+      more.append('For every robots rule on one page and how to fix it, use the ', noindexLink, '.')
+      rules.append(more)
+      card.append(rules)
+      return card
+    }
+
+    const render = (result: Result) => {
+      current = result
+      const where = MARKETS[result.country] ?? result.country
+      const total = result.pages.length
+      title.textContent = total === 1
+        ? VERDICTS[result.pages[0]?.search.verdict ?? 'unknown'].label
+        : `${result.counts.indexed} of ${total} pages found in Google`
+      const when = new Date(result.checkedAt)
+      summary.textContent = `Searched in ${where} on desktop and mobile at ${when.toLocaleString('en-GB', { dateStyle: 'medium', timeStyle: 'short' })}. Google's answers can change from one run to the next.`
+      counts.replaceChildren(fact('Found', result.counts.indexed), fact('Not found', result.counts.notFound), fact('Not known', result.counts.unknown))
+      pages.replaceChildren(...result.pages.map(renderPage))
+      results.hidden = false
+      results.scrollIntoView({ behavior: 'smooth', block: 'start' })
+    }
+
+    download.addEventListener('click', () => {
+      if (!current) return
+      const header = ['url', 'verdict', 'reading', 'search', 'device', 'search_result', 'position', 'page_status', 'final_url', 'noindex', 'robots_txt', 'canonical', 'country', 'checked_at']
+      const lines = current.pages.flatMap((page) => {
+        const rules = page.indexability.state === 'checked' ? page.indexability : null
+        const base = (search: Search | null) => [
+          page.url,
+          page.search.verdict,
+          page.reading,
+          search?.query ?? '',
+          search?.device ?? '',
+          search ? searchLabel(search) : page.search.reason,
+          search?.position ?? null,
+          rules?.status ?? null,
+          rules?.finalUrl ?? '',
+          rules ? rules.noindex : 'unknown',
+          rules?.robotsTxt ?? 'unknown',
+          rules?.canonical.url ?? '',
+          current?.country ?? '',
+          current?.checkedAt ?? '',
+        ]
+        const rows = page.search.searches.length ? page.search.searches.map(base) : [base(null)]
+        return rows.map((row) => row.map(csvCell).join(','))
+      })
+      const link = document.createElement('a')
+      link.href = URL.createObjectURL(new Blob([[header.join(','), ...lines].join('\n')], { type: 'text/csv;charset=utf-8' }))
+      link.download = 'google-index-check.csv'
+      link.click()
+      URL.revokeObjectURL(link.href)
+    })
+
+    form.addEventListener('submit', async (event) => {
+      event.preventDefault()
+      error.hidden = true
+      const parsed = parseUrls(input.value)
+      if (parsed.error) {
+        error.textContent = parsed.error
+        error.hidden = false
+        input.focus()
+        return
+      }
+      const token = new FormData(form).get('turnstileToken')
+      if (typeof token !== 'string' || !token) {
+        error.textContent = 'Complete the security check first.'
+        error.hidden = false
+        return
+      }
+      submit.disabled = true
+      submit.textContent = 'Checking...'
+      progress.hidden = false
+      try {
+        const response = await fetch(root.dataset.endpoint ?? '', {
+          method: 'POST',
+          headers: { 'content-type': 'application/json' },
+          body: JSON.stringify({ urls: parsed.urls.join('\n'), country: market.value, turnstileToken: token }),
+        })
+        if (!response.headers.get('content-type')?.includes('application/json')) {
+          throw new Error('The check could not be completed.')
+        }
+        const data = (await response.json()) as { result?: Result; error?: string }
+        if (response.status === 429) throw new Error(data.error || 'Daily check limit reached. Try again tomorrow.')
+        if (!response.ok || !data.result) throw new Error(data.error || 'The check could not be completed.')
+        render(data.result)
+      } catch (caught) {
+        error.textContent = caught instanceof Error ? caught.message : 'The check could not be completed.'
+        error.hidden = false
+      } finally {
+        submit.disabled = false
+        submit.textContent = label
+        progress.hidden = true
+        const widget = $<HTMLElement>('[data-turnstile-container]')
+        if (widget) window.turnstile?.reset(widget)
+      }
+    })
+  }
+
+  const initialiseAll = () => {
+    for (const root of document.querySelectorAll<HTMLElement>('[data-index-checker]')) initialise(root)
+  }
+  initialiseAll()
+  document.addEventListener('astro:page-load', initialiseAll)
+</script>

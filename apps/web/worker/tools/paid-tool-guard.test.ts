@@ -48,6 +48,28 @@ test('quota allows exactly three daily calls for one identity and tool', () => {
   })
 })
 
+test('a run that costs more than one unit needs that much budget left', () => {
+  // A 10-cent run with 9 cents left is refused, not allowed to overspend.
+  const denied = decidePaidToolQuota({
+    identityUsed: 0,
+    providerUsed: 491,
+    providerDailyLimit: 500,
+    cost: 10,
+  })
+  assert.equal(denied.allowed, false)
+  assert.equal(denied.reason, 'provider-limit')
+
+  const allowed = decidePaidToolQuota({
+    identityUsed: 0,
+    providerUsed: 490,
+    providerDailyLimit: 500,
+    cost: 10,
+  })
+  assert.equal(allowed.allowed, true)
+  assert.equal(allowed.providerUsed, 500)
+  assert.equal(allowed.providerRemaining, 0)
+})
+
 test('provider budget is a separate global ceiling', () => {
   const finalCall = decidePaidToolQuota({
     identityUsed: 0,

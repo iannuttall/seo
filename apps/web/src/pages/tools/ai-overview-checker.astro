@@ -1,0 +1,174 @@
+---
+import Breadcrumbs from '@/components/Breadcrumbs.astro'
+import CodeBlock from '@/components/CodeBlock.astro'
+import FaqAccordion from '@/components/FaqAccordion.astro'
+import PageHeader from '@/components/PageHeader.astro'
+import SetupCommands from '@/components/SetupCommands.astro'
+import AiOverviewChecker from '@/components/tools/AiOverviewChecker.astro'
+import BaseLayout from '@/layouts/BaseLayout.astro'
+import type { SchemaBreadcrumb } from '@/lib/schema'
+
+const breadcrumbs: SchemaBreadcrumb[] = [
+  { label: 'Home', href: '/' },
+  { label: 'Tools', href: '/tools' },
+  { label: 'AI Overview checker' },
+]
+
+const faq = [
+  {
+    question: 'What is an AI Overview?',
+    answer:
+      'The AI written summary Google shows above the results for some searches. It answers the search in a few paragraphs and links the pages it drew on as sources.',
+  },
+  {
+    question: 'How does the AI Overview checker work?',
+    answer:
+      'When you press the button it searches Google live for each keyword through DataForSEO, in the country and on the device you pick. It reads the AI Overview, its sources in order and the first 20 organic results from that same page, then matches each source to its organic position.',
+  },
+  {
+    question: 'Is this AI Overview checker free?',
+    answer:
+      'Yes. You get 3 free checks a day, each with up to five keywords, and you need no email or signup. For more, your agent can run the same check with your own DataForSEO key, which bills you directly.',
+  },
+  {
+    question: 'Why does a keyword show no AI Overview when I see one?',
+    answer:
+      'Google does not show the same page to everyone. Overviews differ by location, device, signed in state and the moment you search, so one check can miss an overview that shows up on the next search. Run the check again before you treat a missing overview as a no.',
+  },
+  {
+    question: 'Why does a source say the page is unknown?',
+    answer:
+      'Google sometimes links a source through its own redirect address instead of the page itself. The checker shows the title Google gave it and says the page is unknown, rather than guessing the address or dropping the source.',
+  },
+  {
+    question: 'Does my site count if a subdomain is cited?',
+    answer:
+      'Yes. If you enter example.com, a source or result on blog.example.com or shop.example.com counts as yours and is highlighted.',
+  },
+  {
+    question: 'Will ranking higher get my page cited?',
+    answer:
+      'Not on its own. The position column shows where each cited page ranks on the same results page, which tells you whether Google drew on top results or reached further down for this search. It is one observation, not a rule for how sources are picked.',
+  },
+]
+---
+
+<BaseLayout
+  title="Free AI Overview checker with cited sources"
+  description="Check whether Google shows an AI Overview for up to five keywords, read what it says, and see each cited source matched to its organic rank. Free, no signup."
+  canonicalPath="/tools/ai-overview-checker"
+  {breadcrumbs}
+>
+  <main data-agent-content>
+    <Breadcrumbs {breadcrumbs} />
+    <PageHeader
+      title="AI Overview checker"
+      description="See whether Google shows an AI Overview for your keywords, what it says, which pages it cites and where those pages rank."
+    />
+
+    <AiOverviewChecker />
+
+    <div class="docs-prose mt-16">
+      <h2>Read the AI Overview results</h2>
+      <p>
+        The first table gives one line per keyword: whether Google showed an
+        AI Overview, how many sources it cited and, if you added your domain,
+        whether your site is cited and where it ranks. Under it, each keyword
+        has the overview's own text and its sources in the order Google
+        listed them.
+      </p>
+      <table>
+        <thead>
+          <tr>
+            <th>Column</th>
+            <th>What it tells you</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>#</td>
+            <td>The source's place in the overview's list, first to last.</td>
+          </tr>
+          <tr>
+            <td>Cited source</td>
+            <td>The page title and address Google linked.</td>
+          </tr>
+          <tr>
+            <td>Page position</td>
+            <td>Where that exact page ranks in the first 20 organic results on the same search.</td>
+          </tr>
+          <tr>
+            <td>Best on the site</td>
+            <td>The highest organic position of any page on the source's site, which shows when Google cites a different page from the one that ranks.</td>
+          </tr>
+        </tbody>
+      </table>
+
+      <h2>Shown, not shown and unknown</h2>
+      <p>
+        Each keyword gets one of four answers. Shown means Google put an AI
+        Overview on the page. Not shown means the page came back without
+        one. Unknown means the search failed or returned no results, so the
+        checker cannot say either way (and it never counts those as a no).
+      </p>
+      <p>
+        Not shown is weaker evidence than shown. The checker waits for the
+        overviews Google builds after the page loads, but Google does not show
+        one for every search every time, so a keyword that shows nothing
+        today is worth checking again before you write it off.
+      </p>
+
+      <h2>Compare cited sources with organic rank</h2>
+      <p>
+        Matching each source to its rank answers a practical question: is
+        Google citing the pages it already ranks, or reaching past them? When
+        most sources sit in the top five, the overview mostly repeats the
+        results page. When several are outside the top 20, Google is drawing
+        on pages that do not rank for this exact wording, which is worth a
+        closer look at what those pages say.
+      </p>
+      <p>
+        Add your domain to see both sides for your own site. A page that ranks
+        on the first page but is not cited is a good place to start reading
+        the overview text against your content. Subdomains count as yours, so
+        blog.example.com is highlighted when you enter example.com.
+      </p>
+
+      <h2>How the check runs</h2>
+      <p>
+        Each keyword is one live Google search through DataForSEO at the
+        moment you press the button, in the country and on the device you
+        choose. The overview, its sources and the organic results all come
+        from that same page, read 20 results deep, and the results show when
+        they were checked.
+      </p>
+      <p>
+        AI Overviews change from one search to the next, by location and by
+        device. Treat each run as one snapshot. When Google links a source
+        through its own redirect, the page is unknown, so the source keeps its
+        title and has no position. For the full organic results of one
+        keyword, use the <a href="/tools/serp-checker">SERP checker</a>.
+      </p>
+
+      <h2>Track AI Overviews with your AI agent</h2>
+      <p>
+        With SEO Skill your agent can run the same check with{' '}
+        <a href="/docs/research">seo research</a> and your own DataForSEO key,
+        for the queries your site already gets impressions for in Search
+        Console. That way you check the keywords that matter to you, not a
+        list you guessed. Ask:
+      </p>
+      <CodeBlock value="Check which of my top 20 Search Console queries for example.com show a Google AI Overview, list the sources each one cites with their organic positions, and tell me where my pages rank but are not cited" wrap />
+      <p>Add the hosted MCP server to your agent and sign in with Google:</p>
+    </div>
+
+    <SetupCommands id="ai-overview-setup" class="mt-6" />
+
+    <div class="docs-prose mt-16">
+      <h2>AI Overview checker questions</h2>
+    </div>
+    <div class="mt-6">
+      <FaqAccordion id="ai-overview-faq" items={faq} />
+    </div>
+  </main>
+</BaseLayout>

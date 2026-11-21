@@ -1,0 +1,417 @@
+---
+import Button from '@/components/Button.astro'
+import Card from '@/components/Card.astro'
+import FormInput from '@/components/FormInput.astro'
+import FormSelect from '@/components/FormSelect.astro'
+import FormTextarea from '@/components/FormTextarea.astro'
+import TurnstileWidget from '@/components/tools/TurnstileWidget.astro'
+
+const markets = [
+  ['us', 'United States'],
+  ['gb', 'United Kingdom'],
+  ['ca', 'Canada'],
+  ['au', 'Australia'],
+  ['in', 'India'],
+  ['de', 'Germany'],
+  ['fr', 'France'],
+  ['es', 'Spain'],
+  ['it', 'Italy'],
+  ['nl', 'Netherlands'],
+]
+const example = [
+  'coffee grinder',
+  'best coffee grinder',
+  'burr coffee grinder',
+  'manual coffee grinder',
+  'how to grind coffee beans',
+  'espresso grinder',
+].join('\n')
+---
+
+<section data-keyword-clustering data-endpoint="/api/tools/keyword-clustering" class="space-y-6">
+  <Card>
+    <form data-form class="space-y-5 p-5 sm:p-6" novalidate>
+      <div class="space-y-1">
+        <h2 class="text-lg font-medium">Cluster your keywords</h2>
+        <p class="text-sm leading-6 text-foreground-muted">Paste 2 to 50 keywords, one per line, and pick the country you want to rank in.</p>
+      </div>
+
+      <label class="block space-y-2 text-sm font-medium">
+        <span class="flex justify-between gap-3"><span>Keywords</span><span data-count class="font-normal text-foreground-muted">0 of 50</span></span>
+        <FormTextarea
+          data-keywords
+          rows="8"
+          autocapitalize="off"
+          spellcheck="false"
+          placeholder={'coffee grinder\nbest coffee grinder\nhow to grind coffee beans'}
+        />
+      </label>
+
+      <div class="grid gap-4 sm:grid-cols-[minmax(0,1fr)_12rem]">
+        <label class="block space-y-2 text-sm font-medium">
+          <span>Your domain <span class="font-normal text-foreground-muted">(optional, to see where it ranks)</span></span>
+          <FormInput data-domain type="text" inputmode="url" autocapitalize="off" spellcheck="false" maxlength="253" placeholder="example.com" />
+        </label>
+        <label class="block space-y-2 text-sm font-medium">
+          <span>Country</span>
+          <FormSelect data-country>
+            {markets.map(([code, name]) => <option value={code}>{name}</option>)}
+          </FormSelect>
+        </label>
+      </div>
+
+      <TurnstileWidget action="keyword-clustering" />
+
+      <div class="flex flex-wrap items-center justify-between gap-4">
+        <p class="text-xs leading-5 text-foreground-muted">
+          3 free checks a day, no signup.
+          <button type="button" data-example={example} class="ml-1 underline underline-offset-4 hover:text-foreground">Try a coffee grinder list</button>
+        </p>
+        <Button data-submit type="submit" class="min-h-10 shrink-0 px-5 text-xs">Cluster keywords</Button>
+      </div>
+      <p data-error hidden class="text-sm leading-6 text-red-700 dark:text-red-400" role="alert"></p>
+    </form>
+  </Card>
+
+  <div data-results hidden class="space-y-6">
+    <Card inverted>
+      <div class="space-y-5 p-5 sm:p-6">
+        <div class="flex flex-wrap items-start justify-between gap-3">
+          <div class="space-y-1">
+            <h3 data-title class="text-xl font-medium text-foreground"></h3>
+            <p data-summary class="text-sm leading-6 text-foreground-muted"></p>
+          </div>
+          <Button data-download type="button" class="min-h-9 px-3 text-xs">Download CSV</Button>
+        </div>
+
+        <label class="block space-y-2 text-sm font-medium">
+          <span class="flex justify-between gap-3"><span>Shared pages needed to group two keywords</span><span data-threshold-value class="font-mono"></span></span>
+          <input data-threshold type="range" min="1" max="10" step="1" value="4" class="w-full accent-primary" />
+        </label>
+
+        <div data-clusters class="space-y-4"></div>
+
+        <div data-unclustered hidden class="space-y-2 border-t border-border pt-4">
+          <p class="text-sm font-medium text-foreground">Unclustered</p>
+          <p class="text-xs leading-5 text-foreground-muted">These share too few pages with any cluster lead at this setting. Each probably needs its own page, or a lower setting.</p>
+          <ul data-unclustered-list class="space-y-1 text-sm text-foreground-muted"></ul>
+        </div>
+
+        <div data-unchecked hidden class="space-y-2 border-t border-border pt-4">
+          <p class="text-sm font-medium text-foreground">Not compared</p>
+          <p class="text-xs leading-5 text-foreground-muted">These are left out of the clusters because there was nothing to compare. That is not the same as sharing no pages.</p>
+          <ul data-unchecked-list class="space-y-1 text-sm text-foreground-muted"></ul>
+        </div>
+
+        <p data-notes class="border-t border-border pt-3 text-xs leading-5 text-foreground-muted"></p>
+      </div>
+    </Card>
+
+    <Card>
+      <div class="space-y-3 p-5 sm:p-6">
+        <h3 class="text-lg font-medium">Run it from your agent with your own key</h3>
+        <p class="text-sm leading-6 text-foreground-muted">This page gives you 3 checks a day. With a free account and your own DataForSEO key, your agent compares the results for any keywords you plan and checks which of them your pages already get impressions for in Search Console.</p>
+        <ol class="list-decimal space-y-1 pl-5 text-sm leading-6 text-foreground-muted">
+          <li>Sign in with Google on your account page. That creates the free account.</li>
+          <li>Save your DataForSEO key in the Keys tab. DataForSEO bills you directly.</li>
+          <li>Connect the hosted MCP to your agent and ask it which of your keywords belong on one page.</li>
+        </ol>
+        <div class="flex flex-wrap gap-2 pt-1">
+          <Button href="/account" class="min-h-10 px-4 text-xs">Get started free</Button>{' '}
+          <Button href="/docs/keys" variant="outline" class="min-h-10 px-4 text-xs">How keys work</Button>
+        </div>
+      </div>
+    </Card>
+  </div>
+</section>
+
+<script>
+  import { clusterKeywords, keywordClustersCsv } from '@/lib/keyword-clusters'
+
+  type Keyword = {
+    keyword: string
+    status: 'ok' | 'no_results' | 'failed'
+    results: number
+    compared: number
+    pages: string[]
+    domains: string[]
+    domainPosition: number | null
+    domainUrl: string | null
+  }
+  type Result = {
+    country: string
+    domain: string | null
+    keywords: Keyword[]
+    partial: boolean
+    checkedAt: string
+  }
+
+  declare global {
+    interface Window {
+      turnstile?: { reset(container?: HTMLElement): void }
+    }
+  }
+
+  const MARKETS: Record<string, string> = {
+    us: 'the United States',
+    gb: 'the United Kingdom',
+    ca: 'Canada',
+    au: 'Australia',
+    in: 'India',
+    de: 'Germany',
+    fr: 'France',
+    es: 'Spain',
+    it: 'Italy',
+    nl: 'the Netherlands',
+  }
+  const MAX_KEYWORDS = 50
+  const KEYWORD_CHARACTERS = 200
+  // The server reads at most this many bytes of request.
+  const MAX_BODY = 8_192
+
+  // One keyword per line, spaces collapsed, repeats dropped whatever their case.
+  function readKeywords(text: string): string[] {
+    const seen = new Set<string>()
+    const keywords: string[] = []
+    for (const line of text.split(/\r?\n/u)) {
+      const keyword = line.trim().replace(/\s+/gu, ' ')
+      const key = keyword.toLowerCase()
+      if (!keyword || seen.has(key)) continue
+      seen.add(key)
+      keywords.push(keyword)
+    }
+    return keywords
+  }
+
+  const reasonFor = (item: Keyword) =>
+    item.status === 'failed'
+      ? 'search failed'
+      : item.status === 'no_results'
+        ? 'no results'
+        : 'no pages to compare'
+
+  function initialise(root: HTMLElement): void {
+    if (root.dataset.initialised === 'true') return
+    root.dataset.initialised = 'true'
+    const $ = <T extends HTMLElement>(selector: string) => root.querySelector<T>(selector)
+    const form = $<HTMLFormElement>('[data-form]')
+    const input = $<HTMLTextAreaElement>('[data-keywords]')
+    const counter = $<HTMLElement>('[data-count]')
+    const domainInput = $<HTMLInputElement>('[data-domain]')
+    const market = $<HTMLSelectElement>('[data-country]')
+    const submit = $<HTMLButtonElement>('[data-submit]')
+    const error = $<HTMLElement>('[data-error]')
+    const results = $<HTMLElement>('[data-results]')
+    const title = $<HTMLElement>('[data-title]')
+    const summary = $<HTMLElement>('[data-summary]')
+    const slider = $<HTMLInputElement>('[data-threshold]')
+    const sliderValue = $<HTMLElement>('[data-threshold-value]')
+    const clustersEl = $<HTMLElement>('[data-clusters]')
+    const unclustered = $<HTMLElement>('[data-unclustered]')
+    const unclusteredList = $<HTMLElement>('[data-unclustered-list]')
+    const unchecked = $<HTMLElement>('[data-unchecked]')
+    const uncheckedList = $<HTMLElement>('[data-unchecked-list]')
+    const notes = $<HTMLElement>('[data-notes]')
+    const download = $<HTMLButtonElement>('[data-download]')
+    if (
+      !form || !input || !counter || !domainInput || !market || !submit || !error || !results || !title ||
+      !summary || !slider || !sliderValue || !clustersEl || !unclustered || !unclusteredList || !unchecked ||
+      !uncheckedList || !notes || !download
+    ) {
+      return
+    }
+    const label = submit.textContent ?? ''
+    let current: Result | null = null
+
+    const updateCount = () => {
+      counter.textContent = `${readKeywords(input.value).length} of ${MAX_KEYWORDS}`
+    }
+    input.addEventListener('input', updateCount)
+    updateCount()
+    root.querySelector<HTMLButtonElement>('[data-example]')?.addEventListener('click', (event) => {
+      input.value = (event.currentTarget as HTMLButtonElement).dataset.example ?? ''
+      updateCount()
+      input.focus()
+    })
+
+    const comparable = (result: Result) => result.keywords.filter((item) => item.status === 'ok' && item.compared > 0)
+    const notCompared = (result: Result) =>
+      result.keywords.filter((item) => item.status !== 'ok' || item.compared === 0)
+
+    const position = (item: Keyword | undefined) => {
+      if (!item || !current?.domain) return null
+      return item.domainPosition === null ? 'not in the top 10' : `ranks ${item.domainPosition}`
+    }
+
+    const draw = () => {
+      if (!current) return
+      const result = current
+      const threshold = Number(slider.value)
+      sliderValue.textContent = `${threshold} of 10`
+      const byKeyword = new Map(result.keywords.map((item) => [item.keyword, item]))
+      const clustering = clusterKeywords(comparable(result), threshold)
+      const grouped = clustering.clusters.reduce((sum, cluster) => sum + cluster.keywords.length, 0)
+      summary.textContent = clustering.clusters.length
+        ? `${grouped} keywords in ${clustering.clusters.length} ${clustering.clusters.length === 1 ? 'cluster' : 'clusters'}, ${clustering.unclustered.length} unclustered, at ${threshold} or more shared pages.`
+        : `No two keywords share ${threshold} or more pages. Try a lower setting.`
+
+      clustersEl.replaceChildren()
+      clustering.clusters.forEach((cluster, index) => {
+        const block = document.createElement('div')
+        block.className = 'space-y-3 rounded-lg bg-card p-4'
+        const heading = document.createElement('p')
+        heading.className = 'text-base font-medium text-foreground'
+        heading.textContent = `${index + 1}. ${cluster.lead}`
+        const list = document.createElement('ul')
+        list.className = 'space-y-1 text-sm'
+        for (const member of cluster.keywords) {
+          const li = document.createElement('li')
+          li.className = 'flex flex-wrap justify-between gap-x-3'
+          const name = document.createElement('span')
+          name.className = 'text-foreground'
+          name.textContent = member.keyword
+          const detail = document.createElement('span')
+          detail.className = 'text-foreground-muted'
+          const parts = [
+            member.sharedWithLead === null ? 'lead keyword' : `${member.sharedWithLead} pages shared with the lead`,
+          ]
+          const ranks = position(byKeyword.get(member.keyword))
+          if (ranks) parts.push(`${result.domain} ${ranks}`)
+          detail.textContent = parts.join(', ')
+          li.append(name, detail)
+          list.append(li)
+        }
+        const pages = document.createElement('details')
+        pages.className = 'text-xs text-foreground-muted'
+        const toggle = document.createElement('summary')
+        toggle.className = 'cursor-pointer'
+        toggle.textContent = `${cluster.sharedPages.length} pages rank for two or more of these keywords`
+        const pageList = document.createElement('ul')
+        pageList.className = 'mt-2 space-y-1'
+        for (const page of cluster.sharedPages) {
+          const li = document.createElement('li')
+          li.className = 'flex justify-between gap-3'
+          const key = document.createElement('span')
+          key.className = 'min-w-0 truncate font-mono'
+          key.textContent = page.page
+          const count = document.createElement('span')
+          count.className = 'shrink-0'
+          count.textContent = `${page.keywords} keywords`
+          li.append(key, count)
+          pageList.append(li)
+        }
+        pages.append(toggle, pageList)
+        block.append(heading, list, pages)
+        clustersEl.append(block)
+      })
+
+      unclusteredList.replaceChildren()
+      for (const keyword of clustering.unclustered) {
+        const li = document.createElement('li')
+        const ranks = position(byKeyword.get(keyword))
+        li.textContent = ranks ? `${keyword} (${result.domain} ${ranks})` : keyword
+        unclusteredList.append(li)
+      }
+      unclustered.hidden = clustering.unclustered.length === 0
+
+      const missing = notCompared(result)
+      uncheckedList.replaceChildren()
+      for (const item of missing) {
+        const li = document.createElement('li')
+        li.textContent = `${item.keyword} (${reasonFor(item)})`
+        uncheckedList.append(li)
+      }
+      unchecked.hidden = missing.length === 0
+    }
+
+    slider.addEventListener('input', draw)
+
+    download.addEventListener('click', () => {
+      if (!current) return
+      const csv = keywordClustersCsv(
+        clusterKeywords(comparable(current), Number(slider.value)),
+        notCompared(current).map((item) => ({ keyword: item.keyword, reason: reasonFor(item) })),
+      )
+      const url = URL.createObjectURL(new Blob([csv], { type: 'text/csv' }))
+      const link = document.createElement('a')
+      link.href = url
+      link.download = 'keyword-clusters.csv'
+      link.click()
+      URL.revokeObjectURL(url)
+    })
+
+    const render = (result: Result) => {
+      current = result
+      const where = MARKETS[result.country] ?? result.country
+      const checked = new Date(result.checkedAt)
+      title.textContent = `Keyword clusters for ${where}`
+      const read = result.keywords.filter((item) => item.status === 'ok')
+      const parts = [
+        `Checked ${Number.isFinite(checked.getTime()) ? checked.toLocaleString('en-GB', { dateStyle: 'medium', timeStyle: 'short' }) : 'just now'} from the top 10 organic Google results for each keyword (${read.length} of ${result.keywords.length} keywords read). `,
+        'Each group is named after the keyword that links to the most others. Google results change through the day, so a fresh check can move a keyword that sits right at the line. ',
+        'Some results are Google redirect links with no exact page; those are matched by the site and path Google shows, and are not compared when that is shortened.',
+      ]
+      if (result.partial) parts.push(' DataForSEO could not fetch every results page, so some keywords have fewer than 10 results.')
+      notes.replaceChildren(...parts)
+      draw()
+      results.hidden = false
+      results.scrollIntoView({ behavior: 'smooth', block: 'start' })
+    }
+
+    form.addEventListener('submit', async (event) => {
+      event.preventDefault()
+      error.hidden = true
+      const keywords = readKeywords(input.value)
+      const fail = (message: string) => {
+        error.textContent = message
+        error.hidden = false
+      }
+      if (keywords.length < 2) return fail('Enter at least 2 different keywords, one per line.')
+      if (keywords.length > MAX_KEYWORDS) return fail(`Enter at most ${MAX_KEYWORDS} keywords. This list has ${keywords.length}.`)
+      if (keywords.some((keyword) => keyword.length > KEYWORD_CHARACTERS)) {
+        return fail(`Keep each keyword under ${KEYWORD_CHARACTERS} characters.`)
+      }
+      const token = new FormData(form).get('turnstileToken')
+      if (typeof token !== 'string' || !token) return fail('Complete the security check first.')
+      const domain = domainInput.value.trim()
+      const body = JSON.stringify({
+        keywords,
+        country: market.value,
+        ...(domain ? { domain } : {}),
+        turnstileToken: token,
+      })
+      if (new TextEncoder().encode(body).byteLength > MAX_BODY) {
+        return fail('This list is too long to send in one check. Remove a few keywords or shorten the longest ones.')
+      }
+      submit.disabled = true
+      submit.textContent = 'Checking...'
+      try {
+        const response = await fetch(root.dataset.endpoint ?? '', {
+          method: 'POST',
+          headers: { 'content-type': 'application/json' },
+          body,
+        })
+        if (!response.headers.get('content-type')?.includes('application/json')) {
+          throw new Error('The check could not be completed.')
+        }
+        const data = (await response.json()) as { result?: Result; error?: string }
+        if (response.status === 429) throw new Error(data.error || 'Daily check limit reached. Try again tomorrow.')
+        if (!response.ok || !data.result) throw new Error(data.error || 'The check could not be completed.')
+        render(data.result)
+      } catch (caught) {
+        fail(caught instanceof Error ? caught.message : 'The check could not be completed.')
+      } finally {
+        submit.disabled = false
+        submit.textContent = label
+        const widget = $<HTMLElement>('[data-turnstile-container]')
+        if (widget) window.turnstile?.reset(widget)
+      }
+    })
+  }
+
+  const initialiseAll = () => {
+    for (const root of document.querySelectorAll<HTMLElement>('[data-keyword-clustering]')) initialise(root)
+  }
+  initialiseAll()
+  document.addEventListener('astro:page-load', initialiseAll)
+</script>

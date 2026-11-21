@@ -1,0 +1,173 @@
+---
+import Breadcrumbs from '@/components/Breadcrumbs.astro'
+import CodeBlock from '@/components/CodeBlock.astro'
+import FaqAccordion from '@/components/FaqAccordion.astro'
+import PageHeader from '@/components/PageHeader.astro'
+import SetupCommands from '@/components/SetupCommands.astro'
+import QueryFanOutTool from '@/components/tools/QueryFanOutTool.astro'
+import BaseLayout from '@/layouts/BaseLayout.astro'
+import type { SchemaBreadcrumb } from '@/lib/schema'
+
+const breadcrumbs: SchemaBreadcrumb[] = [
+  { label: 'Home', href: '/' },
+  { label: 'Tools', href: '/tools' },
+  { label: 'Query fan-out tool' },
+]
+
+const faq = [
+  {
+    question: 'What is query fan-out?',
+    answer:
+      'Query fan-out is an AI search engine turning one prompt into one or more web searches of its own, then picking the pages it cites from those results. ChatGPT search and Google AI Mode both do it.',
+  },
+  {
+    question: 'Are these searches real or predicted?',
+    answer:
+      'Real. The tool asks ChatGPT search your prompt through DataForSEO and shows the searches ChatGPT reported running for each answer. Nothing is guessed by a model.',
+  },
+  {
+    question: 'Why is the prompt asked 3 times?',
+    answer:
+      'ChatGPT writes different searches and cites different pages from one run to the next. Three runs show which searches and sites keep coming back and which turned up once.',
+  },
+  {
+    question: 'What does "answered without searching" mean?',
+    answer:
+      'ChatGPT answered that run from what it already knew and did not search the web, so there were no searches to report. The check did not fail. Prompts about settled facts can get answered this way.',
+  },
+  {
+    question: 'Why only ChatGPT?',
+    answer:
+      'Gemini, Google AI Mode and AI Overviews do not report the searches they run, so there is nothing real to show for them. ChatGPT search does.',
+  },
+  {
+    question: 'Is this query fan-out tool free?',
+    answer:
+      'Yes. You get 3 free checks a day with no email or signup. Your agent can run the same check for as many prompts as you need with your own DataForSEO key.',
+  },
+  {
+    question: 'Will ranking for these searches get my site cited?',
+    answer:
+      'Nothing guarantees a citation. The searches show which results ChatGPT read before it answered, so a page that ranks for them is one ChatGPT could see. What it cites is still its choice.',
+  },
+]
+---
+
+<BaseLayout
+  title="Free query fan-out tool for ChatGPT searches"
+  description="See the real web searches ChatGPT runs behind a prompt, asked 3 times, with the sites it cites and whether it cites your domain. Free, no signup."
+  canonicalPath="/tools/query-fan-out-tool"
+  {breadcrumbs}
+>
+  <main data-agent-content>
+    <Breadcrumbs {breadcrumbs} />
+    <PageHeader
+      title="Query fan-out tool"
+      description="See the searches ChatGPT actually ran to answer a prompt, and the sites it cited from them. Recorded from live answers, not predicted."
+    />
+
+    <QueryFanOutTool />
+
+    <div class="docs-prose mt-16">
+      <h2>What query fan-out is</h2>
+      <p>
+        When ChatGPT searches the web, it rarely searches for exactly what was
+        typed. It rewrites the prompt into one or more searches of its own,
+        reads the results, and cites pages from them. That step is query
+        fan-out, and it decides which pages can be cited at all.
+      </p>
+      <p>
+        You can't see these searches in Search Console or a keyword tool. This
+        tool asks ChatGPT search your prompt live through DataForSEO, 3 times,
+        and shows the searches ChatGPT reported for each answer. Most tools
+        that show fan-out queries predict them with a model. These were
+        recorded from real answers.
+      </p>
+      <p>
+        I logged the searches behind dozens of questions in my{' '}
+        <a href="/blog/query-fan-out">query fan-out tests</a>, and they
+        look nothing like keyword tool keywords: long, often with a year, a
+        place or the word "official" in them.
+      </p>
+
+      <h2>Read the searches and cited sites</h2>
+      <table>
+        <thead>
+          <tr>
+            <th>Part</th>
+            <th>What it tells you</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>Searches ChatGPT ran</td>
+            <td>Each search and how many of the 3 runs ran it. A search in 3 of 3 is one ChatGPT reaches for every time.</td>
+          </tr>
+          <tr>
+            <td>Sites ChatGPT cited</td>
+            <td>Each site the answers cited, with how many runs cited it.</td>
+          </tr>
+          <tr>
+            <td>Each run</td>
+            <td>Whether that run searched or answered without searching, the searches it ran, and, if you gave a domain, whether the answer cited your site, named it without a link, or did neither.</td>
+          </tr>
+        </tbody>
+      </table>
+      <p>
+        "Answered without searching" means ChatGPT answered from what it
+        already knew. It is not a failed check, and a prompt that is often
+        answered that way gives a page less chance to be cited. A run that
+        could not be read is shown as not known, never as a miss.
+      </p>
+
+      <h2>Use the searches to plan a page</h2>
+      <p>
+        Search each fan-out query in Google and Bing and see which pages rank.
+        Those are the results ChatGPT read before it answered. If your page is
+        missing from them, the search tells you what to cover: the year, the
+        comparison, the place or the publisher ChatGPT asked for. The{' '}
+        <a href="/tools/serp-checker">SERP checker</a> shows the Google results for
+        any of them.
+      </p>
+      <p>
+        Pay most attention to searches in 2 or 3 runs. A search that turned up
+        once is real, but it may not come back next time (ChatGPT's
+        searches vary from run to run).
+      </p>
+
+      <h2>Why this tool shows ChatGPT only</h2>
+      <p>
+        Gemini, Google AI Mode and AI Overviews do not report the searches they
+        run, so there is no real fan-out to show for them. Google AI Mode does
+        fan out, but you can only see the answer and its sources. ChatGPT
+        search reports each search, so it is the one engine this tool can show
+        honestly.
+      </p>
+      <p>
+        Each check is one snapshot. You get 3 free checks a day without an
+        email or account. The answers change from run to run and day to day,
+        and nothing here means a page will be cited.
+      </p>
+
+      <h2>See fan-out searches for your own questions</h2>
+      <p>
+        With SEO Skill your agent asks ChatGPT the questions your site already
+        gets in Search Console through{' '}
+        <a href="/docs/research">seo research</a> with your own DataForSEO
+        key, and shows the searches behind each answer and whether it cited
+        you. Ask:
+      </p>
+      <CodeBlock value="Ask ChatGPT the top AI-style questions example.com gets in Search Console, show me the searches it ran for each, and tell me which of those searches my pages rank for" wrap />
+      <p>Add the hosted MCP server to your agent and sign in with Google:</p>
+    </div>
+
+    <SetupCommands id="query-fan-out-setup" class="mt-6" />
+
+    <div class="docs-prose mt-16">
+      <h2>Query fan-out tool questions</h2>
+    </div>
+    <div class="mt-6">
+      <FaqAccordion id="query-fan-out-faq" items={faq} />
+    </div>
+  </main>
+</BaseLayout>

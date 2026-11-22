@@ -22,7 +22,7 @@ const MAX_BRANDS = 3
 const MAX_BRAND_CHARACTERS = 60
 const MAX_COMPETITORS = 3
 // How long queued answers are read back before the rest show as not ready.
-const WAIT_SECONDS = 40
+const WAIT_SECONDS = 120
 const TOP_SITES = 10
 const TOP_SEARCHES = 15
 

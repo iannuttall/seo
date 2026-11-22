@@ -3,7 +3,7 @@
 // seo research index_check, on the site's DataForSEO account) and runs the
 // noindex checker on it, so a page that is not found comes with what may
 // keep it out. A failed search or fetch is unknown, never "not indexed".
-import { runResearch } from '@seo/core/commands'
+import { runIndexCheck } from '@seo/core/commands'
 import { checkNoindex, type NoindexResult } from './noindex-checker.ts'
 import { parsePublicUrl, readPageSignals } from './page-signals.ts'
 import {
@@ -21,8 +21,10 @@ export const INDEX_CHECKER_LIMITS = Object.freeze({
   urls: 5,
   inputCharacters: 2_000,
   // Pages checked at once. Each page runs up to six live searches, five at
-  // a time, and a Worker holds six connections open, so more would queue.
-  concurrency: 2,
+  // a time; a Worker holds six connections open and queues the rest. Every
+  // page starts at once because resolving redirect links makes each search
+  // slow to answer, not busy.
+  concurrency: 5,
   // HTML kept from the page for its exact phrases: the head and the H1.
   phraseBytes: 262_144,
   errorCharacters: 200,
@@ -224,20 +226,12 @@ async function searchGoogle(
   country: string,
 ): Promise<IndexCheckerPage['search']> {
   try {
-    const { data } = await runResearch(
-      {
-        provider: 'dataforseo',
-        action: 'index_check',
-        target: url,
-        keywords: phrases,
-        country,
-      },
+    const { data } = await runIndexCheck(
+      { url, phrases, country, resolveGoto: true },
       new Headers({
         'x-dataforseo-login': env.DATAFORSEO_LOGIN,
         'x-dataforseo-password': env.DATAFORSEO_PASSWORD,
       }),
-      // A live check every time, never a saved run.
-      { call: () => '', store: null },
     )
     const result = data as {
       verdict?: unknown

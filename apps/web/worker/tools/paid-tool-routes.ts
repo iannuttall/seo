@@ -346,8 +346,6 @@ async function liveSerp(
     country: string
     depth: number
     paa?: number
-    // Have DataForSEO turn Google's redirect links into page URLs.
-    resolveGoto?: boolean
   },
 ) {
   return research(
@@ -364,7 +362,6 @@ async function liveSerp(
       depth: input.depth,
       limit: input.depth,
       noRank: true,
-      ...(input.resolveGoto ? { resolveGoto: true } : {}),
       ...(input.paa ? { peopleAlsoAskDepth: input.paa } : {}),
     },
   )
@@ -412,7 +409,7 @@ export function handleTitleWords(
 // DataForSEO resolves (resolve_goto_urls); we never follow those links
 // ourselves, so one it could not resolve leaves the page unknown, with
 // only its site.
-const PAA_QUESTIONS = 8
+const PAA_QUESTIONS = 5
 
 async function answeringPage(
   env: Cloudflare.Env,
@@ -501,13 +498,9 @@ export function handlePeopleAlsoAsk(
     parse: parseSerp,
     provider: async ({ keyword, country }) => {
       // Opening the first questions makes Google show a few more.
-      const serp = await liveSerp(env, {
-        keyword,
-        country,
-        depth: 10,
-        paa: 1,
-        resolveGoto: true,
-      })
+      // No link resolving here: a question whose page is behind a Google
+      // redirect is looked up again below, where DataForSEO resolves it.
+      const serp = await liveSerp(env, { keyword, country, depth: 10, paa: 1 })
       const asked = (serp.peopleAlsoAsk?.[0]?.questions ?? []).slice(
         0,
         PAA_QUESTIONS,

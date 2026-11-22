@@ -281,6 +281,9 @@ async function liveSerps(
           depth: DEPTH,
           device: input.device,
           load_async_ai_overview: true,
+          // DataForSEO turns Google's redirect links into page URLs, so
+          // sources and results can be matched by page.
+          resolve_goto_urls: true,
           ...CHECKED_SERP,
         },
       ).catch(() => null),

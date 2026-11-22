@@ -18,7 +18,7 @@ import {
 const SAMPLES = 3
 const PROMPT_CHARACTERS = 300
 const DOMAIN_CHARACTERS = 253
-const WAIT_SECONDS = 40
+const WAIT_SECONDS = 120
 // Stands in for the site when no domain is given. A placeholder domain is
 // never cited or named, and no per-site result is returned for it.
 const NO_SITE = 'example.com'

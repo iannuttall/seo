@@ -64,7 +64,14 @@ function phraseFrom(text: string | null, words = 2): string | null {
 }
 
 export async function runIndexCheck(
-  input: { url: string; phrases?: string[]; country?: string },
+  input: {
+    url: string
+    phrases?: string[]
+    country?: string
+    // Have DataForSEO turn Google's redirect links into page URLs, so a
+    // result from the site can be matched to the page. Slower, not dearer.
+    resolveGoto?: boolean
+  },
   headers: Headers,
 ): Promise<CommandResult> {
   let target: URL
@@ -135,6 +142,7 @@ export async function runIndexCheck(
             keyword: query,
             depth: DEPTH,
             device,
+            ...(input.resolveGoto ? { resolve_goto_urls: true } : {}),
             ...CHECKED_SERP,
           },
         )

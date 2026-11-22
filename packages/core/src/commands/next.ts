@@ -4,6 +4,8 @@ import {
   weighByKeyEvents,
 } from './analytics-site.js'
 import {
+  BUYING_QUESTIONS,
+  BUYING_SEARCHES,
   CONTEXT_DAYS,
   type ConversionPath,
   contextGuide,
@@ -22,7 +24,7 @@ import {
   parseSaved,
   type StoredIssue,
 } from './issues.js'
-import { recordWeek } from './progress.js'
+import { contextDefinition, recordWeek } from './progress.js'
 import { runReport } from './report.js'
 import { OUTREACH_GUIDE } from './research-link-targets.js'
 import { dateWindow, originOf } from './shared.js'
@@ -117,6 +119,7 @@ export async function runNext(
     recordWeek(site, deps),
   ])
   const pages = conversionPaths(context.text)
+  const tracking = trackingNote(site, context, call)
   const open = list.issues.filter((issue) => issue.mark === 'open')
   const active = open.filter((issue) => issue.seen !== 'not-found')
   const gone = open.filter((issue) => issue.seen === 'not-found')
@@ -158,6 +161,7 @@ export async function runNext(
     text: [
       savedNote,
       week,
+      tracking,
       `The next step for ${site} is to ${STEP_TITLES[step]}.`,
       `The loop:\n${loop.join('\n')}`,
       `## ${heading(step)}\n${stepGuide(step, site, call)}`,
@@ -218,6 +222,29 @@ export async function runNext(
         : { save: { version: 1, sites: { [site]: list.issues } } }),
     },
   }
+}
+
+// What the business context is missing to measure the work by buyers, and
+// its lines that progress cannot read, done before the due step.
+function trackingNote(
+  site: string,
+  context: SiteContext,
+  call: Caller,
+): string | null {
+  const { definition, problems } = contextDefinition(site, context)
+  const missing = [
+    definition.searches?.length ? null : 'tracked searches',
+    definition.questions?.length ? null : 'AI questions',
+  ].filter(Boolean)
+  const parts = [
+    missing.length
+      ? `The business context has no ${missing.join(' and no ')}, so the work cannot be measured by what buyers search for and ask. Before the step below, propose them to the person under "## Tracked searches" and "## AI questions". ${BUYING_SEARCHES} ${BUYING_QUESTIONS} Check each search with ${call('research', { action: 'keyword_metrics', keywords: '<searches>' })} and ${call('data', { site, query: '<search>' })}. Save the context again once the person agrees.`
+      : null,
+    ...problems,
+  ].filter(Boolean)
+  return parts.length
+    ? `## Fix the business context first\n${parts.map((part) => `- ${part}`).join('\n')}`
+    : null
 }
 
 const STEP_TITLES: Record<NextStep, string> = {

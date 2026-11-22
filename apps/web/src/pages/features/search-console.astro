@@ -37,7 +37,7 @@ const related = [
 
 <FeaturePage
   title="Google Search Console MCP"
-  metaTitle="Google Search Console MCP server with no Google Cloud setup"
+  metaTitle="Google Search Console MCP server for Claude, ChatGPT and Codex"
   description="Connect Google Search Console to Claude, ChatGPT, Codex or Cursor with one MCP URL and a Google sign-in. Read-only, no API key, free for every on-demand tool."
   path="/features/search-console"
   lead="Add one URL to your AI client, sign in with Google, and ask about your clicks, impressions, CTR, positions, queries and index status. There is no Google Cloud project to create and nothing to install."
@@ -233,6 +233,23 @@ const related = [
     needs, such as index check results and the last two crawls. Your agent can
     start it with &quot;Add example.com to the weekly site audit&quot;, which
     returns a Stripe Checkout link for you to open.
+  </p>
+
+  <h2>Keep your numbers past Search Console's 16 months</h2>
+  <p>
+    Search Console keeps 16 months of data, and a server that reads it live
+    sees the same 16 months. Once your agent saves a business context for a
+    site, every week it runs <code>seo_next</code> or the report, it saves
+    one point of that week's numbers: clicks and impressions for brand, not
+    brand and category searches, your conversion pages and up to 30 tracked
+    searches. The first point is the baseline. The points stay with your
+    account after Google drops those days, so the report's progress section
+    can compare this week with the week you started.
+  </p>
+  <p>
+    Each point holds those weekly totals, not every row Search Console had.
+    For a question about one query two years ago, only the rows Google still
+    keeps can answer it.
   </p>
 
   <h2>2 things Search Console data cannot tell you</h2>

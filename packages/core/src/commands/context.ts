@@ -188,6 +188,13 @@ export function onConversionPage(
   )
 }
 
+// What makes a search or an AI question worth tracking: someone choosing
+// what to buy, not someone learning a topic.
+export const BUYING_SEARCHES =
+  'A buying search is one a person types while choosing what to buy, such as "best <category> for <use>", "<competitor> alternative", "<product> vs <competitor>", "<category> pricing", or the category with an integration or industry. Pick the ones that fit what the business sells over the ones with the most volume, and leave out how-to and definition searches.'
+export const BUYING_QUESTIONS =
+  'A buying question is one a person asks while choosing, such as "What is the best <category> for <use>?", "What is a cheaper alternative to <competitor>?", "Is <product> worth it?" or "Which <category> works with <tool>?". Write them the way a buyer would ask, without the business name. Leave out how-to questions, which show who teaches the topic, not who gets recommended.'
+
 // What the agent follows to write the context. seo next returns it when a
 // site has none, or when its context is older than CONTEXT_DAYS.
 export function contextGuide(site: string, call: Caller): string {
@@ -211,13 +218,13 @@ export function contextGuide(site: string, call: Caller): string {
       '## Brand names',
       `The names people type when they look for this business by name, one per line: the product or company name, and the domain as people type it, such as example.com. The reports leave out every search that contains one of these names, with or without a space inside it, so "openbook" also catches "open book". Start with the searches Google itself counts as brand: ${call('data', { site, dimensions: 'query', brand: 'branded' })}. Those searches are brand, even when one looks generic, and the reports go by Google's count. A name here works differently: it hides every search that contains it, so list the searches each name would catch with ${call('data', { site, query: '<name>' })}. When Google classifies the site, propose a name only when Google counts at least 80% of the clicks it would catch as brand: "easyrecipes" for easyrecipes.example, but not "easy recipes", which would also catch "easy recipes for dinner". Google classifies only top-level properties with enough searches; when it returns no rows, propose a name only when the searches it catches are about this business: the name with words such as login, pricing, app, download or a competitor's name, clicks that land on the home page, or a top position with a high click rate. Without Google's classification, leave a name out when it is also the words people use for the product category or the service itself, such as a recipe site called Easy Recipes, because it would hide the searches that bring new customers; the domain alone is enough then. Show the person each name with its evidence and the clicks it would hide, and they confirm or remove them when they reply to the draft.`,
       '## Competitors',
-      'One domain per line, then the name buyers use when it differs from the domain, such as example.com Example App.',
+      `One domain per line, then the name buyers use when it differs from the domain, such as example.com Example App. A line that does not start with a domain is left out. AI answers and tracked searches judge the first ${PROGRESS_LIMITS.competitors}, so put first the ones buyers compare this business with.`,
       '## Category searches',
       'One RE2 regex for the searches the SEO work should grow, such as (?i)(invoice|billing software). Brand searches are left out of it.',
       '## Tracked searches',
-      `Up to ${PROGRESS_LIMITS.searches} buying searches to follow in Google and Search Console, one per line.`,
+      `Up to ${PROGRESS_LIMITS.searches} buying searches to follow in Google and Search Console, one per line. ${BUYING_SEARCHES}`,
       '## AI questions',
-      `Up to ${PROGRESS_LIMITS.questions} questions buyers ask AI assistants, one per line, to check who the answers cite.`,
+      `Up to ${PROGRESS_LIMITS.questions} buying questions, one per line, asked of AI assistants to check whether the answers cite or name this business and its competitors. ${BUYING_QUESTIONS}`,
       '## Markets',
       'Optional groups of the countries the business cares about, one group per line as a name and three-letter country codes, such as Europe: FRA, BEL, CHE. Reports and Google update results split clicks by these groups. Leave it out for a business that sells in one country.',
       '## Voice',

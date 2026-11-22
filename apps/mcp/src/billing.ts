@@ -363,11 +363,13 @@ export async function stripeWebhook(
   // Only for a person who still exists; a later event for an older
   // subscription of the same person does not overwrite a newer one.
   const saved = await env.DB.prepare(
-    `INSERT INTO billing (user_id, customer, subscription, status, sites, updated_at)
-     SELECT ?1, ?2, ?3, ?4, ?5, ?6 WHERE EXISTS (SELECT 1 FROM users WHERE id = ?1)
+    `INSERT INTO billing (user_id, customer, subscription, status, sites, updated_at, paid_at)
+     SELECT ?1, ?2, ?3, ?4, ?5, ?6, CASE WHEN ?4 IN ${ACTIVE_SQL} THEN ?6 END
+     WHERE EXISTS (SELECT 1 FROM users WHERE id = ?1)
      ON CONFLICT (user_id) DO UPDATE SET customer = excluded.customer,
        subscription = excluded.subscription, status = excluded.status,
-       sites = excluded.sites, checkout = NULL, updated_at = excluded.updated_at
+       sites = excluded.sites, checkout = NULL, updated_at = excluded.updated_at,
+       paid_at = COALESCE(billing.paid_at, excluded.paid_at)
      WHERE billing.subscription IS NULL OR billing.subscription = excluded.subscription
        OR billing.status NOT IN ${ACTIVE_SQL}`,
   )

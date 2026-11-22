@@ -341,7 +341,14 @@ function serpKeys(env: Cloudflare.Env): string[] {
 
 async function liveSerp(
   env: Cloudflare.Env,
-  input: { keyword: string; country: string; depth: number; paa?: number },
+  input: {
+    keyword: string
+    country: string
+    depth: number
+    paa?: number
+    // Have DataForSEO turn Google's redirect links into page URLs.
+    resolveGoto?: boolean
+  },
 ) {
   return research(
     'dataforseo',
@@ -357,6 +364,7 @@ async function liveSerp(
       depth: input.depth,
       limit: input.depth,
       noRank: true,
+      ...(input.resolveGoto ? { resolveGoto: true } : {}),
       ...(input.paa ? { peopleAlsoAskDepth: input.paa } : {}),
     },
   )
@@ -400,38 +408,11 @@ export function handleTitleWords(
 
 // Google answers most People Also Ask questions with its own AI text, so
 // the page for each question is the first result when the question itself
-// is searched. DataForSEO returns most results as Google redirect links;
-// two redirect hops reach the page, and a link that does not resolve
-// leaves the page unknown, with only its site.
+// is searched. Google links most results through its own redirect, which
+// DataForSEO resolves (resolve_goto_urls); we never follow those links
+// ourselves, so one it could not resolve leaves the page unknown, with
+// only its site.
 const PAA_QUESTIONS = 8
-const REDIRECT_TIMEOUT_MS = 4_000
-
-async function resolveGoogleLink(url: string): Promise<string | null> {
-  let next = url
-  for (let hop = 0; hop < 2; hop += 1) {
-    try {
-      const response = await fetch(next, {
-        redirect: 'manual',
-        signal: AbortSignal.timeout(REDIRECT_TIMEOUT_MS),
-      })
-      await response.body?.cancel()
-      const location = response.headers.get('location')
-      if (!location || response.status < 300 || response.status > 399) {
-        return null
-      }
-      const target = new URL(location, next)
-      if (!GOTO.test(target.href)) {
-        return ['http:', 'https:'].includes(target.protocol)
-          ? target.href
-          : null
-      }
-      next = target.href
-    } catch {
-      return null
-    }
-  }
-  return null
-}
 
 async function answeringPage(
   env: Cloudflare.Env,
@@ -450,6 +431,7 @@ async function answeringPage(
         ...dataForSeoMarket(country, dataForSeoLanguage(country)),
         keyword: question,
         depth: 10,
+        resolve_goto_urls: true,
         ...CHECKED_SERP,
       },
     )
@@ -460,7 +442,7 @@ async function answeringPage(
     const row = dataForSeoSerp(question, items).rows[0]
     if (!first || !row) return { url: null, domain: null, title: null }
     const raw = typeof first.url === 'string' ? first.url : ''
-    const url = GOTO.test(raw) ? await resolveGoogleLink(raw) : raw || null
+    const url = raw && !GOTO.test(raw) ? raw : null
     const host = url ? new URL(url).hostname : null
     return {
       url,
@@ -519,7 +501,13 @@ export function handlePeopleAlsoAsk(
     parse: parseSerp,
     provider: async ({ keyword, country }) => {
       // Opening the first questions makes Google show a few more.
-      const serp = await liveSerp(env, { keyword, country, depth: 10, paa: 1 })
+      const serp = await liveSerp(env, {
+        keyword,
+        country,
+        depth: 10,
+        paa: 1,
+        resolveGoto: true,
+      })
       const asked = (serp.peopleAlsoAsk?.[0]?.questions ?? []).slice(
         0,
         PAA_QUESTIONS,

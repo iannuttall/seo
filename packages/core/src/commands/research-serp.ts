@@ -71,10 +71,20 @@ export const fromWeb = (items: Record<string, unknown>[]) =>
 const bare = (host: string) => host.toLowerCase().replace(/^www\./, '')
 
 // A page as host and path, without scheme, www, query or trailing slash,
-// so a real URL and a breadcrumb for the same page give the same key.
+// so a real URL and a breadcrumb for the same page give the same key. A
+// YouTube video keeps its id, which lives in the query and is case
+// sensitive, so two videos are never the same page.
 export function pageKey(url: string): string {
   try {
     const parsed = new URL(url)
+    const host = bare(parsed.hostname).replace(/^m\./, '')
+    const video =
+      host === 'youtu.be'
+        ? parsed.pathname.slice(1).split('/')[0]
+        : host === 'youtube.com' && parsed.pathname === '/watch'
+          ? parsed.searchParams.get('v')
+          : null
+    if (video) return `youtube.com/watch?v=${video}`
     return `${bare(parsed.hostname)}${parsed.pathname.replace(/\/+$/, '')}`.toLowerCase()
   } catch {
     return ''

@@ -113,7 +113,7 @@ const agentAsk = {
 
       <div class="flex flex-wrap items-center justify-between gap-4">
         <p class="text-xs leading-5 text-foreground-muted">
-          3 free lookups a day.
+          3 free lookups a day.{kind === 'paa' ? ' A lookup takes up to four minutes.' : ''}
           {example ? <button type="button" data-example={example} class="ml-1 underline underline-offset-4 hover:text-foreground">Try “{example}”</button> : null}
         </p>
         <Button data-submit type="submit" class="min-h-10 shrink-0 px-5 text-xs">{submitLabel}</Button>

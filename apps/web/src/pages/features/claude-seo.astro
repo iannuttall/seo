@@ -19,7 +19,7 @@ const related = [
 
 <FeaturePage
   title="Claude SEO skill"
-  metaTitle="Claude SEO skill for Claude Code and Claude.ai"
+  metaTitle="Free Claude SEO skill for Claude Code and Claude.ai"
   description="Free Claude SEO skill and MCP server for Claude Code, claude.ai and Claude Desktop, so Claude answers from your own Search Console and keyword data."
   path="/features/claude-seo"
   lead="Add SEO Skill to Claude Code, claude.ai or Claude Desktop, and Claude reads your clicks, queries, index status and keyword data before it answers an SEO question about your site."
@@ -86,7 +86,7 @@ const related = [
 
   <h2>What the Claude SEO skill tells Claude</h2>
   <p>
-    The skill is one Markdown file of about 75 lines,{' '}
+    The skill is one Markdown file of under 100 lines,{' '}
     <a href="https://github.com/iannuttall/seo/blob/main/skills/seo/SKILL.md" target="_blank" rel="noreferrer">SKILL.md on GitHub</a>.
     Claude Code reads its description and loads the file when you ask an SEO
     question, so you never have to name it.
@@ -201,42 +201,40 @@ seo compare --site example.com --date 2026-10-07`} />
     </tbody>
   </table>
 
-  <h2>How we picked this page's keywords with the same tools</h2>
+  <h2>Let Claude work on your site's SEO one step at a time</h2>
   <p>
-    We researched this page with SEO Skill in November 2026: keyword ideas
-    for "claude seo" and "claude code seo", then keyword metrics and the
-    top 10 results, from DataForSEO for the US. Searches are monthly, and KD
-    is DataForSEO's keyword difficulty from 0 to 100.
+    Ask Claude to work on a site's SEO without a narrower question, and the
+    skill starts a loop that does one step at a time:
   </p>
-  <table>
-    <thead><tr><th>Keyword</th><th>Searches (KD)</th></tr></thead>
-    <tbody>
-      <tr><td>claude seo</td><td>590 (KD 8)</td></tr>
-      <tr><td>claude seo skill</td><td>480 (KD 3)</td></tr>
-      <tr><td>claude seo skills</td><td>480 (KD 3)</td></tr>
-      <tr><td>claude code seo skill</td><td>110 (KD 5)</td></tr>
-      <tr><td>claude code for seo</td><td>110 (KD 8)</td></tr>
-      <tr><td>claude seo github</td><td>110 (KD 37)</td></tr>
-      <tr><td>claude code seo</td><td>90 (KD 36)</td></tr>
-      <tr><td>claude for seo</td><td>70 (KD 6)</td></tr>
-    </tbody>
-  </table>
+  <CodeBlock value="Use SEO Skill to improve example.com" wrap />
+  <ol>
+    <li>
+      <strong>Write the business context.</strong> Claude reads your home,
+      pricing and product pages, your Search Console queries and your
+      competitors, then drafts what you sell, who buys it, which pages turn a
+      visit into a customer, the buying searches to track and the questions
+      buyers ask AI assistants. It asks you to correct the draft before it
+      saves anything.
+    </li>
+    <li>
+      <strong>Unblock pages.</strong> Crawl and Google index problems on the
+      pages that bring customers come first.
+    </li>
+    <li>
+      <strong>Improve the pages that rank.</strong> Quick wins, low
+      click-through rates and striking distance queries, once Claude has
+      checked that each search fits what you sell.
+    </li>
+    <li>
+      <strong>Plan new pages and earn links.</strong> Buying searches your
+      competitors rank for and you have no page for, and the pages that
+      already link to or cite your competitors in AI answers.
+    </li>
+  </ol>
   <p>
-    On 11 November 2026, the US top 5 for "claude seo skill" held a skill
-    listing on mcpmarket.com (Domain Rating 63), two forum threads, a GitHub
-    repository (Domain Rating 97) and context-link.ai (Domain Rating 46),
-    with Domain Rating by{' '}
-    <a href="https://ahrefs.com/website-authority-checker" target="_blank" rel="noreferrer">Ahrefs</a>.
-    A difficulty of 3 and a page one with forum threads on it is a keyword a
-    focused page can win, so "claude seo skill" is the one this page aims at.
-  </p>
-  <p>
-    The searches with "github" in them are people looking for one open
-    source repository, and this page does not chase them. Search Console
-    agreed with the plan: from 12 August to 7 November 2026, the seoskill.dev
-    home page showed 317 times for "claude seo skills" at an average
-    position of 57.5, with no clicks. Those searches wanted a page about
-    Claude, and the home page is about every agent.
+    Claude marks each job done once it is live, and 28 days later the issues
+    list shows that page's Search Console clicks against the 28 days before
+    the fix. In the CLI the same loop is <code>seo next --site example.com</code>.
   </p>
 
   <h2>What Claude SEO with SEO Skill costs</h2>

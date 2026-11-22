@@ -104,12 +104,14 @@ export function contextDefinition(
     return values.slice(0, max)
   }
   const own = registrableDomain(site)?.domain
-  const competitors = headingLines(text, 'competitors')
+  const notDomains: string[] = []
+  const named = headingLines(text, 'competitors')
     .flatMap((line) => {
       const [first, ...rest] = line.split(/\s+/)
       const domain = registrableDomain(
         (first ?? '').replace(/^https?:\/\//, ''),
       )?.domain
+      if (!domain) notDomains.push(first ?? line)
       if (!domain || domain === own) return []
       const name = rest
         .join(' ')
@@ -121,7 +123,17 @@ export function contextDefinition(
       (item, index, all) =>
         all.findIndex((other) => other.domain === item.domain) === index,
     )
-    .slice(0, PROGRESS_LIMITS.competitors)
+  if (notDomains.length) {
+    problems.push(
+      `"## Competitors" has ${notDomains.length === 1 ? 'a line' : 'lines'} that ${notDomains.length === 1 ? 'does' : 'do'} not start with a domain (${notDomains.map((line) => `"${line}"`).join(', ')}), so ${notDomains.length === 1 ? 'it is' : 'they are'} left out. Start each line with the domain, then the name.`,
+    )
+  }
+  if (named.length > PROGRESS_LIMITS.competitors) {
+    problems.push(
+      `"## Competitors" has ${named.length} domains; AI answers and tracked searches judge the first ${PROGRESS_LIMITS.competitors}. Put first the ones buyers compare the business with.`,
+    )
+  }
+  const competitors = named.slice(0, PROGRESS_LIMITS.competitors)
   const pages = conversionPaths(text)
   if (pages.length > PROGRESS_LIMITS.pages) {
     problems.push(

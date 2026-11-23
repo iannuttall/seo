@@ -162,8 +162,14 @@ export type WeekAiAnswers = {
     cited_url: string | null
   }[]
   // Other sites the latest answers cite most, by how many answers cite
-  // each.
-  cited_sites: { host: string; answers: number }[]
+  // each, with how many different pages they cite on it and the first of
+  // them. Checks from before pages were kept have no pages.
+  cited_sites: {
+    host: string
+    answers: number
+    pages?: number
+    urls?: string[]
+  }[]
 }
 
 export type WeekData = {
@@ -513,6 +519,30 @@ const ENGINE_NAMES: Record<string, string> = {
   google_ai_overview: 'AI Overviews',
 }
 export const MAX_AI_CHANGES = 10
+const MAX_CITED_SHOWN = 5
+const QUESTION_CHARS = 100
+
+// A question on one line, cut short when long, such as a quiz with its
+// answers pasted into Google.
+const quoted = (question: string) => {
+  const text = question.replace(/\s+/g, ' ').trim()
+  return `"${text.length > QUESTION_CHARS ? `${text.slice(0, QUESTION_CHARS - 1).trimEnd()}…` : text}"`
+}
+
+// A cited page as a Markdown link named by its path, or its host when the
+// page is the home page.
+function pageLink(url: string): string {
+  let name = url
+  try {
+    const { hostname, pathname, search } = new URL(url)
+    name =
+      pathname === '/' && !search
+        ? hostname.replace(/^www\./, '')
+        : decodeURI(pathname + search)
+  } catch {}
+  const short = name.length > 60 ? `${name.slice(0, 59)}…` : name
+  return `[${short.replace(/[[\]]/g, '')}](${url.replace(/[()\s]/g, (c) => `%${c.charCodeAt(0).toString(16).padStart(2, '0')}`)})`
+}
 
 // The AI answer line, the answers that changed since the check before and
 // the sites cited instead. Each answer is one sample, so a change is
@@ -542,7 +572,7 @@ function aiAnswerLines(site: WeekSite): string[] {
         : `  - No answer changed since ${day(found.previous_checked_at)}${counts.unavailable || counts.pending ? ' among the ones known both weeks' : ''}.`,
       ...shown.map(
         (change) =>
-          `    - "${change.question}" in ${ENGINE_NAMES[change.engine] ?? change.engine}: ${label(change.from)}, now ${label(change.to)}${change.cited_url ? ` (${change.cited_url})` : ''}.`,
+          `    - ${quoted(change.question)} in ${ENGINE_NAMES[change.engine] ?? change.engine}: ${label(change.from)}, now ${label(change.to)}${change.cited_url ? ` (${change.cited_url})` : ''}.`,
       ),
       ...(found.changes.length > shown.length
         ? [`    - And ${plural(found.changes.length - shown.length, 'more')}.`]
@@ -564,11 +594,19 @@ function aiAnswerLines(site: WeekSite): string[] {
     )
   }
   if (found.cited_sites.length) {
+    const shown = found.cited_sites.slice(0, MAX_CITED_SHOWN)
     lines.push(
-      `  - Sites cited instead: ${found.cited_sites
-        .slice(0, 5)
-        .map((item) => `${item.host} (${item.answers})`)
-        .join(', ')}.`,
+      '  - Sites cited instead, by how many answers cite each:',
+      ...shown.map((item) => {
+        const urls = item.urls ?? []
+        const more = (item.pages ?? urls.length) - urls.length
+        return `    - ${item.host} (${item.answers})${urls.length ? `: ${list([...urls.map(pageLink), ...(more > 0 ? [plural(more, 'more page')] : [])])}` : ''}.`
+      }),
+      ...(found.cited_sites.length > shown.length
+        ? [
+            `    - And ${plural(found.cited_sites.length - shown.length, 'more site')}.`,
+          ]
+        : []),
     )
   }
   lines.push(

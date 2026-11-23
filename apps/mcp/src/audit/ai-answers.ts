@@ -40,6 +40,8 @@ const RUN_ESTIMATE_USD = 0.2
 const WAIT_SECONDS = 120
 const READ_BACK_SECONDS = 30
 const MAX_CITED_SITES = 10
+// Pages kept for each cited site in the weekly summary.
+const MAX_CITED_PAGES = 3
 // Results that say what the answer showed, so a change between two of
 // them is a real change, not a failed or late read.
 const KNOWN = new Set(['cited', 'mentioned', 'neither', 'no_answer'])
@@ -72,7 +74,8 @@ CREATE TABLE IF NOT EXISTS ai_answers (
   engine TEXT NOT NULL,
   result TEXT NOT NULL,
   cited_url TEXT,
-  -- JSON list of the other hosts the answer cites.
+  -- JSON list of the other sites the answer cites: the first page it
+  -- cites on each, or the host alone from checks before pages were kept.
   sources TEXT NOT NULL DEFAULT '[]',
   previous_result TEXT,
   -- JSON: each context competitor's result for the same answer, by domain.
@@ -157,7 +160,10 @@ function saveState(meter: Meter, fields: Partial<State>): void {
 }
 
 // The rows ai_answers returns with detail full.
-type Answered = AnswersData['rows'][number] & { sources: string[] }
+type Answered = AnswersData['rows'][number] & {
+  sources: string[]
+  source_urls?: string[]
+}
 type Answers = Omit<AnswersData, 'rows'> & {
   questions: string[]
   pendingTasks: string[]
@@ -263,7 +269,9 @@ export async function runAiCheck(
     ).data as Answers
   const store = (rows: Answered[], fresh: boolean) => {
     for (const row of rows) {
-      const sources = JSON.stringify(row.sources ?? [])
+      const sources = JSON.stringify(
+        row.source_urls?.length ? row.source_urls : (row.sources ?? []),
+      )
       const others = JSON.stringify(row.others ?? {})
       if (fresh) {
         meter.run(
@@ -488,12 +496,23 @@ export function aiResult(meter: Meter, property: string): WeekAiAnswers {
     unavailable: 0,
     pending: 0,
   }
-  const cites = new Map<string, number>()
+  // Each cited site's answers, and the answers citing each page on it.
+  const cites = new Map<
+    string,
+    { answers: number; urls: Map<string, number> }
+  >()
   for (const row of rows) {
     const key = row.result as keyof typeof counts
     if (key in counts) counts[key] += 1
-    for (const host of JSON.parse(row.sources) as string[]) {
-      cites.set(host, (cites.get(host) ?? 0) + 1)
+    for (const source of JSON.parse(row.sources) as string[]) {
+      const url = /^https?:\/\//.test(source) ? source : null
+      const host = url
+        ? new URL(url).hostname.toLowerCase().replace(/^www\./, '')
+        : source
+      const site = cites.get(host) ?? { answers: 0, urls: new Map() }
+      site.answers += 1
+      if (url) site.urls.set(url, (site.urls.get(url) ?? 0) + 1)
+      cites.set(host, site)
     }
   }
   const rank = (result: string) => (result === 'cited' ? 0 : 1)
@@ -532,9 +551,17 @@ export function aiResult(meter: Meter, property: string): WeekAiAnswers {
           a.engine.localeCompare(b.engine),
       ),
     cited_sites: [...cites]
-      .sort((a, b) => b[1] - a[1] || a[0].localeCompare(b[0]))
+      .sort((a, b) => b[1].answers - a[1].answers || a[0].localeCompare(b[0]))
       .slice(0, MAX_CITED_SITES)
-      .map(([host, answers]) => ({ host, answers })),
+      .map(([host, { answers, urls }]) => ({
+        host,
+        answers,
+        pages: urls.size,
+        urls: [...urls]
+          .sort((a, b) => b[1] - a[1] || a[0].localeCompare(b[0]))
+          .slice(0, MAX_CITED_PAGES)
+          .map(([url]) => url),
+      })),
   }
 }
 

@@ -222,8 +222,10 @@ type Answer = {
   cited_url: string | null
   // For a mentioned answer, the domain or brand name its text names.
   mentioned_as: string | null
-  // The other sites the answer cites, by host, up to MAX_SOURCES.
+  // The other sites the answer cites, by host, up to MAX_SOURCES, and the
+  // first page it cites on each, in the same order.
   sources: string[]
+  source_urls: string[]
   // The model DataForSEO reports for the answer, when it reports one.
   model: string | null
   // The web searches the engine ran for the answer: [] when it reported
@@ -281,6 +283,7 @@ const empty = {
   cited_url: null,
   mentioned_as: null,
   sources: [],
+  source_urls: [],
   model: null,
   searches: null,
   answered_at: null,
@@ -377,18 +380,21 @@ function judge(engine: Engine, task: DataForSeoQueued, site: Site): Answer {
   const onTarget = (url: string) =>
     site.domains.some((domain) => onSite(url, domain))
   const cited = all.find(onTarget) ?? null
-  const sources = [
-    ...new Set(
-      all
-        .filter((url) => !onTarget(url))
-        .map(hostOf)
-        .filter((host): host is string => Boolean(host)),
-    ),
-  ].slice(0, MAX_SOURCES)
+  // A text fragment (#:~:text=) only highlights a passage, so the same
+  // page with another fragment is the same page.
+  const pages = new Map<string, string>()
+  for (const url of all) {
+    const host = hostOf(url)
+    if (host && !onTarget(url) && !pages.has(host)) {
+      pages.set(host, url.replace(/#:~:.*$/, ''))
+    }
+  }
+  const sources = [...pages.keys()].slice(0, MAX_SOURCES)
   const base = {
     cited_url: cited,
     mentioned_as: null,
     sources,
+    source_urls: sources.map((host) => pages.get(host) as string),
     model: shown.model,
     searches: shown.searches,
     answered_at,

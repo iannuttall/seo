@@ -21,10 +21,19 @@ const ENTITIES: Record<string, string> = {
   '#39': "'",
 }
 
-// Minimal HTML to plain text: links keep their URL.
+// Minimal HTML to plain text: links keep their URL, and each list item
+// starts a line, indented two spaces a level.
 export function htmlToText(html: string): string {
+  let depth = 0
   return html
     .replace(/<(script|style)\b[\s\S]*?<\/\1>/gi, '')
+    .replace(/<(\/?)(ul|li)\b[^>]*>/gi, (_m, close: string, tag: string) => {
+      if (tag.toLowerCase() === 'ul') {
+        depth += close ? -1 : 1
+        return close && !depth ? '\n\n' : ''
+      }
+      return close ? '' : `\n${'  '.repeat(Math.max(depth - 1, 0))}- `
+    })
     .replace(
       /<a\b[^>]*\bhref=["']([^"']*)["'][^>]*>([\s\S]*?)<\/a>/gi,
       (_m, href: string, text: string) =>
@@ -32,15 +41,13 @@ export function htmlToText(html: string): string {
     )
     .replace(/<br\s*\/?>/gi, '\n')
     .replace(/<hr\b[^>]*>/gi, '\n---\n\n')
-    .replace(/<\/(p|div|h[1-6]|li|pre|blockquote|tr|ul)>/gi, '\n\n')
-    .replace(/<li\b[^>]*>/gi, '- ')
+    .replace(/<\/(p|div|h[1-6]|pre|blockquote|tr)>/gi, '\n\n')
     .replace(/<[^>]*>/g, '')
     .replace(
       /&(amp|lt|gt|quot|#39);/g,
       (_m, name: string) => ENTITIES[name] ?? '',
     )
     .replace(/[ \t]+\n/g, '\n')
-    .replace(/(- [^\n]*)\n\n(?=- )/g, '$1\n')
     .replace(/\n{3,}/g, '\n\n')
     .trim()
 }
@@ -50,36 +57,55 @@ export function previewText(value: string, limit = 150): string {
   return text.length > limit ? `${text.slice(0, limit - 1).trimEnd()}…` : text
 }
 
+// Text that is not a link. Inside double quotes, such as a question
+// quoted from Search Console, a zero-width space follows each dot that
+// joins two words, so inboxes do not turn words such as "a.it" into a link
+// nobody wrote.
+function plain(text: string): string {
+  return esc(
+    text.replace(/"[^"]*"/g, (quote) =>
+      quote.replace(/(\w)\.(?=\p{L})/gu, '$1.\u200B'),
+    ),
+  )
+}
+
 // One line of Markdown: [text](url) links; everything else is text.
 function inline(text: string): string {
   let out = ''
   let at = 0
   for (const match of text.matchAll(/\[([^\]]+)\]\((https?:\/\/[^)\s]+)\)/g)) {
-    out += esc(text.slice(at, match.index))
+    out += plain(text.slice(at, match.index))
     out += `<a href="${esc(match[2] ?? '')}">${esc(match[1] ?? '')}</a>`
     at = (match.index ?? 0) + match[0].length
   }
-  return out + esc(text.slice(at))
+  return out + plain(text.slice(at))
 }
 
-// The Markdown the emails use: headings, paragraphs, "- " lists, ``` code
-// blocks and --- rules.
+// A list item and the items indented under it.
+type Item = { text: string; items: Item[] }
+
+// Inline, as inboxes ignore head styles here: no default 40px indent, so
+// bullets sit at the text edge in a narrow column.
+const listHtml = (items: Item[], nested = false): string =>
+  `<ul style="margin:${nested ? '4px' : '14px'} 0;padding:0 0 0 18px">${items
+    .map(
+      (item) =>
+        `<li style="margin:0 0 4px">${inline(item.text)}${item.items.length ? listHtml(item.items, true) : ''}</li>`,
+    )
+    .join('')}</ul>`
+
+// The Markdown the emails use: headings, paragraphs, "- " lists with items
+// nested two spaces a level, ``` code blocks and --- rules.
 export function markdownToHtml(markdown: string): string {
   const out: string[] = []
   const lines = markdown.split('\n')
   let paragraph: string[] = []
-  let list: string[] = []
+  let list: Item[] = []
   const flush = () => {
     if (paragraph.length) {
       out.push(`<p>${paragraph.map(inline).join('<br>')}</p>`)
     }
-    if (list.length) {
-      out.push(
-        // Inline, as inboxes ignore head styles here: no default 40px
-        // indent, so bullets sit at the text edge in a narrow column.
-        `<ul style="margin:14px 0;padding:0 0 0 18px">${list.map((item) => `<li style="margin:0 0 4px">${inline(item)}</li>`).join('')}</ul>`,
-      )
-    }
+    if (list.length) out.push(listHtml(list))
     paragraph = []
     list = []
   }
@@ -106,9 +132,15 @@ export function markdownToHtml(markdown: string): string {
     } else if (line.trim() === '---') {
       flush()
       out.push('<hr>')
-    } else if (line.startsWith('- ')) {
+    } else if (/^ *- /.test(line) && (line.startsWith('- ') || list.length)) {
       if (paragraph.length) flush()
-      list.push(line.slice(2))
+      // Under the last item one level up, or as deep as the list goes.
+      let items = list
+      const depth = Math.floor(line.indexOf('-') / 2)
+      for (let level = 0; level < depth && items.length; level += 1) {
+        items = (items.at(-1) as Item).items
+      }
+      items.push({ text: line.slice(line.indexOf('-') + 2), items: [] })
     } else if (!line.trim()) {
       flush()
     } else {

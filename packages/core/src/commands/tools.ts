@@ -286,7 +286,7 @@ export const SHARED_TOOLS: SharedTool[] = [
         .boolean()
         .optional()
         .describe(
-          'Optional. true returns the steps to put the site on autopilot, a scheduled run of the agent with a GitHub Actions workflow, instead of the due step. Only after the person has said yes.',
+          'Optional. true returns the steps to put the site on autopilot, a scheduled run of the agent, with the prompt each run starts with, instead of the due step. Only after the person has said yes.',
         ),
     }),
     run: async (surface, input) =>

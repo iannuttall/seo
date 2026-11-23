@@ -10,6 +10,7 @@ import {
   searchConsoleDay,
   type WeekData,
   weekMeasured,
+  weekWork,
 } from '@seo/core/commands'
 import { queueAlert } from '../alerts/deliver.ts'
 import { hasWeeklyAudit } from '../beta.ts'
@@ -68,14 +69,13 @@ export async function weekData(
         const found = await siteObject(env, userId, site.property)
           .week(week.startMs, week.endMs)
           .catch(() => null)
+        const kept = (await issues.read(site.property).catch(() => null)) ?? []
         return {
           property: site.property,
           link: `${env.PUBLIC_URL}/account/sites/${await siteId(userId, site.property)}`,
           added_at: site.addedAt,
-          measured: weekMeasured(
-            (await issues.read(site.property).catch(() => null)) ?? [],
-            now,
-          ),
+          measured: weekMeasured(kept, now),
+          work: weekWork(kept, week.startMs, week.endMs),
           crawl: found?.crawl ?? null,
           start_error: site.lastError,
           unread: !found,

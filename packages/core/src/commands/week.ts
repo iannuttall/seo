@@ -82,7 +82,17 @@ export type WeekSite = {
     total: number
     items: (IssueMeasure & { subject: string })[]
   }
+  // The agent's work from the issues list: jobs marked fixed during the
+  // week, and jobs marked started that wait for review now, first MAX_WORK
+  // of each, oldest first, and how many there were in all.
+  work?: {
+    live: { total: number; items: WeekWorkItem[] }
+    waiting: { total: number; items: WeekWorkItem[] }
+  }
 }
+
+// A job and the day it was marked, with its note, such as a pull request.
+export type WeekWorkItem = { subject: string; on: string; note: string | null }
 
 export type WeekOpportunities = {
   // The latest competitor check, and the competitors whose keywords count
@@ -186,6 +196,7 @@ export type WeekData = {
 
 export const MAX_DROPPED_PAGES = 5
 export const MAX_MEASURED = 5
+export const MAX_WORK = 5
 
 export type WeekGoogleUpdate = {
   name: string
@@ -654,6 +665,74 @@ export function weekMeasured(
   return { total: all.length, items: all.slice(0, MAX_MEASURED) }
 }
 
+// A site's jobs marked fixed in the week, from startMs to before endMs, and
+// its jobs marked started, which wait for review now.
+export function weekWork(
+  issues: StoredIssue[],
+  startMs: number,
+  endMs: number,
+): NonNullable<WeekSite['work']> {
+  const items = (
+    mark: 'fixed' | 'started',
+    within: (at: number) => boolean,
+  ) => {
+    const all = issues
+      .filter((issue) => issue.mark === mark && issue.marked_at)
+      .filter((issue) => within(Date.parse(issue.marked_at as string)))
+      .map((issue) => ({
+        subject: issue.subject,
+        on: (issue.marked_at as string).slice(0, 10),
+        note: issue.note,
+      }))
+      .sort(
+        (a, b) =>
+          a.on.localeCompare(b.on) || a.subject.localeCompare(b.subject),
+      )
+    return { total: all.length, items: all.slice(0, MAX_WORK) }
+  }
+  return {
+    live: items('fixed', (at) => at >= startMs && at < endMs),
+    waiting: items('started', () => true),
+  }
+}
+
+// What the agent changed: fixes that went live this week, and changes that
+// wait for the person's review, each with its pull request when noted.
+function workLines(site: WeekSite): string[] {
+  const work = site.work
+  if (!work?.live.total && !work?.waiting.total) return []
+  const item = (entry: WeekWorkItem, when: string) => {
+    const subject = entry.subject.replace(/https?:\/\/[^\s/]+/g, '') || '/'
+    const note = entry.note
+      ? /^https?:\/\/\S+$/.test(entry.note)
+        ? `, ${pageLink(entry.note)}`
+        : ` (${entry.note})`
+      : ''
+    return `${subject}, ${when} ${dayLabel(entry.on)}${note}`
+  }
+  const group = (
+    found: { total: number; items: WeekWorkItem[] },
+    heading: string,
+    when: string,
+  ) =>
+    found.total
+      ? [
+          `  - ${heading}:`,
+          ...found.items.map((entry) => `    - ${item(entry, when)}.`),
+          ...(found.total > found.items.length
+            ? [
+                `    - And ${plural(found.total - found.items.length, 'more')} in the issues list.`,
+              ]
+            : []),
+        ]
+      : []
+  return [
+    `- Your agent's changes: ${plural(work.live.total, 'fix', 'fixes')} marked live this week, ${plural(work.waiting.total, 'change')} waiting for your review.`,
+    ...group(work.live, 'Marked live', 'live'),
+    ...group(work.waiting, 'Waiting for review', 'since'),
+  ]
+}
+
 // The fixes whose 28 or 56 days after ended this week, as facts.
 function measuredLines(site: WeekSite): string[] {
   const found = site.measured
@@ -724,6 +803,7 @@ export function weekMarkdown(data: WeekData): string {
       ...opportunityLines(site),
       ...aiAnswerLines(site),
       ...aiVisitLines(site),
+      ...workLines(site),
       ...measuredLines(site),
       ...updateLines(site),
       ...(site.link ? [`- [View site](${site.link})`] : []),

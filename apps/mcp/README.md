@@ -302,7 +302,11 @@ is not known yet. A site's `google_updates` lists Google ranking updates
 that ran that week or whose result became ready in the last 7 days, each
 with `ready` and a `result` (`verdict`, `clicks`, `previous`, `days`) for
 up to 20 sites once final data covers it, else `null`. `index_changes` is the site's part of Monday's daily roundup, in the shape of
-`index-changes` `data.sites`, empty when nothing changed.
+`index-changes` `data.sites`, empty when nothing changed. A site's
+`work` is its agent's work from the issues list: `live`, the jobs marked
+fixed during the week, and `waiting`, the jobs marked started that wait for
+review now. Each has a `total` and up to 5 `items`, oldest first, each with
+`subject`, `on` (the day it was marked) and `note`, such as the pull request.
 A site's first `weekly-summary` does not wait for Monday: it goes out
 within the hour once its first crawl and competitor check are done
 (at most a day after the site was added), for the 7 days to then, with

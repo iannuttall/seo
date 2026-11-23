@@ -851,7 +851,7 @@ export class SiteAudit extends DurableObject<Env> {
       }
       meter.run(
         "UPDATE run SET status = ?, finished_at = ?, summary = ? WHERE status = 'running'",
-        status,
+        summary.status,
         now,
         JSON.stringify(summary),
       )
@@ -861,7 +861,7 @@ export class SiteAudit extends DurableObject<Env> {
         run.id,
         run.started_at,
         now,
-        status,
+        summary.status,
         JSON.stringify(summary),
       )
       meter.run(

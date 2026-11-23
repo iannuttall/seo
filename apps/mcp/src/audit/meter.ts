@@ -31,6 +31,11 @@ export class Meter {
     this.all(query, ...bindings)
   }
 
+  // Waits until every write so far is on disk.
+  sync(): Promise<void> {
+    return this.storage.sync()
+  }
+
   transaction<T>(fn: () => T): T {
     return this.storage.transactionSync(fn)
   }

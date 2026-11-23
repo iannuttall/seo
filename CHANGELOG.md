@@ -1,5 +1,55 @@
 # Changelog
 
+## 0.26.0
+
+### Added
+
+- `seo crawl` checks hreflang return links. A page whose crawled alternate
+  does not name it back is flagged, because Google ignores a pair unless
+  both pages name each other. Alternates the crawl did not reach are not
+  judged.
+- `seo crawl` notes a hreflang set with no `x-default` as a review item.
+  Google recommends it but does not require it.
+- `seo crawl` checks the home page on www and the bare domain, and flags a
+  site where both answer instead of one redirecting to the other. The
+  probes are under `siteChecks.hostVariant`. Other subdomains, IP addresses
+  and localhost are skipped.
+- Autopilot. Once the business context is saved, `seo next` asks once
+  whether to put the site on a schedule, and saves the answer under
+  `## Autopilot`. `seo next --autopilot` (`autopilot: true`) returns the
+  setup: cadence, where the agent runs, approval rules and the run prompt.
+  Each run does at most 5 jobs, one pull request per change, and new
+  pages, template changes, redirects and deletions always wait for review.
+- A `started` mark on the issues list. Mark a job started with its pull
+  request as the note, and `seo next` lists it under "Started jobs" instead
+  of offering it again. `--fixed-on` (`fixed_on`) marks a job fixed on the
+  day its pull request merged, so its 28 and 56 day results count from
+  that day.
+- `seo research serp` keeps each AI Overview's own text beside its sources.
+
+### Changed
+
+- When the business context has no tracked searches or AI questions,
+  `seo next` starts with "Fix the business context first" and explains what
+  a buying search and a buying question are. It also warns when a
+  competitor line is not a domain, or when more than 5 are listed (only the
+  first 5 are judged).
+
+### Fixed
+
+- Two different YouTube videos no longer count as the same page when
+  research matches AI Overview sources and SERP overlap.
+- Hosted: an `ai_answers` read-back later the same day no longer pays
+  again when it reaches another Cloudflare data centre, and
+  `link_gap` and `backlinks` with `pages` keep their rows for a day, so
+  each next page is free and no longer times out.
+- Hosted: weekly site audits at the 5,000 page limit finish their crawl,
+  and their index checks run again. The Monday email says when results
+  could not be read, instead of showing nothing, and sites audited before
+  the summary change get it again.
+- Hosted: the weekly email links up to 3 pages each AI answer cites on
+  each site, and quoted questions no longer turn into links.
+
 ## 0.25.0
 
 ### Added

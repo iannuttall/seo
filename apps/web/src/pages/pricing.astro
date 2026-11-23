@@ -34,10 +34,10 @@ const free = [
 ]
 
 const paid = [
+  { title: 'AI answer tracking', icon: AiChat02Icon, text: 'Every week we ask ChatGPT search, the Gemini app, Google AI Mode and AI Overviews the same 10 questions, on our own DataForSEO account: the buying questions you pick, or the top questions from your Search Console until you do. You see which answers started or stopped citing you, how often they name your competitors, and which sites they cite instead.' },
+  { title: 'Competitor opportunities', icon: Target02Icon, text: 'Every week we check what your competitors rank for, on our own DataForSEO account. You only hear about a keyword or free tool idea that competitors prove, that is worth money and that looks winnable. Some weeks that is nothing (which is the point).' },
   { title: 'A weekly crawl that sees what Google sees', icon: WebDesign01Icon, text: 'Broken links, titles, canonicals, noindex and sitemap problems, with what is new, back or resolved since last week. Pages that need JavaScript are rendered in a real browser.' },
   { title: 'Daily Google index monitoring', icon: Globe02Icon, text: "Up to each property's full 2,000 URL Inspection checks a day, top pages first, so your agent answers index questions at once. Drops and returns come in one daily roundup." },
-  { title: 'Competitor opportunities', icon: Target02Icon, text: 'Every week we check what your competitors rank for, on our own DataForSEO account. You only hear about a keyword or free tool idea that competitors prove, that is worth money and that looks winnable. Some weeks that is nothing (which is the point).' },
-  { title: 'AI answer tracking', icon: AiChat02Icon, text: 'Every week we ask ChatGPT search, the Gemini app, Google AI Mode and AI Overviews the same 10 questions, on our own DataForSEO account: the buying questions you pick, or the top questions from your Search Console until you do. You see which answers started or stopped citing you, how often they name your competitors, and which sites they cite instead.' },
   { title: 'A fix list your agent remembers', icon: CheckListIcon, text: 'What the crawl, index checks and Search Console reports find goes on one list per site. Your agent marks what it fixed, and 28 and 56 days later it sees the Search Console clicks for that page against the same days before.' },
   { title: 'Internal links on up to 5,000 pages', icon: Link04Icon, text: 'The internal linking tool reads up to 5,000 pages of an audited site, against 100 on the free plan.', href: '/tools/internal-linking-tool', link: 'Internal linking tool' },
   { title: 'Start with one site', icon: CreditCardIcon, text: 'Pick a site on your account page. Your first one opens Stripe Checkout, and you can add or remove sites and cancel any time.', href: '/account', link: 'Your account page' },
@@ -54,36 +54,25 @@ const faqs = [
 ---
 
 <BaseLayout
-  title="Pricing for the free SEO MCP server"
-  description="SEO Skill is free for every tool your AI agent calls, with no usage cap. The weekly site audit is $50 a month per site: a rendered weekly crawl, daily index monitoring and competitor opportunities."
+  title="Pricing for the weekly site audit"
+  description="The weekly site audit is $50 a month per site: AI answer tracking for your buying questions, competitor opportunities, a weekly crawl and daily index monitoring. Tools your agent calls on demand have no usage cap."
   canonicalPath="/pricing"
   {breadcrumbs}
   framed={false}
 >
   <main data-agent-content>
     <LandingHero
-      title="Free, with a paid weekly audit"
-      lead="Every tool your agent calls is free with no usage cap. Pay $50 a month per site only if you want us to watch the site for you every week."
+      title="Autonomous SEO and AI search that runs every week"
+      lead="Every week we check your pages in Google, what your competitors rank for and which companies AI answers recommend to your buyers. Your agent starts each session knowing what to fix next. $50 a month per site."
       setupId="pricing-setup"
     />
 
     <div class="space-y-24 py-24 sm:space-y-32 sm:py-32">
-      <section class="site-frame" aria-labelledby="free-heading">
-        <SectionHeading
-          id="free-heading"
-          title="Free, with no usage cap"
-          text="Everything your agent asks for on demand. No credit card and no message credits (ask as often as you like)."
-        />
-        <div class="grid grid-cols-1 gap-2 sm:grid-cols-2">
-          {free.map((item) => <HomeCard {...item} />)}
-        </div>
-      </section>
-
       <section class="site-frame" aria-labelledby="paid-heading">
         <SectionHeading
           id="paid-heading"
-          title="Weekly site audit, $50 a month per site"
-          text="Runs on our servers in the background for the sites you pick, so your agent starts each session with the week's evidence already gathered."
+          title="What the weekly audit checks"
+          text="It runs on our servers for each site you add, with no work from you or your agent."
         />
         <div class="grid grid-cols-1 gap-2 sm:grid-cols-2">
           {paid.map((item, index) =>
@@ -96,6 +85,17 @@ const faqs = [
               <HomeCard {...item} />
             ),
           )}
+        </div>
+      </section>
+
+      <section class="site-frame" aria-labelledby="free-heading">
+        <SectionHeading
+          id="free-heading"
+          title="Included without a plan"
+          text="Every tool your agent calls on demand, with no usage cap and no credit card."
+        />
+        <div class="grid grid-cols-1 gap-2 sm:grid-cols-2">
+          {free.map((item) => <HomeCard {...item} />)}
         </div>
       </section>
 

@@ -1,11 +1,11 @@
 ---
+import EngineSwap from '@/components/EngineSwap.astro'
 import FounderBadge from '@/components/FounderBadge.astro'
 import {
   Analytics01Icon,
   Briefcase01Icon,
   Calendar03Icon,
   ChartLineData01Icon,
-  FileSearchIcon,
   Key01Icon,
   News01Icon,
   Route01Icon,
@@ -24,35 +24,35 @@ import { toolIcon } from '@/content/tool-icons'
 import { tools } from '@/content/tools/manifest.mjs'
 import BaseLayout from '@/layouts/BaseLayout.astro'
 
-// What a team's agent can do with it, each with the docs that show how.
+// The jobs a team's agent does with it, each with the page that shows how.
 const jobs = [
   {
-    title: 'Find out why traffic moved',
-    icon: Analytics01Icon,
-    text: 'Your agent gets your clicks and impressions against the last period, the pages and queries that moved, Google Analytics sessions for the same dates, and the Google updates in between.',
-    href: '/tools/google-algorithm-update-checker',
-    link: 'Google algorithm update checker',
-  },
-  {
-    title: 'Check that a fix worked',
-    icon: FileSearchIcon,
-    text: 'After an edit, your agent loads the live page and asks Google whether it is indexed, so you see the redirect, the noindex or the missing canonical before your traffic does.',
-    href: '/features/google-index-checker',
-    link: 'Google index checker',
-  },
-  {
-    title: 'See what people ask AI about you',
-    icon: AiChat02Icon,
-    text: 'Questions from Google AI Mode and AI assistants already show up in your Search Console. Your agent finds them, groups the rewordings and shows which page Google picked for each.',
-    href: '/features/ai-search',
-    link: 'AI search tracking',
-  },
-  {
-    title: 'Plan pages from real demand',
+    title: 'Get found in Google',
     icon: SearchList01Icon,
-    text: 'Start from the searches you already show up for, then size the gaps with keyword volumes and competitors from your own Ahrefs or DataForSEO account.',
-    href: '/features/keyword-research',
-    link: 'Keyword research tool',
+    text: 'Your agent fixes what stops Google from indexing your pages, rewrites titles on pages that rank but get few clicks, and plans pages for the buying searches your competitors rank for.',
+    href: '/features/keyword-opportunities',
+    link: 'Keyword opportunities',
+  },
+  {
+    title: 'Get named in AI answers',
+    icon: AiChat02Icon,
+    text: 'Ask ChatGPT, Gemini, AI Mode and AI Overviews the questions your buyers ask. See which answers cite or name you, how often they name each competitor, and which pages they cite instead.',
+    href: '/features/ai-visibility-checker',
+    link: 'AI visibility checker',
+  },
+  {
+    title: 'Earn links where buyers look',
+    icon: Route01Icon,
+    text: 'Find the lists, reviews and directories that already link to two or more of your competitors, and the pages that name you without a link, ready for your agent to pitch.',
+    href: '/features/backlink-gap',
+    link: 'Backlink gap analysis',
+  },
+  {
+    title: 'Check that the work paid off',
+    icon: Analytics01Icon,
+    text: 'Every fix your agent marks done gets its Search Console clicks 28 and 56 days later, and each week is measured against the baseline you started from.',
+    href: '/features/seo-monitoring',
+    link: 'SEO monitoring',
   },
 ]
 
@@ -241,9 +241,9 @@ const faqs = [
 ---
 
 <BaseLayout
-  title="Open source SEO for agent-native teams"
+  title="Autonomous SEO and AI search to get customers"
   titleBrandPosition="prefix"
-  description="Give your AI agent your real Search Console, Google Analytics, Bing and Clicky data, Google update dates and a site crawl. Free hosted MCP and open source CLI."
+  description="Your AI agent works on getting you customers from Google, ChatGPT, Claude, Gemini, Perplexity and Bing. It checks where you rank and who AI answers mention, fixes your pages and finds links."
   canonicalPath="/"
   framed={false}
 >
@@ -251,15 +251,17 @@ const faqs = [
     <section class="pt-4">
       <div class="site-frame flex flex-col items-center pt-14 text-center sm:pt-20">
         <FounderBadge />
-        <h1 class="mt-4 max-w-3xl text-pretty text-4xl/tight font-medium -tracking-[0.8px] xl:text-5xl/tight xl:-tracking-[1px]">
-          SEO for <span class="whitespace-nowrap">agent-native</span> teams
+        <h1 class="mt-4 max-w-3xl xl:max-w-4xl text-pretty text-4xl/tight font-medium -tracking-[0.8px] xl:text-5xl/tight xl:-tracking-[1px]">
+          <span class="sm:block">Autonomous SEO and AI search{' '}</span>
+          <span class="sm:whitespace-nowrap">to get customers from <EngineSwap /></span>
         </h1>
         <p class="mt-4 max-w-2xl text-pretty text-xl/8 font-medium -tracking-[0.2px] text-foreground-muted">
-          Give your team's AI agents your real Search Console, Google Analytics
-          and Bing data, so every answer they give you about search comes from
-          your own numbers instead of a guess.
+          For SaaS and B2B teams that work in Claude Code, Codex or ChatGPT. Your
+          agent finds where Google and AI answers send your buyers to competitors,
+          then fixes your pages, builds the ones you're missing and finds the sites
+          that link to them but not to you.
         </p>
-        <a class:list={[getButtonClasses('default', 'lg'), 'mt-8']} href="/account">Get started free</a>
+        <a class:list={[getButtonClasses('default', 'lg'), 'mt-8']} href="/account">Get started</a>
       </div>
 
       <div class="site-frame mt-10 sm:mt-12">
@@ -271,8 +273,8 @@ const faqs = [
       <section class="site-frame" aria-labelledby="why-heading">
         <SectionHeading
           id="why-heading"
-          title="What your agent can do with it"
-          text="You ask your agent a question the way you would ask a colleague, and it pulls the numbers it needs from your own accounts to tell you what changed, which pages were affected and when it started."
+          title="What your agent does for the business"
+          text="Ask your agent to work on your site's SEO and it takes one step at a time, from what your business sells and who buys it to the pages and links that bring those buyers. You approve each change before it goes live."
         />
         <div class="grid grid-cols-1 gap-2 sm:grid-cols-2">
           {
@@ -286,8 +288,8 @@ const faqs = [
       <section class="site-frame" aria-labelledby="sources-heading">
         <SectionHeading
           id="sources-heading"
-          title="The data your agent works from"
-          text="Everything comes straight from the accounts you already use. When you need keyword volumes or competitor data too, your agent adds research from your own Ahrefs or DataForSEO account."
+          title="Every answer comes from your own data"
+          text="Each step starts from the accounts you already use, so your agent works from your real numbers instead of a guess. When you need keyword volumes or competitor data too, your agent adds research from your own Ahrefs or DataForSEO account."
         />
         <div class="grid grid-cols-1 gap-2 sm:grid-cols-2">
           {

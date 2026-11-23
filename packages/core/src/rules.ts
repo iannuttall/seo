@@ -465,6 +465,24 @@ const RULE_DEFINITIONS = [
     },
   },
   {
+    id: 'host_variant_not_redirected',
+    title: 'www and the bare domain both serve the site',
+    category: 'canonical',
+    defaultSeverity: 'medium',
+    whyItMatters:
+      'The home page answered with a page on both www and the bare domain instead of one redirecting to the other. Every page can then be reached at two URLs, which splits links and leaves search engines to pick one.',
+    howToFix:
+      'Pick one host and send the other to it with a permanent (301 or 308) redirect for every path, at the host, CDN or DNS provider. Keep canonicals and sitemap URLs on the chosen host.',
+    impactIfIgnored:
+      'Links and signals can split across two copies of the site, and search results may show the host you did not choose.',
+    howToVerify:
+      'Request the home page on the other host and confirm it returns a 301 or 308 to the same path on the chosen host.',
+    agentHints: {
+      evidenceFields: ['report.siteChecks.hostVariant'],
+      suggestedCommands: ['seo crawl <url> --json'],
+    },
+  },
+  {
     id: 'client_error',
     title: 'Client error',
     category: 'response',
@@ -1054,6 +1072,50 @@ const RULE_DEFINITIONS = [
     },
   },
   {
+    id: 'hreflang_no_return_link',
+    title: 'Hreflang alternate does not link back',
+    category: 'international',
+    defaultSeverity: 'medium',
+    whyItMatters:
+      "Google uses an hreflang pair only when both pages name each other. This page names a crawled alternate whose own hreflang set does not point back to this page's URL, so Google ignores the pair.",
+    howToFix:
+      'Give every page in the language set the same full hreflang list, each entry pointing at the exact final URL of that version. Generate the list from one source so the pages cannot drift apart.',
+    impactIfIgnored:
+      'Search engines may show the wrong language or country version, or treat the versions as unrelated pages.',
+    howToVerify:
+      "Re-run the crawl on both URLs and confirm the alternate's hreflang set includes this page's final URL.",
+    agentHints: {
+      evidenceFields: ['page.hreflang', 'issue.evidence.missingReturnLinks'],
+      suggestedCommands: ['seo crawl --mode list --urls <url>,<url> --json'],
+    },
+  },
+  {
+    id: 'hreflang_x_default_missing',
+    title: 'Hreflang set has no x-default',
+    category: 'international',
+    defaultSeverity: 'low',
+    whyItMatters:
+      'An x-default entry tells search engines which version to show searchers whose language or country matches none of the listed versions. Google recommends it but does not require it.',
+    howToFix:
+      'Add one x-default entry to every page in the set, pointing at the version for everyone else, such as a language picker or the main language page.',
+    impactIfIgnored:
+      'Searchers outside the listed languages and countries may get whichever version search engines pick.',
+    howToVerify:
+      'Re-run the crawl and confirm each page in the set has one x-default entry pointing at the same URL.',
+    review: {
+      question:
+        'Is there a version that should serve searchers outside the listed languages and countries?',
+      changeOnlyIf:
+        'One version, or a language picker, is the right default for everyone else.',
+      ifNotNeeded:
+        'Leave it. A set without x-default still works for the languages it lists.',
+    },
+    agentHints: {
+      evidenceFields: ['page.hreflang'],
+      suggestedCommands: ['seo crawl <url> --json'],
+    },
+  },
+  {
     id: 'structured_data_missing',
     title: 'No structured data detected',
     category: 'structured-data',
@@ -1359,6 +1421,7 @@ const RULE_RECOMMENDATIONS: Partial<Record<RuleId, RuleRecommendation>> = {
   ai_search_bot_blocked: 'review',
   llms_txt_missing: 'review',
   markdown_missing: 'review',
+  hreflang_x_default_missing: 'review',
 }
 
 const RULES_BY_ID = new Map<string, RuleInfo>(

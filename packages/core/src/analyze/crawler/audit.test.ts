@@ -320,6 +320,62 @@ test('hreflang requires a self target rather than a language label or x-default'
   )
 })
 
+test('hreflang return links are checked only against crawled alternates', () => {
+  const set = (self: string) => [
+    { hreflang: 'en', href: 'https://example.com/en' },
+    { hreflang: 'fr', href: 'https://example.com/fr' },
+    { hreflang: 'de', href: 'https://example.com/de' },
+    { hreflang: 'es', href: 'https://example.com/es' },
+    { hreflang: 'x-default', href: self },
+  ]
+  const issues = auditCrawlPages([
+    page({
+      url: 'https://example.com/en',
+      finalUrl: 'https://example.com/en',
+      hreflang: set('https://example.com/en'),
+    }),
+    // Links back to /en.
+    page({
+      url: 'https://example.com/fr',
+      finalUrl: 'https://example.com/fr',
+      hreflang: set('https://example.com/en'),
+    }),
+    // Names itself only, with no x-default.
+    page({
+      url: 'https://example.com/de',
+      finalUrl: 'https://example.com/de',
+      hreflang: [
+        { hreflang: 'de', href: 'https://example.com/de' },
+        { hreflang: 'de-at', href: 'https://example.com/at' },
+      ],
+    }),
+    // /es was not crawled, so it says nothing about return links.
+  ])
+  const returnLinks = issues.filter(
+    (issue) => issue.ruleId === 'hreflang_no_return_link',
+  )
+
+  assert.deepEqual(
+    returnLinks.map((issue) => [issue.url, issue.evidence?.missingReturnLinks]),
+    [
+      [
+        'https://example.com/en',
+        [{ hreflang: 'de', href: 'https://example.com/de' }],
+      ],
+      [
+        'https://example.com/fr',
+        [{ hreflang: 'de', href: 'https://example.com/de' }],
+      ],
+    ],
+  )
+  assert.deepEqual(
+    issues
+      .filter((issue) => issue.ruleId === 'hreflang_x_default_missing')
+      .map((issue) => issue.url),
+    ['https://example.com/de'],
+  )
+})
+
 test('auditCrawlPages keeps ambiguous canonical evidence explicit', () => {
   const issues = auditCrawlPages([
     page({

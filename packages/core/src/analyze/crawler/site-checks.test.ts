@@ -47,9 +47,10 @@ test('soft 404 checks warn when only a made-up root path returns 200', async () 
   assert.equal(result.checks.soft404.status, 'warning')
   assert.equal(result.checks.soft404.complete, true)
   assert.equal(result.checks.soft404.probes.length, 3)
-  assert.equal(result.issues.length, 1)
+  const soft404 = result.issues.filter((issue) => issue.ruleId === 'soft_404')
+  assert.equal(soft404.length, 1)
   assert.match(
-    result.issues[0]?.detail ?? '',
+    soft404[0]?.detail ?? '',
     /^1 of 3 made-up paths .*-not-found \(200\)\.$/,
   )
 })
@@ -96,4 +97,34 @@ test('soft 404 checks are incomplete when probes are skipped, and retry once aft
   assert.deepEqual(sleeps, [4_000])
   assert.equal(retried.checks.soft404.status, 'pass')
   assert.equal(retried.checks.soft404.complete, true)
+})
+
+test('www and the bare domain warn only when both serve their own home page', async () => {
+  const check = (redirectWww: boolean, startUrl = 'https://example.co.uk/') =>
+    collectCrawlSiteChecks({
+      startUrl,
+      timeoutMs: 1_000,
+      respectRobots: true,
+      fetchStatusPage: (async (url: string) => {
+        const { hostname, pathname } = new URL(url)
+        if (pathname !== '/') return response(url, 404)
+        return redirectWww && hostname.startsWith('www.')
+          ? response(url, 200, 'https://example.co.uk/')
+          : response(url, 200)
+      }) as typeof import('../monitoring/crawl-page.js').crawlStatusOnly,
+    })
+
+  const both = await check(false)
+  assert.equal(both.checks.hostVariant?.status, 'warning')
+  assert.deepEqual(
+    both.issues.map((issue) => [issue.ruleId, issue.url]),
+    [['host_variant_not_redirected', 'https://www.example.co.uk/']],
+  )
+
+  const redirected = await check(true)
+  assert.equal(redirected.checks.hostVariant?.status, 'pass')
+  assert.deepEqual(redirected.issues, [])
+
+  const subdomain = await check(false, 'https://app.example.co.uk/')
+  assert.equal(subdomain.checks.hostVariant, undefined)
 })

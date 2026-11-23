@@ -8,6 +8,7 @@ import type {
   CrawlRequestObservation,
 } from '../monitoring/types.js'
 import { estimateSerpTitleWidth } from '../title-width.js'
+import { hreflangFindings } from './hreflang.js'
 import {
   GOOGLEBOT_HTML_LIMIT_BYTES,
   largeHtmlIssue,
@@ -157,14 +158,6 @@ function requestIssue(
 function isBrokenLinkStatus(status?: number): boolean {
   return (
     status === 0 || status === 404 || status === 410 || (status ?? 0) >= 500
-  )
-}
-
-function hasRecognizableHreflangFormat(value: string): boolean {
-  const normalized = value.trim().toLowerCase()
-  return (
-    normalized === 'x-default' ||
-    /^[a-z]{2}(?:-[a-z]{4})?(?:-[a-z]{2})?$/.test(normalized)
   )
 }
 
@@ -902,44 +895,12 @@ export function auditCrawlPages(
     if (!page.lang) {
       issues.push(issue('lang_missing', page))
     }
-    const hreflang = page.hreflang ?? []
-    if (hreflang.length) {
-      const malformed = hreflang.filter(
-        (item) => !hasRecognizableHreflangFormat(item.hreflang),
-      )
-      if (malformed.length) {
-        issues.push(
-          issue('hreflang_invalid', page, `${malformed.length} malformed`, {
-            malformed,
-          }),
-        )
-      }
-      const duplicateCodes = [
-        ...new Set(
-          hreflang
-            .map((item) => item.hreflang.trim().toLowerCase())
-            .filter((code, index, values) => values.indexOf(code) !== index),
-        ),
-      ]
-      if (duplicateCodes.length) {
-        issues.push(
-          issue('hreflang_duplicate', page, duplicateCodes.join(', '), {
-            duplicateCodes,
-          }),
-        )
-      }
-      const hasSelfReference = hreflang.some((item) =>
-        sameUrl(item.href, page.finalUrl),
-      )
-      if (!hasSelfReference) {
-        issues.push(
-          issue('hreflang_incomplete', page, page.lang, {
-            lang: page.lang,
-            finalUrl: page.finalUrl,
-            hreflang,
-          }),
-        )
-      }
+    for (const finding of hreflangFindings(
+      page,
+      (href) => sameUrl(href, page.finalUrl) || sameUrl(href, page.url),
+      (href) => pageByUrl.get(urlKey(href) ?? ''),
+    )) {
+      issues.push(issue(finding.ruleId, page, finding.detail, finding.evidence))
     }
     const structuredDataFormats = page.structuredDataFormats
     if (

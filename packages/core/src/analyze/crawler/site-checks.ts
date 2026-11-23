@@ -1,4 +1,5 @@
 import { createHash } from 'node:crypto'
+import { registrableDomain } from '../../brand.js'
 import type { FetchRateControls } from '../../fetch/page-fetcher/types.js'
 import { explainRule } from '../../rules.js'
 import type { CrawlOneResult } from '../monitoring/crawl-page.js'
@@ -7,16 +8,15 @@ import type { CrawlIssue } from './report.js'
 export type CrawlSiteChecks = {
   soft404: {
     status: 'pass' | 'warning' | 'unknown'
-    probes: Array<{
-      url: string
-      status?: number
-      finalUrl?: string
-      redirected?: boolean
-      accessBlocked?: boolean
-      error?: string
-    }>
+    probes: Probe[]
     probeLimit: number
     complete: boolean
+  }
+  // The home page on the start host and on its www or bare domain twin.
+  // Absent when the start host is a subdomain, an IP address or localhost.
+  hostVariant?: {
+    status: 'pass' | 'warning' | 'unknown'
+    probes: Probe[]
   }
 }
 
@@ -55,7 +55,38 @@ function probeObservation(url: string, result: CrawlOneResult) {
   }
 }
 
-type Probe = CrawlSiteChecks['soft404']['probes'][number]
+type Probe = {
+  url: string
+  status?: number
+  finalUrl?: string
+  redirected?: boolean
+  accessBlocked?: boolean
+  error?: string
+}
+
+// The start host's home page and its twin: www.example.com for
+// example.com, and the reverse.
+function hostVariantUrls(startUrl: string): [string, string] | undefined {
+  const home = new URL('/', startUrl)
+  const domain = registrableDomain(home.hostname)?.domain
+  if (!domain) return undefined
+  const twin = new URL(home)
+  if (home.hostname === domain) twin.hostname = `www.${domain}`
+  else if (home.hostname === `www.${domain}`) twin.hostname = domain
+  else return undefined
+  return [home.toString(), twin.toString()]
+}
+
+// A host serves the site when its home page answers 2xx without leaving it.
+function servesOwnHost(probe: Probe): boolean {
+  if (!isConclusive(probe)) return false
+  const status = probe.status ?? 0
+  if (status < 200 || status >= 300) return false
+  return (
+    new URL(probe.finalUrl ?? probe.url).hostname ===
+    new URL(probe.url).hostname
+  )
+}
 
 // A skipped, failed, blocked or rate-limited probe says nothing about how
 // the site answers a missing path.
@@ -92,8 +123,9 @@ export async function collectCrawlSiteChecks(input: {
         ...(input.rate ? { rate: input.rate } : {}),
       }),
     )
+  const hostUrls = hostVariantUrls(input.startUrl) ?? []
   const probes: Probe[] = []
-  for (const url of probeUrls(input.startUrl)) {
+  for (const url of [...probeUrls(input.startUrl), ...hostUrls]) {
     if (input.signal?.aborted) break
     probes.push(await probe(url))
   }
@@ -109,6 +141,17 @@ export async function collectCrawlSiteChecks(input: {
     }
   }
 
+  const hostProbes = probes.splice(PROBE_COUNT)
+  const hostVariant = hostUrls.length
+    ? {
+        status: (hostProbes.length === 2 && hostProbes.every(servesOwnHost)
+          ? 'warning'
+          : hostProbes.length === 2 && hostProbes.every(isConclusive)
+            ? 'pass'
+            : 'unknown') as 'pass' | 'warning' | 'unknown',
+        probes: hostProbes,
+      }
+    : undefined
   const conclusive = probes.filter(isConclusive)
   const successful = conclusive.filter(
     (probe) => (probe.status ?? 0) >= 200 && (probe.status ?? 0) < 400,
@@ -129,25 +172,49 @@ export async function collectCrawlSiteChecks(input: {
       probeLimit: PROBE_COUNT,
       complete: conclusive.length === PROBE_COUNT,
     },
+    ...(hostVariant ? { hostVariant } : {}),
   }
-  if (status !== 'warning') return { checks, issues: [] }
-
-  const rule = explainRule('soft_404')
-  if (!rule) throw new Error('Missing rule guidance for soft_404')
-  return {
-    checks,
-    issues: [
-      {
-        ruleId: 'soft_404',
-        title: rule.title,
-        category: rule.category,
-        severity: rule.defaultSeverity,
-        url: new URL('/', input.startUrl).toString(),
-        detail: `${successful.length} of ${probes.length} made-up paths returned a successful response or redirect: ${successful
+  const issues: CrawlIssue[] = []
+  if (status === 'warning') {
+    issues.push(
+      siteIssue(
+        'soft_404',
+        new URL('/', input.startUrl).toString(),
+        `${successful.length} of ${probes.length} made-up paths returned a successful response or redirect: ${successful
           .map((probe) => `${new URL(probe.url).pathname} (${probe.status})`)
           .join(', ')}.`,
-        evidence: checks.soft404,
-      },
-    ],
+        checks.soft404,
+      ),
+    )
+  }
+  if (hostVariant?.status === 'warning') {
+    issues.push(
+      siteIssue(
+        'host_variant_not_redirected',
+        hostUrls[1] ?? input.startUrl,
+        `${hostVariant.probes.map((probe) => `${probe.url} (${probe.status})`).join(' and ')} both answered without redirecting to the other host.`,
+        hostVariant,
+      ),
+    )
+  }
+  return { checks, issues }
+}
+
+function siteIssue(
+  ruleId: 'soft_404' | 'host_variant_not_redirected',
+  url: string,
+  detail: string,
+  evidence: CrawlIssue['evidence'],
+): CrawlIssue {
+  const rule = explainRule(ruleId)
+  if (!rule) throw new Error(`Missing rule guidance for ${ruleId}`)
+  return {
+    ruleId,
+    title: rule.title,
+    category: rule.category,
+    severity: rule.defaultSeverity,
+    url,
+    detail,
+    evidence,
   }
 }

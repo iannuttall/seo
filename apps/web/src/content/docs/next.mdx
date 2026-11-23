@@ -32,7 +32,7 @@ The loop moves through four steps in order. A step is due only when the one befo
 | Business context | Writes down what the site sells, who buys it and which pages turn a visit into a customer. Due when there is none, or it is more than 90 days old. |
 | Unblock pages | Fixes what stops Google crawling, reading or indexing pages. For a site in the [weekly site audit](/docs/weekly-site-audit), these are the problems its crawl and Google index checks found. |
 | Improve pages that rank | Works through quick wins, low click-through rates and striking distance searches from the [SEO report](/docs/report), after checking each search fits what you sell. |
-| Find new pages | Looks for buying searches the site has no page for yet, such as comparisons and alternatives, from your competitors' keywords. It needs a [research key](/docs/research). Your agent shows you at most three and builds only the ones you approve. |
+| Find new pages | Looks for buying searches the site has no page for yet, such as comparisons and alternatives, from your competitors' keywords. It needs a [research key](/docs/research). Your agent shows you at most three. The ones you approve go under "Pages to build" in the business context, and your agent drafts each one in a pull request for your review. |
 
 Each step comes with its instructions and its first five jobs. Pages with Google Analytics key events from Organic Search come first, then the conversion pages in the business context, so the work starts where search already brings customers.
 
@@ -58,7 +58,22 @@ seo report --site example.com --mark fixed --issues <id>,<id>
 
 A search that doesn't fit what you sell can be marked `ignored` instead, and your agent asks you first. A page marked fixed later shows its Search Console clicks for the 28 and 56 days after the fix against the same days before, once Search Console's final data covers them. That shows what changed after the fix, though not on its own that the fix caused it.
 
+When your agent opens a pull request for a job, it marks the job `started` with the pull request's link, so later sessions leave it alone. `seo next` lists started jobs until each one is marked fixed, or open again if the pull request was closed. For a change that went live before today, add `--fixed-on` with that day, so its results count from then:
+
+```sh
+seo report --site example.com --mark started --issues <id> --note https://github.com/example/site/pull/7
+seo report --site example.com --mark fixed --issues <id> --fixed-on 2026-11-20
+```
+
 `seo next` checks the site again when the list is more than a day old, so asking twice in an hour doesn't repeat the work.
+
+## Put it on autopilot
+
+Once the business context is saved, your agent asks you once whether to put the site on autopilot. On autopilot, your agent runs on a schedule, daily or weekly, with the same SEO Skill connection and access to your site's code it has now. Each run settles the started jobs, works through up to five due jobs and opens a pull request for each change. It also drafts the next page you approved.
+
+Your agent sets up the schedule itself, or gives you the prompt to start it from wherever you run it on a schedule. In a terminal, `seo next --site example.com --autopilot` shows the same steps. Your answers go under "Autopilot" in the business context, so every run follows the same rules. By default every change waits for your review. You can let some kinds of change merge on their own, such as titles and descriptions. New pages, template changes, redirects and deletions always wait for you.
+
+For a site in the [weekly site audit](/docs/weekly-site-audit), an [alert](/docs/alerts#send-alerts-to-a-webhook) can start a run too, such as when a page drops out of Google's index. Save a URL that starts your agent as the webhook. Each alert about one site carries the prompt that starts the run. The Monday summary lists what your agent changed that week and what waits for your review.
 
 ## Where the context and list are kept
 

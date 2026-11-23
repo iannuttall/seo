@@ -1,4 +1,4 @@
-import { siteName } from '@seo/core/commands'
+import { autopilotRunPrompt, mcpCall, siteName } from '@seo/core/commands'
 import { readJsonOrUndefined } from '@seo/core/hosted'
 import { betaFlags } from '../beta.ts'
 import { seal } from '../seal.ts'
@@ -301,6 +301,11 @@ export function webhookBody(
     // null for an alert about the whole account, such as a Google update.
     site: row.site || null,
     created_at: new Date(row.created_at).toISOString(),
+    // For an alert about one site, the prompt that starts an autopilot run
+    // on it, for a receiver that hands the alert to the person's agent.
+    prompt: row.site
+      ? `SEO Skill sent this ${row.type} alert for ${row.site}, with its facts in this alert's data.\n\n${autopilotRunPrompt(row.site, mcpCall)}`
+      : null,
     data: JSON.parse(row.data),
   })
 }

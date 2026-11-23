@@ -246,6 +246,7 @@ other answer stops that alert. The Alerts tab shows the last call's result.
   "type": "index-changes",
   "site": "sc-domain:example.com",
   "created_at": "2026-10-22T08:17:03.000Z",
+  "prompt": "SEO Skill sent this index-changes alert for sc-domain:example.com, with its facts in this alert's data.\n\nRun SEO Skill's autopilot for sc-domain:example.com.\n1. Run seo_next ...",
   "data": {
     "sites": [
       {
@@ -274,6 +275,12 @@ other answer stops that alert. The Alerts tab shows the last call's result.
 }
 ```
 
+`prompt` is the text that starts an autopilot run on `site`
+(`autopilotRunPrompt` in `packages/core/src/commands/autopilot.ts`), after
+one line that names the alert, so a receiver can hand the alert straight to
+the person's agent. It is `null` for an alert about the whole account, such
+as a Google update.
+
 `type` says what `data` holds. `index-changes` is the daily roundup. Each
 site with changes gets its own, like the weekly summary, so `site` is the
 property and `data.sites` holds that one site. It lists
@@ -295,7 +302,11 @@ is not known yet. A site's `google_updates` lists Google ranking updates
 that ran that week or whose result became ready in the last 7 days, each
 with `ready` and a `result` (`verdict`, `clicks`, `previous`, `days`) for
 up to 20 sites once final data covers it, else `null`. `index_changes` is the site's part of Monday's daily roundup, in the shape of
-`index-changes` `data.sites`, empty when nothing changed.
+`index-changes` `data.sites`, empty when nothing changed. A site's
+`work` is its agent's work from the issues list: `live`, the jobs marked
+fixed during the week, and `waiting`, the jobs marked started that wait for
+review now. Each has a `total` and up to 5 `items`, oldest first, each with
+`subject`, `on` (the day it was marked) and `note`, such as the pull request.
 A site's first `weekly-summary` does not wait for Monday: it goes out
 within the hour once its first crawl and competitor check are done
 (at most a day after the site was added), for the 7 days to then, with

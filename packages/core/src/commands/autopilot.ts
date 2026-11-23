@@ -29,7 +29,7 @@ export function autopilotRunPrompt(site: string, call: Caller): string {
     `1. Run ${call('next', { site })}. Settle the started jobs it lists first, as it says, then run it again.`,
     '2. Follow the due step for at most 5 of its jobs.',
     `3. Open one pull request for each change and name the job ids it covers in its description. Then run ${call('report', { site, mark: 'started', issues: '<ids>', note: '<pull request URL>' })}. Merge only what the "## Autopilot" rules in the business context allow. Everything else waits for review.`,
-    `4. Where the step says to ask the person, such as before a new page, a template change, a redirect or a deletion, leave the question with its evidence where the person reviews your work, such as an issue in the repository, instead of making the change. Mark the job started with that link as note, so later runs do not ask again.`,
+    `4. Where the step says to ask the person, such as before a new page, a template change, a redirect or a deletion, leave the question with its evidence where the person reviews your work, such as an issue in the repository, instead of making the change. Mark the job started with that link as note, so later runs do not ask again. When the person approves a new page there, add it under "## Pages to build" in the business context.`,
     '5. End with a short summary of what you opened and what waits for the person.',
   ].join('\n')
 }
@@ -41,8 +41,9 @@ export function autopilotGuide(site: string, call: Caller): string {
     [
       '1. Cadence. Weekly runs the whole loop and suits most sites. Daily also catches pages that drop out of Google or break within a day. Ask which they want.',
       "2. Where it runs. Use your own scheduler, or the platform you run on, to start a run with the prompt below at that cadence. Each run needs SEO Skill and push access to the site's repository, through the same connections you have now. A machine without a browser signs in to SEO Skill with an account token, as https://seoskill.dev/docs/cloud-agents explains. If you cannot run on a schedule, give the person the prompt to start from wherever they run you on a schedule.",
-      '3. Rules. By default every change waits for the person to review its pull request. Ask whether any kind of change may merge on its own, such as titles and descriptions. New pages, template changes, redirects and deletions always wait for review.',
-      `4. Save their answers in the business context under "## Autopilot": the cadence, where it runs, and what may merge on its own, or "Every change waits for review". Save it with ${call('next', { site, context: '<the whole context with the new heading>' })}.`,
+      `3. Alerts. When ${site} is in the weekly site audit, a run can also start when something happens on it, such as a page that drops out of Google's index, so the fix comes that day. The person saves a URL that starts you, such as your platform's trigger URL or an automation that starts you, as the webhook under Alerts on https://seoskill.dev/account#alerts. Each alert about one site carries the prompt to start the run with in its prompt field.`,
+      '4. Rules. By default every change waits for the person to review its pull request. Ask whether any kind of change may merge on its own, such as titles and descriptions. New pages, template changes, redirects and deletions always wait for review.',
+      `5. Save their answers in the business context under "## Autopilot": the cadence, where it runs, whether alerts start runs, and what may merge on its own, or "Every change waits for review". Save it with ${call('next', { site, context: '<the whole context with the new heading>' })}.`,
     ].join('\n'),
     `The run prompt:\n\n${autopilotRunPrompt(site, call)}`,
     'Once it is set up, start one run now and show the person what it opened.',

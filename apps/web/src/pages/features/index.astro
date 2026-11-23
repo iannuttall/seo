@@ -1,33 +1,83 @@
 ---
 import HomeCard from '@/components/HomeCard.astro'
-import PageHeader from '@/components/PageHeader.astro'
+import LandingHero from '@/components/LandingHero.astro'
+import SectionHeading from '@/components/SectionHeading.astro'
 import { features } from '@/content/features'
 import BaseLayout from '@/layouts/BaseLayout.astro'
+
+// The feature pages grouped by the job a team hires the agent for. A page
+// missing from every group would vanish from this index, so the build fails.
+const groups = [
+  {
+    id: 'google',
+    title: 'Get found in Google',
+    text: 'Fix what keeps pages out of Google, improve the pages that already rank and plan pages for buying searches.',
+    paths: ['/features/keyword-opportunities', '/features/keyword-research', '/features/striking-distance-keywords', '/features/seo-audit', '/features/seo-crawler', '/features/google-index-checker', '/features/crawled-currently-not-indexed', '/features/discovered-currently-not-indexed', '/features/website-not-showing-up-on-google', '/features/programmatic-seo'],
+  },
+  {
+    id: 'ai',
+    title: 'Get named in AI answers',
+    text: 'See whether ChatGPT, Gemini, AI Mode and AI Overviews cite or name you for the questions buyers ask, and who they name instead.',
+    paths: ['/features/ai-visibility-checker', '/features/ai-search', '/features/chatgpt-seo'],
+  },
+  {
+    id: 'competitors',
+    title: 'Win against competitors and earn links',
+    text: 'What your competitors rank for and you do not, and the sites that link to them and not to you.',
+    paths: ['/features/seo-competitor-analysis', '/features/keyword-gap', '/features/backlink-gap', '/features/domain-overview'],
+  },
+  {
+    id: 'measure',
+    title: 'Measure the result',
+    text: 'Your own Search Console and Google Analytics numbers, weekly checks and reports that show what each change did.',
+    paths: ['/features/seo-monitoring', '/features/seo-reporting', '/features/keyword-report', '/features/search-console', '/features/google-analytics'],
+  },
+  {
+    id: 'agents',
+    title: 'Work in the agent you already use',
+    text: 'One skill and one MCP server for Claude, Codex, ChatGPT and the rest, free and open source.',
+    paths: ['/features/claude-seo', '/features/codex-seo', '/features/seo-agent', '/features/mcp', '/features/seo-for-developers'],
+  },
+].map((group) => ({
+  ...group,
+  items: group.paths.map((path) => {
+    const item = features.find((feature) => feature.path === path)
+    if (!item) throw new Error(`Unknown feature ${path}`)
+    return item
+  }),
+}))
+const grouped = new Set(groups.flatMap((group) => group.paths))
+const missing = features.filter((feature) => !grouped.has(feature.path))
+if (missing.length) {
+  throw new Error(`Features in no group: ${missing.map((item) => item.path).join(', ')}`)
+}
 ---
 
 <BaseLayout
-  title="Open source SEO tools for AI agents"
-  description="SEO tools for AI agents: a Search Console and Google Analytics MCP, AI search tracking, keyword research, site audits, reporting, monitoring and an SEO agent."
+  title="SEO and AEO tools for AI agents"
+  description="What your AI agent does with SEO Skill: get found in Google, get named in AI answers, win against competitors and earn links, and measure the result from your own data."
   canonicalPath="/features"
   schemaType="CollectionPage"
+  framed={false}
 >
   <main data-agent-content>
-    <PageHeader
-      title="Open source SEO tools for AI agents"
-      description="Give your agent your real search and analytics data, so it works from your numbers instead of guessing."
+    <LandingHero
+      title="SEO and AEO tools for AI agents"
+      lead="Everything your agent uses to get you customers from Google and AI answers, grouped by the job it does for your business."
+      setupId="features-setup"
     />
 
-    <div class="grid grid-cols-1 gap-2 sm:grid-cols-2">
-      {features.map((item) => <HomeCard title={item.title} text={item.text} icon={item.icon} href={item.path} />)}
+    <div class="space-y-24 py-24 sm:space-y-32 sm:py-32">
+      {
+        groups.map((group) => (
+          <section class="site-frame" aria-labelledby={`group-${group.id}`}>
+            <SectionHeading id={`group-${group.id}`} title={group.title} text={group.text} />
+            <div class="grid grid-cols-1 gap-2 sm:grid-cols-2">
+              {group.items.map((item) => <HomeCard title={item.title} text={item.text} icon={item.icon} href={item.path} />)}
+            </div>
+          </section>
+        ))
+      }
     </div>
-
-    <section class="docs-prose mt-14" aria-labelledby="get-started">
-      <h2 id="get-started">Start in a minute</h2>
-      <p>
-        Connect the hosted MCP and sign in with Google, or install the CLI on
-        your machine. The <a href="/docs/getting-started">getting started
-        guide</a> walks through both.
-      </p>
-    </section>
   </main>
 </BaseLayout>

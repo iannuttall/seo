@@ -5,24 +5,27 @@
   </picture>
 </p>
 
-# SEO For Agent-Native Teams
+# Autonomous SEO And AI Search To Get Customers
 
 [![npm](https://img.shields.io/npm/v/seo?style=flat-square)](https://www.npmjs.com/package/seo)
 
-The SEO data I give my agents every day, so they work from my real numbers
-instead of guessing.
+An SEO and AEO skill and Google Search Console MCP server for Claude Code,
+Codex, ChatGPT and Cursor, for SaaS and B2B teams. Your agent finds where
+Google and AI answers send your buyers to competitors, then fixes your pages,
+builds the ones you're missing and finds the sites that link to them but not
+to you.
 
 Most AI SEO tools do one of two things. They hand your agent a checklist of
 generic advice, or they feed it estimates from a keyword tool that has never
 seen your site. Either way you end up with the same pages everyone else is
 publishing. Pages written from a keyword list aren't SEO. They're slop.
 
-This works the other way round. It's a Google Search Console MCP server and
-CLI, and it doesn't tell your agent what to do. It gives it the facts: your
+This works the other way round. Your agent starts from what your business
+sells and who buys it, then works one step at a time from real data: your
 clicks, impressions and positions from Search Console, your visits from
-Google Analytics, Clicky or Simple Analytics, your Bing data, the dates of Google updates, and
-a crawl of your site. Your agent works out what matters, and you decide what
-changes.
+Google Analytics, Clicky or Simple Analytics, your Bing data, the dates of
+Google updates, a crawl of your site, and what ChatGPT, Gemini and Google's
+AI answers say about you and your competitors. You decide what changes.
 
 It's free and open source. Hack around with it. Make it your own.
 

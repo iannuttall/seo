@@ -78,6 +78,7 @@ export async function weekData(
           ),
           crawl: found?.crawl ?? null,
           start_error: site.lastError,
+          unread: !found,
           index: found?.index ?? null,
           clicks: found?.clicks ?? null,
           not_brand: found?.clicks
@@ -225,10 +226,11 @@ export async function sendWeeklySummaries(env: Env, now = Date.now()) {
     .run()
 }
 
-// SQL that is true when the audit_sites row (alias) was sent its first
-// report and not yet the week bound in its place.
+// SQL that is true when the audit_sites row (alias) was sent a summary
+// before, and not yet the week bound in its place. Any earlier row counts,
+// not only "first": sites audited before site_summaries have only weeks.
 const weekDue = (alias: string) =>
-  `EXISTS (SELECT 1 FROM site_summaries w WHERE w.user_id = ${alias}.user_id AND w.property = ${alias}.property AND w.week = 'first')
+  `EXISTS (SELECT 1 FROM site_summaries w WHERE w.user_id = ${alias}.user_id AND w.property = ${alias}.property)
    AND NOT EXISTS (SELECT 1 FROM site_summaries w WHERE w.user_id = ${alias}.user_id AND w.property = ${alias}.property AND w.week = ?)`
 
 const byAccount = (rows: { user_id: string; property: string }[]) => {

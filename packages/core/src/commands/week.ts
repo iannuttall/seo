@@ -28,6 +28,9 @@ export type WeekSite = {
   } | null
   // Why the last weekly crawl could not start, if it could not.
   start_error: string | null
+  // True when the site's own results could not be read for this summary,
+  // so its crawl, index and clicks are missing rather than empty.
+  unread?: boolean
   // Google's index during the week, or null when no check ran in it. A
   // page that dropped and came back in the same week counts as returned.
   index: {
@@ -324,6 +327,8 @@ function issues(
     found.push({ rank: 1, heading: 'crawl stopped early' })
   } else if (!crawled && site.added_at < startMs) {
     found.push({ rank: 1, heading: 'no crawl this week' })
+  } else if (!crawl && !site.unread && endMs - site.added_at > DAY_MS) {
+    found.push({ rank: 1, heading: 'first crawl not finished' })
   }
   if (clicksChange(site) === 'fell') {
     found.push({ rank: 2, heading: `clicks down ${percent(site)}%` })
@@ -346,6 +351,11 @@ function siteLines(
   endMs: number,
   first = false,
 ): string[] {
+  if (site.unread) {
+    return [
+      "Results: this site's checks could not be read for this summary, so its Google index, weekly crawl and search clicks are missing here, not zero. The next summary reads them again.",
+    ]
+  }
   const lines: string[] = []
   const index = site.index
   if (!index) {
@@ -382,6 +392,10 @@ function siteLines(
   } else if (site.added_at < startMs) {
     lines.push(
       `Weekly crawl: none finished this week${site.start_error ? `: ${sentence(site.start_error)}` : '.'} It tries again each hour.`,
+    )
+  } else if (endMs - site.added_at > DAY_MS) {
+    lines.push(
+      `Weekly crawl: the first crawl has not finished, ${plural(Math.floor((endMs - site.added_at) / DAY_MS), 'day')} after the site was added.`,
     )
   } else {
     lines.push('Weekly crawl: the first crawl is still running.')
@@ -638,6 +652,7 @@ export function weekMarkdown(data: WeekData): string {
   }))
   const attention = rows.filter((row) => row.found.length)
   const quiet = rows.filter((row) => !row.found.length && !row.waiting)
+  const unread = rows.filter((row) => row.site.unread)
   // Sites with changes first, the most urgent first; the rest by name.
   rows.sort(
     (a, b) =>
@@ -656,7 +671,11 @@ export function weekMarkdown(data: WeekData): string {
         : quiet.length === total
           ? `All ${total} of your sites had a quiet week.`
           : `${quiet.length} of your ${total} sites had a quiet week.`
-      : 'Your sites are still on their first checks.'
+      : unread.length
+        ? total === 1
+          ? "Your site's results could not be read this week."
+          : `${unread.length} of your ${total} sites could not be read this week.`
+        : 'Your sites are still on their first checks.'
   const out = [title, '', verdict]
   for (const { site, found } of rows) {
     out.push(

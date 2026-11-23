@@ -14,6 +14,7 @@ import {
   contextReviewOn,
   contextText,
   conversionPaths,
+  headingLines,
   onConversionPage,
   type SiteContext,
   subjectUrl,
@@ -160,6 +161,8 @@ export async function runNext(
       : 'new-pages'
   const shown = (step === 'unblock' ? unblock : improve).slice(0, JOBS_SHOWN)
   const started = list.issues.filter((issue) => issue.mark === 'started')
+  const toBuild = headingLines(context.text, 'pages to build')
+  const drafted = toBuild.filter((line) => /https?:\/\//.test(line))
   const fixed = list.issues.filter((issue) => issue.mark === 'fixed')
   const measured = fixed.filter((issue) => issue.measures?.length)
   const checked = lastCheck(list.issues)
@@ -171,7 +174,7 @@ export async function runNext(
     `- Issues list: ${list.ranChecks ? 'checked just now' : `last checked ${checked?.slice(0, 10) ?? 'never'}`}, ${open.length} open, ${started.length} started, ${fixed.length} fixed.`,
     `- Unblock pages: ${unblock.length} open${due('unblock')}.`,
     `- Improve the pages that rank: ${improve.length} open${due('improve')}.`,
-    `- New pages: ${step === 'new-pages' ? 'due now' : 'after the steps above'}.`,
+    `- New pages: ${step === 'new-pages' ? 'due now' : 'after the steps above'}${toBuild.length ? `, ${toBuild.length - drafted.length} approved to build and ${drafted.length} in draft pull requests` : ''}.`,
     `- Earn links: ${step === 'new-pages' ? 'due now, beside new pages' : 'after the steps above, unless the person asks for links now'}.`,
     `- Autopilot: ${autopilot === 'on' ? 'on, with the rules under "## Autopilot" in the business context' : autopilot === 'off' ? 'off' : 'not set up'}.`,
     `- Results: ${measured.length} fixed ${measured.length === 1 ? 'issue' : 'issues'} measured, ${fixed.length - measured.length} waiting for 28 days of Search Console data${measured.length ? `; ${call('report', { site, section: ISSUES_SECTION })} shows them` : ''}.`,
@@ -186,6 +189,14 @@ export async function runNext(
       `The loop:\n${loop.join('\n')}`,
       started.length ? startedSection(site, started, call) : null,
       `## ${heading(step)}\n${stepGuide(step, site, call)}`,
+      toBuild.length
+        ? buildSection(
+            site,
+            toBuild.length - drafted.length,
+            drafted.length,
+            call,
+          )
+        : null,
       step === 'new-pages' ? `## Earn links\n${linksGuide(site, call)}` : null,
       shown.length
         ? `Jobs ${shown.length} of ${step === 'unblock' ? unblock.length : improve.length}, pages with key events first, then conversion pages:\n${jobsTable(shown)}`
@@ -240,6 +251,10 @@ export async function runNext(
             ? { error: ga }
             : null,
       counts: { unblock: unblock.length, improve: improve.length },
+      pages_to_build: {
+        approved: toBuild.length - drafted.length,
+        drafted: drafted.length,
+      },
       jobs: shown,
       started: started.slice(0, STARTED_SHOWN).map((issue) => ({
         id: issue.id,
@@ -327,7 +342,7 @@ function stepGuide(step: NextStep, site: string, call: Caller): string {
     case 'improve':
       return `These pages already rank for a search but get fewer clicks than they could. For each job, first judge from the business context whether the search fits what the business sells and how close the searcher is to buying. List the real searches that do not fit for the person, with why, and mark them "ignored" once they agree. For the rest, rewrite the title and description for that searcher and make the page answer what they came for, with what only this business knows. Before you write, check where each title and description comes from. When several jobs' pages get theirs from one shared template, such as every city or product page, change the template once instead of each page, and say how many pages it touches. Ask the person before you change a template that many pages share, because it moves all their clicks at once. Once it is live, mark every job it covers fixed together, so their results are measured from the same day, and compare the pages with ${call('compare', { site, date: '<the day it went live>', pages: '<the shared path>' })} 28 days later. Open one pull request for each change, and check the new copy with ${call('lint', {})}.`
     case 'new-pages':
-      return `Nothing open is blocking or holding back the pages that rank, so look for buying searches the site has no page for. Run ${call('research', { action: 'ranked_keywords', target: '<competitor>' })} for the competitors in the business context, and keep searches that fit the product and show someone comparing options or ready to buy, such as comparisons, alternatives, use cases, industries and integrations. Check each with ${call('research', { action: 'serp', keywords: '<keyword>' })} and ${call('report', { site, section: 'striking-distance' })} so you do not duplicate a page the site already has. Show the person at most 3, each with the search, its volume and the page you would build, and build only the ones they approve, as landing pages rather than blog posts. Run ${call('next', { site })} again in a week.`
+      return `Nothing open is blocking or holding back the pages that rank, so look for buying searches the site has no page for. Run ${call('research', { action: 'ranked_keywords', target: '<competitor>' })} for the competitors in the business context, and keep searches that fit the product and show someone comparing options or ready to buy, such as comparisons, alternatives, use cases, industries and integrations. Check each with ${call('research', { action: 'serp', keywords: '<keyword>' })} and ${call('report', { site, section: 'striking-distance' })} so you do not duplicate a page the site already has. Show the person at most 3, each with the search, its volume and the page you would build. Add each one they approve under "## Pages to build" in the business context, one line each with the search and the page's path, such as "invoice app for freelancers /invoice-app-for-freelancers", and save it. Build only those, as landing pages rather than blog posts.`
     default:
       return contextGuide(site, call)
   }
@@ -412,6 +427,25 @@ function conversionsLine(
 }
 
 const cell = (text: string) => text.replaceAll('|', '\\|').replaceAll('\n', ' ')
+
+// The pages the person approved under "## Pages to build": the next one to
+// draft, and the drafts to settle once their pull requests close.
+function buildSection(
+  site: string,
+  approved: number,
+  drafted: number,
+  call: Caller,
+): string {
+  const parts = [
+    approved
+      ? `${approved} approved ${approved === 1 ? 'page waits' : 'pages wait'} under "## Pages to build" in the business context. Beside the due step, build the first line without a pull request. Check what the search's top results cover with ${call('research', { action: 'serp', keywords: '<search>' })}. Write the page in the site's own templates and the voice in the business context, so it helps that searcher choose, with what only this business knows, such as its prices, features, customers and proof. Link to it from the related pages, and check its copy with ${call('lint', {})}. Open it as a draft pull request, which always waits for the person's review, then add the pull request's URL to the end of its line and save the context. Propose more new pages only once every approved page has a pull request.`
+      : null,
+    drafted
+      ? `${drafted} ${drafted === 1 ? 'line has' : 'lines have'} a draft pull request. When one merged, remove its line and add its search under "## Tracked searches", if there is room, so progress follows it. When one was closed without merging, remove its line.`
+      : null,
+  ]
+  return `## Build approved pages\n${parts.filter(Boolean).join(' ')}`
+}
 
 // Jobs that went into a change waiting for review, for the agent to settle
 // before new work: fixed from the day the change went live, or open again.

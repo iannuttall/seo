@@ -29,7 +29,7 @@ export function autopilotRunPrompt(site: string, call: Caller): string {
     `1. Run ${call('next', { site })}. Settle the started jobs it lists first, as it says, then run it again.`,
     '2. Follow the due step for at most 5 of its jobs.',
     `3. Open one pull request for each change and name the job ids it covers in its description. Then run ${call('report', { site, mark: 'started', issues: '<ids>', note: '<pull request URL>' })}. Merge only what the "## Autopilot" rules in the business context allow. Everything else waits for review.`,
-    `4. Where the step says to ask the person, such as before a new page, a template change, a redirect or a deletion, leave the question with its evidence where the person reviews your work, such as an issue in the repository, instead of making the change. Mark the job started with that link as note, so later runs do not ask again.`,
+    `4. Where the step says to ask the person, such as before a new page, a template change, a redirect or a deletion, leave the question with its evidence where the person reviews your work, such as an issue in the repository, instead of making the change. Mark the job started with that link as note, so later runs do not ask again. When the person approves a new page there, add it under "## Pages to build" in the business context.`,
     '5. End with a short summary of what you opened and what waits for the person.',
   ].join('\n')
 }

@@ -1,5 +1,26 @@
 # Changelog
 
+## 0.27.0
+
+### Added
+
+- Page drafts for autopilot. New pages the person approves go under
+  `## Pages to build` in the business context. While any wait there,
+  `seo next` adds a "Build approved pages" section beside the due step:
+  draft the next page in a pull request, written in the site's own
+  templates and voice and checked with `seo lint`, then add the pull
+  request's URL to its line. A merged page's line is removed and its search
+  moves to tracked searches. Its data has `pages_to_build`.
+- Hosted: each alert webhook about one site has a `prompt` field with the
+  text that starts an autopilot run on it, so a receiver can hand the alert
+  to the person's agent. Alerts about the whole account have `prompt: null`.
+  The autopilot setup in `seo next` explains pointing the webhook at the
+  agent.
+- Hosted: the weekly summary lists each site's agent work under `work`:
+  jobs marked fixed during the week, and started jobs still waiting for
+  review, with their pull requests. The Monday email and `seo report` with
+  no site show it.
+
 ## 0.26.0
 
 ### Added

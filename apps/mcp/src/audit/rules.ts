@@ -13,6 +13,7 @@ import type { Run } from './site-audit.ts'
 const MAX_PER_RULE = 1000
 const MAX_EXAMPLES = 5
 const MAX_CHANGES = 200
+const MAX_FINISHES = 3
 
 export type RunSummary = {
   status: 'done' | 'failed'
@@ -95,7 +96,10 @@ const NOINDEX = `coalesce(google_noindex,
   lower(coalesce(robots, '') || ' ' || coalesce(x_robots, '')) LIKE '%noindex%')`
 
 // Every rule, as SQL that returns rule, subject and a JSON details string,
-// ordered by subject so the cap keeps the same rows each week.
+// ordered by subject so the cap keeps the same rows each week. Joins over a
+// page's links are CROSS JOINs, so SQLite looks up each link's target by
+// URL; left to choose, it scanned every target against every page's links,
+// which on a 5,000-page crawl ran past the Worker's CPU limit.
 function rules(
   rendering: Run['render'],
   llms: Llms | null,
@@ -105,8 +109,8 @@ function rules(
     SELECT t.url AS subject, json_object('status', t.status, 'location', t.location,
       'linking_pages', count(DISTINCT p.url),
       'examples', json_group_array(DISTINCT p.url)) AS details
-    FROM pages p, json_each(p.links) j
-    JOIN pages t ON t.url = j.value ->> 'u'
+    FROM pages p CROSS JOIN json_each(p.links) j
+    CROSS JOIN pages t ON t.url = j.value ->> 'u'
     WHERE p.state = 'fetched' AND j.value ->> 'm' IS NULL AND ${where}
     GROUP BY t.url ORDER BY t.url`
   return [
@@ -173,13 +177,13 @@ function rules(
     {
       // Heuristic: in a sitemap, but no crawled page links to it.
       rule: 'sitemap_page_unlinked',
-      sql: `WITH inbound AS (
-          SELECT DISTINCT j.value ->> 'u' AS url FROM pages p, json_each(p.links) j
-          WHERE p.state = 'fetched' AND j.value ->> 'u' != p.url)
-        SELECT p.url AS subject, '{}' AS details FROM pages p
-        LEFT JOIN inbound i ON i.url = p.url
+      sql: `SELECT p.url AS subject, '{}' AS details FROM pages p
         WHERE p.in_sitemap = 1 AND p.state = 'fetched' AND p.status = 200
-          AND p.content_type LIKE 'text/html%' AND i.url IS NULL ORDER BY p.url`,
+          AND p.content_type LIKE 'text/html%' AND p.url NOT IN (
+            SELECT j.value ->> 'u' FROM pages s CROSS JOIN json_each(s.links) j
+            WHERE s.state = 'fetched' AND j.value ->> 'u' != s.url
+              AND j.value ->> 'u' IS NOT NULL)
+        ORDER BY p.url`,
     },
     {
       // The raw HTML says another title, canonical or robots than the
@@ -199,8 +203,8 @@ function rules(
       sql: `SELECT t.url AS subject, json_object('status', t.status, 'state', t.state,
           'content_type', t.content_type, 'pages', count(DISTINCT p.url),
           'examples', json_group_array(DISTINCT p.url)) AS details
-        FROM pages p, json_each(p.links) j
-        JOIN pages t ON t.url = j.value ->> 'u'
+        FROM pages p CROSS JOIN json_each(p.links) j
+        CROSS JOIN pages t ON t.url = j.value ->> 'u'
         WHERE p.state = 'fetched' AND j.value ->> 'm' = 1 AND ( t.state = 'failed' OR (t.state = 'fetched' AND (t.status >= 400
           OR (t.status = 200 AND t.content_type LIKE 'text/html%'))))
         GROUP BY t.url ORDER BY t.url`,
@@ -211,7 +215,7 @@ function rules(
             rule: 'llms_txt_broken_link',
             sql: `SELECT t.url AS subject, json_object('status', t.status, 'state', t.state,
                 'llms_txt', ?) AS details
-              FROM json_each(?) j JOIN pages t ON t.url = j.value
+              FROM json_each(?) j CROSS JOIN pages t ON t.url = j.value
               WHERE t.state = 'failed' OR (t.state = 'fetched' AND t.status >= 400)
               ORDER BY t.url`,
             bindings: [llms.url, JSON.stringify(llms.links)],
@@ -246,7 +250,23 @@ export async function analyse(
   env: Env,
   site: { user_id: string; property: string },
 ): Promise<RunSummary> {
-  const conversion = await conversionOf(env, site)
+  // A try the runtime kills (CPU or memory) never returns, so after
+  // MAX_FINISHES of them the run fails without findings: no rule runs, and
+  // open findings stay as the last run left them, instead of the alarm
+  // retrying forever and starving the index checks.
+  const tries = meter.one<{ n: number }>('SELECT finishes AS n FROM run')?.n
+  // Saved before the work, so a try the runtime kills still counts.
+  meter.run('UPDATE run SET finishes = finishes + 1')
+  await meter.sync()
+  const skipFindings = (tries ?? 0) >= MAX_FINISHES
+  if (skipFindings) {
+    status = 'failed'
+    meter.run(
+      'UPDATE run SET error = ?',
+      `Its findings could not be worked out after ${MAX_FINISHES} tries, so this run lists none`,
+    )
+  }
+  const conversion = skipFindings ? [] : await conversionOf(env, site)
   const counts = { queued: 0, fetched: 0, failed: 0, blocked: 0 }
   const renders = { rendered: 0, failed: 0 }
   for (const row of meter.all<{ render: keyof typeof renders; n: number }>(
@@ -281,7 +301,9 @@ export async function analyse(
           },
         ]
       : []
-  for (const { rule, sql, bindings } of rules(run.render, llms)) {
+  for (const { rule, sql, bindings } of skipFindings
+    ? []
+    : rules(run.render, llms)) {
     listed.push({
       rule,
       rows: meter.all<{ subject: string; details: string }>(
@@ -368,6 +390,7 @@ export async function analyse(
               .map((row) => row.url),
           )
     for (const [id, before] of stored) {
+      if (skipFindings) break
       if (before.state !== 'open' || seen.has(id)) continue
       // llms.txt could not be read this run, so its findings stand.
       if (!llms && before.rule.startsWith('llms_txt_')) continue

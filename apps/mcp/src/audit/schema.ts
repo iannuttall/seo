@@ -62,7 +62,9 @@ CREATE TABLE IF NOT EXISTS run (
   render TEXT,
   render_probes INTEGER NOT NULL DEFAULT 0,
   render_errors INTEGER NOT NULL DEFAULT 0,
-  browser_ms INTEGER NOT NULL DEFAULT 0
+  browser_ms INTEGER NOT NULL DEFAULT 0,
+  -- Tries at working out the finished crawl's findings (site-audit.ts).
+  finishes INTEGER NOT NULL DEFAULT 0
 );
 
 -- Whether each section of the site (its first folder, or / for pages at
@@ -249,6 +251,7 @@ export const RUN_ADDED: [string, string][] = [
   ['render_errors', 'INTEGER NOT NULL DEFAULT 0'],
   ['browser_ms', 'INTEGER NOT NULL DEFAULT 0'],
   ['llms', 'TEXT'],
+  ['finishes', 'INTEGER NOT NULL DEFAULT 0'],
 ]
 
 export const PAGES_ADDED: [string, string][] = [

@@ -75,6 +75,7 @@ const FLAGS: Record<string, string> = {
   mark: '--mark',
   issues: '--issues',
   note: '--note',
+  fixed_on: '--fixed-on',
   start_date: '--start-date',
   end_date: '--end-date',
   search_type: '--search-type',
@@ -274,14 +275,23 @@ export const reportCommand = defineCommand({
     },
     mark: {
       type: 'string',
-      description: `With --site and --issues: ${ISSUE_MARKS.join(', ')}. Records what the person decided; runs no checks.`,
+      description: `With --site and --issues: ${ISSUE_MARKS.join(', ')}. Records what happened to them; runs no checks.`,
     },
     issues: {
       type: 'string',
       description:
         'With --mark: issue ids from --section issues, comma-separated.',
     },
-    note: { type: 'string', description: 'Optional, with --mark: why.' },
+    note: {
+      type: 'string',
+      description:
+        'Optional, with --mark: why, or the pull request URL for started.',
+    },
+    'fixed-on': {
+      type: 'string',
+      description:
+        'Optional, with --mark fixed: the day the change went live, YYYY-MM-DD.',
+    },
     ...dates,
     ...detail,
     ...common,
@@ -313,6 +323,7 @@ export const reportCommand = defineCommand({
             mark: mark as IssueMark | undefined,
             issues: issues?.split(','),
             note: stringArg(args.note),
+            fixedOn: stringArg(args['fixed-on']),
           },
           deps,
         ),

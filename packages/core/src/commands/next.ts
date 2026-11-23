@@ -59,6 +59,8 @@ export const NEXT_TEXT =
 
 // Jobs shown for the due step.
 const JOBS_SHOWN = 5
+// Started jobs shown, oldest first.
+const STARTED_SHOWN = 10
 // The issues list is checked again when its last check is older than this.
 const FRESH_MS = 86_400_000
 // Days of Google Analytics key events that order the jobs, the same days the
@@ -157,6 +159,7 @@ export async function runNext(
       ? 'improve'
       : 'new-pages'
   const shown = (step === 'unblock' ? unblock : improve).slice(0, JOBS_SHOWN)
+  const started = list.issues.filter((issue) => issue.mark === 'started')
   const fixed = list.issues.filter((issue) => issue.mark === 'fixed')
   const measured = fixed.filter((issue) => issue.measures?.length)
   const checked = lastCheck(list.issues)
@@ -165,7 +168,7 @@ export async function runNext(
   const loop = [
     `- Business context: saved ${context.updated_at.slice(0, 10)}, checked again after ${contextReviewOn(context)}.`,
     conversionsLine(ga, range),
-    `- Issues list: ${list.ranChecks ? 'checked just now' : `last checked ${checked?.slice(0, 10) ?? 'never'}`}, ${open.length} open, ${fixed.length} fixed.`,
+    `- Issues list: ${list.ranChecks ? 'checked just now' : `last checked ${checked?.slice(0, 10) ?? 'never'}`}, ${open.length} open, ${started.length} started, ${fixed.length} fixed.`,
     `- Unblock pages: ${unblock.length} open${due('unblock')}.`,
     `- Improve the pages that rank: ${improve.length} open${due('improve')}.`,
     `- New pages: ${step === 'new-pages' ? 'due now' : 'after the steps above'}.`,
@@ -181,13 +184,14 @@ export async function runNext(
       tracking,
       `The next step for ${site} is to ${STEP_TITLES[step]}.`,
       `The loop:\n${loop.join('\n')}`,
+      started.length ? startedSection(site, started, call) : null,
       `## ${heading(step)}\n${stepGuide(step, site, call)}`,
       step === 'new-pages' ? `## Earn links\n${linksGuide(site, call)}` : null,
       shown.length
         ? `Jobs ${shown.length} of ${step === 'unblock' ? unblock.length : improve.length}, pages with key events first, then conversion pages:\n${jobsTable(shown)}`
         : null,
       shown.length
-        ? `When a job is done and live, run ${call('report', { site, mark: 'fixed', issues: '<id>,<id>' })}. Mark a job "ignored" with a note on your own only when it is not a real opportunity, such as a junk search, a URL that redirects or a page kept out of Google on purpose. When the search fits the product, ask the person first. Then ${call('next', { site })}.`
+        ? `When you open a pull request for a job, run ${call('report', { site, mark: 'started', issues: '<id>,<id>', note: '<pull request URL>' })}, so later sessions leave it alone while it waits for review. When a job is done and live, run ${call('report', { site, mark: 'fixed', issues: '<id>,<id>' })}. Mark a job "ignored" with a note on your own only when it is not a real opportunity, such as a junk search, a URL that redirects or a page kept out of Google on purpose. When the search fits the product, ask the person first. Then ${call('next', { site })}.`
         : null,
       autopilot === 'not-set-up' ? autopilotAsk(site, call) : null,
       gone.length
@@ -220,6 +224,7 @@ export async function runNext(
         stored: list.stored,
         checked_at: list.ranChecks ? now.toISOString() : checked,
         open: open.length,
+        started: started.length,
         fixed: fixed.length,
         measured: measured.length,
       },
@@ -236,6 +241,13 @@ export async function runNext(
             : null,
       counts: { unblock: unblock.length, improve: improve.length },
       jobs: shown,
+      started: started.slice(0, STARTED_SHOWN).map((issue) => ({
+        id: issue.id,
+        kind: issue.kind,
+        subject: issue.subject,
+        started_at: issue.marked_at,
+        note: issue.note,
+      })),
       ...(list.stored
         ? {}
         : { save: { version: 1, sites: { [site]: list.issues } } }),
@@ -399,9 +411,36 @@ function conversionsLine(
   return `- Conversions: ${total} Google Analytics key events from Organic Search on ${pages} landing ${pages === 1 ? 'page' : 'pages'}, ${days} (property ${ga.propertyName}, ${ga.property}).${ga.capped ? ' Google Analytics did not list every landing page, so a blank key events cell is unknown, not zero.' : ''}`
 }
 
+const cell = (text: string) => text.replaceAll('|', '\\|').replaceAll('\n', ' ')
+
+// Jobs that went into a change waiting for review, for the agent to settle
+// before new work: fixed from the day the change went live, or open again.
+function startedSection(
+  site: string,
+  started: StoredIssue[],
+  call: Caller,
+): string {
+  const oldest = [...started]
+    .sort(
+      (a, b) =>
+        (a.marked_at ?? '').localeCompare(b.marked_at ?? '') ||
+        a.id.localeCompare(b.id),
+    )
+    .slice(0, STARTED_SHOWN)
+  return [
+    `## Started jobs\n${started.length} ${started.length === 1 ? 'job went' : 'jobs went'} into a change that waits for review${started.length > oldest.length ? `, oldest ${oldest.length} below` : ''}. Before new work, check each one's pull request. When it merged and the change is live, run ${call('report', { site, mark: 'fixed', issues: '<id>,<id>', fixed_on: '<the day it merged>' })}. When it was closed without merging, run ${call('report', { site, mark: 'open', issues: '<id>' })} so it comes back as a job. Leave the ones still waiting.`,
+    [
+      '| id | kind | subject | started | pull request |',
+      '| --- | --- | --- | --- | --- |',
+      ...oldest.map(
+        (issue) =>
+          `| ${issue.id} | ${issue.kind} | ${cell(issue.subject)} | ${issue.marked_at?.slice(0, 10) ?? ''} | ${cell(issue.note ?? '')} |`,
+      ),
+    ].join('\n'),
+  ].join('\n')
+}
+
 function jobsTable(shown: Job[]): string {
-  const cell = (text: string) =>
-    text.replaceAll('|', '\\|').replaceAll('\n', ' ')
   return [
     '| id | kind | subject | evidence | key events | conversion page |',
     '| --- | --- | --- | --- | --- | --- |',

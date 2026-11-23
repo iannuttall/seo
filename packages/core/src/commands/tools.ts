@@ -282,6 +282,12 @@ export const SHARED_TOOLS: SharedTool[] = [
       saved: marks.saved.describe(
         "Optional: an issues list saved in the person's project before, such as .seo/issues.json, to carry over its marks once. This server keeps the list from then on.",
       ),
+      autopilot: z
+        .boolean()
+        .optional()
+        .describe(
+          'Optional. true returns the steps to put the site on autopilot, a scheduled run of the agent with a GitHub Actions workflow, instead of the due step. Only after the person has said yes.',
+        ),
     }),
     run: async (surface, input) =>
       runNext(
@@ -289,6 +295,7 @@ export const SHARED_TOOLS: SharedTool[] = [
           site: await surface.resolveSite(input.site),
           context: input.context,
           saved: input.saved,
+          autopilot: input.autopilot,
         },
         surface.deps,
       ),

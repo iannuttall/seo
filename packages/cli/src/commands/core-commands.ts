@@ -227,6 +227,11 @@ export const nextCommand = defineCommand({
       type: 'string',
       description: 'Optional instead of --context: a Markdown file to save.',
     },
+    autopilot: {
+      type: 'boolean',
+      description:
+        'Optional. The steps to put the site on autopilot, a scheduled run of your agent, instead of the due step.',
+    },
     ...common,
   },
   run: async ({ args }) => {
@@ -246,7 +251,8 @@ export const nextCommand = defineCommand({
       }
     }
     const site = await property(args, requireSite(stringArg(args.site)))
-    await run(args, (deps) => runNext({ site, context }, deps))
+    const autopilot = booleanArg(args.autopilot)
+    await run(args, (deps) => runNext({ site, context, autopilot }, deps))
   },
 })
 

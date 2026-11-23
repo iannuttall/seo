@@ -3,6 +3,7 @@ import {
   organicPages,
   weighByKeyEvents,
 } from './analytics-site.js'
+import { autopilotAsk, autopilotGuide, autopilotState } from './autopilot.js'
 import {
   BUYING_QUESTIONS,
   BUYING_SEARCHES,
@@ -72,6 +73,8 @@ export type NextInput = {
   context?: string
   // An issues list saved in the person's project, carried over once.
   saved?: string
+  // Return the autopilot setup steps instead of the due step.
+  autopilot?: boolean
 }
 
 type Job = {
@@ -110,6 +113,19 @@ export async function runNext(
   const context = deps.context ? await deps.context.read(site) : null
   if (!context || contextIsStale(context, now)) {
     return contextStep(site, context, call)
+  }
+  const autopilot = autopilotState(context.text)
+  if (input.autopilot) {
+    return {
+      text: [
+        savedNote,
+        autopilotGuide(site, call),
+        `## Business context (saved ${context.updated_at.slice(0, 10)})\n${context.text}`,
+      ]
+        .filter(Boolean)
+        .join('\n\n'),
+      data: { site, autopilot },
+    }
   }
 
   const range = dateWindow({}, KEY_EVENT_DAYS)
@@ -154,6 +170,7 @@ export async function runNext(
     `- Improve the pages that rank: ${improve.length} open${due('improve')}.`,
     `- New pages: ${step === 'new-pages' ? 'due now' : 'after the steps above'}.`,
     `- Earn links: ${step === 'new-pages' ? 'due now, beside new pages' : 'after the steps above, unless the person asks for links now'}.`,
+    `- Autopilot: ${autopilot === 'on' ? 'on, with the rules under "## Autopilot" in the business context' : autopilot === 'off' ? 'off' : 'not set up'}.`,
     `- Results: ${measured.length} fixed ${measured.length === 1 ? 'issue' : 'issues'} measured, ${fixed.length - measured.length} waiting for 28 days of Search Console data${measured.length ? `; ${call('report', { site, section: ISSUES_SECTION })} shows them` : ''}.`,
   ]
 
@@ -172,6 +189,7 @@ export async function runNext(
       shown.length
         ? `When a job is done and live, run ${call('report', { site, mark: 'fixed', issues: '<id>,<id>' })}. Mark a job "ignored" with a note on your own only when it is not a real opportunity, such as a junk search, a URL that redirects or a page kept out of Google on purpose. When the search fits the product, ask the person first. Then ${call('next', { site })}.`
         : null,
+      autopilot === 'not-set-up' ? autopilotAsk(site, call) : null,
       gone.length
         ? `${gone.length} open ${gone.length === 1 ? 'issue was' : 'issues were'} not found by the last check (${gone
             .slice(0, 10)
@@ -193,6 +211,7 @@ export async function runNext(
     data: {
       site,
       step,
+      autopilot,
       context: {
         updated_at: context.updated_at,
         review_on: contextReviewOn(context),

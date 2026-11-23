@@ -183,9 +183,8 @@ const autopilot = (account: string) =>
     '',
     '## Put it on autopilot',
     '',
-    `- This summary also goes out as signed JSON to a webhook every Monday, with the same data as this email. Save a URL under Alerts: ${account}#alerts`,
-    '- Point the webhook at a weekly agent run, such as a Claude Code or Codex job, n8n or a GitHub Action, so an agent looks into each change as it lands.',
-    '- Index changes also go to the webhook in a daily roundup the other six days.',
+    '- Ask your agent to put this site on autopilot with SEO Skill. It then runs on a schedule, works through the due jobs and opens a pull request for each change for you to review.',
+    `- To start a run when an alert lands, such as a page that drops out of Google, save a URL that starts your agent as the webhook under Alerts: ${account}#alerts. Each site alert carries the prompt to start it with.`,
     '- Any agent connected to SEO Skill can read this week with seo_report and no site.',
   ].join('\n')
 

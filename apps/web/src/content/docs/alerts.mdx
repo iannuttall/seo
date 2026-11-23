@@ -83,7 +83,9 @@ Every email also has a link at the bottom that turns that kind of email off. In 
 
 ## Send alerts to a webhook
 
-A webhook lets an agent or automation act on each alert as it lands, such as a weekly Claude Code or Codex job, an n8n flow or a GitHub Action. Save an `https://` URL under **Alerts** on your account page. Each alert is one `POST` with a JSON body, carrying the same data as the email.
+A webhook lets an agent or automation act on each alert as it lands. Save an `https://` URL under **Alerts** on your account page. Each alert is one `POST` with a JSON body, carrying the same data as the email.
+
+To have your agent fix what an alert found, put the site on autopilot first: ask your agent to use SEO Skill, and say yes when it asks about autopilot. Then point the webhook at whatever starts your agent, such as your agent platform's trigger URL or an automation tool. Each alert about one site has a `prompt` field with the text that starts an autopilot run on that site, so the receiver can pass it straight to the agent. An alert about your whole account, such as a Google update starting, has `prompt` set to `null`.
 
 Requests are signed the [Standard Webhooks](https://www.standardwebhooks.com/) way, so most webhook libraries can check them:
 
@@ -101,6 +103,7 @@ The body's `type` says which alert it is: `google-update`, `index-changes` or `w
   "type": "google-update",
   "site": null,
   "created_at": "2026-11-04T16:12:40.000Z",
+  "prompt": null,
   "data": {
     "update": {
       "id": "example-update-id",
@@ -115,4 +118,4 @@ The body's `type` says which alert it is: `google-update`, `index-changes` or `w
 }
 ```
 
-`phase` is `started`, `finished` or `impact`. An `impact` alert adds `impacts`, one result per audited site with the same data as the `google-updates` report section, and `unread`, the sites Search Console could not be read for. More alert types may come later, so ignore a type you do not know.
+This alert is about your whole account, so its `site` and `prompt` are `null`. `phase` is `started`, `finished` or `impact`. An `impact` alert adds `impacts`, one result per audited site with the same data as the `google-updates` report section, and `unread`, the sites Search Console could not be read for. More alert types may come later, so ignore a type you do not know.

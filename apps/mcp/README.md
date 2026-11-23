@@ -246,6 +246,7 @@ other answer stops that alert. The Alerts tab shows the last call's result.
   "type": "index-changes",
   "site": "sc-domain:example.com",
   "created_at": "2026-10-22T08:17:03.000Z",
+  "prompt": "SEO Skill sent this index-changes alert for sc-domain:example.com, with its facts in this alert's data.\n\nRun SEO Skill's autopilot for sc-domain:example.com.\n1. Run seo_next ...",
   "data": {
     "sites": [
       {
@@ -273,6 +274,12 @@ other answer stops that alert. The Alerts tab shows the last call's result.
   }
 }
 ```
+
+`prompt` is the text that starts an autopilot run on `site`
+(`autopilotRunPrompt` in `packages/core/src/commands/autopilot.ts`), after
+one line that names the alert, so a receiver can hand the alert straight to
+the person's agent. It is `null` for an alert about the whole account, such
+as a Google update.
 
 `type` says what `data` holds. `index-changes` is the daily roundup. Each
 site with changes gets its own, like the weekly summary, so `site` is the

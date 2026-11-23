@@ -87,7 +87,7 @@ Sections that list pages also check their top 20 URLs live, so you can see a pag
 
 ## Keep a list of issues
 
-The `issues` section runs the quick wins, low CTR and striking distance checks again and keeps what they found in a list for the site. For a site in the [weekly site audit](/docs/weekly-site-audit), the list also has what the weekly crawl and the Google index checks found. Each issue has an id, what the latest check saw and whether you marked it open, fixed or ignored.
+The `issues` section runs the quick wins, low CTR and striking distance checks again and keeps what they found in a list for the site. For a site in the [weekly site audit](/docs/weekly-site-audit), the list also has what the weekly crawl and the Google index checks found. Each issue has an id, what the latest check saw and its mark, such as `open` or `fixed`.
 
 ```sh
 seo report --site example.com --section issues
@@ -100,7 +100,14 @@ seo report --site example.com --mark fixed --issues <id>,<id>
 seo report --site example.com --mark ignored --issues <id> --note "Not for us"
 ```
 
-"Fixed" is your word for it. The list still says when a later check finds the issue again. For a fixed page, or a query on a page, the list adds its Search Console clicks and impressions for the 28 and 56 days after the day you marked it against the same days before, once final data covers them. That shows what changed after the fix, not that the fix caused it.
+When a change waits for review, mark its issues started with the pull request as the note. [`seo next`](/docs/next) then leaves them out of its jobs and lists them until you mark them fixed, or open again if the change was dropped. If the change went live before today, add the day it did, so the results count from then:
+
+```sh
+seo report --site example.com --mark started --issues <id> --note https://github.com/example/site/pull/7
+seo report --site example.com --mark fixed --issues <id> --fixed-on 2026-11-20
+```
+
+"Fixed" is your word for it. The list still says when a later check finds the issue again. For a fixed page, or a query on a page, the list adds its Search Console clicks and impressions for the 28 and 56 days after the day you marked it against the same days before, once final data covers them. With `--fixed-on`, they count from that day instead. That shows what changed after the fix, not that the fix caused it.
 
 The hosted MCP keeps the list with your account, for any site, until you delete your account. So does the CLI, or the local MCP server, once you link it to your account with `seo login`, so every machine and agent works from the same list. Without an account, the CLI keeps the list on your machine. [`seo next`](/docs/next) reads the same list to pick its jobs.
 

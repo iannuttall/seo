@@ -634,6 +634,8 @@ export type ReportInput = DateInput & {
   mark?: IssueMark
   issues?: string[]
   note?: string
+  // With mark fixed: the day the change went live.
+  fixedOn?: string
   // The issues list the agent saved, where the server keeps none.
   saved?: string
 }
@@ -972,6 +974,7 @@ export function runReport(
         mark: input.mark,
         ids: input.issues,
         note: input.note,
+        fixedOn: input.fixedOn,
         saved: input.saved,
       },
       deps,

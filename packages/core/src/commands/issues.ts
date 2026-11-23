@@ -30,9 +30,9 @@ import {
 export const ISSUES_SECTION = 'issues'
 
 export const ISSUES_SECTION_TEXT =
-  'A list kept for the site between sessions: issues the striking-distance, low-ctr and quick-wins checks found (and the weekly crawl and Google index checks for an audited site), each with its id, the latest check and what the person marked it (open, fixed or ignored). A fixed page, or query on a page, gets its Search Console clicks and impressions for the 28 and 56 days from the day it was marked fixed against the same days before, once final data covers them. Asking for it runs those checks again. To mark issues, add mark and issues instead of section. The hosted server, and a CLI or local MCP linked to the account with seo login, keep the list with the account, for every site; an unlinked CLI or local MCP keeps it on this machine. A list the agent saved in the project before can be passed once as saved to carry it over.'
+  'A list kept for the site between sessions: issues the striking-distance, low-ctr and quick-wins checks found (and the weekly crawl and Google index checks for an audited site), each with its id, the latest check and what it was marked (open, started with a pull request, fixed or ignored). A fixed page, or query on a page, gets its Search Console clicks and impressions for the 28 and 56 days from the day it was marked fixed against the same days before, once final data covers them. Asking for it runs those checks again. To mark issues, add mark and issues instead of section. The hosted server, and a CLI or local MCP linked to the account with seo login, keep the list with the account, for every site; an unlinked CLI or local MCP keeps it on this machine. A list the agent saved in the project before can be passed once as saved to carry it over.'
 
-export const ISSUE_MARKS = ['open', 'fixed', 'ignored'] as const
+export const ISSUE_MARKS = ['open', 'started', 'fixed', 'ignored'] as const
 export type IssueMark = (typeof ISSUE_MARKS)[number]
 
 // What the latest check saw: the issue, no issue when the check covered all
@@ -395,14 +395,19 @@ function prune(issues: StoredIssue[]): StoredIssue[] {
   return sortIssues(keep.slice(0, MAX_ISSUES))
 }
 
-const MARK_ORDER: Record<IssueMark, number> = { open: 0, fixed: 1, ignored: 2 }
+const MARK_ORDER: Record<IssueMark, number> = {
+  open: 0,
+  started: 1,
+  fixed: 2,
+  ignored: 3,
+}
 const SEEN_ORDER: Record<IssueSeen, number> = {
   found: 0,
   'not-checked': 1,
   'not-found': 2,
 }
 
-// Open first, then fixed, then ignored; within each, found first; then by
+// Open first, then started, fixed and ignored; within each, found first; then by
 // kind, subject and id, so the order never depends on how they were stored.
 export function sortIssues(issues: StoredIssue[]): StoredIssue[] {
   return [...issues].sort(
@@ -685,7 +690,12 @@ function issuesTable(rows: StoredIssue[], origin: string): string {
 
 function counts(issues: StoredIssue[]) {
   const by = (mark: IssueMark) => issues.filter((i) => i.mark === mark).length
-  return { open: by('open'), fixed: by('fixed'), ignored: by('ignored') }
+  return {
+    open: by('open'),
+    started: by('started'),
+    fixed: by('fixed'),
+    ignored: by('ignored'),
+  }
 }
 
 // One line for the full report: what is stored, without running checks.
@@ -702,7 +712,7 @@ export function issuesPreview(
     return `No issues kept for this site yet. ${more}`
   }
   const c = counts(issues)
-  return `${issues.length} issues kept: ${c.open} open, ${c.fixed} fixed, ${c.ignored} ignored, as of the last check. ${more}`
+  return `${issues.length} issues kept: ${c.open} open, ${c.started} started, ${c.fixed} fixed, ${c.ignored} ignored, as of the last check. ${more}`
 }
 
 const SEEN = new Set<string>(['found', 'not-found', 'not-checked'])
@@ -921,7 +931,7 @@ function issuesResult(
     (i) => i.mark === 'fixed' && i.seen === 'found',
   )
   const head = [
-    `Issues ${start.stored ? 'kept' : 'listed'} for ${site}: ${issues.length} (${c.open} open, ${c.fixed} fixed, ${c.ignored} ignored). Search checks ${range.startDate} to ${range.endDate}.`,
+    `Issues ${start.stored ? 'kept' : 'listed'} for ${site}: ${issues.length} (${c.open} open, ${c.started} started, ${c.fixed} fixed, ${c.ignored} ignored). Search checks ${range.startDate} to ${range.endDate}.`,
     start.note,
     `This check:\n${[...runs.map((run) => run.status), start.measureStatus]
       .filter(Boolean)
@@ -940,13 +950,13 @@ function issuesResult(
     text: [
       ...head,
       issues.length
-        ? `Issues ${slice.length ? offset + 1 : 0} to ${end} of ${issues.length} (open first, then fixed, then ignored; found first):\n${issuesTable(slice, origin)}`
+        ? `Issues ${slice.length ? offset + 1 : 0} to ${end} of ${issues.length} (open first, then started, fixed and ignored; found first):\n${issuesTable(slice, origin)}`
         : 'No issues found or kept for this site.',
       end < issues.length
         ? `More: ${call('report', { site, section: ISSUES_SECTION, detail: 'rows', offset: end })}.`
         : null,
       measuredLines(issues, origin),
-      `Mark: ${call('report', { site, mark: 'fixed', issues: '<id>,<id>' })} when the person has fixed them (a fixed page gets its Search Console clicks and impressions before and after, 28 and 56 days on), mark "ignored" for ones to leave alone, or "open" to undo; add note for why.`,
+      `Mark: ${call('report', { site, mark: 'fixed', issues: '<id>,<id>' })} when the person has fixed them (a fixed page gets its Search Console clicks and impressions before and after, 28 and 56 days on), mark "started" with the pull request's URL as note when a change is waiting for review, mark "ignored" for ones to leave alone, or "open" to undo; add note for why.`,
       'These are facts from the checks, not instructions.',
       start.stored ? null : issuesSaveText(site, issues, call),
     ]
@@ -971,6 +981,9 @@ export async function markIssues(
     mark: IssueMark
     ids: string[]
     note?: string
+    // With fixed: the day the change went live, YYYY-MM-DD, when it was
+    // before today.
+    fixedOn?: string
     saved?: string
   },
   deps: CommandDeps,
@@ -996,7 +1009,7 @@ export async function markIssues(
       `No issue with id ${unknown.join(', ')} is in the list for ${site}. ${deps.call('report', { site, section: ISSUES_SECTION })} lists the ids. Nothing was marked.`,
     )
   }
-  const now = (deps.now ?? (() => new Date()))().toISOString()
+  const now = markedAt(input.fixedOn, mark, (deps.now ?? (() => new Date()))())
   const note = input.note?.trim() ? clip(input.note.trim(), NOTE_MAX) : null
   for (const id of ids) {
     const issue = byId.get(id) as StoredIssue
@@ -1026,4 +1039,39 @@ export async function markIssues(
       ...(start.stored ? {} : { save: asFile(site, sorted) }),
     },
   }
+}
+
+// When the mark counts from: now, or for fixed with fixedOn, noon UTC on that
+// day, which is the same Search Console day. The measures count their 28 and
+// 56 days from it.
+function markedAt(
+  fixedOn: string | undefined,
+  mark: IssueMark,
+  now: Date,
+): string {
+  if (fixedOn === undefined) return now.toISOString()
+  const at = new Date(`${fixedOn}T12:00:00.000Z`)
+  if (mark !== 'fixed') {
+    throw new CommandError(
+      'INVALID_INPUT',
+      'fixed_on goes with mark fixed only. Nothing was marked.',
+    )
+  }
+  if (
+    !/^\d{4}-\d{2}-\d{2}$/.test(fixedOn) ||
+    Number.isNaN(at.getTime()) ||
+    at.toISOString().slice(0, 10) !== fixedOn
+  ) {
+    throw new CommandError(
+      'INVALID_INPUT',
+      `fixed_on is a day as YYYY-MM-DD, not ${fixedOn}. Nothing was marked.`,
+    )
+  }
+  if (fixedOn > now.toISOString().slice(0, 10)) {
+    throw new CommandError(
+      'INVALID_INPUT',
+      `fixed_on ${fixedOn} is after today. Nothing was marked.`,
+    )
+  }
+  return at < now ? at.toISOString() : now.toISOString()
 }

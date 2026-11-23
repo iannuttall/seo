@@ -141,7 +141,7 @@ const marks = {
     .enum(ISSUE_MARKS)
     .optional()
     .describe(
-      'Optional, with site and issues: fixed, ignored, or open to undo. Only when the person says so.',
+      'Optional, with site and issues: started when a pull request with the change waits for review (note: its URL), fixed once the change is live, ignored only when the person says so, or open to undo.',
     ),
   issues: z
     .string()
@@ -152,7 +152,16 @@ const marks = {
     .string()
     .max(NOTE_MAX)
     .optional()
-    .describe('Optional, with mark: why, in the person’s words.'),
+    .describe(
+      'Optional, with mark: why, in the person’s words, or the pull request URL for started.',
+    ),
+  fixed_on: z
+    .string()
+    .regex(/^\d{4}-\d{2}-\d{2}$/)
+    .optional()
+    .describe(
+      'Optional, with mark fixed: the day the change went live, YYYY-MM-DD, such as the day its pull request merged, when that was before today. Results are measured from it.',
+    ),
   saved: z
     .string()
     .max(SAVED_MAX)
@@ -310,7 +319,7 @@ export const SHARED_TOOLS: SharedTool[] = [
       .map(([id, text]) => `- ${id}: ${text}`)
       .join(
         '\n',
-      )}\nWith site, mark and issues: records what the person decided about those issue ids (fixed, ignored, or open to undo) and runs no checks.`,
+      )}\nWith site, mark and issues: records what happened to those issue ids (started, fixed, ignored, or open to undo) and runs no checks.`,
     input: z.object({
       site: site
         .optional()
@@ -352,6 +361,7 @@ export const SHARED_TOOLS: SharedTool[] = [
             mark: input.mark,
             issues: input.issues?.split(','),
             note: input.note,
+            fixedOn: input.fixed_on,
             saved: input.saved,
           },
           surface.deps,

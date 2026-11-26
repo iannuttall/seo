@@ -297,13 +297,19 @@ export async function npmDownloads(sinceDay: string): Promise<NpmDay[] | null> {
       maxBytes: 200_000,
     })
     if (!Array.isArray(json.downloads)) return null
-    return json.downloads
+    const days = json.downloads
       .flatMap((row: { day?: unknown; downloads?: unknown }) =>
         typeof row.day === 'string' && typeof row.downloads === 'number'
           ? [{ day: row.day, downloads: row.downloads }]
           : [],
       )
       .sort((a, b) => a.day.localeCompare(b.day))
+    // npm publishes each day a day or two late and answers 0 for the days it
+    // has not published yet, so trailing zero days are dropped rather than
+    // shown as days with no downloads.
+    let end = days.length
+    while (end > 0 && days[end - 1].downloads === 0) end -= 1
+    return days.slice(0, end)
   }
   try {
     const cached = await cache?.match(url)

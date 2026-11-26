@@ -1,5 +1,13 @@
 # Changelog
 
+## 0.27.1
+
+### Fixed
+
+- `seo_crawl` on the local MCP server (`seo mcp serve`) works again. Since
+  0.4.0 every call failed with `Invalid parameters for site-crawl` before
+  the crawl started. `seo crawl` on the command line was not affected.
+
 ## 0.27.0
 
 ### Added

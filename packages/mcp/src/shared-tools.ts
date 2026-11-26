@@ -139,13 +139,13 @@ export function registerSharedTools(
     {
       title: 'Crawl a site',
       description:
-        'Crawls a site from this machine and returns technical issues and the URLs they affect. The crawl is saved locally for later reports.',
+        'Crawls a site from this machine and returns technical issues and the URLs they affect.',
       inputSchema: { url: z.url() },
       annotations: readOnly,
     },
     async ({ url }) =>
       counted('crawl', {}, options.telemetry, () =>
-        executeReport('site-crawl', { url, saveReport: true }),
+        executeReport('site-crawl', { url }),
       ),
   )
 

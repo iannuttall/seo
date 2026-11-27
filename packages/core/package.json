@@ -59,7 +59,7 @@
     "@mozilla/readability": "^0.6.0",
     "@napi-rs/keyring": "^1.3.0",
     "cheerio": "^1.2.0",
-    "defuddle": "^0.19.6",
+    "defuddle": "^0.19.12",
     "htmlparser2": "10.1.0",
     "libsql": "^0.5.29",
     "lighthouse": "13.6.0",
@@ -69,10 +69,10 @@
     "p-retry": "^8.0.1",
     "pino": "^10.4.0",
     "pino-pretty": "^13.2.0",
-    "playwright-core": "1.65.0",
+    "playwright-core": "1.65.1",
     "proper-lockfile": "^4.1.2",
     "robots-parser": "^3.0.1",
-    "undici": "^8.12.4",
+    "undici": "^8.13.0",
     "zod": "^4.6.7"
   }
 }

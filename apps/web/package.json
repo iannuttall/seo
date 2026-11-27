@@ -25,7 +25,7 @@
     "types:worker": "wrangler types worker/worker-configuration.d.ts --include-runtime false"
   },
   "dependencies": {
-    "@astrojs/markdown-remark": "^7.3.8",
+    "@astrojs/markdown-remark": "^7.3.10",
     "@astrojs/mdx": "^7.0.8",
     "@hugeicons/core-free-icons": "4.4.0",
     "@iannuttall/seo-graph-astro": "^0.0.12",
@@ -34,19 +34,19 @@
     "@seo/core": "workspace:*",
     "@tailwindcss/vite": "^4.3.5",
     "alpinejs": "^3.17.5",
-    "astro": "^7.4.11",
-    "hono": "^4.13.18",
-    "lucide": "^1.72.0",
+    "astro": "^7.4.13",
+    "hono": "^4.13.19",
+    "lucide": "^1.77.0",
     "saxes": "^6.0.0"
   },
   "devDependencies": {
     "@astrojs/check": "^0.9.12",
-    "@cloudflare/workers-types": "5.20261113.1",
+    "@cloudflare/workers-types": "5.20261120.1",
     "@seo/mcp": "workspace:*",
     "@types/alpinejs": "^3.17.0",
     "tailwindcss": "^4.3.5",
-    "takumi-js": "2.20.0",
+    "takumi-js": "2.22.1",
     "typescript": "^6.0.3",
-    "wrangler": "^4.161.0"
+    "wrangler": "^4.165.0"
   }
 }

@@ -288,7 +288,7 @@ export const tools = [
   {
     id: 'title-and-meta-description-checker',
     path: '/tools/title-and-meta-description-checker',
-    title: 'Title tag and meta description checker',
+    title: 'SEO title and meta description checker',
     action: 'Open the title and meta description checker',
     description:
       'Check a page title and meta description in pixels on desktop and mobile, with a Google preview and the problems that make Google rewrite them.',

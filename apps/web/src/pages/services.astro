@@ -1,0 +1,182 @@
+---
+import {
+  AiChat02Icon,
+  Analytics01Icon,
+  ChartLineData01Icon,
+  Route01Icon,
+} from '@hugeicons/core-free-icons'
+import Breadcrumbs from '@/components/Breadcrumbs.astro'
+import CodeBlock from '@/components/CodeBlock.astro'
+import FaqAccordion from '@/components/FaqAccordion.astro'
+import HomeCard from '@/components/HomeCard.astro'
+import PageHeader from '@/components/PageHeader.astro'
+import SetupCommands from '@/components/SetupCommands.astro'
+import BaseLayout from '@/layouts/BaseLayout.astro'
+import type { SchemaBreadcrumb } from '@/lib/schema'
+
+const breadcrumbs: SchemaBreadcrumb[] = [
+  { label: 'Home', href: '/' },
+  { label: 'AI SEO services' },
+]
+
+const related = [
+  { title: 'AI visibility checker', text: 'Ask ChatGPT, Gemini, AI Mode and AI Overviews your buyer questions and see who they cite.', href: '/features/ai-visibility-checker', icon: AiChat02Icon, link: 'See the checker' },
+  { title: 'SEO audit', text: 'Crawl the site for the technical problems that keep pages out of Google and AI answers.', href: '/features/seo-audit', icon: Route01Icon, link: 'See the audit' },
+  { title: 'SEO agent', text: 'Turn the coding agent you already use into the one that does the work.', href: '/features/seo-agent', icon: Analytics01Icon, link: 'See the agent' },
+  { title: 'SEO reporting', text: 'A weekly report on what moved, from your own Search Console and analytics.', href: '/features/seo-reporting', icon: ChartLineData01Icon, link: 'See reporting' },
+]
+
+const faq = [
+  {
+    question: 'What is the difference between AI SEO and normal SEO?',
+    answer:
+      'Most of the work is the same. AI Overviews and AI Mode use pages Google has indexed, and ChatGPT and Perplexity search the web before they answer, so a page that is not crawlable or indexed cannot be cited either. AI SEO adds one thing: checking what AI answers say about your category and who they cite, so you can see whether the work reaches them.',
+  },
+  {
+    question: 'Are AEO, GEO and AI search optimization different services?',
+    answer:
+      'No. Answer engine optimization (AEO), generative engine optimization (GEO) and AI search optimization are names for the same work: getting a business named and cited in AI answers. Judge a service by the work it does each week.',
+  },
+  {
+    question: 'How do you measure whether AI answers name you?',
+    answer:
+      'Ask the same buyer questions on each AI engine, more than once, and count how often the answer names or cites you. One answer is one sample, and the same question can name you in one run and skip you in the next. SEO Skill can ask each question up to five times and report the rate.',
+  },
+  {
+    question: 'Can I run AI SEO myself?',
+    answer:
+      'Yes. SEO Skill gives your agent your Search Console, Google Analytics, crawl and AI answer data, and the agent works in your site’s code. You review each change before it ships. The tools your agent calls on demand are free.',
+  },
+]
+---
+
+<BaseLayout
+  title="AI SEO services for Google and AI answers"
+  description="What AI SEO services cover: indexing, pages for buyer questions, tracking who AI answers cite and weekly reports, run with your own agent and data."
+  canonicalPath="/services"
+  {breadcrumbs}
+>
+  <main data-agent-content>
+    <Breadcrumbs {breadcrumbs} />
+
+    <PageHeader
+      title="AI SEO services"
+      description="AI SEO is the work of getting found in Google and named in ChatGPT, Gemini, Perplexity and Google's AI answers. This is what that work covers, how to check it is working, and how to run it with your own agent and data."
+    />
+
+    <SetupCommands id="services-setup" />
+
+    <article class="docs-prose mt-14 min-w-0">
+      <h2>What AI SEO services cover</h2>
+      <p>
+        Whatever a provider calls it (AI SEO, AEO, GEO or AI search
+        optimization), the work comes down to five jobs. Each one depends on
+        the one before it: a page Google has not indexed cannot rank, and a
+        page that does not rank is rarely the one an AI answer cites.
+      </p>
+      <table>
+        <thead><tr><th>Job</th><th>What it involves</th><th>How SEO Skill runs it</th></tr></thead>
+        <tbody>
+          <tr>
+            <td>Get crawled and indexed</td>
+            <td>Let search and AI crawlers read every page, and get the pages that matter into Google's index.</td>
+            <td><a href="/docs/commands/indexing">seo index</a> checks Google's index status for your pages, and the <a href="/tools/robots-txt-validator">robots.txt checker</a> shows which crawlers your rules let in.</td>
+          </tr>
+          <tr>
+            <td>Find the buyer questions</td>
+            <td>Find what buyers search and ask AI, and which pages show up for it today.</td>
+            <td><a href="/features/ai-search">AI search tracking</a> pulls the AI-style questions from your own Search Console; <a href="/features/keyword-research">keyword research</a> adds volumes and competitors.</td>
+          </tr>
+          <tr>
+            <td>Write and fix pages</td>
+            <td>Comparison, alternatives and use-case pages, and sharper titles and copy on the pages you have.</td>
+            <td>Your agent writes the change in your site's code from the evidence, and you review it before it ships.</td>
+          </tr>
+          <tr>
+            <td>Track AI answers</td>
+            <td>Ask ChatGPT, Gemini and Google's AI answers your buyer questions and see who they name and cite.</td>
+            <td>The <a href="/features/ai-visibility-checker">AI visibility checker</a> asks each question on four engines and lists the sites each answer cites, yours and your competitors'.</td>
+          </tr>
+          <tr>
+            <td>Report what moved</td>
+            <td>A regular report on clicks, rankings, index status and AI answers.</td>
+            <td><a href="/features/seo-reporting">SEO reporting</a> compares each week with the one before, from your own data.</td>
+          </tr>
+        </tbody>
+      </table>
+
+      <h2>How the work runs each week</h2>
+      <p>
+        AI SEO runs as a weekly loop. Read what changed in Search Console
+        and AI answers, pick the one change most likely to help, make it,
+        and check it the next week.
+      </p>
+      <p>
+        SEO Skill runs that loop through the agent you already use. It
+        picks the next step from your own data, your agent makes the change
+        in your codebase, and the next run checks whether it worked. Nothing
+        ships without your say. The <a href="/features/seo-agent">SEO
+        agent</a> page shows the jobs to give it.
+      </p>
+
+      <h2>Check an AI SEO service before you pay for it</h2>
+      <p>
+        AI answers vary from run to run, so a screenshot of one good answer
+        proves very little. Ask these questions of any provider, or of your
+        own setup:
+      </p>
+      <ul>
+        <li>
+          <strong>Which questions do you track, and where did they come
+          from?</strong> Questions from your own Search Console are ones
+          people already ask. A list someone guessed may be questions nobody
+          types.
+        </li>
+        <li>
+          <strong>How many times do you ask each one?</strong> A rate across
+          several runs means something. A single answer does not.
+        </li>
+        <li>
+          <strong>Whose data is the report built on?</strong> Your own Search
+          Console and analytics show real clicks. Third-party estimates are
+          useful for competitors, but they are estimates.
+        </li>
+        <li>
+          <strong>Can you see every change and when it shipped?</strong> If
+          a number moves, you should be able to line it up with the change
+          that came before it.
+        </li>
+        <li>
+          <strong>Do they separate cause from timing?</strong> A rise in the
+          same week as a new page shows the timing matched. It does not
+          prove the page caused it.
+        </li>
+      </ul>
+
+      <h2>Run it yourself with your agent</h2>
+      <p>
+        Add the hosted MCP to Claude Code, Codex, Cursor or ChatGPT and sign
+        in with Google, or install the CLI for the site crawl. Then ask:
+      </p>
+      <CodeBlock value="What should I fix first to get found in Google and named in AI answers?" wrap />
+      <p>
+        Your agent reads your Search Console, checks your pages and AI
+        answers, and comes back with the first step and the evidence for it.
+      </p>
+    </article>
+
+    <div class="docs-prose mt-16">
+      <h2>AI SEO questions</h2>
+    </div>
+    <div class="mt-6">
+      <FaqAccordion id="services-faq" items={faq} />
+    </div>
+
+    <section class="mt-16" aria-labelledby="services-related">
+      <h2 id="services-related" class="text-2xl/8 font-medium tracking-normal">The tools behind each job</h2>
+      <div class="mt-6 grid grid-cols-1 gap-2 sm:grid-cols-2">
+        {related.map((item) => <HomeCard {...item} />)}
+      </div>
+    </section>
+  </main>
+</BaseLayout>

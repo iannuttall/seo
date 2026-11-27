@@ -45,6 +45,7 @@ const paths = [
   ...integrationPaths,
   ...cmsPaths,
   ...alternativePaths,
+  '/services',
   '/pricing',
   '/about',
   '/stats',

@@ -5,6 +5,7 @@ import {
   Route01Icon,
   SearchList01Icon,
 } from '@hugeicons/core-free-icons'
+import CodeBlock from '@/components/CodeBlock.astro'
 import FeaturePage from '@/components/FeaturePage.astro'
 
 const related = [
@@ -41,19 +42,16 @@ const related = [
     source and the date it was checked.
   </p>
 
-  <h2>Start a site with two commands</h2>
+  <h2>Start a site with one prompt</h2>
   <p>
-    You need the current LTS release of Node.js on your computer. Install the <code>seo</code> CLI, then create
-    the site in a new folder:
+    Any coding agent that can run commands works, such as Claude Code,
+    Codex, Cursor or Amp. Give it this prompt in an empty folder:
   </p>
-  <pre><code>npm i -g seo
-seo site new my-site --name "My Site"</code></pre>
+  <CodeBlock prompt value={`If seo --version fails, install the SEO Skill CLI with npm i -g seo, and install the current LTS release of Node.js first if it is missing. Then run seo site new my-site --name "My Site", run seo site guide setup and follow it step by step. Ask me only for decisions about my site and data.`} wrap />
   <p>
-    This copies the starter, installs its packages and prints the first step.
-    The starter is a small working site about parks, so you can see every part
-    before the agent replaces it with your data. Then ask your agent to run <code>seo site guide setup</code> and follow
-    it. Any coding agent that can
-    run commands works, such as Claude Code, Codex, Cursor or Amp.
+    <code>seo site new</code> copies the starter, installs its packages and
+    prints the first step. The starter is a small working site about parks,
+    so you can see every part before the agent replaces it with your data.
   </p>
 
   <h2>The ten steps your agent follows</h2>
@@ -89,7 +87,7 @@ seo site new my-site --name "My Site"</code></pre>
     <thead><tr><th>Area</th><th>What fails the build</th></tr></thead>
     <tbody>
       <tr><td>Pages</td><td>A missing, duplicate or overlong title or description, more or fewer than one H1, a wrong canonical URL, broken links, a page left out of the sitemap, a noindex tag (which tells search engines to leave the page out of their results), FAQ markup (the structured data for questions and answers) that does not match the questions on the page, and a missing sharing image or Markdown copy.</td></tr>
-      <tr><td>Copy</td><td>Dashes and semicolons, hype words such as seamless and robust, "it's not X, it's Y" lines, openings such as "in this guide", talk about the tools or search terms, and "coming soon".</td></tr>
+      <tr><td>Copy</td><td>Dashes and semicolons, hype words from a list of words to cut, "it's not X, it's Y" lines, openings such as "in this guide", talk about the tools or search terms, and "coming soon".</td></tr>
       <tr><td>Design</td><td>Uppercase or letter-spaced labels, gradients, shadows, coloured left borders and card grids wider than two columns.</td></tr>
       <tr><td>Data</td><td>A fact block without a link to its source or without the date it was checked.</td></tr>
     </tbody>

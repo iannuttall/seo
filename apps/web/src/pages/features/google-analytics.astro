@@ -58,41 +58,27 @@ Visits from AI assistants (ChatGPT, Perplexity, Claude, Gemini, Copilot and othe
     </tbody>
   </table>
 
-  <h2>Connect Google Analytics to Claude, Codex or ChatGPT in 3 steps</h2>
+  <h2>Connect Google Analytics to Claude, Codex or ChatGPT with one prompt</h2>
   <p>
     You need a Google account with Viewer access to the Google Analytics
     property, and access to at least one Search Console property on the same
     account. That Google sign-in is your SEO Skill account, with no password
     or separate signup.
   </p>
-  <ol>
-    <li>
-      Add the server to your agent. In Claude Code, run the command below. The
-      Codex command and the URL for other clients are at the top of this page.
-      <CodeBlock value="claude mcp add --transport http seoskill https://seoskill.dev/mcp" wrap />
-    </li>
-    <li>
-      Sign in with Google when your client asks. The sign-in asks for
-      read-only access, so nothing the agent does can change your Google
-      Analytics settings.
-    </li>
-    <li>
-      Ask a first question to check the connection:
-      <CodeBlock prompt value="Which Google Analytics properties can you see?" wrap />
-    </li>
-  </ol>
   <p>
-    In claude.ai and the Claude apps you add the same URL as a custom
-    connector instead of running a command, and in ChatGPT as a custom MCP
-    server. The <a
-    href="/integrations/google-analytics">Google Analytics setup guides</a>{' '}
-    show each client step by step (Claude, ChatGPT, Codex, Cursor, VS Code,
-    Gemini CLI, Windsurf and Le Chat).
+    Copy the prompt for your agent at the top of this page and give it to
+    Claude Code, Codex, Cursor or any agent that runs commands. It adds the
+    server, waits while you sign in with Google (read-only, so nothing the
+    agent does can change your Google Analytics settings) and checks it
+    connects. Then ask a first question:
   </p>
+  <CodeBlock prompt value="Which Google Analytics properties can you see?" wrap />
   <p>
-    Prefer a terminal? <code>npm i -g seo</code> then <code>seo start</code>{' '}
-    signs you in with Google on your own machine, and the same reports run
-    from the command line.
+    In claude.ai and the Claude apps you add the server as a custom connector
+    in settings, and in ChatGPT as a custom MCP server. The <a
+    href="/integrations/google-analytics">Google Analytics setup guides</a>{' '}
+    show each client (Claude, ChatGPT, Codex, Cursor, VS Code, Gemini CLI,
+    Windsurf and Le Chat).
   </p>
 
   <h2>See Google Analytics sessions beside Search Console clicks</h2>

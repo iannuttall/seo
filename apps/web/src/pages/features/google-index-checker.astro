@@ -25,8 +25,8 @@ const related = [
   <h2>What you need to check indexing</h2>
   <p>
     The answers come from Google's URL Inspection, so the site has to be a
-    Search Console property your Google account can read. Connect the hosted
-    MCP and sign in with Google, or install the CLI and run <code>seo start</code>. Both are free. It checks your own sites, not a
+    Search Console property your Google account can read. Give your agent
+    the setup prompt at the top of this page and sign in with Google. It is free. It checks your own sites, not a
     list of pages on other people's sites.
   </p>
 
@@ -75,8 +75,8 @@ const related = [
     </tbody>
   </table>
   <p>
-    The labels come from simple rules over this evidence, not from Google
-    (so treat a check as a question, not a verdict). If most of your pages
+    SEO Skill sets the labels with simple rules over this evidence. Google
+    does not give them, so treat each check as a question to look into. If most of your pages
     are missing, start with{' '}
     <a href="/features/website-not-showing-up-on-google">website not showing
     up on Google</a>.
@@ -89,8 +89,8 @@ const related = [
   </p>
   <pre><code>seo page --url https://example.com/pricing</code></pre>
   <p>
-    You get the live page's status, redirect, title, canonical and robots
-    tags, Google's index status for the URL, and its Search Console queries
+    You get the live page as it loads now (status, redirect and head tags),
+    Google's index status for the URL, and its Search Console queries
     against the period before. URL Inspection reports Google's last known
     state, so it can lag behind a change you made today.
   </p>

@@ -5,27 +5,8 @@ import {
   McpServerIcon,
   PlugSocketIcon,
 } from '@hugeicons/core-free-icons'
-import ClientSteps from '@/components/ClientSteps.astro'
 import CodeBlock from '@/components/CodeBlock.astro'
 import FeaturePage from '@/components/FeaturePage.astro'
-import { clientById } from '@/content/integrations'
-
-// Setup steps come from the integration pages, so each client's steps stay
-// the same everywhere they appear.
-const setup = ['claude-code', 'codex', 'chatgpt', 'claude', 'cursor'].map(
-  (id) => {
-    const client = clientById(id)
-    if (!client) throw new Error(`Unknown client ${id}`)
-    return client
-  },
-)
-const heading: Record<string, string> = {
-  'claude-code': 'Connect Google Search Console to Claude Code',
-  codex: 'Connect Google Search Console to Codex',
-  chatgpt: 'Connect Google Search Console to ChatGPT',
-  claude: 'Connect Google Search Console to Claude.ai and Claude Desktop',
-  cursor: 'Connect Google Search Console to Cursor',
-}
 
 const related = [
   { title: 'Search Console in 9 AI clients', text: 'Setup steps and prompts for VS Code, Gemini CLI, Windsurf, Le Chat and the clients on this page.', href: '/integrations/google-search-console', icon: PlugSocketIcon, link: 'Setup by client' },
@@ -62,33 +43,23 @@ const related = [
     what you see in Search Console.
   </p>
 
-  <h2>Connect Search Console to 5 AI clients</h2>
+  <h2>Connect Search Console with one prompt</h2>
   <p>
     You need a Google account that can see at least one Search Console
-    property. That is the whole list. Each client below takes a minute, and the{' '}
+    property. That is the whole list. Copy the prompt for your agent at the
+    top of this page and give it to Claude Code, Codex, Cursor or any agent
+    that runs commands. It adds the server, waits while you sign in with
+    Google, checks it connects and asks which site to start with. The same
+    prompt installs the open source CLI, which runs the site crawl and Bing
+    Webmaster Tools on your own machine.
+  </p>
+  <p>
+    ChatGPT and Claude on the web cannot add a server themselves, so you add
+    it in their settings. Follow the steps for{' '}
+    <a href="/integrations/google-search-console/chatgpt">ChatGPT</a> or{' '}
+    <a href="/integrations/google-search-console/claude">Claude</a>. The{' '}
     <a href="/integrations/google-search-console">Search Console integration page</a>{' '}
-    has the steps for VS Code, Gemini CLI, Windsurf and Le Chat too.
-  </p>
-
-  {
-    setup.map((client) => (
-      <>
-        <h3>{heading[client.id]}</h3>
-        <ClientSteps steps={client.steps} note={client.note ?? client.signIn} />
-      </>
-    ))
-  }
-
-  <h3>Run it on your machine instead</h3>
-  <p>
-    Prefer to keep the Google token on your own computer? The open source CLI
-    reads the same data and adds a local MCP server to Claude Code, Codex and
-    Cursor during setup:
-  </p>
-  <CodeBlock value="npm i -g seo && seo start" />
-  <p>
-    The local route also gives your agent the site crawl and Bing Webmaster
-    Tools, which the hosted server leaves to the CLI.
+    covers VS Code, Gemini CLI, Windsurf and Le Chat too.
   </p>
 
   <h2>6 prompts to run once Search Console is connected</h2>
@@ -179,7 +150,7 @@ const related = [
   <p>
     This page got 523 of the 717 impressions (73%) and the best position, so
     it is the one we built out. A page split like that is what the report's
-    cannibalization section looks for: queries where more than one of your
+    cannibalization section looks for. It lists queries where more than one of your
     pages gets impressions, with each page's share. None of these rows had a
     click yet, so the table shows where Google is testing the site. It says
     nothing about traffic so far.
@@ -211,9 +182,9 @@ const related = [
   <p>
     Pick the hosted SEO Skill server if you want Search Console in claude.ai,
     ChatGPT or Claude on your phone, where a local server cannot run, or if
-    you would rather skip the Google Cloud step. The CLI is the middle option:
-    open source on GitHub and npm, local, and signed in with Google during{' '}
-    <code>seo start</code>. The{' '}
+    you would rather skip the Google Cloud step. The CLI is the middle option. It is
+    open source on GitHub and npm, runs locally, and is signed in with Google by the
+    setup prompt. The{' '}
     <a href="/alternatives">comparison of Search Console MCP servers</a> shows
     how each one signs in and what it costs, checked on their own pages.
   </p>
@@ -227,7 +198,7 @@ const related = [
   </p>
   <p>
     The one paid part is the <a href="/docs/weekly-site-audit">weekly site audit</a>,
-    at $50 a month per site. It runs on our servers without you asking: a
+    at $50 a month per site. It runs on our servers without you asking, with a
     weekly crawl, up to 2,000 URL Inspection checks a day, and an alert when a
     page drops out of Google's index. For those sites it keeps what the audit
     needs, such as index check results and the last two crawls. Your agent can
@@ -240,7 +211,7 @@ const related = [
     Search Console keeps 16 months of data, and a server that reads it live
     sees the same 16 months. Once your agent saves a business context for a
     site, every week it runs <code>seo_next</code> or the report, it saves
-    one point of that week's numbers: clicks and impressions for brand, not
+    one point of that week's numbers, covering clicks and impressions for brand, not
     brand and category searches, your conversion pages and up to 30 tracked
     searches. The first point is the baseline. The points stay with your
     account after Google drops those days, so the report's progress section
@@ -275,7 +246,7 @@ const related = [
 
   <h3>Is the Google Search Console MCP free?</h3>
   <p>
-    Yes for everything your agent asks on demand: reports, page checks, URL
+    Yes for everything your agent asks on demand, including reports, page checks, URL
     Inspection, comparisons and raw rows, with no cap. Only the weekly site
     audit costs money, $50 a month per site.
   </p>

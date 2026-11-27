@@ -54,20 +54,16 @@ const related = [
     about each page it knows from your Search Console and your sitemap, and
     sorts them by reason.
   </p>
-  <ol>
-    <li>
-      Connect the hosted MCP server and sign in with Google, or run{' '}
-      <code>npm i -g seo</code> then <code>seo start</code>. Both are free.
-      The site has to be a Search Console property your Google account can
-      read.
-    </li>
-    <li>Ask your agent:</li>
-  </ol>
+  <p>
+    Give your agent the setup prompt at the top of this page and sign in
+    with Google when it asks. It is free. The site has to be a Search
+    Console property your Google account can read. Then ask:
+  </p>
   <CodeBlock prompt value={`Which pages on example.com are crawled but not indexed, and which of them matter?`} wrap />
   <p>Or run it in a terminal:</p>
   <CodeBlock value={`seo index --site example.com`} />
   <p>
-    It checks pages in a fixed order: pages that lost their clicks, then
+    It checks pages in a fixed order. First come pages that lost their clicks, then
     pages by clicks and impressions, then sitemap pages, then the rest. Each
     run checks 100. On your own machine you can check up to the quota Google
     has left today, which is 2,000 checks a day for each property:
@@ -103,7 +99,7 @@ const related = [
 
   <h2>Pages you can leave out of Google</h2>
   <p>
-    Plenty of crawled, not indexed pages never needed to be search results:
+    Plenty of crawled, not indexed pages never needed to be search results, such as
     feeds, tag and filter pages, internal search results, deep pagination
     and plain text files. If a page is not in your sitemap and nothing you
     care about links to it, leaving it alone is usually the right call.
@@ -170,14 +166,14 @@ const related = [
   <h2>One crawled, not indexed URL out of 272 on seoskill.dev</h2>
   <p>
     We ran <code>seo index</code> on this site on 11 November 2026. Google
-    had a current answer for all 272 URLs SEO Skill knows: 185 indexed, 79
+    had a current answer for all 272 URLs SEO Skill knows, with 185 indexed, 79
     redirects, 4 noindex pages, 3 unknown to Google and 1 crawled, currently
     not indexed.
   </p>
   <p>
     That one URL is <code>/llms.txt</code>, a plain text file for AI agents
     that our sitemap does not list. The rules label it check, like any page
-    with this reason that still loads. We looked and left it alone: it was never meant
+    with this reason that still loads. We looked and left it alone, because it was never meant
     to be a search result.
   </p>
 
@@ -186,8 +182,8 @@ const related = [
     Crawled means Google fetched the page, so URL Inspection has a last
     crawl date. <a href="/features/discovered-currently-not-indexed">Discovered,
     currently not indexed</a> means Google knows the URL and has not fetched
-    it yet, so the last crawl date is empty. They point at different checks:
-    the page itself for crawled, your server and your links for discovered.
+    it yet, so the last crawl date is empty. They point at different checks, so look at
+    the page itself for crawled, and your server and your links for discovered.
   </p>
 
   <h2>Hear when a page drops out of Google's index</h2>

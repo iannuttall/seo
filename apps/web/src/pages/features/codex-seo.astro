@@ -24,6 +24,7 @@ const related = [
   metaTitle="Codex SEO skill and MCP for Search Console"
   description="Add the SEO skill, hosted MCP and seo CLI to OpenAI Codex, so it reads your Search Console, Google Analytics and keyword data and checks its own SEO work."
   path="/features/codex-seo"
+  setupClient="codex"
   lead="Codex already edits your site's code. Give it your Search Console, Google Analytics and keyword data, and it can pick the pages with the most clicks to gain and check its work after."
   {related}
   relatedHeading="Read more"
@@ -49,44 +50,23 @@ const related = [
     working in the site's repository.
   </p>
 
-  <h2>Add the hosted SEO MCP to Codex</h2>
-  <p>Run these two commands in a terminal:</p>
-  <CodeBlock value={`codex mcp add seoskill --url https://seoskill.dev/mcp\ncodex mcp login seoskill`} />
+  <h2>Set up SEO Skill in Codex with one prompt</h2>
   <p>
-    The login opens a Google sign-in in your browser. Allow read-only access
-    to Search Console and Google Analytics, and Codex keeps the token for
-    later sessions. The Codex CLI, the IDE extension and the desktop app
-    share this config, so one setup covers all three. Type{' '}
-    <code>/mcp</code> in Codex to check that seoskill is connected.
+    Copy the Codex prompt at the top of this page and give it to Codex. It
+    installs the <code>seo</code> CLI, adds the hosted MCP server, runs the
+    Google sign-in in your browser (read-only access to Search Console and
+    Google Analytics), adds the skill and checks seoskill is connected. Some
+    steps need network access or write outside the folder, so Codex asks you
+    to approve them. The Codex CLI, the IDE extension and the desktop app
+    share this config, so one setup covers all three.
   </p>
-
-  <h2>Install the SEO skill in Codex</h2>
-  <p>Install the CLI and run setup:</p>
-  <CodeBlock value={`npm i -g seo && seo start`} />
   <p>
-    Setup signs you in, offers to add an MCP server to Codex, and offers to
-    install the skill. If you skipped the skill, add it later:
+    Codex picks the skill up when a task matches it, and you can name it
+    with <code>$seo</code> in a prompt to be sure. Because Codex runs shell
+    commands, it also runs the CLI for the jobs the hosted server does not
+    do, such as a crawl of your local build before anything ships:
   </p>
-  <CodeBlock value={`seo skill install`} />
-  <p>
-    That runs the open skills installer (<code>npx skills add
-    iannuttall/seo</code>), which asks which agents to add it to. Pick
-    Codex. Codex picks the skill up when a task matches it, and you can
-    name it with <code>$seo</code> in a prompt to be sure.
-  </p>
-
-  <h2>Run the seo CLI from Codex</h2>
-  <p>
-    Codex runs shell commands, so with the CLI installed it can run{' '}
-    <code>seo</code> directly. That matters for the jobs the hosted server
-    does not do. A crawl of your local build, before anything ships:
-  </p>
-  <CodeBlock value={`seo crawl http://localhost:4321`} />
-  <p>
-    To give Codex the crawl, internal links and Bing as MCP tools as well,
-    run <code>seo mcp install</code>, which adds a local server to Codex's
-    config next to the hosted one.
-  </p>
+  <CodeBlock prompt value={`$seo crawl http://localhost:4321 and fix the broken links and missing titles it finds`} wrap />
 
   <h2>Prompts to try in Codex</h2>
   <table>

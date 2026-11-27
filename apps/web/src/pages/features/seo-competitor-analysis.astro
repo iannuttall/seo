@@ -9,6 +9,7 @@ import {
 } from '@hugeicons/core-free-icons'
 import CodeBlock from '@/components/CodeBlock.astro'
 import FeaturePage from '@/components/FeaturePage.astro'
+import { researchKeyStep } from '@/content/setup-prompts'
 
 const related = [
   { title: 'Keyword gap analysis', text: 'The searches your competitors rank for and you don’t, compared with your own Search Console.', href: '/features/keyword-gap', icon: GitCompareIcon, link: 'Keyword gap analysis' },
@@ -25,6 +26,7 @@ const related = [
   metaTitle="SEO competitor analysis tool for AI agents"
   description="Find your real SEO competitors, the pages that earn their traffic and the sites that link to them and not you, from your own DataForSEO or Ahrefs key."
   path="/features/seo-competitor-analysis"
+  setupSteps={[researchKeyStep('research')]}
   lead="Find the sites that compete with you in Google, the pages that earn their traffic and the sites that link to them and not to you. Your agent runs each step from your own DataForSEO or Ahrefs key and shows the numbers it used."
   {related}
   relatedHeading="Read more"
@@ -67,7 +69,7 @@ const related = [
     </tbody>
   </table>
   <p>
-    Besides Google, only 2 of the 10 sell website analytics: MonsterInsights,
+    Besides Google, only 2 of the 10 sell website analytics. They are MonsterInsights,
     a Google Analytics plugin for WordPress, and Matomo. Five are SEO tools or SEO
     blogs. Simple Analytics, a direct rival, shares 127 keywords and sits
     far down the list.
@@ -76,35 +78,21 @@ const related = [
     The top pages for plausible.io show the likely reason. Its backlinks
     guide ranks for 170 keywords, including "backlinks" (4,400 US searches a
     month) in sixth place, and those are exactly the searches Semrush, Ahrefs
-    and Backlinko compete for. The home page carries the business: by
+    and Backlinko compete for. The home page carries the business. By
     DataForSEO's estimate it earns 1,193 of the site's 1,808 monthly visits
     from search (66%).
   </p>
   <p>
-    The lesson works for any site: a competitor list counts shared keywords,
+    The lesson works for any site. A competitor list counts shared keywords,
     so read it next to your own top pages. A site that only shares one
     off-topic guide with you is not a competitor worth a strategy.
   </p>
 
   <h2>Set up competitor analysis in your agent</h2>
-  <ol>
-    <li>
-      Add the hosted MCP server to Claude Code, Codex, Cursor, ChatGPT or any
-      client with remote MCP, and sign in with Google. The commands are at
-      the top of this page.
-    </li>
-    <li>
-      Save a <a href="/docs/keys">DataForSEO or Ahrefs key</a> on your
-      account page. The provider bills you directly, and every DataForSEO
-      result says what the request cost.
-    </li>
-    <li>Ask in plain words, like the prompts in the steps below.</li>
-  </ol>
   <p>
-    Prefer a terminal? <code>npm i -g seo</code> then <code>seo start</code>{' '}
-    gives you the same data through the <a href="/docs/research">seo research</a>{' '}
-    command, with the key kept on your machine. Each step below shows the
-    prompt and the command.
+    Copy the prompt for your agent at the top of this page. It sets up SEO
+    Skill and asks you to save a <a href="/docs/keys">DataForSEO or Ahrefs key</a> under Keys on your account page,
+    never in the chat. The provider bills you directly, and every DataForSEO result says what the request cost. Each step below shows the prompt, and the <a href="/docs/research">seo research</a> command your agent runs for it.
   </p>
 
   <h2>Run an SEO competitor analysis in 5 steps</h2>
@@ -118,7 +106,7 @@ const related = [
     that share keywords with almost everyone, such as YouTube, Reddit and
     Wikipedia, are left out, and the result names each one it dropped. For
     a quick read on any one of them, ask for a{' '}
-    <a href="/features/domain-overview">domain overview</a>: its estimated
+    <a href="/features/domain-overview">domain overview</a>, which gives its estimated
     traffic, top pages, competitors and links in one answer.
   </p>
 

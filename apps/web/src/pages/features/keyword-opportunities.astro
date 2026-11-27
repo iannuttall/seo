@@ -51,12 +51,11 @@ const related = [
 
   <h2>Find keyword opportunities your site already ranks for</h2>
   <p>
-    Add the hosted MCP server to Claude Code, Codex, Cursor or ChatGPT with
-    the commands at the top of this page and sign in with Google (access is
-    read only). Then ask:
+    Give your agent the setup prompt at the top of this page, and sign in
+    with Google when it asks (access is read only). Then ask:
   </p>
   <CodeBlock prompt value={`Find the keyword opportunities for example.com in my Search Console. Show the top 10 with the page that ranks for each.`} wrap />
-  <p>In a terminal, after <code>npm i -g seo</code> and <code>seo start</code>:</p>
+  <p>The same report in a terminal:</p>
   <CodeBlock value={`seo report --site example.com`} wrap />
   <p>
     The report overview counts the rows in each section and shows its top

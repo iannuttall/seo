@@ -1,6 +1,7 @@
 ---
 import Button from '@/components/Button.astro'
 import Card from '@/components/Card.astro'
+import AgentKeyCard from './AgentKeyCard.astro'
 import FormInput from '@/components/FormInput.astro'
 import FormSelect from '@/components/FormSelect.astro'
 import TurnstileWidget from '@/components/tools/TurnstileWidget.astro'
@@ -57,12 +58,13 @@ const agentText = {
     'This page gives you 3 lookups a day. With a free account and your own DataForSEO key, your agent reads the same results for every page you plan, counts the title words and drafts titles from them next to the queries your page already gets in Search Console.',
   paa: 'This page gives you 3 lookups a day. With a free account and your own DataForSEO key, your agent pulls the People Also Ask questions for every topic you plan and checks which ones your pages already answer in Search Console.',
 }[kind]
-const agentAsk = {
-  serp: 'who ranks for a keyword',
-  competitors: "which keywords a competitor ranks for that you don't",
-  'title-words': 'which words the ranking titles share',
-  paa: 'which questions people ask about a topic',
+const agentTask = {
+  serp: 'Check the live Google results for my top five Search Console queries on example.com, and tell me what the pages above mine have in common.',
+  competitors: 'Which keywords does competitor.example rank for in the top 10 that example.com gets no Search Console impressions for? Group them by topic.',
+  'title-words': 'Read the top 10 Google titles for the main keyword of example.com/guide, count the words they share, and draft three titles that use them.',
+  paa: 'Find the People Also Ask questions for my top five topics on example.com, and tell me which ones my pages already get impressions for.',
 }[kind]
+const agentNeeds = kind === 'serp' || kind === 'competitors' ? 'research' : 'dataforseo'
 ---
 
 <section data-research-lookup data-kind={kind} data-endpoint={endpoint} class="space-y-6">
@@ -156,20 +158,7 @@ const agentAsk = {
       </div>
     </Card>
 
-    <Card>
-      <div class="space-y-3 p-5 sm:p-6">
-        <h3 class="text-lg font-medium">Run it from your agent with your own key</h3>
-        <p class="text-sm leading-6 text-foreground-muted">{agentText}</p>
-        <ol class="list-decimal space-y-1 pl-5 text-sm leading-6 text-foreground-muted">
-          <li>Sign in with Google on your <a class="underline underline-offset-4" href="/account">account page</a>. That creates the free account.</li>
-          <li>Save your DataForSEO or Ahrefs key in the Keys tab. The provider bills you directly.</li>
-          <li>Connect the hosted MCP to your agent and ask it {agentAsk}.</li>
-        </ol>
-        <div class="flex flex-wrap gap-2 pt-1">
-          <Button href="/docs/keys" variant="outline" class="min-h-10 px-4 text-xs">How keys work</Button>
-        </div>
-      </div>
-    </Card>
+    <AgentKeyCard text={agentText} task={agentTask} needs={agentNeeds} />
   </div>
 </section>
 

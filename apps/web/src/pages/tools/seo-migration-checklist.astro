@@ -219,26 +219,26 @@ const faq = [
         that earn traffic. Build it the other way round, from the pages
         Google sends visitors to. With SEO Skill your agent pulls every page
         with clicks from Search Console for the last 16 months, before you
-        touch anything:
+        touch anything. Ask:
       </p>
-      <CodeBlock value="seo data --site example.com --dimensions page --detail full --json" wrap />
+      <CodeBlock prompt value="Pull every page on example.com with Search Console clicks in the last 16 months and save the list as my migration baseline" wrap />
       <p>
         Save that list. It is your baseline, and the top of it is the part of
         the redirect map you cannot afford to get wrong. After launch, trace
         the whole map from your own machine, up to 1,000 rows at a time. Each
         line is an old URL and the new URL it should land on, the same file
-        you paste above:
+        you paste above. Ask:
       </p>
-      <CodeBlock value="seo redirect-trace --map redirects.csv" wrap />
+      <CodeBlock prompt value="Trace every row of redirects.csv with seo redirect-trace and list each chain, loop, error and temporary redirect" wrap />
 
       <h2>Compare before and after the launch date</h2>
       <p>
         After launch, the question is which pages lost clicks, not whether
-        the total dipped. The compare command takes the launch date and
+        the total dipped. The compare report takes the launch date and
         splits Search Console into equal periods before and after it, with
-        the pages and queries that moved most:
+        the pages and queries that moved most. Ask:
       </p>
-      <CodeBlock value="seo compare --site example.com --date 2026-11-02" wrap />
+      <CodeBlock prompt value="Compare example.com before and after 2026-11-02 and show the pages and queries that lost the most clicks" wrap />
       <p>
         A drop spread evenly across the site in week one is Google moving
         URLs. A drop concentrated on one folder or template is a redirect,

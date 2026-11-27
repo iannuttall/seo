@@ -1,6 +1,7 @@
 ---
 import Button from '@/components/Button.astro'
 import Card from '@/components/Card.astro'
+import AgentKeyCard from './AgentKeyCard.astro'
 import FormInput from '@/components/FormInput.astro'
 import FormSelect from '@/components/FormSelect.astro'
 import TurnstileWidget from '@/components/tools/TurnstileWidget.astro'
@@ -123,22 +124,7 @@ const toggle =
       </div>
     </Card>
 
-    <Card inverted>
-      <div class="space-y-3 p-5 sm:p-6">
-        <h3 class="text-lg font-medium">Run it from your agent with your own key</h3>
-        <p class="text-sm leading-6 text-foreground-muted">
-          This page gives you 3 checks a day. With a free account and your own DataForSEO or Ahrefs key, your agent lists the referring domains for any site whenever it needs to, and sets them beside your own Search Console data.
-        </p>
-        <ol class="list-decimal space-y-1 pl-5 text-sm leading-6 text-foreground-muted">
-          <li>Sign in with Google on your <a class="underline underline-offset-4" href="/account">account page</a>. That creates the free account.</li>
-          <li>Save your DataForSEO or Ahrefs key in the Keys tab. The provider bills you directly.</li>
-          <li>Connect the hosted MCP to your agent and ask it which sites link to a competitor but not to you.</li>
-        </ol>
-        <div class="flex flex-wrap gap-2 pt-1">
-          <Button href="/docs/keys" variant="outline" class="min-h-10 px-4 text-xs">How keys work</Button>
-        </div>
-      </div>
-    </Card>
+    <AgentKeyCard inverted text='This page gives you 3 checks a day. With a free account and your own DataForSEO or Ahrefs key, your agent lists the referring domains for any site whenever it needs to, and sets them beside your own Search Console data.' task='List the referring domains for competitor.example and other.example, and show the sites that link to both of them but not to example.com.' needs="research" />
   </div>
 </section>
 

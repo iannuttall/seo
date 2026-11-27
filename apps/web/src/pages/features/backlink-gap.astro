@@ -8,6 +8,7 @@ import {
 } from '@hugeicons/core-free-icons'
 import CodeBlock from '@/components/CodeBlock.astro'
 import FeaturePage from '@/components/FeaturePage.astro'
+import { researchKeyStep } from '@/content/setup-prompts'
 
 const related = [
   { title: 'seo research', text: 'Every research action, including the link gap, with its inputs and CLI flags.', href: '/docs/research', icon: SearchList01Icon },
@@ -23,6 +24,7 @@ const related = [
   metaTitle="Backlink gap analysis tool for AI agents"
   description="Find the sites that link to two or more of your competitors but not to you, sorted by Domain Rating, from your own DataForSEO or Ahrefs key."
   path="/features/backlink-gap"
+  setupSteps={[researchKeyStep('research')]}
   lead="Ask your agent which sites link to two or more of your competitors and not to you. It compares up to 5 competitors from your own DataForSEO or Ahrefs account and lists the gap, highest Domain Rating first."
   {related}
   relatedHeading="Read more"
@@ -43,20 +45,12 @@ const related = [
     priority, and sites that link to two are next.
   </p>
 
-  <h2>Run a backlink gap in your agent in 3 steps</h2>
-  <ol>
-    <li>
-      Add the hosted MCP server to Claude Code, Codex, Cursor, ChatGPT or any
-      client with remote MCP, and sign in with Google. The commands are at
-      the top of this page.
-    </li>
-    <li>
-      Save a <a href="/docs/keys">DataForSEO or Ahrefs key</a> on your
-      account page. The provider bills you directly, and SEO Skill adds
-      nothing on top.
-    </li>
-    <li>Name your site and 2 to 5 competitors:</li>
-  </ol>
+  <h2>Run a backlink gap in your agent</h2>
+  <p>
+    Copy the prompt for your agent at the top of this page. It sets up SEO
+    Skill and asks you to save a <a href="/docs/keys">DataForSEO or Ahrefs key</a> under Keys on your account page,
+    never in the chat. The provider bills you directly, and SEO Skill adds nothing on top. Then name your site and 2 to 5 competitors:
+  </p>
   <CodeBlock prompt value={`Run a backlink gap for example.com against example.org, example.net and example.io`} wrap />
   <p>
     The agent reads each site's referring domains, keeps the sites that link
@@ -64,10 +58,7 @@ const related = [
     Rating. A run with DataForSEO says what it cost: about $0.24 for a site
     and 3 competitors in November 2026. With Ahrefs it uses your API units.
   </p>
-  <p>
-    Prefer a terminal? <code>npm i -g seo</code> then <code>seo start</code>{' '}
-    gives you the same gap as a command, with the key kept on your machine:
-  </p>
+  <p>In a terminal, the same gap is one command:</p>
   <CodeBlock value={`seo research link_gap --target example.com --competitors example.org,example.net,example.io`} wrap />
 
   <h2>Pick competitors that win the searches you want</h2>

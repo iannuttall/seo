@@ -5,6 +5,7 @@ import {
   Link01Icon,
   Route01Icon,
 } from '@hugeicons/core-free-icons'
+import CodeBlock from '@/components/CodeBlock.astro'
 import FeaturePage from '@/components/FeaturePage.astro'
 
 const related = [
@@ -22,19 +23,17 @@ const related = [
   lead="Crawl a site from your own machine and get a ranked list of broken pages, redirects, missing titles and stray noindex tags. It is free, needs no account, and works on a local or staging build before you ship."
   {related}
 >
-  <h2>Crawl a site with one command</h2>
+  <h2>Crawl a site with one prompt</h2>
   <p>
     The crawler is part of the <code>seo</code> CLI. You do not need to
-    connect Google or save a key to crawl, so once the package is installed
-    you can point it at any site:
+    connect Google or save a key to crawl, so your agent can point it at
+    any site. Ask:
   </p>
-  <pre><code>npm i -g seo
-seo crawl https://example.com</code></pre>
+  <CodeBlock prompt value="Crawl https://example.com with the seo CLI (install it with npm i -g seo if seo --version fails) and tell me what to fix first" wrap />
   <p>
-    Or ask your agent to crawl the site and tell you what to fix first. The
-    crawl fetches a lot of pages, so it always runs on your machine. If your
-    agent is connected to the hosted MCP, it is told to use the CLI for the
-    crawl.
+    The crawl fetches a lot of pages, so it always runs on your machine. If
+    your agent is connected to the hosted MCP, it is told to use the CLI for
+    the crawl. The command it runs is <code>seo crawl https://example.com</code>.
   </p>
 
   <h2>Crawl a local or staging build</h2>

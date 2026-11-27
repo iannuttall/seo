@@ -211,6 +211,21 @@ export const setupPromptFor = (id: string) =>
 
 const account = 'https://seoskill.dev/account'
 
+const keyNames = {
+  dataforseo: 'DataForSEO login and password',
+  ahrefs: 'Ahrefs API key',
+  research: 'DataForSEO login and password, or my Ahrefs API key',
+}
+const keyBills = {
+  dataforseo: 'DataForSEO bills',
+  ahrefs: 'Ahrefs bills',
+  research: 'The provider bills',
+}
+
+/** The step that has the person save a research key, never in the chat. */
+export const researchKeyStep = (key: keyof typeof keyNames) =>
+  `Ask me to open ${account}, open the Keys tab and save my ${keyNames[key]}. ${keyBills[key]} my own account. Never ask me to paste a key into this chat. Wait until I say it is saved.`
+
 /**
  * The steps a data source's pages add to the prompt: saving a key on the
  * account page, which only the person can do, or connecting Bing.
@@ -218,7 +233,7 @@ const account = 'https://seoskill.dev/account'
 export const sourceSetupSteps = (source: Source): string[] => {
   if (source.connect === 'key')
     return [
-      `Ask me to open ${account}, open the Keys tab and save my ${source.id === 'dataforseo' ? 'DataForSEO login and password' : 'Ahrefs API key'}. ${source.name} bills my own account. Never ask me to paste a key into this chat. Wait until I say it is saved.`,
+      researchKeyStep(source.id === 'dataforseo' ? 'dataforseo' : 'ahrefs'),
     ]
   if (source.connect === 'clicky')
     return [
@@ -230,3 +245,19 @@ export const sourceSetupSteps = (source: Source): string[] => {
     ]
   return []
 }
+
+/**
+ * A prompt for one task, for pages that show what the agent can do. It sets
+ * SEO Skill up first when the tools are missing, and asks the person to save
+ * a research key on their account when the task needs one.
+ */
+export const taskPrompt = (task: string, key?: 'dataforseo' | 'research') =>
+  [
+    'Use the seoskill MCP tools for this. If you do not have them yet, set up SEO Skill first with the prompt under "Set up SEO Skill" at https://seoskill.dev/index.md, then tell me to send this message again once the tools load.',
+    ...(key
+      ? [
+          `This needs ${key === 'dataforseo' ? 'a DataForSEO login' : 'a DataForSEO login or an Ahrefs API key'} saved on my seoskill.dev account. If a tool says the key is missing, ask me to open ${account}, open the Keys tab and save it. Never ask me to paste a key into this chat.`,
+        ]
+      : []),
+    task,
+  ].join('\n\n')

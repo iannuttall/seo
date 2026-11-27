@@ -29,7 +29,7 @@ Discovered - currently not indexed | fix | /guides/old-compost-bins | 404 | yes 
 <FeaturePage
   title="Discovered, currently not indexed"
   metaTitle="Discovered, currently not indexed: check every page"
-  description="Find every page Google knows about but has not crawled, with a live check of each one, and see whether the hold-up is the page, your server or your links."
+  description="Find every page Google knows about but has not crawled, with a live check of each one, and see whether the hold-up is the page itself, or your server and links."
   path="/features/discovered-currently-not-indexed"
   lead="See every page Google knows about but has not crawled yet. Your agent reads Google's reason for each one and checks what the page does now, so you can tell a broken or unwanted URL from a good page Google has not got to."
   {related}
@@ -58,15 +58,11 @@ Discovered - currently not indexed | fix | /guides/old-compost-bins | 404 | yes 
     SEO Skill asks Google's URL Inspection about each page it knows from
     your Search Console and your sitemap, and sorts them by reason.
   </p>
-  <ol>
-    <li>
-      Connect the hosted MCP server and sign in with Google, or run{' '}
-      <code>npm i -g seo</code> then <code>seo start</code>. Both are free.
-      The site has to be a Search Console property your Google account can
-      read.
-    </li>
-    <li>Ask your agent:</li>
-  </ol>
+  <p>
+    Give your agent the setup prompt at the top of this page and sign in
+    with Google when it asks. It is free. The site has to be a Search
+    Console property your Google account can read. Then ask:
+  </p>
   <CodeBlock prompt value={`Which pages on example.com are discovered but not indexed? Group them by folder and tell me which ones we want in Google.`} wrap />
   <p>Or run it in a terminal:</p>
   <CodeBlock value={`seo index --site example.com`} />

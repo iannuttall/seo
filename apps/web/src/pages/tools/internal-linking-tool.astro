@@ -133,7 +133,7 @@ const faq = [
       <p>
         On this page Jev always judges the links, on our key. From your
         machine it needs your own key. Without one, links come from text
-        matching: pages that use the
+        matching, which finds pages that use the
         same words, and sentences that name the target page. That finds good
         candidates, but it cannot tell a helpful link from a forced one, so
         the result says Jev was not used.
@@ -142,17 +142,17 @@ const faq = [
       <h3>What Jev is</h3>
       <p>
         <a href="https://typesafe.ai" target="_blank" rel="noreferrer">Jev</a> is an AI model from TypeSafe AI built to make decisions inside
-        software, not to write text. You ask it a fixed question, such as
+        software. You ask it a fixed question, such as
         "would this link help a reader of this page?", and it answers with a
-        choice and a probability: yes at 82%, for example. Because it only
+        choice and a probability, such as yes at 82%. Because it only
         picks an answer and says how sure it is, it cannot invent a page,
         sentence or phrase that is not on your site. It is also fast and
         cheap enough to judge every candidate link on a site, which a chat
         model is not.
       </p>
       <p>
-        To use it with the command, get an API key from <a href="https://typesafe.ai" target="_blank" rel="noreferrer">TypeSafe AI</a> and add it on the <a href="/account#keys">Keys tab of your account</a>,
-        then run <code>seo login</code>.
+        To use it with the command, get an API key from <a href="https://typesafe.ai" target="_blank" rel="noreferrer">TypeSafe AI</a> and add it on the <a href="/account#keys">Keys tab of your account</a>.
+        The CLI on your machine uses it once it is linked to your account, which the setup prompt does.
         You can also set <code>TYPESAFE_API_KEY</code> on your machine to keep the key there.
         You pay TypeSafe for the requests directly.
       </p>
@@ -160,7 +160,7 @@ const faq = [
       <h3>What Jev does in an audit</h3>
       <p>
         With a TypeSafe key, Jev sorts every page into a type (guide,
-        article, tool, product page and so on), then judges each link: how
+        article, tool, product page and so on), then judges each link on how
         likely it is to help a reader, which real sentence it belongs in,
         which real phrase to use, and what the link does for the reader. A
         link needs a probability of 50% to count as possible and 75% to
@@ -180,7 +180,7 @@ const faq = [
       <p>
         Internal links also carry meaning. The link text tells Google what
         the target page is about, which is why a descriptive phrase beats
-        "click here". And they move readers: a link in the right sentence
+        "click here". And they move readers, since a link in the right sentence
         takes someone to the next thing they need, which is the reason to
         add it in the first place.
       </p>
@@ -192,7 +192,7 @@ const faq = [
         linked to it were removed. A weakly linked page has fewer than three
         links from other pages' main content. Navigation and footer links
         repeat on every page, so they say little about any one page; links in
-        the content say much more.
+        the content are about that page.
       </p>
       <p>
         The tool lists both, so you can start with the pages that need links
@@ -203,7 +203,7 @@ const faq = [
       <h2>Build an internal linking strategy that lasts</h2>
       <ol>
         <li><strong>Link related pages to each other.</strong> Guides on one topic should point to each other where the text calls for it, and to the page that covers the topic best.</li>
-        <li><strong>Link from the content, not just the menu.</strong> A link inside a sentence that explains why to click is worth more than one more menu item.</li>
+        <li><strong>Link from inside the content.</strong> A link inside a sentence that explains why to click is worth more than one more menu item.</li>
         <li><strong>Use descriptive link text.</strong> Use the words that describe the target page, as they read naturally in the sentence. Avoid using the same exact phrase every time.</li>
         <li><strong>Fix links that go through redirects.</strong> Point them straight at the final URL so readers and crawlers skip a hop.</li>
         <li><strong>Check after you publish.</strong> Run the command again, or a <a href="/docs/crawl">crawl</a>, to confirm the links are live.</li>

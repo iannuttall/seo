@@ -57,12 +57,11 @@ const related = [
 
   <h2>Find striking distance keywords for your site</h2>
   <p>
-    Add the hosted MCP server to Claude Code, Codex, Cursor or ChatGPT with
-    the commands at the top of this page, and sign in with Google (access
-    is read only). Then ask:
+    Give your agent the setup prompt at the top of this page, and sign in
+    with Google when it asks (access is read only). Then ask:
   </p>
   <CodeBlock prompt value={`Show me the striking distance keywords for example.com`} wrap />
-  <p>In a terminal, after <code>npm i -g seo</code> and <code>seo start</code>:</p>
+  <p>The same section in a terminal:</p>
   <CodeBlock value={`seo report --site example.com --section striking-distance`} wrap />
   <p>
     Each row is a query and the page that ranks for it, with clicks,

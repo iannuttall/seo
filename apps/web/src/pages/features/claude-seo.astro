@@ -22,6 +22,7 @@ const related = [
   metaTitle="Free Claude SEO skill for Claude Code and Claude.ai"
   description="Free Claude SEO skill and MCP server for Claude Code, claude.ai and Claude Desktop, so Claude answers from your own Search Console and keyword data."
   path="/features/claude-seo"
+  setupClient="claude-code"
   lead="Add SEO Skill to Claude Code, claude.ai or Claude Desktop, and Claude reads your clicks, queries, index status and keyword data before it answers an SEO question about your site."
   {related}
   relatedHeading="Read more"
@@ -41,41 +42,22 @@ const related = [
     <tbody>
       <tr><td>Claude Code</td><td>The hosted MCP server and the skill. Add the CLI for site crawls, internal links and Bing.</td></tr>
       <tr><td>claude.ai</td><td>The hosted MCP server, as a custom connector.</td></tr>
-      <tr><td>Claude Desktop</td><td>The same custom connector, or the local MCP server that <code>seo start</code> adds.</td></tr>
+      <tr><td>Claude Desktop</td><td>The same custom connector, or the local MCP server that <code>seo mcp install</code> adds.</td></tr>
       <tr><td>Claude on your phone</td><td>Nothing more. A connector you add on claude.ai shows up in the mobile apps too.</td></tr>
     </tbody>
   </table>
 
-  <h2>Add the Claude SEO skill to Claude Code in 3 steps</h2>
+  <h2>Add the Claude SEO skill to Claude Code with one prompt</h2>
   <p>
     You need Claude Code and a Google account that can read at least one
-    Search Console property. Step 2 needs the current LTS release of
-    Node.js.
+    Search Console property. Copy the Claude Code prompt at the top of this
+    page and give it to Claude Code. It installs the <code>seo</code> CLI
+    (and Node.js if it is missing), adds the hosted MCP server for every
+    project, waits while you sign in with Google, adds the skill and checks
+    the server connects. Access to Search Console and Google Analytics is
+    read only.
   </p>
-
-  <h3>1. Connect the hosted MCP server</h3>
-  <p>Run this in a terminal. The user scope adds the server to every project on this machine:</p>
-  <CodeBlock value="claude mcp add --transport http --scope user seoskill https://seoskill.dev/mcp" wrap />
-  <p>
-    Start Claude Code, type <code>/mcp</code>, choose seoskill and sign in
-    with Google. Access to Search Console and Google Analytics is read only.
-  </p>
-
-  <h3>2. Install the CLI and the skill</h3>
-  <CodeBlock value="npm i -g seo && seo start" />
-  <p>
-    Setup signs you in, offers to add an MCP server to the agents it finds,
-    and then offers to install the skill. If you said no to the skill (or
-    want to reinstall it later), run:
-  </p>
-  <CodeBlock value="seo skill install" />
-  <p>
-    It runs <code>npx skills add iannuttall/seo</code>, which lets you pick
-    the agents to add the skill to. Pick Claude Code.
-  </p>
-
-  <h3>3. Check that Claude can read your sites</h3>
-  <p>Ask Claude:</p>
+  <p>Once Claude Code restarts with the tools loaded, check it can read your sites:</p>
   <CodeBlock prompt value="Which Search Console sites can you read?" wrap />
   <p>
     Claude lists the Search Console and Google Analytics properties your
@@ -139,10 +121,11 @@ const related = [
     a server.
   </p>
   <p>
-    Claude Desktop has one more option. Run <code>seo start</code> on the
-    same computer and setup adds the local MCP server to Claude Desktop. It
-    runs on your machine with your CLI sign-in and adds the site crawl and
-    internal links, which the hosted server does not have.
+    Claude Desktop has one more option. Ask Claude Code on the same computer
+    to run <code>seo mcp install --claude-desktop</code>, and it adds the
+    local MCP server to Claude Desktop. It runs on your machine with your CLI
+    sign-in and adds the site crawl and internal links, which the hosted
+    server does not have.
   </p>
 
   <h2>Use the CLI when Claude needs to crawl a site</h2>
@@ -152,14 +135,16 @@ const related = [
     hosted server). In Claude Code, the skill runs them through the CLI for
     you.
   </p>
-  <p>The crawl needs no sign-in, so it works on localhost and staging sites too:</p>
-  <CodeBlock value="seo crawl --url https://example.com" />
   <p>
-    It lists pages that return errors, redirects, missing or duplicate
+    The crawl needs no sign-in, so it works on localhost and staging sites
+    too. It lists pages that return errors, redirects, missing or duplicate
     titles and descriptions, canonical and robots tags, and broken internal
-    links. Ask Claude to "crawl example.com and fix the broken internal
-    links" and it runs the crawl, shows you the pages, then edits the
-    templates in your repository if you agree.
+    links. Ask:
+  </p>
+  <CodeBlock prompt value="Crawl example.com with the seo CLI and fix the broken internal links" wrap />
+  <p>
+    Claude runs the crawl, shows you the pages, then edits the templates in
+    your repository if you agree.
   </p>
 
   <h2>A worked example: find out why example.com lost clicks</h2>

@@ -41,7 +41,7 @@ console.log(page.issues.map((issue) => issue.title))`
     that lost its canonical, a moved page with no redirect, a staging <code>noindex</code> that reached production. SEO Skill gives you a crawler
     you can run on localhost, an MCP server for your coding agent, and a
     TypeScript library, all from the open source <code>seo</code> package.
-    The commands above add the hosted MCP server or install the CLI. The
+    The setup prompt above adds the hosted MCP server and installs the CLI. The
     crawl needs no sign-in, so for a one-off run, or in CI, use <code>npx -y seo</code> in place of <code>seo</code> and skip setup.
   </p>
 
@@ -118,7 +118,7 @@ console.log(page.issues.map((issue) => issue.title))`
   <CodeBlock value="npm i seo" wrap />
   <p>Then crawl a site and check a single page. Save this as <code>check.mjs</code> and run <code>node check.mjs</code>:</p>
   <CodeBlock value={libraryExample} />
-  <p> <code>report.status</code> is <code>completed</code>, <code>partial</code> or <code>failed</code>. A partial crawl stopped early, for example at the
+  <p> <code>report.status</code> is <code>completed</code> for a full crawl. Otherwise it is <code>partial</code> or <code>failed</code>. A partial crawl stopped early, for example at the
     page limit, so a missing issue in it is not an all-clear. <code>seo/mcp</code> exports the MCP server, if you want to run it inside
     your own process.
   </p>

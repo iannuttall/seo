@@ -8,6 +8,7 @@ import {
 } from '@hugeicons/core-free-icons'
 import CodeBlock from '@/components/CodeBlock.astro'
 import FeaturePage from '@/components/FeaturePage.astro'
+import { researchKeyStep } from '@/content/setup-prompts'
 
 const related = [
   { title: 'seo research', text: 'Every research action, its inputs and how to run it from the CLI.', href: '/docs/research', icon: SearchList01Icon },
@@ -23,8 +24,9 @@ const related = [
 <FeaturePage
   title="AI keyword research tool"
   metaTitle="AI keyword research tool and MCP for agents"
-  description="Keyword research in Claude, Codex or ChatGPT through an MCP server: real search volumes, SERPs and competitor keywords from your DataForSEO or Ahrefs key."
+  description="Keyword research in Claude, Codex or ChatGPT through an MCP server, with real search volumes, SERPs and competitor keywords from your DataForSEO or Ahrefs key."
   path="/features/keyword-research"
+  setupSteps={[researchKeyStep('research')]}
   lead="Ask your agent for keyword ideas, search volume, who ranks and what a competitor ranks for. It answers from your Search Console and your own DataForSEO or Ahrefs account."
   {related}
   relatedHeading="Read more"
@@ -37,7 +39,7 @@ const related = [
     made up to look plausible.
   </p>
   <p>
-    SEO Skill gives your agent the real thing through an MCP server: your
+    SEO Skill gives your agent the real thing through an MCP server. It reads your
     own Search Console queries, plus keyword, SERP, competitor and backlink
     data from your DataForSEO or Ahrefs account. The agent still does the
     thinking (grouping keywords, spotting gaps, picking a target), but every
@@ -45,23 +47,10 @@ const related = [
   </p>
 
   <h2>Set up keyword research in your agent</h2>
-  <ol>
-    <li>
-      Add the hosted MCP server to Claude Code, Codex, Cursor, ChatGPT or any
-      client with remote MCP, and sign in with Google. The commands are at
-      the top of this page.
-    </li>
-    <li>
-      Save a <a href="/docs/keys">DataForSEO or Ahrefs key</a> on your
-      account page. The provider bills you directly, and SEO Skill adds
-      nothing on top. Every DataForSEO result says what the request cost.
-    </li>
-    <li>Ask for keyword research in plain words, like the prompts below.</li>
-  </ol>
   <p>
-    Prefer a terminal? <code>npm i -g seo</code> then <code>seo start</code>{' '}
-    gives you the same research as the <a href="/docs/research">seo research</a>{' '}
-    command, with the key kept on your machine.
+    Copy the prompt for your agent at the top of this page. It sets up SEO
+    Skill and asks you to save a <a href="/docs/keys">DataForSEO or Ahrefs key</a> under Keys on your account page,
+    never in the chat. The provider bills you directly, and every DataForSEO result says what the request cost. Then ask for keyword research in plain words, like the prompts below.
   </p>
 
   <h2>Start from the searches you already get</h2>
@@ -92,7 +81,7 @@ const related = [
   <p>
     Keyword ideas take up to 5 seed keywords and return the searches that
     contain each one, highest volume first. That is where the long tail
-    lives: the "free invoice template for contractors" searches that one
+    lives, in the "free invoice template for contractors" searches that one
     focused page can win when the head term cannot.
   </p>
 
@@ -100,7 +89,7 @@ const related = [
   <CodeBlock prompt value={`Get search volume, keyword difficulty and CPC for this list of 40 keywords`} wrap />
   <p>
     Keyword metrics take up to 100 keywords at once. Read cost per click
-    next to volume: a keyword advertisers pay $20 a click for usually has
+    next to volume, because a keyword advertisers pay $20 a click for usually has
     buyers behind it, even at 50 searches a month.
   </p>
 
@@ -129,7 +118,7 @@ const related = [
     show where a competitor's search traffic comes from, and competitors
     finds the domains that share your keywords. Your agent can set those
     beside your own Search Console queries to find the gaps. The two
-    sources stay apart: a provider's estimate never gets added to your
+    sources stay apart, and a provider's estimate never gets added to your
     clicks. The <a href="/features/keyword-gap">keyword gap analysis</a>{' '}
     page walks through that comparison, and{' '}
     <a href="/features/seo-competitor-analysis">SEO competitor analysis</a>{' '}
@@ -168,7 +157,7 @@ const related = [
   <p>
     The head terms belong to the big keyword tools, and a new page will not
     move them. The SERP for "ai tools for keyword research" told a
-    different story: four of its top six results came from sites with a
+    different story. Four of its top six results came from sites with a
     Domain Rating under 20. That is the kind of keyword a focused page can win, so it is one
     this page aims at.
   </p>

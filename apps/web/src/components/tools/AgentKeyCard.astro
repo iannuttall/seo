@@ -1,0 +1,29 @@
+---
+// The card under a free tool's result: what the agent does with the
+// person's own research key, and one prompt that sets SEO Skill up if
+// needed, asks for the key and runs the task.
+import Button from '@/components/Button.astro'
+import Card from '@/components/Card.astro'
+import CodeBlock from '@/components/CodeBlock.astro'
+import { taskPrompt } from '@/content/setup-prompts'
+
+type Props = {
+  text: string
+  task: string
+  needs: 'dataforseo' | 'research'
+  inverted?: boolean
+}
+
+const { text, task, needs, inverted = false } = Astro.props
+---
+
+<Card {inverted}>
+  <div class="space-y-3 p-5 sm:p-6">
+    <h3 class="text-lg font-medium">Run it from your agent with your own key</h3>
+    <p class="text-sm leading-6 text-foreground-muted">{text}</p>
+    <CodeBlock label="Give this prompt to your agent" value={taskPrompt(task, needs)} prompt class:list={['!mt-4', inverted && '[&_pre]:bg-background']} />
+    <div class="flex flex-wrap gap-2 pt-1">
+      <Button href="/docs/keys" variant="outline" class="min-h-10 px-4 text-xs">How keys work</Button>
+    </div>
+  </div>
+</Card>

@@ -1,6 +1,7 @@
 ---
 import Button from '@/components/Button.astro'
 import Card from '@/components/Card.astro'
+import AgentKeyCard from './AgentKeyCard.astro'
 import FormSelect from '@/components/FormSelect.astro'
 import FormTextarea from '@/components/FormTextarea.astro'
 import TurnstileWidget from '@/components/tools/TurnstileWidget.astro'
@@ -82,22 +83,7 @@ const markets = [
 
     <div data-pages class="space-y-6"></div>
 
-    <Card>
-      <div class="space-y-3 p-5 sm:p-6">
-        <h3 class="text-lg font-medium">Run it from your agent with your own key</h3>
-        <p class="text-sm leading-6 text-foreground-muted">
-          This page gives you 3 checks a day. With a free account and your own DataForSEO key, your agent runs the same index check on any page, and for your own site it reads URL Inspection from Search Console too.
-        </p>
-        <ol class="list-decimal space-y-1 pl-5 text-sm leading-6 text-foreground-muted">
-          <li>Sign in with Google on your <a class="underline underline-offset-4" href="/account">account page</a>. That creates the free account.</li>
-          <li>Save your DataForSEO key in the Keys tab. DataForSEO bills you directly.</li>
-          <li>Connect the hosted MCP to your agent and ask it whether a page is in Google.</li>
-        </ol>
-        <div class="flex flex-wrap gap-2 pt-1">
-          <Button href="/docs/keys" variant="outline" class="min-h-10 px-4 text-xs">How keys work</Button>
-        </div>
-      </div>
-    </Card>
+    <AgentKeyCard text='This page gives you 3 checks a day. With a free account and your own DataForSEO key, your agent runs the same index check on any page, and for your own site it reads URL Inspection from Search Console too.' task='Check whether Google has indexed my five newest blog posts on example.com, and tell me what is keeping out any that are missing.' needs="dataforseo" />
   </div>
 </section>
 

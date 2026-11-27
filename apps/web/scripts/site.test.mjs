@@ -79,6 +79,7 @@ const expectedPages = new Map([
     'services/aeo-agency/index.html',
     'https://seoskill.dev/services/aeo-agency',
   ],
+  ['services/seo-audit/index.html', 'https://seoskill.dev/services/seo-audit'],
   ['seo-for-startups/index.html', 'https://seoskill.dev/seo-for-startups'],
   ['pricing/index.html', 'https://seoskill.dev/pricing'],
   ['about/index.html', 'https://seoskill.dev/about'],
@@ -348,6 +349,7 @@ test('sitemap is exact and contains only indexable canonical pages', () => {
         path.startsWith('alternatives/') ||
         path === 'services/index.html' ||
         path === 'services/aeo-agency/index.html' ||
+        path === 'services/seo-audit/index.html' ||
         path === 'seo-for-startups/index.html' ||
         path === 'pricing/index.html' ||
         path === 'about/index.html' ||

@@ -1,5 +1,5 @@
 ---
-import { ChartIncreaseIcon, ComputerTerminal01Icon, SourceCodeIcon } from '@hugeicons/core-free-icons'
+import { ChartIncreaseIcon, ComputerTerminal01Icon, GoogleIcon, SourceCodeIcon } from '@hugeicons/core-free-icons'
 import { getCollection } from 'astro:content'
 import HomeCard from '@/components/HomeCard.astro'
 import PageHeader from '@/components/PageHeader.astro'
@@ -23,6 +23,13 @@ const guides = (await getCollection('guides')).sort((a, b) => a.id.localeCompare
 
     <h2 class="mb-6 text-2xl/8 font-medium tracking-normal">Search Console indexing reasons</h2>
     <div class="mb-16 grid grid-cols-1 gap-2 sm:grid-cols-2">
+      <HomeCard
+        title="How to get Google to index your site"
+        text="The five steps that get new pages into Google, what keeps them out, and how fast 72 new pages showed up."
+        icon={GoogleIcon}
+        href="/guides/how-to-get-google-to-index-your-site"
+        link="Read the guide"
+      />
       {statusGuides.map((guide) => <HomeCard title={guide.title} text={guide.text} icon={guide.icon} href={guide.path} link="Read the guide" />)}
     </div>
 

@@ -1,0 +1,228 @@
+---
+import {
+  AiChat02Icon,
+  Alert02Icon,
+  ChartLineData01Icon,
+  Clock01Icon,
+  FileSearchIcon,
+  GoogleIcon,
+  Link01Icon,
+  Notification01Icon,
+  Robot01Icon,
+  Route01Icon,
+  Search01Icon,
+  TaskDone01Icon,
+} from '@hugeicons/core-free-icons'
+import CompareBars from '@/components/blog/CompareBars.astro'
+import PlanSteps from '@/components/blog/PlanSteps.astro'
+import CodeBlock from '@/components/CodeBlock.astro'
+import FaqAccordion from '@/components/FaqAccordion.astro'
+import HomeCard from '@/components/HomeCard.astro'
+import LandingHero from '@/components/LandingHero.astro'
+import SectionHeading from '@/components/SectionHeading.astro'
+import BaseLayout from '@/layouts/BaseLayout.astro'
+import type { SchemaBreadcrumb } from '@/lib/schema'
+
+const breadcrumbs: SchemaBreadcrumb[] = [
+  { label: 'Home', href: '/' },
+  { label: 'AI SEO services', href: '/services' },
+  { label: 'SEO audit service' },
+]
+
+const covers = [
+  { title: 'Crawl and status codes', text: 'Every page the crawl can reach, with broken links, redirect chains and pages that return errors.', icon: Route01Icon },
+  { title: 'Google’s index', text: 'Google’s own reason for every page it left out, from URL Inspection.', icon: GoogleIcon },
+  { title: 'Tags and content', text: 'Missing or duplicate titles and descriptions, missing H1s, thin pages and canonicals to another page.', icon: FileSearchIcon },
+  { title: 'Crawler access', text: 'Which search and AI crawlers robots.txt and the server let in, page by page.', icon: Robot01Icon },
+  { title: 'Pages losing clicks', text: 'Pages whose Search Console clicks fell, checked live, so a drop is traced to a cause.', icon: ChartLineData01Icon },
+  { title: 'Searches close to page one', text: 'Pages ranking just outside the top results, where a better page can win clicks soonest.', icon: Search01Icon },
+]
+
+// seoskill.dev's own URL Inspection results, 27 November 2026: Google's
+// reason for each of the 263 URLs SEO Skill knows for the site.
+const reasons = [
+  { label: 'Submitted and indexed', value: 218, note: 'The pages we want in Google.' },
+  { label: 'Page with redirect', value: 25, note: 'Old URLs that 301 to their new pages.' },
+  { label: 'Excluded by noindex tag', value: 8, note: 'Account and policy pages, and posts Google last saw before they went live.' },
+  { label: 'URL is unknown to Google', value: 7, note: 'New pages Google had not crawled yet.' },
+  { label: 'Crawled, currently not indexed', value: 5, note: 'Includes /llms.txt, which is not meant to rank.' },
+]
+
+const steps = [
+  {
+    marker: 'Day 1',
+    title: 'Crawl the whole site',
+    body: 'Every page the crawler can reach, rendered when JavaScript changes what a page shows, so nothing is judged from an empty shell.',
+  },
+  {
+    marker: 'Day 1',
+    title: 'Ask Google about every page',
+    body: 'URL Inspection for each known URL, so the audit says what Google actually did with a page, not only what a crawler thinks it might do.',
+  },
+  {
+    marker: 'Day 2',
+    title: 'Read the clicks',
+    body: 'Search Console for the pages that lost clicks, the searches close to page one and the pages that compete for the same search.',
+  },
+  {
+    marker: 'Day 2',
+    title: 'Sort the findings',
+    body: 'Fix, check or expected for each one, with the evidence beside it. A redirect from an old URL is expected. A sitemap URL that returns 404 is a fix.',
+  },
+  {
+    marker: 'Every week',
+    title: 'Audit again and compare',
+    body: 'What is new, what came back and what was resolved since the last run, so the audit tracks the work instead of starting over.',
+  },
+]
+
+const deliverables = [
+  { title: 'Every finding with its evidence', text: 'The URL, what was found and how it was checked, so anyone can confirm it.', icon: TaskDone01Icon },
+  { title: 'Findings in order of what they cost', text: 'Pages that lost clicks and pages you want in Google first, cosmetic issues last.', icon: Alert02Icon },
+  { title: 'What to leave alone', text: 'The redirects, noindex pages and duplicates that are working as intended.', icon: Link01Icon },
+  { title: 'A rerun after the fixes', text: 'The same checks again, showing which findings are resolved.', icon: Clock01Icon },
+]
+
+const tools = [
+  { title: 'SEO audit', text: 'A technical site crawl, single page checks and the Search Console report, from your agent.', icon: Route01Icon, href: '/features/seo-audit', link: 'See the audit' },
+  { title: 'Weekly site audit', text: 'A weekly crawl and daily Google index checks, with an email when a page drops out.', icon: Notification01Icon, href: '/docs/weekly-site-audit', link: 'See the weekly audit' },
+  { title: 'Free SEO checker', text: 'Check one page for indexability, its title and description, headings, links, canonical and structured data.', icon: FileSearchIcon, href: '/tools/seo-checker', link: 'Check a page' },
+  { title: 'AI visibility checker', text: 'Ask your buyer questions on four AI engines and see who they cite.', icon: AiChat02Icon, href: '/features/ai-visibility-checker', link: 'See the checker' },
+]
+
+const faq = [
+  {
+    question: 'What does an SEO audit service include?',
+    answer:
+      'A technical crawl of the whole site, Google’s index status for each page, the titles, descriptions, headings and canonicals on every page, crawler access, and the Search Console data on which pages are losing clicks. A good one ends with the findings in order and the evidence for each.',
+  },
+  {
+    question: 'What is the difference between an SEO audit and a technical SEO audit?',
+    answer:
+      'A technical audit covers whether search engines can crawl, render and index the site, through status codes, redirects, robots.txt, canonicals, sitemaps and noindex. A full SEO audit adds the pages and searches, such as which pages lose clicks, which searches are close to page one and which pages compete with each other.',
+  },
+  {
+    question: 'How often should a site be audited?',
+    answer:
+      'Run a full audit once, then keep the same checks running every week. Most problems arrive with a deploy, a migration or a plugin change, and a weekly crawl catches them before they cost clicks.',
+  },
+  {
+    question: 'Can I run an SEO audit myself?',
+    answer:
+      'Yes. SEO Skill gives your agent the crawl, Google’s index status and your Search Console data, and the agent can fix what it finds in your site’s code. You review each change before it ships.',
+  },
+  {
+    question: 'Does an SEO audit cover AI search?',
+    answer:
+      'It should check that the AI search crawlers can read your pages, because AI answers can only cite pages their search can fetch. Checking what AI answers say about your category is a separate job, covered by the AI visibility checker.',
+    links: [{ text: 'AI visibility checker', href: '/features/ai-visibility-checker' }],
+  },
+]
+---
+
+<BaseLayout
+  title="SEO audit service: what a technical audit should cover"
+  description="What an SEO audit service should check, what you should get from it, and how to run a technical SEO audit with your own agent and Search Console data."
+  canonicalPath="/services/seo-audit"
+  {breadcrumbs}
+  framed={false}
+>
+  <main data-agent-content>
+    <LandingHero
+      title="SEO audit service"
+      lead="An SEO audit finds what keeps your pages out of Google and what is costing them clicks. Here is what a technical audit should cover, what you should get from one, and how to run it with your own agent."
+      setupId="seo-audit-setup"
+    />
+
+    <div class="space-y-24 py-24 sm:space-y-32 sm:py-32">
+      <section class="site-frame" aria-labelledby="covers-heading">
+        <SectionHeading
+          id="covers-heading"
+          title="What a technical SEO audit should cover"
+          text="Six areas, from whether Google can reach a page to whether it is close to winning clicks. A crawl alone covers the first and third. The rest need Google's own data."
+        />
+        <div class="grid grid-cols-1 gap-2 sm:grid-cols-2">
+          {covers.map((item) => <HomeCard {...item} />)}
+        </div>
+      </section>
+
+      <section class="site-frame" aria-labelledby="google-heading">
+        <SectionHeading
+          id="google-heading"
+          title="Start from what Google did with each page"
+          text="A crawler can only guess whether Google will index a page. URL Inspection says what Google did. This is that answer for every URL we know on seoskill.dev."
+        />
+        <div class="max-w-3xl">
+          <CompareBars
+            rows={reasons}
+            highlight="Submitted and indexed"
+            unit="URLs"
+            title="seoskill.dev's 263 known URLs, by Google's reason"
+            caption="From seoskill.dev's own URL Inspection results, 27 November 2026. Each URL is checked daily by the weekly site audit."
+          />
+        </div>
+        <div class="docs-prose mt-10 max-w-3xl">
+          <p>
+            Most of the 45 URLs outside the index are meant to be: old URLs
+            that redirect, account and policy pages, and a plain text file.
+            An audit that reported all 45 as errors would send you fixing
+            pages that are working. Each one needs Google's reason and a live
+            check before it counts as a problem.
+          </p>
+        </div>
+      </section>
+
+      <section class="site-frame" aria-labelledby="process-heading">
+        <SectionHeading
+          id="process-heading"
+          title="How the audit runs"
+          text="The first run takes a couple of days of reading. After that, the same checks run every week and report what changed."
+        />
+        <div class="max-w-3xl">
+          <PlanSteps {steps} />
+        </div>
+      </section>
+
+      <section class="site-frame" aria-labelledby="deliverables-heading">
+        <SectionHeading
+          id="deliverables-heading"
+          title="What you should get from an SEO audit"
+          text="Whoever runs it, these four things let you check the work and act on it."
+        />
+        <div class="grid grid-cols-1 gap-2 sm:grid-cols-2">
+          {deliverables.map((item) => <HomeCard {...item} />)}
+        </div>
+      </section>
+
+      <section class="site-frame" aria-labelledby="agent-heading">
+        <SectionHeading
+          id="agent-heading"
+          title="Run the audit with your own agent"
+          text="SEO Skill gives Claude Code, Codex, Cursor or ChatGPT the crawl, Google's index status and your Search Console data, so the agent you already use can run the audit and fix what it finds."
+        />
+        <div class="grid grid-cols-1 gap-2 sm:grid-cols-2">
+          {tools.map((item) => <HomeCard {...item} />)}
+        </div>
+        <div class="docs-prose mt-10 max-w-3xl">
+          <p>Once it is connected, ask:</p>
+          <CodeBlock prompt value="Run a technical SEO audit of example.com. Crawl the site, check Google's index status for every page, and list the findings in the order they cost us clicks, with the evidence for each." wrap />
+          <p>Or crawl from a terminal, including localhost and staging:</p>
+          <CodeBlock value="seo crawl https://example.com" />
+          <p>
+            You review each change before it ships. For the other jobs AI SEO
+            covers, see <a href="/services">AI SEO services</a>.
+          </p>
+        </div>
+      </section>
+
+      <section class="site-frame" aria-labelledby="audit-faq">
+        <SectionHeading
+          id="audit-faq"
+          title="Questions about SEO audit services"
+          text="What people ask before they order an audit."
+        />
+        <FaqAccordion items={faq} id="audit-faq-list" />
+      </section>
+    </div>
+  </main>
+</BaseLayout>

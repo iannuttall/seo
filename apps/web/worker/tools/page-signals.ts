@@ -248,7 +248,7 @@ function audienceOf(name: string): RobotsAudience {
   return 'other'
 }
 
-function stripInert(html: string): string {
+export function stripInert(html: string): string {
   return html
     .replace(/<!--[\s\S]*?-->/gu, ' ')
     .replace(/<script\b[\s\S]*?<\/script\s*>/giu, ' ')

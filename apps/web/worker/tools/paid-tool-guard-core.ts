@@ -52,6 +52,7 @@ export const PUBLIC_WORKER_TOOLS = [
   'noindex-checker',
   'redirect-map',
   'redirect-checker',
+  'seo-checker',
 ] as const
 
 export type PaidToolId = keyof typeof PAID_TOOL_PROVIDERS

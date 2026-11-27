@@ -38,6 +38,7 @@ import {
 import { handleQueryFanOut } from './tools/query-fan-out.ts'
 import { handleRedirectMap, REDIRECT_CHECKER } from './tools/redirect-map.ts'
 import { handleRobotsTxtFetch } from './tools/robots-txt.ts'
+import { handleSeoCheck } from './tools/seo-checker.ts'
 import { handleSerpPreviewFetch } from './tools/serp-preview.ts'
 import { handleSitemapImport } from './tools/sitemap.ts'
 import { handleSitemapExtraction } from './tools/sitemap-extractor.ts'
@@ -891,6 +892,7 @@ app.all('/api/tools/domain-age', (context) => handleDomainAge(context.req.raw))
 app.all('/api/tools/noindex-checker', (context) =>
   handleNoindexCheck(context.req.raw),
 )
+app.all('/api/tools/seo-checker', (context) => handleSeoCheck(context.req.raw))
 app.all('/api/tools/redirect-map', (context) =>
   handleRedirectMap(context.req.raw),
 )

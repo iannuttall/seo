@@ -11,7 +11,7 @@ import type { SchemaBreadcrumb } from '@/lib/schema'
 const breadcrumbs: SchemaBreadcrumb[] = [
   { label: 'Home', href: '/' },
   { label: 'Tools', href: '/tools' },
-  { label: 'robots.txt validator and tester' },
+  { label: 'robots.txt checker and tester' },
 ]
 
 const faq = [
@@ -46,6 +46,16 @@ const faq = [
       'Block the training crawlers by name and leave the search crawlers allowed. For OpenAI that means a group for GPTBot with Disallow: / and no block for OAI-SearchBot. Use the presets above to test both tokens against the same file.',
   },
   {
+    question: 'Does Google still have a robots.txt tester?',
+    answer:
+      'Not one you can paste rules into. Google retired the old tester in 2023. The robots.txt report in Search Console shows the files Google found for your site and when it last read them, and URL Inspection checks one URL at a time. Paste a draft here to test it before it goes live.',
+  },
+  {
+    question: 'Does robots.txt cover my subdomains?',
+    answer:
+      'No. A robots.txt file applies only to the protocol, host and port it is served from. blog.example.com needs its own file at blog.example.com/robots.txt, even when example.com has one.',
+  },
+  {
     question: 'How long does Google take to see a robots.txt change?',
     answer:
       'Google usually caches robots.txt for up to 24 hours, sometimes longer if the file cannot be fetched. Search Console has a robots.txt report where you can ask Google to fetch it again.',
@@ -54,8 +64,8 @@ const faq = [
 ---
 
 <BaseLayout
-  title="Free robots.txt tester and validator"
-  description="Free robots.txt tester and validator. Fetch or paste a file, find ignored lines, and test the exact rule that allows or blocks a URL for Googlebot and AI crawlers."
+  title="Free robots.txt checker for Google and AI crawlers"
+  description="Free robots.txt checker. Load a site's file or paste a draft, and see which search, AI and training crawlers can read each URL, and the line that decides."
   canonicalPath="/tools/robots-txt-validator"
   {breadcrumbs}
 >
@@ -63,8 +73,8 @@ const faq = [
     <Breadcrumbs {breadcrumbs} />
 
     <PageHeader
-      title="robots.txt validator and tester"
-      description="Fetch a live robots.txt file or test custom rules. See which user-agent group applies, the winning rule, and its source line for up to 100 URLs."
+      title="robots.txt checker and tester"
+      description="Load a site's robots.txt or test a draft. See which search, AI and training crawlers can read each URL, and the line that allows or blocks them."
     />
 
     <RobotsTxtValidator />
@@ -124,20 +134,50 @@ const faq = [
         which rules a crawler currently holds.
       </p>
 
-      <h2>Search and AI crawlers use separate tokens</h2>
+      <h2>Which crawlers to let in</h2>
       <p>
-        The presets separate search crawlers from model training controls.
-        OpenAI documents <code>OAI-SearchBot</code> for ChatGPT search and
-        {' '}<code>GPTBot</code> for potential training. Anthropic documents separate
-        Claude search and training crawlers. Blocking one does not describe the
-        access of the other.
+        The crawler access table splits crawlers into three groups, because
+        blocking each group does something different.
+      </p>
+      <ul>
+        <li>
+          <strong>Search and AI answers.</strong> Googlebot, Bingbot,
+          OAI-SearchBot, Claude-SearchBot, PerplexityBot and Applebot find the
+          pages these engines show and cite. Let them all in. If Googlebot is
+          blocked, the page is out of Google Search, which includes AI
+          Overviews and AI Mode. OpenAI says sites that block OAI-SearchBot
+          will not be shown in ChatGPT search answers.
+        </li>
+        <li>
+          <strong>Opens a page when a person asks.</strong> ChatGPT-User,
+          Claude-User and Perplexity-User fetch a page because someone asked
+          about it. OpenAI says robots.txt rules may not apply to ChatGPT-User,
+          and Perplexity says Perplexity-User generally ignores them, so a
+          block there is a request rather than a guarantee.
+        </li>
+        <li>
+          <strong>Model training.</strong> GPTBot, ClaudeBot, Applebot-Extended,
+          CCBot and Bytespider are your call. OpenAI, Anthropic and Apple run
+          search and training on separate tokens, so blocking GPTBot, ClaudeBot
+          or Applebot-Extended does not take you out of their search answers.
+          Google-Extended works differently: it does not
+          affect Google Search, but it decides whether Gemini can use your
+          pages for training and to ground its answers.
+        </li>
+      </ul>
+      <p>
+        Applebot has one quirk. Apple says that when no group names Applebot
+        but one names Googlebot, Applebot follows the Googlebot rules. The
+        checker does the same and says so in the result.
       </p>
       <p>
-        Read the current crawler guidance from{' '}
-        <a href="https://help.openai.com/en/articles/12627856-publishers-and-developers-faq" target="_blank" rel="noreferrer">OpenAI</a>,{' '}
-        <a href="https://support.anthropic.com/en/articles/8896518-does-anthropic-crawl-data-from-the-web-and-how-can-site-owners-block-the-crawler" target="_blank" rel="noreferrer">Anthropic</a>, and{' '}
-        <a href="https://docs.perplexity.ai/docs/resources/perplexity-crawlers" target="_blank" rel="noreferrer">Perplexity</a>
-        {' '}before making a policy change. Crawler names and uses can change.
+        Crawler names and uses change, so read the current guidance from{' '}
+        <a href="https://developers.openai.com/api/docs/bots" target="_blank" rel="noreferrer">OpenAI</a>,{' '}
+        <a href="https://support.anthropic.com/en/articles/8896518-does-anthropic-crawl-data-from-the-web-and-how-can-site-owners-block-the-crawler" target="_blank" rel="noreferrer">Anthropic</a>,{' '}
+        <a href="https://docs.perplexity.ai/docs/resources/perplexity-crawlers" target="_blank" rel="noreferrer">Perplexity</a>,{' '}
+        <a href="https://support.apple.com/en-us/119829" target="_blank" rel="noreferrer">Apple</a> and{' '}
+        <a href="https://developers.google.com/crawling/docs/crawlers-fetchers/google-common-crawlers" target="_blank" rel="noreferrer">Google</a>
+        {' '}before you change your policy.
       </p>
 
       <h2>Fix common robots.txt mistakes</h2>

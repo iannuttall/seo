@@ -17,7 +17,8 @@ export const pageRedirects = {
   '/blog/seo-agent': '/docs/getting-started',
   '/blog/seo-mcp-servers': '/docs/mcp',
   '/docs/start': '/docs/getting-started',
-  '/docs/reports': '/docs',
+  // Searches for SEO reports landed on the old reports index.
+  '/docs/reports': '/features/seo-reporting',
   '/docs/google': '/docs/getting-started',
   '/docs/agents': '/docs/mcp',
   '/docs/skill': '/docs/cli',

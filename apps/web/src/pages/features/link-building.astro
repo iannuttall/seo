@@ -1,0 +1,284 @@
+---
+import {
+  Analytics01Icon,
+  CheckListIcon,
+  Link01Icon,
+  Mail01Icon,
+  News01Icon,
+  SearchList01Icon,
+  UserGroupIcon,
+  ViewIcon,
+} from '@hugeicons/core-free-icons'
+import CodeBlock from '@/components/CodeBlock.astro'
+import FaqAccordion from '@/components/FaqAccordion.astro'
+import HomeCard from '@/components/HomeCard.astro'
+import LandingHero from '@/components/LandingHero.astro'
+import SectionHeading from '@/components/SectionHeading.astro'
+import SetupPrompts from '@/components/SetupPrompts.astro'
+import SplitList from '@/components/SplitList.astro'
+import { getButtonClasses } from '@/components/ui/button'
+import BaseLayout from '@/layouts/BaseLayout.astro'
+import type { SchemaBreadcrumb } from '@/lib/schema'
+
+const breadcrumbs: SchemaBreadcrumb[] = [
+  { label: 'Home', href: '/' },
+  { label: 'Features', href: '/features' },
+  { label: 'Link building tool' },
+]
+
+// The four parts of the job, in the order the agent does them.
+const steps = [
+  {
+    title: 'Find the sites',
+    icon: SearchList01Icon,
+    text: 'Sites that link to two or more of your competitors and not to you, highest Domain Rating first. They already link out on your topic.',
+  },
+  {
+    title: 'Find the page on each site',
+    icon: CheckListIcon,
+    text: 'The exact pages that link to your competitors, with the words around each link and a guess at the type: list, review, directory or forum.',
+  },
+  {
+    title: 'Check each page is a real fit',
+    icon: ViewIcon,
+    text: 'Your agent reads each page live, quotes the paragraph where your link would help the reader, and drops pages with no fit or that sell links.',
+  },
+  {
+    title: 'Draft the outreach',
+    icon: Mail01Icon,
+    text: 'One short email per site that names the page and the paragraph. You read and approve every one before anything is sent.',
+  },
+]
+
+const prospects = [
+  {
+    title: 'Sites that link to two or more competitors',
+    text: 'One competitor link can be chance. Two or more is a pattern, such as a comparison post or a tools list that covers your whole category.',
+  },
+  {
+    title: 'Lists, reviews and roundups your competitors are on',
+    text: 'A "best tools" page that names three of your competitors and not you is the most natural place to ask for one more entry.',
+  },
+  {
+    title: 'Sites that mention you without a link',
+    text: 'They already chose to write about you, so asking them to add the link is the smallest ask there is.',
+  },
+  {
+    title: 'Your competitors\u2019 most linked pages',
+    text: 'If a rival earns links with a free tool, a dataset or a study, that tells you which kind of page your prospects link to.',
+  },
+]
+
+// A real run from the backlink gap page, November 2026, DataForSEO.
+const umami = [
+  { title: '90 sites', text: 'Linked to at least two of Plausible, Fathom and Simple Analytics and not to Umami.' },
+  { title: '29 sites', text: 'Linked to all three rivals, the warmest prospects on the list.' },
+  { title: '8 sites', text: 'Linked to all three and had a Domain Rating of 50 or more. Those are where we would start.' },
+  { title: '$0.24', text: 'What the whole run cost on our own DataForSEO account.' },
+]
+
+const prompts = [
+  { title: 'Find the sites', text: 'Run a backlink gap for example.com against example.org, example.net and example.io' },
+  { title: 'Find the pages', text: 'Show the pages that link to two or more of those competitors but not example.com, with the words around each link, and put the tool lists and reviews first' },
+  { title: 'Find unlinked mentions', text: 'Find pages that mention example.com or "Example App" but don\u2019t link to it' },
+  { title: 'Check the fit', text: 'Read each page on that list and quote the paragraph where a link to my page would help the reader. Skip pages with no good fit and sites that sell links.' },
+  { title: 'Draft the emails', text: 'Draft one short email per site for me to approve. Name the page and the paragraph, and don\u2019t offer anything in return.' },
+]
+
+const costs = [
+  { title: 'Finding and checking prospects', text: 'Free in SEO Skill. Every tool your agent calls on demand is free, in the hosted MCP and the CLI.' },
+  { title: 'Link data', text: 'Comes from your own DataForSEO or Ahrefs account, which bills you directly. SEO Skill adds nothing on top.' },
+  { title: 'A typical run', text: 'A backlink gap for a site and three competitors cost $0.24 with DataForSEO in November 2026. A mentions run costs under $0.10.' },
+  { title: 'Sending the emails', text: 'Happens in your own email, by you or an agent you allow to send. SEO Skill never sends email.' },
+]
+
+const tools = [
+  { title: 'Backlink checker', text: 'See who links to any domain or page, how strong each site is and what the links say. Free, with no account.', href: '/tools/backlink-checker', icon: Link01Icon, link: 'Check backlinks' },
+  { title: 'Domain Rating checker', text: 'Check the Domain Rating of up to 10 prospects at once before you decide who to email.', href: '/tools/domain-rating-checker', icon: Analytics01Icon, link: 'Check Domain Rating' },
+  { title: 'Backlink gap analysis', text: 'A full walk through a real gap run, and how to read it by overlap first.', href: '/features/backlink-gap', icon: UserGroupIcon, link: 'Backlink gap' },
+  { title: 'Unlinked brand mentions', text: 'What a mentions run found for seoskill.dev, and how to ask for the link.', href: '/blog/unlinked-brand-mentions', icon: News01Icon, link: 'Read the post' },
+]
+
+const faq = [
+  {
+    question: 'What is a link building tool?',
+    answer:
+      'A link building tool finds websites likely to link to yours, shows you the page where a link would fit, and helps you contact them. SEO Skill does the finding and checking inside your AI agent, from your own DataForSEO or Ahrefs data, and drafts the emails for you to approve.',
+  },
+  {
+    question: 'What is the difference between a backlink checker and a link building tool?',
+    answer:
+      'A backlink checker shows the links a site already has. A link building tool uses that data to find sites that should link to you next. SEO Skill does both: the free backlink checker for any site, and the backlink gap, linking pages and mentions in your agent.',
+  },
+  {
+    question: 'Is automated link building safe?',
+    answer:
+      'Tools that place links for you, in comments, forums or directories, are link spam under Google\u2019s spam policies. Finding prospects and drafting emails automatically is different, because a person reads each email and decides. SEO Skill automates the finding and the drafting, and leaves the decision and the sending to you.',
+    links: [{ text: 'Google\u2019s spam policies', href: 'https://developers.google.com/search/docs/essentials/spam-policies' }],
+  },
+  {
+    question: 'Can AI do link building?',
+    answer:
+      'AI can do most of the research: find the sites, read each page, judge the fit and write a first draft. The part it should not do alone is decide who gets emailed and what you promise them. In one case an agent found a reason for a Domain Rating 84 site to link, Ian approved the emails, and the site added two links.',
+    links: [{ text: 'In one case', href: '/blog/agent-link-outreach' }],
+  },
+  {
+    question: 'Do I need Ahrefs or DataForSEO?',
+    answer:
+      'Yes, for the link data. Save a key from either on your account page or in the CLI. Linking pages with the words around each link, and unlinked mentions, need DataForSEO. The free backlink checker on this site needs no key.',
+  },
+  {
+    question: 'How many competitors should I compare?',
+    answer:
+      'Two to five sites that rank for the searches you want, ideally a little stronger than you. A gap against a site with 50 times your links fills up with big publishers that rarely link to newcomers.',
+  },
+  {
+    question: 'How accurate is the link data?',
+    answer:
+      'It is a provider estimate. No outside index sees every link Google sees, and the gap reads each site\u2019s top 1,000 referring domains and says when it stopped there. That is why the agent reads each page live before it drafts anything.',
+  },
+]
+---
+
+<BaseLayout
+  title="Link building tool that finds prospects for your agent"
+  description="A link building tool that runs in your AI agent. Find sites and pages that link to your competitors and not to you, and sites that mention you without a link, then approve the outreach your agent drafts."
+  canonicalPath="/features/link-building"
+  {breadcrumbs}
+  framed={false}
+>
+  <main data-agent-content>
+    <LandingHero
+      title="Link building tool for AI agents"
+      lead="Your agent finds the sites most likely to link to you, reads the page where your link would fit, and drafts an email for you to approve. The link data comes from your own DataForSEO or Ahrefs account."
+      setupId="link-building-setup"
+    />
+
+    <div class="space-y-24 py-24 sm:space-y-32 sm:py-32">
+      <section class="site-frame" aria-labelledby="how-heading">
+        <SectionHeading
+          id="how-heading"
+          title="How does an AI link building tool work?"
+          text="It turns your competitors' backlinks into a short list of pages that should link to you, checks each one, and drafts the outreach. You decide who gets an email."
+        />
+        <div class="grid grid-cols-1 gap-2 sm:grid-cols-2">
+          {steps.map((item) => <HomeCard title={item.title} text={item.text} icon={item.icon} />)}
+        </div>
+      </section>
+
+      <SplitList
+        id="prospects-heading"
+        title="Which sites are most likely to link to you?"
+        text="Sites that already link to two or more of your competitors are the most likely to link to you, because they have shown they link out on your topic. These are the four kinds of prospect your agent finds."
+        items={prospects}
+      />
+
+      <section class="site-frame" aria-labelledby="example-heading">
+        <SectionHeading
+          id="example-heading"
+          title="What does a real backlink gap find?"
+          text="We ran one for Umami, the open source web analytics tool, against Plausible, Fathom and Simple Analytics in November 2026. It found 90 link prospects for $0.24."
+        />
+        <div class="grid grid-cols-1 gap-2 sm:grid-cols-2">
+          {
+            umami.map((item) => (
+              <div class="rounded-lg bg-muted p-6">
+                <p class="text-3xl font-medium -tracking-[0.6px] text-foreground">{item.title}</p>
+                <p class="mt-2 text-sm leading-6 text-foreground-muted">{item.text}</p>
+              </div>
+            ))
+          }
+        </div>
+        <p class="mt-6 max-w-2xl text-base leading-7 text-foreground-muted">
+          48 of the 90 sites had a Domain Rating under 10, many of them tool
+          directories. Some are worth a two minute submission. Few are worth an
+          email. The <a class="underline underline-offset-4" href="/features/backlink-gap">backlink gap analysis</a>{' '}
+          page lists the top sites and how to read them.
+        </p>
+      </section>
+
+      <div>
+        <SplitList
+          id="prompts-heading"
+          title="What do I ask my agent?"
+          text="Ask in plain words, one step at a time. Your agent picks the tool, runs it on your own key and shows you the result before the next step."
+          items={prompts}
+        />
+        <div class="site-frame mt-8">
+          <CodeBlock
+            label="Or run it in a terminal"
+            value={'seo research link_gap \\\n  --target example.com \\\n  --competitors example.org,example.net \\\n  --pages\n\nseo research mentions \\\n  --target example.com \\\n  --brand "Example App"'}
+          />
+        </div>
+      </div>
+
+      <section class="site-frame grid gap-8 sm:grid-cols-[1fr_1.15fr] sm:items-start" aria-labelledby="outreach-heading">
+        <div class="sm:sticky sm:top-24">
+          <h2 id="outreach-heading" class="text-pretty text-2xl font-medium -tracking-[0.4px] text-foreground xl:text-3xl xl:-tracking-[0.6px]">
+            Should an AI agent send link outreach for you?
+          </h2>
+          <p class="mt-4 text-base leading-7 text-foreground-muted">
+            Only after you approve each email. Let the agent find, check and
+            draft, then read every email yourself. A good pitch names the page
+            and the paragraph, says what the reader gets from your link, and
+            stops there.
+          </p>
+        </div>
+        <div class="rounded-lg bg-muted p-6 text-base leading-7 text-foreground-muted">
+          <p>
+            In October 2026 an agent took an export of Ian's competitors' best
+            links, found a topical reason for one site to link to him, and
+            sent the emails he approved from his own Gmail. That site has a
+            Domain Rating of 84 and added two links.
+          </p>
+          <p class="mt-4">
+            Two rules made it work. Have the agent quote the exact paragraph
+            where your link would fit, and skip any site where it can't. And
+            skip sites that sell links or sponsored posts, because their links
+            look bought whether yours is or not.
+          </p>
+          <a class:list={[getButtonClasses('secondary', 'lg'), 'mt-6']} href="/blog/agent-link-outreach">Read the outreach method</a>
+        </div>
+      </section>
+
+      <SplitList
+        id="cost-heading"
+        title="How much does link building with SEO Skill cost?"
+        text="SEO Skill is free for this. You pay your own link data provider for the research, usually well under a dollar a run."
+        items={costs}
+      />
+
+      <section class="site-frame" aria-labelledby="tools-heading">
+        <SectionHeading
+          id="tools-heading"
+          title="Free link tools to start with"
+          text="Check any site's links in your browser before you connect anything, then go deeper with your agent."
+        />
+        <div class="grid grid-cols-1 gap-2 sm:grid-cols-2">
+          {tools.map((item) => <HomeCard {...item} />)}
+        </div>
+      </section>
+
+      <section class="site-frame" aria-labelledby="faq-heading">
+        <div class="max-w-2xl">
+          <h2 id="faq-heading" class="text-pretty text-2xl font-medium -tracking-[0.4px] text-foreground xl:text-3xl xl:-tracking-[0.6px]">
+            Questions about link building with an agent
+          </h2>
+        </div>
+        <div class="mt-10">
+          <FaqAccordion items={faq} id="link-building-faq" />
+        </div>
+      </section>
+
+      <section class="site-frame" aria-labelledby="start-heading">
+        <SectionHeading
+          id="start-heading"
+          title="Find your first link prospects"
+          text="Add SEO Skill to your agent, save a DataForSEO or Ahrefs key on your account page, and ask for a backlink gap against two of your competitors."
+        />
+        <a class:list={[getButtonClasses('default', 'lg'), 'mb-10']} href="/account">Sign in and find link prospects</a>
+        <SetupPrompts id="link-building-setup-end" />
+      </section>
+    </div>
+  </main>
+</BaseLayout>

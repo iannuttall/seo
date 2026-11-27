@@ -234,10 +234,10 @@ export const tools = [
   {
     id: 'robots-txt-validator',
     path: '/tools/robots-txt-validator',
-    title: 'robots.txt validator and tester',
-    action: 'Open the robots.txt validator',
+    title: 'robots.txt checker and tester',
+    action: 'Open the robots.txt checker',
     description:
-      'Check a robots.txt file for errors and test whether specific crawler URLs are allowed or blocked.',
+      'Check a robots.txt file for errors and see which search, AI and training crawlers can read each URL.',
     kind: 'hybrid',
   },
   {

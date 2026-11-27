@@ -52,56 +52,124 @@ export type RobotsUrlResult = {
   reason: string
 }
 
+export type RobotsCrawlerGroup = 'search' | 'user' | 'training'
+
+// One crawler across every tested URL, for the crawler access table.
+export type RobotsCrawlerAccess = {
+  userAgent: string
+  purpose: string
+  group: RobotsCrawlerGroup
+  allowed: number
+  blocked: number
+  firstBlocked?: RobotsUrlResult
+}
+
 export type RobotsAnalysis = {
   schema: 1
   origin: string
   userAgent: string
   document: RobotsDocument
   tests: RobotsUrlResult[]
+  access: RobotsCrawlerAccess[]
 }
 
-export const ROBOTS_CRAWLER_PRESETS = Object.freeze([
-  { value: 'Googlebot', label: 'Googlebot', purpose: 'Google Search' },
-  { value: 'Bingbot', label: 'Bingbot', purpose: 'Bing Search' },
+// The crawlers a site owner usually decides on. Crawlers with a group are
+// tested together in the crawler access table.
+export const ROBOTS_CRAWLER_PRESETS: ReadonlyArray<{
+  value: string
+  label: string
+  purpose: string
+  group?: RobotsCrawlerGroup
+}> = Object.freeze([
+  {
+    value: 'Googlebot',
+    label: 'Googlebot',
+    purpose: 'Google Search, AI Overviews and AI Mode',
+    group: 'search',
+  },
+  {
+    value: 'Bingbot',
+    label: 'Bingbot',
+    purpose: 'Bing Search and Copilot',
+    group: 'search',
+  },
   {
     value: 'OAI-SearchBot',
     label: 'OAI-SearchBot',
     purpose: 'ChatGPT search',
+    group: 'search',
   },
   {
     value: 'Claude-SearchBot',
     label: 'Claude-SearchBot',
     purpose: 'Claude search',
+    group: 'search',
   },
   {
     value: 'PerplexityBot',
     label: 'PerplexityBot',
     purpose: 'Perplexity search',
+    group: 'search',
+  },
+  {
+    value: 'Applebot',
+    label: 'Applebot',
+    purpose: 'Siri, Spotlight and Safari',
+    group: 'search',
+  },
+  {
+    value: 'ChatGPT-User',
+    label: 'ChatGPT-User',
+    purpose: 'Pages ChatGPT opens for a person',
+    group: 'user',
+  },
+  {
+    value: 'Claude-User',
+    label: 'Claude-User',
+    purpose: 'Pages Claude opens for a person',
+    group: 'user',
+  },
+  {
+    value: 'Perplexity-User',
+    label: 'Perplexity-User',
+    purpose: 'Pages Perplexity opens for a person',
+    group: 'user',
   },
   {
     value: 'GPTBot',
     label: 'GPTBot',
     purpose: 'OpenAI model training',
+    group: 'training',
   },
   {
     value: 'ClaudeBot',
     label: 'ClaudeBot',
     purpose: 'Anthropic model training',
+    group: 'training',
   },
   {
     value: 'Google-Extended',
     label: 'Google-Extended',
-    purpose: 'Gemini training and grounding control',
+    purpose: 'Gemini training and grounding',
+    group: 'training',
   },
   {
-    value: 'ChatGPT-User',
-    label: 'ChatGPT-User',
-    purpose: 'ChatGPT user requests',
+    value: 'Applebot-Extended',
+    label: 'Applebot-Extended',
+    purpose: 'Apple model training',
+    group: 'training',
   },
   {
-    value: 'Claude-User',
-    label: 'Claude-User',
-    purpose: 'Claude user requests',
+    value: 'CCBot',
+    label: 'CCBot',
+    purpose: 'Common Crawl archive',
+    group: 'training',
+  },
+  {
+    value: 'Bytespider',
+    label: 'Bytespider',
+    purpose: 'ByteDance crawler',
+    group: 'training',
   },
   {
     value: 'Googlebot-Image',
@@ -123,14 +191,6 @@ export const ROBOTS_CRAWLER_PRESETS = Object.freeze([
     label: 'Google-InspectionTool',
     purpose: 'Google inspection tools',
   },
-  { value: 'Applebot', label: 'Applebot', purpose: 'Apple search' },
-  {
-    value: 'Applebot-Extended',
-    label: 'Applebot-Extended',
-    purpose: 'Apple model control',
-  },
-  { value: 'CCBot', label: 'CCBot', purpose: 'Common Crawl' },
-  { value: 'Bytespider', label: 'Bytespider', purpose: 'ByteDance crawler' },
   { value: 'custom', label: 'Custom user agent', purpose: 'Custom' },
 ])
 
@@ -438,6 +498,16 @@ function applicableGroups(
     }
   }
 
+  // Apple: Applebot follows the Googlebot rules when no group names it.
+  if (
+    matchedTokens.size === 0 &&
+    /\bapplebot\b(?!-)/u.test(identification) &&
+    !identification.includes('googlebot')
+  ) {
+    const google = applicableGroups(document, 'Googlebot')
+    if (google.userAgents.includes('googlebot')) return google
+  }
+
   if (matchedTokens.size > 0) {
     return {
       groups: document.groups.filter((group) =>
@@ -531,6 +601,12 @@ export function testRobotsUrl(
   }
 
   const selected = applicableGroups(document, userAgent)
+  const viaGoogle =
+    selected.userAgents.includes('googlebot') &&
+    !userAgent.toLowerCase().includes('googlebot')
+  const fallback = viaGoogle
+    ? ' Applebot follows the Googlebot group when no group names it.'
+    : ''
   const target = normalizeForMatching(`${url.pathname}${url.search}`)
   let winner: (RobotsRule & { specificity: number }) | undefined
   for (const group of selected.groups) {
@@ -557,9 +633,11 @@ export function testRobotsUrl(
       userAgent,
       verdict: 'allowed',
       groupUserAgents: selected.userAgents,
-      reason: selected.groups.length
-        ? 'No rule in the selected group matches this URL.'
-        : 'No user-agent group applies, so the URL is allowed by default.',
+      reason:
+        (selected.groups.length
+          ? 'No rule in the selected group matches this URL.'
+          : 'No user-agent group applies, so the URL is allowed by default.') +
+        fallback,
     }
   }
 
@@ -571,7 +649,7 @@ export function testRobotsUrl(
     verdict: allowed ? 'allowed' : 'blocked',
     groupUserAgents: selected.userAgents,
     rule: winner,
-    reason: `${allowed ? 'Allowed' : 'Blocked'} by line ${winner.line}: ${winner.directive}: ${winner.pattern}`,
+    reason: `${allowed ? 'Allowed' : 'Blocked'} by line ${winner.line}: ${winner.directive}: ${winner.pattern}.${fallback}`,
   }
 }
 
@@ -600,5 +678,36 @@ export function analyseRobotsTxt(input: {
     tests: input.urls.map((url) =>
       testRobotsUrl(document, url, userAgent, origin),
     ),
+    access: crawlerAccess(document, input.urls, origin),
   }
+}
+
+// Every grouped crawler against every URL: how many each may read, and the
+// first URL it may not, with the line that blocks it.
+function crawlerAccess(
+  document: RobotsDocument,
+  urls: string[],
+  origin: string,
+): RobotsCrawlerAccess[] {
+  const access: RobotsCrawlerAccess[] = []
+  for (const crawler of ROBOTS_CRAWLER_PRESETS) {
+    if (!crawler.group) continue
+    const row: RobotsCrawlerAccess = {
+      userAgent: crawler.value,
+      purpose: crawler.purpose,
+      group: crawler.group,
+      allowed: 0,
+      blocked: 0,
+    }
+    for (const url of urls) {
+      const result = testRobotsUrl(document, url, crawler.value, origin)
+      if (result.verdict === 'allowed') row.allowed += 1
+      if (result.verdict === 'blocked') {
+        row.blocked += 1
+        row.firstBlocked ??= result
+      }
+    }
+    access.push(row)
+  }
+  return access
 }

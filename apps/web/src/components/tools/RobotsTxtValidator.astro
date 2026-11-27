@@ -96,7 +96,7 @@ import { ROBOTS_CRAWLER_PRESETS } from '@/lib/robots-txt-validator'
 
       <div class="grid gap-4 border-t border-border pt-5 sm:grid-cols-2">
         <label class="space-y-2 text-sm font-medium">
-          <span>User agent</span>
+          <span>Crawler for the detailed results</span>
           <FormSelect data-user-agent>
             {ROBOTS_CRAWLER_PRESETS.map((crawler) => (
               <option value={crawler.value}>{crawler.label} ({crawler.purpose})</option>
@@ -213,10 +213,25 @@ import { ROBOTS_CRAWLER_PRESETS } from '@/lib/robots-txt-validator'
       </div>
     </Card>
 
+    <div data-access-card>
+      <Card>
+        <div class="space-y-5 p-5 sm:p-6">
+          <div class="space-y-1">
+            <h3 class="text-sm font-medium">Crawler access</h3>
+            <p data-access-summary class="text-sm leading-6"></p>
+            <p class="text-xs leading-5 text-foreground-muted">
+              Every crawler below, tested against every URL above. Fix the first group first: if a search crawler cannot read a page, that engine cannot show or cite it.
+            </p>
+          </div>
+          <div data-access-groups class="space-y-6"></div>
+        </div>
+      </Card>
+    </div>
+
     <Card>
       <div class="space-y-5 p-5 sm:p-6">
         <div class="space-y-1">
-          <h3 class="text-sm font-medium">URL test results</h3>
+          <h3 data-url-heading class="text-sm font-medium">URL test results</h3>
           <p class="text-xs leading-5 text-foreground-muted">
             A result covers robots.txt matching only. It does not test a firewall, login, page response, or indexing state.
           </p>
@@ -290,6 +305,8 @@ import { ROBOTS_CRAWLER_PRESETS } from '@/lib/robots-txt-validator'
   import { defaultToolUrlToHttps } from '@/lib/tool-url'
   import type {
     RobotsAnalysis,
+    RobotsCrawlerAccess,
+    RobotsCrawlerGroup,
     RobotsIssue,
     RobotsUrlResult,
   } from '@/lib/robots-txt-validator'
@@ -369,6 +386,10 @@ import { ROBOTS_CRAWLER_PRESETS } from '@/lib/robots-txt-validator'
     const sourceResponse = required<HTMLElement>('[data-source-response]')
     const sourceFile = required<HTMLElement>('[data-source-file]')
     const sourceRedirects = required<HTMLElement>('[data-source-redirects]')
+    const accessCard = required<HTMLElement>('[data-access-card]')
+    const accessSummary = required<HTMLElement>('[data-access-summary]')
+    const accessGroups = required<HTMLElement>('[data-access-groups]')
+    const urlHeading = required<HTMLElement>('[data-url-heading]')
     const urlTableFrame = required<HTMLElement>('[data-url-table-frame]')
     const urlResults = required<HTMLElement>('[data-url-results]')
     const noUrlResults = required<HTMLElement>('[data-no-url-results]')
@@ -524,6 +545,76 @@ Sitemap: https://example.com/sitemap.xml`
       }
     }
 
+    const accessGroupTitles: Record<RobotsCrawlerGroup, string> = {
+      search: 'Search and AI answers',
+      user: 'Opens a page when a person asks',
+      training: 'Model training',
+    }
+
+    function renderAccess(values: RobotsCrawlerAccess[]): void {
+      accessGroups.replaceChildren()
+      const tested = values.map((value) => value.allowed + value.blocked)
+      accessCard.hidden = values.length === 0 || Math.max(0, ...tested) === 0
+      if (accessCard.hidden) return
+      const urlCount = Math.max(...tested)
+      const open = values.filter((value) => value.blocked === 0).length
+      accessSummary.textContent = `${open} of ${values.length} crawlers can read ${urlCount === 1 ? 'the URL' : `all ${urlCount} URLs`} you tested.`
+      for (const group of ['search', 'user', 'training'] as const) {
+        const rows = values.filter((value) => value.group === group)
+        const section = document.createElement('section')
+        const heading = document.createElement('h4')
+        heading.className = 'text-xs font-medium'
+        heading.textContent = accessGroupTitles[group]
+        const frame = document.createElement('div')
+        frame.className = 'mt-2 overflow-x-auto'
+        const table = document.createElement('table')
+        table.className = 'w-full min-w-[38rem] table-fixed border-collapse text-left'
+        const head = document.createElement('thead')
+        head.className = 'border-b border-border text-xs font-medium text-foreground-muted'
+        const headRow = document.createElement('tr')
+        for (const [label, width] of [
+          ['Crawler', 'w-[24%]'],
+          ['Used for', 'w-[28%]'],
+          ['Result', 'w-[20%]'],
+          ['First blocked URL', 'w-[28%]'],
+        ]) {
+          const th = document.createElement('th')
+          th.className = `pb-2 pr-4 last:pr-0 ${width}`
+          th.textContent = label
+          headRow.append(th)
+        }
+        head.append(headRow)
+        const body = document.createElement('tbody')
+        body.className = 'divide-y divide-border text-xs'
+        for (const value of rows) {
+          const total = value.allowed + value.blocked
+          const result = value.blocked === 0
+            ? total === 1 ? 'Allowed' : `Allowed on all ${total}`
+            : value.allowed === 0
+              ? total === 1 ? 'Blocked' : `Blocked on all ${total}`
+              : `Blocked on ${value.blocked} of ${total}`
+          const blockedAt = value.firstBlocked
+          const row = document.createElement('tr')
+          row.append(
+            cell(value.userAgent, 'font-mono'),
+            cell(value.purpose, 'text-foreground-muted'),
+            cell(result, value.blocked ? 'font-medium text-red-700 dark:text-red-400' : 'font-medium'),
+            cell(
+              blockedAt?.rule
+                ? `${blockedAt.input} (line ${blockedAt.rule.line})`
+                : 'None',
+              'break-words font-mono text-foreground-muted',
+            ),
+          )
+          body.append(row)
+        }
+        table.append(head, body)
+        frame.append(table)
+        section.append(heading, frame)
+        accessGroups.append(section)
+      }
+    }
+
     function renderIssues(values: RobotsIssue[], source?: LiveFetch['source']): void {
       const sourceIssues: RobotsIssue[] = []
       if (source?.truncated) {
@@ -650,6 +741,8 @@ Sitemap: https://example.com/sitemap.xml`
       statWarnings.textContent = warnings.toLocaleString()
       statTested.textContent = analysis.tests.length.toLocaleString()
       renderSource(report)
+      renderAccess(analysis.access)
+      urlHeading.textContent = `URL test results for ${analysis.userAgent}`
       renderUrlResults(analysis.tests, uncertain)
       renderIssues(analysis.document.issues, live?.source)
       renderGroups(analysis)
@@ -748,6 +841,16 @@ Sitemap: https://example.com/sitemap.xml`
         `Warnings: ${report.analysis.document.issueCounts.warning}`,
         '',
       ]
+      if (report.analysis.access.some((value) => value.allowed + value.blocked > 0)) {
+        lines.push('Crawler access')
+        for (const value of report.analysis.access) {
+          const blocked = value.firstBlocked?.rule
+            ? ` (first: ${value.firstBlocked.input}, line ${value.firstBlocked.rule.line})`
+            : ''
+          lines.push(`  ${value.userAgent}: ${value.allowed} allowed, ${value.blocked} blocked${blocked}`)
+        }
+        lines.push('', `URL tests for ${report.analysis.userAgent}`)
+      }
       for (const result of report.analysis.tests) {
         lines.push(`${result.verdict.toUpperCase()} ${result.url ?? result.input}`)
         lines.push(`  ${result.reason}`)

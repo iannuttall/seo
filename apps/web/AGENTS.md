@@ -26,7 +26,7 @@ write any site copy, metadata included.
   controls instead of hand-styled elements.
 - Docs order, index, breadcrumbs, sitemap and llms.txt all come from
   `src/content/docs-nav.mjs`. The `seo index` page is
-  `/docs/commands/indexing` because Cloudflare folds `/index` paths.
+  `/docs/indexing` because Cloudflare folds `/index` paths.
 - When a URL changes, add a permanent redirect. Report ids in
   `src/content/telemetry/report-ids.mjs` are never removed: old clients
   still send them, and they drive redirects in `public/_redirects`.

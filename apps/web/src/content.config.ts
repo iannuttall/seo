@@ -49,6 +49,9 @@ export const collections = {
         .string()
         .regex(/^\d{4}-\d{2}-\d{2}$/)
         .optional(),
+      // The post's topic. A post's related posts come from its own topic
+      // first (src/lib/blog.ts).
+      topic: z.enum(['teardowns', 'ai-answers', 'crawlers', 'search-console', 'agent-work']),
       company: z.string().optional(),
       // The account to tag in the launch post on X, without the @, read from
       // the company's own site. A founder's handle when the founder is the

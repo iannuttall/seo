@@ -9,6 +9,7 @@ import {
 } from '@hugeicons/core-free-icons'
 import CodeBlock from '@/components/CodeBlock.astro'
 import FeaturePage from '@/components/FeaturePage.astro'
+import { statusGuides } from '@/content/status-guides'
 
 const related = [
   { title: 'seo index', text: "Google's indexing reason for every known page, each checked live and labelled.", href: '/docs/indexing', icon: Alert02Icon },
@@ -18,6 +19,9 @@ const related = [
   { title: 'seo internal-links', text: 'Find the pages on your site that should link to one page.', href: '/docs/internal-links', icon: Link01Icon },
   { title: 'Weekly site audit', text: 'Daily Google index checks and an email when a page drops out.', href: '/docs/weekly-site-audit', icon: Notification01Icon },
 ]
+
+// The status guides for the other Page indexing reasons.
+const otherReasons = statusGuides.filter((guide) => guide.path.startsWith('/guides/'))
 ---
 
 <FeaturePage
@@ -195,4 +199,10 @@ const related = [
     Google's reason, and a top page's drop is only sent after a second check
     agrees. <a href="/docs/alerts">Alerts</a> covers each email.
   </p>
+
+  <h2>Other Search Console reasons</h2>
+  <p>The other reasons in the Page indexing report each have a guide:</p>
+  <ul>
+    {otherReasons.map((guide) => <li><a href={guide.path}>{guide.title}</a>: {guide.text}</li>)}
+  </ul>
 </FeaturePage>

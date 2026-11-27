@@ -87,6 +87,7 @@ description: ...                              # one plain sentence, 70 to 160 ch
 heading: How I'd grow <Company>
 lead: One or two short sentences, as you'd say it out loud.
 date: 'YYYY-MM-DD'                            # the day it ships; the post goes live as soon as it's approved
+topic: teardowns
 company: <Company>
 x:
   company: <handle without @>

@@ -259,7 +259,12 @@ import SchemaFieldControl from './SchemaFieldControl.astro'
       actionStatus.textContent = message
     }
 
-    typeSelect.addEventListener('change', renderType)
+    typeSelect.addEventListener('change', () => {
+      renderType()
+      const url = new URL(window.location.href)
+      url.searchParams.set('type', activeType.id)
+      history.replaceState(null, '', url)
+    })
     for (const form of forms) form.addEventListener('input', renderOutput)
     root.addEventListener('click', (event) => {
       const target = event.target
@@ -292,6 +297,9 @@ import SchemaFieldControl from './SchemaFieldControl.astro'
       URL.revokeObjectURL(url)
       actionStatus.textContent = 'JSON-LD downloaded.'
     })
+    // Links such as ?type=faq open the generator on that type.
+    const linked = new URLSearchParams(window.location.search).get('type')
+    if (SCHEMA_GENERATOR_TYPES.some((type) => type.id === linked)) typeSelect.value = linked || ''
     renderType()
   }
 

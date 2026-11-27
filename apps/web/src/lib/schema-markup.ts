@@ -523,6 +523,36 @@ export const SCHEMA_GENERATOR_TYPES: SchemaGeneratorType[] = [
     ],
   },
   {
+    id: 'service',
+    label: 'Service',
+    schemaType: 'Service',
+    description:
+      'Describe a service a business offers, who provides it and where.',
+    caveat:
+      'Google has no rich result for Service markup. It describes the offer for search engines and other software that read the page.',
+    fields: [
+      { name: 'name', label: 'Service name', required: true },
+      {
+        name: 'serviceType',
+        label: 'Service type',
+        placeholder: 'Boiler repair',
+      },
+      { name: 'description', label: 'Description', kind: 'textarea' },
+      { name: 'url', label: 'Service page URL', kind: 'url' },
+      { name: 'image', label: 'Image URL', kind: 'url' },
+      { name: 'providerName', label: 'Provider name', required: true },
+      { name: 'providerUrl', label: 'Provider URL', kind: 'url' },
+      {
+        name: 'areaServed',
+        label: 'Areas served',
+        kind: 'textarea',
+        help: 'Enter one town, region or country per line.',
+      },
+      { name: 'price', label: 'Price', kind: 'number' },
+      { name: 'priceCurrency', label: 'Currency', placeholder: 'USD' },
+    ],
+  },
+  {
     id: 'video',
     label: 'Video',
     schemaType: 'VideoObject',
@@ -917,6 +947,31 @@ export function generateSchemaMarkup(
         bestRating: numberValue(values.bestRating),
         worstRating: numberValue(values.worstRating),
       }),
+    }
+  } else if (type === 'service') {
+    result = {
+      '@context': context,
+      '@type': 'Service',
+      name: values.name,
+      serviceType: values.serviceType,
+      description: values.description,
+      url: values.url,
+      image: values.image,
+      provider: values.providerName
+        ? clean({
+            '@type': 'Organization',
+            name: values.providerName,
+            url: values.providerUrl,
+          })
+        : undefined,
+      areaServed: lines(values.areaServed),
+      offers: values.price
+        ? clean({
+            '@type': 'Offer',
+            price: numberValue(values.price),
+            priceCurrency: values.priceCurrency,
+          })
+        : undefined,
     }
   } else if (type === 'video') {
     result = {

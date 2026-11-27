@@ -1,0 +1,272 @@
+---
+import {
+  AiMagicIcon,
+  Heading01Icon,
+  Link01Icon,
+  ListViewIcon,
+  Megaphone01Icon,
+  Search01Icon,
+  Tag01Icon,
+  TextCheckIcon,
+  WebValidationIcon,
+} from '@hugeicons/core-free-icons'
+import CodeBlock from '@/components/CodeBlock.astro'
+import FaqAccordion from '@/components/FaqAccordion.astro'
+import HomeCard from '@/components/HomeCard.astro'
+import SectionHeading from '@/components/SectionHeading.astro'
+import SetupPrompts from '@/components/SetupPrompts.astro'
+import SplitList from '@/components/SplitList.astro'
+import SeoContentChecker from '@/components/tools/SeoContentChecker.astro'
+import BaseLayout from '@/layouts/BaseLayout.astro'
+import type { SchemaBreadcrumb } from '@/lib/schema'
+
+const breadcrumbs: SchemaBreadcrumb[] = [
+  { label: 'Home', href: '/' },
+  { label: 'Tools', href: '/tools' },
+  { label: 'SEO content checker' },
+]
+
+// What one check reads, in the order a reader fixes it.
+const checks = [
+  {
+    title: 'One H1 and headings in order',
+    icon: Heading01Icon,
+    text: 'More than one H1, and headings that skip a level, such as an H2 followed by an H4. The outline shows every heading in order.',
+  },
+  {
+    title: 'Title and meta description length',
+    icon: Tag01Icon,
+    text: 'The title and description from Markdown frontmatter or the HTML head, checked against the length that fits a search result.',
+  },
+  {
+    title: 'Link text',
+    icon: Link01Icon,
+    text: 'Links and buttons that say \u201cclick here\u201d, \u201chere\u201d, \u201clearn more\u201d or \u201cread more\u201d instead of where they go.',
+  },
+  {
+    title: 'Headings that answer',
+    icon: ListViewIcon,
+    text: 'Headings such as \u201cOverview\u201d or \u201cKey takeaways\u201d that label a section instead of saying what it answers.',
+  },
+  {
+    title: 'Buzzwords and claims',
+    icon: Megaphone01Icon,
+    text: 'Words that claim quality without showing it, such as \u201cworld-class\u201d, and on landing pages a \u201cbest\u201d or \u201cfastest\u201d with no number near it.',
+  },
+  {
+    title: 'AI writing patterns',
+    icon: AiMagicIcon,
+    text: 'The sentence patterns common in AI drafts, such as \u201cIt isn\u2019t X, it\u2019s Y\u201d, forced lists of three and one-line closers.',
+  },
+]
+
+const headings = [
+  { title: 'One H1 that names the page', text: 'It should say what the title says, in words people search for. A second H1 is usually a template adding the site name.' },
+  { title: 'No skipped levels', text: 'An H2 goes straight to H3, never H4. Screen readers and parsers read the levels as the page\u2019s structure.' },
+  { title: 'Each H2 says what its section answers', text: 'A heading phrased as the question a person would ask, answered in the first sentence below it, can be quoted on its own.' },
+  { title: 'Headings people can scan', text: 'Read only the outline. If it doesn\u2019t tell you what the page covers, neither will a search result or an AI answer built from it.' },
+]
+
+const labels = [
+  { title: 'Fix', text: 'A pattern a careful writer almost never needs, such as a second H1, \u201cclick here\u201d or \u201cIt isn\u2019t X, it\u2019s Y\u201d.' },
+  { title: 'Likely fix', text: 'Often a problem, but fine on a second read, such as a description a little short or a list item that opens with a bold label.' },
+  { title: 'Your call', text: 'A line a pattern can find but only a reader can judge. Each comes with a question. Change the line only when it fails it.' },
+]
+
+const presets = [
+  { title: 'Blog post or guide', code: 'blog', text: 'Long pages people read top to bottom. The default for Markdown.' },
+  { title: 'Landing or product page', code: 'landing', text: 'Short marketing copy. Stricter on buzzwords, vague link text and claims with no number.' },
+  { title: 'Documentation', code: 'docs', text: 'Lists and plain contrasts are normal in docs, so fewer of them are flagged.' },
+  { title: 'Titles and descriptions only', code: 'meta', text: 'Use the title and meta description checker, which measures both in pixels as well.', href: '/tools/title-and-meta-description-checker' },
+]
+
+const audit = [
+  { title: 'Thin, duplicate and empty pages', text: 'The crawl lists pages with almost no text, pages that repeat each other, and repeated titles and descriptions.' },
+  { title: 'Pages losing clicks', text: 'Search Console shows which pages lost clicks or positions against the period before, so the edit list starts with real losses.' },
+  { title: 'Pages close to page one', text: 'The SEO report lists pages ranking 4 to 10 for searches with real impressions, where better content pays back first.' },
+  { title: 'Every line checked', text: 'Your agent runs seo lint on each page it edits, live or in your code, and fixes every error before it stops.' },
+]
+
+const tools = [
+  { title: 'AI humanizer', text: 'Only the AI writing patterns, marked in place in your text with a clearer fix for each.', href: '/tools/ai-humanizer', icon: AiMagicIcon, link: 'Open the humanizer' },
+  { title: 'SEO title and meta description checker', text: 'Both measured in pixels on desktop and mobile, with the Google preview.', href: '/tools/title-and-meta-description-checker', icon: TextCheckIcon, link: 'Check titles' },
+  { title: 'SEO checker', text: 'Check a live page: access, title, headings, images, links, canonical and structured data.', href: '/tools/seo-checker', icon: WebValidationIcon, link: 'Check a page' },
+  { title: 'People also ask tool', text: 'The questions Google shows for a search, to turn into the headings your page answers.', href: '/tools/people-also-ask-tool', icon: Search01Icon, link: 'Find questions' },
+]
+
+const faq = [
+  {
+    question: 'What is an SEO content checker?',
+    answer:
+      'A tool that reads a draft or a page and lists what to fix before it goes live: the heading structure, the title and description, link text and the copy itself. This one runs every rule in seo lint, the copy check SEO Skill gives your agent.',
+  },
+  {
+    question: 'Is the SEO content checker free?',
+    answer:
+      'Yes, with no account and no daily limit. The check runs in your browser, so nothing you paste is uploaded.',
+  },
+  {
+    question: 'Can I check a page that is already live?',
+    answer:
+      'Paste its HTML: open the page, view the source and copy it in. The checker reads the headings, title and description from the HTML. With the SEO Skill CLI, seo lint --url reads a live page\u2019s main content for you.',
+  },
+  {
+    question: 'Which keywords should my content use?',
+    answer:
+      'The words people already search for to find the page. Search Console lists them for every page, and SEO Skill gives your agent those queries, so it can put them in the title and headings where they fit.',
+  },
+  {
+    question: 'How do I check the headings on a page?',
+    answer:
+      'Paste the page above. The heading outline lists every H1 to H6 in order, and the result flags a second H1 and any skipped level. For every page on a site, run seo crawl.',
+  },
+  {
+    question: 'Does it work on writing that isn\u2019t from AI?',
+    answer:
+      'Yes. Most of the rules are about headings, links and copy that any writer gets wrong. The AI writing rules look for sentence patterns, not one model\u2019s style, so a human draft with the same habits gets the same findings.',
+  },
+  {
+    question: 'Will fixing every finding make the page rank?',
+    answer:
+      'No. The checker finds problems in how the page is written and structured. Ranking depends on whether the page answers the search better than the other results and on links from other sites.',
+  },
+  {
+    question: 'Can my agent run the same check on every page?',
+    answer:
+      'Yes. Ask it to run seo lint on any Markdown, MDX, HTML or Astro file, a folder of them, or a live URL, and fix every error until the check comes back clean. The command exits with an error code when it finds one, so it can run before a commit too.',
+  },
+]
+---
+
+<BaseLayout
+  title="Free SEO content checker for posts and pages"
+  description="Paste a blog post, a landing page or its HTML to check the headings, title, meta description, link text and copy, with a fix for each problem. Free, with no account, and your content stays in your browser."
+  canonicalPath="/tools/seo-content-checker"
+  {breadcrumbs}
+  framed={false}
+>
+  <main data-agent-content>
+    <section class="pt-4">
+      <div class="site-frame flex flex-col items-center pt-14 text-center sm:pt-20">
+        <h1 class="mt-4 max-w-3xl text-pretty text-4xl/tight font-medium -tracking-[0.8px] xl:text-5xl/tight xl:-tracking-[1px]">
+          SEO content checker
+        </h1>
+        <p class="mt-4 max-w-2xl text-pretty text-xl/8 font-medium -tracking-[0.2px] text-foreground-muted">
+          Paste a draft or a page's HTML to check its headings, title, meta
+          description, link text and copy before it goes live. Each problem
+          comes with the line it is on and a fix.
+        </p>
+      </div>
+      <div class="site-frame mt-10 sm:mt-12">
+        <SeoContentChecker />
+      </div>
+    </section>
+
+    <div class="space-y-24 py-24 sm:space-y-32 sm:py-32">
+      <section class="site-frame" aria-labelledby="checks-heading">
+        <SectionHeading
+          id="checks-heading"
+          title="What does the SEO content checker check?"
+          text="The structure search engines read first, then the copy people read. It runs every rule in seo lint, the same check SEO Skill gives your agent."
+        />
+        <div class="grid grid-cols-1 gap-2 sm:grid-cols-2">
+          {checks.map((item) => <HomeCard title={item.title} text={item.text} icon={item.icon} />)}
+        </div>
+      </section>
+
+      <SplitList
+        id="headings-heading"
+        title="How do I check the headings on a page?"
+        text="Paste the page and read the heading outline. It lists every H1 to H6 in order and marks a second H1 or a skipped level, so the structure is clear before you read a word of the copy."
+        items={headings}
+      />
+
+      <SplitList
+        id="labels-heading"
+        title="How do I read the result?"
+        text="Each line has one of three labels, and the fixes come first. Work down from the top, and treat the last group as questions rather than errors."
+        items={labels}
+      />
+
+      <SplitList
+        id="presets-heading"
+        title="Which kind of page should I pick?"
+        text="The one closest to what you're checking. A landing page is held to a stricter standard on buzzwords and unsupported claims, and documentation to a looser one on lists."
+        items={presets}
+      />
+
+      <section class="site-frame grid gap-8 sm:grid-cols-[1fr_1.15fr] sm:items-start" aria-labelledby="publish-heading">
+        <div class="sm:sticky sm:top-24">
+          <h2 id="publish-heading" class="text-pretty text-2xl font-medium -tracking-[0.4px] text-foreground xl:text-3xl xl:-tracking-[0.6px]">
+            How do I check content before I publish it?
+          </h2>
+          <p class="mt-4 text-base leading-7 text-foreground-muted">
+            Ask your agent to run seo lint on the draft and fix every error. It
+            works on Markdown, MDX, HTML and Astro files in your project, up to
+            100 at once, and on a live URL from the CLI.
+          </p>
+        </div>
+        <div class="min-w-0 rounded-lg bg-muted p-6 text-base leading-7 text-foreground-muted">
+          <p>
+            The command exits with an error when it finds one, so it can run
+            before a commit or in CI and stop a draft with a second H1 or a
+            "click here" from going out.
+          </p>
+          <CodeBlock
+            prompt
+            value="Check the draft in content/blog/cold-brew.md with seo lint and fix every error, using only facts already in the draft"
+          />
+          <CodeBlock label="Or run it in a terminal" value="seo lint content/blog/cold-brew.md" />
+        </div>
+      </section>
+
+      <div>
+        <SplitList
+          id="audit-heading"
+          title="How do I audit the content on my whole site?"
+          text="Ask your agent. One draft is a spot check. SEO Skill crawls the site for thin and repeated pages, reads Search Console for the pages losing clicks, and checks every page it edits with the same rules as this page."
+          items={audit}
+        />
+        <div class="site-frame mt-8 grid gap-2 sm:grid-cols-2">
+          <CodeBlock
+            label="Ask your agent"
+            prompt
+            value="Audit the content on example.com: crawl it for thin and duplicate pages, find the pages losing clicks in Search Console, then rewrite the worst three and check each with seo lint"
+          />
+          <CodeBlock label="Or check a live page in a terminal" value="seo lint --url https://example.com/blog/cold-brew" />
+        </div>
+      </div>
+
+      <section class="site-frame" aria-labelledby="tools-heading">
+        <SectionHeading
+          id="tools-heading"
+          title="Free tools for the rest of the page"
+          text="Content is one part of a page that ranks. These check the others, with no account."
+        />
+        <div class="grid grid-cols-1 gap-2 sm:grid-cols-2">
+          {tools.map((item) => <HomeCard {...item} />)}
+        </div>
+      </section>
+
+      <section class="site-frame" aria-labelledby="faq-heading">
+        <div class="max-w-2xl">
+          <h2 id="faq-heading" class="text-pretty text-2xl font-medium -tracking-[0.4px] text-foreground xl:text-3xl xl:-tracking-[0.6px]">
+            SEO content checker questions
+          </h2>
+        </div>
+        <div class="mt-10">
+          <FaqAccordion items={faq} id="seo-content-checker-faq" />
+        </div>
+      </section>
+
+      <section class="site-frame" aria-labelledby="start-heading">
+        <SectionHeading
+          id="start-heading"
+          title="Check and fix every page with your agent"
+          text="Add SEO Skill to your agent, sign in with the Google account that can read your Search Console, and ask it which pages to rewrite first."
+        />
+        <SetupPrompts id="seo-content-checker-setup" />
+      </section>
+    </div>
+  </main>
+</BaseLayout>

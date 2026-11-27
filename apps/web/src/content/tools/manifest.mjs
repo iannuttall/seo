@@ -277,6 +277,15 @@ export const tools = [
     kind: 'browser',
   },
   {
+    id: 'seo-content-checker',
+    path: '/tools/seo-content-checker',
+    title: 'SEO content checker',
+    action: 'Open the SEO content checker',
+    description:
+      "Check a draft or a page's HTML for heading, title, description, link text and copy problems, with a fix for each line.",
+    kind: 'browser',
+  },
+  {
     id: 'serp-preview',
     path: '/tools/serp-preview',
     title: 'SERP preview',

@@ -1,5 +1,5 @@
 ---
-import { ComputerTerminal01Icon, SourceCodeIcon } from '@hugeicons/core-free-icons'
+import { ChartIncreaseIcon, ComputerTerminal01Icon, SourceCodeIcon } from '@hugeicons/core-free-icons'
 import { getCollection } from 'astro:content'
 import HomeCard from '@/components/HomeCard.astro'
 import PageHeader from '@/components/PageHeader.astro'
@@ -10,15 +10,15 @@ const guides = (await getCollection('guides')).sort((a, b) => a.id.localeCompare
 ---
 
 <BaseLayout
-  title="SEO guides: Search Console reasons, Astro and Next.js"
-  description="What each Search Console indexing reason means and how to check every URL it covers, plus Astro and Next.js setups that search engines and AI agents can read."
+  title="SEO guides: indexing reasons, frameworks and progress"
+  description="What each Search Console indexing reason means and how to check every URL it covers, Astro and Next.js setups that search engines and AI agents can read, and how to track SEO progress."
   canonicalPath="/guides"
   schemaType="CollectionPage"
 >
   <main data-agent-content>
     <PageHeader
       title="SEO guides"
-      description="What Search Console's indexing reasons mean and what to do about each one, and how to build a site search engines and AI agents can read."
+      description="What Search Console's indexing reasons mean and what to do about each one, how to build a site search engines and AI agents can read, and how to measure what the work did."
     />
 
     <h2 class="mb-6 text-2xl/8 font-medium tracking-normal">Search Console indexing reasons</h2>
@@ -46,6 +46,17 @@ const guides = (await getCollection('guides')).sort((a, b) => a.id.localeCompare
         icon={ComputerTerminal01Icon}
         href="/features/seo-for-developers"
         link="SEO for developers"
+      />
+    </div>
+
+    <h2 class="mt-16 mb-6 text-2xl/8 font-medium tracking-normal">Measure your SEO</h2>
+    <div class="grid grid-cols-1 gap-2 sm:grid-cols-2">
+      <HomeCard
+        title="How to track SEO progress"
+        text="Save a baseline, record the same numbers every week, and compare equal periods after each change, with the SEO KPIs to track."
+        icon={ChartIncreaseIcon}
+        href="/guides/how-to-track-seo-progress"
+        link="Read the guide"
       />
     </div>
   </main>

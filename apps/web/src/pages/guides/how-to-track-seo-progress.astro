@@ -1,0 +1,327 @@
+---
+import {
+  AiChat02Icon,
+  Analytics01Icon,
+  Calendar03Icon,
+  CheckListIcon,
+  GitCompareIcon,
+  GoogleIcon,
+  SearchList01Icon,
+  Target02Icon,
+} from '@hugeicons/core-free-icons'
+import PlanSteps from '@/components/blog/PlanSteps.astro'
+import VerticalBars from '@/components/blog/VerticalBars.astro'
+import CodeBlock from '@/components/CodeBlock.astro'
+import FaqAccordion from '@/components/FaqAccordion.astro'
+import HomeCard from '@/components/HomeCard.astro'
+import LandingHero from '@/components/LandingHero.astro'
+import SectionHeading from '@/components/SectionHeading.astro'
+import SetupPrompts from '@/components/SetupPrompts.astro'
+import SplitList from '@/components/SplitList.astro'
+import { getButtonClasses } from '@/components/ui/button'
+import BaseLayout from '@/layouts/BaseLayout.astro'
+import type { SchemaBreadcrumb } from '@/lib/schema'
+
+const breadcrumbs: SchemaBreadcrumb[] = [
+  { label: 'Home', href: '/' },
+  { label: 'Guides', href: '/guides' },
+  { label: 'How to track SEO progress' },
+]
+
+// The numbers worth tracking, in the order they move.
+const kpis = [
+  {
+    title: 'Pages indexed',
+    icon: GoogleIcon,
+    text: 'Whether Google has indexed the pages you care about. A page it has not indexed gets no clicks, so check this before anything else.',
+  },
+  {
+    title: 'Impressions',
+    icon: Analytics01Icon,
+    text: 'How often your pages showed in Google. Impressions move first, weeks before clicks, because new pages start low in the results.',
+  },
+  {
+    title: 'Clicks from searches without your name',
+    icon: SearchList01Icon,
+    text: 'People who found you without knowing you. Searches for your name grow with launches and word of mouth, so count them apart.',
+  },
+  {
+    title: 'Clicks to the pages that sell',
+    icon: Target02Icon,
+    text: 'Pricing, sign-up and product pages. A blog post that never sends anyone to them brings readers and no customers.',
+  },
+  {
+    title: 'Positions for the searches you chose',
+    icon: CheckListIcon,
+    text: 'A short list of buyer searches, checked live in Google the same way each time. Average position across the whole site hides them.',
+  },
+  {
+    title: 'AI answers that name you',
+    icon: AiChat02Icon,
+    text: 'How many answers from ChatGPT, Gemini and Google AI Mode cite or name your site when asked your buyers\u2019 questions.',
+  },
+]
+
+const steps = [
+  {
+    marker: 'Day 1',
+    title: 'Write down what counts',
+    body: 'Your brand names, the pages that sell, the buyer searches to watch and the questions buyers ask AI assistants. Without this list, every report measures a slightly different thing.',
+  },
+  {
+    marker: 'Day 1',
+    title: 'Save a baseline',
+    body: 'Record the numbers for those things before you change anything. Search Console keeps 16 months, so a baseline you save yourself is the only start point that never moves.',
+  },
+  {
+    marker: 'Weekly',
+    title: 'Save one point a week',
+    body: 'The same numbers, measured the same way, over the same length of window. Weekly is often enough to catch a drop while it is small and slow enough to ignore daily noise.',
+  },
+  {
+    marker: 'Per change',
+    title: 'Compare equal periods',
+    body: 'When a page or template goes live, compare the same number of days before and after it, for the pages it touched. Note the date, because you will forget it.',
+  },
+  {
+    marker: 'Quarterly',
+    title: 'Read the trend against the baseline',
+    body: 'One week tells you little. Thirteen weeks against the baseline tells you whether the work is moving the numbers that matter.',
+  },
+]
+
+// seoskill.dev's own Search Console clicks a week, from the week of 17
+// August 2026 to the week of 16 November 2026, read from its progress
+// section on 27 November 2026.
+const weeks = [
+  ['17 Aug', 14],
+  ['24 Aug', 16],
+  ['31 Aug', 12],
+  ['7 Sep', 34],
+  ['14 Sep', 38],
+  ['21 Sep', 133],
+  ['28 Sep', 69],
+  ['5 Oct', 48],
+  ['12 Oct', 60],
+  ['19 Oct', 129],
+  ['26 Oct', 124],
+  ['2 Nov', 158],
+  ['9 Nov', 203],
+  ['16 Nov', 195],
+].map(([label, value]) => ({ label: label as string, value: value as number }))
+
+const totals = [
+  { title: '+20%', text: 'Google clicks over the last 90 days against the 90 days before the baseline: 1,036 to 1,242.' },
+  { title: '+22%', text: 'Impressions over the same 90 days: 206,167 to 247,313.' },
+  { title: '+11%', text: 'Clicks over the last 28 days against the 28 before the baseline: 614 to 681.' },
+  { title: '14 weeks', text: 'Of weekly points, the baseline\u2019s 13 weeks of history and one week since.' },
+]
+
+const prompts = [
+  { title: 'Start tracking', text: 'Write the business context for example.com, then save its SEO baseline' },
+  { title: 'Check progress', text: 'How far has example.com come since its baseline?' },
+  { title: 'Check the searches you chose', text: 'Check the tracked searches for example.com in Google and add them to its progress' },
+  { title: 'Check one change', text: 'Compare example.com before and after we launched the new pricing page on 3 November' },
+  { title: 'Check a fix', text: 'Which fixes on example.com have 28 days of results yet, and what changed?' },
+]
+
+const mistakes = [
+  { title: 'Reading average position for the whole site', text: 'It rises when a page stops showing for searches where it ranked badly, even though nothing improved. On seoskill.dev one page went from position 72 to 4 while its impressions fell from 401 to 20.' },
+  { title: 'Counting brand searches as SEO progress', text: 'Searches for your name follow launches, posts and word of mouth. Count them apart, or a good launch week looks like an SEO win.' },
+  { title: 'Comparing windows of different lengths', text: 'A 28 day window against a 31 day month makes every number look worse. Keep the window the same each time.' },
+  { title: 'Calling an update the cause', text: 'A drop on the dates of a Google update shows the timing matched. Check releases, tracking and the season before you decide why.' },
+]
+
+const tools = [
+  { title: 'SEO reporting', text: 'Weekly, monthly and client reports your agent writes from Search Console and Google Analytics.', href: '/features/seo-reporting', icon: Calendar03Icon, link: 'SEO reporting' },
+  { title: 'Compare before and after a date', text: 'Equal periods either side of a release or an update, with the pages and queries that moved.', href: '/docs/compare', icon: GitCompareIcon, link: 'seo compare docs' },
+  { title: 'SEO monitoring', text: 'A weekly crawl and daily Google index checks, with alerts when a page drops out.', href: '/features/seo-monitoring', icon: GoogleIcon, link: 'SEO monitoring' },
+  { title: 'AI visibility checker', text: 'Ask AI answers your buyers\u2019 questions and see who they cite.', href: '/features/ai-visibility-checker', icon: AiChat02Icon, link: 'See the checker' },
+]
+
+const faq = [
+  {
+    question: 'How do I track SEO progress?',
+    answer:
+      'Save a baseline of your Search Console numbers before you start, then save the same numbers each week, measured the same way. Track pages indexed, impressions, clicks from searches without your name, clicks to the pages that sell, positions for a short list of buyer searches, and AI answers that name you.',
+  },
+  {
+    question: 'What are the most important SEO KPIs?',
+    answer:
+      'Clicks from searches that don\u2019t include your name, and clicks to the pages that sell. Impressions and indexed pages are the early signs that those will follow. Average position across the whole site is the least useful, because it moves when the mix of searches changes.',
+  },
+  {
+    question: 'How long does SEO take to show progress?',
+    answer:
+      'Google says some changes take effect in a few hours and others take several months, and suggests waiting a few weeks before judging a change. Impressions move first. Clicks from searches without your name usually take months on a new site.',
+    links: [{ text: 'Google says', href: 'https://developers.google.com/search/docs/fundamentals/seo-starter-guide' }],
+  },
+  {
+    question: 'How often should I check SEO progress?',
+    answer:
+      'Weekly for whoever does the work, monthly for whoever pays for it. Daily numbers swing too much to read, and a quarter is too long to catch a drop while it is small.',
+  },
+  {
+    question: 'Can I track keyword rankings without a rank tracker?',
+    answer:
+      'Search Console gives the average position of every query a page shows for, free. For a short list of searches checked live in Google, SEO Skill runs the check on your own DataForSEO or Ahrefs key and keeps each result in the site\u2019s progress.',
+  },
+  {
+    question: 'How do I know if an SEO change worked?',
+    answer:
+      'Compare the same number of days before and after it went live, for the pages it touched, and check that other channels didn\u2019t move the same way. That shows what changed after the fix, though not on its own that the fix caused it.',
+  },
+  {
+    question: 'What should an SEO progress report include?',
+    answer:
+      'The numbers now against the baseline and the week before, the pages and searches that moved most, what you changed and when, and what comes next. The SEO reporting page shows a full monthly report.',
+    links: [{ text: 'SEO reporting page', href: '/features/seo-reporting' }],
+  },
+]
+---
+
+<BaseLayout
+  title="How to track SEO progress and the KPIs that matter"
+  description="How to track SEO progress from your own Search Console: save a baseline, record the same numbers each week, compare equal periods after each change, and the SEO KPIs to track."
+  canonicalPath="/guides/how-to-track-seo-progress"
+  {breadcrumbs}
+  framed={false}
+>
+  <main data-agent-content>
+    <LandingHero
+      title="How to track SEO progress"
+      lead="Save a baseline before you change anything, record the same numbers every week, and compare equal periods after each change. Impressions move first, then clicks from people who didn't know your name."
+      setupId="seo-progress-setup"
+    />
+
+    <div class="space-y-24 py-24 sm:space-y-32 sm:py-32">
+      <section class="site-frame" aria-labelledby="kpis-heading">
+        <SectionHeading
+          id="kpis-heading"
+          title="Which SEO KPIs should I track?"
+          text="Six numbers, in the order they usually move. Indexing and impressions come first and tell you clicks are on the way. Clicks to the pages that sell tell you the work is reaching customers."
+        />
+        <div class="grid grid-cols-1 gap-2 sm:grid-cols-2">
+          {kpis.map((item) => <HomeCard title={item.title} text={item.text} icon={item.icon} />)}
+        </div>
+      </section>
+
+      <section class="site-frame" aria-labelledby="steps-heading">
+        <SectionHeading
+          id="steps-heading"
+          title="How do I track SEO progress week by week?"
+          text="Decide what counts, save a baseline, then save the same numbers every week. Progress is the distance from the baseline, measured the same way each time."
+        />
+        <div class="max-w-3xl">
+          <PlanSteps {steps} />
+        </div>
+      </section>
+
+      <section class="site-frame" aria-labelledby="example-heading">
+        <SectionHeading
+          id="example-heading"
+          title="What does SEO progress look like on a real site?"
+          text="This is seoskill.dev, from its own Search Console. The baseline was saved on 19 November 2026 with 13 weeks of history behind it."
+        />
+        <VerticalBars
+          data={weeks}
+          unit="clicks"
+          title="seoskill.dev Google clicks a week"
+          caption="Each column is one week, from the Monday it starts. Single weeks jump around, so read the trend across several."
+        />
+        <div class="mt-10 grid grid-cols-1 gap-2 sm:grid-cols-2">
+          {
+            totals.map((item) => (
+              <div class="rounded-lg bg-muted p-6">
+                <p class="text-3xl font-medium -tracking-[0.6px] text-foreground">{item.title}</p>
+                <p class="mt-2 text-sm leading-6 text-foreground-muted">{item.text}</p>
+              </div>
+            ))
+          }
+        </div>
+      </section>
+
+      <div>
+        <SplitList
+          id="prompts-heading"
+          title="How do I track SEO progress with an AI agent?"
+          text="Ask it. SEO Skill saves one point of Search Console numbers a week for your site, measured the way your business context says, and keeps every point. Your agent reads them back against the baseline."
+          items={prompts}
+        />
+        <div class="site-frame mt-8">
+          <CodeBlock
+            label="Or run it in a terminal"
+            value={'seo report --site example.com --section progress\n\nseo compare --site example.com --date 2026-11-03'}
+          />
+        </div>
+      </div>
+
+      <section class="site-frame grid gap-8 sm:grid-cols-[1fr_1.15fr] sm:items-start" aria-labelledby="fixes-heading">
+        <div class="sm:sticky sm:top-24">
+          <h2 id="fixes-heading" class="text-pretty text-2xl font-medium -tracking-[0.4px] text-foreground xl:text-3xl xl:-tracking-[0.6px]">
+            How do I know if an SEO fix worked?
+          </h2>
+          <p class="mt-4 text-base leading-7 text-foreground-muted">
+            Mark the day it went live, then compare the same number of days
+            before and after, for that page only. Your agent does this for every
+            fix on the site's issues list, at 28 and 56 days.
+          </p>
+          <a class:list={[getButtonClasses('secondary', 'lg'), 'mt-6']} href="/docs/next">See how fixes are tracked</a>
+        </div>
+        <div class="rounded-lg bg-muted p-6 text-base leading-7 text-foreground-muted">
+          <p>
+            When your agent opens a pull request for a fix, it marks the job
+            started with the link. Once the change is live, it marks it fixed
+            with the day it merged. When Search Console's final data covers 28
+            days after that, the page's clicks and impressions show beside the
+            same 28 days before.
+          </p>
+          <p class="mt-4">
+            That shows what changed after the fix. On its own it does not prove
+            the fix caused it, so check whether the rest of the site moved the
+            same way.
+          </p>
+        </div>
+      </section>
+
+      <SplitList
+        id="mistakes-heading"
+        title="What makes SEO progress look better or worse than it is?"
+        text="Mixing things that should be counted apart, and comparing windows that don't match. Each of these has fooled someone into the wrong decision."
+        items={mistakes}
+      />
+
+      <section class="site-frame" aria-labelledby="tools-heading">
+        <SectionHeading
+          id="tools-heading"
+          title="Tools for tracking SEO progress"
+          text="Reports, before and after comparisons and the checks that keep the numbers honest."
+        />
+        <div class="grid grid-cols-1 gap-2 sm:grid-cols-2">
+          {tools.map((item) => <HomeCard {...item} />)}
+        </div>
+      </section>
+
+      <section class="site-frame" aria-labelledby="faq-heading">
+        <div class="max-w-2xl">
+          <h2 id="faq-heading" class="text-pretty text-2xl font-medium -tracking-[0.4px] text-foreground xl:text-3xl xl:-tracking-[0.6px]">
+            Questions about tracking SEO progress
+          </h2>
+        </div>
+        <div class="mt-10">
+          <FaqAccordion items={faq} id="seo-progress-faq" />
+        </div>
+      </section>
+
+      <section class="site-frame" aria-labelledby="start-heading">
+        <SectionHeading
+          id="start-heading"
+          title="Save your SEO baseline today"
+          text="Add SEO Skill to your agent, sign in with the Google account that can read your Search Console, and ask it to save your site's baseline."
+        />
+        <a class:list={[getButtonClasses('default', 'lg'), 'mb-10']} href="/account">Sign in and save a baseline</a>
+        <SetupPrompts id="seo-progress-setup-end" />
+      </section>
+    </div>
+  </main>
+</BaseLayout>

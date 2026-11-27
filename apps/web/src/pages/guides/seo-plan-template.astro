@@ -1,0 +1,219 @@
+---
+import { AiChat02Icon, ChartIncreaseIcon, CheckListIcon, File01Icon, SearchList01Icon, Target02Icon } from '@hugeicons/core-free-icons'
+import PlanSteps from '@/components/blog/PlanSteps.astro'
+import CodeBlock from '@/components/CodeBlock.astro'
+import FaqAccordion from '@/components/FaqAccordion.astro'
+import HomeCard from '@/components/HomeCard.astro'
+import LandingHero from '@/components/LandingHero.astro'
+import SectionHeading from '@/components/SectionHeading.astro'
+import SetupPrompts from '@/components/SetupPrompts.astro'
+import SplitList from '@/components/SplitList.astro'
+import BaseLayout from '@/layouts/BaseLayout.astro'
+import type { SchemaBreadcrumb } from '@/lib/schema'
+
+const breadcrumbs: SchemaBreadcrumb[] = [
+  { label: 'Home', href: '/' },
+  { label: 'Guides', href: '/guides' },
+  { label: 'SEO plan template' },
+]
+
+// The same headings SEO Skill's business context uses.
+const template = `# SEO plan for example.com
+
+## What it sells
+One or two sentences, in the words a buyer would use.
+
+## Who buys it
+The people you want more of, and what they are trying to do.
+
+## What counts as a conversion
+A sign-up, a trial, a demo or a sale. Name the analytics event.
+
+## Conversion pages
+/pricing
+/signup
+/features/
+
+## Brand names
+Example App
+example.com
+
+## Competitors
+example.org Example Rival
+example.net
+
+## Category searches
+(?i)(invoice|billing) software
+
+## Tracked searches
+best invoicing software for freelancers
+example rival alternative
+
+## AI questions
+What is the best invoicing tool for a small agency?
+
+## Pages to build
+Example Rival alternative, comparison page
+
+## Notes
+What you already tried, and what is off limits.`
+
+const parts = [
+  { title: 'What it sells and who buys it', icon: Target02Icon, text: 'The plan starts here, because every later choice is a judgement about whether a search fits the product and the people you want.' },
+  { title: 'Conversion pages', icon: File01Icon, text: 'The pages that turn a visit into a customer. Work on these comes first, before any new content.' },
+  { title: 'Brand names', icon: SearchList01Icon, text: 'The names people type to find you. Counting them apart keeps launches and word of mouth from looking like SEO progress.' },
+  { title: 'Competitors', icon: CheckListIcon, text: 'Two to five sites buyers compare you with. Their keywords and links show where the gaps are.' },
+  { title: 'Tracked searches and AI questions', icon: AiChat02Icon, text: 'A short list of buying searches to follow in Google, and the questions buyers ask AI assistants, checked the same way each time.' },
+  { title: 'Pages to build', icon: ChartIncreaseIcon, text: 'The new pages you have agreed to write, such as alternatives and comparisons. Only approved pages go on the list.' },
+]
+
+const steps = [
+  { marker: 'Step 1', title: 'Write the plan down', body: 'Fill in the template from your home, pricing and product pages, your Search Console and what customers say in reviews. Keep it short and factual.' },
+  { marker: 'Step 2', title: 'Unblock pages', body: 'Fix anything that stops Google crawling, reading or indexing the pages that matter, starting with the conversion pages.' },
+  { marker: 'Step 3', title: 'Improve pages that rank', body: 'Work through the searches where a page is close, such as positions 4 to 10 with a low click rate, and searches just off page one. Check each fits what you sell first.' },
+  { marker: 'Step 4', title: 'Build the missing pages', body: 'Buying searches with no page yet, such as comparisons and alternatives. Approve at most a few at a time, so each gets finished.' },
+]
+
+const mistakes = [
+  { title: 'A list of keywords with no pages', text: 'A plan names which page each search belongs to. A keyword with no page to improve or build is research, not a plan.' },
+  { title: 'Starting with the blog', text: 'Broad posts take months to climb. Fix and improve the pages that already sell before you write new ones.' },
+  { title: 'No baseline', text: 'Without the numbers from the day you started, nobody can say whether the plan worked.' },
+  { title: 'A plan nobody revisits', text: 'Check it every 90 days. Products, buyers and competitors change, and the plan should change with them.' },
+]
+
+const tools = [
+  { title: 'How to track SEO progress', text: 'Save a baseline for the plan and the same numbers each week after.', href: '/guides/how-to-track-seo-progress', icon: ChartIncreaseIcon, link: 'Read the guide' },
+  { title: 'SEO audit checklist', text: 'The checks behind step 2, from crawling and indexing to what each page tells Google.', href: '/guides/seo-audit-checklist', icon: CheckListIcon, link: 'Read the checklist' },
+  { title: 'SEO for startups', text: 'The order to do this in when the site is new.', href: '/seo-for-startups', icon: Target02Icon, link: 'SEO for startups' },
+  { title: 'seo next docs', text: 'How your agent writes the plan and works through it one step at a time.', href: '/docs/next', icon: File01Icon, link: 'seo next docs' },
+]
+
+const faq = [
+  {
+    question: 'What should an SEO plan include?',
+    answer:
+      'What the business sells and who buys it, the pages that turn visits into customers, the brand names, two to five competitors, a short list of buying searches to track, and the pages you have agreed to build. Then work in order. Unblock pages, improve the ones that rank, and build the missing ones.',
+  },
+  {
+    question: 'What is the difference between an SEO plan and an SEO strategy?',
+    answer:
+      'The strategy is the choice of which customers and searches to go after. The plan is the written list that follows from it. It says which pages, in which order, and how you will measure the result. This template holds both.',
+  },
+  {
+    question: 'How long should an SEO plan cover?',
+    answer:
+      'Write it for about 90 days, then check it again. That is long enough for most page changes to show in Search Console and short enough to catch a plan that is aimed at the wrong searches.',
+  },
+  {
+    question: 'Is an SEO roadmap the same as an SEO plan?',
+    answer:
+      'Mostly. A roadmap usually puts dates on the work. The four steps here are an order rather than dates, because each step is due only when the one before it has nothing left.',
+  },
+  {
+    question: 'Can an AI agent write my SEO plan?',
+    answer:
+      'It can draft it. With SEO Skill your agent reads your pages, Search Console and competitors, writes the plan under these headings and sends you up to three questions before it saves anything. Only you can say which customers you want more of.',
+  },
+]
+---
+
+<BaseLayout
+  title="SEO plan template you can copy, with the steps in order"
+  description="A free SEO plan template: what the business sells, the pages that convert, brand names, competitors, tracked searches and the pages to build, then the four steps to work through in order."
+  canonicalPath="/guides/seo-plan-template"
+  {breadcrumbs}
+  framed={false}
+>
+  <main data-agent-content>
+    <LandingHero
+      title="SEO plan template"
+      lead="Write down what the business sells, which pages bring customers and which searches matter, then work through four steps in order. Copy the template, fill it in, and check it again every 90 days."
+      setupId="seo-plan-setup"
+    />
+
+    <div class="space-y-24 py-24 sm:space-y-32 sm:py-32">
+      <section class="site-frame" aria-labelledby="template-heading">
+        <SectionHeading
+          id="template-heading"
+          title="What does an SEO plan template look like?"
+          text="One short Markdown file with fixed headings. These are the same headings SEO Skill uses for a site's business context, so your agent can read and follow the plan you write."
+        />
+        <div class="max-w-3xl">
+          <CodeBlock label="SEO plan template" value={template} wrap />
+        </div>
+      </section>
+
+      <section class="site-frame" aria-labelledby="parts-heading">
+        <SectionHeading
+          id="parts-heading"
+          title="What should an SEO plan include?"
+          text="Who you sell to, which pages sell, and which searches you want to win. Every later decision checks a search or a page against these."
+        />
+        <div class="grid grid-cols-1 gap-2 sm:grid-cols-2">
+          {parts.map((item) => <HomeCard title={item.title} text={item.text} icon={item.icon} />)}
+        </div>
+      </section>
+
+      <section class="site-frame" aria-labelledby="steps-heading">
+        <SectionHeading
+          id="steps-heading"
+          title="In what order should I do the SEO work?"
+          text="Write the plan, unblock pages, improve the pages that rank, then build the missing ones. Each step is due only when the one before it has nothing left."
+        />
+        <div class="max-w-3xl">
+          <PlanSteps {steps} />
+        </div>
+      </section>
+
+      <SplitList
+        id="mistakes-heading"
+        title="What makes an SEO plan fail?"
+        text="Keywords with nowhere to go, new content before the pages that sell, and no baseline to measure from."
+        items={mistakes}
+      />
+
+      <div>
+        <SplitList
+          id="agent-heading"
+          title="Can my AI agent write and follow the SEO plan?"
+          text="Yes. Ask it to work on your site. It researches the business, drafts the plan under these headings, asks you up to three questions, then works through the steps one at a time and asks before anything goes live."
+          items={[
+            { title: 'Draft the plan', text: 'Use SEO Skill to work on example.com' },
+            { title: 'See the next step', text: 'What is the next SEO step for example.com, and which pages first?' },
+            { title: 'Add a page to build', text: 'Add an Example Rival alternative page to the pages to build for example.com' },
+          ]}
+        />
+        <div class="site-frame mt-8">
+          <CodeBlock label="Or run it in a terminal" value={'seo next --site example.com\n\nseo next --site example.com --context-file plan.md'} />
+        </div>
+      </div>
+
+      <section class="site-frame" aria-labelledby="tools-heading">
+        <SectionHeading id="tools-heading" title="Guides that go with the plan" text="Measure it, audit the site for step 2, and see the order for a new site." />
+        <div class="grid grid-cols-1 gap-2 sm:grid-cols-2">
+          {tools.map((item) => <HomeCard {...item} />)}
+        </div>
+      </section>
+
+      <section class="site-frame" aria-labelledby="faq-heading">
+        <div class="max-w-2xl">
+          <h2 id="faq-heading" class="text-pretty text-2xl font-medium -tracking-[0.4px] text-foreground xl:text-3xl xl:-tracking-[0.6px]">
+            Questions about SEO plans
+          </h2>
+        </div>
+        <div class="mt-10">
+          <FaqAccordion items={faq} id="seo-plan-faq" />
+        </div>
+      </section>
+
+      <section class="site-frame" aria-labelledby="start-heading">
+        <SectionHeading
+          id="start-heading"
+          title="Have your agent draft your SEO plan"
+          text="Add SEO Skill to your agent, sign in with the Google account that can read your Search Console, and ask it to work on your site."
+        />
+        <SetupPrompts id="seo-plan-setup-end" />
+      </section>
+    </div>
+  </main>
+</BaseLayout>

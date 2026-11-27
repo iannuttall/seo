@@ -1,0 +1,217 @@
+---
+import { AiChat02Icon, CodeIcon, File01Icon, GoogleIcon, LockKeyIcon, Route01Icon, TextCheckIcon, WebValidationIcon } from '@hugeicons/core-free-icons'
+import CodeBlock from '@/components/CodeBlock.astro'
+import FaqAccordion from '@/components/FaqAccordion.astro'
+import HomeCard from '@/components/HomeCard.astro'
+import LandingHero from '@/components/LandingHero.astro'
+import SectionHeading from '@/components/SectionHeading.astro'
+import SetupPrompts from '@/components/SetupPrompts.astro'
+import SplitList from '@/components/SplitList.astro'
+import BaseLayout from '@/layouts/BaseLayout.astro'
+import type { SchemaBreadcrumb } from '@/lib/schema'
+
+const breadcrumbs: SchemaBreadcrumb[] = [
+  { label: 'Home', href: '/' },
+  { label: 'Guides', href: '/guides' },
+  { label: 'SEO audit checklist' },
+]
+
+const access = [
+  { title: 'Key pages return 200', text: 'Home, pricing, product and sign-up pages, and every page in the sitemap.', href: '/tools/redirect-checker' },
+  { title: 'robots.txt lets Google in', text: 'And the AI search crawlers you want, such as OAI-SearchBot and PerplexityBot.', href: '/tools/robots-txt-validator' },
+  { title: 'No accidental noindex', text: 'In the robots meta tag, the googlebot tag or the X-Robots-Tag header.', href: '/tools/noindex-checker' },
+  { title: 'The sitemap reads and lists only live pages', text: 'Every URL in it returns 200 and is the canonical version.', href: '/tools/sitemap-validator' },
+  { title: 'Google has indexed the pages that sell', text: 'Check each one in URL Inspection, or search for it.', href: '/tools/google-index-checker' },
+]
+
+const onPage = [
+  { title: 'Every page has its own title', text: 'Not missing, not empty, not repeated, and short enough to fit the result.', href: '/tools/title-and-meta-description-checker' },
+  { title: 'Meta descriptions on the pages that matter', text: 'Missing is fine on thin utility pages. Empty usually means a template field.', href: '/tools/title-and-meta-description-checker' },
+  { title: 'One clear H1 that matches the title', text: 'Google often uses the H1 as the title link when the two disagree.', href: '/tools/seo-checker' },
+  { title: 'Canonicals point to the right page', text: 'Usually the page itself. One pointing elsewhere should be on purpose.', href: '/tools/canonical-checker' },
+  { title: 'Structured data parses', text: 'JSON-LD that is valid and matches what the page shows.', href: '/tools/schema-markup-validator' },
+  { title: 'Text arrives in the HTML', text: 'A low word count on a full-looking page means the text comes from JavaScript, which many AI crawlers never run.', href: '/tools/seo-checker' },
+]
+
+const links = [
+  { title: 'No internal links to errors', text: 'A link to a 404 wastes the click and the crawl. Fix the link or redirect the page.' },
+  { title: 'No redirect chains', text: 'Link straight to the final URL, so each click takes one hop at most.' },
+  { title: 'Every page that sells is linked', text: 'From the navigation or a page Google already knows, not only from the sitemap.' },
+  { title: 'No orphan pages', text: 'A page nothing links to is hard for Google to find and to judge.' },
+]
+
+const search = [
+  { title: 'Pages that lost clicks', text: 'Query and page pairs down against the period before. Look at these before anything new.' },
+  { title: 'Quick wins', text: 'Pages at positions 4 to 10 with a click rate below your own site\u2019s curve. A better title often moves these.' },
+  { title: 'Searches just off page one', text: 'Positions 11 to 20 for pages that already rank. A section or a link can push them over.' },
+  { title: 'Two pages competing for one search', text: 'When two of your pages split the impressions, merge them or make each one clearly about something different.' },
+]
+
+const tools = [
+  { title: 'SEO checker', text: 'Check one page for free: access, title, headings, canonical, structured data and links.', href: '/tools/seo-checker', icon: WebValidationIcon, link: 'Check a page' },
+  { title: 'AI SEO audit', text: 'The whole site audited by your agent: the crawl, Google\u2019s index status and Search Console.', href: '/features/seo-audit', icon: File01Icon, link: 'SEO audit' },
+  { title: 'Site crawl', text: 'Crawl any site from your machine, including staging and localhost, with no sign-in.', href: '/docs/crawl', icon: Route01Icon, link: 'seo crawl docs' },
+  { title: 'SEO plan template', text: 'Where the audit fits: fix what blocks pages before you build new ones.', href: '/guides/seo-plan-template', icon: TextCheckIcon, link: 'Read the template' },
+]
+
+const template = `# SEO audit: example.com, 27 November 2026
+
+## Scope
+Pages crawled: 475. Search Console: last 28 days.
+
+## Fix first (blocks Google)
+- /old-pricing returns 404, linked from 3 pages
+- /blog/ has noindex in the X-Robots-Tag header
+
+## Fix next (pages that sell)
+- /pricing: title repeats /plans
+- /features/reports: no H1
+
+## Opportunities
+- "invoice software for agencies" on /features/agencies: position 7, low click rate
+
+## Checked and fine
+robots.txt, sitemap, canonicals, structured data`
+
+const faq = [
+  {
+    question: 'What should an SEO audit checklist include?',
+    answer:
+      'Four parts, in order: whether Google can reach and index the pages, what each page tells Google (title, description, H1, canonical, structured data), how the pages link together, and how the pages do in Search Console. Each part matters only once the one before it passes.',
+  },
+  {
+    question: 'How often should I run an SEO audit?',
+    answer:
+      'A full crawl after every big release and at least once a month. Google index checks on the pages that sell should run daily or weekly, because a page can drop out between audits.',
+  },
+  {
+    question: 'What is the difference between a technical SEO checklist and an SEO audit checklist?',
+    answer:
+      'A technical checklist covers the first three parts here: access, page markup and links. An SEO audit adds how the pages actually do in search, from Search Console, so the fix list starts with pages that already get traffic.',
+  },
+  {
+    question: 'What should an SEO audit report include?',
+    answer:
+      'The scope and date, what blocks Google first, then fixes on the pages that sell, then opportunities from Search Console, and a line for what was checked and found fine. The template on this page follows that order.',
+  },
+  {
+    question: 'Can I run an SEO audit for free?',
+    answer:
+      'Yes. The SEO checker on this site checks one page with no account, and the SEO Skill CLI crawls a whole site with no sign-in. Search Console data needs you to sign in with the Google account that can read the site.',
+    links: [{ text: 'SEO checker', href: '/tools/seo-checker' }],
+  },
+]
+---
+
+<BaseLayout
+  title="SEO audit checklist and report template"
+  description="A free SEO audit checklist in the order that matters, from access and indexing to on-page checks, internal links and Search Console. Each has a free tool, plus an SEO audit report template."
+  canonicalPath="/guides/seo-audit-checklist"
+  {breadcrumbs}
+  framed={false}
+>
+  <main data-agent-content>
+    <LandingHero
+      title="SEO audit checklist"
+      lead="Check that Google can reach and index your pages, then what each page tells it, then how pages link, then how they do in search. Each item links to a free tool that checks it."
+      setupId="audit-checklist-setup"
+    />
+
+    <div class="space-y-24 py-24 sm:space-y-32 sm:py-32">
+      <section class="site-frame" aria-labelledby="order-heading">
+        <SectionHeading
+          id="order-heading"
+          title="In what order should I audit a site?"
+          text="Access first, because a page Google can't index gains nothing from a better title. Then the page itself, then links, then Search Console."
+        />
+        <div class="grid grid-cols-1 gap-2 sm:grid-cols-2">
+          <HomeCard title="1. Access and indexing" text="Can Google reach, crawl and index the pages that matter?" icon={LockKeyIcon} />
+          <HomeCard title="2. On-page" text="What each page tells Google in its title, description, H1, canonical and structured data." icon={CodeIcon} />
+          <HomeCard title="3. Internal links" text="Broken links, redirect chains and pages nothing links to." icon={Route01Icon} />
+          <HomeCard title="4. Search Console" text="Which pages lost clicks, which are close to page one, and which compete with each other." icon={GoogleIcon} />
+        </div>
+      </section>
+
+      <SplitList
+        id="access-heading"
+        title="How do I check Google can index my site?"
+        text="Check the status code, robots.txt, noindex rules and the sitemap, then confirm Google indexed the pages that sell. Each line links to a free check."
+        items={access}
+      />
+
+      <SplitList
+        id="onpage-heading"
+        title="What should I check on each page?"
+        text="A title of its own, a clear H1 that matches it, the right canonical, structured data that parses, and text that arrives in the HTML."
+        items={onPage}
+      />
+
+      <SplitList
+        id="links-heading"
+        title="What should I check in internal links?"
+        text="Links that point at errors or through redirects, and pages that nothing links to. These usually come from templates, so one fix covers many pages."
+        items={links}
+      />
+
+      <SplitList
+        id="search-heading"
+        title="What should I check in Search Console?"
+        text="Pages that lost clicks, pages close to the top that get few clicks, searches just off page one, and two of your pages competing for one search."
+        items={search}
+      />
+
+      <section class="site-frame" aria-labelledby="template-heading">
+        <SectionHeading
+          id="template-heading"
+          title="What does an SEO audit report template look like?"
+          text="Scope and date, what blocks Google, fixes on the pages that sell, opportunities, and what was checked and found fine. Copy it and fill it in."
+        />
+        <div class="max-w-3xl">
+          <CodeBlock label="SEO audit report template" value={template} wrap />
+        </div>
+      </section>
+
+      <div>
+        <SplitList
+          id="agent-heading"
+          title="Can an AI agent run the whole SEO audit?"
+          text="Yes. With SEO Skill your agent crawls the site, checks Google's index status for the important pages, reads Search Console, writes the report in this order and can fix what it finds in your code."
+          items={[
+            { title: 'Run the audit', text: 'Run an SEO audit of example.com. Crawl the site, check the top pages one by one, then list what to fix first from the Search Console report' },
+            { title: 'Write the report', text: 'Write the audit as a report with what blocks Google first, then fixes on the pages that sell, then opportunities' },
+          ]}
+        />
+        <div class="site-frame mt-8">
+          <CodeBlock label="Or crawl the site in a terminal" value="seo crawl https://example.com" />
+        </div>
+      </div>
+
+      <section class="site-frame" aria-labelledby="tools-heading">
+        <SectionHeading id="tools-heading" title="Tools for the SEO audit" text="Check one page in your browser, or audit the whole site with your agent." />
+        <div class="grid grid-cols-1 gap-2 sm:grid-cols-2">
+          {tools.map((item) => <HomeCard {...item} />)}
+        </div>
+      </section>
+
+      <section class="site-frame" aria-labelledby="faq-heading">
+        <div class="max-w-2xl">
+          <h2 id="faq-heading" class="text-pretty text-2xl font-medium -tracking-[0.4px] text-foreground xl:text-3xl xl:-tracking-[0.6px]">
+            SEO audit checklist questions
+          </h2>
+        </div>
+        <div class="mt-10">
+          <FaqAccordion items={faq} id="audit-checklist-faq" />
+        </div>
+      </section>
+
+      <section class="site-frame" aria-labelledby="start-heading">
+        <SectionHeading
+          id="start-heading"
+          title="Audit your whole site with your agent"
+          text="Add SEO Skill to your agent, sign in with the Google account that can read your Search Console, and ask it to audit your site."
+        />
+        <SetupPrompts id="audit-checklist-setup-end" />
+      </section>
+    </div>
+  </main>
+</BaseLayout>

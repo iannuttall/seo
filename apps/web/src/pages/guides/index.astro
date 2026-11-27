@@ -56,7 +56,7 @@ const guides = (await getCollection('guides')).sort((a, b) => a.id.localeCompare
       />
     </div>
 
-    <h2 class="mt-16 mb-6 text-2xl/8 font-medium tracking-normal">Measure your SEO</h2>
+    <h2 class="mt-16 mb-6 text-2xl/8 font-medium tracking-normal">Plan and measure your SEO</h2>
     <div class="grid grid-cols-1 gap-2 sm:grid-cols-2">
       <HomeCard
         title="How to track SEO progress"
@@ -64,6 +64,27 @@ const guides = (await getCollection('guides')).sort((a, b) => a.id.localeCompare
         icon={ChartIncreaseIcon}
         href="/guides/how-to-track-seo-progress"
         link="Read the guide"
+      />
+      <HomeCard
+        title="SEO case studies"
+        text="A domain move and back, new pages in Google within a week and a new domain's first clicks, with the Search Console numbers."
+        icon={ChartIncreaseIcon}
+        href="/guides/seo-case-studies"
+        link="Read the case studies"
+      />
+      <HomeCard
+        title="SEO plan template"
+        text="The headings to fill in and the four steps to work through in order."
+        icon={ChartIncreaseIcon}
+        href="/guides/seo-plan-template"
+        link="Read the template"
+      />
+      <HomeCard
+        title="SEO audit checklist"
+        text="Access, on-page, links and Search Console, each with a free check, and a report template."
+        icon={ChartIncreaseIcon}
+        href="/guides/seo-audit-checklist"
+        link="Read the checklist"
       />
     </div>
   </main>

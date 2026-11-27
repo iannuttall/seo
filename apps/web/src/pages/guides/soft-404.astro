@@ -1,0 +1,193 @@
+---
+import {
+  Alert02Icon,
+  CodeIcon,
+  Delete02Icon,
+  FileNotFoundIcon,
+  FilterIcon,
+  Route01Icon,
+  ShoppingBag01Icon,
+  TaskDone01Icon,
+} from '@hugeicons/core-free-icons'
+import BeforeAfter from '@/components/blog/BeforeAfter.astro'
+import UrlMap from '@/components/blog/UrlMap.astro'
+import CodeBlock from '@/components/CodeBlock.astro'
+import FaqAccordion from '@/components/FaqAccordion.astro'
+import HomeCard from '@/components/HomeCard.astro'
+import LandingHero from '@/components/LandingHero.astro'
+import SectionHeading from '@/components/SectionHeading.astro'
+import StatusGuides from '@/components/StatusGuides.astro'
+import BaseLayout from '@/layouts/BaseLayout.astro'
+import type { SchemaBreadcrumb } from '@/lib/schema'
+
+const breadcrumbs: SchemaBreadcrumb[] = [
+  { label: 'Home', href: '/' },
+  { label: 'Guides', href: '/guides' },
+  { label: 'Soft 404' },
+]
+
+// An illustration on example.com of pages that can turn into soft 404s.
+const urls = [
+  { url: 'example.com/products/blue-kettle', action: 'Soft 404', tone: 'remove' as const, note: 'Sold out and removed. Answers 200 with "This product is no longer available".' },
+  { url: 'example.com/search?q=kettles', action: 'Soft 404', tone: 'remove' as const, note: 'An empty search results page that answers 200.' },
+  { url: 'example.com/blog/tag/kettles', action: 'Soft 404', tone: 'remove' as const, note: 'A tag page with no posts left on it.' },
+  { url: 'example.com/kettles', action: 'Indexed', tone: 'keep' as const, note: 'A page with real content that answers 200. This is what Google wants to index.' },
+]
+
+const codes = {
+  before: {
+    label: 'Soft 404',
+    code: `GET /products/blue-kettle\nHTTP/2 200\n\n<h1>Sorry, this product is no longer available</h1>`,
+    note: 'The status says the page exists. The words say it does not. Google trusts the words.',
+  },
+  after: {
+    label: 'Real 404',
+    code: `GET /products/blue-kettle\nHTTP/2 404\n\n<h1>Sorry, this product is no longer available</h1>`,
+    note: 'The same friendly message with the right status. Google drops the URL and the soft 404 goes away.',
+  },
+}
+
+const causes = [
+  { title: 'Removed products and posts', text: 'The page now says it is gone, but the server still answers 200.', icon: Delete02Icon },
+  { title: 'Empty lists and searches', text: 'Category, tag and search pages with nothing on them.', icon: FilterIcon },
+  { title: 'Pages that load content later', text: 'The HTML is an empty shell until JavaScript runs, and the content never arrives for Google.', icon: CodeIcon },
+  { title: 'Redirects to the home page', text: 'Old URLs sent to the home page instead of a matching page, which Google may read as a missing page.', icon: Route01Icon },
+]
+
+const fixes = [
+  { title: 'Gone for good', text: 'Return 404 or 410. Keep the friendly message on the page.', icon: FileNotFoundIcon },
+  { title: 'Moved', text: 'Redirect with a 301 to the page that replaced it.', icon: Route01Icon },
+  { title: 'Out of stock for now', text: 'Keep the page and give it real content: details, alternatives, when it is back.', icon: ShoppingBag01Icon },
+  { title: 'Meant to be a real page', text: 'Make sure the content is in the HTML Google gets, then ask for a fresh crawl.', icon: TaskDone01Icon },
+]
+
+const faq = [
+  {
+    question: 'What is a soft 404?',
+    answer:
+      'A page that answers 200 OK but reads like an error page or an empty page. Google’s documentation says that when the content suggests an error, Search Console reports it as a soft 404 and leaves the page out of the index.',
+  },
+  {
+    question: 'How do I fix a soft 404?',
+    answer:
+      'Decide what the page should be. If it is gone, return a real 404 or 410. If it moved, redirect it to the matching page. If it should be indexed, give it real content that Google can read without running JavaScript.',
+  },
+  {
+    question: 'Are soft 404 errors bad for SEO?',
+    answer:
+      'A soft 404 on a page you meant to remove costs you little. One on a page you want in Google means Google thinks it is empty, so it will not rank. That second kind is the one to fix.',
+  },
+  {
+    question: 'Why is a page with content reported as a soft 404?',
+    answer:
+      'Usually because Google did not see the content. Check the page in URL Inspection and look at the rendered page Google got. If the main text loads late from an API, or the page has very little text, Google can read it as empty.',
+  },
+  {
+    question: 'Should I redirect missing pages to my home page?',
+    answer:
+      'No. Google may treat a redirect to an unrelated page as a soft 404. Redirect only to a page that replaces the old one, and let the rest return 404.',
+  },
+]
+---
+
+<BaseLayout
+  title="Soft 404 in Search Console: what it means and how to fix it"
+  description="What a soft 404 is in Search Console, the pages that usually cause one, and how to find every soft 404 on your site with the fix for each."
+  canonicalPath="/guides/soft-404"
+  {breadcrumbs}
+  framed={false}
+>
+  <main data-agent-content>
+    <LandingHero
+      title="Soft 404"
+      lead="A soft 404 is a page that answers 200 OK but reads like an error or an empty page to Google, so Google leaves it out. Find each one and decide what it should be: gone, moved or a real page."
+      setupId="soft-404-setup"
+    />
+
+    <div class="space-y-24 py-24 sm:space-y-32 sm:py-32">
+      <section class="site-frame" aria-labelledby="meaning-heading">
+        <SectionHeading
+          id="meaning-heading"
+          title="What a soft 404 means"
+          text="The server says the page exists. What is on the page says it doesn't. Google goes by what is on the page and reports a soft 404."
+        />
+        <div class="max-w-3xl">
+          <UrlMap
+            rows={urls}
+            title="Pages that can turn into soft 404s, on example.com"
+            caption="An example of the usual causes on a shop with a blog."
+          />
+          <BeforeAfter
+            before={codes.before}
+            after={codes.after}
+            title="The difference is one status code"
+            caption="Visitors see the same message. Google gets a clear answer."
+          />
+        </div>
+      </section>
+
+      <section class="site-frame" aria-labelledby="cause-heading">
+        <SectionHeading
+          id="cause-heading"
+          title="What usually causes a soft 404"
+          text="Most soft 404s come from a page that changed while its URL kept answering 200."
+        />
+        <div class="grid grid-cols-1 gap-2 sm:grid-cols-2">
+          {causes.map((item) => <HomeCard {...item} />)}
+        </div>
+      </section>
+
+      <section class="site-frame" aria-labelledby="fix-heading">
+        <SectionHeading
+          id="fix-heading"
+          title="The fix for each kind of page"
+          text="Decide what the URL should be, then make the status code and the page agree."
+        />
+        <div class="grid grid-cols-1 gap-2 sm:grid-cols-2">
+          {fixes.map((item) => <HomeCard {...item} />)}
+        </div>
+      </section>
+
+      <section class="site-frame" aria-labelledby="check-heading">
+        <SectionHeading
+          id="check-heading"
+          title="Find every soft 404 on your site"
+          text="SEO Skill asks URL Inspection about each page it knows, loads each one live and reports what it returns now, so you can see which soft 404s are still live."
+        />
+        <div class="docs-prose max-w-3xl">
+          <p>Connect SEO Skill to your agent, then ask:</p>
+          <CodeBlock prompt value="Which pages on example.com does Google report as soft 404? Read each one and tell me whether it should return 404, redirect somewhere, or get more content." wrap />
+          <p>Or run it in a terminal:</p>
+          <CodeBlock value="seo index --site example.com" />
+          <p>
+            A soft 404 your sitemap lists is labelled fix, because you asked
+            Google to index a page it thinks is empty. One that now returns
+            404 and that nothing on your site points to is labelled expected.
+            The rest are labelled check, with the live status next to
+            Google's reason.
+          </p>
+          <p>
+            To read a page the way your server sends it, before any
+            JavaScript runs, ask for its main text:
+          </p>
+          <CodeBlock value="seo page --url https://example.com/products/blue-kettle --detail full" wrap />
+          <p>
+            A missing URL on seoskill.dev answers with a real 404 status and
+            a friendly not-found page, which is the pattern to copy.
+          </p>
+        </div>
+      </section>
+
+      <section class="site-frame" aria-labelledby="soft-404-faq">
+        <SectionHeading
+          id="soft-404-faq"
+          title="Questions about soft 404 errors"
+          text="What people ask after they see it in Search Console."
+        />
+        <FaqAccordion items={faq} id="soft-404-faq-list" />
+      </section>
+
+      <StatusGuides current="/guides/soft-404" />
+    </div>
+  </main>
+</BaseLayout>

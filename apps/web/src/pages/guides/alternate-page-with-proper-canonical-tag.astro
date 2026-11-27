@@ -1,0 +1,210 @@
+---
+import {
+  Alert02Icon,
+  FileSearchIcon,
+  GitCompareIcon,
+  Globe02Icon,
+  Link01Icon,
+  Route01Icon,
+  Search01Icon,
+  TaskDone01Icon,
+} from '@hugeicons/core-free-icons'
+import BeforeAfter from '@/components/blog/BeforeAfter.astro'
+import UrlMap from '@/components/blog/UrlMap.astro'
+import CodeBlock from '@/components/CodeBlock.astro'
+import FaqAccordion from '@/components/FaqAccordion.astro'
+import HomeCard from '@/components/HomeCard.astro'
+import LandingHero from '@/components/LandingHero.astro'
+import SectionHeading from '@/components/SectionHeading.astro'
+import StatusGuides from '@/components/StatusGuides.astro'
+import BaseLayout from '@/layouts/BaseLayout.astro'
+import type { SchemaBreadcrumb } from '@/lib/schema'
+
+const breadcrumbs: SchemaBreadcrumb[] = [
+  { label: 'Home', href: '/' },
+  { label: 'Guides', href: '/guides' },
+  { label: 'Alternate page with proper canonical tag' },
+]
+
+// indexmysite.app's own URL Inspection result for http://indexmysite.app/,
+// checked 26 November 2026: the http:// home page answers 200 and declares
+// the https:// home page as canonical, and Google uses that one.
+const urls = [
+  { url: 'http://indexmysite.app/', action: 'Alternate', tone: 'change' as const, to: 'https://indexmysite.app/', note: 'Answers 200 and declares the https:// page as canonical. Google leaves it out of the index.' },
+  { url: 'https://indexmysite.app/', action: 'Indexed', tone: 'keep' as const, note: 'The canonical. Google indexes it and shows it in search.' },
+]
+
+const head = {
+  before: {
+    label: 'On http://',
+    code: `<link rel="canonical" href="https://indexmysite.app/">`,
+    note: 'The http:// page points at another URL, so Google leaves it out of the index.',
+  },
+  after: {
+    label: 'On https://',
+    code: `<link rel="canonical" href="https://indexmysite.app/">`,
+    note: 'The https:// page points at itself. This is the URL Google indexes.',
+  },
+}
+
+const leave = [
+  { title: 'http:// and www variants', text: 'The same page on another protocol or host, pointing at the version you use.', icon: Globe02Icon },
+  { title: 'Tracking and sort parameters', text: 'URLs with ?utm_source= or ?sort= that point back at the clean URL.', icon: Link01Icon },
+  { title: 'AMP and mobile versions', text: 'The case Google describes in its own help: an alternate that names the main page.', icon: FileSearchIcon },
+  { title: 'Print and syndicated copies', text: 'Copies you publish on purpose that should credit the original.', icon: GitCompareIcon },
+]
+
+const act = [
+  { title: 'The canonical is the wrong page', text: 'A template sets every page’s canonical to the home page or the first page of a list, so real pages drop out.', icon: Alert02Icon },
+  { title: 'The page should rank on its own', text: 'A product, location or article page with its own content points somewhere else by mistake.', icon: Search01Icon },
+  { title: 'The canonical is not indexed', text: 'The page you point at redirects, returns an error or has noindex, so neither URL is in Google.', icon: Route01Icon },
+  { title: 'Your sitemap lists the alternate', text: 'A sitemap should list only canonical URLs. Listing alternates sends Google mixed signals.', icon: TaskDone01Icon },
+]
+
+const faq = [
+  {
+    question: 'Is "alternate page with proper canonical tag" an error?',
+    answer:
+      'No. Google’s Page indexing report help says this page correctly points to the canonical page, which is indexed, so there is nothing you need to do. It only needs work when the page it points at is the wrong one.',
+  },
+  {
+    question: 'Should I fix every alternate page with proper canonical tag?',
+    answer:
+      'No. Check that each one points at the page you want in Google and that the canonical is indexed. If both are true, leave it. The count in Search Console often grows as Google finds more variants of the same pages.',
+  },
+  {
+    question: 'How do I make Google index the alternate page instead?',
+    answer:
+      'Make it the canonical: change its canonical tag to point at itself, list it in your sitemap and link to it from your own pages. If it is really the same content as another page, merge the two with a 301 redirect instead.',
+  },
+  {
+    question: 'Should an http:// or www page redirect instead of using a canonical?',
+    answer:
+      'A permanent 301 redirect is the stronger signal for a protocol or host variant, and visitors land on the right URL too. After a redirect, Search Console lists the old URL under page with redirect, which is also fine.',
+  },
+  {
+    question: 'What is the difference from "duplicate without user-selected canonical"?',
+    answer:
+      'With an alternate page, you named the canonical and Google agreed. With duplicate without user-selected canonical, you named none and Google picked one for you. Add a canonical tag to the pages in the second group so the choice is yours.',
+  },
+]
+---
+
+<BaseLayout
+  title="Alternate page with proper canonical tag: check every URL"
+  description="What alternate page with proper canonical tag means in Search Console, when to leave it alone, and how to check every affected URL on your site at once."
+  canonicalPath="/guides/alternate-page-with-proper-canonical-tag"
+  {breadcrumbs}
+  framed={false}
+>
+  <main data-agent-content>
+    <LandingHero
+      title="Alternate page with proper canonical tag"
+      lead="This Search Console reason means a URL names another page as its canonical, and Google indexed that page instead. Usually that is what you want. Check the few cases where it isn’t, across your whole site at once."
+      setupId="alternate-setup"
+    />
+
+    <div class="space-y-24 py-24 sm:space-y-32 sm:py-32">
+      <section class="site-frame" aria-labelledby="meaning-heading">
+        <SectionHeading
+          id="meaning-heading"
+          title="What alternate page with proper canonical tag means"
+          text="Two URLs show the same page. One names the other as its canonical with a link tag, Google agrees, and only the canonical goes in the index."
+        />
+        <div class="max-w-3xl">
+          <UrlMap
+            rows={urls}
+            title="indexmysite.app, as Google sees it"
+            caption="From indexmysite.app’s own URL Inspection results, checked 26 November 2026."
+          />
+          <BeforeAfter
+            before={head.before}
+            after={head.after}
+            title="The tag that decides it"
+            caption="Both URLs name the https:// page, so Google indexes that one."
+          />
+        </div>
+      </section>
+
+      <section class="site-frame" aria-labelledby="leave-heading">
+        <SectionHeading
+          id="leave-heading"
+          title="When to leave it alone"
+          text="Google’s help says there is nothing to do when the alternate points at the right page. These are the usual cases."
+        />
+        <div class="grid grid-cols-1 gap-2 sm:grid-cols-2">
+          {leave.map((item) => <HomeCard {...item} />)}
+        </div>
+      </section>
+
+      <section class="site-frame" aria-labelledby="act-heading">
+        <SectionHeading
+          id="act-heading"
+          title="When it needs fixing"
+          text="The reason is a problem only when the canonical points at the wrong page, or at one Google cannot index."
+        />
+        <div class="grid grid-cols-1 gap-2 sm:grid-cols-2">
+          {act.map((item) => <HomeCard {...item} />)}
+        </div>
+      </section>
+
+      <section class="site-frame" aria-labelledby="check-heading">
+        <SectionHeading
+          id="check-heading"
+          title="Check every alternate page on your site"
+          text="Search Console shows up to 1,000 example URLs for each reason. SEO Skill asks URL Inspection about each page it knows and loads each one live, so you see what the page declares today next to what Google chose."
+        />
+        <div class="docs-prose max-w-3xl">
+          <p>Connect SEO Skill to your agent, then ask:</p>
+          <CodeBlock prompt value="Which pages on example.com are alternate pages with a proper canonical tag? For each one, tell me which page it points at, whether that page is indexed, and whether I should change anything." wrap />
+          <p>Or run it in a terminal:</p>
+          <CodeBlock value="seo index --site example.com" />
+          <p>
+            Each URL comes back with Google’s reason, the canonical the page
+            declares, the canonical Google chose, whether your sitemap lists
+            it and what the URL returns now. A URL whose declared and chosen
+            canonical match is labelled expected. One your sitemap lists is
+            labelled fix, because a sitemap should name only canonical URLs.
+          </p>
+          <p>
+            On indexmysite.app, <code>http://indexmysite.app/</code> came
+            back expected: the page declares <code>https://indexmysite.app/</code>,
+            Google uses it, and the sitemap does not list the http:// URL.
+            A 301 redirect to https:// would be the cleaner fix, and the URL
+            would then move to page with redirect.
+          </p>
+        </div>
+      </section>
+
+      <section class="site-frame" aria-labelledby="related-heading">
+        <SectionHeading
+          id="related-heading"
+          title="How it differs from the other canonical reasons"
+          text="These Search Console reasons all cover a URL that is not the one Google indexed. Each points at a different check."
+        />
+        <div class="docs-prose max-w-3xl">
+          <table>
+            <thead><tr><th>Reason</th><th>Who chose the canonical</th><th>What to check</th></tr></thead>
+            <tbody>
+              <tr><td>Alternate page with proper canonical tag</td><td>You, and Google agreed</td><td>That it points at the right page.</td></tr>
+              <tr><td><a href="/guides/duplicate-without-user-selected-canonical">Duplicate without user-selected canonical</a></td><td>Google, because you named none</td><td>Add a canonical tag so the choice is yours.</td></tr>
+              <tr><td>Duplicate, Google chose different canonical than user</td><td>Google, over your choice</td><td>Why Google thinks another page is the better copy.</td></tr>
+              <tr><td><a href="/guides/page-with-redirect">Page with redirect</a></td><td>The redirect</td><td>That the redirect is permanent and ends on a page that returns 200.</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </section>
+
+      <section class="site-frame" aria-labelledby="alternate-faq">
+        <SectionHeading
+          id="alternate-faq"
+          title="Questions about alternate page with proper canonical tag"
+          text="What people ask after they see it in Search Console."
+        />
+        <FaqAccordion items={faq} id="alternate-faq-list" />
+      </section>
+
+      <StatusGuides current="/guides/alternate-page-with-proper-canonical-tag" />
+    </div>
+  </main>
+</BaseLayout>

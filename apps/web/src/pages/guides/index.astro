@@ -3,22 +3,30 @@ import { ComputerTerminal01Icon, SourceCodeIcon } from '@hugeicons/core-free-ico
 import { getCollection } from 'astro:content'
 import HomeCard from '@/components/HomeCard.astro'
 import PageHeader from '@/components/PageHeader.astro'
+import { statusGuides } from '@/content/status-guides'
 import BaseLayout from '@/layouts/BaseLayout.astro'
 
 const guides = (await getCollection('guides')).sort((a, b) => a.id.localeCompare(b.id))
 ---
 
 <BaseLayout
-  title="SEO guides for Astro and Next.js"
-  description="Set up an Astro or Next.js site so search engines and AI agents can read every page: metadata, JSON-LD, sitemaps, Markdown copies, redirects and build checks."
+  title="SEO guides: Search Console reasons, Astro and Next.js"
+  description="What each Search Console indexing reason means and how to check every URL it covers, plus Astro and Next.js setups that search engines and AI agents can read."
   canonicalPath="/guides"
   schemaType="CollectionPage"
 >
   <main data-agent-content>
     <PageHeader
-      title="Framework SEO guides"
-      description="How to build a site that search engines and AI agents can read, with the code to copy for each framework."
+      title="SEO guides"
+      description="What Search Console's indexing reasons mean and what to do about each one, and how to build a site search engines and AI agents can read."
     />
+
+    <h2 class="mb-6 text-2xl/8 font-medium tracking-normal">Search Console indexing reasons</h2>
+    <div class="mb-16 grid grid-cols-1 gap-2 sm:grid-cols-2">
+      {statusGuides.map((guide) => <HomeCard title={guide.title} text={guide.text} icon={guide.icon} href={guide.path} link="Read the guide" />)}
+    </div>
+
+    <h2 class="mb-6 text-2xl/8 font-medium tracking-normal">Framework guides</h2>
 
     <div class="grid grid-cols-1 gap-2 sm:grid-cols-2">
       {

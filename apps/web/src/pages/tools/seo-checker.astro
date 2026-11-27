@@ -3,7 +3,7 @@ import Breadcrumbs from '@/components/Breadcrumbs.astro'
 import CodeBlock from '@/components/CodeBlock.astro'
 import FaqAccordion from '@/components/FaqAccordion.astro'
 import PageHeader from '@/components/PageHeader.astro'
-import SetupCommands from '@/components/SetupCommands.astro'
+import SetupPrompts from '@/components/SetupPrompts.astro'
 import SeoChecker from '@/components/tools/SeoChecker.astro'
 import BaseLayout from '@/layouts/BaseLayout.astro'
 import type { SchemaBreadcrumb } from '@/lib/schema'
@@ -146,16 +146,15 @@ const faq = [
         Google's own index status for each page from URL Inspection, and the
         Search Console report. Ask:
       </p>
-      <CodeBlock value="Run an SEO audit of example.com: crawl the site, check the top pages one by one, then list what to fix first from the Search Console report" wrap />
+      <CodeBlock prompt value="Run an SEO audit of example.com: crawl the site, check the top pages one by one, then list what to fix first from the Search Console report" wrap />
       <p>
-        To crawl a site from your terminal, including staging and localhost,
-        install the CLI and run setup:
+        To crawl a site, including staging and localhost, your agent needs
+        the CLI. Give it this prompt and it installs the CLI and adds the
+        hosted MCP server:
       </p>
-      <CodeBlock value="npm i -g seo && seo start" wrap />
-      <p>Or add the hosted MCP server to your agent and sign in with Google:</p>
     </div>
 
-    <SetupCommands id="seo-checker-setup" class="mt-6" />
+    <SetupPrompts id="seo-checker-setup" class="mt-6" />
 
     <div class="docs-prose mt-16">
       <h2>SEO checker questions</h2>

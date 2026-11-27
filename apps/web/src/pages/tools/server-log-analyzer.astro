@@ -1,7 +1,7 @@
 ---
 import CodeBlock from '@/components/CodeBlock.astro'
 import FaqAccordion from '@/components/FaqAccordion.astro'
-import SetupCommands from '@/components/SetupCommands.astro'
+import SetupPrompts from '@/components/SetupPrompts.astro'
 import PageHeader from '@/components/PageHeader.astro'
 import ServerLogAnalyzer from '@/components/tools/ServerLogAnalyzer.astro'
 import BaseLayout from '@/layouts/BaseLayout.astro'
@@ -161,11 +161,11 @@ const faq = [
         site, it can find pages crawlers keep requesting that your site no
         longer links to, and linked pages crawlers never reach. Ask:
       </p>
-      <CodeBlock value="Here is the crawler CSV from my server logs and a crawl of example.com. Which pages does Googlebot request that the site no longer links to?" wrap />
-      <p>Add the hosted MCP server to your agent and sign in with Google:</p>
+      <CodeBlock prompt value="Here is the crawler CSV from my server logs and a crawl of example.com. Which pages does Googlebot request that the site no longer links to?" wrap />
+      <p>To set it up, give your agent this prompt:</p>
     </div>
 
-    <SetupCommands id="server-log-analyzer-setup" class="mt-6" />
+    <SetupPrompts id="server-log-analyzer-setup" class="mt-6" />
 
     <div class="docs-prose mt-16">
       <h2>Log file analysis questions</h2>

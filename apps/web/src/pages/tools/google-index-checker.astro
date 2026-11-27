@@ -3,7 +3,7 @@ import Breadcrumbs from '@/components/Breadcrumbs.astro'
 import CodeBlock from '@/components/CodeBlock.astro'
 import FaqAccordion from '@/components/FaqAccordion.astro'
 import PageHeader from '@/components/PageHeader.astro'
-import SetupCommands from '@/components/SetupCommands.astro'
+import SetupPrompts from '@/components/SetupPrompts.astro'
 import GoogleIndexChecker from '@/components/tools/GoogleIndexChecker.astro'
 import BaseLayout from '@/layouts/BaseLayout.astro'
 import type { SchemaBreadcrumb } from '@/lib/schema'
@@ -142,11 +142,11 @@ const faq = [
         Search Console for each page and says why Google does or does not
         index it. Ask:
       </p>
-      <CodeBlock value="Check whether Google has indexed my five newest blog posts on example.com, and tell me what is keeping out any that are missing" wrap />
-      <p>Add the hosted MCP server to your agent and sign in with Google:</p>
+      <CodeBlock prompt value="Check whether Google has indexed my five newest blog posts on example.com, and tell me what is keeping out any that are missing" wrap />
+      <p>To set it up, give your agent this prompt:</p>
     </div>
 
-    <SetupCommands id="index-checker-setup" class="mt-6" />
+    <SetupPrompts id="index-checker-setup" class="mt-6" />
 
     <div class="docs-prose mt-16">
       <h2>Google index checker questions</h2>

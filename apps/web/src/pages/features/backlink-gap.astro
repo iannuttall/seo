@@ -57,7 +57,7 @@ const related = [
     </li>
     <li>Name your site and 2 to 5 competitors:</li>
   </ol>
-  <CodeBlock value={`Run a backlink gap for example.com against example.org, example.net and example.io`} wrap />
+  <CodeBlock prompt value={`Run a backlink gap for example.com against example.org, example.net and example.io`} wrap />
   <p>
     The agent reads each site's referring domains, keeps the sites that link
     to two or more competitors and not to you, and sorts them by Domain
@@ -76,7 +76,7 @@ const related = [
     sites that rank for the searches you want, not the companies you meet in
     sales calls. If you are not sure who they are, ask first:
   </p>
-  <CodeBlock value={`Which domains share the most keywords with example.com? Then show the top 10 for "invoice software" with each site's Domain Rating`} wrap />
+  <CodeBlock prompt value={`Which domains share the most keywords with example.com? Then show the top 10 for "invoice software" with each site's Domain Rating`} wrap />
   <p>
     Competitors lists the domains that rank for the same keywords as you, and
     a SERP shows who holds page one for one search. Sites a little stronger
@@ -135,7 +135,7 @@ const related = [
     the category on purpose, so it is the likeliest to add you. Ask your
     agent to put those first:
   </p>
-  <CodeBlock value={`From that backlink gap, list the sites that link to every competitor, then the ones with Domain Rating 50 or more, and tell me what each site is`} wrap />
+  <CodeBlock prompt value={`From that backlink gap, list the sites that link to every competitor, then the ones with Domain Rating 50 or more, and tell me what each site is`} wrap />
   <p>
     Domain Rating tells you how strong a site's own links are, not whether
     it would link to you. In the Umami gap, a cookie consent company and Y
@@ -155,7 +155,7 @@ const related = [
     first, with how many links each one sends and when it first linked.
     Pages by backlinks lists the competitor pages that most sites link to:
   </p>
-  <CodeBlock value={`Which pages on example.org have the most referring domains, and which sites link to example.org most often?`} wrap />
+  <CodeBlock prompt value={`Which pages on example.org have the most referring domains, and which sites link to example.org most often?`} wrap />
   <p>
     If a competitor's most linked page is a free tool, a pricing study or an
     open dataset, that is the kind of page the sites in your gap link to. A

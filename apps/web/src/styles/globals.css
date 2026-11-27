@@ -433,6 +433,20 @@
     overflow-wrap: break-word;
   }
 
+  /* Prompts to give an agent are plain English, so they read in the body
+     font and wrap. Commands and output stay monospace. */
+  .docs-prose pre:has(> code.language-prompt) {
+    white-space: pre-wrap;
+    overflow-wrap: break-word;
+    font-family: var(--font-sans);
+    font-size: 1rem;
+    line-height: 1.75rem;
+  }
+
+  .docs-prose pre > code.language-prompt {
+    font-family: inherit;
+  }
+
   .docs-prose pre span {
     color: var(--foreground) !important;
   }

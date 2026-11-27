@@ -1,0 +1,157 @@
+---
+// The setup box: one prompt per agent that sets up SEO Skill for the person.
+// The client switch is the ilo toggle group. View prompt opens the full
+// prompt in every panel at once, so switching agents keeps the same view.
+import { ArrowRight01Icon, Copy01Icon, Tick02Icon } from '@hugeicons/core-free-icons'
+import HugeIcon from './HugeIcon.astro'
+import { buttonBaseStyles, buttonVariants, getButtonClasses } from './ui/button'
+import { cn } from '@/lib/cn'
+import { setupPrompts } from '@/content/setup-prompts'
+
+type Props = { class?: string; id?: string }
+
+const { class: className, id = 'setup' } = Astro.props
+
+const firstLine = (prompt: string) => prompt.split('\n')[0] ?? prompt
+const summary = (agent: string) =>
+  `${agent.charAt(0).toUpperCase()}${agent.slice(1)} installs the CLI, adds the hosted MCP server, waits while you sign in with Google and checks it connects.`
+---
+
+<div class:list={['w-full text-left', className]} data-setup-prompts data-agent-markdown="exclude">
+  <div
+    role="tablist"
+    aria-label="AI agent"
+    class="inline-flex h-9 max-w-full items-center justify-start gap-1 overflow-x-auto rounded-lg bg-muted p-0.5 text-foreground-muted"
+  >
+    {
+      setupPrompts.map((client, index) => (
+        <button
+          type="button"
+          role="tab"
+          id={`${id}-tab-${client.id}`}
+          aria-controls={`${id}-panel-${client.id}`}
+          aria-selected={index === 0 ? 'true' : 'false'}
+          tabindex={index === 0 ? undefined : -1}
+          data-setup-tab={client.id}
+          class="inline-flex h-8 min-w-7 items-center justify-center whitespace-nowrap rounded-md border border-transparent px-2.5 sm:px-3 text-sm font-medium outline-none transition-colors hover:text-foreground focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/20 aria-selected:bg-card aria-selected:text-foreground aria-selected:shadow-xs"
+        >
+          {client.label}
+        </button>
+      ))
+    }
+  </div>
+
+  {/* Every panel sits in the same grid cell, so the box is always as tall
+      as the tallest panel and switching agents never shifts the page. */}
+  <div class="mt-3 grid grid-cols-[minmax(0,1fr)]">
+  {
+    setupPrompts.map((client, index) => (
+      <div
+        role="tabpanel"
+        id={`${id}-panel-${client.id}`}
+        aria-labelledby={`${id}-tab-${client.id}`}
+        aria-hidden={index === 0 ? undefined : 'true'}
+        data-setup-panel={client.id}
+        class:list={['[grid-area:1/1]', index !== 0 && 'invisible']}
+      >
+        <div class="rounded-lg bg-muted p-4 sm:p-5">
+          <div class="flex flex-col gap-3 sm:flex-row sm:items-center sm:gap-4">
+            <div class="min-w-0 flex-1">
+              <p class="text-sm text-foreground-muted">Give this prompt to {client.agent}</p>
+              <p class="mt-1 truncate text-base text-foreground">{firstLine(client.prompt)}</p>
+            </div>
+            <div class="flex shrink-0 gap-2">
+              <button
+                type="button"
+                class={getButtonClasses('default', 'default')}
+                data-copy-value={client.prompt}
+                aria-label={`Copy the ${client.label} prompt`}
+              >
+                <HugeIcon icon={Copy01Icon} class="size-4" data-copy-icon />
+                <HugeIcon icon={Tick02Icon} class="hidden size-4" data-copy-check-icon />
+                Copy prompt
+              </button>
+              <button
+                type="button"
+                class={cn(buttonBaseStyles, buttonVariants.size.default, 'min-w-28 bg-background text-foreground hover:bg-secondary-hover')}
+                aria-expanded="false"
+                aria-controls={`${id}-prompt-${client.id}`}
+                data-setup-view
+              >
+                View prompt
+              </button>
+            </div>
+          </div>
+          <pre
+            id={`${id}-prompt-${client.id}`}
+            class="mt-4 hidden whitespace-pre-wrap break-words rounded-lg bg-background p-4 font-sans text-base/7 text-foreground"
+            data-setup-full>{client.prompt}</pre>
+        </div>
+        <div class="mt-2 flex flex-col gap-1 text-sm/6 sm:flex-row sm:items-start sm:justify-between sm:gap-6">
+          <p class="text-foreground-muted">{summary(client.agent)}</p>
+          <a
+            class="inline-flex shrink-0 items-center gap-1 font-medium text-foreground no-underline hover:underline underline-offset-4"
+            href={client.guide.href}
+          >
+            {client.guide.label}
+            <HugeIcon icon={ArrowRight01Icon} class="size-4" />
+          </a>
+        </div>
+      </div>
+    ))
+  }
+  </div>
+</div>
+
+<script>
+  for (const root of document.querySelectorAll('[data-setup-prompts]')) {
+    if (!(root instanceof HTMLElement) || root.dataset.setupReady === 'true') continue
+    root.dataset.setupReady = 'true'
+
+    const tabs = Array.from(root.querySelectorAll('[data-setup-tab]')).filter(
+      (tab): tab is HTMLButtonElement => tab instanceof HTMLButtonElement,
+    )
+    const select = (tab: HTMLButtonElement) => {
+      for (const other of tabs) {
+        const selected = other === tab
+        other.setAttribute('aria-selected', String(selected))
+        if (selected) other.removeAttribute('tabindex')
+        else other.tabIndex = -1
+        const panel = root.querySelector(`[data-setup-panel="${other.dataset.setupTab}"]`)
+        if (panel instanceof HTMLElement) {
+          panel.classList.toggle('invisible', !selected)
+          if (selected) panel.removeAttribute('aria-hidden')
+          else panel.setAttribute('aria-hidden', 'true')
+        }
+      }
+    }
+
+    for (const tab of tabs) {
+      tab.addEventListener('click', () => select(tab))
+      tab.addEventListener('keydown', (event) => {
+        const index = tabs.indexOf(tab)
+        let next = index
+        if (event.key === 'ArrowRight') next = (index + 1) % tabs.length
+        else if (event.key === 'ArrowLeft') next = (index - 1 + tabs.length) % tabs.length
+        else return
+        event.preventDefault()
+        tabs[next]?.focus()
+        if (tabs[next]) select(tabs[next])
+      })
+    }
+
+    const views = root.querySelectorAll('[data-setup-view]')
+    for (const view of views) {
+      view.addEventListener('click', () => {
+        const open = view.getAttribute('aria-expanded') !== 'true'
+        for (const other of views) {
+          other.setAttribute('aria-expanded', String(open))
+          other.textContent = open ? 'Hide prompt' : 'View prompt'
+        }
+        for (const full of root.querySelectorAll('[data-setup-full]')) {
+          full.classList.toggle('hidden', !open)
+        }
+      })
+    }
+  }
+</script>

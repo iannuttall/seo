@@ -3,7 +3,7 @@ import Breadcrumbs from '@/components/Breadcrumbs.astro'
 import CodeBlock from '@/components/CodeBlock.astro'
 import FaqAccordion from '@/components/FaqAccordion.astro'
 import PageHeader from '@/components/PageHeader.astro'
-import SetupCommands from '@/components/SetupCommands.astro'
+import SetupPrompts from '@/components/SetupPrompts.astro'
 import SchemaMarkupValidator from '@/components/tools/SchemaMarkupValidator.astro'
 import BaseLayout from '@/layouts/BaseLayout.astro'
 import type { SchemaBreadcrumb } from '@/lib/schema'
@@ -176,15 +176,11 @@ const faq = [
         and the ones with JSON-LD that does not parse. Your agent can then
         open the template that prints it and fix the cause. Ask:
       </p>
-      <CodeBlock value="Crawl example.com and list the pages with broken JSON-LD, grouped by template" wrap />
-      <p>
-        The crawl runs from the CLI. Install it and run setup:
-      </p>
-      <CodeBlock value="npm i -g seo && seo start" wrap />
-      <p>Or add the hosted MCP server for Search Console work in your agent:</p>
+      <CodeBlock prompt value="Crawl example.com and list the pages with broken JSON-LD, grouped by template" wrap />
+      <p>The crawl runs from the CLI on your machine. Give your agent this prompt and it installs the CLI and adds the hosted MCP server:</p>
     </div>
 
-    <SetupCommands id="schema-validator-setup" class="mt-6" />
+    <SetupPrompts id="schema-validator-setup" class="mt-6" />
 
     <div class="docs-prose mt-16">
       <h2>Schema validator questions</h2>

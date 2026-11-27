@@ -1,7 +1,7 @@
 ---
 import CodeBlock from '@/components/CodeBlock.astro'
 import FaqAccordion from '@/components/FaqAccordion.astro'
-import SetupCommands from '@/components/SetupCommands.astro'
+import SetupPrompts from '@/components/SetupPrompts.astro'
 import Breadcrumbs from '@/components/Breadcrumbs.astro'
 import PageHeader from '@/components/PageHeader.astro'
 import CanonicalChecker from '@/components/tools/CanonicalChecker.astro'
@@ -142,13 +142,11 @@ const faq = [
         Your agent can then trace each one to the template that prints it.
         Ask:
       </p>
-      <CodeBlock value="Crawl example.com and list every page whose canonical points somewhere other than itself, grouped by template" wrap />
-      <p>The crawl runs from the CLI on your machine. Install it and run setup:</p>
-      <CodeBlock value="npm i -g seo && seo start" wrap />
-      <p>Or add the hosted MCP server to your agent and sign in with Google:</p>
+      <CodeBlock prompt value="Crawl example.com and list every page whose canonical points somewhere other than itself, grouped by template" wrap />
+      <p>The crawl runs from the CLI on your machine. Give your agent this prompt and it installs the CLI and adds the hosted MCP server:</p>
     </div>
 
-    <SetupCommands id="canonical-checker-setup" class="mt-6" />
+    <SetupPrompts id="canonical-checker-setup" class="mt-6" />
 
     <div class="docs-prose mt-16">
       <h2>Canonical tag questions</h2>

@@ -1,6 +1,6 @@
 ---
 import PageHeader from '@/components/PageHeader.astro'
-import SetupCommands from '@/components/SetupCommands.astro'
+import SetupPrompts from '@/components/SetupPrompts.astro'
 import { commands } from '@/content/commands'
 import { docsSections } from '@/content/docs-nav.mjs'
 import BaseLayout from '@/layouts/BaseLayout.astro'
@@ -20,7 +20,7 @@ import BaseLayout from '@/layouts/BaseLayout.astro'
 
     <section aria-labelledby="docs-setup">
       <h2 id="docs-setup" class="sr-only">Connect or install</h2>
-      <SetupCommands id="docs-setup-commands" />
+      <SetupPrompts id="docs-setup-commands" />
     </section>
 
     <div class="mt-16 space-y-14">

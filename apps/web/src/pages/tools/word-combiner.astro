@@ -1,7 +1,7 @@
 ---
 import CodeBlock from '@/components/CodeBlock.astro'
 import FaqAccordion from '@/components/FaqAccordion.astro'
-import SetupCommands from '@/components/SetupCommands.astro'
+import SetupPrompts from '@/components/SetupPrompts.astro'
 import Breadcrumbs from '@/components/Breadcrumbs.astro'
 import PageHeader from '@/components/PageHeader.astro'
 import WordCombiner from '@/components/tools/WordCombiner.astro'
@@ -141,11 +141,11 @@ const faq = [
         which ones you already get impressions for with{' '}
         <a href="/docs/data">seo data</a>. Ask:
       </p>
-      <CodeBlock value="Get the search volume for these phrases in the US, drop the ones with none, and group the rest by intent" wrap />
-      <p>Add the hosted MCP server to your agent and sign in with Google:</p>
+      <CodeBlock prompt value="Get the search volume for these phrases in the US, drop the ones with none, and group the rest by intent" wrap />
+      <p>To set it up, give your agent this prompt:</p>
     </div>
 
-    <SetupCommands id="word-combiner-setup" class="mt-6" />
+    <SetupPrompts id="word-combiner-setup" class="mt-6" />
 
     <div class="docs-prose mt-16">
       <h2>Word combiner questions</h2>

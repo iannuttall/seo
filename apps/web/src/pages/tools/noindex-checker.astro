@@ -3,7 +3,7 @@ import Breadcrumbs from '@/components/Breadcrumbs.astro'
 import CodeBlock from '@/components/CodeBlock.astro'
 import FaqAccordion from '@/components/FaqAccordion.astro'
 import PageHeader from '@/components/PageHeader.astro'
-import SetupCommands from '@/components/SetupCommands.astro'
+import SetupPrompts from '@/components/SetupPrompts.astro'
 import NoindexChecker from '@/components/tools/NoindexChecker.astro'
 import BaseLayout from '@/layouts/BaseLayout.astro'
 import type { SchemaBreadcrumb } from '@/lib/schema'
@@ -231,13 +231,11 @@ const faq = [
         <a href="/docs/page">seo page</a> command adds Google's own URL
         Inspection result for a page, through your Search Console. Ask:
       </p>
-      <CodeBlock value="Crawl example.com and list every page that has noindex or is blocked by robots.txt, then check which of them still get impressions in Search Console" wrap />
-      <p>Install the CLI and run setup:</p>
-      <CodeBlock value="npm i -g seo && seo start" wrap />
-      <p>Or add the hosted MCP server to your agent and sign in with Google:</p>
+      <CodeBlock prompt value="Crawl example.com and list every page that has noindex or is blocked by robots.txt, then check which of them still get impressions in Search Console" wrap />
+      <p>Give your agent this prompt and it installs the CLI and adds the hosted MCP server:</p>
     </div>
 
-    <SetupCommands id="noindex-checker-setup" class="mt-6" />
+    <SetupPrompts id="noindex-checker-setup" class="mt-6" />
 
     <div class="docs-prose mt-16">
       <p>

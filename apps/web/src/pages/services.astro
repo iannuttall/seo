@@ -10,7 +10,7 @@ import CodeBlock from '@/components/CodeBlock.astro'
 import FaqAccordion from '@/components/FaqAccordion.astro'
 import HomeCard from '@/components/HomeCard.astro'
 import PageHeader from '@/components/PageHeader.astro'
-import SetupCommands from '@/components/SetupCommands.astro'
+import SetupPrompts from '@/components/SetupPrompts.astro'
 import BaseLayout from '@/layouts/BaseLayout.astro'
 import type { SchemaBreadcrumb } from '@/lib/schema'
 
@@ -64,7 +64,7 @@ const faq = [
       description="AI SEO is the work of getting found in Google and named in ChatGPT, Gemini, Perplexity and Google's AI answers. This is what that work covers, how to check it is working, and how to run it with your own agent and data."
     />
 
-    <SetupCommands id="services-setup" />
+    <SetupPrompts id="services-setup" />
 
     <article class="docs-prose mt-14 min-w-0">
       <h2>What AI SEO services cover</h2>
@@ -158,7 +158,7 @@ const faq = [
         Add the hosted MCP to Claude Code, Codex, Cursor or ChatGPT and sign
         in with Google, or install the CLI for the site crawl. Then ask:
       </p>
-      <CodeBlock value="What should I fix first to get found in Google and named in AI answers?" wrap />
+      <CodeBlock prompt value="What should I fix first to get found in Google and named in AI answers?" wrap />
       <p>
         Your agent reads your Search Console, checks your pages and AI
         answers, and comes back with the first step and the evidence for it.

@@ -3,7 +3,7 @@ import Breadcrumbs from '@/components/Breadcrumbs.astro'
 import CodeBlock from '@/components/CodeBlock.astro'
 import FaqAccordion from '@/components/FaqAccordion.astro'
 import PageHeader from '@/components/PageHeader.astro'
-import SetupCommands from '@/components/SetupCommands.astro'
+import SetupPrompts from '@/components/SetupPrompts.astro'
 import MigrationChecklist, { type ChecklistPhase } from '@/components/tools/MigrationChecklist.astro'
 import RedirectMapChecker from '@/components/tools/RedirectMapChecker.astro'
 import BaseLayout from '@/layouts/BaseLayout.astro'
@@ -255,13 +255,11 @@ const faq = [
         redirect rule gets caught in days instead of at the next quarterly
         review. Ask:
       </p>
-      <CodeBlock value="Every Monday until February, compare example.com before and after 2026-11-02, run seo redirect-trace --map redirects.csv, and tell me only what got worse" wrap />
-      <p>Install the CLI and run setup:</p>
-      <CodeBlock value="npm i -g seo && seo start" wrap />
-      <p>Or add the hosted MCP server to your agent and sign in with Google:</p>
+      <CodeBlock prompt value="Every Monday until February, compare example.com before and after 2026-11-02, run seo redirect-trace --map redirects.csv, and tell me only what got worse" wrap />
+      <p>Give your agent this prompt and it installs the CLI and adds the hosted MCP server:</p>
     </div>
 
-    <SetupCommands id="migration-setup" class="mt-6" />
+    <SetupPrompts id="migration-setup" class="mt-6" />
 
     <div class="docs-prose mt-16">
       <h2>SEO migration questions</h2>

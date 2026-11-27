@@ -1,6 +1,7 @@
 ---
 // A copyable code block from the ilo docs. The base layout binds the copy
-// button.
+// button. `prompt` is for plain-English text to give an agent: it reads in
+// the body font and wraps, while commands and output stay monospace.
 import { Copy01Icon, Tick02Icon } from '@hugeicons/core-free-icons'
 import HugeIcon from './HugeIcon.astro'
 
@@ -8,10 +9,11 @@ type Props = {
   label?: string
   value: string
   wrap?: boolean
+  prompt?: boolean
   class?: string
 }
 
-const { label, value, wrap = false, class: className } = Astro.props
+const { label, value, wrap = false, prompt = false, class: className } = Astro.props
 ---
 
 <div class:list={['mt-5 min-w-0', className]}>
@@ -19,9 +21,10 @@ const { label, value, wrap = false, class: className } = Astro.props
   <div class="code-frame !mt-0">
     <pre
       class:list={[
-        '!mt-0 overflow-x-auto rounded-lg bg-muted p-4 pr-13 font-mono text-sm leading-6 text-foreground',
-        wrap && 'whitespace-pre-wrap break-words',
-      ]}><code>{value}</code></pre>
+        '!mt-0 overflow-x-auto rounded-lg bg-muted p-4 pr-13 text-foreground',
+        prompt ? 'font-sans text-base/7' : 'font-mono text-sm leading-6',
+        (wrap || prompt) && 'whitespace-pre-wrap break-words',
+      ]}><code class:list={[prompt && 'language-prompt font-sans']}>{value}</code></pre>
     <div class="code-copy-strip">
       <button
         type="button"

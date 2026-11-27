@@ -1,7 +1,7 @@
 ---
 import CodeBlock from '@/components/CodeBlock.astro'
 import FaqAccordion from '@/components/FaqAccordion.astro'
-import SetupCommands from '@/components/SetupCommands.astro'
+import SetupPrompts from '@/components/SetupPrompts.astro'
 import Breadcrumbs from '@/components/Breadcrumbs.astro'
 import PageHeader from '@/components/PageHeader.astro'
 import SitemapValidator from '@/components/tools/SitemapValidator.astro'
@@ -150,13 +150,11 @@ const faq = [
         reading every page, so your agent can tell you which entries should
         come out. Ask:
       </p>
-      <CodeBlock value="Check every URL in https://example.com/sitemap.xml and list the ones that redirect or return an error" wrap />
-      <p>The crawl runs from the CLI on your machine. Install it and run setup:</p>
-      <CodeBlock value="npm i -g seo && seo start" wrap />
-      <p>Or add the hosted MCP server to your agent and sign in with Google:</p>
+      <CodeBlock prompt value="Check every URL in https://example.com/sitemap.xml and list the ones that redirect or return an error" wrap />
+      <p>The crawl runs from the CLI on your machine. Give your agent this prompt and it installs the CLI and adds the hosted MCP server:</p>
     </div>
 
-    <SetupCommands id="sitemap-validator-setup" class="mt-6" />
+    <SetupPrompts id="sitemap-validator-setup" class="mt-6" />
 
     <div class="docs-prose mt-16">
       <h2>Sitemap validator questions</h2>

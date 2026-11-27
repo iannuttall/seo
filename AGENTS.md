@@ -26,6 +26,10 @@ tell you. Product and privacy decisions are not rules for this file.
 - Edits to an agent's MCP config keep unrelated settings, make a backup and
   never replace an entry that `seo` did not write.
 - The Clicky account password never leaves the server.
+- The setup prompts on seoskill.dev (`apps/web/src/content/setup-prompts.ts`)
+  tell agents exactly what to run. A change to a command or tool they use
+  (`seo login`, `seo skill install`, `seo sites`, `seo_next`), to sign-in, to
+  the hosted MCP or to a client's MCP commands updates them in the same PR.
 
 ## Report truth
 

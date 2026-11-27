@@ -3,7 +3,7 @@ import CodeBlock from '@/components/CodeBlock.astro'
 import FaqAccordion from '@/components/FaqAccordion.astro'
 import Breadcrumbs from '@/components/Breadcrumbs.astro'
 import PageHeader from '@/components/PageHeader.astro'
-import SetupCommands from '@/components/SetupCommands.astro'
+import SetupPrompts from '@/components/SetupPrompts.astro'
 import KeywordCannibalizationChecker from '@/components/tools/KeywordCannibalizationChecker.astro'
 import BaseLayout from '@/layouts/BaseLayout.astro'
 import type { SchemaBreadcrumb } from '@/lib/schema'
@@ -66,14 +66,14 @@ const faq = [
         live: a page that now errors shows before you spend time on it, and
         a page that now redirects counts as the page it points to.
       </p>
-      <p>Add the hosted MCP server to your agent and sign in with Google:</p>
+      <p>To set it up, give your agent this prompt:</p>
     </div>
 
-    <SetupCommands id="cannibalization-setup" class="mt-6" />
+    <SetupPrompts id="cannibalization-setup" class="mt-6" />
 
     <div class="docs-prose mt-8">
       <p>Then ask:</p>
-      <CodeBlock value="Which queries is example.com cannibalizing, and which page should own each one?" wrap />
+      <CodeBlock prompt value="Which queries is example.com cannibalizing, and which page should own each one?" wrap />
       <p>
         In a terminal, install the CLI with <code>npm i -g seo</code>, run{' '}
         <code>seo start</code> to connect Search Console, then run the

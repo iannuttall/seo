@@ -3,7 +3,7 @@ import Breadcrumbs from '@/components/Breadcrumbs.astro'
 import CodeBlock from '@/components/CodeBlock.astro'
 import FaqAccordion from '@/components/FaqAccordion.astro'
 import PageHeader from '@/components/PageHeader.astro'
-import SetupCommands from '@/components/SetupCommands.astro'
+import SetupPrompts from '@/components/SetupPrompts.astro'
 import ProtectedMetricChecker from '@/components/tools/ProtectedMetricChecker.astro'
 import BaseLayout from '@/layouts/BaseLayout.astro'
 import type { SchemaBreadcrumb } from '@/lib/schema'
@@ -154,11 +154,11 @@ const faq = [
         agent can then sort the list and open the sites worth a human look.
         Ask:
       </p>
-      <CodeBlock value="List the referring domains for competitor.example, sort them by Domain Rating, and flag any I should check by hand" wrap />
-      <p>Add the hosted MCP server to your agent and sign in with Google:</p>
+      <CodeBlock prompt value="List the referring domains for competitor.example, sort them by Domain Rating, and flag any I should check by hand" wrap />
+      <p>To set it up, give your agent this prompt:</p>
     </div>
 
-    <SetupCommands id="spam-score-setup" class="mt-6" />
+    <SetupPrompts id="spam-score-setup" class="mt-6" />
 
     <div class="docs-prose mt-16">
       <h2>Spam score questions</h2>

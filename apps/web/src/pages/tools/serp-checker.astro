@@ -3,7 +3,7 @@ import Breadcrumbs from '@/components/Breadcrumbs.astro'
 import CodeBlock from '@/components/CodeBlock.astro'
 import FaqAccordion from '@/components/FaqAccordion.astro'
 import PageHeader from '@/components/PageHeader.astro'
-import SetupCommands from '@/components/SetupCommands.astro'
+import SetupPrompts from '@/components/SetupPrompts.astro'
 import ResearchLookup from '@/components/tools/ResearchLookup.astro'
 import BaseLayout from '@/layouts/BaseLayout.astro'
 import type { SchemaBreadcrumb } from '@/lib/schema'
@@ -152,11 +152,11 @@ const faq = [
         those queries with your own DataForSEO or Ahrefs key, so you can see
         which pages sit above yours and what they have in common. Ask:
       </p>
-      <CodeBlock value="Find my quick wins for example.com, then check the live Google results for the top five and tell me what the pages above mine have in common" wrap />
-      <p>Add the hosted MCP server to your agent and sign in with Google:</p>
+      <CodeBlock prompt value="Find my quick wins for example.com, then check the live Google results for the top five and tell me what the pages above mine have in common" wrap />
+      <p>To set it up, give your agent this prompt:</p>
     </div>
 
-    <SetupCommands id="serp-setup" class="mt-6" />
+    <SetupPrompts id="serp-setup" class="mt-6" />
 
     <div class="docs-prose mt-16">
       <h2>SERP checker questions</h2>

@@ -3,7 +3,7 @@ import Breadcrumbs from '@/components/Breadcrumbs.astro'
 import CodeBlock from '@/components/CodeBlock.astro'
 import FaqAccordion from '@/components/FaqAccordion.astro'
 import PageHeader from '@/components/PageHeader.astro'
-import SetupCommands from '@/components/SetupCommands.astro'
+import SetupPrompts from '@/components/SetupPrompts.astro'
 import ResearchLookup from '@/components/tools/ResearchLookup.astro'
 import BaseLayout from '@/layouts/BaseLayout.astro'
 import type { SchemaBreadcrumb } from '@/lib/schema'
@@ -126,11 +126,11 @@ const faq = [
         count the shared words, and draft titles next to the queries your page
         already gets in Search Console. Ask:
       </p>
-      <CodeBlock value="Read the top 50 Google titles for my main keyword on example.com/guide, count the words they share, and draft three titles that use them" wrap />
-      <p>Add the hosted MCP server to your agent and sign in with Google:</p>
+      <CodeBlock prompt value="Read the top 50 Google titles for my main keyword on example.com/guide, count the words they share, and draft three titles that use them" wrap />
+      <p>To set it up, give your agent this prompt:</p>
     </div>
 
-    <SetupCommands id="title-words-setup" class="mt-6" />
+    <SetupPrompts id="title-words-setup" class="mt-6" />
 
     <div class="docs-prose mt-16">
       <h2>Title tag word frequency questions</h2>

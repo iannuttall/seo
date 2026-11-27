@@ -2,7 +2,7 @@
 import Breadcrumbs from '@/components/Breadcrumbs.astro'
 import HomeCard from '@/components/HomeCard.astro'
 import PageHeader from '@/components/PageHeader.astro'
-import SetupCommands from '@/components/SetupCommands.astro'
+import SetupPrompts from '@/components/SetupPrompts.astro'
 import BaseLayout from '@/layouts/BaseLayout.astro'
 import type { SchemaBreadcrumb } from '@/lib/schema'
 
@@ -53,7 +53,7 @@ const breadcrumbs: SchemaBreadcrumb[] = [
 
     <PageHeader {title} description={lead} />
 
-    <SetupCommands id="feature-setup" />
+    <SetupPrompts id="feature-setup" />
 
     <article class="docs-prose mt-14 min-w-0">
       <slot />

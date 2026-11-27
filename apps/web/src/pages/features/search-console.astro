@@ -99,7 +99,7 @@ const related = [
   </p>
 
   <h3>See which sites your agent can read</h3>
-  <CodeBlock value="Which Search Console properties can you read?" wrap />
+  <CodeBlock prompt value="Which Search Console properties can you read?" wrap />
   <p>
     The agent lists the Search Console and Google Analytics properties your
     linked Google accounts can see. Domain properties look like{' '}
@@ -108,7 +108,7 @@ const related = [
   </p>
 
   <h3>Get the overview for last month</h3>
-  <CodeBlock value="What happened in search for example.com in the last 28 days?" wrap />
+  <CodeBlock prompt value="What happened in search for example.com in the last 28 days?" wrap />
   <CodeBlock label="In a terminal" value="seo report --site example.com" />
   <p>
     Clicks, impressions, CTR and position against the previous period, split
@@ -118,7 +118,7 @@ const related = [
   </p>
 
   <h3>Find quick wins and page two queries</h3>
-  <CodeBlock value="Show me the striking-distance queries and quick wins for example.com" wrap />
+  <CodeBlock prompt value="Show me the striking-distance queries and quick wins for example.com" wrap />
   <p>
     Striking distance lists queries just outside the top positions for pages
     that already rank. Quick wins are queries at positions 4 to 10 with a
@@ -127,7 +127,7 @@ const related = [
   </p>
 
   <h3>Check why one page lost its clicks</h3>
-  <CodeBlock value="Why did https://example.com/pricing lose clicks this month?" wrap />
+  <CodeBlock prompt value="Why did https://example.com/pricing lose clicks this month?" wrap />
   <CodeBlock label="In a terminal" value="seo page --url https://example.com/pricing" />
   <p>
     The agent loads the page live (status, redirect, title, canonical, robots),
@@ -137,7 +137,7 @@ const related = [
   </p>
 
   <h3>Compare before and after a release or a Google update</h3>
-  <CodeBlock value="Compare example.com before and after 2026-09-15, just the /blog/ pages" wrap />
+  <CodeBlock prompt value="Compare example.com before and after 2026-09-15, just the /blog/ pages" wrap />
   <CodeBlock label="In a terminal" value="seo compare --site example.com --date 2026-09-15 --pages /blog/" />
   <p>
     Equal periods either side of the date, with the pages and queries that
@@ -147,7 +147,7 @@ const related = [
   </p>
 
   <h3>Find pages that dropped out of Google</h3>
-  <CodeBlock value="Which pages on example.com lost their clicks, and are they still indexed?" wrap />
+  <CodeBlock prompt value="Which pages on example.com lost their clicks, and are they still indexed?" wrap />
   <CodeBlock label="In a terminal" value="seo index --site example.com" />
   <p>
     Pages that kept 20% or less of their clicks over the last 28 days, each
@@ -159,7 +159,7 @@ const related = [
   <p>
     We ran this on seoskill.dev while rebuilding this page. The prompt was:
   </p>
-  <CodeBlock value={'Which of my pages show up for searches containing "search console mcp", with impressions and position?'} wrap />
+  <CodeBlock prompt value={'Which of my pages show up for searches containing "search console mcp", with impressions and position?'} wrap />
   <p>
     The agent called the raw rows tool with a query filter, by query and page,
     for 13 August to 7 November 2026. For &quot;google search console mcp&quot;

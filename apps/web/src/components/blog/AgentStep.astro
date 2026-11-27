@@ -1,12 +1,11 @@
 ---
 // One how-to step in a blog post: a prompt to give your agent, the CLI
 // command for the same step. `setup` on a post's first step shows the
-// hosted MCP setup once. `local` gives the reason a step runs on the
-// reader's machine (Bing, IndexNow, crawls) and shows the install.
+// setup prompt once. `local` gives the reason a step runs on the reader's
+// machine (Bing, IndexNow, crawls) and shows the setup prompt with it.
 import { Copy01Icon, Tick02Icon } from '@hugeicons/core-free-icons'
 import HugeIcon from '@/components/HugeIcon.astro'
-import SetupCommands from '@/components/SetupCommands.astro'
-import { setupCommands } from '@/lib/site'
+import SetupPrompts from '@/components/SetupPrompts.astro'
 
 type Props = { prompt: string; cli?: string; local?: string; setup?: boolean }
 
@@ -50,25 +49,16 @@ const id = `agent-step-${Math.random().toString(36).slice(2, 8)}`
   {
     local ? (
       <div class="mt-4" data-agent-markdown="exclude">
-        <p class="text-sm/6 text-foreground-muted">{local} First time? Install SEO Skill:</p>
-        <button
-          type="button"
-          class="group mt-1 flex w-full min-w-0 items-center gap-3 rounded-lg bg-background px-4 py-2.5 text-left font-mono text-sm text-foreground outline-none transition-colors hover:bg-secondary-hover focus-visible:ring-[3px] focus-visible:ring-ring/20"
-          data-copy-value={setupCommands.install}
-          aria-label="Copy the install command"
-        >
-          <span class="min-w-0 flex-1 overflow-x-auto whitespace-nowrap">{setupCommands.install}</span>
-          <span class="shrink-0 text-foreground-muted group-hover:text-foreground">
-            <HugeIcon icon={Copy01Icon} class="size-4" data-copy-icon />
-            <HugeIcon icon={Tick02Icon} class="hidden size-4" data-copy-check-icon />
-          </span>
-        </button>
+        <p class="text-sm/6 text-foreground-muted">{local} First time? Give your agent this prompt to set up SEO Skill:</p>
+        <div class="mt-2 rounded-lg bg-background p-4">
+          <SetupPrompts id={id} />
+        </div>
       </div>
     ) : setup ? (
       <div class="mt-4" data-agent-markdown="exclude">
         <p class="text-sm font-medium text-foreground">First time? Connect SEO Skill to your agent, free</p>
         <div class="mt-2 rounded-lg bg-background p-4">
-          <SetupCommands id={id} hostedOnly />
+          <SetupPrompts id={id} />
         </div>
       </div>
     ) : null

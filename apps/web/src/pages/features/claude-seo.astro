@@ -49,8 +49,8 @@ const related = [
   <h2>Add the Claude SEO skill to Claude Code in 3 steps</h2>
   <p>
     You need Claude Code and a Google account that can read at least one
-    Search Console property. Step 2 needs Node 22 or later (the{' '}
-    <a href="/docs/cli">CLI guide</a> lists the exact versions).
+    Search Console property. Step 2 needs the current LTS release of
+    Node.js.
   </p>
 
   <h3>1. Connect the hosted MCP server</h3>
@@ -76,7 +76,7 @@ const related = [
 
   <h3>3. Check that Claude can read your sites</h3>
   <p>Ask Claude:</p>
-  <CodeBlock value="Which Search Console sites can you read?" wrap />
+  <CodeBlock prompt value="Which Search Console sites can you read?" wrap />
   <p>
     Claude lists the Search Console and Google Analytics properties your
     Google account can read, and which research keys you saved. If a site is
@@ -206,7 +206,7 @@ seo compare --site example.com --date 2026-10-07`} />
     Ask Claude to work on a site's SEO without a narrower question, and the
     skill starts a loop that does one step at a time:
   </p>
-  <CodeBlock value="Use SEO Skill to improve example.com" wrap />
+  <CodeBlock prompt value="Use SEO Skill to improve example.com" wrap />
   <ol>
     <li>
       <strong>Write the business context.</strong> Claude reads your home,

@@ -3,7 +3,7 @@ import Breadcrumbs from '@/components/Breadcrumbs.astro'
 import CodeBlock from '@/components/CodeBlock.astro'
 import FaqAccordion from '@/components/FaqAccordion.astro'
 import PageHeader from '@/components/PageHeader.astro'
-import SetupCommands from '@/components/SetupCommands.astro'
+import SetupPrompts from '@/components/SetupPrompts.astro'
 import AiOverviewChecker from '@/components/tools/AiOverviewChecker.astro'
 import BaseLayout from '@/layouts/BaseLayout.astro'
 import type { SchemaBreadcrumb } from '@/lib/schema'
@@ -158,11 +158,11 @@ const faq = [
         Console. That way you check the keywords that matter to you, not a
         list you guessed. Ask:
       </p>
-      <CodeBlock value="Check which of my top 20 Search Console queries for example.com show a Google AI Overview, list the sources each one cites with their organic positions, and tell me where my pages rank but are not cited" wrap />
-      <p>Add the hosted MCP server to your agent and sign in with Google:</p>
+      <CodeBlock prompt value="Check which of my top 20 Search Console queries for example.com show a Google AI Overview, list the sources each one cites with their organic positions, and tell me where my pages rank but are not cited" wrap />
+      <p>To set it up, give your agent this prompt:</p>
     </div>
 
-    <SetupCommands id="ai-overview-setup" class="mt-6" />
+    <SetupPrompts id="ai-overview-setup" class="mt-6" />
 
     <div class="docs-prose mt-16">
       <h2>AI Overview checker questions</h2>

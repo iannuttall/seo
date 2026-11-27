@@ -3,7 +3,7 @@ import CodeBlock from '@/components/CodeBlock.astro'
 import FaqAccordion from '@/components/FaqAccordion.astro'
 import Breadcrumbs from '@/components/Breadcrumbs.astro'
 import PageHeader from '@/components/PageHeader.astro'
-import SetupCommands from '@/components/SetupCommands.astro'
+import SetupPrompts from '@/components/SetupPrompts.astro'
 import MonthlyReportBuilder from '@/components/tools/MonthlyReportBuilder.astro'
 import BaseLayout from '@/layouts/BaseLayout.astro'
 import type { SchemaBreadcrumb } from '@/lib/schema'
@@ -130,11 +130,11 @@ const faq = [
         month compares fairly with the next. Agents that run on a schedule
         can do this without you asking.
       </p>
-      <CodeBlock value="Write the monthly SEO report for example.com for last month, compared with the month before" wrap />
-      <p>Add the hosted MCP server to your agent and sign in with Google:</p>
+      <CodeBlock prompt value="Write the monthly SEO report for example.com for last month, compared with the month before" wrap />
+      <p>To set it up, give your agent this prompt:</p>
     </div>
 
-    <SetupCommands id="monthly-report-setup" class="mt-6" />
+    <SetupPrompts id="monthly-report-setup" class="mt-6" />
 
     <div class="docs-prose mt-16">
       <h2>Monthly SEO report questions</h2>

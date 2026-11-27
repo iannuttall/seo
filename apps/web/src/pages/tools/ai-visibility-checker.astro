@@ -3,7 +3,7 @@ import Breadcrumbs from '@/components/Breadcrumbs.astro'
 import CodeBlock from '@/components/CodeBlock.astro'
 import FaqAccordion from '@/components/FaqAccordion.astro'
 import PageHeader from '@/components/PageHeader.astro'
-import SetupCommands from '@/components/SetupCommands.astro'
+import SetupPrompts from '@/components/SetupPrompts.astro'
 import AiVisibilityChecker from '@/components/tools/AiVisibilityChecker.astro'
 import BaseLayout from '@/layouts/BaseLayout.astro'
 import type { SchemaBreadcrumb } from '@/lib/schema'
@@ -206,17 +206,17 @@ const faq = [
         Google connected it can take the questions from the AI-style searches
         your site already gets in Search Console. Ask:
       </p>
-      <CodeBlock value={`Ask ChatGPT, Gemini, AI Mode and AI Overviews "best invoicing app for freelancers" and "alternatives to example.com", and check whether they cite or name example.com`} wrap />
+      <CodeBlock prompt value={`Ask ChatGPT, Gemini, AI Mode and AI Overviews "best invoicing app for freelancers" and "alternatives to example.com", and check whether they cite or name example.com`} wrap />
       <p>Or run it in a terminal after <code>npm i -g seo</code> and <code>seo start</code>:</p>
       <CodeBlock value={`seo research ai_answers --target example.com --brand "Example" --keywords "best invoicing app for freelancers,alternatives to example.com"`} wrap />
       <p>
         The <a href="/features/ai-visibility-checker">AI visibility checker in SEO Skill</a>{' '}
-        has a worked example and more prompts. Add the hosted MCP server to
-        your agent and sign in with Google:
+        has a worked example and more prompts. To set it up, give
+        your agent this prompt:
       </p>
     </div>
 
-    <SetupCommands id="ai-visibility-setup" class="mt-6" />
+    <SetupPrompts id="ai-visibility-setup" class="mt-6" />
 
     <div class="docs-prose mt-16">
       <h2>AI visibility checker questions</h2>

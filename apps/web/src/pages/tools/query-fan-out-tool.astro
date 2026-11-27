@@ -3,7 +3,7 @@ import Breadcrumbs from '@/components/Breadcrumbs.astro'
 import CodeBlock from '@/components/CodeBlock.astro'
 import FaqAccordion from '@/components/FaqAccordion.astro'
 import PageHeader from '@/components/PageHeader.astro'
-import SetupCommands from '@/components/SetupCommands.astro'
+import SetupPrompts from '@/components/SetupPrompts.astro'
 import QueryFanOutTool from '@/components/tools/QueryFanOutTool.astro'
 import BaseLayout from '@/layouts/BaseLayout.astro'
 import type { SchemaBreadcrumb } from '@/lib/schema'
@@ -157,11 +157,11 @@ const faq = [
         key, and shows the searches behind each answer and whether it cited
         you. Ask:
       </p>
-      <CodeBlock value="Ask ChatGPT the top AI-style questions example.com gets in Search Console, show me the searches it ran for each, and tell me which of those searches my pages rank for" wrap />
-      <p>Add the hosted MCP server to your agent and sign in with Google:</p>
+      <CodeBlock prompt value="Ask ChatGPT the top AI-style questions example.com gets in Search Console, show me the searches it ran for each, and tell me which of those searches my pages rank for" wrap />
+      <p>To set it up, give your agent this prompt:</p>
     </div>
 
-    <SetupCommands id="query-fan-out-setup" class="mt-6" />
+    <SetupPrompts id="query-fan-out-setup" class="mt-6" />
 
     <div class="docs-prose mt-16">
       <h2>Query fan-out tool questions</h2>

@@ -3,7 +3,7 @@ import Breadcrumbs from '@/components/Breadcrumbs.astro'
 import CodeBlock from '@/components/CodeBlock.astro'
 import FaqAccordion from '@/components/FaqAccordion.astro'
 import PageHeader from '@/components/PageHeader.astro'
-import SetupCommands from '@/components/SetupCommands.astro'
+import SetupPrompts from '@/components/SetupPrompts.astro'
 import BacklinkChecker from '@/components/tools/BacklinkChecker.astro'
 import BaseLayout from '@/layouts/BaseLayout.astro'
 import type { SchemaBreadcrumb } from '@/lib/schema'
@@ -224,11 +224,11 @@ const faq = [
         <a href="/features/backlink-gap">backlink gap analysis</a> does that
         comparison for up to 5 competitors in one run. Ask:
       </p>
-      <CodeBlock value="List the referring domains for competitor.example and other.example, and show the sites that link to both of them but not to example.com" wrap />
-      <p>Add the hosted MCP server to your agent and sign in with Google:</p>
+      <CodeBlock prompt value="List the referring domains for competitor.example and other.example, and show the sites that link to both of them but not to example.com" wrap />
+      <p>To set it up, give your agent this prompt:</p>
     </div>
 
-    <SetupCommands id="backlink-setup" class="mt-6" />
+    <SetupPrompts id="backlink-setup" class="mt-6" />
 
     <div class="docs-prose mt-16">
       <h2>Backlink questions</h2>

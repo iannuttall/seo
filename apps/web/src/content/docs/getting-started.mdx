@@ -8,7 +8,7 @@ lead: Connect the hosted MCP or install the CLI, sign in with Google, and ask yo
 
 - A Google account that can see at least one Search Console property.
 - An AI agent that supports MCP, such as Claude Code, Codex or Cursor.
-- For the CLI only: a terminal with Node 22.23.4, 24.22.1, 26.12.1 or a later release of the same line.
+- For the CLI only: a terminal with the current LTS release of Node.js.
 
 Google Analytics, other analytics tools and keyword data are optional. You can add them later.
 
@@ -26,9 +26,9 @@ Both run the same reports and return the same facts. The hosted MCP is the quick
 
 ## Connect the hosted MCP
 
-Pick your agent and copy the command. Each one adds the server and opens the Google sign-in the first time it connects.
+Pick your agent, copy the prompt and paste it into the agent. It installs the CLI, adds the hosted MCP and stops when it needs you to sign in with Google.
 
-<SetupCommands id="getting-started-setup" />
+<SetupPrompts id="getting-started-setup" />
 
 The [hosted MCP guide](/docs/mcp) covers other clients, the tools and how sign-in works. In Codex, the [Codex SEO skill](/features/codex-seo) page adds the skill and the CLI as well.
 
@@ -46,13 +46,13 @@ Setup asks how you want to sign in. Signing in to your free seoskill.dev account
 
 Ask your agent in plain words:
 
-```text
+```prompt
 Run the SEO report for example.com
 ```
 
 The agent calls the report without a section first. You get an overview of clicks, impressions, click-through rate and position against the previous period, plus a count and the top rows for each section. Then ask for the section that looks interesting:
 
-```text
+```prompt
 Show me the quick wins for example.com
 ```
 

@@ -55,7 +55,7 @@ const related = [
     the commands at the top of this page and sign in with Google (access is
     read only). Then ask:
   </p>
-  <CodeBlock value={`Find the keyword opportunities for example.com in my Search Console. Show the top 10 with the page that ranks for each.`} wrap />
+  <CodeBlock prompt value={`Find the keyword opportunities for example.com in my Search Console. Show the top 10 with the page that ranks for each.`} wrap />
   <p>In a terminal, after <code>npm i -g seo</code> and <code>seo start</code>:</p>
   <CodeBlock value={`seo report --site example.com`} wrap />
   <p>
@@ -120,7 +120,7 @@ const related = [
     by difficulty. For keywords you don't rank for yet, your agent can
     build a score like that from keyword metrics and show its formula:
   </p>
-  <CodeBlock value={`Score these 30 keywords by search volume, keyword difficulty and whether example.com already ranks for them. Show the formula you used.`} wrap />
+  <CodeBlock prompt value={`Score these 30 keywords by search volume, keyword difficulty and whether example.com already ranks for them. Show the formula you used.`} wrap />
 
   <h2>Estimate the SEO potential of a keyword you don't rank for</h2>
   <p>
@@ -145,7 +145,7 @@ const related = [
     page (the provider bills you, and every DataForSEO result says what the
     request cost). Then ask for ideas and metrics together:
   </p>
-  <CodeBlock value={`Give me keyword ideas for "invoice template" in the US, then get volume and difficulty for the 30 best fits for example.com`} wrap />
+  <CodeBlock prompt value={`Give me keyword ideas for "invoice template" in the US, then get volume and difficulty for the 30 best fits for example.com`} wrap />
   <CodeBlock value={`seo research keyword_ideas --keywords "invoice template" --country us
 seo research keyword_metrics --keywords "invoice template for contractors,free invoice template word" --country us`} wrap />
   <p>
@@ -178,7 +178,7 @@ seo research keyword_metrics --keywords "invoice template for contractors,free i
     The searches a competitor ranks for and you don't are opportunities with
     proof that the topic can rank. Ask your agent:
   </p>
-  <CodeBlock value={`Who are example.com's search competitors? For the top 3, list the keywords they rank for in the top 10 that example.com doesn't.`} wrap />
+  <CodeBlock prompt value={`Who are example.com's search competitors? For the top 3, list the keywords they rank for in the top 10 that example.com doesn't.`} wrap />
   <p>
     The agent finds the domains that share your keywords, reads each
     one's ranked keywords and compares them with your Search Console
@@ -268,7 +268,7 @@ seo research keyword_metrics --keywords "invoice template for contractors,free i
     A keyword opportunity report is the list in a form you can act on and
     share. Ask for one in a single prompt:
   </p>
-  <CodeBlock value={`Write a keyword opportunity report for example.com. First the top 10 Search Console opportunities with their score and the page for each. Then 10 new keywords with volume, difficulty and who ranks, in a separate table. Say which numbers are estimates.`} wrap />
+  <CodeBlock prompt value={`Write a keyword opportunity report for example.com. First the top 10 Search Console opportunities with their score and the page for each. Then 10 new keywords with volume, difficulty and who ranks, in a separate table. Say which numbers are estimates.`} wrap />
   <p>
     Monthly is a sensible cadence. Keep the same 28 days of Search Console
     data each time so the scores compare. When you fix a page from the

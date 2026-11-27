@@ -110,7 +110,7 @@ const related = [
   <h2>Run an SEO competitor analysis in 5 steps</h2>
 
   <h3>1. Find your SEO competitors</h3>
-  <CodeBlock value={`Who are the SEO competitors of example.com in the US? Group them into direct rivals, publishers and tools.`} wrap />
+  <CodeBlock prompt value={`Who are the SEO competitors of example.com in the US? Group them into direct rivals, publishers and tools.`} wrap />
   <CodeBlock value={`seo research competitors --target example.com --country us`} wrap />
   <p>
     The competitors list gives each domain's shared keywords, its average
@@ -123,7 +123,7 @@ const related = [
   </p>
 
   <h3>2. See which pages earn their traffic</h3>
-  <CodeBlock value={`Show the top pages of example.org and say what each one is: guide, tool, comparison or product page.`} wrap />
+  <CodeBlock prompt value={`Show the top pages of example.org and say what each one is: guide, tool, comparison or product page.`} wrap />
   <CodeBlock value={`seo research top_pages --target example.org --country us`} wrap />
   <p>
     Top pages rank a site's pages by estimated search traffic, with how many
@@ -134,7 +134,7 @@ const related = [
   </p>
 
   <h3>3. Read what one competitor page ranks for</h3>
-  <CodeBlock value={`What does https://example.org/blog/pricing-guide rank for, and which of those searches could one of my pages win?`} wrap />
+  <CodeBlock prompt value={`What does https://example.org/blog/pricing-guide rank for, and which of those searches could one of my pages win?`} wrap />
   <CodeBlock value={`seo research ranked_keywords --target https://example.org/blog/pricing-guide`} wrap />
   <p>
     A full URL reads that one page. Each row has the keyword, its position,
@@ -143,7 +143,7 @@ const related = [
   </p>
 
   <h3>4. Check who ranks for the searches you want</h3>
-  <CodeBlock value={`Show the top 10 for "invoice software for freelancers" and "freelance invoice app" with each site's Domain Rating, and say whether they need one page or two.`} wrap />
+  <CodeBlock prompt value={`Show the top 10 for "invoice software for freelancers" and "freelance invoice app" with each site's Domain Rating, and say whether they need one page or two.`} wrap />
   <CodeBlock value={`seo research serp --keywords "invoice software for freelancers,freelance invoice app" --depth 10
 seo research serp_overlap --keywords "invoice software for freelancers,freelance invoice app"`} />
   <p>
@@ -157,7 +157,7 @@ seo research serp_overlap --keywords "invoice software for freelancers,freelance
   </p>
 
   <h3>5. Find the sites that link to them and not you</h3>
-  <CodeBlock value={`Run a link gap for example.com against example.org, example.net and competitor.example. Which sites link to two or more of them and not to me?`} wrap />
+  <CodeBlock prompt value={`Run a link gap for example.com against example.org, example.net and competitor.example. Which sites link to two or more of them and not to me?`} wrap />
   <CodeBlock value={`seo research link_gap --target example.com --competitors example.org,example.net,competitor.example`} wrap />
   <p>
     Link gap reads each site's top 1,000 referring domains and lists the

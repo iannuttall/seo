@@ -3,7 +3,7 @@ import Breadcrumbs from '@/components/Breadcrumbs.astro'
 import CodeBlock from '@/components/CodeBlock.astro'
 import FaqAccordion from '@/components/FaqAccordion.astro'
 import PageHeader from '@/components/PageHeader.astro'
-import SetupCommands from '@/components/SetupCommands.astro'
+import SetupPrompts from '@/components/SetupPrompts.astro'
 import AiHumanizer from '@/components/tools/AiHumanizer.astro'
 import BaseLayout from '@/layouts/BaseLayout.astro'
 import type { SchemaBreadcrumb } from '@/lib/schema'
@@ -143,22 +143,20 @@ const faq = [
       <p>
         This page runs the AI pattern rules from <code>seo lint</code>, the
         writing check in the SEO Skill CLI. Your agent can run it on a draft,
-        fix each finding and check again until nothing is left. Install the
-        CLI and run setup:
+        fix each finding and check again until nothing is left. Once it is
+        set up (the prompt below does that), ask your agent:
       </p>
-      <CodeBlock value="npm i -g seo && seo start" wrap />
-      <p>Then ask your agent:</p>
-      <CodeBlock value="Check drafts/launch-post.md with seo lint and fix every error and warning. Use only facts already in the text. Run seo lint again until it reports 0 errors and 0 warnings." wrap />
+      <CodeBlock prompt value="Check drafts/launch-post.md with seo lint and fix every error and warning. Use only facts already in the text. Run seo lint again until it reports 0 errors and 0 warnings." wrap />
       <p>
         The <a href="/docs/lint">seo lint docs</a> cover presets for blog
         posts, landing pages and meta descriptions, and how to keep a flagged
         line on purpose. <a href="/blog/ai-slop">What AI slop is and how to
-        remove it</a> explains the research behind the patterns. You can also
-        add the hosted MCP server to your agent and sign in with Google:
+        remove it</a> explains the research behind the patterns. To set it up,
+        give your agent this prompt:
       </p>
     </div>
 
-    <SetupCommands id="ai-humanizer-setup" class="mt-6" />
+    <SetupPrompts id="ai-humanizer-setup" class="mt-6" />
 
     <div class="docs-prose mt-16">
       <h2>AI humanizer questions</h2>

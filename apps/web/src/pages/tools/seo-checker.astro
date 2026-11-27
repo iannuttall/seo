@@ -1,10 +1,22 @@
 ---
-import Breadcrumbs from '@/components/Breadcrumbs.astro'
+import {
+  CodeIcon,
+  File01Icon,
+  Image02Icon,
+  LockKeyIcon,
+  Share08Icon,
+  TextCheckIcon,
+  ViewIcon,
+  WebValidationIcon,
+} from '@hugeicons/core-free-icons'
 import CodeBlock from '@/components/CodeBlock.astro'
 import FaqAccordion from '@/components/FaqAccordion.astro'
-import PageHeader from '@/components/PageHeader.astro'
+import HomeCard from '@/components/HomeCard.astro'
+import SectionHeading from '@/components/SectionHeading.astro'
 import SetupPrompts from '@/components/SetupPrompts.astro'
+import SplitList from '@/components/SplitList.astro'
 import SeoChecker from '@/components/tools/SeoChecker.astro'
+import { getButtonClasses } from '@/components/ui/button'
 import BaseLayout from '@/layouts/BaseLayout.astro'
 import type { SchemaBreadcrumb } from '@/lib/schema'
 
@@ -14,11 +26,58 @@ const breadcrumbs: SchemaBreadcrumb[] = [
   { label: 'SEO checker' },
 ]
 
+// The four parts of the check, in the order they matter.
+const parts = [
+  {
+    title: 'Access',
+    icon: LockKeyIcon,
+    text: 'The status code, every redirect on the way, whether robots.txt lets Googlebot in, and noindex in the robots meta tag, googlebot tag or X-Robots-Tag header.',
+  },
+  {
+    title: 'Title and description',
+    icon: TextCheckIcon,
+    text: 'Missing, empty and long titles and meta descriptions, and pages with more than one title tag.',
+  },
+  {
+    title: 'Content',
+    icon: File01Icon,
+    text: 'The H1, how many words are in the HTML, images without alt text, and how many links go to other pages on the site.',
+  },
+  {
+    title: 'Markup',
+    icon: CodeIcon,
+    text: 'The canonical link, the page language, the viewport tag for phones, JSON-LD structured data and whether it parses, hreflang alternates and Open Graph tags.',
+  },
+]
+
+const labels = [
+  { title: 'Fix', text: 'Something is wrong, such as a noindex, a 404 or structured data that isn\u2019t valid JSON. These come first.' },
+  { title: 'Check', text: 'Probably a problem, but it depends on what you meant, such as a missing meta description.' },
+  { title: 'Note', text: 'Context, such as a long description or how many links the page has.' },
+  { title: 'OK', text: 'The check passed.' },
+]
+
+const audit = [
+  { title: 'Crawl every page', text: 'Broken links, redirect chains, missing and repeated titles, canonicals and noindex pages across the whole site, including staging and localhost.' },
+  { title: 'Check Google\u2019s own index status', text: 'URL Inspection for each important page: whether Google indexed it, the canonical it chose and when it last crawled.' },
+  { title: 'Read Search Console', text: 'The searches each page shows for, its position and clicks, so the fix list starts with pages that already get traffic.' },
+  { title: 'Fix it in your code', text: 'Most problems live in templates. Your agent fixes the template once and every page built from it is fixed.' },
+]
+
+const tools = [
+  { title: 'Title and meta description checker', text: 'Measures both in pixels and shows the Google preview on desktop and mobile.', href: '/tools/title-and-meta-description-checker', icon: TextCheckIcon, link: 'Check titles' },
+  { title: 'Noindex checker', text: 'Shows every robots rule on a page, from the meta tags, the HTTP headers and robots.txt, for Google and Bing.', href: '/tools/noindex-checker', icon: ViewIcon, link: 'Check noindex' },
+  { title: 'Schema markup validator', text: 'Reads the structured data field by field, so you see exactly what Google can read.', href: '/tools/schema-markup-validator', icon: WebValidationIcon, link: 'Validate schema' },
+  { title: 'Open Graph checker', text: 'Shows the share preview on social sites and chat apps, image included.', href: '/tools/open-graph-checker', icon: Share08Icon, link: 'Check Open Graph' },
+  { title: 'Google index checker', text: 'Searches Google for the page itself, to see whether it is in the index today.', href: '/tools/google-index-checker', icon: Image02Icon, link: 'Check indexing' },
+  { title: 'Whole site SEO audit', text: 'The crawl, index checks and Search Console report, run by your agent for every page.', href: '/features/seo-audit', icon: File01Icon, link: 'SEO audit' },
+]
+
 const faq = [
   {
     question: 'What is an SEO audit?',
     answer:
-      'A check of what stops a site doing well in search. It covers whether search engines can reach and index the pages, what each page tells them in its title, headings, canonical and structured data, and how the site actually performs in Search Console. This page does the first two for one URL.',
+      'A check of what stops a site doing well in search. It covers whether search engines can reach and index the pages, what each page tells them in its title, headings, canonical and structured data, and how the site performs in Search Console. This checker does the first two for one URL.',
   },
   {
     question: 'Is this SEO checker really free?',
@@ -33,12 +92,17 @@ const faq = [
   {
     question: 'Does a page that passes every check rank?',
     answer:
-      'No. Passing means nothing on the page stops Google indexing it or reading it. Rankings depend on whether the page answers the search better than the other results, and on links from other sites. The Search Console report shows the searches a page already shows up for.',
+      'No. Passing means nothing on the page stops Google indexing it or reading it. Rankings depend on whether the page answers the search better than the other results, and on links from other sites. Search Console shows the searches a page already shows up for.',
   },
   {
     question: 'Does it check pages built with JavaScript?',
     answer:
       'It reads the HTML the server sends, before any JavaScript runs. That is what Google sees first and what most AI crawlers see at all. If the word count is low on a page that looks full in the browser, the text arrives through JavaScript.',
+  },
+  {
+    question: 'Is a noindex or a canonical to another page a mistake?',
+    answer:
+      'Not always. Thank you pages and filtered listings are often meant to stay out of Google. The checker says what each rule does, and you decide whether it should be there.',
   },
   {
     question: 'How do I audit my whole site for free?',
@@ -58,109 +122,119 @@ const faq = [
   description="Run a free SEO audit of any page. Check whether Google can index it, then its title, meta description, headings, images, links, canonical, structured data and Open Graph tags."
   canonicalPath="/tools/seo-checker"
   {breadcrumbs}
+  framed={false}
 >
   <main data-agent-content>
-    <Breadcrumbs {breadcrumbs} />
-    <PageHeader
-      title="SEO checker"
-      description="Enter a URL for a free SEO audit of that page. The checker says whether Google can reach and index it, then reads the title, description, headings, images, links, canonical, structured data and share tags, with a fix for each problem."
-    />
+    <section class="pt-4">
+      <div class="site-frame flex flex-col items-center pt-14 text-center sm:pt-20">
+        <h1 class="mt-4 max-w-3xl text-pretty text-4xl/tight font-medium -tracking-[0.8px] xl:text-5xl/tight xl:-tracking-[1px]">
+          Free SEO checker
+        </h1>
+        <p class="mt-4 max-w-2xl text-pretty text-xl/8 font-medium -tracking-[0.2px] text-foreground-muted">
+          Enter a URL for a free SEO audit of that page. The checker says whether
+          Google can reach and index it, then reads the title, description,
+          headings, images, links, canonical, structured data and share tags,
+          with a fix for each problem.
+        </p>
+      </div>
+      <div class="site-frame mt-10 max-w-3xl sm:mt-12">
+        <SeoChecker />
+      </div>
+    </section>
 
-    <SeoChecker />
+    <div class="space-y-24 py-24 sm:space-y-32 sm:py-32">
+      <section class="site-frame" aria-labelledby="parts-heading">
+        <SectionHeading
+          id="parts-heading"
+          title="What does the SEO checker look at?"
+          text="Access first, then what the page tells search engines. A page Google can't index gains nothing from a better title, so the checks run in that order."
+        />
+        <div class="grid grid-cols-1 gap-2 sm:grid-cols-2">
+          {parts.map((item) => <HomeCard title={item.title} text={item.text} icon={item.icon} />)}
+        </div>
+      </section>
 
-    <div class="docs-prose mt-16">
-      <h2>What the SEO checker looks at</h2>
-      <p>
-        The checks run in the order that matters. A page Google cannot
-        index gains nothing from a better title, so access comes first.
-      </p>
-      <table>
-        <thead>
-          <tr>
-            <th>Part</th>
-            <th>What it checks</th>
-          </tr>
-        </thead>
-        <tbody>
-          <tr>
-            <td>Access</td>
-            <td>The status code, every redirect on the way, whether robots.txt lets Googlebot in, and noindex in the robots meta tag, googlebot tag or X-Robots-Tag header.</td>
-          </tr>
-          <tr>
-            <td>Title and description</td>
-            <td>Missing, empty and long titles and meta descriptions, and pages with more than one title tag.</td>
-          </tr>
-          <tr>
-            <td>Content</td>
-            <td>The H1, how many words are in the HTML, images without alt text, and how many links go to other pages on the site.</td>
-          </tr>
-          <tr>
-            <td>Markup</td>
-            <td>The canonical link, the page language, the viewport tag for phones, JSON-LD structured data and whether it parses, hreflang alternates and Open Graph tags.</td>
-          </tr>
-        </tbody>
-      </table>
+      <SplitList
+        id="labels-heading"
+        title="How do I read the result?"
+        text="Each line has one of four labels, and the fixes come first. Work down the list from the top, and stop at the notes unless one of them surprises you."
+        items={labels}
+      />
 
-      <h2>Read the result</h2>
-      <p>
-        Each line has one of four labels. <strong>Fix</strong> means
-        something is wrong, such as a noindex, a 404 or structured data
-        that is not valid JSON. <strong>Check</strong> means it is probably
-        a problem but depends on what you meant, such as a missing meta
-        description. <strong>Note</strong> is context, and{' '}
-        <strong>OK</strong> passed.
-      </p>
-      <p>
-        A noindex or a canonical pointing somewhere else is not always a
-        mistake (thank you pages and filtered listings are often meant to
-        stay out of Google). The checker says what each rule does, and you
-        decide whether it should be there.
-      </p>
-      <p>
-        For a closer look at one part, the{' '}
-        <a href="/tools/title-and-meta-description-checker">title and meta description checker</a>{' '}
-        measures both in pixels, the{' '}
-        <a href="/tools/noindex-checker">noindex checker</a> shows every
-        robots rule, the{' '}
-        <a href="/tools/schema-markup-validator">schema markup validator</a>{' '}
-        reads the structured data field by field and the{' '}
-        <a href="/tools/open-graph-checker">Open Graph checker</a> shows the
-        share preview.
-      </p>
+      <section class="site-frame grid gap-8 sm:grid-cols-[1fr_1.15fr] sm:items-start" aria-labelledby="indexed-heading">
+        <div class="sm:sticky sm:top-24">
+          <h2 id="indexed-heading" class="text-pretty text-2xl font-medium -tracking-[0.4px] text-foreground xl:text-3xl xl:-tracking-[0.6px]">
+            Is the page in Google, and how does it do there?
+          </h2>
+          <p class="mt-4 text-base leading-7 text-foreground-muted">
+            The checker says whether Google is allowed to index the page. To
+            see whether it did, search Google for the page with the free index
+            checker, or ask your agent, which reads Google's own answer from
+            URL Inspection.
+          </p>
+          <a class:list={[getButtonClasses('secondary', 'lg'), 'mt-6']} href="/tools/google-index-checker">Check if Google indexed it</a>
+        </div>
+        <div class="rounded-lg bg-muted p-6 text-base leading-7 text-foreground-muted">
+          <p>
+            How the page does in search lives in Search Console: the searches
+            it shows for, its position and its clicks. SEO Skill gives your
+            agent that data, so it can say which pages to fix first.
+          </p>
+          <CodeBlock
+            prompt
+            value="Inspect example.com/pricing in Search Console and tell me whether Google indexed it, which canonical it chose and which searches it shows for"
+          />
+        </div>
+      </section>
 
-      <h2>What one page check cannot tell you</h2>
-      <p>
-        It cannot say whether Google has indexed the page, only whether it
-        is allowed to. The <a href="/tools/google-index-checker">Google index checker</a>{' '}
-        searches Google for the page itself. It also cannot see how the page
-        does in search. That lives in Search Console: the searches it shows
-        for, its position and its clicks.
-      </p>
+      <div>
+        <SplitList
+          id="audit-heading"
+          title="How do I audit my whole site?"
+          text="Ask your agent. One page is a spot check, but most problems live in templates, so they show up on hundreds of pages at once and the fix belongs in the code. SEO Skill gives your agent the full audit."
+          items={audit}
+        />
+        <div class="site-frame mt-8 grid gap-2 sm:grid-cols-2">
+          <CodeBlock
+            label="Ask your agent"
+            prompt
+            value="Run an SEO audit of example.com: crawl the site, check the top pages one by one, then list what to fix first from the Search Console report"
+          />
+          <CodeBlock label="Or run the crawl in a terminal" value="seo crawl https://example.com" />
+        </div>
+      </div>
 
-      <h2>Audit the whole site with your agent</h2>
-      <p>
-        One page is a spot check. Most problems live in templates, so they
-        show up on hundreds of pages at once, and the fix belongs in the
-        code. SEO Skill gives your AI agent the full{' '}
-        <a href="/features/seo-audit">SEO audit</a>: a crawl of the site,
-        Google's own index status for each page from URL Inspection, and the
-        Search Console report. Ask:
-      </p>
-      <CodeBlock prompt value="Run an SEO audit of example.com: crawl the site, check the top pages one by one, then list what to fix first from the Search Console report" wrap />
-      <p>
-        To crawl a site, including staging and localhost, your agent needs
-        the CLI. Give it this prompt and it installs the CLI and adds the
-        hosted MCP server:
-      </p>
-    </div>
+      <section class="site-frame" aria-labelledby="tools-heading">
+        <SectionHeading
+          id="tools-heading"
+          title="Free tools for a closer look at one part"
+          text="When the checker flags something, these tools show that one part in full. None of them needs an account."
+        />
+        <div class="grid grid-cols-1 gap-2 sm:grid-cols-2">
+          {tools.map((item) => <HomeCard {...item} />)}
+        </div>
+      </section>
 
-    <SetupPrompts id="seo-checker-setup" class="mt-6" />
+      <section class="site-frame" aria-labelledby="faq-heading">
+        <div class="max-w-2xl">
+          <h2 id="faq-heading" class="text-pretty text-2xl font-medium -tracking-[0.4px] text-foreground xl:text-3xl xl:-tracking-[0.6px]">
+            SEO checker questions
+          </h2>
+        </div>
+        <div class="mt-10">
+          <FaqAccordion items={faq} id="seo-checker-faq" />
+        </div>
+      </section>
 
-    <div class="docs-prose mt-16">
-      <h2>SEO checker questions</h2>
-    </div>
-    <div class="mt-6">
-      <FaqAccordion id="seo-checker-faq" items={faq} />
+      <section class="site-frame" aria-labelledby="start-heading">
+        <SectionHeading
+          id="start-heading"
+          title="Audit the whole site with your agent"
+          text="Add SEO Skill to your agent, sign in with the Google account that can read your Search Console, and ask it to audit your site."
+        />
+        <a class:list={[getButtonClasses('default', 'lg'), 'mb-10']} href="/account">Sign in and audit your site</a>
+        <SetupPrompts id="seo-checker-setup" />
+      </section>
     </div>
   </main>
 </BaseLayout>

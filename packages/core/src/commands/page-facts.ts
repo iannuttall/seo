@@ -44,6 +44,8 @@ export async function boundedText(
   return text
 }
 
+const INERT_TAGS = new Set(['script', 'style', 'template'])
+
 export function headFacts(
   html: string,
   url: string,
@@ -67,6 +69,8 @@ export function headFacts(
   let inH1 = false
   let titleDone = false
   let h1Done = false
+  // Script, style and template text is code, not heading text.
+  let inert = 0
   let description: string | null = null
   let canonical: string | null = null
   const robots: string[] = []
@@ -75,6 +79,7 @@ export function headFacts(
     {
       onopentag(name, attributes) {
         countImage(images, name, attributes, url)
+        if (INERT_TAGS.has(name)) inert++
         if (name === 'title' && !titleDone) {
           inTitle = true
           title ??= ''
@@ -114,9 +119,10 @@ export function headFacts(
       },
       ontext(text) {
         if (inTitle) title = (title ?? '') + text
-        if (inH1) h1 = (h1 ?? '') + text
+        if (inH1 && !inert) h1 = (h1 ?? '') + text
       },
       onclosetag(name) {
+        if (INERT_TAGS.has(name) && inert) inert--
         if (name === 'title' && inTitle) {
           inTitle = false
           titleDone = true

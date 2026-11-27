@@ -66,6 +66,7 @@ export const toolIcons = {
   'serp-preview': Search01Icon,
   'title-and-meta-description-checker': Search01Icon,
   'ai-humanizer': AiMagicIcon,
+  'seo-checker': CheckListIcon,
   'noindex-checker': ViewOffIcon,
   'redirect-checker': ArrowTurnForwardIcon,
   'seo-migration-checklist': Route01Icon,

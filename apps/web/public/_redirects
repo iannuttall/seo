@@ -5,8 +5,8 @@
 /blog/seo-mcp-servers.md /docs/mcp.md 301
 /docs/start /docs/getting-started 301
 /docs/start.md /docs/getting-started.md 301
-/docs/reports /docs 301
-/docs/reports.md /docs.md 301
+/docs/reports /features/seo-reporting 301
+/docs/reports.md /features/seo-reporting.md 301
 /docs/google /docs/getting-started 301
 /docs/google.md /docs/getting-started.md 301
 /docs/agents /docs/mcp 301

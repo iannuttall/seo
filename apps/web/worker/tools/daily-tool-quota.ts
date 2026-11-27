@@ -32,6 +32,7 @@ const PUBLIC_TOOL_BY_PATH = new Map<string, PublicWorkerToolId>([
   ['/api/tools/noindex-checker', 'noindex-checker'],
   ['/api/tools/redirect-map', 'redirect-map'],
   ['/api/tools/redirect-checker', 'redirect-checker'],
+  ['/api/tools/seo-checker', 'seo-checker'],
 ])
 
 const JSON_HEADERS = {

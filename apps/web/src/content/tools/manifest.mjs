@@ -295,6 +295,15 @@ export const tools = [
     kind: 'hybrid',
   },
   {
+    id: 'seo-checker',
+    path: '/tools/seo-checker',
+    title: 'SEO checker',
+    action: 'Open the SEO checker',
+    description:
+      'Run a free SEO audit of one page: whether Google can index it, then its title, description, headings, images, links, canonical, structured data and Open Graph tags.',
+    kind: 'worker',
+  },
+  {
     id: 'noindex-checker',
     path: '/tools/noindex-checker',
     title: 'Noindex checker',

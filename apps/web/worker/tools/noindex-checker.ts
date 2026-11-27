@@ -90,7 +90,7 @@ function jsonResponse(value: unknown, status = 200): Response {
   return Response.json(value, { status, headers: JSON_HEADERS })
 }
 
-async function robotsFor(
+export async function robotsFor(
   hops: string[],
   fetcher: SitemapFetcher,
 ): Promise<Map<string, RobotsTxtState>> {
@@ -149,7 +149,10 @@ async function robotsFor(
   return states
 }
 
-function platformOf(trace: PageTrace, signals: PageSignals): string | null {
+export function platformOf(
+  trace: PageTrace,
+  signals: PageSignals,
+): string | null {
   const generator = signals.generator?.toLowerCase() ?? ''
   if (generator.includes('wordpress')) return 'wordpress'
   if (generator.includes('webflow')) return 'webflow'

@@ -16,6 +16,7 @@ import FaqAccordion from '@/components/FaqAccordion.astro'
 import HomeCard from '@/components/HomeCard.astro'
 import LandingHero from '@/components/LandingHero.astro'
 import SectionHeading from '@/components/SectionHeading.astro'
+import SetupPrompts from '@/components/SetupPrompts.astro'
 import StatusGuides from '@/components/StatusGuides.astro'
 import BaseLayout from '@/layouts/BaseLayout.astro'
 import type { SchemaBreadcrumb } from '@/lib/schema'
@@ -109,8 +110,8 @@ const faq = [
       <section class="site-frame" aria-labelledby="meaning-heading">
         <SectionHeading
           id="meaning-heading"
-          title="What excluded by noindex tag means"
-          text="Google crawled the page and found a noindex rule, in a robots meta tag or an X-Robots-Tag header. It obeyed the rule and left the page out."
+          title="What does excluded by noindex tag mean?"
+          text="It means Google obeyed a noindex rule. It crawled the page, found the rule in a robots meta tag or an X-Robots-Tag header, and left the page out."
         />
         <div class="max-w-3xl">
           <UrlMap
@@ -130,8 +131,8 @@ const faq = [
       <section class="site-frame" aria-labelledby="leave-heading">
         <SectionHeading
           id="leave-heading"
-          title="When to leave it alone"
-          text="Google’s help calls noindex the right way to keep a page out of search. These pages usually belong out."
+          title="When should you leave it alone?"
+          text="When the page belongs out of search, because Google’s help calls noindex the right way to keep it out. These are the usual cases."
         />
         <div class="grid grid-cols-1 gap-2 sm:grid-cols-2">
           {leave.map((item) => <HomeCard {...item} />)}
@@ -141,8 +142,8 @@ const faq = [
       <section class="site-frame" aria-labelledby="act-heading">
         <SectionHeading
           id="act-heading"
-          title="When it needs fixing"
-          text="Noindex is a problem when it lands on a page you want found. It usually arrives through a template, a setting or a header nobody looks at."
+          title="When does it need fixing?"
+          text="When noindex lands on a page you want found. It usually arrives through a template, a setting or a header nobody looks at."
         />
         <div class="grid grid-cols-1 gap-2 sm:grid-cols-2">
           {act.map((item) => <HomeCard {...item} />)}
@@ -152,8 +153,8 @@ const faq = [
       <section class="site-frame" aria-labelledby="check-heading">
         <SectionHeading
           id="check-heading"
-          title="Check every noindex page on your site"
-          text="SEO Skill asks URL Inspection about each page it knows, then loads each one live and reads both the robots meta tag and the X-Robots-Tag header."
+          title="How do you check every noindex page on your site?"
+          text="With SEO Skill, which asks URL Inspection about each page it knows, then loads each one live and reads both the robots meta tag and the X-Robots-Tag header."
         />
         <div class="docs-prose max-w-3xl">
           <p>Connect SEO Skill to your agent, then ask:</p>
@@ -184,12 +185,21 @@ const faq = [
         <SectionHeading
           id="noindex-faq"
           title="Questions about excluded by noindex tag"
-          text="What people ask after they see it in Search Console."
+          text="These are the follow-ups people ask after they see it in Search Console."
         />
         <FaqAccordion items={faq} id="noindex-faq-list" />
       </section>
 
       <StatusGuides current="/guides/excluded-by-noindex-tag" />
+
+      <section class="site-frame" aria-labelledby="start-heading">
+        <SectionHeading
+          id="start-heading"
+          title="Check your noindex pages with your agent"
+          text="Add SEO Skill to your agent, sign in with Google and ask which noindex pages should be in search."
+        />
+        <SetupPrompts id="noindex-setup-end" />
+      </section>
     </div>
   </main>
 </BaseLayout>

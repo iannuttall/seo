@@ -16,6 +16,7 @@ import FaqAccordion from '@/components/FaqAccordion.astro'
 import HomeCard from '@/components/HomeCard.astro'
 import LandingHero from '@/components/LandingHero.astro'
 import SectionHeading from '@/components/SectionHeading.astro'
+import SetupPrompts from '@/components/SetupPrompts.astro'
 import StatusGuides from '@/components/StatusGuides.astro'
 import BaseLayout from '@/layouts/BaseLayout.astro'
 import type { SchemaBreadcrumb } from '@/lib/schema'
@@ -127,8 +128,8 @@ const faq = [
       <section class="site-frame" aria-labelledby="steps-heading">
         <SectionHeading
           id="steps-heading"
-          title="Five steps to get a page into Google"
-          text="Do them in order. Asking Google to crawl a page that has a noindex tag or a canonical to another URL wastes the request."
+          title="How do you get a page into Google?"
+          text="With these five steps, done in order. Asking Google to crawl a page that has a noindex tag or a canonical to another URL wastes the request."
         />
         <div class="max-w-3xl">
           <PlanSteps {steps} />
@@ -138,8 +139,8 @@ const faq = [
       <section class="site-frame" aria-labelledby="timing-heading">
         <SectionHeading
           id="timing-heading"
-          title="How fast new pages showed up on seoskill.dev"
-          text="We published 81 pages between 20 October and 21 November. By 25 November, 72 had appeared in Google search, half of them within a day of going live."
+          title="How fast do new pages show up in Google?"
+          text="On seoskill.dev, half of them within a day. We published 81 pages between 20 October and 21 November, and by 25 November 72 had appeared in Google search."
         />
         <div class="max-w-3xl">
           <VerticalBars
@@ -174,8 +175,8 @@ const faq = [
       <section class="site-frame" aria-labelledby="blockers-heading">
         <SectionHeading
           id="blockers-heading"
-          title="What keeps a page out of Google"
-          text="If a page is still missing after a week or two, one of these is usually why. Search Console's Page indexing report gives Google's own reason for each URL."
+          title="What keeps a page out of Google?"
+          text="Usually one of these, if a page is still missing after a week or two. Search Console's Page indexing report gives Google's own reason for each URL."
         />
         <div class="grid grid-cols-1 gap-2 sm:grid-cols-2">
           {blockers.map((item) => <HomeCard {...item} />)}
@@ -185,8 +186,8 @@ const faq = [
       <section class="site-frame" aria-labelledby="check-heading">
         <SectionHeading
           id="check-heading"
-          title="Check every page on your site at once"
-          text="Search Console's report shows up to 1,000 example URLs for each reason. SEO Skill asks URL Inspection about each page it knows and loads each one live, so you see Google's reason next to what the page does today."
+          title="How do you check every page on your site at once?"
+          text="Use SEO Skill, because Search Console's report shows only up to 1,000 example URLs for each reason. SEO Skill asks URL Inspection about each page it knows and loads each one live, so you see Google's reason next to what the page does today."
         />
         <div class="grid grid-cols-1 gap-2 sm:grid-cols-2">
           <HomeCard title="Google index checker" text="Google's reason for every known page, each checked live and labelled fix, check or expected." icon={GoogleIcon} href="/features/google-index-checker" link="See the index checker" />
@@ -213,12 +214,21 @@ const faq = [
         <SectionHeading
           id="indexing-faq"
           title="Questions about getting indexed"
-          text="What people ask while they wait for Google."
+          text="These are the follow-ups people ask while they wait for Google."
         />
         <FaqAccordion items={faq} id="indexing-faq-list" />
       </section>
 
       <StatusGuides current="/guides/how-to-get-google-to-index-your-site" />
+
+      <section class="site-frame" aria-labelledby="start-heading">
+        <SectionHeading
+          id="start-heading"
+          title="Check your indexing with your agent"
+          text="Add SEO Skill to your agent, sign in with Google and ask which of your pages Google hasn't indexed, and why."
+        />
+        <SetupPrompts id="indexing-setup-end" />
+      </section>
     </div>
   </main>
 </BaseLayout>

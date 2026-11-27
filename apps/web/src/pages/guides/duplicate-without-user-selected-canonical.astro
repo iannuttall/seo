@@ -16,6 +16,7 @@ import FaqAccordion from '@/components/FaqAccordion.astro'
 import HomeCard from '@/components/HomeCard.astro'
 import LandingHero from '@/components/LandingHero.astro'
 import SectionHeading from '@/components/SectionHeading.astro'
+import SetupPrompts from '@/components/SetupPrompts.astro'
 import StatusGuides from '@/components/StatusGuides.astro'
 import BaseLayout from '@/layouts/BaseLayout.astro'
 import type { SchemaBreadcrumb } from '@/lib/schema'
@@ -109,8 +110,8 @@ const faq = [
       <section class="site-frame" aria-labelledby="meaning-heading">
         <SectionHeading
           id="meaning-heading"
-          title="What duplicate without user-selected canonical means"
-          text="Several URLs show the same page. None of them has a canonical tag, so Google chose the canonical, indexed that one and left the rest out."
+          title="What does duplicate without user-selected canonical mean?"
+          text="It means Google picked the canonical for you. Several URLs show the same page with no canonical tag, so Google indexed one and left the rest out."
         />
         <div class="max-w-3xl">
           <UrlMap
@@ -130,8 +131,8 @@ const faq = [
       <section class="site-frame" aria-labelledby="leave-heading">
         <SectionHeading
           id="leave-heading"
-          title="When it can wait"
-          text="If Google indexed the page you want, nothing is lost today. These cases can wait for your next template change."
+          title="When can it wait?"
+          text="When Google indexed the page you want, because nothing is lost today. These cases can wait for your next template change."
         />
         <div class="grid grid-cols-1 gap-2 sm:grid-cols-2">
           {leave.map((item) => <HomeCard {...item} />)}
@@ -141,8 +142,8 @@ const faq = [
       <section class="site-frame" aria-labelledby="act-heading">
         <SectionHeading
           id="act-heading"
-          title="When it needs fixing"
-          text="Act when Google's choice costs you: the wrong URL in search, or a real page treated as a copy."
+          title="When does it need fixing?"
+          text="When Google's choice costs you, such as the wrong URL in search or a real page treated as a copy."
         />
         <div class="grid grid-cols-1 gap-2 sm:grid-cols-2">
           {act.map((item) => <HomeCard {...item} />)}
@@ -152,8 +153,8 @@ const faq = [
       <section class="site-frame" aria-labelledby="check-heading">
         <SectionHeading
           id="check-heading"
-          title="Check every duplicate on your site"
-          text="SEO Skill asks URL Inspection about each page it knows and loads each one live, so you see the canonical Google chose next to what the page declares today."
+          title="How do you check every duplicate on your site?"
+          text="With SEO Skill, which asks URL Inspection about each page it knows and loads each one live, so you see the canonical Google chose next to what the page declares today."
         />
         <div class="docs-prose max-w-3xl">
           <p>Connect SEO Skill to your agent, then ask:</p>
@@ -178,8 +179,8 @@ const faq = [
       <section class="site-frame" aria-labelledby="related-heading">
         <SectionHeading
           id="related-heading"
-          title="How it differs from the other canonical reasons"
-          text="These Search Console reasons all cover a URL that is not the one Google indexed. Each points at a different check."
+          title="How does it differ from the other canonical reasons?"
+          text="Each one points at a different check, though all of these Search Console reasons cover a URL that is not the one Google indexed."
         />
         <div class="docs-prose max-w-3xl">
           <table>
@@ -198,12 +199,21 @@ const faq = [
         <SectionHeading
           id="duplicate-faq"
           title="Questions about duplicate without user-selected canonical"
-          text="What people ask after they see it in Search Console."
+          text="These are the follow-ups people ask after they see it in Search Console."
         />
         <FaqAccordion items={faq} id="duplicate-faq-list" />
       </section>
 
       <StatusGuides current="/guides/duplicate-without-user-selected-canonical" />
+
+      <section class="site-frame" aria-labelledby="start-heading">
+        <SectionHeading
+          id="start-heading"
+          title="Check your duplicates with your agent"
+          text="Add SEO Skill to your agent, sign in with Google and ask which duplicates Google chose the wrong canonical for."
+        />
+        <SetupPrompts id="duplicate-setup-end" />
+      </section>
     </div>
   </main>
 </BaseLayout>

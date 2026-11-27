@@ -16,6 +16,7 @@ import FaqAccordion from '@/components/FaqAccordion.astro'
 import HomeCard from '@/components/HomeCard.astro'
 import LandingHero from '@/components/LandingHero.astro'
 import SectionHeading from '@/components/SectionHeading.astro'
+import SetupPrompts from '@/components/SetupPrompts.astro'
 import StatusGuides from '@/components/StatusGuides.astro'
 import BaseLayout from '@/layouts/BaseLayout.astro'
 import type { SchemaBreadcrumb } from '@/lib/schema'
@@ -108,8 +109,8 @@ const faq = [
       <section class="site-frame" aria-labelledby="meaning-heading">
         <SectionHeading
           id="meaning-heading"
-          title="What alternate page with proper canonical tag means"
-          text="Two URLs show the same page. One names the other as its canonical with a link tag, Google agrees, and only the canonical goes in the index."
+          title="What does alternate page with proper canonical tag mean?"
+          text="It means Google agrees with your canonical tag. Two URLs show the same page, one names the other as its canonical, and only the canonical goes in the index."
         />
         <div class="max-w-3xl">
           <UrlMap
@@ -129,8 +130,8 @@ const faq = [
       <section class="site-frame" aria-labelledby="leave-heading">
         <SectionHeading
           id="leave-heading"
-          title="When to leave it alone"
-          text="Google’s help says there is nothing to do when the alternate points at the right page. These are the usual cases."
+          title="When should you leave it alone?"
+          text="Whenever the alternate points at the right page, because Google’s help says there is nothing to do then. These are the usual cases."
         />
         <div class="grid grid-cols-1 gap-2 sm:grid-cols-2">
           {leave.map((item) => <HomeCard {...item} />)}
@@ -140,8 +141,8 @@ const faq = [
       <section class="site-frame" aria-labelledby="act-heading">
         <SectionHeading
           id="act-heading"
-          title="When it needs fixing"
-          text="The reason is a problem only when the canonical points at the wrong page, or at one Google cannot index."
+          title="When does it need fixing?"
+          text="Only when the canonical points at the wrong page, or at one Google cannot index."
         />
         <div class="grid grid-cols-1 gap-2 sm:grid-cols-2">
           {act.map((item) => <HomeCard {...item} />)}
@@ -151,8 +152,8 @@ const faq = [
       <section class="site-frame" aria-labelledby="check-heading">
         <SectionHeading
           id="check-heading"
-          title="Check every alternate page on your site"
-          text="Search Console shows up to 1,000 example URLs for each reason. SEO Skill asks URL Inspection about each page it knows and loads each one live, so you see what the page declares today next to what Google chose."
+          title="How do you check every alternate page on your site?"
+          text="Use SEO Skill, because Search Console shows only up to 1,000 example URLs for each reason. SEO Skill asks URL Inspection about each page it knows and loads each one live, so you see what the page declares today next to what Google chose."
         />
         <div class="docs-prose max-w-3xl">
           <p>Connect SEO Skill to your agent, then ask:</p>
@@ -179,8 +180,8 @@ const faq = [
       <section class="site-frame" aria-labelledby="related-heading">
         <SectionHeading
           id="related-heading"
-          title="How it differs from the other canonical reasons"
-          text="These Search Console reasons all cover a URL that is not the one Google indexed. Each points at a different check."
+          title="How does it differ from the other canonical reasons?"
+          text="Each one points at a different check, though all of these Search Console reasons cover a URL that is not the one Google indexed."
         />
         <div class="docs-prose max-w-3xl">
           <table>
@@ -199,12 +200,21 @@ const faq = [
         <SectionHeading
           id="alternate-faq"
           title="Questions about alternate page with proper canonical tag"
-          text="What people ask after they see it in Search Console."
+          text="These are the follow-ups people ask after they see it in Search Console."
         />
         <FaqAccordion items={faq} id="alternate-faq-list" />
       </section>
 
       <StatusGuides current="/guides/alternate-page-with-proper-canonical-tag" />
+
+      <section class="site-frame" aria-labelledby="start-heading">
+        <SectionHeading
+          id="start-heading"
+          title="Check your canonicals with your agent"
+          text="Add SEO Skill to your agent, sign in with Google and ask which alternate pages point at the wrong canonical."
+        />
+        <SetupPrompts id="alternate-setup-end" />
+      </section>
     </div>
   </main>
 </BaseLayout>

@@ -16,6 +16,7 @@ import FaqAccordion from '@/components/FaqAccordion.astro'
 import HomeCard from '@/components/HomeCard.astro'
 import LandingHero from '@/components/LandingHero.astro'
 import SectionHeading from '@/components/SectionHeading.astro'
+import SetupPrompts from '@/components/SetupPrompts.astro'
 import StatusGuides from '@/components/StatusGuides.astro'
 import BaseLayout from '@/layouts/BaseLayout.astro'
 import type { SchemaBreadcrumb } from '@/lib/schema'
@@ -110,8 +111,8 @@ const faq = [
       <section class="site-frame" aria-labelledby="meaning-heading">
         <SectionHeading
           id="meaning-heading"
-          title="What page with redirect means"
-          text="Google requested the URL and got a redirect. It follows the redirect and considers the final page for its index, never the URL that redirected."
+          title="What does page with redirect mean?"
+          text="It means the URL redirects, so Google indexes the page it ends on instead. Google follows the redirect and considers only the final page for its index."
         />
         <div class="max-w-3xl">
           <UrlMap
@@ -131,8 +132,8 @@ const faq = [
       <section class="site-frame" aria-labelledby="leave-heading">
         <SectionHeading
           id="leave-heading"
-          title="When to leave it alone"
-          text="A redirect from a URL you no longer use is the right outcome. These are the usual cases."
+          title="When should you leave it alone?"
+          text="When the redirect comes from a URL you no longer use, because that is the right outcome. These are the usual cases."
         />
         <div class="grid grid-cols-1 gap-2 sm:grid-cols-2">
           {leave.map((item) => <HomeCard {...item} />)}
@@ -142,8 +143,8 @@ const faq = [
       <section class="site-frame" aria-labelledby="act-heading">
         <SectionHeading
           id="act-heading"
-          title="When it needs fixing"
-          text="The reason is a problem only when the redirect is the wrong kind, ends in the wrong place, or should not be there."
+          title="When does it need fixing?"
+          text="Only when the redirect is the wrong kind, ends in the wrong place, or should not be there."
         />
         <div class="grid grid-cols-1 gap-2 sm:grid-cols-2">
           {act.map((item) => <HomeCard {...item} />)}
@@ -153,8 +154,8 @@ const faq = [
       <section class="site-frame" aria-labelledby="check-heading">
         <SectionHeading
           id="check-heading"
-          title="Check every redirected URL on your site"
-          text="SEO Skill asks URL Inspection about each page it knows from your Search Console and your sitemap, then follows every redirect live, hop by hop."
+          title="How do you check every redirected URL on your site?"
+          text="With SEO Skill, which asks URL Inspection about each page it knows from your Search Console and your sitemap, then follows every redirect live, hop by hop."
         />
         <div class="docs-prose max-w-3xl">
           <p>Connect SEO Skill to your agent, then ask:</p>
@@ -191,12 +192,21 @@ const faq = [
         <SectionHeading
           id="redirect-faq"
           title="Questions about page with redirect"
-          text="What people ask after they see it in Search Console."
+          text="These are the follow-ups people ask after they see it in Search Console."
         />
         <FaqAccordion items={faq} id="redirect-faq-list" />
       </section>
 
       <StatusGuides current="/guides/page-with-redirect" />
+
+      <section class="site-frame" aria-labelledby="start-heading">
+        <SectionHeading
+          id="start-heading"
+          title="Check your redirects with your agent"
+          text="Add SEO Skill to your agent, sign in with Google and ask which redirects end in the wrong place."
+        />
+        <SetupPrompts id="redirect-setup-end" />
+      </section>
     </div>
   </main>
 </BaseLayout>

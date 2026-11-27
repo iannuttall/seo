@@ -1,0 +1,239 @@
+---
+import { AiChat02Icon, ChartIncreaseIcon, CheckListIcon, GoogleIcon, Link01Icon, SearchList01Icon } from '@hugeicons/core-free-icons'
+import VerticalBars from '@/components/blog/VerticalBars.astro'
+import CodeBlock from '@/components/CodeBlock.astro'
+import FaqAccordion from '@/components/FaqAccordion.astro'
+import HomeCard from '@/components/HomeCard.astro'
+import LandingHero from '@/components/LandingHero.astro'
+import SectionHeading from '@/components/SectionHeading.astro'
+import SetupPrompts from '@/components/SetupPrompts.astro'
+import SplitList from '@/components/SplitList.astro'
+import BaseLayout from '@/layouts/BaseLayout.astro'
+import type { SchemaBreadcrumb } from '@/lib/schema'
+
+const breadcrumbs: SchemaBreadcrumb[] = [
+  { label: 'Home', href: '/' },
+  { label: 'Guides', href: '/guides' },
+  { label: 'SEO case studies' },
+]
+
+const m = (labels: string[], values: number[]) => labels.map((label, index) => ({ label, value: values[index] as number }))
+
+// Google clicks a month from each site's own Search Console, read on 27
+// November 2026. November runs to the 23rd.
+const months = ['Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov']
+const keep = m(months, [8559, 11962, 4082, 1566, 2504, 14902])
+const ilo = m(months, [4835, 10609, 45408, 57975, 28297, 12914])
+const moveMarkers = [
+  { at: 'Aug', text: 'Content moved to ilo.so as a test' },
+  { at: 'Sep', text: 'Content on ilo.so' },
+  { at: 'Oct', text: 'Content moved back to keep.md' },
+]
+const seoskill = m(['Jul', 'Aug', 'Sep', 'Oct', 'Nov'], [8, 46, 255, 371, 602])
+
+const summary = [
+  { title: '14,902', text: 'keep.md clicks in the first 23 days of November, after its content moved back. Its best month before the move was 11,962.' },
+  { title: '72 of 81', text: 'New seoskill.dev pages that showed in Google search by 25 November, each within a week of going live. 41 showed within a day.' },
+  { title: '2 links', text: 'From one site with a Domain Rating of 84, after an agent found a topical reason for it to link and drafted the emails.' },
+  { title: '+22%', text: 'seoskill.dev non-brand clicks over 90 days against the 90 days before its baseline.' },
+]
+
+const lessons = [
+  { title: 'A domain move is a big change to undo', text: 'keep.md lost most of its clicks while its content lived on ilo.so. Its clicks came back after the content returned, but a test like this costs months.' },
+  { title: 'New pages on a known site get seen fast', text: 'Of 81 pages seoskill.dev published from 20 October to 21 November, 72 showed in search by 25 November, each within a week of going live.' },
+  { title: 'Brand searches come first on a new site', text: 'On seoskill.dev, searches for the name brought the first clicks. Searches without it went from 0 in July to 98 in November.' },
+  { title: 'Read each result against its own baseline', text: 'A month with a launch or a move looks like a win or a loss on its own. Compare equal periods and say what else changed on those dates.' },
+]
+
+const how = [
+  { title: 'The site and the question', text: 'Which site, what it sells and the one thing you wanted to change, such as clicks to the pricing page.' },
+  { title: 'The baseline', text: 'The numbers before the change, from Search Console, over a stated window.' },
+  { title: 'What you changed and when', text: 'The date each change went live. Without the date, nobody can check the result.' },
+  { title: 'What moved', text: 'The same numbers after, over a window of the same length, with the pages and searches that moved most.' },
+  { title: 'What else happened', text: 'Google updates, launches, seasonality and tracking changes on the same dates. Name them, because they can explain the result.' },
+]
+
+const tools = [
+  { title: 'How to track SEO progress', text: 'Save a baseline and the same numbers each week, so every change has a before and after.', href: '/guides/how-to-track-seo-progress', icon: ChartIncreaseIcon, link: 'Read the guide' },
+  { title: 'How to get Google to index your site', text: 'The steps that get new pages into Google, and how fast 72 new pages showed up.', href: '/guides/how-to-get-google-to-index-your-site', icon: GoogleIcon, link: 'Read the guide' },
+  { title: 'Link building outreach with an agent', text: 'How the agent found a reason for a Domain Rating 84 site to link, and the emails it sent.', href: '/blog/agent-link-outreach', icon: Link01Icon, link: 'Read the post' },
+  { title: 'SEO for startups', text: 'Four of Ian\u2019s sites from their first months in Google, and what to do first on a new site.', href: '/seo-for-startups', icon: SearchList01Icon, link: 'SEO for startups' },
+]
+
+const faq = [
+  {
+    question: 'What is an SEO case study?',
+    answer:
+      'A record of one change to a site and what happened in search afterwards: the numbers before, what changed and when, the numbers after, and anything else that happened on the same dates. A good one gives you enough to check it yourself.',
+  },
+  {
+    question: 'Where do these numbers come from?',
+    answer:
+      'Every click and impression here comes from the site\u2019s own Google Search Console, read with SEO Skill on 27 November 2026. The sites are Ian Nuttall\u2019s. November runs to the 23rd, the last day of final data.',
+  },
+  {
+    question: 'Is each result caused by the change before it?',
+    answer:
+      'Not on its own. Each case shows what changed after a step and what else happened on those dates. A move, a launch or a Google update in the same weeks can explain part of a result, so each case names what else was going on.',
+  },
+  {
+    question: 'How long does it take to see SEO results?',
+    answer:
+      'On seoskill.dev, 72 new pages showed in search within a week each and a new domain had clicks from searches without its name within two months. Google says some changes take a few hours and others several months.',
+    links: [{ text: 'Google says', href: 'https://developers.google.com/search/docs/fundamentals/seo-starter-guide' }],
+  },
+  {
+    question: 'How do I write an SEO case study for my own site?',
+    answer:
+      'Save a baseline before the change, write down the date it went live, then compare the same number of days before and after for the pages it touched. Your agent can do the comparison from your Search Console with SEO Skill.',
+  },
+]
+---
+
+<BaseLayout
+  title="SEO case studies with real Search Console data"
+  description="SEO case studies from Ian Nuttall's own sites: a domain move and back, how fast 72 new pages showed in Google, a new domain's first clicks and agent link outreach, each with its Search Console numbers."
+  canonicalPath="/guides/seo-case-studies"
+  {breadcrumbs}
+  framed={false}
+>
+  <main data-agent-content>
+    <LandingHero
+      title="SEO case studies"
+      lead="What happened in Google after real changes to Ian's own sites, with the Search Console numbers before and after each one and what else changed on the same dates."
+      setupId="case-studies-setup"
+    />
+
+    <div class="space-y-24 py-24 sm:space-y-32 sm:py-32">
+      <section class="site-frame" aria-labelledby="results-heading">
+        <SectionHeading
+          id="results-heading"
+          title="Which SEO changes are in these case studies?"
+          text="A domain move and back, new pages found within a week, a new domain's first clicks, and links from one strong site. Every number is from the site's own Search Console or the post that reported it."
+        />
+        <div class="grid grid-cols-1 gap-2 sm:grid-cols-2">
+          {
+            summary.map((item) => (
+              <div class="rounded-lg bg-muted p-6">
+                <p class="text-3xl font-medium -tracking-[0.6px] text-foreground">{item.title}</p>
+                <p class="mt-2 text-sm leading-6 text-foreground-muted">{item.text}</p>
+              </div>
+            ))
+          }
+        </div>
+      </section>
+
+      <section class="site-frame" aria-labelledby="move-heading">
+        <SectionHeading
+          id="move-heading"
+          title="What happened when keep.md moved its content to another domain?"
+          text="Its clicks fell from 11,962 in July to 1,566 in September while the content lived on ilo.so. After it moved back in October, keep.md had 14,902 clicks in the first 23 days of November."
+        />
+        <div class="grid grid-cols-1 gap-10">
+          <VerticalBars data={keep} markers={moveMarkers} unit="clicks" title="keep.md Google clicks a month" caption="The shaded months are when the content lived on ilo.so as a test. November runs to the 23rd." />
+          <VerticalBars data={ilo} markers={moveMarkers} unit="clicks" title="ilo.so Google clicks a month" caption="ilo.so has its own pages too, so its rise is not only keep.md's content." />
+        </div>
+        <p class="mt-6 max-w-2xl text-base leading-7 text-foreground-muted">
+          Added together, the two sites had more clicks in August and
+          September than in July. ilo.so's own pages make up part of that, so
+          these numbers can't say how much of keep.md's traffic followed its
+          content. They do show keep.md's clicks returning in the month after
+          the content moved back.
+        </p>
+      </section>
+
+      <section class="site-frame" aria-labelledby="new-heading">
+        <SectionHeading
+          id="new-heading"
+          title="How fast can a new domain get SEO traffic?"
+          text="seoskill.dev was first seen in Google on 14 July 2026 and had 602 clicks in the first 23 days of November. Most early clicks were searches for its name."
+        />
+        <VerticalBars data={seoskill} unit="clicks" title="seoskill.dev Google clicks a month" caption="July is half a month. November runs to the 23rd." />
+        <p class="mt-6 max-w-2xl text-base leading-7 text-foreground-muted">
+          Searches without the name went from 0 clicks in July to 98 in
+          November. Of 81 pages it published from 20 October to 21 November,
+          72 showed in Google search by 25 November, each within a week of
+          going live. The{' '}
+          <a class="underline underline-offset-4" href="/guides/how-to-get-google-to-index-your-site">indexing guide</a>{' '}
+          has the steps.
+        </p>
+      </section>
+
+      <section class="site-frame grid gap-8 sm:grid-cols-[1fr_1.15fr] sm:items-start" aria-labelledby="links-heading">
+        <div class="sm:sticky sm:top-24">
+          <h2 id="links-heading" class="text-pretty text-2xl font-medium -tracking-[0.4px] text-foreground xl:text-3xl xl:-tracking-[0.6px]">
+            Can an AI agent get you links?
+          </h2>
+          <p class="mt-4 text-base leading-7 text-foreground-muted">
+            Yes, with you approving each email. In October 2026 an agent got
+            Ian two links from one site with a Domain Rating of 84.
+          </p>
+        </div>
+        <div class="rounded-lg bg-muted p-6 text-base leading-7 text-foreground-muted">
+          <p>
+            It took an export of his competitors' best backlinks, found a
+            topical reason for each site to link to him, and drafted the
+            emails. Ian approved the picks, and the agent sent them from his
+            own Gmail.
+          </p>
+          <p class="mt-4">
+            <a class="underline underline-offset-4" href="/blog/agent-link-outreach">The outreach post</a>{' '}
+            has the prompts, and the{' '}
+            <a class="underline underline-offset-4" href="/features/link-building">link building page</a>{' '}
+            shows how SEO Skill finds the prospects.
+          </p>
+        </div>
+      </section>
+
+      <SplitList
+        id="lessons-heading"
+        title="What do these SEO case studies teach?"
+        text="Undo big changes slowly, link every new page, expect brand clicks first, and judge each result against its own baseline."
+        items={lessons}
+      />
+
+      <div>
+        <SplitList
+          id="how-heading"
+          title="How do I write an SEO case study for my own site?"
+          text="Write down the baseline and the date of the change, then compare equal periods. A case study without the date and the baseline is a story, and nobody can check it."
+          items={how}
+        />
+        <div class="site-frame mt-8">
+          <CodeBlock
+            label="Ask your agent"
+            prompt
+            value="Compare example.com before and after we moved the blog on 3 November. Show the pages and searches that moved most, and list any Google updates in the window."
+          />
+        </div>
+      </div>
+
+      <section class="site-frame" aria-labelledby="tools-heading">
+        <SectionHeading id="tools-heading" title="Read the full stories" text="Each case study comes from a longer page with the method and the evidence." />
+        <div class="grid grid-cols-1 gap-2 sm:grid-cols-2">
+          {tools.map((item) => <HomeCard {...item} />)}
+        </div>
+      </section>
+
+      <section class="site-frame" aria-labelledby="faq-heading">
+        <div class="max-w-2xl">
+          <h2 id="faq-heading" class="text-pretty text-2xl font-medium -tracking-[0.4px] text-foreground xl:text-3xl xl:-tracking-[0.6px]">
+            Questions about these SEO case studies
+          </h2>
+        </div>
+        <div class="mt-10">
+          <FaqAccordion items={faq} id="case-studies-faq" />
+        </div>
+      </section>
+
+      <section class="site-frame" aria-labelledby="start-heading">
+        <SectionHeading
+          id="start-heading"
+          title="Measure your own site the same way"
+          text="Add SEO Skill to your agent, sign in with the Google account that can read your Search Console, and ask it how your site has done since its baseline."
+        />
+        <SetupPrompts id="case-studies-setup-end" />
+      </section>
+    </div>
+  </main>
+</BaseLayout>

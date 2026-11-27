@@ -128,6 +128,12 @@ const PROFILE_RULES: Record<
     advice:
       'The review and rating must be genuine and visible on the page. Google review stars are unavailable for self-controlled LocalBusiness or Organization reviews.',
   },
+  Service: {
+    required: ['name', 'provider.name'],
+    recommended: ['serviceType', 'description', 'areaServed'],
+    advice:
+      'Google has no rich result for Service markup. It describes the offer for search engines and other software that read the page.',
+  },
   VideoObject: {
     required: ['name', 'description', 'thumbnailUrl', 'uploadDate'],
     recommended: ['duration', 'contentUrl', 'embedUrl'],

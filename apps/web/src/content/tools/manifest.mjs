@@ -246,7 +246,7 @@ export const tools = [
     title: 'Schema markup generator',
     action: 'Open the schema markup generator',
     description:
-      'Create JSON-LD structured data for fourteen common page and entity types and copy the finished script.',
+      'Create JSON-LD structured data for fifteen common page and entity types and copy the finished script.',
     kind: 'browser',
   },
   {

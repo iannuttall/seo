@@ -16,7 +16,9 @@ import FaqAccordion from '@/components/FaqAccordion.astro'
 import HomeCard from '@/components/HomeCard.astro'
 import LandingHero from '@/components/LandingHero.astro'
 import SectionHeading from '@/components/SectionHeading.astro'
+import SetupPrompts from '@/components/SetupPrompts.astro'
 import { checked, seoSkillTracker, sources, trackers } from '@/content/ai-visibility-trackers'
+import { researchKeyStep } from '@/content/setup-prompts'
 import BaseLayout from '@/layouts/BaseLayout.astro'
 import type { SchemaBreadcrumb } from '@/lib/schema'
 
@@ -104,8 +106,8 @@ const faq = [
       <section class="site-frame" aria-labelledby="profound-heading">
         <SectionHeading
           id="profound-heading"
-          title="What Profound does"
-          text={`More than a tracker: it measures, then drafts the fixes. From Profound’s own pages, read on ${checked}.`}
+          title="What does Profound do?"
+          text={`It measures your AI visibility, then drafts the fixes. These points come from Profound’s own pages, read on ${checked}.`}
         />
         <div class="grid grid-cols-1 gap-2 sm:grid-cols-2">
           {profoundDoes.map((item) => <HomeCard {...item} />)}
@@ -115,7 +117,7 @@ const faq = [
       <section class="site-frame" aria-labelledby="versus-heading">
         <SectionHeading
           id="versus-heading"
-          title="Profound vs Peec AI vs SEO Skill"
+          title="How do Profound, Peec AI and SEO Skill compare?"
           text="Peec AI watches. Profound watches and drafts the work. SEO Skill checks, then your own agent does the work in your codebase."
         />
         <div class="docs-prose max-w-5xl">
@@ -135,8 +137,8 @@ const faq = [
       <section class="site-frame" aria-labelledby="options-heading">
         <SectionHeading
           id="options-heading"
-          title="Profound alternatives, by the job you need"
-          text="Most teams need one of these jobs done well, not all of them at once."
+          title="Which Profound alternative fits your job?"
+          text="The one that does your main job well, because most teams need one of these at a time."
         />
         <div class="grid grid-cols-1 gap-2 sm:grid-cols-2">
           {options.map((item) => <HomeCard {...item} />)}
@@ -146,8 +148,8 @@ const faq = [
       <section class="site-frame" aria-labelledby="agent-heading">
         <SectionHeading
           id="agent-heading"
-          title="Let your own agent do the work"
-          text="Profound’s agents draft pages inside Profound. With SEO Skill, the agent you already code with checks the answers, then edits the page in your repository."
+          title="Can your own agent do the work instead?"
+          text="Yes. With SEO Skill, the agent you already code with checks the answers, then edits the page in your repository. Profound’s agents draft pages inside Profound."
         />
         <div class="docs-prose max-w-3xl">
           <p>
@@ -170,8 +172,8 @@ const faq = [
       <section class="site-frame" aria-labelledby="crawlers-heading">
         <SectionHeading
           id="crawlers-heading"
-          title="See AI crawlers without forwarding your logs"
-          text="An AI answer can only cite a page its crawler can read. Check that first, for free."
+          title="Can you see AI crawlers without forwarding your logs?"
+          text="Yes, for free, and it is worth checking first, because an AI answer can only cite a page its crawler can read."
         />
         <div class="grid grid-cols-1 gap-2 sm:grid-cols-2">
           {crawlerTools.map((item) => <HomeCard {...item} />)}
@@ -190,8 +192,8 @@ const faq = [
       <section class="site-frame" aria-labelledby="more-heading">
         <SectionHeading
           id="more-heading"
-          title="More on AI visibility"
-          text="The other comparison, and where AI search shows in your own data."
+          title="Where can you read more on AI visibility?"
+          text="On these pages, which cover the other comparison and where AI search shows in your own data."
         />
         <div class="grid grid-cols-1 gap-2 sm:grid-cols-2">
           <HomeCard title="Peec AI alternatives" text="What Peec AI does well, the alternatives for each job, and Peec AI next to SEO Skill." icon={CloudServerIcon} href="/alternatives/peec-ai" link="Peec AI alternatives" />
@@ -205,6 +207,15 @@ const faq = [
             ))}
           </ul>
         </div>
+      </section>
+
+      <section class="site-frame" aria-labelledby="start-heading">
+        <SectionHeading
+          id="start-heading"
+          title="Check your own AI visibility"
+          text="Add SEO Skill to your agent, sign in with Google and save a DataForSEO key on your account page. Then ask which AI answers cite your site, and which pages should."
+        />
+        <SetupPrompts id="profound-setup-end" extraSteps={[researchKeyStep('dataforseo')]} />
       </section>
     </div>
   </main>

@@ -16,7 +16,9 @@ import FaqAccordion from '@/components/FaqAccordion.astro'
 import HomeCard from '@/components/HomeCard.astro'
 import LandingHero from '@/components/LandingHero.astro'
 import SectionHeading from '@/components/SectionHeading.astro'
+import SetupPrompts from '@/components/SetupPrompts.astro'
 import { checked, seoSkillTracker, sources, trackers } from '@/content/ai-visibility-trackers'
+import { researchKeyStep } from '@/content/setup-prompts'
 import BaseLayout from '@/layouts/BaseLayout.astro'
 import type { SchemaBreadcrumb } from '@/lib/schema'
 
@@ -105,8 +107,8 @@ const faq = [
       <section class="site-frame" aria-labelledby="peec-heading">
         <SectionHeading
           id="peec-heading"
-          title="What Peec AI does well"
-          text={`A clean daily tracker for marketing teams and agencies. From Peec AI’s own pages, read on ${checked}.`}
+          title="What does Peec AI do well?"
+          text={`It is a clean daily tracker for marketing teams and agencies. These four points come from Peec AI’s own pages, read on ${checked}.`}
         />
         <div class="grid grid-cols-1 gap-2 sm:grid-cols-2">
           {peecDoes.map((item) => <HomeCard {...item} />)}
@@ -116,8 +118,8 @@ const faq = [
       <section class="site-frame" aria-labelledby="options-heading">
         <SectionHeading
           id="options-heading"
-          title="Peec AI alternatives, by the job you need"
-          text="Each tool answers a different question. Pick the one that matches the work you will do with the numbers."
+          title="Which Peec AI alternative fits your job?"
+          text="The one that matches the work you will do with the numbers, because each tool answers a different question."
         />
         <div class="grid grid-cols-1 gap-2 sm:grid-cols-2">
           {options.map((item) => <HomeCard {...item} />)}
@@ -127,8 +129,8 @@ const faq = [
       <section class="site-frame" aria-labelledby="compare-heading">
         <SectionHeading
           id="compare-heading"
-          title="Peec AI and SEO Skill side by side"
-          text="Peec AI is built to watch. SEO Skill is built to check, then fix."
+          title="How does Peec AI compare with SEO Skill?"
+          text="Peec AI is built to watch the answers. SEO Skill is built to check them, then fix the page."
         />
         <div class="docs-prose max-w-4xl">
           <table>
@@ -147,8 +149,8 @@ const faq = [
       <section class="site-frame" aria-labelledby="own-data-heading">
         <SectionHeading
           id="own-data-heading"
-          title="Start from the questions people already ask"
-          text="A tracker runs the prompts you give it. Your Search Console already holds the ones real people typed into AI Mode and AI assistants."
+          title="Which questions should you track?"
+          text="Start with the ones real people already typed into AI Mode and AI assistants, which your Search Console holds. A tracker only runs the prompts you give it."
         />
         <div class="grid grid-cols-1 gap-2 sm:grid-cols-2">
           <div class="rounded-lg bg-muted p-6">
@@ -175,8 +177,8 @@ const faq = [
       <section class="site-frame" aria-labelledby="steps-heading">
         <SectionHeading
           id="steps-heading"
-          title="Check and fix AI visibility with your own agent"
-          text="The loop SEO Skill runs in Claude Code, Codex or Cursor, one question group at a time."
+          title="How do you check and fix AI visibility with your own agent?"
+          text="With this loop, which SEO Skill runs in Claude Code, Codex or Cursor one question group at a time."
         />
         <div class="max-w-3xl">
           <PlanSteps {steps} />
@@ -199,8 +201,8 @@ const faq = [
       <section class="site-frame" aria-labelledby="more-heading">
         <SectionHeading
           id="more-heading"
-          title="More on AI visibility"
-          text="Other ways SEO Skill reads AI search, and the next comparison."
+          title="Where can you read more on AI visibility?"
+          text="On these pages, which cover the next comparison and the weekly work behind AI answers."
         />
         <div class="grid grid-cols-1 gap-2 sm:grid-cols-2">
           <HomeCard title="Profound alternatives" text="Profound compared with Peec AI and SEO Skill, and the alternatives for each job." icon={CloudServerIcon} href="/alternatives/profound" link="Profound alternatives" />
@@ -214,6 +216,15 @@ const faq = [
             ))}
           </ul>
         </div>
+      </section>
+
+      <section class="site-frame" aria-labelledby="start-heading">
+        <SectionHeading
+          id="start-heading"
+          title="Check your own AI visibility"
+          text="Add SEO Skill to your agent, sign in with Google and save a DataForSEO key on your account page. Then ask which AI answers cite your site, and which pages should."
+        />
+        <SetupPrompts id="peec-setup-end" extraSteps={[researchKeyStep('dataforseo')]} />
       </section>
     </div>
   </main>

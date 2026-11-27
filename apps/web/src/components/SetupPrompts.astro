@@ -2,19 +2,29 @@
 // The setup box: one prompt per agent that sets up SEO Skill for the person.
 // The client switch is the ilo toggle group. View prompt opens the full
 // prompt in every panel at once, so switching agents keeps the same view.
+// On a client's own pages, pass client to open on its tab (added first when
+// it is not one of the four), and extraSteps for what that page sets up too.
 import { ArrowRight01Icon, Copy01Icon, Tick02Icon } from '@hugeicons/core-free-icons'
 import HugeIcon from './HugeIcon.astro'
 import { buttonBaseStyles, buttonVariants, getButtonClasses } from './ui/button'
 import { cn } from '@/lib/cn'
-import { setupPrompts } from '@/content/setup-prompts'
+import { promptText, setupPromptFor, setupPrompts } from '@/content/setup-prompts'
 
-type Props = { class?: string; id?: string }
+type Props = { class?: string; id?: string; client?: string; extraSteps?: string[] }
 
-const { class: className, id = 'setup' } = Astro.props
+const { class: className, id = 'setup', client: clientId, extraSteps = [] } = Astro.props
+
+const own = clientId ? setupPromptFor(clientId) : undefined
+const tabs = own && !own.featured ? [own, ...setupPrompts] : setupPrompts
+const selected = own ? tabs.indexOf(own) : 0
+const prompts = tabs.map((client) => ({ ...client, prompt: promptText(client, extraSteps) }))
+// The guide link is left out on the guide's own page.
+const here = Astro.url.pathname.replace(/\/$/, '')
 
 const firstLine = (prompt: string) => prompt.split('\n')[0] ?? prompt
-const summary = (agent: string) =>
-  `${agent.charAt(0).toUpperCase()}${agent.slice(1)} installs the CLI, adds the hosted MCP server, waits while you sign in with Google and checks it connects.`
+const summary = (client: { agent: string; summary?: string }) =>
+  client.summary ??
+  `${client.agent.charAt(0).toUpperCase()}${client.agent.slice(1)} installs the CLI, adds the hosted MCP server, waits while you sign in with Google and checks it connects.`
 ---
 
 <div class:list={['w-full text-left', className]} data-setup-prompts data-agent-markdown="exclude">
@@ -24,16 +34,20 @@ const summary = (agent: string) =>
     class="inline-flex h-9 max-w-full items-center justify-start gap-1 overflow-x-auto rounded-lg bg-muted p-0.5 text-foreground-muted"
   >
     {
-      setupPrompts.map((client, index) => (
+      prompts.map((client, index) => (
         <button
           type="button"
           role="tab"
           id={`${id}-tab-${client.id}`}
           aria-controls={`${id}-panel-${client.id}`}
-          aria-selected={index === 0 ? 'true' : 'false'}
-          tabindex={index === 0 ? undefined : -1}
+          aria-selected={index === selected ? 'true' : 'false'}
+          tabindex={index === selected ? undefined : -1}
           data-setup-tab={client.id}
-          class="inline-flex h-8 min-w-7 items-center justify-center whitespace-nowrap rounded-md border border-transparent px-2.5 sm:px-3 text-sm font-medium outline-none transition-colors hover:text-foreground focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/20 aria-selected:bg-card aria-selected:text-foreground aria-selected:shadow-xs"
+          class:list={[
+            'inline-flex h-8 min-w-7 items-center justify-center whitespace-nowrap rounded-md border border-transparent px-2.5 sm:px-3 text-sm font-medium outline-none transition-colors hover:text-foreground focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/20 aria-selected:bg-card aria-selected:text-foreground aria-selected:shadow-xs',
+            // Five tabs do not fit a phone: keep each whole and let the row scroll.
+            prompts.length > 4 && 'shrink-0',
+          ]}
         >
           {client.label}
         </button>
@@ -45,14 +59,14 @@ const summary = (agent: string) =>
       as the tallest panel and switching agents never shifts the page. */}
   <div class="mt-3 grid grid-cols-[minmax(0,1fr)]">
   {
-    setupPrompts.map((client, index) => (
+    prompts.map((client, index) => (
       <div
         role="tabpanel"
         id={`${id}-panel-${client.id}`}
         aria-labelledby={`${id}-tab-${client.id}`}
-        aria-hidden={index === 0 ? undefined : 'true'}
+        aria-hidden={index === selected ? undefined : 'true'}
         data-setup-panel={client.id}
-        class:list={['[grid-area:1/1]', index !== 0 && 'invisible']}
+        class:list={['[grid-area:1/1]', index !== selected && 'invisible']}
       >
         <div class="rounded-lg bg-muted p-4 sm:p-5">
           <div class="flex flex-col gap-3 sm:flex-row sm:items-center sm:gap-4">
@@ -88,14 +102,16 @@ const summary = (agent: string) =>
             data-setup-full>{client.prompt}</pre>
         </div>
         <div class="mt-2 flex flex-col gap-1 text-sm/6 sm:flex-row sm:items-start sm:justify-between sm:gap-6">
-          <p class="text-foreground-muted">{summary(client.agent)}</p>
-          <a
-            class="inline-flex shrink-0 items-center gap-1 font-medium text-foreground no-underline hover:underline underline-offset-4"
-            href={client.guide.href}
-          >
-            {client.guide.label}
-            <HugeIcon icon={ArrowRight01Icon} class="size-4" />
-          </a>
+          <p class="text-foreground-muted">{summary(client)}</p>
+          {client.guide.href !== here ? (
+            <a
+              class="inline-flex shrink-0 items-center gap-1 font-medium text-foreground no-underline hover:underline underline-offset-4"
+              href={client.guide.href}
+            >
+              {client.guide.label}
+              <HugeIcon icon={ArrowRight01Icon} class="size-4" />
+            </a>
+          ) : null}
         </div>
       </div>
     ))

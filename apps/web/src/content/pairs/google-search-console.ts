@@ -39,10 +39,10 @@ export const pairs: Record<string, PairPage> = {
         ],
       },
       {
-        title: 'Add the CLI for crawls, Bing and copy checks',
+        title: 'Crawls, Bing and copy checks run on your machine',
         paragraphs: [
-          'The hosted server reads Google data. Crawls, Bing Webmaster Tools and copy checks run on your machine with the `seo` CLI. Install it with `npm i -g seo`, then run `seo start` to sign in.',
-          'Codex can then run `seo crawl` against localhost or a staging build before you merge, and `seo lint` on the copy it just wrote. Run `seo mcp install` to add the local MCP server to Codex as well.',
+          'The hosted server reads Google data. Crawls, Bing Webmaster Tools and copy checks run on your machine with the `seo` CLI, which the setup prompt installs and links to your account.',
+          'Codex can run `seo crawl` against localhost or a staging build before you merge, and `seo lint` on the copy it just wrote.',
         ],
       },
     ],

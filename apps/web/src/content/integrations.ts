@@ -27,8 +27,6 @@ export type Source = {
   connect: 'google' | 'key' | 'clicky' | 'cli'
   /** What a person needs before they start. */
   needs: string
-  /** Request headers that carry a research key, with the variable to read. */
-  headers?: [header: string, variable: string][]
   /** One sentence for cards and the hub. */
   card: string
   tools: { tool: HostedTool; text: string }[]
@@ -50,10 +48,6 @@ export type Client = {
   steps: Step[]
   /** What happens at the first request. */
   signIn: string
-  /** The add command or config with a research key header, when supported. */
-  withHeader?: (headers: [header: string, variable: string][]) => Step
-  /** `seo mcp install` can add the local MCP to it. */
-  localMcp: boolean
   note?: string
   docsUrl: string
 }
@@ -246,10 +240,6 @@ export const sources: Source[] = [
     connect: 'key',
     needs:
       'A DataForSEO account with API credit. DataForSEO bills you directly for each request.',
-    headers: [
-      ['X-DataForSEO-Login', 'DATAFORSEO_LOGIN'],
-      ['X-DataForSEO-Password', 'DATAFORSEO_PASSWORD'],
-    ],
     card: 'Keyword metrics, rankings, SERPs, competitors, backlinks and AI answer checks with your own login.',
     tools: [
       {
@@ -310,7 +300,6 @@ export const sources: Source[] = [
     connect: 'key',
     needs:
       'An Ahrefs API key from a plan that includes API access. Ahrefs counts each request against your units.',
-    headers: [['X-Ahrefs-Key', 'AHREFS_API_KEY']],
     card: 'Keyword metrics, ranked keywords, SERPs, competitors and backlinks with your own key.',
     tools: [
       {
@@ -461,7 +450,7 @@ export const clients: Client[] = [
     id: 'claude-code',
     name: 'Claude Code',
     where: "Anthropic's coding agent in your terminal",
-    card: 'One command in your terminal.',
+    card: 'One prompt, and Claude Code sets it up for every project.',
     steps: [
       {
         text: 'Run this in a terminal. The user scope makes it available in every project:',
@@ -473,16 +462,6 @@ export const clients: Client[] = [
     ],
     signIn:
       'A browser tab opens for Google sign-in. Claude Code keeps the token, so you sign in once.',
-    withHeader: (headers) => ({
-      text: 'Or send the key as a header, so nothing is saved on your account:',
-      code: [
-        `claude mcp add --transport http --scope user seoskill ${mcpUrl}`,
-        ...headers.map(
-          ([header, variable]) => `  --header "${header}: \${${variable}}"`,
-        ),
-      ].join(' \\\n'),
-    }),
-    localMcp: true,
     docsUrl: 'https://code.claude.com/docs/en/mcp',
   },
   {
@@ -505,7 +484,6 @@ export const clients: Client[] = [
     ],
     signIn:
       'Claude opens the Google sign-in when you connect. The connector belongs to your Claude account, so it also shows up in the desktop and mobile apps.',
-    localMcp: false,
     note: 'Every Claude plan can add custom connectors, and the free plan allows one. On Team and Enterprise plans an owner adds the connector under Organization settings first, then each member connects their own Google account.',
     docsUrl:
       'https://support.claude.com/en/articles/11175166-getting-started-with-custom-connectors-using-remote-mcp',
@@ -528,7 +506,6 @@ export const clients: Client[] = [
     ],
     signIn:
       'ChatGPT opens the Google sign-in while it sets up the plugin, and refreshes the token after that.',
-    localMcp: false,
     note: 'Custom MCP servers depend on your ChatGPT plan. OpenAI lists Business, Enterprise and Edu workspaces, where an admin may need to create the plugin, and Pro accounts for read-only servers like this one.',
     docsUrl:
       'https://help.openai.com/en/articles/12584461-connecting-custom-mcp-servers-in-chatgpt',
@@ -538,7 +515,7 @@ export const clients: Client[] = [
     name: 'Codex',
     where:
       "OpenAI's coding agent in the terminal, the IDE extension and the desktop app",
-    card: 'Two commands in your terminal.',
+    card: 'One prompt, and Codex sets it up in the CLI, IDE extension and app.',
     steps: [
       {
         text: 'Add the server, then sign in. The CLI, IDE extension and desktop app share this config:',
@@ -548,18 +525,13 @@ export const clients: Client[] = [
     ],
     signIn:
       'codex mcp login opens the Google sign-in in your browser. Codex keeps the token for later sessions.',
-    withHeader: (headers) => ({
-      text: 'Or send the key as a header from ~/.codex/config.toml, so nothing is saved on your account. Each header takes its value from the environment variable named here:',
-      code: `[mcp_servers.seoskill]\nurl = "${mcpUrl}"\nenv_http_headers = { ${headers.map(([header, variable]) => `"${header}" = "${variable}"`).join(', ')} }`,
-    }),
-    localMcp: true,
     docsUrl: 'https://developers.openai.com/codex/mcp',
   },
   {
     id: 'cursor',
     name: 'Cursor',
     where: 'the Cursor editor and its agent',
-    card: 'One entry in mcp.json.',
+    card: 'One prompt, and Cursor sets it up for every project.',
     steps: [
       {
         text: 'Add the server to ~/.cursor/mcp.json for every project, or .cursor/mcp.json for one:',
@@ -571,27 +543,6 @@ export const clients: Client[] = [
     ],
     signIn:
       'Cursor opens the Google sign-in in your browser and keeps the token.',
-    withHeader: (headers) => ({
-      text: 'Or send the key as a header, so nothing is saved on your account:',
-      code: JSON.stringify(
-        {
-          mcpServers: {
-            seoskill: {
-              url: mcpUrl,
-              headers: Object.fromEntries(
-                headers.map(([header, variable]) => [
-                  header,
-                  `\${env:${variable}}`,
-                ]),
-              ),
-            },
-          },
-        },
-        null,
-        2,
-      ),
-    }),
-    localMcp: true,
     note: 'On Enterprise teams an admin can limit which MCP servers are allowed.',
     docsUrl: 'https://cursor.com/docs/context/mcp',
   },
@@ -599,7 +550,7 @@ export const clients: Client[] = [
     id: 'vs-code',
     name: 'VS Code',
     where: 'VS Code with GitHub Copilot',
-    card: 'The Add Server command, or one entry in .mcp.json.',
+    card: 'One prompt, and Copilot walks you through adding it.',
     steps: [
       {
         text: 'Open the Command Palette, run MCP: Add Server and choose HTTP. Enter the server URL and the name seoskill:',
@@ -613,28 +564,6 @@ export const clients: Client[] = [
     ],
     signIn:
       'VS Code opens the Google sign-in the first time the server connects, then keeps the token.',
-    withHeader: (headers) => ({
-      text: 'Or send the key as a header, so nothing is saved on your account:',
-      code: JSON.stringify(
-        {
-          mcpServers: {
-            seoskill: {
-              type: 'http',
-              url: mcpUrl,
-              headers: Object.fromEntries(
-                headers.map(([header, variable]) => [
-                  header,
-                  `\${${variable}}`,
-                ]),
-              ),
-            },
-          },
-        },
-        null,
-        2,
-      ),
-    }),
-    localMcp: false,
     note: 'You need a Copilot plan. On Copilot Business and Enterprise, an admin has to turn on the MCP servers in Copilot policy first.',
     docsUrl:
       'https://code.visualstudio.com/docs/agent-customization/mcp-servers',
@@ -643,7 +572,7 @@ export const clients: Client[] = [
     id: 'gemini-cli',
     name: 'Gemini CLI',
     where: "Google's coding agent in your terminal",
-    card: 'One command in your terminal.',
+    card: 'One prompt, and Gemini CLI sets it up for every project.',
     steps: [
       {
         text: 'Run this in a terminal. The user scope makes it available in every project:',
@@ -655,23 +584,13 @@ export const clients: Client[] = [
     ],
     signIn:
       'Gemini CLI opens the Google sign-in in your browser and keeps the token.',
-    withHeader: (headers) => ({
-      text: 'Or send the key as a header, so nothing is saved on your account:',
-      code: [
-        `gemini mcp add --transport http --scope user seoskill ${mcpUrl}`,
-        ...headers.map(
-          ([header, variable]) => `  --header "${header}: \${${variable}}"`,
-        ),
-      ].join(' \\\n'),
-    }),
-    localMcp: false,
     docsUrl: 'https://geminicli.com/docs/tools/mcp-server/',
   },
   {
     id: 'windsurf',
     name: 'Windsurf',
     where: 'Devin Desktop, the editor that was called Windsurf',
-    card: 'Two commands, or one entry in mcp_config.json.',
+    card: 'One prompt, and Devin Desktop sets it up for every project.',
     steps: [
       {
         text: 'Add the server for Devin Local, the default agent, then sign in:',
@@ -684,7 +603,6 @@ export const clients: Client[] = [
     ],
     signIn:
       'The Google sign-in opens in your browser. When it expires, the app shows Needs authentication with a button to sign in again.',
-    localMcp: false,
     note: 'Windsurf became Devin Desktop in June 2026. On Enterprise teams MCP has to be turned on, and an admin allowlist blocks servers that are not on it.',
     docsUrl: 'https://docs.devin.ai/cli/extensibility/mcp/configuration',
   },
@@ -702,7 +620,6 @@ export const clients: Client[] = [
     ],
     signIn:
       'Le Chat finds the sign-in on its own and opens the Google consent screen.',
-    localMcp: false,
     note: 'Only an administrator can add connectors. On Free, Pro and Student plans that is the account owner.',
     docsUrl:
       'https://docs.mistral.ai/le-chat/knowledge-integrations/connectors/mcp-connectors',

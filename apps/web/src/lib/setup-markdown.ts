@@ -12,7 +12,7 @@ import {
   sha256,
 } from '@iannuttall/seo-graph-core'
 import type { AstroIntegration } from 'astro'
-import { setupPrompts } from '../content/setup-prompts'
+import { promptText, setupPrompts } from '../content/setup-prompts'
 
 const setupMarkdown = (site: string): string => {
   const anyAgent = setupPrompts.find((client) => client.id === 'other')
@@ -23,7 +23,7 @@ const setupMarkdown = (site: string): string => {
   return [
     '## Set up SEO Skill',
     'Give this prompt to your AI agent. It installs the `seo` CLI, adds the hosted MCP server, waits while you sign in with Google and checks it connects.',
-    `\`\`\`prompt\n${anyAgent.prompt}\n\`\`\``,
+    `\`\`\`prompt\n${promptText(anyAgent)}\n\`\`\``,
     `There are setup guides for ${guides.join(', ')} and [every other agent](${new URL(anyAgent.guide.href, site)}).`,
   ].join('\n\n')
 }

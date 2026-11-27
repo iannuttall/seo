@@ -82,13 +82,28 @@ const otherSources = hostedSources.filter((item) => item.id !== source.id)
       canRunSetup ? (
         <LandingHero {title} {lead} setupId="pair-setup" setupClient={client.id} setupSteps={sourceSetupSteps(source)} />
       ) : (
-        <LandingHero {title} {lead} setupId="pair-setup">
-          <ClientSteps {steps} note={client.signIn} />
+        <LandingHero {title} {lead} setupId="pair-setup" setupSteps={sourceSetupSteps(source)}>
+          <p slot="note" class="mt-4 max-w-2xl text-pretty text-base leading-7 text-foreground-muted">
+            {client.name} adds connectors in its own settings, not from a prompt. Give this prompt to a coding agent, or follow the steps below in {client.name}.
+          </p>
         </LandingHero>
       )
     }
 
     <div class="space-y-24 py-24 sm:space-y-32 sm:py-32">
+      {
+        canRunSetup ? null : (
+          <section class="site-frame" aria-labelledby="clicks-heading">
+            <SectionHeading
+              id="clicks-heading"
+              title={`How do you add SEO Skill in ${client.name}?`}
+              text={`By hand in ${client.name}'s settings, because a chat cannot add a connector to itself. You sign in with Google at the end.`}
+            />
+            <ClientSteps steps={steps} note={client.signIn} />
+          </section>
+        )
+      }
+
       <SplitList
         id="prompts-heading"
         title={`What can you ask ${client.name} about ${source.name}?`}
@@ -150,9 +165,9 @@ const otherSources = hostedSources.filter((item) => item.id !== source.id)
         <SectionHeading
           id="start-heading"
           title={`Connect ${source.name} to ${client.name}`}
-          text={canRunSetup ? `Give ${client.name} the setup prompt, sign in with Google when it asks, and ask about your site.` : `Follow these steps in ${client.name}, sign in with Google and ask about your site.`}
+          text={canRunSetup ? `Give ${client.name} the setup prompt, sign in with Google when it asks, and ask about your site.` : `Give the setup prompt to a coding agent, or add the connector in ${client.name} with the steps above. Then sign in with Google and ask about your site.`}
         />
-        {canRunSetup ? <SetupPrompts id="pair-setup-end" client={client.id} extraSteps={sourceSetupSteps(source)} /> : <ClientSteps {steps} note={client.signIn} />}
+        <SetupPrompts id="pair-setup-end" client={canRunSetup ? client.id : undefined} extraSteps={sourceSetupSteps(source)} />
       </section>
     </div>
   </main>

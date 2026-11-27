@@ -133,7 +133,7 @@ const faq = [
       <p>
         On this page Jev always judges the links, on our key. From your
         machine it needs your own key. Without one, links come from text
-        matching: pages that use the
+        matching, which finds pages that use the
         same words, and sentences that name the target page. That finds good
         candidates, but it cannot tell a helpful link from a forced one, so
         the result says Jev was not used.
@@ -142,9 +142,9 @@ const faq = [
       <h3>What Jev is</h3>
       <p>
         <a href="https://typesafe.ai" target="_blank" rel="noreferrer">Jev</a> is an AI model from TypeSafe AI built to make decisions inside
-        software, not to write text. You ask it a fixed question, such as
+        software. You ask it a fixed question, such as
         "would this link help a reader of this page?", and it answers with a
-        choice and a probability: yes at 82%, for example. Because it only
+        choice and a probability, such as yes at 82%. Because it only
         picks an answer and says how sure it is, it cannot invent a page,
         sentence or phrase that is not on your site. It is also fast and
         cheap enough to judge every candidate link on a site, which a chat
@@ -160,7 +160,7 @@ const faq = [
       <h3>What Jev does in an audit</h3>
       <p>
         With a TypeSafe key, Jev sorts every page into a type (guide,
-        article, tool, product page and so on), then judges each link: how
+        article, tool, product page and so on), then judges each link on how
         likely it is to help a reader, which real sentence it belongs in,
         which real phrase to use, and what the link does for the reader. A
         link needs a probability of 50% to count as possible and 75% to
@@ -180,7 +180,7 @@ const faq = [
       <p>
         Internal links also carry meaning. The link text tells Google what
         the target page is about, which is why a descriptive phrase beats
-        "click here". And they move readers: a link in the right sentence
+        "click here". And they move readers, since a link in the right sentence
         takes someone to the next thing they need, which is the reason to
         add it in the first place.
       </p>
@@ -192,7 +192,7 @@ const faq = [
         linked to it were removed. A weakly linked page has fewer than three
         links from other pages' main content. Navigation and footer links
         repeat on every page, so they say little about any one page; links in
-        the content say much more.
+        the content are about that page.
       </p>
       <p>
         The tool lists both, so you can start with the pages that need links

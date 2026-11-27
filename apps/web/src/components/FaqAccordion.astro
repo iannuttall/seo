@@ -1,6 +1,9 @@
 ---
 // The ilo accordion: one muted panel with ruled rows. Opening a row closes
-// the others. Arrow keys, Home and End move between questions.
+// the others. Arrow keys, Home and End move between questions. The question
+// sits in the heading with the button laid over the row, and a closed answer
+// is inert rather than aria-hidden, so the page's Markdown copy (which drops
+// buttons and aria-hidden elements) keeps every question and answer.
 type FaqItem = {
   question: string
   answer?: string
@@ -39,16 +42,19 @@ const answerParts = (item: FaqItem) => {
         data-faq-item
         data-state="closed"
       >
-        <h3 class="flex">
+        <h3 class="relative flex">
+          <span id={`${id}-question-${index + 1}`} class="flex-1 py-5 pr-8 text-left text-base font-medium text-foreground">
+            {item.question}
+          </span>
           <button
             id={`${id}-trigger-${index + 1}`}
             type="button"
+            aria-labelledby={`${id}-question-${index + 1}`}
             aria-controls={`${id}-content-${index + 1}`}
             aria-expanded="false"
-            class="group flex flex-1 items-center justify-between gap-4 rounded-md border border-transparent py-5 text-left text-base font-medium text-foreground outline-none transition-all focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/20"
+            class="group absolute inset-0 flex items-center justify-end rounded-md border border-transparent outline-none transition-all focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/20"
             data-faq-trigger
           >
-            <span>{item.question}</span>
             <svg
               class="size-3.5 shrink-0 text-foreground transition-transform duration-200 group-aria-expanded:rotate-180"
               viewBox="0 0 24 24"
@@ -66,8 +72,8 @@ const answerParts = (item: FaqItem) => {
         <div
           id={`${id}-content-${index + 1}`}
           role="region"
-          aria-labelledby={`${id}-trigger-${index + 1}`}
-          aria-hidden="true"
+          aria-labelledby={`${id}-question-${index + 1}`}
+          inert
           class="faq-content grid text-sm"
           data-faq-content
           data-state="closed"
@@ -127,7 +133,7 @@ const answerParts = (item: FaqItem) => {
       item.dataset.state = state
       content.dataset.state = state
       trigger.setAttribute('aria-expanded', String(open))
-      content.setAttribute('aria-hidden', String(!open))
+      content.inert = !open
     }
 
     for (const item of items) {

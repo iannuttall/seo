@@ -189,7 +189,7 @@ Test the pages where people act, such as a product page, a sign-up form or a sea
 
 Lighthouse only looks at the page. To see what agents can fetch from the whole site, crawl it. `seo crawl` reports your robots.txt rules for AI bots, Markdown copies, llms.txt links and the agent files under `/.well-known/`, which covers much of what Cloudflare's scanner checks:
 
-<AgentStep setup prompt="Crawl my site and tell me what AI agents can read: robots.txt rules for AI bots, Markdown copies, llms.txt and any files under /.well-known/." cli="seo crawl https://example.com" local="Crawls fetch pages from your site, so they run on your own machine." />
+<AgentStep setup prompt="Crawl my site and tell me what AI agents can read: robots.txt rules for AI bots, Markdown copies, llms.txt and any files under /.well-known/." local="Crawls fetch pages from your site, so they run on your own machine." />
 
 If the crawl and Lighthouse both come back clean, I'd spend the time on the pages themselves. In my experience, a page people find easy to use is most of what an agent needs too.
 

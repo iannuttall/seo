@@ -42,19 +42,19 @@ The useful part is the pattern across a day. When two or more different follow-u
 
 The AI queries section of [`seo report`](/docs/report) finds follow-up questions, bare replies and other conversational queries in your Search Console data. It groups the different wordings of one question and shows which page Google showed for each:
 
-<AgentStep setup prompt="Which AI Mode follow-up questions and conversational queries bring my site impressions, and which page shows for each?" cli="seo report --site example.com --section ai-queries" />
+<AgentStep setup prompt="Which AI Mode follow-up questions and conversational queries bring my site impressions, and which page shows for each?" />
 
 A pronoun query that names your own site doesn't count as a follow-up, and neither does the "it" in time and weather questions such as "is it raining". The section covers 90 days by default.
 
 Then look at the follow-up trails. Each trail is one page and one day, with the follow-up questions people asked there:
 
-<AgentStep prompt="Show me my site's follow-up trails: which pages got several follow-up questions on one day, and what were the questions?" cli="seo report --site example.com --section ai-queries --detail full" />
+<AgentStep prompt="Show me my site's follow-up trails: which pages got several follow-up questions on one day, and what were the questions?" />
 
 A page with several trails is one that AI Mode keeps showing, while the people reading the answer keep asking for something else. Those questions are what the page is missing.
 
 To see whether AI answers actually cite your page for the questions behind those follow-ups, ask the AI engines directly. This uses your own DataForSEO key and costs about $0.07 a run:
 
-<AgentStep prompt="Ask ChatGPT, AI Mode and AI Overviews my site's top conversational questions. Do the answers cite or mention my site?" cli="seo research ai_answers --target example.com" />
+<AgentStep prompt="Ask ChatGPT, AI Mode and AI Overviews my site's top conversational questions. Do the answers cite or mention my site?" />
 
 Without keywords, SEO Skill picks your top 10 chat-style and long questions from Search Console itself.
 

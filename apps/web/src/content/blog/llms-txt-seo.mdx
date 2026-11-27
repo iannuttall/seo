@@ -156,10 +156,10 @@ Paste your llms.txt URL below. It checks the file against the llms.txt format, l
 
 The validator reads one file and doesn't open its links. To check that the links load, that each page has a Markdown copy and which AI bots your robots.txt lets in, crawl the site:
 
-<AgentStep setup prompt="Crawl example.com and tell me whether llms.txt exists and its links load, which pages have no Markdown copy, and which AI search bots robots.txt blocks." cli="seo crawl https://example.com --max-pages 200 --json" local="Crawls fetch pages from your site, so they run on your own machine." />
+<AgentStep setup prompt="Crawl example.com and tell me whether llms.txt exists and its links load, which pages have no Markdown copy, and which AI search bots robots.txt blocks." local="Crawls fetch pages from your site, so they run on your own machine." />
 
 Then find what JavaScript is hiding. With rendering on, the crawl loads each page in a browser as well and reports where the rendered page's titles, headings, links, text or structured data differ from the raw HTML.
 
-<AgentStep prompt="Crawl example.com with JavaScript rendering on and list the pages where headings, links or main text appear only after JavaScript runs." cli="seo crawl https://example.com --rendering on --max-pages 200 --json" local="Rendering needs Chrome or Chromium on your machine." />
+<AgentStep prompt="Crawl example.com with JavaScript rendering on and list the pages where headings, links or main text appear only after JavaScript runs." local="Rendering needs Chrome or Chromium on your machine." />
 
 If your site is in the weekly [site audit](/pricing), it crawls the site every week and flags a missing llms.txt, broken links in it, conversion pages it doesn't list and broken Markdown copies, with what's new since the last crawl. The [AI crawler user agents](/blog/ai-crawler-user-agents) reference has every bot above, what it does and how to tell it apart from a fake.

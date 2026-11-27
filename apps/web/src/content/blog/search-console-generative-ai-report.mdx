@@ -89,7 +89,7 @@ The device split surprised me. AI impressions lean further towards desktop than 
 
 The useful number is each page's AI share, which is its AI impressions divided by its web impressions over the same dates. A page with a high share is one that Google's AI answers lean on. Pull the web impressions for the same pages and dates to work it out:
 
-<AgentStep setup prompt="Show web impressions and clicks by page for example.com from 2026-08-17 to 2026-11-15, so I can divide each page's AI impressions by them." cli="seo data --site example.com --dimensions page --start-date 2026-08-17 --end-date 2026-11-15" />
+<AgentStep setup prompt="Show web impressions and clicks by page for example.com from 2026-08-17 to 2026-11-15, so I can divide each page's AI impressions by them." />
 
 <CompareBars
   title="AI share of web impressions, by page"
@@ -124,7 +124,7 @@ SEO Skill finds follow-up questions by their wording, so treat the list as a heu
 
 Start with the pages that have a high AI share in the Generative AI report. Then check which follow-up questions reach those same pages:
 
-<AgentStep prompt="Which AI Mode follow-up questions reach each page on example.com, and how many impressions does each get?" cli="seo report --site example.com --section ai-queries --detail full" />
+<AgentStep prompt="Which AI Mode follow-up questions reach each page on example.com, and how many impressions does each get?" />
 
 A page that AI answers show often and that keeps drawing follow-up questions is one people still have questions about. Those questions are what it should answer next.
 

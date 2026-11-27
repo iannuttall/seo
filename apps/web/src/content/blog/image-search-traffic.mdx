@@ -30,11 +30,11 @@ So check before you plan a project around Google Images. SEO Skill's report over
 
 Ask for the image search section of the report. It compares Google Images with web search, lists the pages with the most image impressions beside the previous period, and checks the images on the top 20 pages:
 
-<AgentStep setup prompt="How much does Google Images show example.com compared with web search, and which pages does it show most?" cli="seo report --site example.com --section image-search" />
+<AgentStep setup prompt="How much does Google Images show example.com compared with web search, and which pages does it show most?" />
 
 To see what people searched for when Google Images showed one page, ask for that page's image searches:
 
-<AgentStep prompt="Which Google Images searches show example.com/garden-paths, with impressions and clicks?" cli="seo data --site example.com --search-type image --dimensions query --page-regex '/garden-paths/?$'" />
+<AgentStep prompt="Which Google Images searches show example.com/garden-paths, with impressions and clicks?" />
 
 Search Console leaves anonymized queries out of this list to protect privacy, so a page's rarest image searches won't show.
 

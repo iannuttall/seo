@@ -49,13 +49,13 @@ Bing's list isn't a copy of Google's anonymized queries. People search a little 
 
 Connect Bing once, either through your seoskill.dev account or with a Bing Webmaster API key, as the [Bing docs](/docs/bing) explain. Then run the Bing section of the report for your site:
 
-<AgentStep prompt="Compare my site's Bing searches with Google's and show me the ones Search Console doesn't list." cli="seo report --site example.com --section bing" local="Bing blocks our hosted server, so Bing data runs on your own machine." />
+<AgentStep prompt="Compare my site's Bing searches with Google's and show me the ones Search Console doesn't list." local="Bing blocks our hosted server, so Bing data runs on your own machine." />
 
 The section lists Bing's top searches with Google's clicks, impressions and position for the same search beside them. It also counts how many searches each engine lists, how many appear in both, and the share of Google impressions in anonymized queries. A Bing search with no Google numbers beside it is one Search Console didn't list.
 
 For every Bing search, with the previous period beside it, pull the raw rows:
 
-<AgentStep prompt="List every Bing search for my site and pick out the long questions that have no Google row." cli="seo data --site example.com --source bing --dimensions query" local="Bing blocks our hosted server, so Bing data runs on your own machine." />
+<AgentStep prompt="List every Bing search for my site and pick out the long questions that have no Google row." local="Bing blocks our hosted server, so Bing data runs on your own machine." />
 
 The long questions with no Google row are the searches to write for.
 

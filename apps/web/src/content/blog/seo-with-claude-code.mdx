@@ -50,7 +50,7 @@ You need Claude Code or Codex and a Google account that can read your site's Sea
 
 I started the way the [`seo next`](/docs/next) docs suggest, by asking the agent to work on the site rather than asking for a particular report. Every prompt below uses example.com; swap in your own site.
 
-<AgentStep setup prompt="Use SEO Skill to work on example.com" cli="seo next --site example.com" />
+<AgentStep setup prompt="Use SEO Skill to work on example.com" />
 
 It came back with one step and the pages to work on:
 
@@ -72,7 +72,7 @@ Four pages had dropped out of Google's index between 14 and 16 November 2026. Th
 
 The report gives the agent the shape of the site before it chases a single query.
 
-<AgentStep prompt="Run the SEO report for example.com" cli="seo report --site example.com" />
+<AgentStep prompt="Run the SEO report for example.com" />
 
 Trimmed, the overview said:
 
@@ -92,7 +92,7 @@ The home page took 490 of the site's 614 clicks in those four weeks. So whatever
 
 Quick wins are queries at positions 4 to 10 whose click-through rate sits below the site's own curve for that position. They're the obvious place for an agent to start.
 
-<AgentStep prompt="Show me the quick wins for example.com" cli="seo report --site example.com --section quick-wins" />
+<AgentStep prompt="Show me the quick wins for example.com" />
 
 ```text
 quick-wins: 17 rows
@@ -110,7 +110,7 @@ The top real row was "ai seo skill", with 172 impressions for the home page at a
 
 Before agreeing, I asked who else ranks:
 
-<AgentStep prompt="Who ranks for 'ai seo skill' in the US, and what do their titles say?" cli={'seo research serp --keywords "ai seo skill" --country us'} />
+<AgentStep prompt="Who ranks for 'ai seo skill' in the US, and what do their titles say?" />
 
 On 19 November 2026, in DataForSEO's US desktop results, number one was a skill file called `ai-seo` in a GitHub repository named marketingskills, and seoskill.dev was ninth.
 
@@ -146,7 +146,7 @@ So I parked it. People searching "ai seo skill" are probably looking for someone
 
 The quick win pointed at something bigger, though. If the home page shows up for "ai seo skill", what else does it show up for that it isn't written for?
 
-<AgentStep prompt="Which searches with Claude, Codex or AI in them show pages on example.com, and which page does Google show for each?" cli="seo data --site example.com --dimensions query,page --query-regex '(^| )(claude|codex|ai)( |$)' --sort impressions" />
+<AgentStep prompt="Which searches with Claude, Codex or AI in them show pages on example.com, and which page does Google show for each?" />
 
 ```text
 query                    | page | clicks | impressions
@@ -164,7 +164,7 @@ Searches that name Claude land almost entirely on the home page.
 
 Then by page, for every search with "claude" in it:
 
-<AgentStep prompt="Which pages on example.com get impressions for searches with 'claude' in them?" cli="seo data --site example.com --dimensions page --query claude --sort impressions" />
+<AgentStep prompt="Which pages on example.com get impressions for searches with 'claude' in them?" />
 
 <CompareBars
   title={'Impressions for searches containing "claude", by page'}
@@ -183,7 +183,7 @@ That's the real finding. Between 19 October and 15 November 2026, Google showed 
 
 When the right page gets nothing, the first question is what Google has on file for it.
 
-<AgentStep prompt="Check example.com/features/claude-seo: is it indexed, when did Google last crawl it, and what does it rank for?" cli="seo page --url https://example.com/features/claude-seo" />
+<AgentStep prompt="Check example.com/features/claude-seo: is it indexed, when did Google last crawl it, and what does it rank for?" />
 
 ```text
 title: Claude SEO skill for Claude Code and Claude.ai | SEO Skill
@@ -235,11 +235,11 @@ In this session the agent found every number. It also proposed the wrong first f
 
 The session is most useful run the same way each week, because the agent can then tell you what changed. Ask it the same first question:
 
-<AgentStep prompt="Use SEO Skill to work on example.com. What changed since last week, and what's due?" cli="seo next --site example.com" />
+<AgentStep prompt="Use SEO Skill to work on example.com. What changed since last week, and what's due?" />
 
 SEO Skill keeps a list of issues for each site between sessions. When a change is live, mark it fixed, and the list later shows that page's clicks and impressions for the 28 and 56 days after the fix against the same days before:
 
-<AgentStep prompt="The new title for the pricing page went live today. Mark that issue fixed on example.com." cli="seo report --site example.com --mark fixed --issues <id>" />
+<AgentStep prompt="The new title for the pricing page went live today. Mark that issue fixed on example.com." />
 
 Keep the windows comparable from week to week, such as the last 28 days against the 28 before, so a change in the numbers isn't a change in the dates. You can schedule the prompt in your agent or run the CLI from a scheduled job; the [cloud agents guide](/docs/cloud-agents) covers machines that start fresh each time. The paid [weekly site audit](/docs/weekly-site-audit), $50 a month per site, runs the crawl and daily index checks in the background if you'd rather not schedule anything.
 

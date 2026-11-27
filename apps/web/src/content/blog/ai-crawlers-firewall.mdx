@@ -63,7 +63,7 @@ A catch-all rule like that blocks every new AI crawler until someone adds it to 
 
 SEO Skill checks your robots.txt rules for each AI crawler's user-agent token on your home page and labels each one search or training:
 
-<AgentStep setup prompt="Check which AI crawlers my site's robots.txt allows on its home page, with search crawlers and training crawlers listed separately." cli="seo crawl --mode sites --urls example.com --json" local="Crawls fetch pages from your site, so they run on your own machine." />
+<AgentStep setup prompt="Check which AI crawlers my site's robots.txt allows on its home page, with search crawlers and training crawlers listed separately." local="Crawls fetch pages from your site, so they run on your own machine." />
 
 Two crawlers don't follow the plain rules. Applebot follows your Googlebot rules when robots.txt doesn't name Applebot, and OpenAI says robots.txt rules may not apply to ChatGPT-User, because a person asked for the page.
 

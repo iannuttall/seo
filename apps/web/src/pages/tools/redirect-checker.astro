@@ -274,30 +274,20 @@ const faq = [
         visitors still move, a script is doing it.
       </p>
 
-      <h2>Trace redirects from your agent or terminal</h2>
+      <h2>Trace redirects from your agent</h2>
       <p>
         The page above uses the same redirect tracer as{' '}
         <code>seo redirect-trace</code> in the CLI, with the same 10 redirect
-        limit, 10 seconds per request and SEO Skill crawler user agent.
-        Install it once:
+        limit, 10 seconds per request and SEO Skill crawler user agent. Your
+        agent runs it on your own machine, which also reaches staging sites
+        and anything behind your VPN, and reads the final page's title,
+        canonical and robots tags too. For a migration, put one{' '}
+        <code>old_url,new_url</code> pair per line in a CSV file, up to 1,000
+        rows, and ask:
       </p>
-      <CodeBlock value="npm i -g seo && seo start" wrap />
+      <CodeBlock prompt value="Trace every row of redirects.csv with seo redirect-trace and list each chain, loop, error and temporary redirect, with the rule to fix it" wrap />
       <p>
-        Then trace one URL from your own machine, which also reaches staging
-        sites and anything behind your VPN. It reads the final page's title,
-        canonical and robots tags too:
-      </p>
-      <CodeBlock value="seo redirect-trace --url http://example.com/old-page" wrap />
-      <p>
-        For a migration, put one <code>old_url,new_url</code> pair per line
-        in a CSV file, up to 1,000 rows, and check the whole map. Add{' '}
-        <code>--json</code> for one result per line that an agent or script
-        can read:
-      </p>
-      <CodeBlock value="seo redirect-trace --map redirects.csv" wrap />
-      <p>
-        Your agent runs the same commands once setup has added the skill, so
-        you can ask it in plain words. With the hosted MCP server, the{' '}
+        With the hosted MCP server, the{' '}
         <a href="/docs/page">seo page</a> report shows a URL's live status and
         redirects next to Google's own URL Inspection result and the page's
         Search Console queries, for any page on a site you have in Search

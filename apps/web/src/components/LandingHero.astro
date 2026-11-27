@@ -1,13 +1,14 @@
 ---
 // The home page hero for the landing pages: centred title and lead, then
-// the setup box in the full page frame. Pass a slot to
-// replace the setup box, such as one client's own steps, and a "note" slot
-// for one line under the lead.
+// the setup box in the full page frame. setupClient opens the box on that
+// client's tab and setupSteps adds the page's own steps to its prompts. Pass
+// a slot to replace the setup box, such as the clicks a web chat client
+// needs, and a "note" slot for one line under the lead.
 import SetupPrompts from './SetupPrompts.astro'
 
-type Props = { title: string; lead: string; setupId: string }
+type Props = { title: string; lead: string; setupId: string; setupClient?: string; setupSteps?: string[] }
 
-const { title, lead, setupId } = Astro.props
+const { title, lead, setupId, setupClient, setupSteps } = Astro.props
 const hasSetup = Astro.slots.has('default')
 ---
 
@@ -23,6 +24,6 @@ const hasSetup = Astro.slots.has('default')
   </div>
 
   <div class="site-frame mt-10 sm:mt-12">
-    {hasSetup ? <slot /> : <SetupPrompts id={setupId} />}
+    {hasSetup ? <slot /> : <SetupPrompts id={setupId} client={setupClient} extraSteps={setupSteps} />}
   </div>
 </section>

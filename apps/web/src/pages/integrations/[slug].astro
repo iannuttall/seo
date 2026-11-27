@@ -2,7 +2,6 @@
 // One landing page per data source (/integrations/google-search-console) and
 // one per AI client (/integrations/claude-code).
 import ClientSteps from '@/components/ClientSteps.astro'
-import CodeBlock from '@/components/CodeBlock.astro'
 import FaqAccordion from '@/components/FaqAccordion.astro'
 import HomeCard from '@/components/HomeCard.astro'
 import LandingHero from '@/components/LandingHero.astro'
@@ -11,6 +10,7 @@ import SplitList from '@/components/SplitList.astro'
 import { getButtonClasses } from '@/components/ui/button'
 import { integrationIcon } from '@/content/integration-icons'
 import { type Client, type Source, clients, hostedSources, sources } from '@/content/integrations'
+import { setupPromptFor, sourceSetupSteps } from '@/content/setup-prompts'
 import BaseLayout from '@/layouts/BaseLayout.astro'
 import type { SchemaBreadcrumb } from '@/lib/schema'
 
@@ -46,16 +46,16 @@ const connectSteps = source
   ? [
       { title: 'What you need', text: source.needs },
       ...(source.connect === 'google'
-        ? [{ title: 'Connect', text: 'Add the server to your agent and sign in with Google when it asks. Access is read only. Add more Google accounts, such as a client\'s, on your account page.' }]
+        ? [{ title: 'Connect', text: 'Give your agent the setup prompt on this page. It adds the server, and you sign in with Google when it asks. Access is read only. Add more Google accounts, such as a client\'s, on your account page.' }]
         : []),
       ...(source.connect === 'key'
-        ? [{ title: `Add your ${name} key`, text: `Sign in with Google first, then save your ${source.id === 'dataforseo' ? 'login and password' : 'API key'} under Keys on your account page. Clients that send headers can pass it with each request instead.` }]
+        ? [{ title: `Add your ${name} key`, text: `The setup prompt has your agent ask you to save your ${source.id === 'dataforseo' ? 'login and password' : 'API key'} under Keys on your account page, so the key never goes into a chat. Clients that send headers can pass it with each request instead.` }]
         : []),
       ...(source.connect === 'clicky'
-        ? [{ title: 'Add your Clicky sites', text: 'Sign in with Google first, then add your whole Clicky account, or one site at a time, under Keys on your account page.' }]
+        ? [{ title: 'Add your Clicky sites', text: 'The setup prompt has your agent ask you to add your whole Clicky account, or one site at a time, under Keys on your account page.' }]
         : []),
       ...(source.connect === 'cli'
-        ? [{ title: 'Connect Bing', text: 'Run seo start, choose Connect Bing on your account page and link the CLI with seo login. Or use a Bing Webmaster API key with seo providers bing connect.' }]
+        ? [{ title: 'Connect Bing', text: 'The setup prompt installs the CLI, links it to your account and asks you to choose Connect Bing on your account page. To keep Bing on one machine instead, use a Bing Webmaster API key with seo providers bing connect.' }]
         : []),
       { title: 'Read it with its limits', text: source.limit },
       ...(source.id === 'google-search-console'
@@ -80,7 +80,7 @@ const clientFaq = client
       { question: `Can ${name} change anything in my Search Console?`, answer: 'No. The Google sign-in asks for read-only access to Search Console and Google Analytics.' },
       { question: 'Does the server keep my search data?', answer: 'It keeps your linked Google accounts and any keys you save, encrypted. Search Console and analytics rows are fetched when your agent asks and not kept, except for sites in the paid weekly audit, where it keeps the crawls, index checks with each page\'s clicks and impressions, and the issues list.' },
       ...(client.note ? [{ question: `Which ${name} plans can add it?`, answer: client.note }] : []),
-      { question: 'What about site crawls and Bing?', answer: client.localMcp ? `Those run on your own machine. Install the seo CLI and run seo mcp install to add the local MCP server to ${name} as well.` : 'Those run on your own machine with the seo CLI. The hosted server tells your agent when a request needs the CLI.' },
+      { question: 'What about site crawls and Bing?', answer: setupPromptFor(client.id) ? `Those run on your own machine with the seo CLI. The setup prompt installs it and links it to your account, and ${name} runs it when a request needs it.` : 'Those run on your own machine with the seo CLI. The hosted server tells your agent when a request needs the CLI.' },
     ]
   : []
 ---
@@ -90,7 +90,7 @@ const clientFaq = client
     {
       source ? (
         hosted ? (
-          <LandingHero {title} {lead} setupId="integration-setup">
+          <LandingHero {title} {lead} setupId="integration-setup" setupSteps={sourceSetupSteps(source)}>
             {featureLink ? (
               <p slot="note" class="mt-4 max-w-2xl text-pretty text-base leading-7 text-foreground-muted">
                 {featureLink.before}
@@ -100,14 +100,16 @@ const clientFaq = client
             ) : null}
           </LandingHero>
         ) : (
-          <LandingHero {title} {lead} setupId="integration-setup">
-            <CodeBlock label="Install the CLI, then add the local MCP server to your agents" value={'npm i -g seo && seo start\nseo mcp install'} />
-          </LandingHero>
+          <LandingHero {title} {lead} setupId="integration-setup" setupSteps={sourceSetupSteps(source)} />
         )
       ) : (
-        <LandingHero {title} {lead} setupId="integration-setup">
-          <ClientSteps steps={client?.steps ?? []} note={client?.signIn} />
-        </LandingHero>
+        client && setupPromptFor(client.id) ? (
+          <LandingHero {title} {lead} setupId="integration-setup" setupClient={client.id} />
+        ) : (
+          <LandingHero {title} {lead} setupId="integration-setup">
+            <ClientSteps steps={client?.steps ?? []} note={client?.signIn} />
+          </LandingHero>
+        )
       )
     }
 
@@ -163,7 +165,7 @@ const clientFaq = client
         <SectionHeading
           id="links-heading"
           title={source ? (hosted ? `${name} in your AI client` : 'Data your agent can read') : `Data ${name} can read`}
-          text={source && hosted ? `Setup steps for ${name} in each client.` : 'Search Console and Google Analytics come with your Google sign-in. Research uses your own key.'}
+          text={source && hosted ? `How to set up ${name} in each client.` : 'Search Console and Google Analytics come with your Google sign-in. Research uses your own key.'}
         />
         <div class="grid grid-cols-1 gap-2 sm:grid-cols-2">
           {

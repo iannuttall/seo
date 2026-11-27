@@ -8,6 +8,8 @@ cover:
   alt: "An engraved Victorian print hall where rows of presses churn out identical green pages, and one hand lifts a single page out of the flow."
 ---
 
+import { taskPrompt } from '@/content/setup-prompts'
+
 <SlopDemo />
 
 <Fix rule="stock-opener" slop="In today's fast-paced digital landscape, " />"AI slop" is what people call low-quality content made with AI and published without a careful read. Merriam-Webster made "slop" its [2025 word of the year](https://www.merriam-webster.com/wordplay/word-of-the-year) and defines it as "digital content of low quality that is produced usually in quantity by means of artificial intelligence." <Fix rule="significance-inflation" slop="This marks a pivotal moment for the internet" /><Fix rule="participle-tail" slop=", underscoring the growing tension between speed and quality." />
@@ -86,25 +88,16 @@ That is the question that decides whether a page is slop. Someone landed on it b
 
 ## Check your own copy with `seo lint`
 
-<Fix rule="cliche" slop="Ready to take your writing to the next level?" /> The quickest way is to let your agent check its own work. Add the hosted MCP server to your agent and ask for the check whenever it writes something. The server signs you in with Google the first time, because its other tools read your Search Console data. In Claude Code:
+<Fix rule="cliche" slop="Ready to take your writing to the next level?" /> The quickest way is to let your agent check its own work. Give it the prompt below whenever it writes something. If SEO Skill isn't connected yet, the agent sets it up first, and you sign in with Google once, because the hosted server's other tools read your Search Console data.
 
-```sh
-claude mcp add --transport http seoskill https://seoskill.dev/mcp
-```
-
-The [hosted MCP guide](/docs/mcp) has the setup for Codex, Cursor and Claude on the web. Then ask:
-
-```prompt
-Check this draft with seo lint and fix every error.
-```
+<CodeBlock prompt value={taskPrompt('Check this draft with seo lint and fix every error.')} />
 
 The hosted tool takes the text itself, up to 200,000 characters, so it works on a draft that only exists in the chat. <Fix rule="colon-reveal" slop="The best part: it's completely free." />
 
-To check files on your machine, or to skip the sign-in, install the CLI. The lint command works offline with no account:
+To check files on your machine, or to skip the sign-in, ask your agent to run the CLI. The lint command works offline with no account:
 
-```sh
-npm i -g seo
-seo lint drafts/launch-post.md
+```prompt
+Run npx -y seo lint drafts/launch-post.md and fix every error.
 ```
 
 <Fix rule="negation-countdown" slop="No setup, no sign-in, no fuss. It">It</Fix> reads Markdown, MDX, HTML, Astro and plain text, and skips code blocks. Each finding has a line and column, the words it matched, why they stand out and a fix:

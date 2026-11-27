@@ -13,6 +13,8 @@ cover:
   title: left
 ---
 
+import { taskPrompt } from '@/content/setup-prompts'
+
 export const beforeUnknown = `<pre>GET windsurf.com/any-made-up-address
 200 OK
 &lt;title&gt;Page Not Found | Windsurf&lt;/title&gt;
@@ -488,27 +490,9 @@ These are from my own library, and each one fits a part of this plan:
 
 Everything in this teardown came from SEO Skill, run by an agent, plus the Ahrefs MCP for top pages and traffic history. You can run the same audit on your own site.
 
-**1. Connect the hosted MCP server.** It's free, you sign in with Google, and there's nothing to install. In Claude Code:
+Give your agent this prompt. It is close to the one I used. If SEO Skill isn't connected yet, the agent sets it up first, with the free hosted MCP server, a Google sign-in and the CLI for the crawl. It asks you to save an Ahrefs or DataForSEO key on your [account page](/account), never in the chat. The key gives your agent search volumes, rankings, results pages and AI answers.
 
-```sh
-claude mcp add --transport http seoskill https://seoskill.dev/mcp
-```
-
-The [MCP guide](/docs/mcp) has the steps for Codex, Cursor and Claude on the web.
-
-**2. Add a research key.** On your [account page](/account), save an Ahrefs or DataForSEO key. It gives your agent search volumes, rankings, results pages and AI answers.
-
-**3. Install the CLI for crawling.** The crawl runs on your machine:
-
-```sh
-npm i -g seo
-seo login
-```
-
-**4. Ask your agent.** This is close to the prompt I used:
-
-```prompt
-Audit every host we own, including old and
+<CodeBlock prompt value={taskPrompt(`Audit every host we own, including old and
 redirected domains. Follow each redirect and
 check what unknown addresses return.
 Crawl each host with seo crawl and list the
@@ -517,8 +501,7 @@ Use seo_research for the category, comparison
 and migration searches our buyers make.
 Ask ai_answers 16 buyer questions for us and
 for our biggest competitor.
-Rank every fix by how close it sits to pipeline.
-```
+Rank every fix by how close it sits to pipeline.`, 'research', true)} />
 
 If you run more than one domain, list every host first and follow every redirect. In this teardown, the biggest fixes were addresses nobody had looked at since the rebrand.
 

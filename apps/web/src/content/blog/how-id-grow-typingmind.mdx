@@ -13,6 +13,8 @@ cover:
   title: center
 ---
 
+import { taskPrompt } from '@/content/setup-prompts'
+
 export const beforeHome = `<pre>GET www.typingmind.com/
 200 OK, 202 KB of HTML
 about 2,400 words
@@ -447,29 +449,9 @@ Most of these fixes change pages Google already knows under a different title or
 
 Everything in this teardown came from SEO Skill, run by an agent. You can run the same audit on your own site.
 
-**1. Connect the hosted MCP server.** It's free. You sign in with Google, and there's no password and nothing to install. In Claude Code:
+Give your agent this prompt. It is close to the one I used. If SEO Skill isn't connected yet, the agent sets it up first, with the free hosted MCP server, a Google sign-in and the CLI for the crawl. It asks you to save an Ahrefs or DataForSEO key on your [account page](/account), never in the chat. The key gives your agent search volumes, rankings and results pages, like the tables above.
 
-```sh
-claude mcp add --transport http seoskill https://seoskill.dev/mcp
-```
-
-Codex, Cursor and Claude on the web work too. The [MCP guide](/docs/mcp) has the steps for each one.
-
-**2. Add a research key.** On your [account page](/account), save an Ahrefs or DataForSEO key. The key gives your agent search volumes, rankings and results pages, like the tables above.
-
-**3. Install the CLI for crawling.** The crawl runs on your machine, so it can read any site:
-
-```sh
-npm i -g seo
-seo login
-```
-
-TypingMind's main site draws its menu with JavaScript, so a plain crawl stops at the homepage. Run `seo crawl` with `--rendering on` for sites like that.
-
-**4. Ask your agent.** This is close to the prompt I used:
-
-```prompt
-Audit example.com and every subdomain we use.
+<CodeBlock prompt value={taskPrompt(`Audit example.com and every subdomain we use.
 Crawl each one with seo crawl, with rendering on
 if the homepage has no links in its HTML.
 Count the pages each template makes, and check
@@ -478,8 +460,9 @@ Use seo_research to find the searches our buyers
 make, who ranks for them and whether we can compete.
 Ask ai_answers ten buyer questions for us and for
 our biggest competitor.
-Rank every fix by how close it sits to revenue.
-```
+Rank every fix by how close it sits to revenue.`, 'research', true)} />
+
+TypingMind's main site draws its menu with JavaScript, so a plain crawl stops at the homepage. For sites like that, the crawl needs rendering on.
 
 On your own site, the hosted server adds the part I couldn't see from the outside: your real Search Console clicks and queries. With those, you get measured numbers where this post has estimates.
 

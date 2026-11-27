@@ -144,7 +144,7 @@ Sections, in this order, adjusted to the company:
 7. Technical fixes, closest to revenue first. Each gets an `###` subsection: what it is in plain words, an exhibit that shows it, **The fix:** with best practice, and how to confirm it worked.
 8. The plan, under a heading that says what it gets the company in plain words ("What I'd change to send US searches to US pages"), never a bare "The plan": every change as a numbered list (`PlanSteps`, no "Agent 1" labels), then how to check the results (`PlanSteps` with `marker: "Day 0"` and so on). No implementation timeline, and no lines about shipping it all today, sprints or agents running in parallel.
 9. Get the changes seen quickly: Index My Site for every changed and new URL.
-10. How I ran this: the hosted MCP first (free, Google sign-in, research key on the account page), then the CLI for crawling, then the prompt. No disclosure line: it's a product site, so readers can see we build the tools.
+10. How I ran this: one prompt for the reader's agent, not setup steps or commands. Write the audit prompt and wrap it as `<CodeBlock prompt value={taskPrompt(`...`, 'research', true)} />` (import `taskPrompt` from `@/content/setup-prompts`), which sets up the hosted MCP when it is missing, asks for a research key on the account page and adds the CLI for the crawl. No disclosure line: it's a product site, so readers can see we build the tools.
 
 Rules that came from Ian's reviews:
 

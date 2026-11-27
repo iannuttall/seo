@@ -44,28 +44,7 @@ The session in six steps:
 
 ## What you need before the first prompt
 
-You need Claude Code or Codex and a Google account that can read your site's Search Console property. SEO Skill gives either agent your Search Console data, read only, through a free hosted MCP server. There's nothing to install for that part.
-
-In Claude Code, add the server, then type `/mcp` inside Claude Code, choose seoskill and sign in with Google:
-
-```sh
-claude mcp add --transport http --scope user seoskill https://seoskill.dev/mcp
-```
-
-In Codex, add the server and sign in. The Codex CLI, the IDE extension and the desktop app share this config:
-
-```sh
-codex mcp add seoskill --url https://seoskill.dev/mcp
-codex mcp login seoskill
-```
-
-Add the CLI too if the agent works in your site's repository. It installs the skill, which tells the agent which tool answers which SEO question, and it runs the jobs the hosted server can't, such as a site crawl and Bing:
-
-```sh
-npm i -g seo && seo start
-```
-
-Setup offers to add an MCP server and the skill to the agents it finds. If you skip the skill, `seo skill install` adds it later. In Codex you can name it with `$seo` in a prompt to make sure it loads. The [Claude SEO skill](/features/claude-seo) and [Codex SEO skill](/features/codex-seo) pages cover each agent in more detail.
+You need Claude Code or Codex and a Google account that can read your site's Search Console property. SEO Skill gives either agent your Search Console data, read only, through a free hosted MCP server. You don't set it up by hand. The first step below has a setup prompt for your agent. The agent adds the hosted MCP server, waits while you sign in with Google, then installs the CLI and the skill. The skill tells the agent which tool answers which SEO question. The CLI runs the jobs the hosted server can't, such as a site crawl and Bing. In Codex you can name the skill with `$seo` in a prompt to make sure it loads. The [Claude SEO skill](/features/claude-seo) and [Codex SEO skill](/features/codex-seo) pages cover each agent in more detail.
 
 ## Ask the agent what's due first
 

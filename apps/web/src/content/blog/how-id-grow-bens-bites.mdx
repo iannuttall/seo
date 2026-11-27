@@ -14,6 +14,8 @@ cover:
   title: left
 ---
 
+import { taskPrompt } from '@/content/setup-prompts'
+
 export const beforeOld = `<pre>bensbites.co/p/no-claude-for-claws
   301 → bensbites.com/
   301 → www.bensbites.com/   (the homepage)
@@ -571,27 +573,9 @@ The catalog pages are still in Google's index, and Google takes its time to rech
 
 Everything in this teardown came from SEO Skill, run by an agent. You can run the same audit on your own site.
 
-**1. Connect the hosted MCP server.** It's free. You sign in with Google, and there's no password and nothing to install. In Claude Code:
+Give your agent this prompt. It is close to the one I used. If SEO Skill isn't connected yet, the agent sets it up first, with the free hosted MCP server, a Google sign-in and the CLI for the crawl. It asks you to save an Ahrefs or DataForSEO key on your [account page](/account), never in the chat. The key gives your agent search volumes, rankings and results pages, like the tables above.
 
-```sh
-claude mcp add --transport http seoskill https://seoskill.dev/mcp
-```
-
-Codex, Cursor and Claude on the web work too. The [MCP guide](/docs/mcp) has the steps for each one.
-
-**2. Add a research key.** On your [account page](/account), save an Ahrefs or DataForSEO key. The key gives your agent search volumes, rankings and results pages, like the tables above.
-
-**3. Install the CLI for crawling.** The crawl runs on your machine, so it can read any site:
-
-```sh
-npm i -g seo
-seo login
-```
-
-**4. Ask your agent.** This is close to the prompt I used:
-
-```prompt
-Audit example.com and every domain we have used.
+<CodeBlock prompt value={taskPrompt(`Audit example.com and every domain we have used.
 Crawl each one with seo crawl, including old domains
 and subdomains. Check where each old address redirects.
 Crawl the old URLs the Wayback Machine has saved.
@@ -601,8 +585,7 @@ our competitors rank for that we don't.
 Ask AI assistants ten questions our readers ask
 with seo research ai_answers, for us and our
 biggest competitor.
-Rank every fix by how close it sits to revenue.
-```
+Rank every fix by how close it sits to revenue.`, 'research', true)} />
 
 On your own site, the hosted server adds the part I couldn't see from the outside: your real Search Console clicks and queries. With those, you get measured numbers where this post has estimates.
 

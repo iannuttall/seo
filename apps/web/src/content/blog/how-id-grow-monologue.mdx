@@ -13,6 +13,8 @@ cover:
   alt: "A dark theatre where an actor performs a monologue to a packed audience, while a builder in the wings speaks into a microphone that gives off teal sound waves."
 ---
 
+import { taskPrompt } from '@/content/setup-prompts'
+
 export const before5 = `<ul><li><strong>278 links</strong> to the bare monologue.to homepage, almost all with the anchor "Monologue"</li><li><strong>5 links</strong> to monologue.co, a parked domain that shows a parking page</li><li><strong>0 links</strong> to a comparison, dictation or use-case page</li></ul>`
 
 export const after5 = `<ul><li>Essays about coding agents link to the developers use-case page</li><li>Model reviews that mention dictation link to the Wispr Flow alternative page</li><li>The newsletter footer links to the dictation page with a descriptive anchor</li><li>The five monologue.co links point at the real site</li></ul>`
@@ -374,27 +376,9 @@ Every step above either changes existing pages or adds new ones, and Google does
 
 Everything in this teardown came from SEO Skill, run by an agent. You can run the same audit on your own site.
 
-**1. Connect the hosted MCP server.** It's free. You sign in with Google, and there's no password and nothing to install. In Claude Code:
+Give your agent this prompt. It is close to the one I used. If SEO Skill isn't connected yet, the agent sets it up first, with the free hosted MCP server, a Google sign-in and the CLI for the crawl. It asks you to save an Ahrefs or DataForSEO key on your [account page](/account), never in the chat. The key gives your agent search volumes, rankings and results pages, like the tables above.
 
-```sh
-claude mcp add --transport http seoskill https://seoskill.dev/mcp
-```
-
-Codex, Cursor and Claude on the web work too. The [MCP guide](/docs/mcp) has the steps for each one.
-
-**2. Add a research key.** On your [account page](/account), save an Ahrefs or DataForSEO key. The key gives your agent search volumes, rankings and results pages, like the tables above.
-
-**3. Install the CLI for crawling.** The crawl runs on your machine, so it can read any site:
-
-```sh
-npm i -g seo
-seo login
-```
-
-**4. Ask your agent.** This is close to the prompt I used:
-
-```prompt
-Audit example.com and every site we own.
+<CodeBlock prompt value={taskPrompt(`Audit example.com and every site we own.
 Crawl each one with seo crawl. Find where our sites
 link to each other and which pages those links hit.
 Use seo_research to find the searches our buyers
@@ -402,8 +386,7 @@ make, who ranks for them and whether we can compete.
 Find the searches our competitors win that we have
 no page for. Ask ai_answers ten questions our buyers
 ask, for us and our top competitor.
-Rank every fix by how close it sits to revenue.
-```
+Rank every fix by how close it sits to revenue.`, 'research', true)} />
 
 On your own site, the hosted server adds your real Search Console clicks and queries, which I couldn't see from the outside. With those, you get measured numbers where this post has estimates.
 

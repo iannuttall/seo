@@ -249,14 +249,24 @@ export const sourceSetupSteps = (source: Source): string[] => {
 /**
  * A prompt for one task, for pages that show what the agent can do. It sets
  * SEO Skill up first when the tools are missing, and asks the person to save
- * a research key on their account when the task needs one.
+ * a research key on their account when the task needs one. `crawl` adds the
+ * CLI, which crawls run on.
  */
-export const taskPrompt = (task: string, key?: 'dataforseo' | 'research') =>
+export const taskPrompt = (
+  task: string,
+  key?: 'dataforseo' | 'research',
+  crawl = false,
+) =>
   [
     'Use the seoskill MCP tools for this. If you do not have them yet, set up SEO Skill first with the prompt under "Set up SEO Skill" at https://seoskill.dev/index.md, then tell me to send this message again once the tools load.',
     ...(key
       ? [
           `This needs ${key === 'dataforseo' ? 'a DataForSEO login' : 'a DataForSEO login or an Ahrefs API key'} saved on my seoskill.dev account. If a tool says the key is missing, ask me to open ${account}, open the Keys tab and save it. Never ask me to paste a key into this chat.`,
+        ]
+      : []),
+    ...(crawl
+      ? [
+          'Crawls run with the seo CLI on this machine. If `seo --version` fails, install it with `npm i -g seo`. A crawl needs no sign-in.',
         ]
       : []),
     task,

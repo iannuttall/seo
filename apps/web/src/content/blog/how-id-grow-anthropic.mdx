@@ -13,6 +13,8 @@ cover:
   title: center
 ---
 
+import { taskPrompt } from '@/content/setup-prompts'
+
 export const beforeHead = `<pre>GET https://claude.com/pricing   (as Googlebot)
 
 &lt;head&gt;
@@ -376,27 +378,9 @@ Most of this changes pages Google already knows, and the redirect fixes only cou
 
 Everything in this teardown came from SEO Skill, run by an agent, plus a few hand checks with curl and a browser. You can run the same audit on your own site.
 
-**1. Connect the hosted MCP server.** It's free. You sign in with Google, and there's nothing to install. In Claude Code:
+Give your agent this prompt. It is close to the one I used. If SEO Skill isn't connected yet, the agent sets it up first, with the free hosted MCP server, a Google sign-in and the CLI for the crawl. It asks you to save an Ahrefs or DataForSEO key on your [account page](/account), never in the chat. With DataForSEO, your agent can also ask ChatGPT and Google's AI answers your questions and check who they cite.
 
-```sh
-claude mcp add --transport http seoskill https://seoskill.dev/mcp
-```
-
-The [MCP guide](/docs/mcp) has the steps for other agents.
-
-**2. Add a research key.** On your [account page](/account), save an Ahrefs or DataForSEO key. With DataForSEO, your agent can also ask ChatGPT and Google's AI answers your questions and check who they cite.
-
-**3. Install the CLI for crawling.** The crawl runs on your machine:
-
-```sh
-npm i -g seo
-seo login
-```
-
-**4. Ask your agent.** This is close to the prompt I used:
-
-```prompt
-Audit example.com and every host we own.
+<CodeBlock prompt value={taskPrompt(`Audit example.com and every host we own.
 Ask ai_answers 20 buyer questions about our category
 and list which answers name us and which link to us.
 Find the non-brand searches where we have no page.
@@ -404,8 +388,7 @@ Crawl the main site and check that title, canonical
 and hreflang are in the head for Googlebot.
 Follow the 300 most-linked URLs on every old host
 and count redirects that are temporary or end in 404.
-Rank every fix by how close it sits to a sign-up.
-```
+Rank every fix by how close it sits to a sign-up.`, 'research', true)} />
 
 If your brand is already the answer, the lesson from this one is cheap to apply. Ask the engines your buyers' questions, count the answers that name you and the ones that link to you, and write the sentence you want repeated at the top of the page that should get the link.
 

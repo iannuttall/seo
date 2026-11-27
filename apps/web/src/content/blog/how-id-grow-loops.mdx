@@ -13,6 +13,8 @@ cover:
   title: left
 ---
 
+import { taskPrompt } from '@/content/setup-prompts'
+
 export const beforeDocs = `<pre>GET app.loops.so/docs/
     transactional/guide
 301 Moved Permanently
@@ -428,28 +430,10 @@ Retitled pages only rank under their new names once Google recrawls them, and th
 
 The data in this teardown came from SEO Skill, run by an agent. By hand I checked page titles and links with curl, old pages in the Wayback Machine, and Chris's and Loops' posts on X. You can run the same audit on your own site.
 
-**1. Connect the hosted MCP server.** It's free. You sign in with Google, and there's no password and nothing to install. In Claude Code:
+Give your agent this prompt. It is close to the one I used. If SEO Skill isn't connected yet, the agent sets it up first, with the free hosted MCP server, a Google sign-in and the CLI for the crawl. It asks you to save an Ahrefs or DataForSEO key on your [account page](/account), never in the chat. The key gives your agent search volumes, rankings and results pages, like the tables above. With DataForSEO it can also ask ChatGPT and Google's AI answers your questions and check who they cite.
 
-```sh
-claude mcp add --transport http seoskill https://seoskill.dev/mcp
-```
-
-Codex, Cursor and Claude on the web work too. The [MCP guide](/docs/mcp) has the steps for each one.
-
-**2. Add a research key.** On your [account page](/account), save an Ahrefs or DataForSEO key. The key gives your agent search volumes, rankings and results pages, like the tables above. With DataForSEO it can also ask ChatGPT and Google's AI answers your questions and check who they cite.
-
-**3. Install the CLI for crawling.** The crawl runs on your machine, so it can read any site:
-
-```sh
-npm i -g seo
-seo login
-seo crawl https://example.com/ --max-pages 1500
-```
-
-**4. Ask your agent.** This is close to the prompt I used:
-
-```prompt
-Audit example.com for US search and AI answers.
+<CodeBlock prompt value={taskPrompt(`Audit example.com for US search and AI answers.
+Crawl up to 1,500 pages with seo crawl.
 Group our estimated search traffic by kind of page.
 For each section (guides, tools, templates,
 integrations), list the searches it ranks for and
@@ -461,8 +445,7 @@ competitors and who ranks for them.
 Ask ai_answers ten questions about our product,
 how-to topics and which tool to choose, for us and
 our closest rival, and say who gets cited.
-Rank the fixes by how close each is to a sale.
-```
+Rank the fixes by how close each is to a sale.`, 'research', true)} />
 
 On your own site, the hosted server adds your real Search Console clicks and queries, which I couldn't see from outside. With those you'd know straight away whether the waitlist page slipped, and which guides on page two are closest to page one.
 

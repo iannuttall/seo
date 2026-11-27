@@ -89,6 +89,12 @@ export const features = [
     icon: Link01Icon,
   },
   {
+    path: '/features/link-building',
+    title: 'Link building tool',
+    text: 'Link prospects your agent finds: sites and pages that link to your competitors, and sites that mention you without a link.',
+    icon: Link01Icon,
+  },
+  {
     path: '/features/keyword-opportunities',
     title: 'Keyword opportunities',
     text: 'The searches your site could win more clicks from, scored with your own Search Console, and new keywords sized from your own key.',
@@ -171,6 +177,12 @@ export const features = [
     title: 'SEO reporting tool',
     text: 'Weekly and client SEO reports your agent writes from Search Console and Google Analytics.',
     icon: TaskDone01Icon,
+  },
+  {
+    path: '/features/seo-for-agencies',
+    title: 'SEO software for agencies',
+    text: 'Every client site in one agent: their own Search Console, client reports, weekly audits and the next step for each.',
+    icon: UserSearch01Icon,
   },
   {
     path: '/features/seo-monitoring',

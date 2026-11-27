@@ -1,0 +1,279 @@
+---
+import {
+  AiChat02Icon,
+  Analytics01Icon,
+  Briefcase01Icon,
+  Link01Icon,
+  Notification01Icon,
+  SearchList01Icon,
+  TaskDone01Icon,
+  UserGroupIcon,
+} from '@hugeicons/core-free-icons'
+import CodeBlock from '@/components/CodeBlock.astro'
+import FaqAccordion from '@/components/FaqAccordion.astro'
+import HomeCard from '@/components/HomeCard.astro'
+import LandingHero from '@/components/LandingHero.astro'
+import SectionHeading from '@/components/SectionHeading.astro'
+import SetupPrompts from '@/components/SetupPrompts.astro'
+import SplitList from '@/components/SplitList.astro'
+import { getButtonClasses } from '@/components/ui/button'
+import BaseLayout from '@/layouts/BaseLayout.astro'
+import type { SchemaBreadcrumb } from '@/lib/schema'
+
+const breadcrumbs: SchemaBreadcrumb[] = [
+  { label: 'Home', href: '/' },
+  { label: 'Features', href: '/features' },
+  { label: 'SEO software for agencies' },
+]
+
+// The jobs an agency runs for every client, each with the page that shows how.
+const jobs = [
+  {
+    title: 'Every client in one account',
+    icon: UserGroupIcon,
+    text: 'Link as many Google accounts as you need. Each request uses the one that can read that client’s Search Console and Google Analytics.',
+    href: '/docs/mcp',
+    link: 'Hosted MCP setup',
+  },
+  {
+    title: 'Client reports from their own data',
+    icon: TaskDone01Icon,
+    text: 'Monthly and weekly reports your agent writes from the client’s real clicks, queries and sessions, in your format and under your name.',
+    href: '/features/seo-reporting',
+    link: 'SEO reporting',
+  },
+  {
+    title: 'The next step for each client',
+    icon: SearchList01Icon,
+    text: 'Each site keeps its own business context and issues list, so the agent picks up where it left off with that client.',
+    href: '/docs/next',
+    link: 'seo next',
+  },
+  {
+    title: 'Weekly checks on every site',
+    icon: Notification01Icon,
+    text: 'A weekly crawl, daily Google index checks and alerts for each client site you add to the weekly site audit.',
+    href: '/docs/weekly-site-audit',
+    link: 'Weekly site audit',
+  },
+  {
+    title: 'Links for each client',
+    icon: Link01Icon,
+    text: 'Sites that link to a client’s competitors and not to them, the lists they’re missing from, and unlinked mentions.',
+    href: '/features/link-building',
+    link: 'Link building',
+  },
+  {
+    title: 'AI answers for each client',
+    icon: AiChat02Icon,
+    text: 'Whether ChatGPT, Gemini, AI Mode and AI Overviews name the client for their buyers’ questions, and who they name instead.',
+    href: '/features/ai-visibility-checker',
+    link: 'AI visibility checker',
+  },
+]
+
+const onboarding = [
+  { title: '1. Get access to their Search Console', text: 'Ask the client to add your Google account as a user on their Search Console property, or link the Google account they share with you.' },
+  { title: '2. Link that account once', text: 'Add it on your account page. From then on any agent signed in to your account can read that site.' },
+  { title: '3. Save what the business sells', text: 'Ask your agent to work on the site. The first time, it asks what the client sells, which pages bring customers and who they compete with, and saves it.' },
+  { title: '4. Take a baseline', text: 'That first run saves a point of the site’s numbers, so every later week and every report compares with where you started.' },
+]
+
+const prompts = [
+  { title: 'Start a client', text: 'Use SEO Skill to work on example.com' },
+  { title: 'Monday check', text: 'Give me last week’s SEO summary for all my audited sites, with the sites that changed first' },
+  { title: 'Explain a drop', text: 'Why did example.com lose clicks this month? Was it a Google update or something on the site?' },
+  { title: 'Monthly report', text: 'Write the October 2026 SEO report for example.com. Compare it with September, list the pages that gained and lost clicks, and say what we fixed and what comes next.' },
+  { title: 'Find the next win', text: 'Which pages on example.com rank 4 to 10 with a low click-through rate? Rewrite their titles for me to review.' },
+]
+
+const audit = [
+  { title: 'Weekly crawl', text: 'Up to 5,000 pages, with each problem marked new, back or resolved since the crawl before.' },
+  { title: 'Daily index checks', text: 'Up to 2,000 URL Inspection checks a day for the property, top pages first.' },
+  { title: 'Weekly AI answer check', text: 'Whether ChatGPT search, Gemini, AI Mode and AI Overviews cite the site for the same 10 questions each week.' },
+  { title: 'Alerts', text: 'Google updates, pages that drop out of the index, and a Monday summary by email, and to a webhook if you want one.' },
+]
+
+const trust = [
+  { title: 'Straight from the client’s accounts', text: 'Search Console and Google Analytics are read fresh each time you ask, so a report never comes from an old export.' },
+  { title: 'Each source keeps its own names', text: 'Search Console clicks and Google Analytics sessions stay apart, so a client never asks why two numbers called visits don’t match.' },
+  { title: 'Estimates are labelled', text: 'Ahrefs and DataForSEO numbers are marked as research and never mixed into the client’s own data.' },
+  { title: 'Timing is not called cause', text: 'When a drop lines up with a Google update, the report shows both dates and leaves the judgement to you.' },
+]
+
+const faq = [
+  {
+    question: 'What is SEO agency software?',
+    answer:
+      'SEO agency software is what an agency uses to run SEO for several clients: access to each client’s data, audits, rank and traffic checks, reports and a record of what was done. SEO Skill does that work inside the AI agent your team already uses, from each client’s own Search Console and Google Analytics.',
+  },
+  {
+    question: 'Can I manage SEO for multiple clients in one place?',
+    answer:
+      'Yes. Link each Google account that can read a client’s Search Console on your account page, and ask about any client site by name. With no site named, the report summarises last week across every site in your weekly site audit.',
+  },
+  {
+    question: 'Can I white label the SEO reports?',
+    answer:
+      'Yes. SEO Skill gives your agent the numbers, and the agent writes the report in whatever document and format you already send. Nothing in it carries the SEO Skill name unless you add it.',
+  },
+  {
+    question: 'How much does SEO Skill cost an agency?',
+    answer:
+      'Every tool your agent calls on demand is free for every client. The weekly site audit is $50 a month per site, so you pay only for the clients you want watched in the background. Keyword and link research uses your own DataForSEO or Ahrefs account.',
+  },
+  {
+    question: 'How do I get access to a client’s Search Console?',
+    answer:
+      'The client adds your Google account as a user on their Search Console property, under Settings, then Users and permissions. Then link that Google account on your SEO Skill account page. Access is read only, so your agent cannot change their settings.',
+  },
+  {
+    question: 'Can my whole team use it?',
+    answer:
+      'Your team’s agents can use your account. One account token gives each machine or cloud agent your linked Google accounts and keys, so scheduled jobs and teammates’ agents read the same clients.',
+    links: [{ text: 'One account token', href: '/docs/cloud-agents' }],
+  },
+  {
+    question: 'Does it replace a CRM or project management tool?',
+    answer:
+      'No. Keep your CRM and task board. SEO Skill gives the agent each client’s data and the next step, and your team decides what ships.',
+  },
+  {
+    question: 'What do you store about my clients?',
+    answer:
+      'Your linked Google accounts and any keys, encrypted, plus each site’s issues list and business context when your agent saves them. On-demand requests keep no Search Console or analytics rows. For sites in the weekly audit we keep what it needs, such as the last two crawls and index check results. You can delete everything from your account page.',
+  },
+]
+---
+
+<BaseLayout
+  title="SEO agency software for every client in one agent"
+  description="SEO agency software that runs in your AI agent: every client's Search Console in one account, white label client reports, weekly audits per site and the next step for each client."
+  canonicalPath="/features/seo-for-agencies"
+  {breadcrumbs}
+  framed={false}
+>
+  <main data-agent-content>
+    <LandingHero
+      title="SEO software for agencies"
+      lead="Link each client's Google account once, then ask your agent about any client by name. It reads their Search Console and Google Analytics, writes the report and says what to work on next."
+      setupId="agencies-setup"
+    />
+
+    <div class="space-y-24 py-24 sm:space-y-32 sm:py-32">
+      <section class="site-frame" aria-labelledby="jobs-heading">
+        <SectionHeading
+          id="jobs-heading"
+          title="What does SEO Skill do for an agency?"
+          text="It gives the agent your team already uses each client's real search data, and runs the jobs you do for every client: reports, checks, the next fix, links and AI answers."
+        />
+        <div class="grid grid-cols-1 gap-2 sm:grid-cols-2">
+          {jobs.map((item) => <HomeCard {...item} />)}
+        </div>
+      </section>
+
+      <SplitList
+        id="onboarding-heading"
+        title="How do I add a new client?"
+        text="Get read access to their Search Console, link that Google account once, and ask your agent to work on the site. It takes a few minutes per client."
+        items={onboarding}
+      >
+        <CodeBlock value="Which Search Console sites can you read?" prompt />
+      </SplitList>
+
+      <SplitList
+        id="week-heading"
+        title="What does a week with SEO Skill look like?"
+        text="Monday starts with one summary across every audited client. The rest of the week is one client at a time, by name, in the same chat."
+        items={prompts}
+      />
+
+      <section class="site-frame grid gap-8 sm:grid-cols-[1fr_1.15fr] sm:items-start" aria-labelledby="reports-heading">
+        <div class="sm:sticky sm:top-24">
+          <h2 id="reports-heading" class="text-pretty text-2xl font-medium -tracking-[0.4px] text-foreground xl:text-3xl xl:-tracking-[0.6px]">
+            Can I send white label client reports?
+          </h2>
+          <p class="mt-4 text-base leading-7 text-foreground-muted">
+            Yes. SEO Skill supplies the client's numbers and your agent writes
+            the report in your own document, under your agency's name. The
+            numbers come straight from the client's Search Console and Google
+            Analytics for the dates you ask for.
+          </p>
+          <a class:list={[getButtonClasses('secondary', 'lg'), 'mt-6']} href="/features/seo-reporting">See SEO reporting</a>
+        </div>
+        <div class="rounded-lg bg-muted p-6">
+          <CodeBlock
+            value="Write the October 2026 SEO report for example.com. Compare it with September, list the pages that gained and lost clicks, and say what we fixed and what comes next."
+            prompt
+          />
+          <p class="mt-4 text-base leading-7 text-foreground-muted">
+            The report covers clicks, impressions, click-through rate and
+            position against the month before, the pages and queries that
+            moved, and Google Analytics sessions for the same dates. No agent to hand? The free{' '}
+            <a class="underline underline-offset-4" href="/tools/monthly-seo-report">monthly SEO report builder</a>{' '}
+            turns a Search Console export into a report in your browser.
+          </p>
+        </div>
+      </section>
+
+      <SplitList
+        id="audit-heading"
+        title="How do I keep watch on every client site?"
+        text="Add the sites that matter to the weekly site audit. It runs on our servers for $50 a month per site and tells you when something breaks, without you asking."
+        items={audit}
+      >
+        <a class:list={[getButtonClasses('secondary', 'lg'), 'mt-6']} href="/docs/weekly-site-audit">Weekly site audit</a>
+      </SplitList>
+
+      <SplitList
+        id="trust-heading"
+        title="Can I trust the numbers in front of a client?"
+        text="Yes, because every number comes from the client's own accounts with its dates, and anything estimated is labelled. These rules hold in every answer your agent gives."
+        items={trust}
+      />
+
+      <section class="site-frame" aria-labelledby="cost-heading">
+        <SectionHeading
+          id="cost-heading"
+          title="How much does it cost per client?"
+          text="Nothing for the work your agent does when you ask. $50 a month for each client site you want watched every week."
+        />
+        <div class="grid grid-cols-1 gap-2 sm:grid-cols-2">
+          <HomeCard
+            title="Free for every client"
+            icon={Briefcase01Icon}
+            text="Reports, page checks, index checks, comparisons, raw data and the next step, for as many client sites as your linked accounts can read. No usage cap."
+          />
+          <HomeCard
+            title="$50 a month per audited site"
+            icon={Analytics01Icon}
+            text="The weekly crawl, daily index checks, AI answer check and alerts, only for the sites you add. Research runs on your own DataForSEO or Ahrefs account."
+            href="/pricing"
+            link="Pricing"
+          />
+        </div>
+      </section>
+
+      <section class="site-frame" aria-labelledby="faq-heading">
+        <div class="max-w-2xl">
+          <h2 id="faq-heading" class="text-pretty text-2xl font-medium -tracking-[0.4px] text-foreground xl:text-3xl xl:-tracking-[0.6px]">
+            Questions agencies ask
+          </h2>
+        </div>
+        <div class="mt-10">
+          <FaqAccordion items={faq} id="agencies-faq" />
+        </div>
+      </section>
+
+      <section class="site-frame" aria-labelledby="start-heading">
+        <SectionHeading
+          id="start-heading"
+          title="Add your first client"
+          text="Connect SEO Skill to your agent, sign in with Google, link the account that can read your client's Search Console, and ask it to work on their site."
+        />
+        <a class:list={[getButtonClasses('default', 'lg'), 'mb-10']} href="/account">Sign in and add a client</a>
+        <SetupPrompts id="agencies-setup-end" />
+      </section>
+    </div>
+  </main>
+</BaseLayout>

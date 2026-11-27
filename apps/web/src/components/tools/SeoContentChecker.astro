@@ -1,0 +1,253 @@
+---
+import Button from '@/components/Button.astro'
+import Card from '@/components/Card.astro'
+import FormSelect from '@/components/FormSelect.astro'
+import FormTextarea from '@/components/FormTextarea.astro'
+import Badge from '@/components/ui/badge.astro'
+import { CONTENT_CHECKER_MAX_CHARS, CONTENT_PRESETS } from '@/lib/seo-content-checker'
+---
+
+<section data-seo-content-checker class="space-y-6">
+  <Card>
+    <form data-content-form class="space-y-4 p-5 sm:p-6">
+      <div class="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+        <div class="space-y-1">
+          <h2 class="text-lg font-medium">Paste your content</h2>
+          <p class="text-sm leading-6 text-foreground-muted">Markdown, plain text or the page HTML. The check runs in your browser as you type.</p>
+        </div>
+        <div class="flex shrink-0 gap-2">
+          <Button data-use-example type="button" class="px-3 py-2 text-xs">Use an example</Button>
+          <Button data-clear type="button" class="px-3 py-2 text-xs">Clear</Button>
+        </div>
+      </div>
+      <label class="block">
+        <span class="sr-only">Content to check</span>
+        <FormTextarea data-text class="min-h-56 font-sans sm:min-h-72" maxlength={CONTENT_CHECKER_MAX_CHARS} placeholder="Paste a blog post, a landing page or the HTML of a page here." spellcheck="false" />
+      </label>
+      <div class="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
+        <label class="block space-y-2 text-sm font-medium sm:w-64">
+          <span>Kind of page</span>
+          <FormSelect data-preset>
+            {CONTENT_PRESETS.map((choice) => <option value={choice.value}>{choice.label}</option>)}
+          </FormSelect>
+        </label>
+        <p data-limit class="text-xs leading-5 text-foreground-muted sm:text-right">Up to about 8,000 words. Your content stays in this browser tab.</p>
+      </div>
+    </form>
+  </Card>
+
+  <div data-results hidden class="space-y-6">
+    <div class="flex flex-col gap-3 sm:flex-row sm:items-baseline sm:justify-between">
+      <h2 data-summary class="text-lg font-medium" aria-live="polite"></h2>
+      <div class="flex flex-wrap gap-2 text-xs">
+        <Badge variant="destructive">Fix</Badge>
+        <Badge variant="warning">Likely fix</Badge>
+        <Badge variant="outline-info">Your call</Badge>
+      </div>
+    </div>
+
+    <div class="grid gap-6 lg:grid-cols-[minmax(0,0.8fr)_minmax(0,1.2fr)] lg:items-start">
+      <Card inverted class="lg:sticky lg:top-6">
+        <div class="space-y-3 p-5 sm:p-6">
+          <h3 class="text-sm font-medium">Heading outline</h3>
+          <p data-outline-note class="text-xs leading-5 text-foreground-muted"></p>
+          <ol data-outline class="space-y-1 text-sm leading-6 lg:max-h-[60vh] lg:overflow-y-auto"></ol>
+        </div>
+      </Card>
+
+      <div class="space-y-4">
+        <div data-groups class="space-y-4"></div>
+        <Card inverted>
+          <div class="space-y-3 p-5 sm:p-6">
+            <h3 class="text-sm font-medium">Fix it with your own AI</h3>
+            <p class="text-sm leading-6 text-foreground-muted">Copy a prompt with every problem and your content. Paste it into ChatGPT, Claude or Gemini, or give it to your agent. It asks for fixes that use only facts already in your text.</p>
+            <Button data-copy-prompt type="button" variant="default" class="px-4 py-2.5 text-xs">Copy fix prompt</Button>
+          </div>
+        </Card>
+      </div>
+    </div>
+  </div>
+
+  <template data-badge="error"><Badge variant="destructive" class="mt-0.5 shrink-0">Fix</Badge></template>
+  <template data-badge="warning"><Badge variant="warning" class="mt-0.5 shrink-0">Likely fix</Badge></template>
+  <template data-badge="review"><Badge variant="outline-info" class="mt-0.5 shrink-0">Your call</Badge></template>
+
+  <p data-clean hidden class="rounded-lg bg-muted p-5 text-sm leading-6" role="status"></p>
+</section>
+
+<script>
+  import type { LintPreset } from '@seo/core/lint/browser'
+  import {
+    CONTENT_CHECKER_MAX_CHARS,
+    CONTENT_GROUPS,
+    checkContent,
+    type ContentItem,
+    fixPrompt,
+    type Heading,
+  } from '@/lib/seo-content-checker'
+
+  const example = `---
+title: Cold brew coffee
+description: Learn how to make cold brew.
+---
+
+# How to make cold brew coffee at home
+
+Cold brew isn't just iced coffee, it's a whole new way to enjoy your morning. Our world-class method is smooth, rich and effortless.
+
+## What you need
+
+- **Coffee:** 100 grams, ground coarse
+- **Water:** 1 litre, cold
+- **A jar:** with a lid
+
+#### Steeping time
+
+Steep it for 12 to 18 hours in the fridge. For the full ratio table, click [here](/ratio).
+
+## Serve it
+
+Strain it twice, then dilute it one to one with water or milk. The result? Coffee that tastes like it came from a café.
+
+# Cold brew questions
+
+Cold brew keeps for about a week in the fridge.`
+
+  const plural = (count: number, word: string) => `${count.toLocaleString('en-US')} ${word}${count === 1 ? '' : 's'}`
+
+  for (const root of document.querySelectorAll<HTMLElement>('[data-seo-content-checker]')) {
+    const form = root.querySelector<HTMLFormElement>('[data-content-form]')
+    const field = root.querySelector<HTMLTextAreaElement>('[data-text]')
+    const preset = root.querySelector<HTMLSelectElement>('[data-preset]')
+    const limit = root.querySelector<HTMLElement>('[data-limit]')
+    const results = root.querySelector<HTMLElement>('[data-results]')
+    const summary = root.querySelector<HTMLElement>('[data-summary]')
+    const outline = root.querySelector<HTMLElement>('[data-outline]')
+    const outlineNote = root.querySelector<HTMLElement>('[data-outline-note]')
+    const groups = root.querySelector<HTMLElement>('[data-groups]')
+    const clean = root.querySelector<HTMLElement>('[data-clean]')
+    const copy = root.querySelector<HTMLButtonElement>('[data-copy-prompt]')
+    if (!form || !field || !preset || !limit || !results || !summary || !outline || !outlineNote || !groups || !clean || !copy) continue
+    let items: ContentItem[] = []
+    let timer = 0
+
+    const renderOutline = (headings: Heading[]) => {
+      const h1s = headings.filter((heading) => heading.level === 1).length
+      outlineNote.textContent = !headings.length
+        ? 'No headings found. Start each section with a heading that says what it answers.'
+        : h1s === 1
+          ? `${plural(headings.length, 'heading')}, one H1.`
+          : `${plural(headings.length, 'heading')}, ${h1s === 0 ? 'no H1' : `${h1s} H1s`}.`
+      outline.replaceChildren(...headings.map((heading, index) => {
+        const previous = headings[index - 1]?.level ?? 0
+        const skipped = heading.level > previous + 1 && index > 0
+        const row = document.createElement('li')
+        row.className = 'flex items-baseline gap-2'
+        row.style.paddingLeft = `${(heading.level - 1) * 0.75}rem`
+        const tag = document.createElement('code')
+        tag.className = `shrink-0 rounded px-1.5 font-mono text-xs ${skipped || (heading.level === 1 && h1s > 1) ? 'bg-warning-soft text-foreground' : 'bg-muted text-foreground-muted'}`
+        tag.textContent = `H${heading.level}`
+        const text = document.createElement('span')
+        text.className = 'min-w-0 break-words'
+        text.textContent = heading.text || '(empty)'
+        row.append(tag, text)
+        return row
+      }))
+    }
+
+    const renderGroups = () => {
+      groups.replaceChildren(...CONTENT_GROUPS.flatMap((group) => {
+        const list = items.filter((item) => item.category === group.category)
+        if (!list.length) return []
+        const box = document.createElement('section')
+        box.className = 'space-y-3 rounded-lg bg-muted p-5 sm:p-6'
+        const head = document.createElement('div')
+        head.className = 'space-y-1'
+        const title = document.createElement('h3')
+        title.className = 'flex items-baseline justify-between gap-3 text-sm font-medium'
+        const name = document.createElement('span')
+        name.textContent = group.name
+        const count = document.createElement('span')
+        count.className = 'shrink-0 text-xs font-normal text-foreground-muted'
+        count.textContent = plural(list.length, 'line')
+        title.append(name, count)
+        const about = document.createElement('p')
+        about.className = 'text-xs leading-5 text-foreground-muted'
+        about.textContent = group.about
+        head.append(title, about)
+        const rows = document.createElement('ul')
+        rows.className = 'space-y-2'
+        for (const item of list) {
+          const row = document.createElement('li')
+          row.className = 'space-y-1.5 rounded-lg bg-card p-3 text-sm leading-6'
+          const top = document.createElement('span')
+          top.className = 'flex items-start gap-2'
+          const badge = root.querySelector<HTMLTemplateElement>(`template[data-badge="${item.level}"]`)?.content.firstElementChild?.cloneNode(true) ?? document.createTextNode('')
+          const quote = document.createElement('span')
+          quote.className = 'min-w-0 break-words font-medium'
+          quote.textContent = `"${item.excerpt}"`
+          const line = document.createElement('span')
+          line.className = 'ml-auto shrink-0 text-xs text-foreground-muted'
+          line.textContent = `Line ${item.line}`
+          top.append(badge, quote, line)
+          row.append(top)
+          if (item.message) {
+            const why = document.createElement('span')
+            why.className = 'block text-foreground-muted'
+            why.textContent = item.message
+            row.append(why)
+          }
+          const fix = document.createElement('span')
+          fix.className = 'block'
+          fix.textContent = item.fix
+          row.append(fix)
+          rows.append(row)
+        }
+        box.append(head, rows)
+        return [box]
+      }))
+    }
+
+    const run = () => {
+      const text = field.value
+      limit.textContent = text.length >= CONTENT_CHECKER_MAX_CHARS
+        ? 'That is the limit. Content past this point is not checked.'
+        : 'Up to about 8,000 words. Your content stays in this browser tab.'
+      if (!text.trim()) {
+        items = []
+        results.hidden = true
+        clean.hidden = true
+        return
+      }
+      const result = checkContent(text, preset.value as LintPreset)
+      items = result.items
+      const fixes = items.filter((item) => item.level !== 'review').length
+      const calls = items.length - fixes
+      const read = `${plural(result.words, 'word')} of ${result.format === 'html' ? 'HTML' : 'Markdown'}`
+      if (!items.length) {
+        results.hidden = true
+        clean.hidden = false
+        clean.textContent = `No problems found in ${read}. The check reads headings, copy and sentence patterns, so read it once more as the person searching would.`
+        return
+      }
+      clean.hidden = true
+      results.hidden = false
+      summary.textContent = `${plural(fixes, 'problem')} to fix${calls ? ` and ${plural(calls, 'line')} to judge` : ''} in ${read}`
+      renderOutline(result.headings)
+      renderGroups()
+    }
+
+    const schedule = () => { window.clearTimeout(timer); timer = window.setTimeout(run, 150) }
+    form.addEventListener('submit', (event) => event.preventDefault())
+    field.addEventListener('input', schedule)
+    preset.addEventListener('change', run)
+    root.querySelector('[data-use-example]')?.addEventListener('click', () => { field.value = example; run() })
+    root.querySelector('[data-clear]')?.addEventListener('click', () => { field.value = ''; run(); field.focus() })
+    copy.addEventListener('click', async () => {
+      await navigator.clipboard.writeText(fixPrompt(field.value, items))
+      copy.textContent = 'Copied'
+      window.setTimeout(() => { copy.textContent = 'Copy fix prompt' }, 1_500)
+    })
+    run()
+  }
+</script>

@@ -30,16 +30,16 @@ export const pairs: Record<string, PairPage> = {
     ],
     sections: [
       {
-        title: 'Plan content in a Claude chat',
+        title: 'Can you plan content in a Claude chat?',
         paragraphs: [
-          'A content plan usually starts with a list of ideas and a lot of tab switching. In a Claude chat you can ask for the ideas, check their volume, look at who ranks and decide which ones get their own page, all in one place.',
+          'Yes. In a Claude chat you can ask for ideas, check their volume, look at who ranks and decide which ones get their own page, all in one place instead of across a dozen tabs.',
           'Claude only sees what the research returns. Volume and difficulty are DataForSEO’s estimates, kept apart from your Search Console clicks, so use them to compare keywords with each other.',
         ],
       },
       {
-        title: 'Add your DataForSEO login once',
+        title: 'Where does your DataForSEO login go?',
         paragraphs: [
-          'Claude connectors cannot send your DataForSEO login with each request, so save it under Keys on your account page at seoskill.dev/account. It is stored encrypted and works in every client you connect.',
+          'Under Keys on your account page at seoskill.dev/account, because Claude connectors cannot send it with each request. It is stored encrypted and works in every client you connect.',
           'Each result says what it cost from DataForSEO’s own numbers. The AI answer check is the one to watch, at about 7 cents a run.',
         ],
       },

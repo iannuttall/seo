@@ -32,16 +32,16 @@ export const pairs: Record<string, PairPage> = {
     ],
     sections: [
       {
-        title: 'Go from a Search Console finding to a code change',
+        title: 'How does a Search Console finding become a code change?',
         paragraphs: [
-          'In Codex the Search Console rows and your code sit in one session, so "these five pages rank well but get few clicks" can turn into a diff with five new titles.',
+          'In one Codex session. The Search Console rows and your code sit side by side, so "these five pages rank well but get few clicks" can turn into a diff with five new titles.',
           'Review that diff the way you review any other. The data says where to look. Whether a new title is better is still your call, and Search Console will show the result a few weeks after you ship.',
         ],
       },
       {
-        title: 'Crawls, Bing and copy checks run on your machine',
+        title: 'Where do crawls, Bing and copy checks run?',
         paragraphs: [
-          'The hosted server reads Google data. Crawls, Bing Webmaster Tools and copy checks run on your machine with the `seo` CLI, which the setup prompt installs and links to your account.',
+          'On your machine, with the `seo` CLI, which the setup prompt installs and links to your account. The hosted server reads Google data only.',
           'Codex can run `seo crawl` against localhost or a staging build before you merge, and `seo lint` on the copy it just wrote.',
         ],
       },
@@ -87,14 +87,14 @@ export const pairs: Record<string, PairPage> = {
     ],
     sections: [
       {
-        title: 'How to connect Google Search Console to ChatGPT',
+        title: 'How do you connect Google Search Console to ChatGPT?',
         paragraphs: [
-          'ChatGPT calls an outside data source a custom MCP server, and you add it from Plugins with the steps at the top of this page. You sign in with Google while ChatGPT creates the plugin, and the sign-in asks for read-only access.',
+          'Add it from Plugins as a custom MCP server, which is ChatGPT’s name for an outside data source, with the steps at the top of this page. You sign in with Google while ChatGPT creates the plugin, and the sign-in asks for read-only access.',
           'To check it worked, type @seoskill and ask "which Search Console properties can you see?" ChatGPT lists every property your Google account can read. If one is missing, that account has no access to it in Search Console.',
         ],
       },
       {
-        title: 'Keep a site’s questions in a ChatGPT project',
+        title: 'How do you keep a site’s questions in a ChatGPT project?',
         paragraphs: [
           'Put the site in a ChatGPT project and add a line to its instructions, such as "Our Search Console property is sc-domain:example.com." Then a question like "what dropped this week?" needs no site name.',
           'ChatGPT does not remember your numbers between chats. Each request reads Search Console again, so the answer uses the latest final days.',
@@ -142,16 +142,16 @@ export const pairs: Record<string, PairPage> = {
     ],
     sections: [
       {
-        title: 'Check a page from your phone after you publish',
+        title: 'Can you check a page from your phone after you publish?',
         paragraphs: [
-          'You publish a post, then wonder a day later whether Google has picked it up. Open the Claude app, turn on the connector from the + menu and ask. Claude runs URL Inspection on the page and tells you what Google reports, with the last crawl date.',
+          'Yes. Open the Claude app, turn on the connector from the + menu and ask whether Google has picked up the post. Claude runs URL Inspection on the page and tells you what Google reports, with the last crawl date.',
           'Google decides when to crawl, so a page that is not indexed after one day is normal. If it is still missing after a couple of weeks, ask Claude why and it checks the live page for a noindex, a redirect or a canonical that points somewhere else.',
         ],
       },
       {
-        title: 'Run the same monthly report in a Claude project',
+        title: 'How do you run the same report every month?',
         paragraphs: [
-          'Most people want the same answer each month: what moved, which pages gained and which lost. Make a Claude project for the site and write the request into its instructions, such as "Run the SEO report for example.com and list the five biggest changes."',
+          'Make a Claude project for the site and write the request into its instructions, such as "Run the SEO report for example.com and list the five biggest changes." Most people want the same answer each month, which is what moved, which pages gained and which lost.',
           'Each new chat in that project starts from those instructions and reads fresh data, so the numbers are always the latest final days Search Console has. Ask follow-up questions in the same chat to dig into one page or query.',
         ],
       },

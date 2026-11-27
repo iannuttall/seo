@@ -48,27 +48,27 @@ const others = cmsList.filter((item) => item.id !== cms.id)
     <div class="space-y-24 py-24 sm:space-y-32 sm:py-32">
       <SplitList
         id="loop-heading"
-        title="From finding to fixed"
-        text={`SEO Skill reads your data and never writes to your site. The ${cms.mcp} makes the edits, with the access you give it.`}
+        title={`How does SEO Skill work with ${cms.name}?`}
+        text={`SEO Skill finds the fix in your own data, and the ${cms.mcp} makes the edit with the access you give it. SEO Skill does not write to your site.`}
         items={loop}
       />
 
       <SplitList
         id="change-heading"
-        title={`What the ${cms.mcp} can change`}
+        title={`What can the ${cms.mcp} change?`}
         text={cms.limit}
         items={cms.canChange}
       />
 
       <SplitList
         id="asks-heading"
-        title="Prompts to try"
-        text="Each one starts with your own numbers and ends with an edit you can check."
+        title={`What do you ask your agent?`}
+        text="Prompts like these, each starting with your own numbers and ending with an edit you can check."
         items={cms.asks.map((ask) => ({ title: ask.question, text: ask.answer }))}
       />
 
       <section class="site-frame" aria-labelledby="more-heading">
-        <SectionHeading id="more-heading" title="Data and other sites" text="Where the issues come from, and the same guide for other platforms." />
+        <SectionHeading id="more-heading" title="Where do the issues come from?" text="From your Search Console data. The same guide covers other platforms too." />
         <div class="grid grid-cols-1 gap-2 sm:grid-cols-2">
           <HomeCard
             title="Google Search Console"
@@ -111,6 +111,15 @@ const others = cmsList.filter((item) => item.id !== cms.id)
           ))}
           .
         </p>
+      </section>
+
+      <section class="site-frame" aria-labelledby="start-heading">
+        <SectionHeading
+          id="start-heading"
+          title={`Connect ${cms.name} and SEO Skill`}
+          text={`Follow these steps, sign in with Google, and ask for the first fix on your ${cms.name} site.`}
+        />
+        <ClientSteps steps={cms.steps} note={cms.needs} />
       </section>
     </div>
   </main>

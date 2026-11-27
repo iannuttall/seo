@@ -6,6 +6,7 @@ import FaqAccordion from '@/components/FaqAccordion.astro'
 import HomeCard from '@/components/HomeCard.astro'
 import LandingHero from '@/components/LandingHero.astro'
 import SectionHeading from '@/components/SectionHeading.astro'
+import SetupPrompts from '@/components/SetupPrompts.astro'
 import SplitList from '@/components/SplitList.astro'
 import { getButtonClasses } from '@/components/ui/button'
 import { integrationIcon } from '@/content/integration-icons'
@@ -32,7 +33,7 @@ const breadcrumbs: SchemaBreadcrumb[] = [
   { label: name },
 ]
 const title = source ? source.title : `SEO MCP server for ${name}`
-const metaTitle = source?.metaTitle ?? `SEO MCP for ${name}`
+const metaTitle = source?.metaTitle ?? `SEO MCP server for ${name}`
 const description = source
   ? source.description
   : `Add the free SEO Skill MCP server to ${name} and ask about your Search Console, Google Analytics, Clicky and keyword data. Setup takes a minute.`
@@ -122,28 +123,28 @@ const clientFaq = client
           <>
             <SplitList
               id="asks-heading"
-              title="Questions you can ask it"
-              text={`Ask the way you would ask a colleague. Your agent picks the tool and reads your ${name} data before it answers.`}
+              title={`What can you ask about your ${name} data?`}
+              text={`Anything you would ask a colleague, in the same words. Your agent picks the tool and reads your ${name} data before it answers.`}
               items={source.asks.map((ask) => ({ title: ask.question, text: ask.answer }))}
             >
             </SplitList>
             {source.tools.length ? (
               <SplitList
                 id="tools-heading"
-                title="Tools your agent gets"
-                text={`The SEO Skill tools that read ${name}. Your agent calls them for you.`}
+                title="Which tools does your agent get?"
+                text={`These SEO Skill tools read ${name}, and your agent calls them for you.`}
                 items={source.tools.map((tool) => ({ title: tool.text, code: tool.tool }))}
               />
             ) : null}
-            <SplitList id="connect-heading" title={`Connect ${name}`} text="What you need, and how to read what comes back." items={connectSteps}>
+            <SplitList id="connect-heading" title={`How do you connect ${name}?`} text="With the setup prompt on this page. You need the account below, and each answer comes with the limits listed here." items={connectSteps}>
               <a class:list={[getButtonClasses('secondary', 'lg'), 'mt-6']} href={source.docs.href}>{source.docs.label}</a>
             </SplitList>
           </>
         ) : (
           <SplitList
             id="prompts-heading"
-            title={`Prompts to try in ${name}`}
-            text="Each one reads a different source. Open one for its setup in this client."
+            title={`What can you ask in ${name}?`}
+            text="Questions about your own search data, such as these. Each one reads a different source, so open one for its setup in this client."
             items={hostedSources.map((item) => ({
               title: item.asks[0]?.question ?? item.name,
               text: `Reads ${item.name}.`,
@@ -167,8 +168,8 @@ const clientFaq = client
       <section class="site-frame" aria-labelledby="links-heading">
         <SectionHeading
           id="links-heading"
-          title={source ? (hosted ? `${name} in your AI client` : 'Data your agent can read') : `Data ${name} can read`}
-          text={source && hosted ? `How to set up ${name} in each client.` : 'Search Console and Google Analytics come with your Google sign-in. Research uses your own key.'}
+          title={source ? (hosted ? `Which AI clients can read ${name}?` : 'What other data can your agent read?') : `What data can ${name} read?`}
+          text={source && hosted ? `All of these, with the same server and sign-in. Open one for its setup.` : 'Search Console and Google Analytics, which come with your Google sign-in, and research with your own key.'}
         />
         <div class="grid grid-cols-1 gap-2 sm:grid-cols-2">
           {
@@ -198,6 +199,21 @@ const clientFaq = client
         <div class="mt-10">
           <FaqAccordion items={source?.faq ?? clientFaq} id="integration-faq" />
         </div>
+      </section>
+
+      <section class="site-frame" aria-labelledby="start-heading">
+        <SectionHeading
+          id="start-heading"
+          title={client ? `Add SEO Skill to ${name}` : `Connect ${name} to your agent`}
+          text={client && !setupPromptFor(client.id) ? `Follow these steps in ${name}, sign in with Google and ask about your site.` : 'Give your agent the setup prompt, sign in with Google when it asks, and ask about your site.'}
+        />
+        {
+          client && !setupPromptFor(client.id) ? (
+            <ClientSteps steps={client.steps} note={client.signIn} />
+          ) : (
+            <SetupPrompts id="integration-setup-end" client={client?.id} extraSteps={source ? sourceSetupSteps(source) : undefined} />
+          )
+        }
       </section>
     </div>
   </main>

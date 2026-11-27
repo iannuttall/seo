@@ -6,6 +6,7 @@ import FaqAccordion from '@/components/FaqAccordion.astro'
 import HomeCard from '@/components/HomeCard.astro'
 import LandingHero from '@/components/LandingHero.astro'
 import SectionHeading from '@/components/SectionHeading.astro'
+import SetupPrompts from '@/components/SetupPrompts.astro'
 import SplitList from '@/components/SplitList.astro'
 import { integrationIcon } from '@/content/integration-icons'
 import { pairPages } from '@/content/integration-pairs'
@@ -38,7 +39,7 @@ const pair = pairPages[`${source.id}/${client.id}`]
 // Agent clients get the setup box on their own tab, with the source's steps
 // added to the prompt. Web chat clients keep their clicks, then the key step.
 const canRunSetup = Boolean(setupPromptFor(client.id))
-const description = pair?.description ?? `Connect ${source.name} to ${client.name} with the free SEO Skill MCP server. ${source.card} ${canRunSetup ? 'A setup prompt for your agent' : 'Setup steps'} and prompts to try.`
+const description = pair?.description ?? `Connect ${source.name} to ${client.name} with the free SEO Skill MCP server. ${source.card}`
 const lead = pair?.lead ?? `Ask ${client.name} about your ${source.name} data in plain words. Add one server, sign in with Google, and it reads your own numbers on each request.`
 
 const keyStep =
@@ -90,8 +91,8 @@ const otherSources = hostedSources.filter((item) => item.id !== source.id)
     <div class="space-y-24 py-24 sm:space-y-32 sm:py-32">
       <SplitList
         id="prompts-heading"
-        title={`Prompts to try in ${client.name}`}
-        text={`Ask in plain words and your agent picks the tool. ${source.limit}`}
+        title={`What can you ask ${client.name} about ${source.name}?`}
+        text={`Anything, in plain words, and your agent picks the tool. ${source.limit}`}
         items={(pair?.asks ?? source.asks).map((ask) => ({ title: ask.question, text: ask.answer }))}
       >
         {featureLink ? (
@@ -117,7 +118,7 @@ const otherSources = hostedSources.filter((item) => item.id !== source.id)
       ))}
 
       <section class="site-frame" aria-labelledby="clients-heading">
-        <SectionHeading id="clients-heading" title={`${source.name} in other AI clients`} text="The same server and sign-in, set up from each client." />
+        <SectionHeading id="clients-heading" title={`Which other AI clients can read ${source.name}?`} text="All of these, with the same server and sign-in, set up from each client." />
         <div class="grid grid-cols-1 gap-2 sm:grid-cols-2">
           {otherClients.map((item) => (
             <HomeCard title={item.name} text={item.card} icon={integrationIcon(item.id)} href={`/integrations/${source.id}/${item.id}`} link={`${source.name} in ${item.name}`} />
@@ -126,7 +127,7 @@ const otherSources = hostedSources.filter((item) => item.id !== source.id)
       </section>
 
       <section class="site-frame" aria-labelledby="sources-heading">
-        <SectionHeading id="sources-heading" title={`More data for ${client.name}`} text="One server reads all of these. Add a key or a site and your agent can use it." />
+        <SectionHeading id="sources-heading" title={`What other data can ${client.name} read?`} text="All of these, through the same server. Add a key or a site and your agent can use it." />
         <div class="grid grid-cols-1 gap-2 sm:grid-cols-2">
           {otherSources.map((item) => (
             <HomeCard title={item.name} text={item.card} icon={integrationIcon(item.id)} href={`/integrations/${item.id}/${client.id}`} link={`${item.name} in ${client.name}`} />
@@ -143,6 +144,15 @@ const otherSources = hostedSources.filter((item) => item.id !== source.id)
         <div class="mt-10">
           <FaqAccordion items={faq} id="pair-faq" />
         </div>
+      </section>
+
+      <section class="site-frame" aria-labelledby="start-heading">
+        <SectionHeading
+          id="start-heading"
+          title={`Connect ${source.name} to ${client.name}`}
+          text={canRunSetup ? `Give ${client.name} the setup prompt, sign in with Google when it asks, and ask about your site.` : `Follow these steps in ${client.name}, sign in with Google and ask about your site.`}
+        />
+        {canRunSetup ? <SetupPrompts id="pair-setup-end" client={client.id} extraSteps={sourceSetupSteps(source)} /> : <ClientSteps {steps} note={client.signIn} />}
       </section>
     </div>
   </main>

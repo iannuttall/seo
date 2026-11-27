@@ -5,6 +5,7 @@ import FaqAccordion from '@/components/FaqAccordion.astro'
 import HomeCard from '@/components/HomeCard.astro'
 import LandingHero from '@/components/LandingHero.astro'
 import SectionHeading from '@/components/SectionHeading.astro'
+import SetupPrompts from '@/components/SetupPrompts.astro'
 import SplitList from '@/components/SplitList.astro'
 import { AiChat02Icon } from '@hugeicons/core-free-icons'
 import { competitors, groups } from '@/content/alternatives'
@@ -56,8 +57,8 @@ const faqs = [
     <div class="space-y-24 py-24 sm:space-y-32 sm:py-32">
       <SplitList
         id="why-heading"
-        title="Why teams pick SEO Skill"
-        text="Free SEO tools in your browser, and your own search data in your AI agent. Add the URL, sign in with Google and ask."
+        title="Why do teams pick SEO Skill over other SEO tools?"
+        text="Because it is free: SEO tools in your browser, and your own search data in your AI agent. Add the URL, sign in with Google and ask."
         items={why}
       />
 
@@ -72,7 +73,7 @@ const faqs = [
                 {items.map((item) => (
                   <HomeCard
                     title={item.short}
-                    text={`Free: ${item.freeShort}. Paid: ${item.priceFrom}.`}
+                    text={`${item.summary} Paid plans start at ${item.priceFrom}.`}
                     icon={group.icon}
                     href={`/alternatives/${item.slug}`}
                     link={item.kind === 'seo suite' ? `Free ${item.short} alternative` : `SEO Skill vs ${item.short}`}
@@ -114,6 +115,15 @@ const faqs = [
         <div class="mt-10">
           <FaqAccordion items={faqs} id="alternatives-faq-list" />
         </div>
+      </section>
+
+      <section class="site-frame" aria-labelledby="start-heading">
+        <SectionHeading
+          id="start-heading"
+          title="Try SEO Skill on your own site"
+          text="Add SEO Skill to your agent, sign in with Google and ask for your site's quick wins. It reads your Search Console live, so you can keep your other tools while you decide."
+        />
+        <SetupPrompts id="alternatives-setup-end" />
       </section>
     </div>
   </main>

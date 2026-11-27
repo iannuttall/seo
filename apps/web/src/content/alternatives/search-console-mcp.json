@@ -6,7 +6,7 @@
   "checked": "2026-11-02",
   "summary": "search-console-mcp is a free open source Node.js server and CLI by Saurabh Sharma for Search Console, Bing, GA4 and AdSense.",
   "signIn": "Google OAuth browser sign-in through npx search-console-mcp setup (the docs do not describe creating your own OAuth client), or a Google Cloud service account key. Google Analytics 4 uses a service account, AdSense uses OAuth only, and Bing uses an API key.",
-  "tools": "README says v2.0 has '7 Fluent Domain Tools', but its tools table lists 18 tools plus 3 AdSense tools, and says 96+ legacy tool names still work. Source: GitHub README, Tools section.",
+  "tools": "README says v2.0 has '7 Fluent Domain Tools', but its tools table lists 18 tools plus 3 AdSense tools, and says 96+ legacy tool names still work. Both come from the Tools section of its GitHub README.",
   "dataSources": [
     "Google Search Console",
     "Bing Webmaster Tools",

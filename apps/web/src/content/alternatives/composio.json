@@ -31,7 +31,7 @@
   ],
   "webChat": "Yes",
   "free": "Hobby plan at $0, no credit card: 100,000 tool calls a month, of which up to 20,000 can run through Composio-managed apps such as Google Search Console. Usage pauses at the cap.",
-  "price": "Hobby $0. Pro $29 per month with $29 usage credit, then $0.0003 per tool call ($0.0005 per tool call on Composio-managed apps). Enterprise custom. Prices in USD.",
+  "price": "Hobby $0. Pro $29 per month with $29 usage credit, then $0.0003 per tool call ($0.0005 per tool call on Composio-managed apps). Enterprise custom, with prices in USD.",
   "freeShort": "100,000 tool calls a month",
   "priceFrom": "$29 a month",
   "writeActions": "Yes. Add Site, Delete Site and Submit Sitemap.",

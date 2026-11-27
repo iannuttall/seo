@@ -29,7 +29,7 @@
   ],
   "webChat": "Yes",
   "free": "A limited free version with no credit card, per its MCP page. The free limits are not stated.",
-  "price": "Starter $15 a month (up to 3 properties, 1 seat). Pro $40 a month (up to 10 GSC and 10 GA4 properties, 3 seats). Max $105 a month (unlimited properties under fair use, 5 seats, up to 3 Google accounts). Quarterly billing saves 15%. Prices exclude tax. The page says these are round two rates held while you stay subscribed.",
+  "price": "Starter $15 a month (up to 3 properties, 1 seat). Pro $40 a month (up to 10 GSC and 10 GA4 properties, 3 seats). Max $105 a month (unlimited properties under fair use, 5 seats, up to 3 Google accounts). Quarterly billing saves 15%, and prices exclude tax. The page says these are round two rates held while you stay subscribed.",
   "freeShort": "Limited free version, limits not stated",
   "priceFrom": "$15 a month",
   "writeActions": "Read-only, per its privacy policy: it requests webmasters.readonly and analytics.readonly and says it cannot modify Search Console or Analytics. The optional Google Ads scope has write permission, but the policy says the service only reads Ads data.",

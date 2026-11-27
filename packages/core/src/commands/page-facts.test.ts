@@ -11,7 +11,7 @@ test('reads the first title, description, H1, canonical and robots', () => {
     <link rel="canonical" href="/a">
     <title>Second</title></head>
     <body><h1>  Big
-      heading </h1><h1>Other</h1></body></html>`,
+      <span>heading</span><script>var e=2800;</script> </h1><h1>Other</h1></body></html>`,
     'https://example.com/page',
   )
   const { images: _, ...head } = facts

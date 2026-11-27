@@ -8,6 +8,7 @@ import {
 } from '@hugeicons/core-free-icons'
 import CodeBlock from '@/components/CodeBlock.astro'
 import FeaturePage from '@/components/FeaturePage.astro'
+import { researchKeyStep } from '@/content/setup-prompts'
 
 const related = [
   { title: 'seo research', text: 'Every research action, its inputs and how to run it from the CLI.', href: '/docs/research', icon: SearchList01Icon },
@@ -25,6 +26,7 @@ const related = [
   metaTitle="AI keyword research tool and MCP for agents"
   description="Keyword research in Claude, Codex or ChatGPT through an MCP server: real search volumes, SERPs and competitor keywords from your DataForSEO or Ahrefs key."
   path="/features/keyword-research"
+  setupSteps={[researchKeyStep('research')]}
   lead="Ask your agent for keyword ideas, search volume, who ranks and what a competitor ranks for. It answers from your Search Console and your own DataForSEO or Ahrefs account."
   {related}
   relatedHeading="Read more"
@@ -45,23 +47,10 @@ const related = [
   </p>
 
   <h2>Set up keyword research in your agent</h2>
-  <ol>
-    <li>
-      Add the hosted MCP server to Claude Code, Codex, Cursor, ChatGPT or any
-      client with remote MCP, and sign in with Google. The commands are at
-      the top of this page.
-    </li>
-    <li>
-      Save a <a href="/docs/keys">DataForSEO or Ahrefs key</a> on your
-      account page. The provider bills you directly, and SEO Skill adds
-      nothing on top. Every DataForSEO result says what the request cost.
-    </li>
-    <li>Ask for keyword research in plain words, like the prompts below.</li>
-  </ol>
   <p>
-    Prefer a terminal? <code>npm i -g seo</code> then <code>seo start</code>{' '}
-    gives you the same research as the <a href="/docs/research">seo research</a>{' '}
-    command, with the key kept on your machine.
+    Copy the prompt for your agent at the top of this page. It sets up SEO
+    Skill and asks you to save a <a href="/docs/keys">DataForSEO or Ahrefs key</a> under Keys on your account page,
+    never in the chat. The provider bills you directly, and every DataForSEO result says what the request cost. Then ask for keyword research in plain words, like the prompts below.
   </p>
 
   <h2>Start from the searches you already get</h2>

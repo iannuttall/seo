@@ -65,8 +65,8 @@ const related = [
 
   <h2>Run a keyword report for your site in two prompts</h2>
   <p>
-    Add the hosted MCP server with the commands at the top of this page and
-    sign in with Google (access is read only). Start with the overview,
+    Give your agent the setup prompt at the top of this page and sign in
+    with Google when it asks (access is read only). Start with the overview,
     which runs <code>seo_report</code>:
   </p>
   <CodeBlock prompt value={`Show me the overview section of the SEO report for example.com`} wrap />
@@ -83,8 +83,7 @@ const related = [
   </p>
   <CodeBlock prompt value={`Give me a keyword report for example.com: every query with the page that ranks for it, clicks, impressions, CTR and average position for the last 28 days against the 28 days before. Leave out searches for my brand.`} wrap />
   <p>
-    In a terminal, after <code>npm i -g seo</code> and <code>seo start</code>,
-    the same rows come from <code>seo data</code>:
+    In a terminal, the same rows come from <code>seo data</code>:
   </p>
   <CodeBlock value={`seo data --site example.com --dimensions query,page`} wrap />
   <p>

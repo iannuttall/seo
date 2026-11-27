@@ -5,27 +5,8 @@ import {
   McpServerIcon,
   PlugSocketIcon,
 } from '@hugeicons/core-free-icons'
-import ClientSteps from '@/components/ClientSteps.astro'
 import CodeBlock from '@/components/CodeBlock.astro'
 import FeaturePage from '@/components/FeaturePage.astro'
-import { clientById } from '@/content/integrations'
-
-// Setup steps come from the integration pages, so each client's steps stay
-// the same everywhere they appear.
-const setup = ['claude-code', 'codex', 'chatgpt', 'claude', 'cursor'].map(
-  (id) => {
-    const client = clientById(id)
-    if (!client) throw new Error(`Unknown client ${id}`)
-    return client
-  },
-)
-const heading: Record<string, string> = {
-  'claude-code': 'Connect Google Search Console to Claude Code',
-  codex: 'Connect Google Search Console to Codex',
-  chatgpt: 'Connect Google Search Console to ChatGPT',
-  claude: 'Connect Google Search Console to Claude.ai and Claude Desktop',
-  cursor: 'Connect Google Search Console to Cursor',
-}
 
 const related = [
   { title: 'Search Console in 9 AI clients', text: 'Setup steps and prompts for VS Code, Gemini CLI, Windsurf, Le Chat and the clients on this page.', href: '/integrations/google-search-console', icon: PlugSocketIcon, link: 'Setup by client' },
@@ -62,33 +43,23 @@ const related = [
     what you see in Search Console.
   </p>
 
-  <h2>Connect Search Console to 5 AI clients</h2>
+  <h2>Connect Search Console with one prompt</h2>
   <p>
     You need a Google account that can see at least one Search Console
-    property. That is the whole list. Each client below takes a minute, and the{' '}
+    property. That is the whole list. Copy the prompt for your agent at the
+    top of this page and give it to Claude Code, Codex, Cursor or any agent
+    that runs commands. It adds the server, waits while you sign in with
+    Google, checks it connects and asks which site to start with. The same
+    prompt installs the open source CLI, which runs the site crawl and Bing
+    Webmaster Tools on your own machine.
+  </p>
+  <p>
+    ChatGPT and Claude on the web cannot add a server themselves, so you add
+    it in their settings. Follow the steps for{' '}
+    <a href="/integrations/google-search-console/chatgpt">ChatGPT</a> or{' '}
+    <a href="/integrations/google-search-console/claude">Claude</a>. The{' '}
     <a href="/integrations/google-search-console">Search Console integration page</a>{' '}
-    has the steps for VS Code, Gemini CLI, Windsurf and Le Chat too.
-  </p>
-
-  {
-    setup.map((client) => (
-      <>
-        <h3>{heading[client.id]}</h3>
-        <ClientSteps steps={client.steps} note={client.note ?? client.signIn} />
-      </>
-    ))
-  }
-
-  <h3>Run it on your machine instead</h3>
-  <p>
-    Prefer to keep the Google token on your own computer? The open source CLI
-    reads the same data and adds a local MCP server to Claude Code, Codex and
-    Cursor during setup:
-  </p>
-  <CodeBlock value="npm i -g seo && seo start" />
-  <p>
-    The local route also gives your agent the site crawl and Bing Webmaster
-    Tools, which the hosted server leaves to the CLI.
+    covers VS Code, Gemini CLI, Windsurf and Le Chat too.
   </p>
 
   <h2>6 prompts to run once Search Console is connected</h2>
@@ -212,8 +183,8 @@ const related = [
     Pick the hosted SEO Skill server if you want Search Console in claude.ai,
     ChatGPT or Claude on your phone, where a local server cannot run, or if
     you would rather skip the Google Cloud step. The CLI is the middle option:
-    open source on GitHub and npm, local, and signed in with Google during{' '}
-    <code>seo start</code>. The{' '}
+    open source on GitHub and npm, local, and signed in with Google by the
+    setup prompt. The{' '}
     <a href="/alternatives">comparison of Search Console MCP servers</a> shows
     how each one signs in and what it costs, checked on their own pages.
   </p>

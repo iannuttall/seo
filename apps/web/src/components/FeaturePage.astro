@@ -24,6 +24,9 @@ type Props = {
   lead: string
   related: Related[]
   relatedHeading?: string
+  // Open the setup box on this client's tab, and add the page's own steps.
+  setupClient?: string
+  setupSteps?: string[]
 }
 
 const {
@@ -34,6 +37,8 @@ const {
   lead,
   related,
   relatedHeading = 'Read the docs',
+  setupClient,
+  setupSteps,
 } = Astro.props
 const breadcrumbs: SchemaBreadcrumb[] = [
   { label: 'Home', href: '/' },
@@ -53,7 +58,7 @@ const breadcrumbs: SchemaBreadcrumb[] = [
 
     <PageHeader {title} description={lead} />
 
-    <SetupPrompts id="feature-setup" />
+    <SetupPrompts id="feature-setup" client={setupClient} extraSteps={setupSteps} />
 
     <article class="docs-prose mt-14 min-w-0">
       <slot />

@@ -58,15 +58,11 @@ Discovered - currently not indexed | fix | /guides/old-compost-bins | 404 | yes 
     SEO Skill asks Google's URL Inspection about each page it knows from
     your Search Console and your sitemap, and sorts them by reason.
   </p>
-  <ol>
-    <li>
-      Connect the hosted MCP server and sign in with Google, or run{' '}
-      <code>npm i -g seo</code> then <code>seo start</code>. Both are free.
-      The site has to be a Search Console property your Google account can
-      read.
-    </li>
-    <li>Ask your agent:</li>
-  </ol>
+  <p>
+    Give your agent the setup prompt at the top of this page and sign in
+    with Google when it asks. It is free. The site has to be a Search
+    Console property your Google account can read. Then ask:
+  </p>
   <CodeBlock prompt value={`Which pages on example.com are discovered but not indexed? Group them by folder and tell me which ones we want in Google.`} wrap />
   <p>Or run it in a terminal:</p>
   <CodeBlock value={`seo index --site example.com`} />

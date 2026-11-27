@@ -5,6 +5,7 @@ import {
   Route01Icon,
   SearchList01Icon,
 } from '@hugeicons/core-free-icons'
+import CodeBlock from '@/components/CodeBlock.astro'
 import FeaturePage from '@/components/FeaturePage.astro'
 
 const related = [
@@ -41,19 +42,16 @@ const related = [
     source and the date it was checked.
   </p>
 
-  <h2>Start a site with two commands</h2>
+  <h2>Start a site with one prompt</h2>
   <p>
-    You need the current LTS release of Node.js on your computer. Install the <code>seo</code> CLI, then create
-    the site in a new folder:
+    Any coding agent that can run commands works, such as Claude Code,
+    Codex, Cursor or Amp. Give it this prompt in an empty folder:
   </p>
-  <pre><code>npm i -g seo
-seo site new my-site --name "My Site"</code></pre>
+  <CodeBlock prompt value={`If seo --version fails, install the SEO Skill CLI with npm i -g seo, and install the current LTS release of Node.js first if it is missing. Then run seo site new my-site --name "My Site", run seo site guide setup and follow it step by step. Ask me only for decisions about my site and data.`} wrap />
   <p>
-    This copies the starter, installs its packages and prints the first step.
-    The starter is a small working site about parks, so you can see every part
-    before the agent replaces it with your data. Then ask your agent to run <code>seo site guide setup</code> and follow
-    it. Any coding agent that can
-    run commands works, such as Claude Code, Codex, Cursor or Amp.
+    <code>seo site new</code> copies the starter, installs its packages and
+    prints the first step. The starter is a small working site about parks,
+    so you can see every part before the agent replaces it with your data.
   </p>
 
   <h2>The ten steps your agent follows</h2>

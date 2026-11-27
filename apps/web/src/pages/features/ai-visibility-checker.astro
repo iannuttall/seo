@@ -7,6 +7,7 @@ import {
 } from '@hugeicons/core-free-icons'
 import CodeBlock from '@/components/CodeBlock.astro'
 import FeaturePage from '@/components/FeaturePage.astro'
+import { researchKeyStep } from '@/content/setup-prompts'
 
 const related = [
   { title: 'seo research', text: 'The AI answer check, its options and how to run it from the CLI.', href: '/docs/research', icon: SearchList01Icon },
@@ -21,6 +22,7 @@ const related = [
   metaTitle="AI visibility checker for ChatGPT, Gemini and AI Overviews"
   description="Check whether ChatGPT search, Gemini, Google AI Mode and AI Overviews cite or mention your site for up to 10 questions, and which sites they cite instead."
   path="/features/ai-visibility-checker"
+  setupSteps={[researchKeyStep('dataforseo')]}
   lead="Ask your agent whether ChatGPT search, Gemini, Google AI Mode and Google AI Overviews cite your site for the questions people already ask, and which sites they cite instead."
   {related}
   relatedHeading="Read more"
@@ -51,25 +53,11 @@ const related = [
     Skill does not run it on a schedule or store a history of past checks.
   </p>
 
-  <h2>Set up the checker in 3 steps</h2>
-  <ol>
-    <li>
-      Add the hosted MCP server to Claude Code, Codex, Cursor, ChatGPT or any
-      client with remote MCP, and sign in with Google. The commands are at
-      the top of this page.
-    </li>
-    <li>
-      Save a <a href="/docs/keys">DataForSEO key</a> on your account page.
-      DataForSEO bills you directly for each check, and SEO Skill adds
-      nothing on top. The AI answer check needs DataForSEO; an Ahrefs key
-      does not run it.
-    </li>
-    <li>Ask your agent, like the prompts below.</li>
-  </ol>
+  <h2>Set up the checker with one prompt</h2>
   <p>
-    Prefer a terminal? <code>npm i -g seo</code> then <code>seo start</code>{' '}
-    sets up the CLI, and <code>seo providers dataforseo connect</code> keeps
-    the key on your machine.
+    Copy the prompt for your agent at the top of this page. It sets up SEO
+    Skill and asks you to save a <a href="/docs/keys">DataForSEO key</a> under Keys on your account page,
+    never in the chat. DataForSEO bills you directly for each check, and SEO Skill adds nothing on top. The AI answer check needs DataForSEO; an Ahrefs key does not run it. Then ask your agent, like the prompts below.
   </p>
 
   <h2>Check the questions people already ask AI about your site</h2>

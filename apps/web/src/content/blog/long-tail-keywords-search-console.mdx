@@ -18,7 +18,7 @@ A long, specific search your page already shows for tells you what a reader want
 
 I start with searches at average positions 4 to 20, because Google already shows the page for them. On 24 of my sites over the 28 days to 10 November 2026, those positions held a median 53% of each site's listed searches and 62% of its listed impressions.
 
-<AgentStep setup prompt="Which searches does example.com show for at positions 4 to 20 in Search Console? Group them by page, then read each page and tell me which searches it doesn't answer yet." cli="seo data --site example.com --dimensions query,page --detail full" />
+<AgentStep setup prompt="Which searches does example.com show for at positions 4 to 20 in Search Console? Group them by page, then read each page and tell me which searches it doesn't answer yet." />
 
 The agent keeps the rows at positions 4 to 20 and reads each page to judge what's missing. The report also has two ready-made lists: `quick-wins` for searches at positions 4 to 10 that get fewer clicks than your site's usual rate, and `second-page` for pages at positions 11 to 20 with their searches.
 
@@ -40,7 +40,7 @@ This one finds searches that start with a question word:
 
 Your agent can run them with the page beside each search:
 
-<AgentStep prompt="Show me every Google search with seven or more words that example.com appears for, with the page, impressions and position. Then do the same for searches that start with a question word." cli="seo data --site example.com --dimensions query,page --query-regex '^(\S+\s+){6,}\S+$' --detail full" />
+<AgentStep prompt="Show me every Google search with seven or more words that example.com appears for, with the page, impressions and position. Then do the same for searches that start with a question word." />
 
 ## Expect a short list, because Google hides most of the long tail
 
@@ -66,7 +66,7 @@ Have your agent sort them before anything changes:
 
 Change one thing per page, note the date, and wait three to four weeks. Then compare equal periods before and after:
 
-<AgentStep prompt="Compare example.com in equal periods before and after 1 December 2026, with the pages and searches that moved." cli="seo compare --site example.com --date 2026-12-01" />
+<AgentStep prompt="Compare example.com in equal periods before and after 1 December 2026, with the pages and searches that moved." />
 
 The comparison lists any Google ranking update that ran in either period. If one did, the change may come from the update.
 

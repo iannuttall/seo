@@ -61,11 +61,11 @@ The comparison only works when the dates match. Note the 28 days the Insights ta
 
 With SEO Skill, pull the ChatGPT visits your analytics recorded for those dates. For Google Analytics, the [SEO report](/docs/report) overview lists visits from AI assistants by source, ChatGPT included, beside your search numbers:
 
-<AgentStep setup prompt="Run the SEO report for example.com from 2026-10-14 to 2026-11-10. How many Google Analytics sessions came from ChatGPT, and which pages did they land on?" cli="seo report --site example.com --start-date 2026-10-14 --end-date 2026-11-10" />
+<AgentStep setup prompt="Run the SEO report for example.com from 2026-10-14 to 2026-11-10. How many Google Analytics sessions came from ChatGPT, and which pages did they land on?" />
 
 For Simple Analytics, raw data from [`seo data`](/docs/data) includes visitors from AI tools such as ChatGPT, and it says when a visitor with both a chatgpt.com referrer and the `utm_source=chatgpt.com` tag might be counted twice:
 
-<AgentStep prompt="Show the Simple Analytics visitors from ChatGPT on example.com from 2026-10-14 to 2026-11-10." cli="seo data --site example.com --source simple_analytics --start-date 2026-10-14 --end-date 2026-11-10" />
+<AgentStep prompt="Show the Simple Analytics visitors from ChatGPT on example.com from 2026-10-14 to 2026-11-10." />
 
 Clicky's landing pages don't split out AI assistants, but [`seo compare`](/docs/compare) (`seo compare --site example.com --date 2026-10-14`) shows Clicky visits from AI assistants for the periods it compares. The [analytics guide](/docs/analytics) covers connecting each tool.
 

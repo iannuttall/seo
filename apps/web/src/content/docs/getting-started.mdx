@@ -1,46 +1,28 @@
 ---
 title: Getting started
-description: Connect the free hosted MCP or install the seo CLI, sign in with Google, and ask your agent for your first SEO report.
-lead: Connect the hosted MCP or install the CLI, sign in with Google, and ask your agent for the SEO report. It takes about a minute.
+description: Give your agent one prompt to set up SEO Skill, sign in with Google, and ask for your first SEO report.
+lead: Give your agent one prompt, sign in with Google when it asks, and ask for the SEO report. It takes about a minute.
 ---
 
 ## What you need
 
 - A Google account that can see at least one Search Console property.
 - An AI agent that supports MCP, such as Claude Code, Codex or Cursor.
-- For the CLI only: a terminal with the current LTS release of Node.js.
+- Node.js (the current LTS release) on the machine your agent runs on, for the CLI.
 
 Google Analytics, other analytics tools and keyword data are optional. You can add them later.
 
-## Pick the hosted MCP or the CLI
+## Set up SEO Skill
 
-Both run the same reports and return the same facts. The hosted MCP is the quickest start. The CLI runs on your machine and adds a site crawl and internal links.
-
-| | Hosted MCP | CLI |
-| --- | --- | --- |
-| Install | Nothing | `npm i -g seo && seo start` |
-| Where it runs | seoskill.dev | Your machine |
-| Sign in | Google, in your browser | Your seoskill.dev account or Google, during `seo start` |
-| Crawl and internal links | No | Yes |
-| What it keeps | Your linked sign-ins and keys, encrypted | Your sign-in, keys and a short cache, on your machine |
-
-## Connect the hosted MCP
-
-Pick your agent, copy the prompt and paste it into the agent. It installs the CLI, adds the hosted MCP and stops when it needs you to sign in with Google.
+Pick your agent, copy the prompt and paste it into the agent. It installs the CLI, adds the hosted MCP server and the skill, and stops when it needs you to sign in with Google. You don't type any commands.
 
 <SetupPrompts id="getting-started-setup" />
 
-The [hosted MCP guide](/docs/mcp) covers other clients, the tools and how sign-in works. In Codex, the [Codex SEO skill](/features/codex-seo) page adds the skill and the CLI as well.
+The hosted MCP runs on seoskill.dev and reads your data each time your agent asks. The CLI runs on your machine for the jobs the hosted server can't do, such as a site crawl and Bing. The [hosted MCP guide](/docs/mcp) covers other clients, the tools and how sign-in works. For cloud agents and CI machines that start fresh each time, follow the [cloud agents guide](/docs/cloud-agents) instead.
 
-## Or install the CLI
+## Run it yourself
 
-Install the package and run setup in one line:
-
-```sh
-npm i -g seo && seo start
-```
-
-Setup asks how you want to sign in. Signing in to your free seoskill.dev account (or creating one) keeps your Google accounts, Bing and keys in one place for both the CLI and the hosted MCP. You can also sign in with Google on this machine only. Then setup offers to add an MCP server and the skill to your agents (if you skip that step, you can add them later). It saves nothing about your site. The [CLI guide](/docs/cli) explains each choice. For cloud agents and CI machines that start fresh each time, follow the [cloud agents guide](/docs/cloud-agents) instead.
+To set it up by hand, the [CLI guide](/docs/cli) covers `seo start` and each choice it asks about, and the [hosted MCP guide](/docs/mcp) has the command for each agent.
 
 ## Ask for your first report
 

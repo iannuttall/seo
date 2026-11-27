@@ -13,6 +13,8 @@ cover:
   alt: "Crowds admire three shop windows showing a microphone, envelopes and a book, while every shop door stays shut and the doormats are untouched."
 ---
 
+import { taskPrompt } from '@/content/setup-prompts'
+
 export const beforeVerdict = `<pre>…the full Vibe Check includes our Reach Test ratings,
 benchmark results, screenshots, pricing analysis, and
 exact guidance on which model should get which job.
@@ -516,27 +518,9 @@ Almost everything above changes pages that Google has already crawled. Google co
 
 Everything in this teardown came from SEO Skill, run by an agent. You can run the same audit on your own site.
 
-**1. Connect the hosted MCP server.** It's free. You sign in with Google, and there's no password and nothing to install. In Claude Code:
+Give your agent this prompt. It is close to the one I used. If SEO Skill isn't connected yet, the agent sets it up first, with the free hosted MCP server, a Google sign-in and the CLI for the crawl. It asks you to save an Ahrefs or DataForSEO key on your [account page](/account), never in the chat. The key gives your agent search volumes, rankings and results pages, like the tables above. With DataForSEO it can also ask ChatGPT and Google's AI answers your questions and check who they cite.
 
-```sh
-claude mcp add --transport http seoskill https://seoskill.dev/mcp
-```
-
-Codex, Cursor and Claude on the web work too. The [MCP guide](/docs/mcp) has the steps for each one.
-
-**2. Add a research key.** On your [account page](/account), save an Ahrefs or DataForSEO key. The key gives your agent search volumes, rankings and results pages, like the tables above. With DataForSEO it can also ask ChatGPT and Google's AI answers your questions and check who they cite.
-
-**3. Install the CLI for crawling.** The crawl runs on your machine, so it can read any site:
-
-```sh
-npm i -g seo
-seo login
-```
-
-**4. Ask your agent.** This is close to the prompt I used:
-
-```prompt
-Audit example.com and every site we own.
+<CodeBlock prompt value={taskPrompt(`Audit example.com and every site we own.
 Crawl each one with seo crawl. Find where our sites
 link to each other and which pages those links hit.
 Use seo_research to find the searches our buyers
@@ -545,8 +529,7 @@ Find the searches our competitors rank for and we
 don't, and group them into pages we should write.
 Ask ai_answers 10 buyer questions for us and our
 top competitor, and say who gets cited.
-Rank every fix by how close it sits to revenue.
-```
+Rank every fix by how close it sits to revenue.`, 'research', true)} />
 
 On your own site, the hosted server adds the part I couldn't see from the outside: your real Search Console clicks and queries. With those, you get measured numbers where this post has estimates.
 

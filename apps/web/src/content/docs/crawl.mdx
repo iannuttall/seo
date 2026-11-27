@@ -1,21 +1,21 @@
 ---
 title: Technical SEO site crawl
-description: Crawl your site with seo crawl on your own machine and list technical issues such as broken pages, redirects, titles, canonicals and noindex tags, plus what AI agents can read.
+description: Crawl your site on your own machine with seo crawl and list technical issues, such as broken pages and redirects, plus what AI agents can read.
 heading: seo crawl
 lead: Crawl your site from your own machine and list technical issues. CLI only.
 ---
 
-Use it to get a technical baseline: before a release, after one, or when you suspect something broke across many pages. A crawl fetches a lot of pages, so it runs on your machine with the [CLI](/docs/cli), not on the hosted server.
+Use it to get a technical baseline before or after a release, or when you suspect something broke across many pages. A crawl fetches a lot of pages, so it runs on your machine with the [CLI](/docs/cli). The hosted server doesn't crawl.
 
 ## Run a crawl
 
-Install the CLI and run setup if you have not yet:
+Ask your agent to crawl the site. A crawl needs no sign-in, so the agent only needs the CLI:
 
-```sh
-npm i -g seo && seo start
+```prompt
+Crawl https://example.com with the seo CLI (install it with npm i -g seo if seo --version fails) and tell me what to fix first
 ```
 
-Then ask your agent to crawl the site, or run it yourself:
+The command it runs:
 
 ```sh
 seo crawl https://example.com
@@ -29,7 +29,7 @@ seo crawl --sitemap-url https://example.com/sitemap.xml --health
 
 ## What comes back
 
-The crawl fetches your pages and lists what it finds, such as pages that return errors, redirects, missing or duplicate titles and descriptions, canonical and robots tags, and broken internal links. To trace one redirect hop by hop, use the [redirect checker](/tools/redirect-checker). Nothing is saved: the result comes back in full, and your agent keeps what it needs (add `--json --output crawl.json` to write it to a file).
+The crawl fetches your pages and lists what it finds, such as pages that return errors, redirects, missing or duplicate titles and descriptions, canonical and robots tags, and broken internal links. To trace one redirect hop by hop, use the [redirect checker](/tools/redirect-checker). Nothing is saved. The result comes back in full, and your agent keeps what it needs (add `--json --output crawl.json` to write it to a file).
 
 Googlebot reads only the first 2 MB of a page's HTML and indexes it as if the file ended there. For a page over that size, the crawl shows where the main content starts (the first `<h1>` or `<main>`) and how much of the page sits past the cut. It flags the page as high priority when the main content starts after the cut or just before it, or when most of the visible text comes after it.
 
@@ -40,7 +40,7 @@ A `noindex` tag or a canonical pointing elsewhere is reported as what the page s
 The crawl also checks how AI agents get to your site:
 
 - Which AI search bots (such as OAI-SearchBot, Claude-SearchBot and PerplexityBot) and which AI training bots (such as GPTBot and ClaudeBot) your robots.txt allows. The two groups are listed apart, because blocking training is a choice and blocking search keeps you out of AI answers.
-- Whether your pages have a Markdown copy: through a `rel="alternate"` link, or for a request with `Accept: text/markdown`. Every public page can have one, including noindex pages such as privacy and terms. The crawl reports a page that needs a sign-in and still links to a copy.
+- Whether your pages have a Markdown copy, through a `rel="alternate"` link or for a request with `Accept: text/markdown`. Every public page can have one, including noindex pages such as privacy and terms. The crawl reports a page that needs a sign-in and still links to a copy.
 - Whether `/llms.txt` exists and its links load.
 - Agent files under `/.well-known/`, such as an agent skills index or an MCP server card, plus the `Content-Signal` and `Link` headers.
 
@@ -48,7 +48,7 @@ None of these change your Google rankings. They decide how easily ChatGPT, Claud
 
 ## Check many sites at once
 
-To compare robots.txt, home pages and llms.txt across many sites, such as a list of competitors, use sites mode. It reads up to 1,000 sites a run, eight at a time, with three requests per site: robots.txt, the home page (unless robots.txt disallows it), then llms.txt.
+To compare robots.txt, home pages and llms.txt across many sites, such as a list of competitors, use sites mode. It reads up to 1,000 sites a run, eight at a time, with three requests per site. It reads robots.txt, then the home page (unless robots.txt disallows it), then llms.txt.
 
 ```sh
 seo crawl --mode sites --urls-file sites.txt --json --output sites.jsonl
@@ -57,4 +57,4 @@ seo crawl --mode sites --urls example.com,example.org
 
 Each site is one JSON line with its robots.txt rules for each AI bot, the home page's status, title, canonical and robots tags, and whether llms.txt exists and starts with a heading. A last line sums the run. Without `--json` you get the counts, such as how many sites block GPTBot. A site that timed out, failed DNS or served a challenge page says so, so an unreachable llms.txt is never counted as missing.
 
-To see which pages lost search clicks rather than which pages have issues, use [`seo index`](/docs/indexing).
+To see which pages lost search clicks, use [`seo index`](/docs/indexing).

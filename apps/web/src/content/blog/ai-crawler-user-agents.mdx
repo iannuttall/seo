@@ -211,7 +211,7 @@ The same page lists ten IPv4 ranges in the text rather than a file, and says rea
 
 SEO Skill reads your robots.txt and reports whether each AI crawler's token may fetch your home page, with search crawlers and training crawlers listed separately:
 
-<AgentStep setup prompt="Check which AI crawlers my site's robots.txt allows on its home page, with search crawlers and training crawlers listed separately." cli="seo crawl --mode sites --urls example.com --json" local="Crawls fetch pages from your site, so they run on your own machine." />
+<AgentStep setup prompt="Check which AI crawlers my site's robots.txt allows on its home page, with search crawlers and training crawlers listed separately." local="Crawls fetch pages from your site, so they run on your own machine." />
 
 You can also paste the file into the [robots.txt validator](/tools/robots-txt-validator). Robots.txt is only half of it. A firewall rule or a CDN bot setting can still turn away a crawler you allowed, and the fetchers that skip robots.txt are only stopped there.
 

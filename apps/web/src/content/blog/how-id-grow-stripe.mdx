@@ -13,6 +13,8 @@ cover:
   title: left
 ---
 
+import { taskPrompt } from '@/content/setup-prompts'
+
 export const beforeGuide = `<p><strong>stripe.com/resources/more/ach-payments-101</strong> (the US copy)</p><p>Menu: … Financial Connections, Treasury, Crypto Onramp, Capital for platforms, Issuing …</p><p>If you’ve ever received a paycheck through direct deposit or paid a utility bill directly from your bank account using your account and routing numbers, you’re already familiar with ACH payments as an individual. But what about accepting ACH payments as a business?</p><p><em>Last updated May 8, 2026</em></p>`
 
 export const afterGuide = `<p><strong>stripe.com/au/resources/more/ach-payments-101</strong> (the Australian copy)</p><p>Menu: … no Financial Connections, Treasury, Crypto Onramp, Capital for platforms or Issuing … (the footer still lists three of them)</p><p>If you've ever received a paycheck through direct Deposit or paid a utility bill directly from your bank account using your account and routing numbers, you're already familiar with ACH payments as an Individual. But what about accepting ACH payments as a Business?</p><p><em>Last updated 8 May 2026</em></p>`
@@ -448,33 +450,9 @@ If you publish the same page for several English-speaking countries, search for 
 
 Everything in this teardown came from SEO Skill, run by an agent. You can run the same audit on your own site.
 
-**1. Connect the hosted MCP server.** It's free. You sign in with Google, and there's no password and nothing to install. In Claude Code:
+Give your agent this prompt. It is close to the one I used. If SEO Skill isn't connected yet, the agent sets it up first, with the free hosted MCP server, a Google sign-in and the CLI for the crawl. It asks you to save an Ahrefs or DataForSEO key on your [account page](/account), never in the chat. The key gives your agent search volumes, rankings and results pages, like the tables above. With DataForSEO it can also ask ChatGPT and Google's AI answers your questions and check who they cite.
 
-```sh
-claude mcp add --transport http seoskill https://seoskill.dev/mcp
-```
-
-Codex, Cursor and Claude on the web work too. The [MCP guide](/docs/mcp) has the steps for each one.
-
-**2. Add a research key.** On your [account page](/account), save an Ahrefs or DataForSEO key. The key gives your agent search volumes, rankings and results pages, like the tables above. With DataForSEO it can also ask ChatGPT and Google's AI answers your questions and check who they cite.
-
-**3. Install the CLI for crawling.** The crawl runs on your machine, so it can read any site:
-
-```sh
-npm i -g seo
-seo login
-```
-
-To check a guide's regional copies, put their addresses in a file and crawl them as a list. On Stripe's ACH guide this flagged 45 of 46 English copies as duplicate content:
-
-```sh
-seo crawl --mode list --urls-file ach-copies.txt
-```
-
-**4. Ask your agent.** This is close to the prompt I used:
-
-```prompt
-Audit example.com for a US audience.
+<CodeBlock prompt value={taskPrompt(`Audit example.com for a US audience.
 List the searches where Google ranks one of our
 other countries' copies instead of the US page,
 then check each one live from a US location.
@@ -484,8 +462,9 @@ Request a page as OAI-SearchBot, ClaudeBot and
 PerplexityBot and show the headers.
 Ask ai_answers 10 buyer questions for us and our
 top competitor, and list who gets cited instead.
-Rank the fixes by how close each is to revenue.
-```
+Rank the fixes by how close each is to revenue.`, 'research', true)} />
+
+On Stripe's ACH guide, the list crawl of its English copies flagged 45 of 46 as duplicate content.
 
 On your own site, the hosted server adds the part I couldn't see from the outside. That's your real Search Console clicks and queries, and the canonical Google chose for each page. With those, you get measured numbers where this post has estimates.
 

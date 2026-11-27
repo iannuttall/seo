@@ -5,11 +5,21 @@ heading: Bing Webmaster Tools
 lead: See Bing's clicks, impressions, queries and pages next to Google's for the same site. Bing data is free.
 ---
 
+import { sources } from '@/content/integrations'
+import { sourceSetupSteps } from '@/content/setup-prompts'
+export const bing = sources.find((source) => source.id === 'bing-webmaster-tools')
+
 Google is not the only search engine sending visits. Connect Bing Webmaster Tools and the main report shows both engines for the same dates, so you can see how much of your search traffic each one sends.
 
 You need a site verified in [Bing Webmaster Tools](https://www.bing.com/webmasters). Bing can import your sites from Search Console, which is the quickest way to add them.
 
 Bing runs with the CLI and the local MCP server, on your own machine. The [hosted MCP](/docs/mcp) cannot reach Bing (Bing blocks requests from its network), so if you use it, your agent runs the CLI for Bing, the same way it does for a crawl.
+
+## Set it up with one prompt
+
+Give your agent this prompt. It sets up SEO Skill if it isn't connected yet, asks you to connect Bing on your account page, then checks that Bing's data comes through. The steps below are what it does, if you'd rather do them yourself.
+
+<SetupPrompts id="bing-setup" extraSteps={sourceSetupSteps(bing)} />
 
 ## Connect Bing on your account
 

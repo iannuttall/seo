@@ -39,7 +39,7 @@ The opposite case is a query Google spreads across several of your pages. SEO Sk
 
 Start with the queries Google already splits across more than one of your pages:
 
-<AgentStep setup prompt="Which queries does Google split across more than one page on my site?" cli="seo report --site example.com --section cannibalization" />
+<AgentStep setup prompt="Which queries does Google split across more than one page on my site?" />
 
 The report checks each competing page live, so you can see a redirect or a canonical that already explains the split before you change anything.
 
@@ -47,7 +47,7 @@ The report checks each competing page live, so you can see a redirect or a canon
 
 For a topic you haven't written about, compare the results Google shows for each keyword. Give SEO Skill between 2 and 10 keywords, and it counts how many of their top 10 pages and sites each pair shares:
 
-<AgentStep prompt="Compare the Google results for coffee grinder, best coffee grinder, manual coffee grinder and how to grind coffee beans. Which belong on one page?" cli={'seo research serp_overlap --keywords "coffee grinder,best coffee grinder,manual coffee grinder,how to grind coffee beans"'} />
+<AgentStep prompt="Compare the Google results for coffee grinder, best coffee grinder, manual coffee grinder and how to grind coffee beans. Which belong on one page?" />
 
 When I ran the command for the four coffee grinder searches, no pair shared a single page in its top results. The only pair that shared any sites was "coffee grinder" and "manual coffee grinder", with two shops ranking for both. Those are the two searches where Google ranks shop pages, so the overlap and the page types point the same way.
 

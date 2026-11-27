@@ -13,6 +13,8 @@ cover:
   title: left
 ---
 
+import { taskPrompt } from '@/content/setup-prompts'
+
 export const beforeCert = `<pre>&lt;p&gt;Creating a lot of certificates and need to
 automate the process? Look into our API or
 Nocode automations to generate PDF
@@ -289,39 +291,19 @@ Google will find new tool pages on its own, but the redirects only pay off once 
 
 Everything in this teardown came from SEO Skill, run by an agent, plus hand checks with curl, the Wayback Machine and Jon's public X posts. You can run the same audit on your own site.
 
-**1. Connect the hosted MCP server.** It's free. You sign in with Google, and there's no password and nothing to install. In Claude Code:
+Give your agent this prompt. It is close to the one I used. If SEO Skill isn't connected yet, the agent sets it up first, with the free hosted MCP server, a Google sign-in and the CLI for the crawl. It asks you to save an Ahrefs or DataForSEO key on your [account page](/account), never in the chat. The key gives your agent search volumes, rankings and results pages, like the tables above. With DataForSEO it can also ask ChatGPT and Google's AI answers your questions and check who they cite.
 
-```sh
-claude mcp add --transport http seoskill https://seoskill.dev/mcp
-```
-
-Codex, Cursor and Claude on the web work too. The [MCP guide](/docs/mcp) has the steps for each one.
-
-**2. Add a research key.** On your [account page](/account), save an Ahrefs or DataForSEO key. The key gives your agent search volumes, rankings and results pages, like the tables above. With DataForSEO it can also ask ChatGPT and Google's AI answers your questions and check who they cite.
-
-**3. Install the CLI for crawling.** The crawl runs on your machine, so it can read any site:
-
-```sh
-npm i -g seo
-seo login
-seo crawl https://example.com/ --max-pages 1500
-```
-
-**4. Ask your agent.** This is close to the prompt I used:
-
-```prompt
-Audit example.com for US search and AI answers.
+<CodeBlock prompt value={taskPrompt(`Audit example.com for US search and AI answers.
 Group our estimated search traffic by kind of page
 and tell me which pages sell something.
 For each free tool, find the searches people use
 for that job, with volume and who ranks.
-Crawl the whole sitemap and tell me which sections
+Crawl the whole sitemap (up to 1,500 pages) and tell me which sections
 still use an old template or have a second copy.
 Ask ai_answers ten questions about our product,
 the jobs it does and which tool to choose, for us
 and our closest rival, and say who gets cited.
-Rank the fixes by how close each is to a sale.
-```
+Rank the fixes by how close each is to a sale.`, 'research', true)} />
 
 On your own site, the hosted server adds your real Search Console clicks and queries, which I couldn't see from outside. With those you'd see which tool searches already bring impressions, and the trend this teardown can't.
 

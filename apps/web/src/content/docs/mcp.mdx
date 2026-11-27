@@ -7,12 +7,18 @@ lead: A free remote MCP server at seoskill.dev/mcp. Sign in with Google and your
 
 There is nothing to install and no password to create. Your agent connects to `https://seoskill.dev/mcp`, you sign in with Google once, and the tools read your own data on each request. The [Google Search Console MCP](/features/search-console) page shows the questions it answers from Search Console.
 
-## Add the server
+## Set it up with one prompt
+
+Give your agent this prompt. It adds the server, waits while you sign in with Google and checks the tools load. It also installs the CLI and the skill.
+
+<SetupPrompts id="mcp-setup" />
+
+## Add the server by hand
 
 Claude Code:
 
 ```sh
-claude mcp add --transport http seoskill https://seoskill.dev/mcp
+claude mcp add --transport http --scope user seoskill https://seoskill.dev/mcp
 ```
 
 The [Claude SEO skill](/features/claude-seo) page adds the skill and the CLI next to the server.
@@ -76,7 +82,7 @@ The site crawl, internal links, [Bing Webmaster Tools](/docs/bing), and analytic
 
 ## What the server keeps
 
-Only your linked Google and Bing accounts, any keys, Clicky sites, Clicky account login and Simple Analytics key you save, encrypted, and the names of the machines you link. They are used to fetch your own data when your agent asks. It also keeps, for any site you use it on, the issues list your agent asks for with the `issues` section of the [report](/docs/report#keep-a-list-of-issues) and the business context it saves with [`seo next`](/docs/next). Otherwise the server keeps no reports, no Search Console or analytics rows, no site lists and no request logs, except what the paid weekly audit keeps for its sites. The token your agent keeps holds only a random person id.
+Only your linked Google and Bing accounts, any keys, Clicky sites, Clicky account login and Simple Analytics key you save, encrypted, and the names of the machines you link. They are used to fetch your own data when your agent asks. It also keeps, for any site you use it on, the issues list your agent asks for with the `issues` section of the [report](/docs/report#keep-a-list-of-issues) and the business context it saves with [`seo next`](/docs/next). Otherwise the server keeps none of your reports, Search Console or analytics rows, site lists or request logs, except what the paid weekly audit keeps for its sites. The token your agent keeps holds only a random person id.
 
 The only other thing kept is an anonymous count of what ran: the event, report, agent, version and week. [What is stored](/docs/privacy) has the details.
 

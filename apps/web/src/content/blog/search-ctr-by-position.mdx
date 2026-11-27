@@ -57,11 +57,11 @@ SEO Skill works out those rates from your own Search Console data. For each posi
 
 Start with the queries in the top three:
 
-<AgentStep setup prompt="Which of my site's top three queries get fewer clicks than they should for their position?" cli="seo report --site example.com --section low-ctr" />
+<AgentStep setup prompt="Which of my site's top three queries get fewer clicks than they should for their position?" />
 
 Then check positions 4 to 10, where a small ranking gain is worth the most. The quick wins section uses the same rates:
 
-<AgentStep prompt="Which of my site's queries at positions 4 to 10 would gain the most clicks from a small ranking gain?" cli="seo report --site example.com --section quick-wins" />
+<AgentStep prompt="Which of my site's queries at positions 4 to 10 would gain the most clicks from a small ranking gain?" />
 
 Both leave out brand queries, check each page live, and estimate the clicks each query is missing against your site's own rate. That estimate is for deciding what to fix first, not a traffic forecast. When a site doesn't have enough data to work out its own rates, the report says so and uses a built-in set of rates instead.
 

@@ -232,25 +232,7 @@ Check draft.md with seo lint and fix every error and warning. For each review it
 
 On the 24 drafts, `seo lint` flagged 97 AI pattern lines, at least one in every draft. All 24 rewrites ended at 0 errors and 0 warnings, at about 15 seconds and $0.05 a draft. The judge counted fewer tells in 22 of the 24 rewrites, and 139 in all against 212 in the drafts.
 
-To use it as your humanizer, install the CLI. `seo start` installs the SEO Skill in your agents, and the skill already knows to run `seo lint` on a draft:
-
-```sh
-npm i -g seo
-seo start
-```
-
-`seo lint` runs offline with no account. Point it at a file, or see every AI rule with its fix:
-
-```sh
-seo lint drafts/launch-post.md
-seo lint rules --only ai
-```
-
-Or add the hosted MCP server and ask your agent to check a draft with `seo_lint`. It signs you in with Google the first time, because its other tools read Search Console. In Claude Code:
-
-```sh
-claude mcp add --transport http seoskill https://seoskill.dev/mcp
-```
+To use it as your humanizer, give your agent that prompt. `seo lint` runs offline with no account, so an agent without SEO Skill can run it with `npx -y seo lint draft.md`. To keep it for every draft, give your agent the setup prompt at the end of this post. It installs the skill, which already knows to run `seo lint` on a draft, and the hosted server, which adds `seo_lint` for text that only exists in the chat. To see every AI rule with its fix, ask your agent to run `seo lint rules --only ai`.
 
 The [`seo lint` docs](/docs/lint) cover presets for landing pages and meta descriptions, and how to keep a flagged line on purpose. You can also copy rules from `seo lint rules` into your own skill and leave out the rest.
 

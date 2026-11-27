@@ -12,6 +12,8 @@ cover:
   alt: "Colourful hot-air balloons lift off at a sunset festival while partners climb into the baskets with bags of coins and a host hands out tickets."
 ---
 
+import { taskPrompt } from '@/content/setup-prompts'
+
 export const beforeRedirect = `<pre>GET https://dub.sh/pm33group   (a link that no longer exists)
   307 Temporary Redirect
   → https://dub.co/links
@@ -271,27 +273,9 @@ The marketplace is the biggest test. Once the canonicals point at it, Google has
 
 Everything in this teardown came from SEO Skill, run by an agent. You can run the same audit on your own site.
 
-**1. Connect the hosted MCP server.** It's free. You sign in with Google, and there's no password and nothing to install. In Claude Code:
+Give your agent this prompt. It is close to the one I used. If SEO Skill isn't connected yet, the agent sets it up first, with the free hosted MCP server, a Google sign-in and the CLI for the crawl. It asks you to save an Ahrefs or DataForSEO key on your [account page](/account), never in the chat. The key gives your agent search volumes, rankings and results pages, like the tables above. With DataForSEO it can also ask ChatGPT and Google's AI answers your questions and check who they cite.
 
-```sh
-claude mcp add --transport http seoskill https://seoskill.dev/mcp
-```
-
-Codex, Cursor and Claude on the web work too. The [MCP guide](/docs/mcp) has the steps for each one.
-
-**2. Add a research key.** On your [account page](/account), save an Ahrefs or DataForSEO key. The key gives your agent search volumes, rankings and results pages, like the tables above. With DataForSEO it can also ask ChatGPT and Google's AI answers your questions and check who they cite.
-
-**3. Install the CLI for crawling.** The crawl runs on your machine, so it can read any site:
-
-```sh
-npm i -g seo
-seo login
-```
-
-**4. Ask your agent.** This is close to the prompt I used:
-
-```prompt
-Audit example.com and every domain we use for links.
+<CodeBlock prompt value={taskPrompt(`Audit example.com and every domain we use for links.
 Crawl each one with seo crawl, and check what unknown
 addresses and short links return.
 For our biggest page, check which countries and
@@ -301,8 +285,7 @@ Use seo_research to find the searches our buyers make
 and who ranks for them.
 Ask ai_answers ten buyer questions for us and our top
 competitor, and say who gets cited.
-Rank the fixes by how much revenue each one is near.
-```
+Rank the fixes by how much revenue each one is near.`, 'research', true)} />
 
 On your own site, the hosted server adds your real Search Console clicks and queries, which I couldn't see from the outside. With those, you'd see the Indonesian impressions directly instead of through an estimate.
 

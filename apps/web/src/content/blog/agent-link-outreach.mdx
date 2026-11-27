@@ -28,7 +28,7 @@ Be honest with yourself here. Your own tool, data or guide has to be something y
 
 Start with the sites that already link to sites like yours. A site that links to two of your competitors has shown it will link to sites like yours, though not always to the kind of page you'd pitch:
 
-<AgentStep setup prompt="Which sites link to at least two of example.org, example.net and example.io but not to example.com? Put the strongest sites first." cli="seo research link_gap --target example.com --competitors example.org,example.net,example.io" />
+<AgentStep setup prompt="Which sites link to at least two of example.org, example.net and example.io but not to example.com? Put the strongest sites first." />
 
 This uses your own DataForSEO or Ahrefs key, with one backlinks call for your site and one for each competitor. It reads each site's top 1,000 referring domains, so smaller sites that link to your competitors can be missing. For one competitor, ask for its referring domains instead with `seo research backlinks --target example.org`.
 

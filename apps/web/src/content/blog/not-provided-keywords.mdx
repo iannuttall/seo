@@ -26,23 +26,23 @@ So the question you can answer is "which searches bring people to this page?". T
 
 Connect your Google account once and SEO Skill reads Search Console and Google Analytics with the same sign-in. It also reads landing pages from Clicky or Simple Analytics when you add their key. Start with the pages that get the most visits from search:
 
-<AgentStep setup prompt="Which pages on example.com get the most visits from organic search in my analytics, and which Google searches bring people to each one?" cli="seo analytics google report --property 123456789" />
+<AgentStep setup prompt="Which pages on example.com get the most visits from organic search in my analytics, and which Google searches bring people to each one?" />
 
 Your agent reads the landing pages from your analytics, then asks Search Console for each page's searches. Google Analytics splits landing pages by channel, so it can list the pages people reach from search. Clicky and Simple Analytics count each landing page's visits from every source, so read their top pages as your busiest pages overall, not only from search. With Clicky the first command is `seo data --source clicky --site example.com`.
 
 In a terminal it's two commands: `seo analytics google properties` lists your property numbers for the first, and this gives every page with its searches:
 
-<AgentStep prompt="List the Google searches for every page on example.com, with clicks and position." cli="seo data --site example.com --dimensions page,query" />
+<AgentStep prompt="List the Google searches for every page on example.com, with clicks and position." />
 
 For one page, ask for its searches directly:
 
-<AgentStep prompt="Show me the Google searches that bring people to example.com/pricing, with clicks, impressions and position." cli="seo page --url https://example.com/pricing" />
+<AgentStep prompt="Show me the Google searches that bring people to example.com/pricing, with clicks, impressions and position." />
 
 That gives every search Search Console lists for the page, with the previous period beside it, plus a live check of the page itself.
 
 To see which searches land on pages that earn sign-ups or sales, ask for the report's quick wins. When the site's Google Analytics property records key events, the report lists the pages with key events from organic search first. Those counts cover the whole page, whichever search brought each visit:
 
-<AgentStep prompt="Which of my quick wins in Search Console are on pages that bring key events in Google Analytics?" cli="seo report --site example.com --section quick-wins" />
+<AgentStep prompt="Which of my quick wins in Search Console are on pages that bring key events in Google Analytics?" />
 
 ## How much of a page's traffic Search Console can name
 

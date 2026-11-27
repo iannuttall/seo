@@ -3,7 +3,7 @@ import Breadcrumbs from '@/components/Breadcrumbs.astro'
 import CodeBlock from '@/components/CodeBlock.astro'
 import FaqAccordion from '@/components/FaqAccordion.astro'
 import PageHeader from '@/components/PageHeader.astro'
-import SetupCommands from '@/components/SetupCommands.astro'
+import SetupPrompts from '@/components/SetupPrompts.astro'
 import InternalLinksExplorer from '@/components/tools/InternalLinksExplorer.astro'
 import BaseLayout from '@/layouts/BaseLayout.astro'
 import { ONLINE_LIMITS } from '@/lib/internal-links-tool'
@@ -217,12 +217,10 @@ const faq = [
         crawl. A person approves every change. Ask:
       </p>
       <CodeBlock value="Run seo internal-links on example.com, open the strong suggestions, and add each link to the source page in the sentence it names. Show me the diff before you save." wrap />
-      <p>Install the CLI and run setup. The command runs from the CLI or the local MCP server:</p>
-      <CodeBlock value="npm i -g seo && seo start" wrap />
-      <p>Or add the hosted MCP server for the rest of your data and sign in with Google:</p>
+      <p>The command runs from the CLI or the local MCP server. Give your agent this prompt and it installs the CLI and adds the hosted MCP server:</p>
     </div>
 
-    <SetupCommands id="internal-links-setup" class="mt-6" />
+    <SetupPrompts id="internal-links-setup" class="mt-6" />
 
     <div class="docs-prose mt-16">
       <h2>Internal linking questions</h2>

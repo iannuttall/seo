@@ -3,7 +3,7 @@ import Breadcrumbs from '@/components/Breadcrumbs.astro'
 import CodeBlock from '@/components/CodeBlock.astro'
 import FaqAccordion from '@/components/FaqAccordion.astro'
 import PageHeader from '@/components/PageHeader.astro'
-import SetupCommands from '@/components/SetupCommands.astro'
+import SetupPrompts from '@/components/SetupPrompts.astro'
 import KeywordClusteringTool from '@/components/tools/KeywordClusteringTool.astro'
 import BaseLayout from '@/layouts/BaseLayout.astro'
 import type { SchemaBreadcrumb } from '@/lib/schema'
@@ -120,10 +120,10 @@ const faq = [
         Search Console. Ask:
       </p>
       <CodeBlock value="Compare the Google results for coffee grinder, best coffee grinder, burr coffee grinder and how to grind coffee beans. Which belong on one page on example.com?" wrap />
-      <p>Add the hosted MCP server to your agent and sign in with Google:</p>
+      <p>To set it up, give your agent this prompt:</p>
     </div>
 
-    <SetupCommands id="keyword-clustering-setup" class="mt-6" />
+    <SetupPrompts id="keyword-clustering-setup" class="mt-6" />
 
     <div class="docs-prose mt-16">
       <h2>Keyword clustering tool questions</h2>

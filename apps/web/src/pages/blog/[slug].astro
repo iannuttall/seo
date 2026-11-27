@@ -3,7 +3,7 @@ import { render } from 'astro:content'
 import Breadcrumbs from '@/components/Breadcrumbs.astro'
 import FounderBadge from '@/components/FounderBadge.astro'
 import PageHeader from '@/components/PageHeader.astro'
-import SetupCommands from '@/components/SetupCommands.astro'
+import SetupPrompts from '@/components/SetupPrompts.astro'
 import { getButtonClasses } from '@/components/ui/button'
 import { blogMdxComponents } from '@/components/blog/mdx'
 import BaseLayout from '@/layouts/BaseLayout.astro'
@@ -86,7 +86,7 @@ const breadcrumbs: SchemaBreadcrumb[] = [
         Give your AI agent your real Search Console, Google Analytics and Bing data, so its answers about search come from your own numbers instead of a guess.
       </p>
       <a class:list={[getButtonClasses('default', 'lg'), 'mt-6']} href="/account">Get started free</a>
-      <SetupCommands id="post-setup" class="mt-8 text-left" />
+      <SetupPrompts id="post-setup" class="mt-8 text-left" />
     </section>
   </main>
 </BaseLayout>

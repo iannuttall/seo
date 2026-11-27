@@ -3,7 +3,7 @@ import Breadcrumbs from '@/components/Breadcrumbs.astro'
 import CodeBlock from '@/components/CodeBlock.astro'
 import FaqAccordion from '@/components/FaqAccordion.astro'
 import PageHeader from '@/components/PageHeader.astro'
-import SetupCommands from '@/components/SetupCommands.astro'
+import SetupPrompts from '@/components/SetupPrompts.astro'
 import WebsiteTrafficChecker from '@/components/tools/WebsiteTrafficChecker.astro'
 import BaseLayout from '@/layouts/BaseLayout.astro'
 import type { SchemaBreadcrumb } from '@/lib/schema'
@@ -202,12 +202,10 @@ const faq = [
         answer. Ask:
       </p>
       <CodeBlock value="Compare my Search Console clicks for example.com with the estimated organic traffic for competitor.example, and show which of their top pages I have no equivalent for" wrap />
-      <p>
-        Add the hosted MCP server to your agent and sign in with Google:
-      </p>
+      <p>To set it up, give your agent this prompt:</p>
     </div>
 
-    <SetupCommands id="traffic-setup" class="mt-6" />
+    <SetupPrompts id="traffic-setup" class="mt-6" />
 
     <div class="docs-prose mt-16">
       <h2>Website traffic questions</h2>

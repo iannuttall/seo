@@ -3,7 +3,7 @@ import Breadcrumbs from '@/components/Breadcrumbs.astro'
 import CodeBlock from '@/components/CodeBlock.astro'
 import FaqAccordion from '@/components/FaqAccordion.astro'
 import PageHeader from '@/components/PageHeader.astro'
-import SetupCommands from '@/components/SetupCommands.astro'
+import SetupPrompts from '@/components/SetupPrompts.astro'
 import ResearchLookup from '@/components/tools/ResearchLookup.astro'
 import BaseLayout from '@/layouts/BaseLayout.astro'
 import type { SchemaBreadcrumb } from '@/lib/schema'
@@ -139,10 +139,10 @@ const faq = [
         is never mixed into your own numbers. Ask:
       </p>
       <CodeBlock value="Which keywords does competitor.example rank for in the top 10 that example.com gets no Search Console impressions for? Group them by topic." wrap />
-      <p>Add the hosted MCP server to your agent and sign in with Google:</p>
+      <p>To set it up, give your agent this prompt:</p>
     </div>
 
-    <SetupCommands id="competitor-setup" class="mt-6" />
+    <SetupPrompts id="competitor-setup" class="mt-6" />
 
     <div class="docs-prose mt-16">
       <h2>Competitor keyword questions</h2>

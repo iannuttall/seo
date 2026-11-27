@@ -1,7 +1,7 @@
 ---
 import CodeBlock from '@/components/CodeBlock.astro'
 import FaqAccordion from '@/components/FaqAccordion.astro'
-import SetupCommands from '@/components/SetupCommands.astro'
+import SetupPrompts from '@/components/SetupPrompts.astro'
 import Breadcrumbs from '@/components/Breadcrumbs.astro'
 import PageHeader from '@/components/PageHeader.astro'
 import FaviconChecker from '@/components/tools/FaviconChecker.astro'
@@ -169,10 +169,10 @@ const faq = [
         you deploy. Ask your agent:
       </p>
       <CodeBlock value="Make favicon files at 16, 32, 48 and 180 pixels and a 512 pixel manifest icon from logo.svg, and add the right link tags to the site layout" wrap />
-      <p>Add the hosted MCP server to your agent and sign in with Google:</p>
+      <p>To set it up, give your agent this prompt:</p>
     </div>
 
-    <SetupCommands id="favicon-checker-setup" class="mt-6" />
+    <SetupPrompts id="favicon-checker-setup" class="mt-6" />
 
     <div class="docs-prose mt-16">
       <h2>Favicon questions</h2>

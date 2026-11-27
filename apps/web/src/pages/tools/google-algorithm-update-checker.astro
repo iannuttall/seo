@@ -1,7 +1,7 @@
 ---
 import Breadcrumbs from '@/components/Breadcrumbs.astro'
 import PageHeader from '@/components/PageHeader.astro'
-import SetupCommands from '@/components/SetupCommands.astro'
+import SetupPrompts from '@/components/SetupPrompts.astro'
 import GoogleUpdateChecker from '@/components/tools/GoogleUpdateChecker.astro'
 import BaseLayout from '@/layouts/BaseLayout.astro'
 import type { SchemaBreadcrumb } from '@/lib/schema'
@@ -107,6 +107,6 @@ const breadcrumbs: SchemaBreadcrumb[] = [
       </p>
     </div>
 
-    <SetupCommands id="update-checker-setup" class="mt-6" />
+    <SetupPrompts id="update-checker-setup" class="mt-6" />
   </main>
 </BaseLayout>

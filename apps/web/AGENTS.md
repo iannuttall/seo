@@ -37,8 +37,11 @@ write any site copy, metadata included.
   site.
 - `/.well-known/agent-skills/` is generated from `skills/`. Never hand-edit
   or commit it.
-- Teach `npm i -g seo` then `seo start`, and the hosted MCP next to it. Keep
-  hosted facts in step with `apps/mcp/README.md`. Credit Domain Rating as
+- Setup boxes give the person a prompt for their agent
+  (`src/content/setup-prompts.ts`): it installs the CLI, adds the hosted MCP,
+  signs them in and works through the MCP. Docs still teach `npm i -g seo`
+  then `seo start` for people who run it themselves. Keep hosted facts in
+  step with `apps/mcp/README.md`. Credit Domain Rating as
   Domain Rating by Ahrefs with a link.
 - Copy says what the product gives today. No "coming next", no earlier
   versions of the product, and no sections built on what other tools get

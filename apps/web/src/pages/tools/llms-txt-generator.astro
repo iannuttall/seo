@@ -1,7 +1,7 @@
 ---
 import CodeBlock from '@/components/CodeBlock.astro'
 import FaqAccordion from '@/components/FaqAccordion.astro'
-import SetupCommands from '@/components/SetupCommands.astro'
+import SetupPrompts from '@/components/SetupPrompts.astro'
 import PageHeader from '@/components/PageHeader.astro'
 import LlmsTxtGenerator from '@/components/tools/LlmsTxtGenerator.astro'
 import BaseLayout from '@/layouts/BaseLayout.astro'
@@ -149,12 +149,10 @@ const faq = [
         codebase when pages move. Ask:
       </p>
       <CodeBlock value="Check whether example.com has an llms.txt with working links, and list the pages that are missing from it" wrap />
-      <p>The crawl runs from the CLI on your machine. Install it and run setup:</p>
-      <CodeBlock value="npm i -g seo && seo start" wrap />
-      <p>Or add the hosted MCP server to your agent and sign in with Google:</p>
+      <p>The crawl runs from the CLI on your machine. Give your agent this prompt and it installs the CLI and adds the hosted MCP server:</p>
     </div>
 
-    <SetupCommands id="llms-txt-generator-setup" class="mt-6" />
+    <SetupPrompts id="llms-txt-generator-setup" class="mt-6" />
 
     <div class="docs-prose mt-16">
       <h2>llms.txt generator questions</h2>

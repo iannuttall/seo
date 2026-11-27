@@ -42,11 +42,3 @@ export const shortCount = (value: number) =>
   value >= 1000
     ? `${(value / 1000).toFixed(1).replace(/\.0$/, '')}k`
     : `${value}`
-
-/** The commands people copy to connect or install. */
-export const setupCommands = {
-  claude: 'claude mcp add --transport http seoskill https://seoskill.dev/mcp',
-  codex: 'codex mcp add seoskill --url https://seoskill.dev/mcp',
-  url: 'https://seoskill.dev/mcp',
-  install: 'npm i -g seo && seo start',
-} as const

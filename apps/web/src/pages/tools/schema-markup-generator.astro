@@ -3,7 +3,7 @@ import Breadcrumbs from '@/components/Breadcrumbs.astro'
 import CodeBlock from '@/components/CodeBlock.astro'
 import FaqAccordion from '@/components/FaqAccordion.astro'
 import PageHeader from '@/components/PageHeader.astro'
-import SetupCommands from '@/components/SetupCommands.astro'
+import SetupPrompts from '@/components/SetupPrompts.astro'
 import SchemaMarkupGenerator from '@/components/tools/SchemaMarkupGenerator.astro'
 import BaseLayout from '@/layouts/BaseLayout.astro'
 import type { SchemaBreadcrumb } from '@/lib/schema'
@@ -174,14 +174,10 @@ const faq = [
         template in your codebase, using the page’s own fields. Ask:
       </p>
       <CodeBlock value="Crawl example.com, find the product pages with no structured data, and add Product JSON-LD to the product template" wrap />
-      <p>
-        The crawl runs from the CLI on your machine:
-      </p>
-      <CodeBlock value="npm i -g seo && seo start" wrap />
-      <p>Or add the hosted MCP server to your agent:</p>
+      <p>The crawl runs from the CLI on your machine. Give your agent this prompt and it installs the CLI and adds the hosted MCP server:</p>
     </div>
 
-    <SetupCommands id="schema-generator-setup" class="mt-6" />
+    <SetupPrompts id="schema-generator-setup" class="mt-6" />
 
     <div class="docs-prose mt-16">
       <h2>Schema generator questions</h2>

@@ -3,7 +3,7 @@ import Breadcrumbs from '@/components/Breadcrumbs.astro'
 import CodeBlock from '@/components/CodeBlock.astro'
 import FaqAccordion from '@/components/FaqAccordion.astro'
 import PageHeader from '@/components/PageHeader.astro'
-import SetupCommands from '@/components/SetupCommands.astro'
+import SetupPrompts from '@/components/SetupPrompts.astro'
 import OpenGraphChecker from '@/components/tools/OpenGraphChecker.astro'
 import BaseLayout from '@/layouts/BaseLayout.astro'
 import type { SchemaBreadcrumb } from '@/lib/schema'
@@ -214,12 +214,10 @@ const faq = [
         check one page here before it ships. Ask:
       </p>
       <CodeBlock value="Crawl example.com and list the pages missing og:image or twitter:card, grouped by template" wrap />
-      <p>The crawl runs from the CLI on your machine. Install it and run setup:</p>
-      <CodeBlock value="npm i -g seo && seo start" wrap />
-      <p>Or add the hosted MCP server to your agent and sign in with Google:</p>
+      <p>The crawl runs from the CLI on your machine. Give your agent this prompt and it installs the CLI and adds the hosted MCP server:</p>
     </div>
 
-    <SetupCommands id="open-graph-setup" class="mt-6" />
+    <SetupPrompts id="open-graph-setup" class="mt-6" />
 
     <div class="docs-prose mt-16">
       <h2>Open Graph questions</h2>

@@ -1,0 +1,211 @@
+---
+import {
+  AiChat02Icon,
+  Analytics01Icon,
+  Building03Icon,
+  ChartLineData01Icon,
+  CloudServerIcon,
+  DatabaseIcon,
+  FileSearchIcon,
+  Robot01Icon,
+  SearchList01Icon,
+  ShoppingBag01Icon,
+} from '@hugeicons/core-free-icons'
+import CodeBlock from '@/components/CodeBlock.astro'
+import FaqAccordion from '@/components/FaqAccordion.astro'
+import HomeCard from '@/components/HomeCard.astro'
+import LandingHero from '@/components/LandingHero.astro'
+import SectionHeading from '@/components/SectionHeading.astro'
+import { checked, seoSkillTracker, sources, trackers } from '@/content/ai-visibility-trackers'
+import BaseLayout from '@/layouts/BaseLayout.astro'
+import type { SchemaBreadcrumb } from '@/lib/schema'
+
+const breadcrumbs: SchemaBreadcrumb[] = [
+  { label: 'Home', href: '/' },
+  { label: 'Alternatives', href: '/alternatives' },
+  { label: 'Profound alternatives' },
+]
+
+const { peec, profound, otterly, brandRadar } = trackers
+
+const profoundDoes = [
+  { title: 'Ten engines', text: 'ChatGPT, Perplexity, Claude, Gemini, DeepSeek, AI Overviews, AI Mode, Exa, Muse Spark and Qwen.', icon: AiChat02Icon },
+  { title: 'An AI Marketer that does the work', text: 'It picks the pages to change, drafts rewrites and new pages, and stages them in your CMS for approval.', icon: Robot01Icon },
+  { title: 'Agent Analytics from your logs', text: 'AI bot visits read from AWS, Akamai, Cloudflare, Fastly or Google Cloud logs, with spoofed bots filtered out.', icon: Analytics01Icon },
+  { title: 'Shopping and FactCheck', text: 'How products show in ChatGPT Shopping, and where AI answers say something wrong about you.', icon: ShoppingBag01Icon },
+  { title: 'Built for large teams', text: 'SSO, role-based access, SCIM and SOC 2 Type II. Its MCP server is on the Enterprise plan.', icon: Building03Icon },
+  { title: 'Prompt volumes', text: 'What people ask AI in your category, from real user conversations.', icon: ChartLineData01Icon },
+]
+
+const rows = [
+  { label: 'Engines', profound: profound.engines, peec: peec.engines, ours: seoSkillTracker.engines },
+  { label: 'How often', profound: profound.cadence, peec: peec.cadence, ours: seoSkillTracker.cadence },
+  { label: 'What it measures', profound: profound.extras, peec: peec.extras, ours: seoSkillTracker.extras },
+  { label: 'Who does the work', profound: profound.doesTheWork, peec: peec.doesTheWork, ours: seoSkillTracker.doesTheWork },
+  { label: 'MCP', profound: profound.mcp, peec: peec.mcp, ours: seoSkillTracker.mcp },
+]
+
+const options = [
+  { title: 'SEO Skill', text: 'Pick it if you want the work Profound’s agents do done by your own coding agent, in your own codebase, with your Search Console beside the AI answers.', icon: Robot01Icon, href: '/features/ai-visibility-checker', link: 'See the AI visibility checker' },
+  { title: peec.name, text: `Pick it if ${peec.pickIf[0]}, or ${peec.pickIf[1]}.`, icon: ChartLineData01Icon, href: '/alternatives/peec-ai', link: 'Peec AI alternatives' },
+  { title: otterly.name, text: `Pick it if ${otterly.pickIf[0]}, or ${otterly.pickIf[1]}.`, icon: Analytics01Icon, href: otterly.url, link: 'Visit otterly.ai' },
+  { title: brandRadar.name, text: `Pick it if ${brandRadar.pickIf[0]}, or ${brandRadar.pickIf[1]}.`, icon: DatabaseIcon, href: brandRadar.url, link: 'Visit Brand Radar' },
+]
+
+const crawlerTools = [
+  { title: 'robots.txt checker', text: 'Which search, AI search and training crawlers each URL lets in, and the line that decides it.', icon: Robot01Icon, href: '/tools/robots-txt-validator', link: 'Check robots.txt' },
+  { title: 'Server log analyzer', text: 'Drop in an access log and see which AI crawlers asked for which pages. It runs in your browser, so the log stays with you.', icon: FileSearchIcon, href: '/tools/server-log-analyzer', link: 'Analyze a log' },
+]
+
+const faq = [
+  {
+    question: 'What is Profound?',
+    answer:
+      'Profound is an AI marketing platform for large brands. It tracks how ten AI engines answer prompts about your category, reads AI bot visits from your server logs, and runs agents that draft and stage content for your team to approve.',
+  },
+  {
+    question: 'Profound vs Peec AI: which is better?',
+    answer:
+      'They suit different teams. Peec AI is a simpler daily tracker with an MCP server, a Looker Studio connector and white-label client reports. Profound covers more engines and adds bot logs, ChatGPT Shopping and agents that write content, with the controls a large company asks for.',
+  },
+  {
+    question: 'Is there a free alternative to Profound?',
+    answer:
+      'SEO Skill is free and its CLI is open source. Its AI answer check runs on your own DataForSEO account, which bills you for each check, and SEO Skill adds nothing on top. Instead of Profound’s agents, your own coding agent makes the changes.',
+  },
+  {
+    question: 'Does Profound track AI crawlers?',
+    answer:
+      'Yes. Profound’s Agent Analytics reads AI bot visits from your CDN or server logs. Without log forwarding, SEO Skill’s robots.txt checker shows which crawlers each URL lets in, and its server log analyzer reads an access log in your browser.',
+  },
+  {
+    question: 'Can I use Profound from Claude or ChatGPT?',
+    answer:
+      'Yes, through Profound’s hosted MCP server, which is on its Enterprise plan. SEO Skill is an MCP server for any plan: add it to Claude, ChatGPT, Claude Code, Codex or Cursor and it fetches the AI answers itself.',
+  },
+]
+---
+
+<BaseLayout
+  title="Profound alternatives, and Profound vs Peec AI"
+  description="Profound alternatives for tracking AI answers, plus Profound vs Peec AI on engines, what they measure and who does the work. Facts from each tool's site."
+  canonicalPath="/alternatives/profound"
+  {breadcrumbs}
+  framed={false}
+>
+  <main data-agent-content>
+    <LandingHero
+      title="Profound alternatives"
+      lead="Profound tracks ten AI engines and runs agents that do the content work for large teams. Here is how it compares with Peec AI, the alternatives for each job, and how to do the same work with your own agent."
+      setupId="profound-alternatives-setup"
+    />
+
+    <div class="space-y-24 py-24 sm:space-y-32 sm:py-32">
+      <section class="site-frame" aria-labelledby="profound-heading">
+        <SectionHeading
+          id="profound-heading"
+          title="What Profound does"
+          text={`More than a tracker: it measures, then drafts the fixes. From Profound’s own pages, read on ${checked}.`}
+        />
+        <div class="grid grid-cols-1 gap-2 sm:grid-cols-2">
+          {profoundDoes.map((item) => <HomeCard {...item} />)}
+        </div>
+      </section>
+
+      <section class="site-frame" aria-labelledby="versus-heading">
+        <SectionHeading
+          id="versus-heading"
+          title="Profound vs Peec AI vs SEO Skill"
+          text="Peec AI watches. Profound watches and drafts the work. SEO Skill checks, then your own agent does the work in your codebase."
+        />
+        <div class="docs-prose max-w-5xl">
+          <table>
+            <thead>
+              <tr><th></th><th>Profound</th><th>Peec AI</th><th>SEO Skill</th></tr>
+            </thead>
+            <tbody>
+              {rows.map((row) => (
+                <tr><th scope="row">{row.label}</th><td>{row.profound}</td><td>{row.peec}</td><td>{row.ours}</td></tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      </section>
+
+      <section class="site-frame" aria-labelledby="options-heading">
+        <SectionHeading
+          id="options-heading"
+          title="Profound alternatives, by the job you need"
+          text="Most teams need one of these jobs done well, not all of them at once."
+        />
+        <div class="grid grid-cols-1 gap-2 sm:grid-cols-2">
+          {options.map((item) => <HomeCard {...item} />)}
+        </div>
+      </section>
+
+      <section class="site-frame" aria-labelledby="agent-heading">
+        <SectionHeading
+          id="agent-heading"
+          title="Let your own agent do the work"
+          text="Profound’s agents draft pages inside Profound. With SEO Skill, the agent you already code with checks the answers, then edits the page in your repository."
+        />
+        <div class="docs-prose max-w-3xl">
+          <p>
+            The agent asks each question on ChatGPT, Gemini, AI Mode and AI
+            Overviews up to five times, reads which sites they cite, and
+            judges your competitors on the same answers. For ChatGPT it also
+            lists the web searches it ran to write the answer, which are the
+            searches a page has to show up in. Then it opens the page
+            that should answer the question and changes it. Ask:
+          </p>
+          <CodeBlock prompt value="Ask ChatGPT, Gemini and Google's AI answers our top buyer questions three times each and show who they cite. Then update the page on example.com that should answer the question we lose most, and open a pull request." wrap />
+          <p>
+            Save the questions in your business context and each run is kept,
+            so the <a href="/docs/report">progress report</a> shows the rate
+            from the first check to the latest.
+          </p>
+        </div>
+      </section>
+
+      <section class="site-frame" aria-labelledby="crawlers-heading">
+        <SectionHeading
+          id="crawlers-heading"
+          title="See AI crawlers without forwarding your logs"
+          text="An AI answer can only cite a page its crawler can read. Check that first, for free."
+        />
+        <div class="grid grid-cols-1 gap-2 sm:grid-cols-2">
+          {crawlerTools.map((item) => <HomeCard {...item} />)}
+        </div>
+      </section>
+
+      <section class="site-frame" aria-labelledby="profound-faq">
+        <SectionHeading
+          id="profound-faq"
+          title="Questions about Profound alternatives"
+          text="What people ask when they compare AI visibility platforms."
+        />
+        <FaqAccordion id="profound-faq-list" items={faq} />
+      </section>
+
+      <section class="site-frame" aria-labelledby="more-heading">
+        <SectionHeading
+          id="more-heading"
+          title="More on AI visibility"
+          text="The other comparison, and where AI search shows in your own data."
+        />
+        <div class="grid grid-cols-1 gap-2 sm:grid-cols-2">
+          <HomeCard title="Peec AI alternatives" text="What Peec AI does well, the alternatives for each job, and Peec AI next to SEO Skill." icon={CloudServerIcon} href="/alternatives/peec-ai" link="Peec AI alternatives" />
+          <HomeCard title="AI search tracking" text="The questions people ask AI that show in your Search Console, visits from AI assistants and crawler access." icon={SearchList01Icon} href="/features/ai-search" link="See AI search tracking" />
+        </div>
+        <div class="docs-prose mt-10 max-w-3xl text-sm">
+          <p>Where these facts come from, read on {checked}:</p>
+          <ul>
+            {sources.map((source) => (
+              <li><a href={source.url} target="_blank" rel="noreferrer">{source.fact}</a></li>
+            ))}
+          </ul>
+        </div>
+      </section>
+    </div>
+  </main>
+</BaseLayout>

@@ -29,6 +29,15 @@ const alternativePaths = [
   ...readdirSync(resolve(appRoot, 'src/content/alternatives'))
     .filter((file) => file.endsWith('.json'))
     .map((file) => `/alternatives/${file.replace(/\.json$/, '')}`),
+  // Landing pages written by hand, such as /alternatives/peec-ai.
+  ...readdirSync(resolve(appRoot, 'src/pages/alternatives'))
+    .filter(
+      (file) =>
+        file.endsWith('.astro') &&
+        file !== 'index.astro' &&
+        !file.startsWith('['),
+    )
+    .map((file) => `/alternatives/${file.replace(/\.astro$/, '')}`),
 ]
 const featurePaths = [
   '/features',

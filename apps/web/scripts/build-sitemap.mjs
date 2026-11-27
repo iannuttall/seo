@@ -17,6 +17,18 @@ const alternativePaths = [
     .filter((file) => file.endsWith('.json'))
     .sort()
     .map((file) => `/alternatives/${file.replace(/\.json$/, '')}`),
+  // Landing pages written by hand, such as /alternatives/peec-ai.
+  ...readdirSync(
+    resolve(import.meta.dirname, '..', 'src', 'pages', 'alternatives'),
+  )
+    .filter(
+      (file) =>
+        file.endsWith('.astro') &&
+        file !== 'index.astro' &&
+        !file.startsWith('['),
+    )
+    .sort()
+    .map((file) => `/alternatives/${file.replace(/\.astro$/, '')}`),
 ]
 // One feature page for each file in src/pages/features.
 const featurePaths = [

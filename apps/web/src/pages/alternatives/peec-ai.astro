@@ -1,0 +1,220 @@
+---
+import {
+  AiChat02Icon,
+  Analytics01Icon,
+  ChartLineData01Icon,
+  Clock01Icon,
+  CloudServerIcon,
+  DatabaseIcon,
+  PlugSocketIcon,
+  Robot01Icon,
+  SearchList01Icon,
+} from '@hugeicons/core-free-icons'
+import PlanSteps from '@/components/blog/PlanSteps.astro'
+import CodeBlock from '@/components/CodeBlock.astro'
+import FaqAccordion from '@/components/FaqAccordion.astro'
+import HomeCard from '@/components/HomeCard.astro'
+import LandingHero from '@/components/LandingHero.astro'
+import SectionHeading from '@/components/SectionHeading.astro'
+import { checked, seoSkillTracker, sources, trackers } from '@/content/ai-visibility-trackers'
+import BaseLayout from '@/layouts/BaseLayout.astro'
+import type { SchemaBreadcrumb } from '@/lib/schema'
+
+const breadcrumbs: SchemaBreadcrumb[] = [
+  { label: 'Home', href: '/' },
+  { label: 'Alternatives', href: '/alternatives' },
+  { label: 'Peec AI alternatives' },
+]
+
+const { peec, profound, otterly, brandRadar } = trackers
+
+const peecDoes = [
+  { title: 'Six engines on every plan', text: 'ChatGPT, Perplexity, Gemini, AI Overviews, AI Mode and Bing AI Mode, with Claude, Grok and others as add-ons.', icon: AiChat02Icon },
+  { title: 'Every prompt, every day', text: 'Each prompt runs once a day on each engine you pick, so the trend lines compare like with like.', icon: Clock01Icon },
+  { title: 'Scores for you and each competitor', text: 'How often each answer names you, where in the answer and in what tone, with the sources it used, by engine, country and tag.', icon: ChartLineData01Icon },
+  { title: 'An MCP server and Looker Studio', text: 'Ask about your Peec data from Claude, ChatGPT or Cursor, or pull it into client dashboards.', icon: PlugSocketIcon },
+]
+
+const options = [
+  { title: 'SEO Skill', text: 'Pick it if you want your own agent to check the answers and then fix the pages, starting from the questions already in your Search Console.', icon: Robot01Icon, href: '/features/ai-visibility-checker', link: 'See the AI visibility checker' },
+  { title: profound.name, text: `Pick it if ${profound.pickIf[0]}, or ${profound.pickIf[1]}.`, icon: CloudServerIcon, href: '/alternatives/profound', link: 'Profound alternatives' },
+  { title: otterly.name, text: `Pick it if ${otterly.pickIf[0]}, or ${otterly.pickIf[1]}.`, icon: Analytics01Icon, href: otterly.url, link: 'Visit otterly.ai' },
+  { title: brandRadar.name, text: `Pick it if ${brandRadar.pickIf[0]}, or ${brandRadar.pickIf[1]}.`, icon: DatabaseIcon, href: brandRadar.url, link: 'Visit Brand Radar' },
+]
+
+const rows = [
+  { label: 'Engines', peec: peec.engines, ours: seoSkillTracker.engines },
+  { label: 'How often', peec: peec.cadence, ours: seoSkillTracker.cadence },
+  { label: 'What it measures', peec: peec.extras, ours: seoSkillTracker.extras },
+  { label: 'Who does the work', peec: peec.doesTheWork, ours: seoSkillTracker.doesTheWork },
+  { label: 'MCP', peec: peec.mcp, ours: seoSkillTracker.mcp },
+]
+
+const steps = [
+  { title: 'Start from real questions', body: 'Your agent pulls the chat-style questions people already searched from your Search Console, then adds the ones your buyers ask you.' },
+  { title: 'Ask each engine more than once', body: 'Each question goes to ChatGPT, Gemini, AI Mode and AI Overviews up to five times, so you get a rate instead of one lucky answer.' },
+  { title: 'Read who gets cited instead', body: 'Every answer lists the sites it cited, and your competitors are judged on the same answers at no extra cost.' },
+  { title: 'Fix the page that should win', body: 'Your agent edits the page in your codebase, or finds the cited pages that name competitors and not you.' },
+  { title: 'Ask again', body: 'The next run is kept beside the first, so you can see whether the change moved the rate.' },
+]
+
+const faq = [
+  {
+    question: 'What is Peec AI?',
+    answer:
+      'Peec AI is an AI search analytics tool for marketing teams. It runs a set of prompts on ChatGPT, Perplexity, Gemini and Google’s AI answers every day, and shows how often each one names your brand, in what position and in what tone.',
+  },
+  {
+    question: 'What is the best Peec AI alternative?',
+    answer:
+      'It depends on the job. For a bigger team that wants content drafted and bot logs read, look at Profound. For a simple daily tracker with Copilot and Claude, look at Otterly.AI. To check the answers and fix the pages with your own agent, use SEO Skill.',
+  },
+  {
+    question: 'Is there a free Peec AI alternative?',
+    answer:
+      'SEO Skill is free and its CLI is open source. The AI answer check runs on your own DataForSEO account, which bills you for each check, and SEO Skill adds nothing on top. It runs when you ask rather than every day, so it suits checking and fixing more than a daily dashboard.',
+  },
+  {
+    question: 'Does Peec AI have an MCP server?',
+    answer:
+      'Yes. Peec AI has a hosted MCP server for Claude, ChatGPT, Cursor, VS Code, Windsurf and Codex, which reads your Peec projects. SEO Skill is an MCP server too, but it fetches the AI answers itself and can also read your Search Console and crawl your site.',
+  },
+  {
+    question: 'How is SEO Skill different from Peec AI?',
+    answer:
+      'Peec AI measures AI visibility every day and shows it in a dashboard. SEO Skill checks it when your agent asks, then gives the same agent your Search Console, a site crawl and your pages, so the fix happens in the same conversation.',
+  },
+]
+---
+
+<BaseLayout
+  title="Peec AI alternatives: AI visibility trackers by job"
+  description="Peec AI alternatives for tracking AI answers, compared on engines, how often they run, what they measure and who does the work. Facts from each tool's own site."
+  canonicalPath="/alternatives/peec-ai"
+  {breadcrumbs}
+  framed={false}
+>
+  <main data-agent-content>
+    <LandingHero
+      title="Peec AI alternatives"
+      lead="Peec AI tracks how often AI answers name your brand, every day, in a dashboard. Here is what it does well, the alternatives for each job, and how to check and fix your AI visibility with your own agent."
+      setupId="peec-alternatives-setup"
+    />
+
+    <div class="space-y-24 py-24 sm:space-y-32 sm:py-32">
+      <section class="site-frame" aria-labelledby="peec-heading">
+        <SectionHeading
+          id="peec-heading"
+          title="What Peec AI does well"
+          text={`A clean daily tracker for marketing teams and agencies. From Peec AI’s own pages, read on ${checked}.`}
+        />
+        <div class="grid grid-cols-1 gap-2 sm:grid-cols-2">
+          {peecDoes.map((item) => <HomeCard {...item} />)}
+        </div>
+      </section>
+
+      <section class="site-frame" aria-labelledby="options-heading">
+        <SectionHeading
+          id="options-heading"
+          title="Peec AI alternatives, by the job you need"
+          text="Each tool answers a different question. Pick the one that matches the work you will do with the numbers."
+        />
+        <div class="grid grid-cols-1 gap-2 sm:grid-cols-2">
+          {options.map((item) => <HomeCard {...item} />)}
+        </div>
+      </section>
+
+      <section class="site-frame" aria-labelledby="compare-heading">
+        <SectionHeading
+          id="compare-heading"
+          title="Peec AI and SEO Skill side by side"
+          text="Peec AI is built to watch. SEO Skill is built to check, then fix."
+        />
+        <div class="docs-prose max-w-4xl">
+          <table>
+            <thead>
+              <tr><th></th><th>Peec AI</th><th>SEO Skill</th></tr>
+            </thead>
+            <tbody>
+              {rows.map((row) => (
+                <tr><th scope="row">{row.label}</th><td>{row.peec}</td><td>{row.ours}</td></tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      </section>
+
+      <section class="site-frame" aria-labelledby="own-data-heading">
+        <SectionHeading
+          id="own-data-heading"
+          title="Start from the questions people already ask"
+          text="A tracker runs the prompts you give it. Your Search Console already holds the ones real people typed into AI Mode and AI assistants."
+        />
+        <div class="grid grid-cols-1 gap-2 sm:grid-cols-2">
+          <div class="rounded-lg bg-muted p-6">
+            <p class="text-4xl font-medium tabular-nums -tracking-[0.8px]">98</p>
+            <p class="mt-3 text-base leading-7 text-foreground-muted">AI-shaped searches in seoskill.dev’s Search Console over 90 days: long questions, follow-ups and agent prompts.</p>
+          </div>
+          <div class="rounded-lg bg-muted p-6">
+            <p class="text-4xl font-medium tabular-nums -tracking-[0.8px]">23</p>
+            <p class="mt-3 text-base leading-7 text-foreground-muted">Follow-up questions that reached one page on one day, such as “how many hits does this website get” and “how many visits does this website get”.</p>
+          </div>
+        </div>
+        <div class="docs-prose mt-10 max-w-3xl">
+          <p>
+            The top one, “how much traffic does this website get”, had 730
+            impressions on our <a href="/tools/website-traffic-checker">website traffic checker</a>.
+            Nobody would have guessed that wording as a prompt to track. SEO
+            Skill’s <a href="/features/ai-search">AI search tracking</a> finds
+            these in your own Search Console, groups the rewordings of each
+            question, and hands the top ten to the AI answer check.
+          </p>
+        </div>
+      </section>
+
+      <section class="site-frame" aria-labelledby="steps-heading">
+        <SectionHeading
+          id="steps-heading"
+          title="Check and fix AI visibility with your own agent"
+          text="The loop SEO Skill runs in Claude Code, Codex or Cursor, one question group at a time."
+        />
+        <div class="max-w-3xl">
+          <PlanSteps {steps} />
+        </div>
+        <div class="docs-prose mt-10 max-w-3xl">
+          <p>Connect SEO Skill with the prompt at the top of this page, add a DataForSEO key, then ask:</p>
+          <CodeBlock prompt value="Check whether ChatGPT, Gemini and Google's AI answers cite example.com for the questions people ask about it, three times each. Then show me which sites they cite instead and which of our pages should answer each question." wrap />
+        </div>
+      </section>
+
+      <section class="site-frame" aria-labelledby="peec-faq">
+        <SectionHeading
+          id="peec-faq"
+          title="Questions about Peec AI alternatives"
+          text="What people ask before they switch or add a tool."
+        />
+        <FaqAccordion id="peec-faq-list" items={faq} />
+      </section>
+
+      <section class="site-frame" aria-labelledby="more-heading">
+        <SectionHeading
+          id="more-heading"
+          title="More on AI visibility"
+          text="Other ways SEO Skill reads AI search, and the next comparison."
+        />
+        <div class="grid grid-cols-1 gap-2 sm:grid-cols-2">
+          <HomeCard title="Profound alternatives" text="Profound compared with Peec AI and SEO Skill, and the alternatives for each job." icon={CloudServerIcon} href="/alternatives/profound" link="Profound alternatives" />
+          <HomeCard title="AEO and GEO agency" text="The weekly work that gets a business named in AI answers, and how to judge it." icon={SearchList01Icon} href="/services/aeo-agency" link="See the weekly work" />
+        </div>
+        <div class="docs-prose mt-10 max-w-3xl text-sm">
+          <p>Where these facts come from, read on {checked}:</p>
+          <ul>
+            {sources.map((source) => (
+              <li><a href={source.url} target="_blank" rel="noreferrer">{source.fact}</a></li>
+            ))}
+          </ul>
+        </div>
+      </section>
+    </div>
+  </main>
+</BaseLayout>

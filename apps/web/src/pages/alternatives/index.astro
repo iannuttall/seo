@@ -6,6 +6,7 @@ import HomeCard from '@/components/HomeCard.astro'
 import LandingHero from '@/components/LandingHero.astro'
 import SectionHeading from '@/components/SectionHeading.astro'
 import SplitList from '@/components/SplitList.astro'
+import { AiChat02Icon } from '@hugeicons/core-free-icons'
 import { competitors, groups } from '@/content/alternatives'
 import BaseLayout from '@/layouts/BaseLayout.astro'
 import type { SchemaBreadcrumb } from '@/lib/schema'
@@ -91,6 +92,18 @@ const faqs = [
           )
         })
       }
+
+      <section class="site-frame" aria-labelledby="group-ai-visibility">
+        <SectionHeading
+          id="group-ai-visibility"
+          title="AI visibility trackers"
+          text="Tools that track how often ChatGPT, Gemini and Google's AI answers name or cite you, compared on what they measure and who does the work."
+        />
+        <div class="grid grid-cols-1 gap-2 sm:grid-cols-2">
+          <HomeCard title="Peec AI" text="A daily tracker for marketing teams, with an MCP server and Looker Studio." icon={AiChat02Icon} href="/alternatives/peec-ai" link="Peec AI alternatives" />
+          <HomeCard title="Profound" text="Ten engines, bot logs and agents that draft the content, for large teams." icon={AiChat02Icon} href="/alternatives/profound" link="Profound alternatives" />
+        </div>
+      </section>
 
       <section class="site-frame" aria-labelledby="alternatives-faq">
         <div class="max-w-2xl">

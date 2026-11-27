@@ -42,7 +42,7 @@
   "pickIf": [
     "You need more than Google's 16 months: it keeps up to 10 years of history on stored properties.",
     "You want Bing, Yandex and Merchant Center data in the same connector as Search Console and GA4.",
-    "You want your agent to submit sitemaps and IndexNow pings, not just read data.",
+    "You want your agent to submit sitemaps and send IndexNow pings as well as read data.",
     "You want ready-made reports such as change point detection and content decay computed for you."
   ],
   "sources": [

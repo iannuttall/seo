@@ -17,7 +17,7 @@
   "clients": ["ChatGPT", "Claude", "Cursor", "VS Code", "Le Chat"],
   "webChat": "Yes",
   "free": "Pipedream's MCP page says the tools can be added to an AI assistant for free. The Pipedream Free plan is $0 with every feature in development only.",
-  "price": "Free $0. Startup $99 per month billed annually or $150 per month billed monthly, with 100 users and 10,000 usage credits, then $2 per user and $0.012 per credit. Business custom. Prices in USD. These plans are for Pipedream Connect, which serves external users in production.",
+  "price": "Free $0. Startup $99 per month billed annually or $150 per month billed monthly, with 100 users and 10,000 usage credits, then $2 per user and $0.012 per credit. Business custom, with prices in USD. These plans are for Pipedream Connect, which serves external users in production.",
   "freeShort": "Free to add to an AI assistant",
   "priceFrom": "$99 a month for Connect, billed yearly",
   "writeActions": "Yes. Submit Sitemap, Delete Sitemap, and Submit URL for Indexing through the Indexing API.",

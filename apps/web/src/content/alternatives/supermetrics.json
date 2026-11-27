@@ -28,7 +28,7 @@
   ],
   "webChat": "Yes",
   "free": "14 day free trial, no credit card needed. No free plan stated.",
-  "price": "Starter from $55 per month billed monthly, or $44 per month billed yearly. Growth from $222 per month billed monthly, or $177 per month billed yearly. Enterprise by quote. Prices in USD. The MCP page says MCP access comes with any subscription, but its FAQ says MCP is included in plans with Data API access, and the pricing table lists Data API access under Enterprise.",
+  "price": "Starter from $55 per month billed monthly, or $44 per month billed yearly. Growth from $222 per month billed monthly, or $177 per month billed yearly. Enterprise by quote, with prices in USD. The MCP page says MCP access comes with any subscription, but its FAQ says MCP is included in plans with Data API access, and the pricing table lists Data API access under Enterprise.",
   "freeShort": "14-day trial",
   "priceFrom": "$44 a month, billed yearly",
   "writeActions": "No Google Search Console write actions stated. Beta tools can create and update ad campaigns (Google, Meta, Microsoft, TikTok, LinkedIn, ChatGPT and Snapchat Ads), publish Supermetrics Studio dashboards and publish Instagram posts.",

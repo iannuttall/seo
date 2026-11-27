@@ -34,9 +34,9 @@ export type Competitor = {
   webChat: string
   free: string
   price: string
-  /** A few words from `free`, for the hub table. */
+  /** A few words from `free`, for the hub cards. */
   freeShort: string
-  /** The cheapest paid plan from `price`, for the hub table. */
+  /** The cheapest paid plan from `price`, for the hub cards. */
   priceFrom: string
   writeActions: string
   dataStorage: string
@@ -238,7 +238,7 @@ export const seoSkill = {
   signIn:
     'Add https://seoskill.dev/mcp to your agent and sign in with Google. Read-only access, no Google Cloud project, no API key.',
   tools:
-    '7 hosted tools: seo_sites, seo_report, seo_page, seo_compare, seo_index, seo_research and seo_data. The CLI adds the site crawl, internal links and Bing.',
+    'Seven hosted tools (seo_sites, seo_report, seo_page, seo_compare, seo_index, seo_research and seo_data). The CLI adds the site crawl, internal links and Bing.',
   dataSources:
     'Google Search Console, Google Analytics, URL Inspection, Clicky, and DataForSEO or Ahrefs with your own key. Bing Webmaster Tools in the CLI. Free Domain Rating by Ahrefs on research rows.',
   clients:
@@ -266,7 +266,7 @@ export const seoSkillAsTool = {
   signIn:
     'Use the free web tools with no account. For your own data, add https://seoskill.dev/mcp to your AI agent and sign in with Google (read only).',
   tools:
-    'Free web tools: backlink checker, Domain Rating, competitor keywords, SERP checker, traffic estimates, robots.txt, sitemap, schema and more. In your AI agent: Search Console reports (quick wins, low CTR, striking distance, content decay, cannibalization, traffic drops), page checks, index checks, before and after comparisons, and keyword research with your own key. A site crawler and internal links in the CLI.',
+    'Free web tools for backlinks, Domain Rating, competitor keywords, SERPs, traffic estimates, robots.txt, sitemaps, schema and more. In your AI agent, Search Console reports (quick wins, low CTR, striking distance, content decay, cannibalization, traffic drops), page checks, index checks, before and after comparisons, and keyword research with your own key. A site crawler and internal links in the CLI.',
   clients:
     'Your browser for the web tools. Claude Code, Claude, ChatGPT, Codex, Cursor, VS Code, Gemini CLI, Windsurf, Le Chat and any remote MCP client for your own data.',
 } as const
@@ -314,7 +314,7 @@ export const reasonsFor = (item: Competitor): string[] => {
     case 'self-hosted':
     case 'skill':
       return [
-        'You want nothing to install and no Google Cloud project: one URL and a Google sign-in.',
+        'You want nothing to install and no Google Cloud project, just one URL and a Google sign-in.',
         'You want it in claude.ai, ChatGPT and Le Chat on the web, and in cloud agents that cannot reach your laptop.',
         free,
         sources,
@@ -328,14 +328,14 @@ export const reasonsFor = (item: Competitor): string[] => {
       ]
     case 'seo suite':
       return [
-        'You want the everyday lookups for free: backlinks, Domain Rating, competitor keywords, SERPs and traffic estimates, with no account.',
+        'You want free backlink, Domain Rating, competitor keyword, SERP and traffic lookups, with no account.',
         'You want your AI agent to answer from your own Search Console and Google Analytics data, not only from an index estimate.',
-        'You already pay for keyword data: SEO Skill uses your own DataForSEO or Ahrefs key, so you pay that provider and nothing on top.',
+        'You already pay for keyword data. SEO Skill uses your own DataForSEO or Ahrefs key, so you pay that provider and nothing on top.',
         'You want a weekly crawl, daily index checks and drop alerts for $50 a month per site, with no seats to buy.',
       ]
     default:
       return [
-        'You want a server built for SEO questions: quick wins, low CTR, content decay, cannibalization, traffic drops and index checks.',
+        'You want a server built for SEO questions, such as quick wins, low CTR, content decay, cannibalization, traffic drops and index checks.',
         free,
         sources,
         'You want no workspace or data flow to set up first, just a URL and a Google sign-in.',

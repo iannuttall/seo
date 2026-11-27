@@ -8,6 +8,7 @@ import rehypeCodeFrame from './scripts/rehype-code-frame.mjs'
 import rehypeRelativeLinks from './scripts/rehype-relative-links.mjs'
 import { llmsTxt } from './llms.config.mjs'
 import { ogImages } from './src/lib/og-images.ts'
+import { setupPromptMarkdown } from './src/lib/setup-markdown.ts'
 
 export default defineConfig({
   site: process.env.SITE_URL ?? 'https://seoskill.dev',
@@ -29,6 +30,8 @@ export default defineConfig({
       // /account-shell, whose canonical is /account.
       excludePaths: ['/account'],
     }),
+    // After agentMarkdown: ends every page's Markdown with the setup prompt.
+    setupPromptMarkdown(),
   ],
   vite: {
     plugins: [tailwindcss()],

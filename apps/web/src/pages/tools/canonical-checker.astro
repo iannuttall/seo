@@ -1,10 +1,22 @@
 ---
+import {
+  Alert02Icon,
+  Copy01Icon,
+  FileSearchIcon,
+  Globe02Icon,
+  LockKeyIcon,
+  Route01Icon,
+  TextCheckIcon,
+  WebValidationIcon,
+} from '@hugeicons/core-free-icons'
 import CodeBlock from '@/components/CodeBlock.astro'
 import FaqAccordion from '@/components/FaqAccordion.astro'
+import HomeCard from '@/components/HomeCard.astro'
+import SectionHeading from '@/components/SectionHeading.astro'
 import SetupPrompts from '@/components/SetupPrompts.astro'
-import Breadcrumbs from '@/components/Breadcrumbs.astro'
-import PageHeader from '@/components/PageHeader.astro'
+import SplitList from '@/components/SplitList.astro'
 import CanonicalChecker from '@/components/tools/CanonicalChecker.astro'
+import { getButtonClasses } from '@/components/ui/button'
 import BaseLayout from '@/layouts/BaseLayout.astro'
 import type { SchemaBreadcrumb } from '@/lib/schema'
 
@@ -14,145 +26,243 @@ const breadcrumbs: SchemaBreadcrumb[] = [
   { label: 'Canonical tag checker' },
 ]
 
+// What one check reports, in the order a reader looks for it.
+const checks = [
+  {
+    title: 'Every canonical link',
+    icon: FileSearchIcon,
+    text: 'Each rel=canonical link in the HTML, in the order it appears, with the raw value the page printed.',
+  },
+  {
+    title: 'The full URL it points to',
+    icon: Route01Icon,
+    text: 'Relative values resolved against the page URL or the first valid base tag, so you see the address Google would read.',
+  },
+  {
+    title: 'Where it points',
+    icon: Globe02Icon,
+    text: 'To the page itself, to another page on the same site, or to another site, described rather than marked wrong.',
+  },
+  {
+    title: 'Repeated and conflicting tags',
+    icon: Copy01Icon,
+    text: 'More than one canonical, and tags that disagree. Google may ignore every one of them.',
+  },
+  {
+    title: 'Tags in the wrong place',
+    icon: Alert02Icon,
+    text: 'A canonical outside the head, which Google ignores, and a value that can\u2019t be read as a URL.',
+  },
+  {
+    title: 'Nothing leaves the browser',
+    icon: LockKeyIcon,
+    text: 'The HTML is parsed in this tab and not uploaded, so it works for staging pages and drafts too.',
+  },
+]
+
+const results = [
+  { title: 'Points to itself', text: 'The normal case for a unique page. Nothing to do.' },
+  { title: 'Points to another page', text: 'This page says it is a copy. Right for a filtered or tracking URL, wrong for a page you want ranked.' },
+  { title: 'Points to another site', text: 'Right for syndicated content that credits the original. Google may then index the other site\u2019s copy instead of yours.' },
+  { title: 'More than one', text: 'Google may ignore all of them. Keep one, usually by finding the plugin or template that adds the second.' },
+  { title: 'Missing', text: 'Fine for most unique pages. Worth adding where the same content has several URLs.' },
+]
+
+const signals = [
+  { title: 'Redirects', code: 'strong', text: 'A permanent redirect tells Google the old URL is gone. Use one when the duplicate doesn\u2019t need to stay reachable.' },
+  { title: 'rel=canonical', code: 'strong', text: 'A request for the preferred URL that Google usually follows when the other signals agree.' },
+  { title: 'Sitemap', code: 'weak', text: 'Google reads the URLs you list as the ones you prefer. List only canonical URLs.' },
+  { title: 'Internal links', text: 'Links across your own site that use another version, such as http or a trailing slash, pull Google towards it.' },
+]
+
+const mistakes = [
+  { title: 'Every page points to the home page', text: 'A template bug that tells Google the whole site is one page.' },
+  { title: 'A canonical to a page that redirects or fails', text: 'Point it at the final, working URL.' },
+  { title: 'Signals that disagree', text: 'The canonical says one URL while internal links and the sitemap use another.' },
+  { title: 'Canonical and noindex on the same page', text: 'They ask for different things. Pick one.' },
+  { title: 'Translated pages pointing to the original', text: 'Each language version needs its own self-referencing canonical, with hreflang linking them.' },
+  { title: 'A canonical chain', text: 'Page A points to B, and B points to C. Point A straight at C.' },
+]
+
+const statuses = [
+  { title: 'Alternate page with proper canonical tag', text: 'Google found a copy, saw its canonical and indexed the page it points to. Usually working as intended.', href: '/guides/alternate-page-with-proper-canonical-tag' },
+  { title: 'Duplicate without user-selected canonical', text: 'Google found copies with no canonical and picked one itself. Add a canonical to the one you want.', href: '/guides/duplicate-without-user-selected-canonical' },
+  { title: 'Page with redirect', text: 'The URL redirects, so Google indexes the target instead. Fix the links and sitemap entries that still use it.', href: '/guides/page-with-redirect' },
+]
+
+const tools = [
+  { title: 'Redirect checker', text: 'Trace every redirect a URL takes, since a redirect is the strongest canonical signal there is.', href: '/tools/redirect-checker', icon: Route01Icon, link: 'Trace redirects' },
+  { title: 'SEO checker', text: 'Check a live page: access, canonical, title, headings, links and structured data in one go.', href: '/tools/seo-checker', icon: WebValidationIcon, link: 'Check a page' },
+  { title: 'Hreflang generator', text: 'Build the hreflang set for translated pages, each with its own self-referencing canonical.', href: '/tools/hreflang-generator', icon: Globe02Icon, link: 'Build hreflang' },
+  { title: 'Title and meta description checker', text: 'Send the title and description from the HTML you pasted, without pasting them again.', href: '/tools/title-and-meta-description-checker', icon: TextCheckIcon, link: 'Check titles' },
+]
+
 const faq = [
   {
-    question: "What is a canonical tag?",
+    question: 'How do I check a page\u2019s canonical tag?',
     answer:
-      "A link in the page head, such as <link rel=\"canonical\" href=\"https://example.com/page\">, that tells search engines which URL you prefer when the same content is available at more than one address.",
+      'Open the page, view its source and paste the HTML above with the page URL. The checker lists every canonical link, resolves it to a full URL and says where it points. To check every page on a site, run seo crawl.',
   },
   {
-    question: "Does every page need a canonical tag?",
+    question: 'Does every page need a canonical tag?',
     answer:
-      "No. A unique page with one URL is understood without one. A self-referencing canonical on every page is still a sensible default, because it covers tracking parameters and other copies you did not plan for.",
+      'No. A unique page with one URL is understood without one. A self-referencing canonical on every page is still a sensible default, because it covers tracking parameters and other copies you didn\u2019t plan for.',
   },
   {
-    question: "What does \"Alternate page with proper canonical tag\" mean?",
+    question: 'Should the canonical URL be absolute?',
     answer:
-      "Google found this URL, saw that its canonical points to another page, and indexed that other page instead. It is working as intended unless the listed page is one you wanted indexed.",
+      'Yes. Google accepts relative URLs, but a full URL with the protocol and host avoids mistakes when pages are copied to staging or another domain.',
   },
   {
-    question: "Should the canonical URL be absolute?",
+    question: 'Can a canonical point to another domain?',
     answer:
-      "Yes. Google accepts relative URLs, but a full URL with the protocol and host avoids mistakes when pages are copied to staging or another domain.",
+      'Yes. It is how syndicated content credits the original. Use it only when the other site really is the original, because Google may then index that site\u2019s copy instead of yours.',
   },
   {
-    question: "Can a canonical point to another domain?",
+    question: 'Why did Google choose a different canonical?',
     answer:
-      "Yes. It is how syndicated content credits the original. Use it only when the other site really is the original, because Google may then index that site’s copy instead of yours.",
+      'Google weighs the canonical tag against redirects, internal links, the sitemap, HTTPS and how alike the pages are. When those point elsewhere, it picks another URL. Make the signals agree on the URL you want.',
   },
   {
-    question: "Can I check a live URL?",
+    question: 'Should I use a canonical or a noindex?',
     answer:
-      "This page checks HTML you paste, so it never fetches anything. Open the page, view its source and paste it in. For every page on a site, run seo crawl.",
+      'A canonical for a copy of a page you want indexed, so its signals go to the main version. A noindex for a page that shouldn\u2019t be in Google at all. Don\u2019t put both on one page.',
+  },
+  {
+    question: 'Can I check a live URL?',
+    answer:
+      'This page checks HTML you paste, so it never fetches anything and doesn\u2019t read an HTTP Link header. The free SEO checker fetches a live page and reports its canonical, and the SEO Skill crawl checks every page on a site.',
+  },
+  {
+    question: 'Is the canonical checker free?',
+    answer: 'Yes, with no account and no daily limit, because the check runs in your browser.',
   },
 ]
 ---
 
-<BaseLayout title="Free canonical tag and URL checker" description="Check the canonical tag in any page’s HTML. See where it points, find conflicts and repeated tags, and learn why Google picks a different canonical and how to fix it." canonicalPath="/tools/canonical-checker" {breadcrumbs}>
+<BaseLayout
+  title="Free canonical tag checker"
+  description="Check the canonical tags in any page's HTML. See every rel=canonical link, the full URL it points to, and repeated, conflicting or misplaced tags. Free, with no account, and the HTML never leaves your browser."
+  canonicalPath="/tools/canonical-checker"
+  {breadcrumbs}
+  framed={false}
+>
   <main data-agent-content>
-    <Breadcrumbs {breadcrumbs} />
-    <PageHeader title="Canonical tag checker" description="Paste a page URL and its HTML to see every canonical link, its resolved URL, and the checks that need attention." />
-    <CanonicalChecker />
+    <section class="pt-4">
+      <div class="site-frame flex flex-col items-center pt-14 text-center sm:pt-20">
+        <h1 class="mt-4 max-w-3xl text-pretty text-4xl/tight font-medium -tracking-[0.8px] xl:text-5xl/tight xl:-tracking-[1px]">
+          Canonical tag checker
+        </h1>
+        <p class="mt-4 max-w-2xl text-pretty text-xl/8 font-medium -tracking-[0.2px] text-foreground-muted">
+          Paste a page URL and its HTML to see every canonical link, the full
+          URL it points to, and the repeated, conflicting or misplaced tags
+          that make Google ignore it.
+        </p>
+      </div>
+      <div class="site-frame mt-10 max-w-3xl sm:mt-12">
+        <CanonicalChecker />
+      </div>
+    </section>
 
-    <div class="docs-prose mt-16">
-      <h2>A canonical is a preference signal</h2>
-      <p>A canonical link tells search engines which URL you prefer for duplicate or very similar pages. Google can still select another URL when its other signals point elsewhere.</p>
-      <p>Google describes <a href="https://developers.google.com/search/docs/crawling-indexing/consolidate-duplicate-urls" target="_blank" rel="noreferrer">redirects and canonical link annotations as strong signals</a>, while sitemap inclusion is weaker. Internal links should also point consistently to the preferred URL.</p>
+    <div class="space-y-24 py-24 sm:space-y-32 sm:py-32">
+      <section class="site-frame" aria-labelledby="checks-heading">
+        <SectionHeading
+          id="checks-heading"
+          title="What does the canonical checker check?"
+          text="Every canonical link in the HTML, where each one points, and the problems that make Google ignore them. It reads the HTML in your browser, so nothing is uploaded."
+        />
+        <div class="grid grid-cols-1 gap-2 sm:grid-cols-2">
+          {checks.map((item) => <HomeCard title={item.title} text={item.text} icon={item.icon} />)}
+        </div>
+      </section>
 
-      <h2>A missing canonical is not automatically a defect</h2>
-      <p>A unique page can be understood without an explicit canonical. Treat a missing tag as an observation until duplicate versions, inconsistent internal links, or Search Console evidence show a real problem.</p>
+      <SplitList
+        id="results-heading"
+        title="How do I read the canonical result?"
+        text="Start with where the canonical points. A canonical to another page or site can be right, so the checker describes the relationship and you decide whether it matches what you meant."
+        items={results}
+      />
 
-      <h2>Relative and cross-site values need human review</h2>
-      <p>The checker resolves relative values against the page URL or a valid base tag. A canonical pointing to another page or another site can be intentional, so the result describes the relationship instead of marking every mismatch as wrong.</p>
+      <SplitList
+        id="signals-heading"
+        title="Why does Google pick a different canonical?"
+        text="Because a canonical tag is one signal among several. Google weighs it against redirects, the sitemap and internal links, and when they disagree it can choose another URL. Make them all name the same one."
+        items={signals}
+      >
+        <a
+          class:list={[getButtonClasses('secondary', 'lg'), 'mt-6']}
+          href="https://developers.google.com/search/docs/crawling-indexing/consolidate-duplicate-urls"
+          target="_blank"
+          rel="noreferrer">Read Google's canonical guide</a
+        >
+      </SplitList>
 
-      <h2>This check covers pasted HTML</h2>
-      <p>The tool does not fetch a live page or inspect an HTTP <code>Link</code> header. Paste the rendered HTML you want to review. You can send its title and description straight to the <a href="/tools/title-and-meta-description-checker">title and meta description checker</a> without pasting them again.</p>
+      <SplitList
+        id="mistakes-heading"
+        title="Which canonical mistakes should I fix first?"
+        text="The ones that come from a template, because they repeat on every page built from it. A canonical to the home page on every page is the worst of them."
+        items={mistakes}
+      />
 
-      <h2>Your HTML stays in the browser</h2>
-      <p>The HTML is parsed in this browser tab and is not uploaded. Only a small set of candidate details is kept while the check is running.</p>
+      <SplitList
+        id="status-heading"
+        title="What do the canonical statuses in Search Console mean?"
+        text="Search Console reports the canonical Google chose for each URL it left out. These three statuses come up most, and each has its own guide."
+        items={statuses}
+      />
 
-      <h2>Read the canonical result</h2>
-      <p>
-        The checker finds every canonical link in the HTML, resolves it to a
-        full URL and says how it relates to the page: it points to itself, to
-        another page on the same site, or to another site. It also reports
-        more than one canonical, a canonical outside the head, and a value
-        that cannot be read.
-      </p>
-      <table>
-        <thead>
-          <tr>
-            <th>Result</th>
-            <th>What it usually means</th>
-          </tr>
-        </thead>
-        <tbody>
-          <tr>
-            <td>Points to itself</td>
-            <td>The normal case for a unique page. Nothing to do.</td>
-          </tr>
-          <tr>
-            <td>Points to another page</td>
-            <td>This page says it is a copy. Right for a filtered or tracking URL, wrong for a page you want ranked.</td>
-          </tr>
-          <tr>
-            <td>More than one</td>
-            <td>Google may ignore all of them. Keep one.</td>
-          </tr>
-          <tr>
-            <td>Missing</td>
-            <td>Fine for most unique pages. Worth adding where the same content has several URLs.</td>
-          </tr>
-        </tbody>
-      </table>
+      <div>
+        <SplitList
+          id="site-heading"
+          title="How do I check canonicals across my whole site?"
+          text="Ask your agent. One page shows one template. SEO Skill crawls every page it can reach from your own machine, staging and localhost included, and your agent traces each problem to the template that prints it."
+          items={[
+            { title: 'Missing, repeated and conflicting canonicals', text: 'Every page with no canonical, more than one, or tags that disagree.' },
+            { title: 'Relative and misplaced canonicals', text: 'Values without a full URL, and tags outside the head or added late in the body.' },
+            { title: 'Canonical chains', text: 'Pages whose canonical points to a page with a canonical of its own.' },
+            { title: 'Google\u2019s own choice', text: 'With the hosted MCP server, URL Inspection shows the canonical Google chose next to the one the page declares.' },
+          ]}
+        />
+        <div class="site-frame mt-8 grid gap-2 sm:grid-cols-2">
+          <CodeBlock
+            label="Ask your agent"
+            prompt
+            value="Crawl example.com and list every page whose canonical points somewhere other than itself, grouped by template"
+          />
+          <CodeBlock label="Or run the crawl in a terminal" value="seo crawl https://example.com" />
+        </div>
+      </div>
 
-      <h2>Why Google picks a different canonical</h2>
-      <p>
-        A canonical tag is a request, not an order. Google weighs it against
-        redirects, internal links, the sitemap, HTTPS and how similar the
-        pages are. When those point somewhere else, Google can choose another
-        URL, and Search Console says so with the status{' '}
-        <strong>Duplicate, Google chose different canonical than user</strong>.
-        The fix is to make the signals agree: link to the URL you want, list
-        only that URL in the sitemap, and redirect the others when you can.
-      </p>
-      <p>
-        The status <strong>Alternate page with proper canonical tag</strong>{' '}
-        is usually good news. It means Google found a duplicate, saw its
-        canonical and indexed the page it points to. Act on it only when the
-        listed page is one you wanted in the index.
-      </p>
+      <section class="site-frame" aria-labelledby="tools-heading">
+        <SectionHeading
+          id="tools-heading"
+          title="Free tools for the other canonical signals"
+          text="A canonical tag works when the redirects, links and translated pages around it agree. These check them, with no account."
+        />
+        <div class="grid grid-cols-1 gap-2 sm:grid-cols-2">
+          {tools.map((item) => <HomeCard {...item} />)}
+        </div>
+      </section>
 
-      <h2>Fix common canonical mistakes</h2>
-      <ul>
-        <li><strong>Every page points to the home page.</strong> A template bug that tells Google the whole site is one page.</li>
-        <li><strong>Canonical to a page that redirects or returns an error.</strong> Point it at the final, working URL.</li>
-        <li><strong>Mixed signals.</strong> The canonical says one URL while internal links and the sitemap use another, such as a trailing slash or <code>http</code>.</li>
-        <li><strong>Canonical and noindex on the same page.</strong> They ask for different things. Pick one.</li>
-        <li><strong>Translated pages pointing to the original.</strong> Each language version needs its own self-referencing canonical, with hreflang linking them. The <a href="/tools/hreflang-generator">hreflang generator</a> builds that set.</li>
-      </ul>
+      <section class="site-frame" aria-labelledby="faq-heading">
+        <div class="max-w-2xl">
+          <h2 id="faq-heading" class="text-pretty text-2xl font-medium -tracking-[0.4px] text-foreground xl:text-3xl xl:-tracking-[0.6px]">
+            Canonical checker questions
+          </h2>
+        </div>
+        <div class="mt-10">
+          <FaqAccordion items={faq} id="canonical-checker-faq" />
+        </div>
+      </section>
 
-      <h2>Check canonicals across your site with your agent</h2>
-      <p>
-        One page tells you about one template. The{' '}
-        <a href="/docs/crawl">seo crawl</a> command checks every page it
-        reaches on your own machine and reports missing, conflicting,
-        repeated and relative canonicals, canonicals placed outside the head
-        and chains where a canonical points to a page with its own canonical.
-        Your agent can then trace each one to the template that prints it.
-        Ask:
-      </p>
-      <CodeBlock prompt value="Crawl example.com and list every page whose canonical points somewhere other than itself, grouped by template" wrap />
-      <p>The crawl runs from the CLI on your machine. Give your agent this prompt and it installs the CLI and adds the hosted MCP server:</p>
-    </div>
-
-    <SetupPrompts id="canonical-checker-setup" class="mt-6" />
-
-    <div class="docs-prose mt-16">
-      <h2>Canonical tag questions</h2>
-    </div>
-    <div class="mt-6">
-      <FaqAccordion id="canonical-checker-faq" items={faq} />
+      <section class="site-frame" aria-labelledby="start-heading">
+        <SectionHeading
+          id="start-heading"
+          title="Check every canonical on your site with your agent"
+          text="Add SEO Skill to your agent, sign in with the Google account that can read your Search Console, and ask it which canonicals Google ignored."
+        />
+        <SetupPrompts id="canonical-checker-setup" />
+      </section>
     </div>
   </main>
 </BaseLayout>

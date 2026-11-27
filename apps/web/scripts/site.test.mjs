@@ -41,6 +41,14 @@ const guidePaths = [
   ...readdirSync(resolve(appRoot, 'src/content/guides'))
     .filter((file) => file.endsWith('.mdx'))
     .map((file) => `/guides/${file.replace(/\.mdx$/, '')}`),
+  ...readdirSync(resolve(appRoot, 'src/pages/guides'))
+    .filter(
+      (file) =>
+        file.endsWith('.astro') &&
+        file !== 'index.astro' &&
+        !file.startsWith('['),
+    )
+    .map((file) => `/guides/${file.replace(/\.astro$/, '')}`),
 ]
 const pagePath = (path) =>
   path === '/' ? 'index.html' : `${path.slice(1)}/index.html`

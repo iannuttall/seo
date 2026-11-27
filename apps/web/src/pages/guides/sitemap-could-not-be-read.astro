@@ -1,0 +1,186 @@
+---
+import {
+  Alert02Icon,
+  CodeIcon,
+  FileNotFoundIcon,
+  FileZipIcon,
+  LockIcon,
+  Route01Icon,
+  ServerStack01Icon,
+  Shield01Icon,
+} from '@hugeicons/core-free-icons'
+import BeforeAfter from '@/components/blog/BeforeAfter.astro'
+import UrlMap from '@/components/blog/UrlMap.astro'
+import CodeBlock from '@/components/CodeBlock.astro'
+import FaqAccordion from '@/components/FaqAccordion.astro'
+import HomeCard from '@/components/HomeCard.astro'
+import LandingHero from '@/components/LandingHero.astro'
+import SectionHeading from '@/components/SectionHeading.astro'
+import StatusGuides from '@/components/StatusGuides.astro'
+import BaseLayout from '@/layouts/BaseLayout.astro'
+import type { SchemaBreadcrumb } from '@/lib/schema'
+
+const breadcrumbs: SchemaBreadcrumb[] = [
+  { label: 'Home', href: '/' },
+  { label: 'Guides', href: '/guides' },
+  { label: 'Sitemap could not be read' },
+]
+
+// seoskill.dev's own sitemap, checked live on 27 November 2026: robots.txt
+// names it, it answers 200 as application/xml and lists 237 URLs.
+const steps = [
+  { url: 'seoskill.dev/robots.txt', action: '200', tone: 'keep' as const, note: 'Names the sitemap on a Sitemap: line, so Google and SEO Skill know where it is.' },
+  { url: 'seoskill.dev/sitemap.xml', action: '200', tone: 'keep' as const, note: 'Answers 200 with Content-Type application/xml, straight away, with no redirect or sign-in.' },
+  { url: '237 page URLs', action: 'Valid', tone: 'keep' as const, note: 'Each one a full https:// URL on the same domain, in valid XML.' },
+]
+
+const response = {
+  before: {
+    label: 'Readable',
+    code: `GET /sitemap.xml\nHTTP/2 200\ncontent-type: application/xml\n\n<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">`,
+    note: 'What seoskill.dev sends. Google can fetch and parse it.',
+  },
+  after: {
+    label: 'Could not be read',
+    code: `GET /sitemap.xml\nHTTP/2 200\ncontent-type: text/html\n\n<!doctype html>\n<html><body>Page not found</body></html>`,
+    note: 'A common failure: the app sends its HTML not-found page with a 200 for a file it does not have.',
+  },
+}
+
+const causes = [
+  { title: 'The URL is wrong or missing', text: 'The sitemap moved, or you submitted a URL that returns 404 or an HTML page.', icon: FileNotFoundIcon },
+  { title: 'robots.txt or a sign-in blocks it', text: 'A Disallow rule, a password or a firewall stops Googlebot fetching the file.', icon: LockIcon },
+  { title: 'The XML is broken', text: 'An unescaped &, a missing closing tag or text before the XML declaration.', icon: CodeIcon },
+  { title: 'The server is slow or blocks bots', text: 'A timeout, a 5xx or a bot challenge from a CDN or security plugin.', icon: ServerStack01Icon },
+  { title: 'It redirects', text: 'The sitemap URL redirects to another host or to a page that is not the sitemap.', icon: Route01Icon },
+  { title: 'It is too big', text: 'Over 50,000 URLs or 50 MB uncompressed in one file. Split it under a sitemap index.', icon: FileZipIcon },
+]
+
+const faq = [
+  {
+    question: 'What does "sitemap could not be read" mean?',
+    answer:
+      'Google tried to fetch the sitemap you submitted and could not get or parse it. The Sitemaps report also shows this as couldn’t fetch. Google’s help says to check that robots.txt does not block it, that it is valid, and that you submitted the right URL.',
+  },
+  {
+    question: 'My sitemap opens fine in a browser. Why can’t Google read it?',
+    answer:
+      'A browser is not Googlebot. A CDN or security rule may block bots, the file may need a cookie your browser has, or the server may send HTML with the wrong content type. Fetch it from outside your network, as a bot would.',
+  },
+  {
+    question: 'Does a sitemap that could not be read stop my site being indexed?',
+    answer:
+      'Not on its own. Google also finds pages through links. But the sitemap is how you tell Google which pages you want indexed, so new and deep pages can take longer to be found while it fails.',
+  },
+  {
+    question: 'How long does Search Console take to read a fixed sitemap?',
+    answer:
+      'Search Console shows the result of its last fetch. Resubmit the sitemap in the Sitemaps report after you fix it, and the status updates when Google fetches it again.',
+  },
+  {
+    question: 'Where should my sitemap be listed?',
+    answer:
+      'Add a Sitemap: line with the full URL to robots.txt, and submit the same URL in Search Console. If you have several sitemaps, list one sitemap index that names them all.',
+  },
+]
+---
+
+<BaseLayout
+  title="Sitemap could not be read in Search Console: how to fix it"
+  description="Why Search Console says your sitemap could not be read or couldn't fetch, the usual causes, and how to check what Googlebot gets for your sitemap."
+  canonicalPath="/guides/sitemap-could-not-be-read"
+  {breadcrumbs}
+  framed={false}
+>
+  <main data-agent-content>
+    <LandingHero
+      title="Sitemap could not be read"
+      lead="Search Console shows this when Google could not fetch or parse a sitemap you submitted. The fix is almost always in what your server sends for that one file. Check it the way Googlebot gets it."
+      setupId="sitemap-setup"
+    />
+
+    <div class="space-y-24 py-24 sm:space-y-32 sm:py-32">
+      <section class="site-frame" aria-labelledby="meaning-heading">
+        <SectionHeading
+          id="meaning-heading"
+          title="What a readable sitemap looks like"
+          text="Google has to find the file, fetch it without a redirect or a block, and parse valid XML with full URLs. A failure at any step shows as could not be read."
+        />
+        <div class="max-w-3xl">
+          <UrlMap
+            rows={steps}
+            title="seoskill.dev's sitemap, step by step"
+            caption="Checked live on 27 November 2026."
+          />
+          <BeforeAfter
+            before={response.before}
+            after={response.after}
+            title="What the server sends"
+            caption="Both answer 200. Only one is a sitemap."
+          />
+        </div>
+      </section>
+
+      <section class="site-frame" aria-labelledby="cause-heading">
+        <SectionHeading
+          id="cause-heading"
+          title="What usually causes it"
+          text="Work down this list in order. The first ones are the most common and the quickest to rule out."
+        />
+        <div class="grid grid-cols-1 gap-2 sm:grid-cols-2">
+          {causes.map((item) => <HomeCard {...item} />)}
+        </div>
+      </section>
+
+      <section class="site-frame" aria-labelledby="check-heading">
+        <SectionHeading
+          id="check-heading"
+          title="Check your sitemap the way Google gets it"
+          text="SEO Skill reads your sitemaps from robots.txt, or from /sitemap.xml when robots.txt names none, and says which file it could not read and why."
+        />
+        <div class="docs-prose max-w-3xl">
+          <p>Connect SEO Skill to your agent, then ask:</p>
+          <CodeBlock prompt value="Search Console says our sitemap could not be read. Fetch example.com's robots.txt and every sitemap it lists, tell me what each one returns and why Google might fail to read it, then fix it in our codebase." wrap />
+          <p>Or run it in a terminal:</p>
+          <CodeBlock value="seo index --site example.com" />
+          <p>
+            Its summary lists each sitemap it could not read, with the status
+            or error it got. It follows sitemap indexes and reads gzipped
+            files, and it says when it stopped at a file or URL limit, so a
+            short list is never mistaken for the whole site.
+          </p>
+          <p>
+            To check one file for broken XML, bad URLs, duplicates and size
+            limits, paste it into the free{' '}
+            <a href="/tools/sitemap-validator">sitemap validator</a>. To see
+            whether robots.txt blocks it, use the{' '}
+            <a href="/tools/robots-txt-validator">robots.txt checker</a>.
+          </p>
+        </div>
+      </section>
+
+      <section class="site-frame" aria-labelledby="after-heading">
+        <SectionHeading
+          id="after-heading"
+          title="After you fix it"
+          text="Resubmit the sitemap, then check that Google can use the pages in it."
+        />
+        <div class="grid grid-cols-1 gap-2 sm:grid-cols-2">
+          <HomeCard title="Resubmit in Search Console" text="Open the Sitemaps report and submit the same URL again. The status updates after Google's next fetch." icon={Shield01Icon} />
+          <HomeCard title="Check the pages it lists" text="A readable sitemap full of redirects or noindex pages still sends Google mixed signals." icon={Alert02Icon} href="/guides/page-with-redirect" link="Page with redirect guide" />
+        </div>
+      </section>
+
+      <section class="site-frame" aria-labelledby="sitemap-faq">
+        <SectionHeading
+          id="sitemap-faq"
+          title="Questions about sitemap could not be read"
+          text="What people ask after they see it in Search Console."
+        />
+        <FaqAccordion items={faq} id="sitemap-faq-list" />
+      </section>
+
+      <StatusGuides current="/guides/sitemap-could-not-be-read" />
+    </div>
+  </main>
+</BaseLayout>

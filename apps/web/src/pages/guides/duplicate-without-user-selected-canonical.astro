@@ -1,0 +1,209 @@
+---
+import {
+  Alert02Icon,
+  Copy01Icon,
+  FilterIcon,
+  Globe02Icon,
+  Link01Icon,
+  Search01Icon,
+  ShoppingBag01Icon,
+  TaskDone01Icon,
+} from '@hugeicons/core-free-icons'
+import BeforeAfter from '@/components/blog/BeforeAfter.astro'
+import UrlMap from '@/components/blog/UrlMap.astro'
+import CodeBlock from '@/components/CodeBlock.astro'
+import FaqAccordion from '@/components/FaqAccordion.astro'
+import HomeCard from '@/components/HomeCard.astro'
+import LandingHero from '@/components/LandingHero.astro'
+import SectionHeading from '@/components/SectionHeading.astro'
+import StatusGuides from '@/components/StatusGuides.astro'
+import BaseLayout from '@/layouts/BaseLayout.astro'
+import type { SchemaBreadcrumb } from '@/lib/schema'
+
+const breadcrumbs: SchemaBreadcrumb[] = [
+  { label: 'Home', href: '/' },
+  { label: 'Guides', href: '/guides' },
+  { label: 'Duplicate without user-selected canonical' },
+]
+
+// An illustration on example.com: one product list reached at four URLs,
+// none with a canonical tag, and the one Google picked.
+const urls = [
+  { url: 'example.com/shoes?sort=price', action: 'Duplicate', tone: 'change' as const, note: 'The same list in another order. No canonical tag.' },
+  { url: 'example.com/shoes?utm_source=newsletter', action: 'Duplicate', tone: 'change' as const, note: 'A tracking link to the same page. No canonical tag.' },
+  { url: 'example.com/Shoes', action: 'Duplicate', tone: 'change' as const, note: 'A capital letter your server also answers. No canonical tag.' },
+  { url: 'example.com/shoes', action: 'Chosen', tone: 'keep' as const, note: 'The one Google picked. Here it is the right one, but you left it to chance.' },
+]
+
+const head = {
+  before: {
+    label: 'Without a canonical',
+    code: `<!-- example.com/shoes?sort=price -->\n<head>\n  <title>Shoes</title>\n</head>`,
+    note: 'Google sees a copy with no instruction, so it chooses the canonical itself.',
+  },
+  after: {
+    label: 'With a canonical',
+    code: `<!-- example.com/shoes?sort=price -->\n<head>\n  <title>Shoes</title>\n  <link rel="canonical" href="https://example.com/shoes">\n</head>`,
+    note: 'You name the page to index. The URL moves to alternate page with proper canonical tag.',
+  },
+}
+
+const leave = [
+  { title: 'Google chose the right page', text: 'The canonical Google picked is the one you would have picked. Add the tag anyway when you next touch the template.', icon: TaskDone01Icon },
+  { title: 'Parameters you never link to', text: 'Sort, filter and tracking URLs that came from outside links or old campaigns.', icon: FilterIcon },
+  { title: 'Host and case variants', text: 'Versions of the same URL that a redirect would tidy up.', icon: Globe02Icon },
+  { title: 'Print and share views', text: 'Copies of a page made for another use, with nothing new on them.', icon: Copy01Icon },
+]
+
+const act = [
+  { title: 'Google picked the wrong page', text: 'It chose a parameter URL, an old URL or a thin copy over the page you want people to land on.', icon: Alert02Icon },
+  { title: 'The page is not really a duplicate', text: 'Two products, places or articles that share a template and too little else.', icon: ShoppingBag01Icon },
+  { title: 'Your sitemap lists the duplicate', text: 'A sitemap should list only the URL you want indexed.', icon: Link01Icon },
+  { title: 'The page should rank on its own', text: 'A page that answers a different search got folded into another one.', icon: Search01Icon },
+]
+
+const faq = [
+  {
+    question: 'Is "duplicate without user-selected canonical" an error?',
+    answer:
+      'No. Google’s Page indexing report help says it is working as intended, because Google does not show duplicate pages. Change something only when Google picked the wrong page, or the pages are not duplicates.',
+  },
+  {
+    question: 'How do I fix duplicate without user-selected canonical?',
+    answer:
+      'Add a canonical tag to each copy that names the page you want indexed, and give the main page a canonical that points at itself. Link to the main URL from your own pages and list only that URL in your sitemap.',
+  },
+  {
+    question: 'How do I see which page Google chose?',
+    answer:
+      'Inspect the URL in Search Console and read Google-selected canonical. SEO Skill shows the same field for every URL it checks, next to the canonical the live page declares.',
+  },
+  {
+    question: 'My two pages are different. Why does Google call them duplicates?',
+    answer:
+      'They are probably too similar to tell apart: the same template with a few words changed. Google’s help says to make the content differ substantially. Add what is specific to each page, or merge them.',
+  },
+  {
+    question: 'Should I redirect the duplicates instead?',
+    answer:
+      'Redirect them with a 301 when they have no reason to exist, such as an old URL or a host variant. Keep them with a canonical tag when people still need them, such as a sorted list or a tracking link.',
+  },
+]
+---
+
+<BaseLayout
+  title="Duplicate without user-selected canonical: check every URL"
+  description="What duplicate without user-selected canonical means in Search Console, when Google picked the wrong page, and how to check every affected URL at once."
+  canonicalPath="/guides/duplicate-without-user-selected-canonical"
+  {breadcrumbs}
+  framed={false}
+>
+  <main data-agent-content>
+    <LandingHero
+      title="Duplicate without user-selected canonical"
+      lead="This Search Console reason means Google found copies of a page that named no canonical, and picked one to index itself. Check that it picked the right page, then make the choice yours."
+      setupId="duplicate-setup"
+    />
+
+    <div class="space-y-24 py-24 sm:space-y-32 sm:py-32">
+      <section class="site-frame" aria-labelledby="meaning-heading">
+        <SectionHeading
+          id="meaning-heading"
+          title="What duplicate without user-selected canonical means"
+          text="Several URLs show the same page. None of them has a canonical tag, so Google chose the canonical, indexed that one and left the rest out."
+        />
+        <div class="max-w-3xl">
+          <UrlMap
+            rows={urls}
+            title="One page at four URLs, on example.com"
+            caption="An example of the most common cause: sort, tracking and case variants of one list page."
+          />
+          <BeforeAfter
+            before={head.before}
+            after={head.after}
+            title="The tag that makes the choice yours"
+            caption="One line in the head of each copy."
+          />
+        </div>
+      </section>
+
+      <section class="site-frame" aria-labelledby="leave-heading">
+        <SectionHeading
+          id="leave-heading"
+          title="When it can wait"
+          text="If Google indexed the page you want, nothing is lost today. These cases can wait for your next template change."
+        />
+        <div class="grid grid-cols-1 gap-2 sm:grid-cols-2">
+          {leave.map((item) => <HomeCard {...item} />)}
+        </div>
+      </section>
+
+      <section class="site-frame" aria-labelledby="act-heading">
+        <SectionHeading
+          id="act-heading"
+          title="When it needs fixing"
+          text="Act when Google's choice costs you: the wrong URL in search, or a real page treated as a copy."
+        />
+        <div class="grid grid-cols-1 gap-2 sm:grid-cols-2">
+          {act.map((item) => <HomeCard {...item} />)}
+        </div>
+      </section>
+
+      <section class="site-frame" aria-labelledby="check-heading">
+        <SectionHeading
+          id="check-heading"
+          title="Check every duplicate on your site"
+          text="SEO Skill asks URL Inspection about each page it knows and loads each one live, so you see the canonical Google chose next to what the page declares today."
+        />
+        <div class="docs-prose max-w-3xl">
+          <p>Connect SEO Skill to your agent, then ask:</p>
+          <CodeBlock prompt value="Which pages on example.com are duplicates without a user-selected canonical? For each one, tell me which page Google chose, whether that is the page we want, and what canonical tag to add." wrap />
+          <p>Or run it in a terminal:</p>
+          <CodeBlock value="seo index --site example.com" />
+          <p>
+            A duplicate your sitemap lists is labelled fix, because the
+            sitemap asks Google to index a URL Google has set aside. The rest
+            are labelled check, with the canonical Google chose, so you can
+            see at a glance whether the choice is the one you want.
+          </p>
+          <p>
+            Once your agent knows which page should win, ask it to add the
+            canonical tags in your codebase. To test one URL after the change,
+            use the free <a href="/tools/canonical-checker">canonical
+            checker</a>.
+          </p>
+        </div>
+      </section>
+
+      <section class="site-frame" aria-labelledby="related-heading">
+        <SectionHeading
+          id="related-heading"
+          title="How it differs from the other canonical reasons"
+          text="These Search Console reasons all cover a URL that is not the one Google indexed. Each points at a different check."
+        />
+        <div class="docs-prose max-w-3xl">
+          <table>
+            <thead><tr><th>Reason</th><th>Who chose the canonical</th><th>What to check</th></tr></thead>
+            <tbody>
+              <tr><td>Duplicate without user-selected canonical</td><td>Google, because you named none</td><td>Add a canonical tag so the choice is yours.</td></tr>
+              <tr><td><a href="/guides/alternate-page-with-proper-canonical-tag">Alternate page with proper canonical tag</a></td><td>You, and Google agreed</td><td>That it points at the right page.</td></tr>
+              <tr><td>Duplicate, Google chose different canonical than user</td><td>Google, over your choice</td><td>Why Google thinks another page is the better copy.</td></tr>
+              <tr><td><a href="/guides/page-with-redirect">Page with redirect</a></td><td>The redirect</td><td>That the redirect is permanent and ends on a page that returns 200.</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </section>
+
+      <section class="site-frame" aria-labelledby="duplicate-faq">
+        <SectionHeading
+          id="duplicate-faq"
+          title="Questions about duplicate without user-selected canonical"
+          text="What people ask after they see it in Search Console."
+        />
+        <FaqAccordion items={faq} id="duplicate-faq-list" />
+      </section>
+
+      <StatusGuides current="/guides/duplicate-without-user-selected-canonical" />
+    </div>
+  </main>
+</BaseLayout>

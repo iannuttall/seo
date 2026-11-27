@@ -26,13 +26,27 @@ const featurePaths = [
     .sort()
     .map((file) => `/features/${file.replace(/\.astro$/, '')}`),
 ]
-// One guide page for each MDX file in src/content/guides.
+// One guide page for each MDX file in src/content/guides, and one for each
+// landing page in src/pages/guides.
 const guidePaths = [
   '/guides',
-  ...readdirSync(resolve(import.meta.dirname, '..', 'src', 'content', 'guides'))
-    .filter((file) => file.endsWith('.mdx'))
+  ...[
+    ...readdirSync(
+      resolve(import.meta.dirname, '..', 'src', 'content', 'guides'),
+    )
+      .filter((file) => file.endsWith('.mdx'))
+      .map((file) => file.replace(/\.mdx$/, '')),
+    ...readdirSync(resolve(import.meta.dirname, '..', 'src', 'pages', 'guides'))
+      .filter(
+        (file) =>
+          file.endsWith('.astro') &&
+          file !== 'index.astro' &&
+          !file.startsWith('['),
+      )
+      .map((file) => file.replace(/\.astro$/, '')),
+  ]
     .sort()
-    .map((file) => `/guides/${file.replace(/\.mdx$/, '')}`),
+    .map((slug) => `/guides/${slug}`),
 ]
 const paths = [
   '/',

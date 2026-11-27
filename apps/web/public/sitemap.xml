@@ -32,8 +32,14 @@
   <url><loc>https://seoskill.dev/features/striking-distance-keywords</loc></url>
   <url><loc>https://seoskill.dev/features/website-not-showing-up-on-google</loc></url>
   <url><loc>https://seoskill.dev/guides</loc></url>
+  <url><loc>https://seoskill.dev/guides/alternate-page-with-proper-canonical-tag</loc></url>
   <url><loc>https://seoskill.dev/guides/astro-seo</loc></url>
+  <url><loc>https://seoskill.dev/guides/duplicate-without-user-selected-canonical</loc></url>
+  <url><loc>https://seoskill.dev/guides/excluded-by-noindex-tag</loc></url>
   <url><loc>https://seoskill.dev/guides/nextjs-seo</loc></url>
+  <url><loc>https://seoskill.dev/guides/page-with-redirect</loc></url>
+  <url><loc>https://seoskill.dev/guides/sitemap-could-not-be-read</loc></url>
+  <url><loc>https://seoskill.dev/guides/soft-404</loc></url>
   <url><loc>https://seoskill.dev/blog</loc></url>
   <url><loc>https://seoskill.dev/blog/ai-crawler-user-agents</loc></url>
   <url><loc>https://seoskill.dev/blog/lighthouse-agentic-browsing</loc></url>

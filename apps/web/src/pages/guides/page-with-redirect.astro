@@ -1,0 +1,197 @@
+---
+import {
+  Alert02Icon,
+  ArrowReloadHorizontalIcon,
+  Clock01Icon,
+  FileNotFoundIcon,
+  Globe02Icon,
+  Link01Icon,
+  Route01Icon,
+  TaskDone01Icon,
+} from '@hugeicons/core-free-icons'
+import BeforeAfter from '@/components/blog/BeforeAfter.astro'
+import UrlMap from '@/components/blog/UrlMap.astro'
+import CodeBlock from '@/components/CodeBlock.astro'
+import FaqAccordion from '@/components/FaqAccordion.astro'
+import HomeCard from '@/components/HomeCard.astro'
+import LandingHero from '@/components/LandingHero.astro'
+import SectionHeading from '@/components/SectionHeading.astro'
+import StatusGuides from '@/components/StatusGuides.astro'
+import BaseLayout from '@/layouts/BaseLayout.astro'
+import type { SchemaBreadcrumb } from '@/lib/schema'
+
+const breadcrumbs: SchemaBreadcrumb[] = [
+  { label: 'Home', href: '/' },
+  { label: 'Guides', href: '/guides' },
+  { label: 'Page with redirect' },
+]
+
+// seoskill.dev's own old URLs that Search Console lists as page with
+// redirect, each checked live on 27 November 2026: every one answers 301.
+const urls = [
+  { url: '/docs/skill', action: '301', tone: 'change' as const, to: '/docs/cli', note: 'An old docs page, merged into the CLI docs.' },
+  { url: '/docs/typescript', action: '301', tone: 'change' as const, to: '/docs/cli', note: 'A second old page merged into the same one.' },
+  { url: '/docs/dataforseo', action: '301', tone: 'change' as const, to: '/docs/keys', note: 'One provider page, folded into the page for every key.' },
+  { url: '/blog/seo-agent', action: '301', tone: 'change' as const, to: '/docs/getting-started', note: 'An early post, replaced by the setup guide.' },
+  { url: '/docs/cli', action: 'Indexed', tone: 'keep' as const, note: 'The first two redirects end here, and Google indexes this URL.' },
+]
+
+const codes = {
+  before: {
+    label: 'Permanent',
+    code: `GET /docs/skill\nHTTP/2 301\nlocation: /docs/cli`,
+    note: 'A strong signal that /docs/cli is the page to index. Use it for a page that has moved for good.',
+  },
+  after: {
+    label: 'Temporary',
+    code: `GET /docs/skill\nHTTP/2 302\nlocation: /docs/cli`,
+    note: 'A weak signal. Google may keep the old URL as the canonical. Use it only for a short-lived move.',
+  },
+}
+
+const leave = [
+  { title: 'Moved and merged pages', text: 'An old URL that sends people to the page that replaced it.', icon: ArrowReloadHorizontalIcon },
+  { title: 'http:// and www variants', text: 'Every other version of your domain redirecting to the one you use.', icon: Globe02Icon },
+  { title: 'Trailing slash and case', text: 'One form of the URL redirecting to the form your site links to.', icon: Link01Icon },
+  { title: 'Old campaign and short links', text: 'Links you printed or shared that still need to land somewhere.', icon: Clock01Icon },
+]
+
+const act = [
+  { title: 'Your sitemap lists the old URL', text: 'A sitemap should list the URLs your redirects end on.', icon: TaskDone01Icon },
+  { title: 'It is a temporary 302 or 307', text: 'A page that moved for good should send a 301 or 308.', icon: Alert02Icon },
+  { title: 'It ends on an error', text: 'The redirect lands on a 404, a 5xx or another redirect that loops.', icon: FileNotFoundIcon },
+  { title: 'The page should not redirect', text: 'A page you want in Google redirects by mistake, often after a migration or a plugin change.', icon: Route01Icon },
+]
+
+const faq = [
+  {
+    question: 'Is "page with redirect" an error in Search Console?',
+    answer:
+      'No. Google’s Page indexing report help says a URL that redirects is not indexed, and the page it ends on may be. A list of old URLs under this reason is normal after you move or merge pages.',
+  },
+  {
+    question: 'How do I fix page with redirect?',
+    answer:
+      'For most URLs there is nothing to fix. Check that each one redirects permanently, ends on a page that returns 200, and is not in your sitemap. Fix only the URLs that fail one of those checks, or the pages that should not redirect at all.',
+  },
+  {
+    question: 'Should I remove redirected URLs from my sitemap?',
+    answer:
+      'Yes. List the URL each redirect ends on instead. A sitemap tells Google which URLs you want indexed, and a redirecting URL will never be one of them.',
+  },
+  {
+    question: 'Why does Search Console still show URLs I redirected long ago?',
+    answer:
+      'Google keeps crawling URLs it knows, from old links and its own records, for a long time. As long as they still redirect to the right page, leave them. The count does not hurt the pages they point at.',
+  },
+  {
+    question: 'Should I use a redirect or a canonical tag?',
+    answer:
+      'Use a 301 when the old URL has no reason to exist, so people and Google both land on the new page. Use a canonical tag when both URLs need to work, such as a page with tracking parameters.',
+  },
+]
+---
+
+<BaseLayout
+  title="Page with redirect in Search Console: check every URL"
+  description="What page with redirect means in Search Console, which redirects to leave alone, and how to check every redirected URL on your site at once."
+  canonicalPath="/guides/page-with-redirect"
+  {breadcrumbs}
+  framed={false}
+>
+  <main data-agent-content>
+    <LandingHero
+      title="Page with redirect"
+      lead="This Search Console reason means a URL redirects somewhere else, so Google indexes where it ends instead. Most of these are old URLs doing their job. Find the few that send Google the wrong way."
+      setupId="redirect-setup"
+    />
+
+    <div class="space-y-24 py-24 sm:space-y-32 sm:py-32">
+      <section class="site-frame" aria-labelledby="meaning-heading">
+        <SectionHeading
+          id="meaning-heading"
+          title="What page with redirect means"
+          text="Google requested the URL and got a redirect. It follows the redirect and considers the final page for its index, never the URL that redirected."
+        />
+        <div class="max-w-3xl">
+          <UrlMap
+            rows={urls}
+            title="seoskill.dev's own redirects, as Google lists them"
+            caption="Old URLs on this site under page with redirect in Search Console. Each answered 301 when we checked on 27 November 2026."
+          />
+          <BeforeAfter
+            before={codes.before}
+            after={codes.after}
+            title="The status code that decides it"
+            caption="Google treats a 301 or 308 as a strong signal and a 302 or 307 as a weak one."
+          />
+        </div>
+      </section>
+
+      <section class="site-frame" aria-labelledby="leave-heading">
+        <SectionHeading
+          id="leave-heading"
+          title="When to leave it alone"
+          text="A redirect from a URL you no longer use is the right outcome. These are the usual cases."
+        />
+        <div class="grid grid-cols-1 gap-2 sm:grid-cols-2">
+          {leave.map((item) => <HomeCard {...item} />)}
+        </div>
+      </section>
+
+      <section class="site-frame" aria-labelledby="act-heading">
+        <SectionHeading
+          id="act-heading"
+          title="When it needs fixing"
+          text="The reason is a problem only when the redirect is the wrong kind, ends in the wrong place, or should not be there."
+        />
+        <div class="grid grid-cols-1 gap-2 sm:grid-cols-2">
+          {act.map((item) => <HomeCard {...item} />)}
+        </div>
+      </section>
+
+      <section class="site-frame" aria-labelledby="check-heading">
+        <SectionHeading
+          id="check-heading"
+          title="Check every redirected URL on your site"
+          text="SEO Skill asks URL Inspection about each page it knows from your Search Console and your sitemap, then follows every redirect live, hop by hop."
+        />
+        <div class="docs-prose max-w-3xl">
+          <p>Connect SEO Skill to your agent, then ask:</p>
+          <CodeBlock prompt value="Which URLs on example.com does Google list as page with redirect? Tell me which redirects are temporary, which end on an error, and which redirected URLs are still in our sitemap." wrap />
+          <p>Or run it in a terminal:</p>
+          <CodeBlock value="seo index --site example.com" />
+          <p>
+            Each URL comes back with every hop and where it ends. A same-host
+            302 or 307, a loop, a redirect to a missing page and a sitemap URL
+            that redirects are labelled fix. A permanent redirect to a page
+            that returns 200 and declares itself canonical is labelled
+            expected.
+          </p>
+          <p>
+            On seoskill.dev, Search Console lists 25 URLs as page with
+            redirect, most of them old docs URLs and the http:// home page.
+            The four old URLs in the map above are not in the sitemap, answer
+            301 and end on a page that returns 200, so there is nothing to
+            change on them.
+          </p>
+          <p>
+            To follow one URL's redirects by hand, use the free{' '}
+            <a href="/tools/redirect-checker">redirect checker</a>.
+          </p>
+        </div>
+      </section>
+
+      <section class="site-frame" aria-labelledby="redirect-faq">
+        <SectionHeading
+          id="redirect-faq"
+          title="Questions about page with redirect"
+          text="What people ask after they see it in Search Console."
+        />
+        <FaqAccordion items={faq} id="redirect-faq-list" />
+      </section>
+
+      <StatusGuides current="/guides/page-with-redirect" />
+    </div>
+  </main>
+</BaseLayout>

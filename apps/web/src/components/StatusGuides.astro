@@ -1,0 +1,23 @@
+---
+// The other Search Console status pages, as linked cards at the end of
+// each one. Leaves out the page it sits on.
+import HomeCard from './HomeCard.astro'
+import SectionHeading from './SectionHeading.astro'
+import { statusGuides } from '@/content/status-guides'
+
+type Props = { current: string }
+
+const { current } = Astro.props
+const others = statusGuides.filter((guide) => guide.path !== current)
+---
+
+<section class="site-frame" aria-labelledby="status-guides-heading">
+  <SectionHeading
+    id="status-guides-heading"
+    title="Other Search Console reasons"
+    text="What each reason in the Page indexing report means, and how to check every URL it covers."
+  />
+  <div class="grid grid-cols-1 gap-2 sm:grid-cols-2">
+    {others.map((guide) => <HomeCard title={guide.title} text={guide.text} icon={guide.icon} href={guide.path} link="Read the guide" />)}
+  </div>
+</section>

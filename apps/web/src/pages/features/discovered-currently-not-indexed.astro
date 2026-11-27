@@ -9,6 +9,7 @@ import {
 } from '@hugeicons/core-free-icons'
 import CodeBlock from '@/components/CodeBlock.astro'
 import FeaturePage from '@/components/FeaturePage.astro'
+import { statusGuides } from '@/content/status-guides'
 
 const related = [
   { title: 'seo index', text: "Google's indexing reason for every known page, each checked live and labelled.", href: '/docs/indexing', icon: Alert02Icon },
@@ -24,6 +25,9 @@ reason | label | url | live | in_sitemap | last_crawl | why
 Discovered - currently not indexed | check | /guides/composting | 200 | yes | | Google knows the URL but has not crawled it yet. The sitemap lists it. It returns 200 now.
 Discovered - currently not indexed | check | /shop?colour=red&size=9 | 200 | no | | Google knows the URL but has not crawled it yet. It returns 200 now.
 Discovered - currently not indexed | fix | /guides/old-compost-bins | 404 | yes | | It returns 404 now, and the sitemap lists it.`
+
+// The status guides for the other Page indexing reasons.
+const otherReasons = statusGuides.filter((guide) => guide.path.startsWith('/guides/'))
 ---
 
 <FeaturePage
@@ -170,4 +174,10 @@ Discovered - currently not indexed | fix | /guides/old-compost-bins | 404 | yes 
     page drops out of Google's index or comes back. <a href="/docs/alerts">Alerts</a>{' '}
     covers each email.
   </p>
+
+  <h2>Other Search Console reasons</h2>
+  <p>The other reasons in the Page indexing report each have a guide:</p>
+  <ul>
+    {otherReasons.map((guide) => <li><a href={guide.path}>{guide.title}</a>: {guide.text}</li>)}
+  </ul>
 </FeaturePage>

@@ -3,6 +3,7 @@ import {
   AiChat02Icon,
   Analytics01Icon,
   ChartLineData01Icon,
+  Rocket01Icon,
   Route01Icon,
 } from '@hugeicons/core-free-icons'
 import Breadcrumbs from '@/components/Breadcrumbs.astro'
@@ -17,6 +18,12 @@ import type { SchemaBreadcrumb } from '@/lib/schema'
 const breadcrumbs: SchemaBreadcrumb[] = [
   { label: 'Home', href: '/' },
   { label: 'AI SEO services' },
+]
+
+const services = [
+  { title: 'SEO audit service', text: 'What a technical audit should check, what you should get from it, and how to run one with your own agent.', href: '/services/seo-audit', icon: Route01Icon, link: 'See the SEO audit service' },
+  { title: 'AEO and GEO agency', text: 'The weekly work an AEO or GEO agency does to get you cited in AI answers, and how to judge it.', href: '/services/aeo-agency', icon: AiChat02Icon, link: 'See the AEO agency page' },
+  { title: 'SEO for startups', text: 'The few SEO jobs to do at launch, in the order they pay off, each checked with your own data.', href: '/seo-for-startups', icon: Rocket01Icon, link: 'See SEO for startups' },
 ]
 
 const related = [
@@ -80,7 +87,7 @@ const faq = [
           <tr>
             <td>Get crawled and indexed</td>
             <td>Let search and AI crawlers read every page, and get the pages that matter into Google's index.</td>
-            <td><a href="/docs/commands/indexing">seo index</a> checks Google's index status for your pages, and the <a href="/tools/robots-txt-validator">robots.txt checker</a> shows which crawlers your rules let in.</td>
+            <td><a href="/docs/indexing">seo index</a> checks Google's index status for your pages, and the <a href="/tools/robots-txt-validator">robots.txt checker</a> shows which crawlers your rules let in.</td>
           </tr>
           <tr>
             <td>Find the buyer questions</td>
@@ -171,6 +178,13 @@ const faq = [
     <div class="mt-6">
       <FaqAccordion id="services-faq" items={faq} />
     </div>
+
+    <section class="mt-16" aria-labelledby="services-list">
+      <h2 id="services-list" class="text-2xl/8 font-medium tracking-normal">AI SEO services by job</h2>
+      <div class="mt-6 grid grid-cols-1 gap-2 sm:grid-cols-2">
+        {services.map((item) => <HomeCard {...item} />)}
+      </div>
+    </section>
 
     <section class="mt-16" aria-labelledby="services-related">
       <h2 id="services-related" class="text-2xl/8 font-medium tracking-normal">The tools behind each job</h2>

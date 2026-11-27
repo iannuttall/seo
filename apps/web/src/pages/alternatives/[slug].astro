@@ -49,8 +49,12 @@ const freeTools = (suiteTools[item.slug] ?? []).flatMap((id) => tools.filter((to
 const description = suite
   ? `Free ${item.short} alternative: free backlink, keyword and traffic tools, plus your own Search Console data in your AI agent. Compare features and price.`
   : `${item.short} alternative: compare it with the free SEO Skill MCP server on setup, tools, AI clients, price and data handling.`
-const related = competitors.filter((other) => other.kind === item.kind && other.slug !== item.slug)
-const others = (related.length ? related : competitors.filter((other) => other.slug !== item.slug)).slice(0, 4)
+// The next four of the same kind, wrapping round, so every page in a kind
+// gets links from its siblings instead of the first four getting them all.
+const sameKind = competitors.filter((other) => other.kind === item.kind)
+const pool = sameKind.length > 1 ? sameKind : competitors
+const start = pool.findIndex((other) => other.slug === item.slug)
+const others = [...pool.slice(start + 1), ...pool.slice(0, start)].slice(0, 4)
 
 // A link to the feature page closest to what this alternative does.
 const featureLinks: Record<string, { anchor: string; href: string }> = {

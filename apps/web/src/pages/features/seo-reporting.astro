@@ -1,116 +1,292 @@
 ---
 import {
+  AiSearch02Icon,
+  Alert02Icon,
   Analytics01Icon,
-  ChartLineData01Icon,
-  CloudIcon,
   Calendar03Icon,
+  ChartLineData01Icon,
+  GitCompareIcon,
+  RankingIcon,
+  SearchList01Icon,
+  TaskDone01Icon,
+  ChartIncreaseIcon,
 } from '@hugeicons/core-free-icons'
-import FeaturePage from '@/components/FeaturePage.astro'
+import CodeBlock from '@/components/CodeBlock.astro'
+import FaqAccordion from '@/components/FaqAccordion.astro'
+import HomeCard from '@/components/HomeCard.astro'
+import LandingHero from '@/components/LandingHero.astro'
+import SectionHeading from '@/components/SectionHeading.astro'
+import SetupPrompts from '@/components/SetupPrompts.astro'
+import SplitList from '@/components/SplitList.astro'
+import { getButtonClasses } from '@/components/ui/button'
+import BaseLayout from '@/layouts/BaseLayout.astro'
+import type { SchemaBreadcrumb } from '@/lib/schema'
 
-const related = [
-  { title: 'seo report', text: 'Every section of the Search Console report and how to read it.', href: '/docs/report', icon: Analytics01Icon },
-  { title: 'seo compare', text: 'Equal periods before and after a release or a Google update.', href: '/docs/compare', icon: Calendar03Icon },
-  { title: 'Google Analytics', text: 'Connect Google Analytics so reports show search sessions too.', href: '/docs/analytics', icon: ChartLineData01Icon },
-  { title: 'Run in cloud agents', text: 'Run reports from an agent that works on a schedule.', href: '/docs/cloud-agents', icon: CloudIcon },
+const breadcrumbs: SchemaBreadcrumb[] = [
+  { label: 'Home', href: '/' },
+  { label: 'Features', href: '/features' },
+  { label: 'SEO reporting tool' },
+]
+
+// The parts of the SEO report, in the order a reader needs them.
+const parts = [
+  {
+    title: 'Search totals',
+    icon: Analytics01Icon,
+    text: 'Clicks, impressions, click-through rate and average position against the previous period, by device, with the top pages and queries and how each one moved.',
+  },
+  {
+    title: 'Google Analytics sessions',
+    icon: ChartLineData01Icon,
+    text: 'Organic Search sessions from Google and from every search engine, sessions from all channels, and visits from AI assistants, for the same dates.',
+  },
+  {
+    title: 'Opportunities',
+    icon: ChartIncreaseIcon,
+    text: 'Quick wins, titles with a low click-through rate, queries just off page one and pages stuck on page two. These are the pages to work on next.',
+  },
+  {
+    title: 'Problems',
+    icon: Alert02Icon,
+    text: 'Pages that lost clicks, queries where two of your own pages compete, and sudden drops with the Google updates that ran on the same dates.',
+  },
+  {
+    title: 'AI shaped searches',
+    icon: AiSearch02Icon,
+    text: 'The long, question style searches in Search Console that read like prompts to an AI assistant, so you see what people ask before they click.',
+  },
+  {
+    title: 'Before and after',
+    icon: GitCompareIcon,
+    text: 'Equal periods either side of a release, a redesign or a Google update, for the whole site or one set of pages.',
+  },
+]
+
+const prompts = [
+  { title: 'The whole picture', text: 'Run the SEO report for example.com' },
+  { title: 'One part of it', text: 'Show me the content that lost clicks on example.com in the last 28 days' },
+  { title: 'A calendar month', text: 'Write the October 2026 SEO report for example.com and compare it with September' },
+  { title: 'A release or an update', text: 'Compare the 28 days before and after we launched the new pricing page on 3 November' },
+  { title: 'Every site at once', text: 'Summarise last week across all of my audited sites' },
+]
+
+const monthly = [
+  { title: 'What happened', text: 'Clicks, impressions and sessions against last month, in one short paragraph.' },
+  { title: 'What moved', text: 'The pages and queries that gained and lost the most, with the numbers beside each.' },
+  { title: 'Why it moved', text: 'What you changed, and any Google update that ran on the same dates. The dates overlapping is evidence, not proof.' },
+  { title: 'What comes next', text: 'Three pages to work on, taken from the quick wins, low click-through rate and page two sections.' },
+]
+
+const client = [
+  { title: 'Link each client\u2019s Google account once', text: 'On your account page. Every request uses the linked account that can read that client\u2019s Search Console and Google Analytics.' },
+  { title: 'Ask for the month by client name', text: 'Your agent picks the right property and pulls the numbers for exactly those dates.' },
+  { title: 'Keep your own template', text: 'Your agent writes the report into the document you already send, under your agency\u2019s name and nobody else\u2019s.' },
+  { title: 'Keep each metric under its own name', text: 'Search Console clicks and Google Analytics sessions are different counts. Label them, because a client will ask why they don\u2019t match.' },
+]
+
+const checks = [
+  { title: 'Compare equal date windows', text: 'A 28 day window against a 31 day month makes every number look worse. The report compares like with like unless you ask otherwise.' },
+  { title: 'Read updates as timing, not cause', text: 'When a drop lines up with a Google update, the report says the dates overlap. A client report should say the same and no more.' },
+  { title: 'Treat the click-through curve as a yardstick', text: 'It comes from your own site\u2019s data, so it shows which titles underperform for you. It is not a Google rule.' },
+  { title: 'Say where data is missing', text: 'Search Console data is final two or three days after a day ends, and very rare queries are left out of the query rows. Send a monthly report a few days into the next month.' },
+]
+
+const tools = [
+  { title: 'Monthly SEO report builder', text: 'Turn a Search Console export into a month on month report in your browser, then download it as HTML or Markdown. Free, with no account.', href: '/tools/monthly-seo-report', icon: Calendar03Icon, link: 'Build a report' },
+  { title: 'Google algorithm update checker', text: 'See which Google updates ran on the dates your traffic changed, before you write the explanation.', href: '/tools/google-algorithm-update-checker', icon: RankingIcon, link: 'Check updates' },
+  { title: 'SEO keyword report', text: 'Every query with its page, clicks, impressions and position, for when the report needs the full table.', href: '/features/keyword-report', icon: SearchList01Icon, link: 'Keyword report' },
+  { title: 'SEO for agencies', text: 'Every client in one account, a week of prompts and the weekly site audit per client.', href: '/features/seo-for-agencies', icon: TaskDone01Icon, link: 'For agencies' },
+]
+
+const faq = [
+  {
+    question: 'What is an SEO report?',
+    answer:
+      'An SEO report shows how a site did in search over a period: how many people found it, through which searches and pages, what changed since last time and what to work on next. The numbers come from Search Console, with Google Analytics for what visitors did after they arrived.',
+  },
+  {
+    question: 'What should a monthly SEO report include?',
+    answer:
+      'Clicks, impressions, click-through rate and position against the month before, the pages and queries that gained and lost the most, organic sessions from Google Analytics, what you changed, and the few pages to work on next. Anything else belongs in an appendix.',
+  },
+  {
+    question: 'How often should I report on SEO?',
+    answer:
+      'Monthly for a client or a manager, weekly for whoever does the work. Search results move too much day to day for daily reports to mean much, and a quarter is too long to catch a drop while it is still small.',
+  },
+  {
+    question: 'What is a white label SEO report?',
+    answer:
+      'A report an agency sends under its own name, with no other company\u2019s branding on it. With SEO Skill your agent writes it into your own document, so it carries your agency\u2019s name and layout.',
+  },
+  {
+    question: 'Why don\u2019t Search Console clicks match Google Analytics sessions?',
+    answer:
+      'They count different things. A click is counted by Google when someone clicks a result. A session is counted by Google Analytics when the page loads and the tag runs, so blocked tags, consent banners and people who leave before the page loads all make sessions lower.',
+  },
+  {
+    question: 'Do I need Google Analytics?',
+    answer:
+      'No. The report works from Search Console alone. Google Analytics adds sessions and visits from AI assistants for the same dates when you connect it.',
+  },
+  {
+    question: 'Can SEO reports run automatically?',
+    answer:
+      'Yes. A scheduled agent task can run the report every Monday and send you the summary. Sites in the weekly site audit also get each week\u2019s results by email and webhook on Monday.',
+    links: [{ text: 'scheduled agent task', href: '/docs/cloud-agents' }],
+  },
+  {
+    question: 'How much does SEO reporting cost?',
+    answer:
+      'Reports your agent runs are free, in the hosted MCP and the CLI. The weekly site audit, with its Monday email and summary across every audited site, is $50 a month per site.',
+    links: [{ text: 'weekly site audit', href: '/pricing' }],
+  },
 ]
 ---
 
-<FeaturePage
-  title="SEO reporting tool for AI agents"
-  metaTitle="SEO reporting tool for monthly and client reports"
+<BaseLayout
+  title="SEO reporting tool for monthly and client reports"
   description="Automated SEO reports from your own Search Console and Google Analytics data. Ask your agent for a weekly, monthly or white label client SEO report built from real clicks, queries and sessions."
-  path="/features/seo-reporting"
-  lead="Ask your agent for an SEO report and it pulls the numbers from Search Console and Google Analytics first, then writes the summary you would otherwise put together by hand."
-  {related}
+  canonicalPath="/features/seo-reporting"
+  {breadcrumbs}
+  framed={false}
 >
-  <h2>What an SEO report should answer</h2>
-  <p>
-    SEO reporting is the regular check on how a site does in search: how
-    many people found it, through which searches and pages, and what
-    changed since last time. A good report also says what to do next,
-    so whoever reads it knows which page to work on first.
-  </p>
+  <main data-agent-content>
+    <LandingHero
+      title="SEO reporting tool for AI agents"
+      lead="Ask your agent for an SEO report. It pulls the numbers from your own Search Console and Google Analytics, then writes the weekly, monthly or client report you would otherwise put together by hand."
+      setupId="seo-reporting-setup"
+    />
 
-  <h2>What goes into the SEO report</h2>
-  <table>
-    <thead><tr><th>Part</th><th>What it shows</th></tr></thead>
-    <tbody>
-      <tr><td>Search totals</td><td>Clicks, impressions, click-through rate and average position against the previous period, by device, with the top pages and queries and how they changed.</td></tr>
-      <tr><td>Google Analytics</td><td>Organic Search sessions from Google and from every search engine, sessions from all channels, and visits from AI assistants, for the same dates.</td></tr>
-      <tr><td>Opportunities</td><td>Quick wins, titles with a low click-through rate, queries just off page one and pages on page two.</td></tr>
-      <tr><td>Problems</td><td>Content that lost clicks, queries where your own pages compete, and sudden traffic drops with the Google updates near them.</td></tr>
-      <tr><td>Before and after</td><td>Equal periods either side of a release or an update, for the whole site or a set of pages.</td></tr>
-    </tbody>
-  </table>
-  <p>
-    The report returns text and structured data. Your agent turns it into
-    the document you want, whether that is a short update for your team
-    or a monthly report for a client. When the report needs every query
-    with its page, clicks and position, ask for an{' '}
-    <a href="/features/keyword-report">SEO keyword report</a>.
-  </p>
+    <div class="space-y-24 py-24 sm:space-y-32 sm:py-32">
+      <section class="site-frame" aria-labelledby="parts-heading">
+        <SectionHeading
+          id="parts-heading"
+          title="What is in an SEO report?"
+          text="How many people found the site in search, through which pages and queries, what changed since last time and what to work on next. These are the six parts your agent gets back."
+        />
+        <div class="grid grid-cols-1 gap-2 sm:grid-cols-2">
+          {parts.map((item) => <HomeCard title={item.title} text={item.text} icon={item.icon} />)}
+        </div>
+      </section>
 
-  <h2>Run a report for one site</h2>
-  <p>Ask your agent:</p>
-  <pre><code>Run the SEO report for example.com</code></pre>
-  <p>In a terminal, with the CLI installed:</p>
-  <pre><code>seo report --site example.com</code></pre>
-  <p>
-    It covers the last 28 days of final Search Console data unless you give
-    other dates. Add <code>--section content-decay</code> (or any other
-    section) to open one part, and <code>--json</code> when a script or
-    agent reads the result.
-  </p>
+      <div>
+        <SplitList
+          id="prompts-heading"
+          title="How do I get an SEO report from my agent?"
+          text="Ask for it in plain words. Your agent runs the report on the last 28 days of final Search Console data, or the dates you name, and writes the summary from the numbers it got back."
+          items={prompts}
+        />
+        <div class="site-frame mt-8">
+          <CodeBlock
+            label="Or run it in a terminal"
+            value={'seo report --site example.com\n\nseo report --site example.com \\\\\n  --section content-decay \\\\\n  --start-date 2026-10-01 \\\\\n  --end-date 2026-10-31'}
+          />
+        </div>
+      </div>
 
-  <h2>Write a monthly SEO report</h2>
-  <p>
-    Ask your agent for the calendar month and it compares it with the month
-    before. No agent to hand? The free{' '}
-    <a href="/tools/monthly-seo-report">monthly SEO report builder</a>{' '}
-    turns a Search Console export into a month on month report in your
-    browser, and downloads it as HTML or Markdown.
-  </p>
+      <section class="site-frame grid gap-8 sm:grid-cols-[1fr_1.15fr] sm:items-start" aria-labelledby="monthly-heading">
+        <div class="sm:sticky sm:top-24">
+          <h2 id="monthly-heading" class="text-pretty text-2xl font-medium -tracking-[0.4px] text-foreground xl:text-3xl xl:-tracking-[0.6px]">
+            How do I write a monthly SEO report?
+          </h2>
+          <p class="mt-4 text-base leading-7 text-foreground-muted">
+            Ask your agent for the calendar month. It compares it with the
+            month before, then writes four short parts: what happened, what
+            moved, why, and what comes next. Most readers stop after the
+            first paragraph, so that one carries the numbers.
+          </p>
+          <CodeBlock
+            prompt
+            value="Write the October 2026 SEO report for example.com. Compare it with September, list the pages that gained and lost clicks, and say what we fixed and what comes next."
+          />
+          <a class:list={[getButtonClasses('secondary', 'lg'), 'mt-6']} href="/tools/monthly-seo-report">Try the free report builder</a>
+        </div>
+        <ul class="divide-y divide-border rounded-lg bg-muted px-6">
+          {
+            monthly.map((item) => (
+              <li class="py-4">
+                <h3 class="text-base leading-7 font-medium text-foreground">{item.title}</h3>
+                <p class="text-base leading-7 text-foreground-muted">{item.text}</p>
+              </li>
+            ))
+          }
+        </ul>
+      </section>
 
-  <h2>Write a client or white label SEO report</h2>
-  <p>
-    Link each Google account that can read a client's Search Console
-    property on your <a href="/account">account page</a>.
-    Every request uses the linked account that can read that site, so one
-    agent can report on all of your clients. Then give it the month:
-  </p>
-  <pre><code>Write the September 2026 SEO report for example.com. Use seo report
-for 2026-09-01 to 2026-09-30, then the content-decay and quick-wins
-sections. Keep every number as reported and say where data is missing.</code></pre>
-  <p>
-    SEO Skill gives your agent the facts. The layout, the branding and the
-    advice come from you and your agent, in whatever document you already
-    send, so a white label report carries your agency's name and nobody
-    else's. Keep Search Console clicks and Google Analytics sessions under
-    their own names, because they are different counts and a client will
-    ask why they do not match.
-  </p>
+      <SplitList
+        id="client-heading"
+        title="How do I send client and white label SEO reports?"
+        text="Link each client's Google account once and ask for their report by name. SEO Skill supplies the numbers from the client's own data, and your agent writes them into your template, under your agency's name."
+        items={client}
+      />
 
-  <h2>Automated SEO reports each week</h2>
-  <p>
-    A scheduled agent task can run the report every Monday and send you a
-    summary. Keep the same length of date window each time, so this week
-    compares fairly with the last. The <a href="/docs/cloud-agents">cloud
-    agents guide</a> shows how to give a scheduled agent your account.
-  </p>
-  <p>
-    Sites in the weekly site audit ($50 a month per site) also get a
-    Monday email and webhook with each site's week: Google index checks,
-    what the weekly crawl found and search clicks against the week before.
-    Running <code>seo report</code> with no site returns the same summary
-    across all of your audited sites.
-  </p>
+      <section class="site-frame grid gap-8 sm:grid-cols-[1fr_1.15fr] sm:items-start" aria-labelledby="weekly-heading">
+        <div class="sm:sticky sm:top-24">
+          <h2 id="weekly-heading" class="text-pretty text-2xl font-medium -tracking-[0.4px] text-foreground xl:text-3xl xl:-tracking-[0.6px]">
+            Can SEO reports run automatically every week?
+          </h2>
+          <p class="mt-4 text-base leading-7 text-foreground-muted">
+            Yes. Give a scheduled agent your account and it runs the report
+            every Monday and sends you the summary. Keep the same length of
+            date window each week, so this week compares fairly with the last.
+          </p>
+          <a class:list={[getButtonClasses('secondary', 'lg'), 'mt-6']} href="/docs/cloud-agents">Set up a scheduled agent</a>
+        </div>
+        <div class="rounded-lg bg-muted p-6 text-base leading-7 text-foreground-muted">
+          <p>
+            Sites in the weekly site audit ($50 a month per site) also get a
+            Monday email and webhook with each site's week: Google index
+            checks, what the weekly crawl found and search clicks against the
+            week before.
+          </p>
+          <p class="mt-4">
+            Ask your agent for last week with no site named, and it returns
+            the same summary across every audited site. For an agency, that is
+            the Monday stand up in one answer.
+          </p>
+          <a class:list={[getButtonClasses('secondary', 'lg'), 'mt-6']} href="/pricing">See the weekly site audit</a>
+        </div>
+      </section>
 
-  <h2>Check the numbers before you send them</h2>
-  <p>
-    The click-through rate curve comes from your own site's data, so it is a
-    useful yardstick and not a Google rule. When a traffic drop lines up
-    with a Google update, the report shows that the dates overlap. It does
-    not prove the update caused the drop, so the client report should not
-    say so either.
-  </p>
-</FeaturePage>
+      <SplitList
+        id="checks-heading"
+        title="How do I check the numbers before I send them?"
+        text="Compare equal periods, label each source, and say what the evidence shows and no more. A client remembers the one number that turned out to be wrong."
+        items={checks}
+      />
+
+      <section class="site-frame" aria-labelledby="tools-heading">
+        <SectionHeading
+          id="tools-heading"
+          title="Free SEO reporting tools to start with"
+          text="Build a monthly report from a Search Console export in your browser, then let your agent take over the work each month."
+        />
+        <div class="grid grid-cols-1 gap-2 sm:grid-cols-2">
+          {tools.map((item) => <HomeCard {...item} />)}
+        </div>
+      </section>
+
+      <section class="site-frame" aria-labelledby="faq-heading">
+        <div class="max-w-2xl">
+          <h2 id="faq-heading" class="text-pretty text-2xl font-medium -tracking-[0.4px] text-foreground xl:text-3xl xl:-tracking-[0.6px]">
+            Questions about SEO reporting
+          </h2>
+        </div>
+        <div class="mt-10">
+          <FaqAccordion items={faq} id="seo-reporting-faq" />
+        </div>
+      </section>
+
+      <section class="site-frame" aria-labelledby="start-heading">
+        <SectionHeading
+          id="start-heading"
+          title="Run your first SEO report"
+          text="Add SEO Skill to your agent, sign in with the Google account that can read your Search Console, and ask for the SEO report for your site."
+        />
+        <a class:list={[getButtonClasses('default', 'lg'), 'mb-10']} href="/account">Sign in and run a report</a>
+        <SetupPrompts id="seo-reporting-setup-end" />
+      </section>
+    </div>
+  </main>
+</BaseLayout>

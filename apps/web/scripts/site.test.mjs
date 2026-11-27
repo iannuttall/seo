@@ -75,6 +75,10 @@ const expectedPages = new Map([
     .filter((path) => path !== '/blog')
     .map((path) => [pagePath(path), `https://seoskill.dev${path}`]),
   ['services/index.html', 'https://seoskill.dev/services'],
+  [
+    'services/aeo-agency/index.html',
+    'https://seoskill.dev/services/aeo-agency',
+  ],
   ['seo-for-startups/index.html', 'https://seoskill.dev/seo-for-startups'],
   ['pricing/index.html', 'https://seoskill.dev/pricing'],
   ['about/index.html', 'https://seoskill.dev/about'],
@@ -343,6 +347,7 @@ test('sitemap is exact and contains only indexable canonical pages', () => {
         path.startsWith('integrations/') ||
         path.startsWith('alternatives/') ||
         path === 'services/index.html' ||
+        path === 'services/aeo-agency/index.html' ||
         path === 'seo-for-startups/index.html' ||
         path === 'pricing/index.html' ||
         path === 'about/index.html' ||

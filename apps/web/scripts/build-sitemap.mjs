@@ -60,6 +60,7 @@ const paths = [
   ...cmsPaths,
   ...alternativePaths,
   '/services',
+  '/services/aeo-agency',
   '/seo-for-startups',
   '/pricing',
   '/about',

@@ -1,0 +1,253 @@
+---
+import {
+  AiChat02Icon,
+  Analytics01Icon,
+  ChartLineData01Icon,
+  Clock01Icon,
+  GoogleIcon,
+  Link01Icon,
+  Robot01Icon,
+  SearchList01Icon,
+  TaskDone01Icon,
+  UserSearch01Icon,
+} from '@hugeicons/core-free-icons'
+import CompareBars from '@/components/blog/CompareBars.astro'
+import PlanSteps from '@/components/blog/PlanSteps.astro'
+import CodeBlock from '@/components/CodeBlock.astro'
+import FaqAccordion from '@/components/FaqAccordion.astro'
+import HomeCard from '@/components/HomeCard.astro'
+import LandingHero from '@/components/LandingHero.astro'
+import SectionHeading from '@/components/SectionHeading.astro'
+import BaseLayout from '@/layouts/BaseLayout.astro'
+import type { SchemaBreadcrumb } from '@/lib/schema'
+
+const breadcrumbs: SchemaBreadcrumb[] = [
+  { label: 'Home', href: '/' },
+  { label: 'AI SEO services', href: '/services' },
+  { label: 'AEO and GEO agency' },
+]
+
+const steps = [
+  {
+    marker: 'Week 1',
+    title: 'Check crawlers and indexing',
+    body: 'Make sure Googlebot, Bingbot and the AI search crawlers can read your pages, and that the pages that matter are in Google’s index. An AI answer can only cite a page its search can find.',
+  },
+  {
+    marker: 'Week 1',
+    title: 'Collect the questions from your own data',
+    body: 'Start with the searches already in your Search Console that read like AI prompts, then add the questions buyers ask your sales team. Group rewordings of one question together.',
+  },
+  {
+    marker: 'Week 2',
+    title: 'Measure where you start',
+    body: 'Ask each question on ChatGPT, Gemini, Google AI Mode and AI Overviews, more than once. Record how often each engine names or cites you, and which sites it cites instead.',
+  },
+  {
+    marker: 'Every week',
+    title: 'Ship one change',
+    body: 'Improve the page that answers a question group, or earn a mention on a site the answers already cite. One change a week, each with the day it went live.',
+  },
+  {
+    marker: 'Every week',
+    title: 'Report what moved',
+    body: 'Each engine’s rate against the starting point, next to Search Console clicks and impressions, with the changes that shipped in between.',
+  },
+]
+
+// seoskill.dev's own Search Console, 26 August to 23 November 2026: the
+// searches SEO Skill's ai-queries check classifies as AI conversations or
+// agent searches, by kind. 103 searches in total; the two test prompts
+// from AI visibility trackers are left out of the chart.
+const kinds = [
+  { label: 'Ten words or more', value: 61 },
+  { label: 'Search operators, such as site:', value: 14 },
+  { label: 'A bare "this" or "it"', value: 11 },
+  { label: 'Chat phrasing', value: 8 },
+  { label: 'Prompts written for an agent', value: 7 },
+]
+
+// One question, four wordings (the word that changes), all landing on
+// /tools/website-traffic-checker, impressions 26 August to 23 November 2026.
+const wordings = [
+  { label: 'traffic', value: 673 },
+  { label: 'hits', value: 50 },
+  { label: 'visits', value: 38 },
+  { label: 'views', value: 31 },
+]
+
+const deliverables = [
+  { title: 'The question list, with sources', text: 'Every question tracked, and whether it came from your Search Console, your buyers or a guess.', icon: SearchList01Icon },
+  { title: 'A starting rate for each engine', text: 'How often each engine named or cited you across several runs, before any work began.', icon: ChartLineData01Icon },
+  { title: 'The sites cited instead of you', text: 'The pages AI answers lean on for your questions, so you know where a mention would count.', icon: UserSearch01Icon },
+  { title: 'Every change and the day it shipped', text: 'So each move in the numbers can be lined up with the work that came before it.', icon: Clock01Icon },
+  { title: 'Search Console beside the AI numbers', text: 'Clicks and impressions from Google, so AI work and search work are judged together.', icon: GoogleIcon },
+  { title: 'Crawler access for every page that matters', text: 'Which search and AI crawlers your robots.txt and server let in, page by page.', icon: Robot01Icon },
+]
+
+const tools = [
+  { title: 'AI visibility checker', text: 'Ask your buyer questions on four AI engines, up to five times each, and see who they cite.', icon: AiChat02Icon, href: '/features/ai-visibility-checker', link: 'See the checker' },
+  { title: 'AI search tracking', text: 'The searches in your Search Console that read like AI prompts, grouped by question.', icon: Analytics01Icon, href: '/features/ai-search', link: 'See AI search tracking' },
+  { title: 'robots.txt checker', text: 'Which search, AI and training crawlers can read each URL, and the line that decides it.', icon: Robot01Icon, href: '/tools/robots-txt-validator', link: 'Check robots.txt' },
+  { title: 'Link building', text: 'The pages that mention your competitors and not you, to ask for a mention.', icon: Link01Icon, href: '/features/link-building', link: 'See link building' },
+]
+
+const faq = [
+  {
+    question: 'What does an AEO agency do?',
+    answer:
+      'It works to get a business named and cited in AI answers from ChatGPT, Gemini, Perplexity and Google. Most of the work is SEO: crawlable, indexed pages that answer the questions buyers ask. The rest is earning mentions on the sites those answers cite, and measuring how often each engine names you.',
+  },
+  {
+    question: 'What is the difference between an AEO agency and a GEO agency?',
+    answer:
+      'None in the work. Answer engine optimization (AEO) and generative engine optimization (GEO) are two names for getting a business into AI answers, and LLM SEO is a third. Judge an agency by what it does each week.',
+  },
+  {
+    question: 'Is AEO different from SEO?',
+    answer:
+      'Mostly not. When an AI answer cites a page, it is usually one its own search found, so pages that rank are the ones that get cited. Answers that cite nothing draw on what the model learned, which is where brand mentions next to your topic help.',
+  },
+  {
+    question: 'How do you measure AEO results?',
+    answer:
+      'Ask the same questions on each engine several times and count how often the answer names or cites you. Answers change from run to run, so a rate across runs means something and a single screenshot does not. Compare each engine’s rate with where you started.',
+  },
+  {
+    question: 'Will llms.txt or schema markup get me cited in AI answers?',
+    answer:
+      'Neither has been shown to win AI citations. Google Search ignores llms.txt, and adding schema did not raise AI citations in Ahrefs’ study. Keep schema for Google’s rich results and for making clear who you are.',
+  },
+]
+---
+
+<BaseLayout
+  title="AEO and GEO agency: the weekly work and how to judge it"
+  description="What an AEO or GEO agency does each week, what you should get from one, and how to run the same work with your own agent and Search Console data."
+  canonicalPath="/services/aeo-agency"
+  {breadcrumbs}
+  framed={false}
+>
+  <main data-agent-content>
+    <LandingHero
+      title="AEO and GEO agency"
+      lead="An AEO agency works to get your business named and cited in ChatGPT, Gemini, Perplexity and Google’s AI answers. Here is the work it should do each week, what you should get from it, and how to run it with your own agent."
+      setupId="aeo-agency-setup"
+    />
+
+    <div class="space-y-24 py-24 sm:space-y-32 sm:py-32">
+      <section class="site-frame" aria-labelledby="names-heading">
+        <SectionHeading
+          id="names-heading"
+          title="AEO, GEO and AI SEO are one job"
+          text="Answer engine optimization, generative engine optimization, LLM SEO and AI search optimization all name the same work. Most of it is SEO, plus brand mentions on the sites AI answers trust."
+        />
+        <div class="docs-prose max-w-3xl">
+          <table>
+            <thead><tr><th>How an AI answer uses the web</th><th>What gets you into it</th></tr></thead>
+            <tbody>
+              <tr><td>It searches, then cites the pages it found</td><td>Pages that are crawlable, indexed and rank for the question.</td></tr>
+              <tr><td>It answers from what the model learned, citing nothing</td><td>Your name mentioned next to your topic on sites people read.</td></tr>
+              <tr><td>It recommends a short list of products</td><td>Both: pages that rank for the buying question, and mentions on the lists answers draw from.</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </section>
+
+      <section class="site-frame" aria-labelledby="weekly-heading">
+        <SectionHeading
+          id="weekly-heading"
+          title="What an AEO agency should do each week"
+          text="The work runs as a loop. Each step depends on the one before it, and every week ends with a number you can check."
+        />
+        <div class="max-w-3xl">
+          <PlanSteps {steps} />
+        </div>
+      </section>
+
+      <section class="site-frame" aria-labelledby="questions-heading">
+        <SectionHeading
+          id="questions-heading"
+          title="Start from the questions people already ask"
+          text="Your Search Console already holds searches that read like AI prompts. On seoskill.dev, SEO Skill found 103 of them in three months, across 1,417 impressions."
+        />
+        <div class="grid max-w-3xl grid-cols-1 gap-10">
+          <CompareBars
+            rows={kinds}
+            unit="searches"
+            title="seoskill.dev searches shaped like AI prompts, by kind"
+            caption="From seoskill.dev's own Search Console, 26 August to 23 November 2026. Two more were test prompts sent by AI visibility trackers."
+          />
+          <CompareBars
+            rows={wordings}
+            highlight="traffic"
+            unit="impressions"
+            title="How much (or many) ___ does this website get?"
+            caption="Four wordings of one question, each with its impressions. All four reached seoskill.dev's website traffic checker, and none names the website, the way a follow-up question to an AI often reads."
+          />
+        </div>
+        <div class="docs-prose mt-10 max-w-3xl">
+          <p>
+            These four searches are one question group, so they belong on one
+            page. A tracked question list built from searches like these is
+            made of questions people already ask, which a list someone guessed
+            may not be.
+          </p>
+        </div>
+      </section>
+
+      <section class="site-frame" aria-labelledby="deliverables-heading">
+        <SectionHeading
+          id="deliverables-heading"
+          title="What you should get from an AEO agency"
+          text="Whoever does the work, these six things let you check it. Ask for them at the start, and in every report after."
+        />
+        <div class="grid grid-cols-1 gap-2 sm:grid-cols-2">
+          {deliverables.map((item) => <HomeCard {...item} />)}
+        </div>
+      </section>
+
+      <section class="site-frame" aria-labelledby="agent-heading">
+        <SectionHeading
+          id="agent-heading"
+          title="Run the same work with your own agent"
+          text="SEO Skill gives Claude Code, Codex, Cursor or ChatGPT your Search Console, crawl and AI answer data, so the agent you already use can run each step and show its evidence."
+        />
+        <div class="grid grid-cols-1 gap-2 sm:grid-cols-2">
+          {tools.map((item) => <HomeCard {...item} />)}
+        </div>
+        <div class="docs-prose mt-10 max-w-3xl">
+          <p>Once it is connected, ask:</p>
+          <CodeBlock prompt value="Which questions should we track in AI answers, where do ChatGPT, Gemini and Google's AI answers name us today, and what should we change first?" wrap />
+          <p>
+            Your agent pulls the questions from your Search Console, asks
+            each engine, and comes back with the first change and the numbers
+            behind it. You review every change before it ships. For the
+            whole list of jobs, see <a href="/services">AI SEO services</a>.
+          </p>
+        </div>
+      </section>
+
+      <section class="site-frame" aria-labelledby="aeo-faq">
+        <SectionHeading
+          id="aeo-faq"
+          title="Questions about AEO and GEO agencies"
+          text="What people ask before they hire one."
+        />
+        <FaqAccordion items={faq} id="aeo-faq-list" />
+      </section>
+
+      <section class="site-frame" aria-labelledby="aeo-done-heading">
+        <SectionHeading
+          id="aeo-done-heading"
+          title="Where to go next"
+          text="Each step above has its own page."
+        />
+        <div class="grid grid-cols-1 gap-2 sm:grid-cols-2">
+          <HomeCard title="AI SEO services" text="The five jobs AI SEO covers, and the questions to ask any provider." icon={TaskDone01Icon} href="/services" link="See AI SEO services" />
+          <HomeCard title="SEO for startups" text="The order to do SEO in at launch, from four new sites' real numbers." icon={ChartLineData01Icon} href="/seo-for-startups" link="See SEO for startups" />
+        </div>
+      </section>
+    </div>
+  </main>
+</BaseLayout>

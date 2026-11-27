@@ -32,16 +32,16 @@ export const pairs: Record<string, PairPage> = {
     ],
     sections: [
       {
-        title: 'Check tracking after a release',
+        title: 'How do you check tracking after a release?',
         paragraphs: [
-          'A release that drops the analytics tag from one template looks like a traffic drop in every dashboard. Ask Codex to compare the days before and after the release. If Search Console clicks held steady while sessions fell, the tag is the first suspect.',
+          'Ask Codex to compare the days before and after the release. A release that drops the analytics tag from one template looks like a traffic drop in every dashboard, so if Search Console clicks held steady while sessions fell, the tag is the first suspect.',
           'Codex has the code open, so it can search for the tag in your layouts and show you which templates lost it.',
         ],
       },
       {
-        title: 'Name the site once in AGENTS.md',
+        title: 'How does Codex know which site to ask about?',
         paragraphs: [
-          'Codex reads AGENTS.md at the root of your repo. Add a line such as "Our site is example.com" and Codex knows which site to ask about without you naming it each time.',
+          'Name the site once in AGENTS.md at the root of your repo. Codex reads that file, so a line such as "Our site is example.com" means you never have to name the site again.',
           'You still do not pick a property ID. The server finds the Google Analytics property whose web stream matches the site and names it in the answer.',
         ],
       },
@@ -87,14 +87,14 @@ export const pairs: Record<string, PairPage> = {
     ],
     sections: [
       {
-        title: 'See the visits ChatGPT sends you',
+        title: 'How many visits does ChatGPT send you?',
         paragraphs: [
-          'When someone clicks a link in a ChatGPT answer, the visit usually arrives with chatgpt.com as its referrer, and the report counts it under AI assistants. The answer gives the total against the previous period and the pages those visitors land on.',
+          'Ask, and the answer gives the total against the previous period and the pages those visitors land on. When someone clicks a link in a ChatGPT answer, the visit usually arrives with chatgpt.com as its referrer, and the report counts it under AI assistants.',
           'Some visits slip through. The ChatGPT app does not always pass a referrer, and those visits show up as Direct in Google Analytics. Treat the number as a floor (the real figure can only be higher).',
         ],
       },
       {
-        title: 'What you need before you add it to ChatGPT',
+        title: 'What do you need before you add it to ChatGPT?',
         paragraphs: [
           'You need Viewer access to the Google Analytics property on the Google account you sign in with, and a ChatGPT plan that allows custom MCP servers. OpenAI lists Business, Enterprise and Edu workspaces and Pro accounts.',
           'You do not pick a property ID. Name the site and the server finds the property whose web stream matches it, then names that property in the answer.',
@@ -143,18 +143,17 @@ export const pairs: Record<string, PairPage> = {
     ],
     sections: [
       {
-        title:
-          'Use Google Analytics in claude.ai, the desktop app and your phone',
+        title: 'Does it work in the Claude desktop and phone apps?',
         paragraphs: [
-          'The Claude Code setup is a command for developers. This one is for anyone with a Claude account: a marketer checking last week’s traffic, a founder on their phone, or a writer looking at which posts people read.',
-          'You add the connector once in claude.ai. It belongs to your Claude account, so the desktop app and the mobile apps pick it up with nothing more to set up. In each chat, turn it on from the + menu when you want Claude to read your numbers (and leave it off when you don’t).',
+          'Yes. You add the connector once in claude.ai, and because it belongs to your Claude account, the desktop app and the mobile apps pick it up with nothing more to set up. In each chat, turn it on from the + menu when you want Claude to read your numbers (and leave it off when you don’t).',
+          'The Claude Code setup is a command for developers. This one is for anyone with a Claude account, such as a marketer checking last week’s traffic, a founder on their phone, or a writer looking at which posts people read.',
           'Claude does not pick a property ID out of a list. Name the site, and the server finds the Google Analytics property whose web stream matches it and names that property in the answer.',
         ],
       },
       {
-        title: 'Keep your site in a Claude project',
+        title: 'How do you keep your site in a Claude project?',
         paragraphs: [
-          'If you ask about the same site every week, put it in a Claude project. Add a line to the project instructions such as "Our site is example.com. Compare with the previous 28 days." and every chat in the project starts from it.',
+          'Add a line to the project instructions, such as "Our site is example.com. Compare with the previous 28 days." Every chat in the project then starts from it, which helps when you ask about the same site every week.',
           'Each request reads your data again, so last week’s chat does not hold stale numbers. Ask again and you get the latest days Google Analytics has.',
         ],
       },

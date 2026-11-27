@@ -235,12 +235,12 @@ export const sources: Source[] = [
     title: 'DataForSEO MCP for keyword research',
     metaTitle: 'DataForSEO MCP for keyword and SERP research',
     description:
-      'Use your own DataForSEO account in Claude, ChatGPT, Codex or Cursor through a free hosted MCP. Keyword metrics, rankings, SERPs, competitors, backlinks and AI answer checks.',
+      'Use your own DataForSEO account in Claude, ChatGPT, Codex or Cursor through a free hosted MCP. Keyword metrics, SERPs, backlinks and AI answer checks.',
     lead: 'Bring your DataForSEO login and your agent can pull search volume, rankings, SERPs, competitors and backlinks next to your own Search Console data.',
     connect: 'key',
     needs:
       'A DataForSEO account with API credit. DataForSEO bills you directly for each request.',
-    card: 'Keyword metrics, rankings, SERPs, competitors, backlinks and AI answer checks with your own login.',
+    card: 'Keyword metrics, SERPs, competitors, backlinks and AI answer checks with your own login.',
     tools: [
       {
         tool: 'seo_research',
@@ -295,7 +295,7 @@ export const sources: Source[] = [
     title: 'Ahrefs MCP for keyword research',
     metaTitle: 'Ahrefs MCP for keyword and competitor research',
     description:
-      'Use your own Ahrefs API key in Claude, ChatGPT, Codex or Cursor through a free hosted MCP. Keyword metrics, ranked keywords, SERPs, competitors and backlinks beside your Search Console data.',
+      'Use your own Ahrefs API key in Claude, ChatGPT, Codex or Cursor through a free hosted MCP. Keywords, SERPs, competitors and backlinks.',
     lead: 'Add your Ahrefs API key and your agent can check keywords, competitors and backlinks next to your own clicks and impressions.',
     connect: 'key',
     needs:
@@ -393,7 +393,7 @@ export const sources: Source[] = [
       {
         question: 'Does it work with two-factor sign-in on Clicky?',
         answer:
-          'The account login does not. Add each site with its site ID and sitekey instead.',
+          'Not with the account login. Add each site with its site ID and sitekey instead, which works with two-factor sign-in.',
       },
       {
         question: 'Is the Clicky MCP free?',
@@ -407,7 +407,7 @@ export const sources: Source[] = [
     title: 'Bing Webmaster Tools MCP',
     metaTitle: 'Bing Webmaster Tools MCP server',
     description:
-      'Put Bing Webmaster Tools clicks, impressions, queries and pages beside Search Console in Claude Code, Codex or Cursor with the free seo CLI and local MCP server.',
+      'Put Bing Webmaster Tools clicks, queries and pages beside Search Console in Claude Code, Codex or Cursor with the free seo CLI and local MCP server.',
     lead: "See Bing's clicks, impressions, queries and pages next to Google's for the same site and dates.",
     connect: 'cli',
     needs:

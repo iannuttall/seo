@@ -37,7 +37,7 @@ export const cmsList: Cms[] = [
     title: 'WordPress MCP for SEO fixes',
     metaTitle: 'WordPress MCP for SEO, with Search Console data',
     description:
-      'Find SEO fixes in your Search Console data with SEO Skill, then let the WordPress.com MCP rewrite titles, content and drafts. Setup for Claude, ChatGPT and Claude Code.',
+      'Find SEO fixes in your Search Console data with SEO Skill, then let the WordPress.com MCP rewrite titles, content and drafts.',
     lead: 'SEO Skill tells your agent which posts need work, from your own Search Console. The WordPress MCP lets it make the change. Together they close the loop without copy and paste.',
     mcp: 'WordPress.com MCP server',
     steps: [
@@ -77,7 +77,7 @@ export const cmsList: Cms[] = [
       },
     ],
     limit:
-      "WordPress.com lists no tool for a single post's SEO title or meta description. With Yoast SEO, its Abilities can read those fields, but its update Ability covers canonical URLs, cornerstone content and robots settings. An update with status publish goes live at once, so ask for drafts.",
+      "WordPress.com lists no tool for a single post's SEO title or meta description. With Yoast SEO, its Abilities can read those fields, but its update Ability covers canonical URLs, key content flags and robots settings. An update with status publish goes live at once, so ask for drafts.",
     asks: [
       {
         question:
@@ -142,7 +142,7 @@ export const cmsList: Cms[] = [
     title: 'Shopify MCP for SEO fixes',
     metaTitle: 'Shopify MCP for SEO, with Search Console data',
     description:
-      'Find SEO fixes for your Shopify store in Search Console with SEO Skill, then let the official Shopify connector update product and collection copy. Setup for Claude and ChatGPT.',
+      'Find SEO fixes for your Shopify store in Search Console with SEO Skill, then let the official Shopify connector update product and collection copy.',
     lead: 'SEO Skill shows your agent which product and collection pages are close to page one, from your own Search Console. The Shopify connector lets it update the copy.',
     mcp: 'Shopify connector',
     steps: [
@@ -162,7 +162,7 @@ export const cmsList: Cms[] = [
     canChange: [
       {
         title: 'Product titles and descriptions',
-        text: "Update a product's title, description, status and images, one product at a time.",
+        text: 'Update one product at a time, including its title, description, status and images.',
       },
       {
         title: 'Collection titles and descriptions',
@@ -236,7 +236,7 @@ export const cmsList: Cms[] = [
     title: 'Webflow MCP for SEO fixes',
     metaTitle: 'Webflow MCP for SEO, with Search Console data',
     description:
-      'Find SEO fixes in your Search Console data with SEO Skill, then let the official Webflow MCP server update page metadata and CMS items. Setup for Claude, ChatGPT and Claude Code.',
+      'Find SEO fixes in your Search Console data with SEO Skill, then let the official Webflow MCP server update page metadata and CMS items.',
     lead: 'SEO Skill shows your agent which pages and CMS items need work, from your own Search Console. The Webflow MCP server lets it make the change in your site.',
     mcp: 'Webflow MCP server',
     steps: [

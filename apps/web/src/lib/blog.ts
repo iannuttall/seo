@@ -19,6 +19,33 @@ export async function getBlogPosts(): Promise<BlogPost[]> {
   )
 }
 
+/**
+ * Up to `count` other posts for the end of `entry`: the posts after it in its
+ * topic, oldest first and wrapping round, so every post in a topic gets links
+ * from its siblings instead of the newest few getting them all. A topic with
+ * too few posts is filled from the posts after it across the blog.
+ */
+export function relatedPosts(
+  posts: BlogPost[],
+  entry: BlogPost,
+  count = 4,
+): BlogPost[] {
+  const oldestFirst = [...posts].reverse()
+  const after = (list: BlogPost[]) => {
+    const start = list.findIndex((post) => post.id === entry.id)
+    return [...list.slice(start + 1), ...list.slice(0, start)]
+  }
+  const sameTopic = after(
+    oldestFirst.filter(
+      (post) => post.data.topic === entry.data.topic || post.id === entry.id,
+    ),
+  )
+  const rest = after(oldestFirst).filter(
+    (post) => post.data.topic !== entry.data.topic,
+  )
+  return [...sameTopic, ...rest].slice(0, count)
+}
+
 /** "4 November 2026" from a YYYY-MM-DD date, read as a calendar day. */
 export function formatPostDate(date: string): string {
   return new Date(`${date}T00:00:00Z`).toLocaleDateString('en-GB', {

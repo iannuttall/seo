@@ -1,13 +1,15 @@
 ---
+import { ChartLineData01Icon } from '@hugeicons/core-free-icons'
 import { render } from 'astro:content'
 import Breadcrumbs from '@/components/Breadcrumbs.astro'
 import FounderBadge from '@/components/FounderBadge.astro'
+import HomeCard from '@/components/HomeCard.astro'
 import PageHeader from '@/components/PageHeader.astro'
 import SetupPrompts from '@/components/SetupPrompts.astro'
 import { blogMdxComponents } from '@/components/blog/mdx'
 import BaseLayout from '@/layouts/BaseLayout.astro'
 import { isPostLive } from '@/content/blog-posts.mjs'
-import { type BlogPost, formatPostDate, getBlogPosts } from '@/lib/blog'
+import { type BlogPost, formatPostDate, getBlogPosts, relatedPosts } from '@/lib/blog'
 import type { SchemaBreadcrumb } from '@/lib/schema'
 
 export async function getStaticPaths() {
@@ -21,6 +23,7 @@ const { entry } = Astro.props
 const { Content } = await render(entry)
 const { date, updated, draft, cover } = entry.data
 const scheduled = !draft && !isPostLive(date)
+const related = relatedPosts(await getBlogPosts(), entry)
 // A post whose steps carry their own agent setup needs no closing pitch.
 const breadcrumbs: SchemaBreadcrumb[] = [
   { label: 'Home', href: '/' },
@@ -77,6 +80,24 @@ const breadcrumbs: SchemaBreadcrumb[] = [
     <article class="docs-prose min-w-0">
       <Content components={blogMdxComponents} />
     </article>
+    {
+      related.length ? (
+        <section class="mt-20" aria-labelledby="related-posts-heading">
+          <h2 id="related-posts-heading" class="text-2xl/8 font-medium tracking-normal">Related posts</h2>
+          <div class="mt-6 grid grid-cols-1 gap-2 sm:grid-cols-2">
+            {related.map((post) => (
+              <HomeCard
+                title={post.data.heading}
+                text={post.data.lead}
+                icon={ChartLineData01Icon}
+                href={`/blog/${post.id}`}
+                link={post.data.company ? `Read the ${post.data.company} teardown` : 'Read the post'}
+              />
+            ))}
+          </div>
+        </section>
+      ) : null
+    }
     <section class="mt-20 text-center" aria-labelledby="post-cta-heading" data-agent-markdown="exclude">
       <h2 id="post-cta-heading" class="text-pretty text-2xl/tight font-medium -tracking-[0.4px]">
         Run this on your own site with SEO Skill

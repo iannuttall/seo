@@ -1,0 +1,224 @@
+---
+import {
+  Alert02Icon,
+  Clock01Icon,
+  FileSearchIcon,
+  GoogleIcon,
+  HierarchyIcon,
+  Link01Icon,
+  Robot01Icon,
+  ViewOffIcon,
+} from '@hugeicons/core-free-icons'
+import PlanSteps from '@/components/blog/PlanSteps.astro'
+import VerticalBars from '@/components/blog/VerticalBars.astro'
+import CodeBlock from '@/components/CodeBlock.astro'
+import FaqAccordion from '@/components/FaqAccordion.astro'
+import HomeCard from '@/components/HomeCard.astro'
+import LandingHero from '@/components/LandingHero.astro'
+import SectionHeading from '@/components/SectionHeading.astro'
+import StatusGuides from '@/components/StatusGuides.astro'
+import BaseLayout from '@/layouts/BaseLayout.astro'
+import type { SchemaBreadcrumb } from '@/lib/schema'
+
+const breadcrumbs: SchemaBreadcrumb[] = [
+  { label: 'Home', href: '/' },
+  { label: 'Guides', href: '/guides' },
+  { label: 'How to get Google to index your site' },
+]
+
+// seoskill.dev's own pages published from 20 October to 21 November 2026
+// (blog posts by their post date, tool and feature pages by the day they
+// merged to main, which deploys them), against the first day each one had
+// an impression in Search Console, to 25 November. 81 pages: 72 had shown
+// by then, 9 had not.
+const lag = [
+  { label: 'Same day', value: 11 },
+  { label: '1 day', value: 30 },
+  { label: '2 days', value: 10 },
+  { label: '3 days', value: 12 },
+  { label: '4 days', value: 5 },
+  { label: '5 days', value: 1 },
+  { label: '6 days', value: 2 },
+  { label: '7 days', value: 1 },
+]
+
+const steps = [
+  {
+    marker: 'Step 1',
+    title: 'Make sure the page can be indexed',
+    body: 'It returns 200, has no noindex in its HTML or headers, robots.txt lets Googlebot fetch it, and its canonical points at itself. Any one of these going wrong keeps the page out however often you ask.',
+  },
+  {
+    marker: 'Step 2',
+    title: 'List it in your sitemap',
+    body: 'Put the full URL in your sitemap, name the sitemap in robots.txt with a Sitemap line, and submit it once in Search Console’s Sitemaps report.',
+  },
+  {
+    marker: 'Step 3',
+    title: 'Link to it from a page Google knows',
+    body: 'Google finds most pages through links. A link from your home page, a hub page or a recent post gets the new page crawled sooner than a sitemap entry alone.',
+  },
+  {
+    marker: 'Step 4',
+    title: 'Ask for a crawl',
+    body: 'For a few URLs, use Request indexing in Search Console’s URL Inspection tool. For Bing and others, send the URLs with IndexNow.',
+  },
+  {
+    marker: 'Step 5',
+    title: 'Check that it worked',
+    body: 'Look for the page in URL Inspection, or for its first impressions in Search Console. If it is still out after a week or two, read Google’s reason for it.',
+  },
+]
+
+const blockers = [
+  { title: 'A noindex rule', text: 'In the robots meta tag or an X-Robots-Tag header, often left over from staging.', icon: ViewOffIcon, href: '/guides/excluded-by-noindex-tag', link: 'Noindex guide' },
+  { title: 'A robots.txt block', text: 'A Disallow rule stops Googlebot fetching the page at all.', icon: Robot01Icon, href: '/tools/robots-txt-validator', link: 'Check robots.txt' },
+  { title: 'A canonical to another page', text: 'The page names another URL as the one to index, so Google indexes that one.', icon: Link01Icon, href: '/guides/alternate-page-with-proper-canonical-tag', link: 'Canonical guide' },
+  { title: 'A sitemap Google cannot read', text: 'A sitemap that errors, redirects or is blocked tells Google nothing.', icon: HierarchyIcon, href: '/guides/sitemap-could-not-be-read', link: 'Sitemap guide' },
+  { title: 'Google crawled it and passed', text: 'The page was fetched and left out, usually because it adds little to pages already indexed.', icon: Alert02Icon, href: '/features/crawled-currently-not-indexed', link: 'Crawled, not indexed' },
+  { title: 'Google has not crawled it yet', text: 'The URL is known but waiting, which points at your links, your server or the site being new.', icon: Clock01Icon, href: '/features/discovered-currently-not-indexed', link: 'Discovered, not indexed' },
+]
+
+const faq = [
+  {
+    question: 'How long does it take Google to index a new page?',
+    answer:
+      'On seoskill.dev, half of 72 new pages had their first impression in Search Console within a day of going live, and all 72 within a week. That is a site Google already crawls often. Google’s own help says a newly known URL can take up to a few weeks to be crawled, and a brand new domain usually sits at that slower end.',
+  },
+  {
+    question: 'How do I get Google to index my site faster?',
+    answer:
+      'Make sure each page can be indexed, list it in a sitemap Google can read, and link to it from pages Google already visits. Then request indexing for the few pages that matter most. None of these makes Google index a page it has decided to leave out.',
+  },
+  {
+    question: 'Does Request indexing in Search Console guarantee indexing?',
+    answer:
+      'No. It asks Google to crawl the URL soon. Google’s help says indexing is never instant, even when you submit a crawl request, and it does not guarantee every page will be indexed.',
+  },
+  {
+    question: 'Does IndexNow work for Google?',
+    answer:
+      'No. Google does not use IndexNow. It reaches Bing, Yandex and the other engines that support it, which still helps because some AI answers search with Bing.',
+  },
+  {
+    question: 'Why is my website not showing up on Google at all?',
+    answer:
+      'For a new domain, Google may not have found it yet. Verify it in Search Console, submit a sitemap and get one link from a site Google knows. For an older site, check for a sitewide noindex or robots.txt block, then read Google’s reason for each page in the Page indexing report.',
+    links: [{ text: 'Page indexing report', href: '/features/website-not-showing-up-on-google' }],
+  },
+]
+---
+
+<BaseLayout
+  title="How to get Google to index your site, with real timings"
+  description="The steps that get a site and new pages into Google's index, what keeps them out, and how fast 72 new pages on seoskill.dev showed up in Search Console."
+  canonicalPath="/guides/how-to-get-google-to-index-your-site"
+  {breadcrumbs}
+  framed={false}
+>
+  <main data-agent-content>
+    <LandingHero
+      title="How to get Google to index your site"
+      lead="Google indexes a page once it can find it, fetch it and decides to keep it. Five steps cover the first two. Here they are, with how long it took on our own site."
+      setupId="indexing-setup"
+    />
+
+    <div class="space-y-24 py-24 sm:space-y-32 sm:py-32">
+      <section class="site-frame" aria-labelledby="steps-heading">
+        <SectionHeading
+          id="steps-heading"
+          title="Five steps to get a page into Google"
+          text="Do them in order. Asking Google to crawl a page that has a noindex tag or a canonical to another URL wastes the request."
+        />
+        <div class="max-w-3xl">
+          <PlanSteps {steps} />
+        </div>
+      </section>
+
+      <section class="site-frame" aria-labelledby="timing-heading">
+        <SectionHeading
+          id="timing-heading"
+          title="How fast new pages showed up on seoskill.dev"
+          text="We published 81 pages between 20 October and 21 November. By 25 November, 72 had appeared in Google search, half of them within a day of going live."
+        />
+        <div class="max-w-3xl">
+          <VerticalBars
+            data={lag}
+            highlight={['Same day', '1 day']}
+            unit="pages"
+            title="Days from going live to the first impression in Search Console"
+            caption="seoskill.dev's own pages: blog posts by post date, tool and feature pages by the day they deployed. 41 of the 72 showed within a day, and all 72 within a week."
+          />
+        </div>
+        <div class="docs-prose mt-10 max-w-3xl">
+          <p>
+            Every one of these pages was in the sitemap and linked from an
+            index page on the day it went live. The site already had
+            hundreds of indexed pages that Google crawls every day, which is
+            why most new pages were picked up so quickly.
+          </p>
+          <p>
+            A brand new domain starts slower. seoskill.dev had its first
+            impression on 14 July 2026, and its early pages took longer than
+            the ones in this chart. See <a href="/seo-for-startups">SEO for
+            startups</a> for how its first months went.
+          </p>
+          <p>
+            A first impression means Google indexed the page and showed it
+            at least once. A page with no impressions yet may still be
+            indexed, so check URL Inspection before you change anything.
+          </p>
+        </div>
+      </section>
+
+      <section class="site-frame" aria-labelledby="blockers-heading">
+        <SectionHeading
+          id="blockers-heading"
+          title="What keeps a page out of Google"
+          text="If a page is still missing after a week or two, one of these is usually why. Search Console's Page indexing report gives Google's own reason for each URL."
+        />
+        <div class="grid grid-cols-1 gap-2 sm:grid-cols-2">
+          {blockers.map((item) => <HomeCard {...item} />)}
+        </div>
+      </section>
+
+      <section class="site-frame" aria-labelledby="check-heading">
+        <SectionHeading
+          id="check-heading"
+          title="Check every page on your site at once"
+          text="Search Console's report shows up to 1,000 example URLs for each reason. SEO Skill asks URL Inspection about each page it knows and loads each one live, so you see Google's reason next to what the page does today."
+        />
+        <div class="grid grid-cols-1 gap-2 sm:grid-cols-2">
+          <HomeCard title="Google index checker" text="Google's reason for every known page, each checked live and labelled fix, check or expected." icon={GoogleIcon} href="/features/google-index-checker" link="See the index checker" />
+          <HomeCard title="Free check for up to 5 URLs" text="Search Google for each page on desktop and mobile, with every search shown as evidence." icon={FileSearchIcon} href="/tools/google-index-checker" link="Check a page" />
+        </div>
+        <div class="docs-prose mt-10 max-w-3xl">
+          <p>Connect SEO Skill to your agent, then ask:</p>
+          <CodeBlock prompt value="Which of our pages on example.com are not in Google yet? For each one, tell me Google's reason and what to fix before we ask for a crawl." wrap />
+          <p>Or run it in a terminal:</p>
+          <CodeBlock value="seo index --site example.com" />
+          <p>
+            Once the pages are fixed, <code>seo submit</code> sends them to
+            Bing and the other IndexNow engines for free. To send pages to
+            Google as well, it can use{' '}
+            <a href="https://indexmysite.app" target="_blank" rel="noreferrer">Index My Site</a>,
+            which checks each page after 24 hours and gives a credit back for
+            any page Google has not indexed by its final check. The{' '}
+            <a href="/docs/submit">seo submit docs</a> cover both.
+          </p>
+        </div>
+      </section>
+
+      <section class="site-frame" aria-labelledby="indexing-faq">
+        <SectionHeading
+          id="indexing-faq"
+          title="Questions about getting indexed"
+          text="What people ask while they wait for Google."
+        />
+        <FaqAccordion items={faq} id="indexing-faq-list" />
+      </section>
+
+      <StatusGuides current="/guides/how-to-get-google-to-index-your-site" />
+    </div>
+  </main>
+</BaseLayout>

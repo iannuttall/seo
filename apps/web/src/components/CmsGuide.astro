@@ -2,11 +2,11 @@
 // One CMS publishing guide (/integrations/wordpress): SEO Skill finds the
 // fix in your own data, and the CMS's own MCP server makes the change.
 import { Analytics02Icon } from '@hugeicons/core-free-icons'
-import ClientSteps from './ClientSteps.astro'
 import FaqAccordion from './FaqAccordion.astro'
 import HomeCard from './HomeCard.astro'
 import LandingHero from './LandingHero.astro'
 import SectionHeading from './SectionHeading.astro'
+import SetupPrompts from './SetupPrompts.astro'
 import SplitList from './SplitList.astro'
 import { integrationIcon } from '@/content/integration-icons'
 import { type Cms, cmsList } from '@/content/cms'
@@ -41,8 +41,8 @@ const others = cmsList.filter((item) => item.id !== cms.id)
 
 <BaseLayout title={cms.metaTitle} description={cms.description} canonicalPath={`/integrations/${cms.id}`} {breadcrumbs} dateModified={cms.checked} framed={false}>
   <main data-agent-content>
-    <LandingHero title={cms.title} lead={cms.lead} setupId="cms-setup">
-      <ClientSteps steps={cms.steps} note={cms.needs} />
+    <LandingHero title={cms.title} lead={cms.lead} setupId="cms-setup" setupSteps={cms.setupSteps}>
+      <p slot="note" class="mt-4 max-w-2xl text-pretty text-base leading-7 text-foreground-muted">{cms.needs}</p>
     </LandingHero>
 
     <div class="space-y-24 py-24 sm:space-y-32 sm:py-32">
@@ -117,9 +117,9 @@ const others = cmsList.filter((item) => item.id !== cms.id)
         <SectionHeading
           id="start-heading"
           title={`Connect ${cms.name} and SEO Skill`}
-          text={`Follow these steps, sign in with Google, and ask for the first fix on your ${cms.name} site.`}
+          text={`Give your agent the setup prompt. It adds SEO Skill and the ${cms.mcp}, waits while you sign in, and then you can ask for the first fix on your ${cms.name} site.`}
         />
-        <ClientSteps steps={cms.steps} note={cms.needs} />
+        <SetupPrompts id="cms-setup-end" extraSteps={cms.setupSteps} />
       </section>
     </div>
   </main>

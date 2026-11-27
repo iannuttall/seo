@@ -1,5 +1,5 @@
 // The CMS publishing guides (/integrations/wordpress and the rest).
-import { type Ask, type Faq, mcpUrl, type Step } from './integrations.ts'
+import type { Ask, Faq } from './integrations.ts'
 
 /**
  * A CMS whose own MCP server lets the agent make the fixes SEO Skill finds.
@@ -17,7 +17,8 @@ export type Cms = {
   /** The vendor's MCP server or connector, by its own name. */
   mcp: string
   /** How a person adds it, in order. */
-  steps: Step[]
+  /** What the setup prompt adds on this page, after SEO Skill's own steps. */
+  setupSteps: string[]
   /** Who can use it, from the vendor's pages. */
   needs: string
   /** SEO fixes it can make. */
@@ -40,21 +41,10 @@ export const cmsList: Cms[] = [
       'Find SEO fixes in your Search Console data with SEO Skill, then let the WordPress.com MCP rewrite titles, content and drafts.',
     lead: 'SEO Skill tells your agent which posts need work, from your own Search Console. The WordPress MCP lets it make the change. Together they close the loop without copy and paste.',
     mcp: 'WordPress.com MCP server',
-    steps: [
-      {
-        text: 'Add SEO Skill to your agent and sign in with Google. In Claude Code:',
-        code: `claude mcp add --transport http --scope user seoskill ${mcpUrl}`,
-      },
-      {
-        text: 'Turn on MCP access in your WordPress.com account under Preferences, then AI and MCP. Self-hosted sites connect through Jetpack.',
-      },
-      {
-        text: 'Add the WordPress.com MCP server to the same agent and sign in to WordPress.com:',
-        code: 'claude mcp add --transport http wpcom-mcp https://public-api.wordpress.com/wpcom/v2/mcp/v1',
-      },
-      {
-        text: 'In Claude or ChatGPT on the web, add the WordPress.com connector or plugin from its directory instead, and choose Full access to let it edit.',
-      },
+    setupSteps: [
+      'Ask me to turn on MCP access in my WordPress.com account under Preferences, then AI and MCP. A self-hosted site connects through Jetpack. Wait until I say it is on.',
+      'Add the WordPress.com MCP server, https://public-api.wordpress.com/wpcom/v2/mcp/v1, next to seoskill, and wait while I sign in to WordPress.com. If you cannot add servers yourself, such as in Claude or ChatGPT on the web, tell me to add the WordPress.com connector from its directory and choose Full access.',
+      'Save every WordPress change as a draft for me to read, unless I say otherwise.',
     ],
     needs:
       'A WordPress.com site, on any plan including free, or a self-hosted site connected through Jetpack (no Jetpack plan needed), per WordPress.com. Developers can also run the official MCP Adapter plugin on a self-hosted site.',
@@ -145,17 +135,9 @@ export const cmsList: Cms[] = [
       'Find SEO fixes for your Shopify store in Search Console with SEO Skill, then let the official Shopify connector update product and collection copy.',
     lead: 'SEO Skill shows your agent which product and collection pages are close to page one, from your own Search Console. The Shopify connector lets it update the copy.',
     mcp: 'Shopify connector',
-    steps: [
-      {
-        text: 'Add SEO Skill to your agent and sign in with Google. In Claude Code:',
-        code: `claude mcp add --transport http --scope user seoskill ${mcpUrl}`,
-      },
-      {
-        text: "Install Shopify's own connector from your AI tool: the Shopify connector in Claude's directory, or the Shopify plugin in ChatGPT. Gemini, Grok, Perplexity, Muse and Microsoft Copilot have one too.",
-      },
-      {
-        text: 'Sign in to your store and approve write access in your Shopify admin. Without it the connector can only read.',
-      },
+    setupSteps: [
+      "Tell me to install Shopify's own connector in this AI tool, such as the Shopify connector in Claude's directory or the Shopify plugin in ChatGPT, and to approve write access in my Shopify admin. Without write access it can only read. Wait until I say it is done.",
+      'Show me each product or collection change before you save it.',
     ],
     needs:
       'A Shopify store you own, on any Shopify plan. Shopify charges nothing extra for the connector, and your AI tool bills its own subscription.',
@@ -239,18 +221,9 @@ export const cmsList: Cms[] = [
       'Find SEO fixes in your Search Console data with SEO Skill, then let the official Webflow MCP server update page metadata and CMS items.',
     lead: 'SEO Skill shows your agent which pages and CMS items need work, from your own Search Console. The Webflow MCP server lets it make the change in your site.',
     mcp: 'Webflow MCP server',
-    steps: [
-      {
-        text: 'Add SEO Skill to your agent and sign in with Google. In Claude Code:',
-        code: `claude mcp add --transport http --scope user seoskill ${mcpUrl}`,
-      },
-      {
-        text: 'Add the Webflow MCP server to the same agent:',
-        code: 'claude mcp add --transport http webflow https://mcp.webflow.com/mcp',
-      },
-      {
-        text: 'Sign in to Webflow and pick the sites to authorize. In Claude and other clients with a Webflow connector, install that instead.',
-      },
+    setupSteps: [
+      'Add the Webflow MCP server, https://mcp.webflow.com/mcp, next to seoskill, and wait while I sign in to Webflow and pick the sites to authorize. If this client has a Webflow connector, such as Claude, tell me to install that instead.',
+      'Show me each metadata or CMS item change before you publish it.',
     ],
     needs:
       "A Webflow site on any Site plan, including the free Starter plan. Every site role except Reviewer can connect, and the server keeps your role's permissions.",

@@ -1,0 +1,285 @@
+---
+import {
+  AiChat02Icon,
+  File01Icon,
+  GoogleIcon,
+  Link01Icon,
+  PencilEdit01Icon,
+  Robot01Icon,
+  Route01Icon,
+  Search01Icon,
+} from '@hugeicons/core-free-icons'
+import PlanSteps from '@/components/blog/PlanSteps.astro'
+import TrafficCurve from '@/components/blog/TrafficCurve.astro'
+import VerticalBars from '@/components/blog/VerticalBars.astro'
+import CodeBlock from '@/components/CodeBlock.astro'
+import FaqAccordion from '@/components/FaqAccordion.astro'
+import HomeCard from '@/components/HomeCard.astro'
+import LandingHero from '@/components/LandingHero.astro'
+import SectionHeading from '@/components/SectionHeading.astro'
+import BaseLayout from '@/layouts/BaseLayout.astro'
+import type { SchemaBreadcrumb } from '@/lib/schema'
+
+const breadcrumbs: SchemaBreadcrumb[] = [
+  { label: 'Home', href: '/' },
+  { label: 'SEO for startups' },
+]
+
+// seoskill.dev's own Search Console, by month, from its first impression
+// on 14 July 2026 to 23 November 2026. Non-brand leaves out queries that
+// contain "seo skill" or "seoskill", and Google's anonymized queries.
+const clicks = [
+  { label: 'Jul', value: 8 },
+  { label: 'Aug', value: 46 },
+  { label: 'Sep', value: 255 },
+  { label: 'Oct', value: 371 },
+  { label: 'Nov', value: 602 },
+]
+const nonBrand = [
+  { label: 'Jul', value: 0 },
+  { label: 'Aug', value: 3 },
+  { label: 'Sep', value: 21 },
+  { label: 'Oct', value: 39 },
+  { label: 'Nov', value: 98 },
+]
+
+// Google clicks a month from each site's Search Console, from the first
+// month it has data to 23 November 2026. The local services app is Ian's,
+// shown without its name at his request.
+const m = (labels: string[], values: number[]) =>
+  labels.map((label, index) => ({ label, value: values[index] }))
+const sites = [
+  {
+    title: 'keep.md',
+    caption: 'From 63 clicks in its first month to 14,902 in November. The shaded months are when its content moved to another site, before it came back.',
+    data: m(['Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov'], [63, 45, 808, 8559, 11962, 4082, 1566, 2504, 14902]),
+    markers: [
+      { at: 'Aug', text: 'Content moved to ilo.so as a test' },
+      { at: 'Sep', text: 'Content on ilo.so' },
+      { at: 'Oct', text: 'Content moved back to keep.md' },
+    ],
+  },
+  {
+    title: 'A local services app',
+    caption: 'One of Ian’s sites, not named here. From 3,296 clicks in May, the first month in Search Console, to over 40,000 a month.',
+    data: m(['May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov'], [3296, 18490, 23393, 41972, 49666, 47780, 40226]),
+    markers: [],
+  },
+  {
+    title: 'seoskill.dev',
+    caption: 'First seen in Google on 14 July, so July is half a month. 602 clicks by November, four months in.',
+    data: clicks,
+    markers: [],
+  },
+  {
+    title: 'indexmysite.app',
+    caption: 'Two months in. Impressions grew from 386 in September to 2,852 in November.',
+    data: m(['Sep', 'Oct', 'Nov'], [34, 58, 67]),
+    markers: [],
+  },
+]
+
+const steps = [
+  {
+    marker: 'Week 1',
+    title: 'Get your pages indexed',
+    body: 'Verify the site in Google Search Console, submit a sitemap, and link every new page from one Google already knows. Check that robots.txt lets Google and the AI search crawlers in. Done when Search Console lists your key pages as indexed. Google says a new site can take a few weeks to be noticed, so start the clock now.',
+  },
+  {
+    marker: 'Week 1',
+    title: 'Make your name easy to find',
+    body: 'Searches for your name will bring more of your early clicks than any other search, after a launch, a post or a word of mouth tip. Your home and about pages should say what the product does in the words a buyer would use, so the right page comes up first.',
+  },
+  {
+    marker: 'Weeks 2 to 6',
+    title: 'Write the pages buyers read while choosing',
+    body: 'Alternatives and comparison pages, your pricing, and one page for each job the product does. These searches are small, but the person typing them is picking a tool.',
+  },
+  {
+    marker: 'Every month',
+    title: 'Check what AI answers say about you',
+    body: 'Ask ChatGPT, Gemini and Google’s AI answers the questions your buyers ask, more than once each, and see who they name and cite. One answer is one sample.',
+  },
+  {
+    marker: 'After traction',
+    title: 'Build free tools and broader content',
+    body: 'Tools and guides for bigger searches take months to climb. Start them once the product pages are in place and you know which searches turn into users.',
+  },
+]
+
+const later = [
+  { title: 'A big blog program', text: 'Twenty posts on broad topics before you have product pages leaves buyers with nothing to land on.', icon: PencilEdit01Icon },
+  { title: 'Link campaigns', text: 'Links help, but early ones come easier from launches, integrations and partners you already have.', icon: Link01Icon },
+  { title: 'Files and markup for AI', text: 'An llms.txt file or extra schema has not been shown to win AI citations. Google says you need neither for AI Overviews or AI Mode.', icon: File01Icon },
+  { title: 'High-volume keywords', text: 'Broad searches with big numbers are where established sites already sit. Win the small buyer searches first.', icon: Search01Icon },
+]
+
+const tools = [
+  { title: 'Google index checker', text: 'See whether Google has indexed a page, and why not if it hasn’t.', icon: GoogleIcon, href: '/tools/google-index-checker', link: 'Check a page' },
+  { title: 'robots.txt checker', text: 'See which search, AI and training crawlers can read each URL.', icon: Robot01Icon, href: '/tools/robots-txt-validator', link: 'Check robots.txt' },
+  { title: 'AI visibility checker', text: 'Ask AI answers your buyer questions and see who they cite.', icon: AiChat02Icon, href: '/features/ai-visibility-checker', link: 'See the checker' },
+  { title: 'Competitor keyword research', text: 'Find the searches a competitor ranks for that you don’t.', icon: Route01Icon, href: '/tools/competitor-keyword-research', link: 'Research a competitor' },
+]
+
+const faq = [
+  {
+    question: 'When should a startup start doing SEO?',
+    answer:
+      'Start the basics at launch: get indexed, make your name easy to find and write the pages buyers read while choosing. They take days, not months, and pay off from the first visitor. Leave volume work, such as a large blog and link campaigns, until you know who buys and why.',
+  },
+  {
+    question: 'How long does SEO take for a new startup site?',
+    answer:
+      'Google says it can take a few weeks to notice a new site. After that, searches for your name come first. On seoskill.dev, searches that did not include the name went from 0 clicks in the first month to 98 in the fifth, so plan in months for anything beyond your brand.',
+  },
+  {
+    question: 'Which SEO pages should a startup write first?',
+    answer:
+      'The pages people read while picking a tool: alternatives to the products you replace, comparisons with each rival, your pricing, and a page for each job the product does. Write them before blog posts on broad topics.',
+  },
+  {
+    question: 'Should a startup hire an SEO agency?',
+    answer:
+      'Not to start. The first jobs are small and need someone who knows the product. An agent with your Search Console data can do most of them in your codebase. Bring in help when there is more work than your team can review each week.',
+  },
+  {
+    question: 'Does a startup need to do anything different for AI search?',
+    answer:
+      'Mostly no. AI Overviews and AI Mode use pages Google has indexed, and ChatGPT searches the web before it cites a page, so the same basics apply. The one extra job is checking what AI answers say about your category, so you know whether the work reaches them.',
+  },
+]
+---
+
+<BaseLayout
+  title="SEO for startups: what to do first, from real data"
+  description="SEO for startups in the order it pays off: get indexed, make your name findable, write the pages buyers read, then check AI answers. With seoskill.dev's own numbers."
+  canonicalPath="/seo-for-startups"
+  {breadcrumbs}
+  framed={false}
+>
+  <main data-agent-content>
+    <LandingHero
+      title="SEO for startups"
+      lead="At launch you have time for a few SEO jobs. Do them in the order they pay off, check each one with your own data, and leave the rest until you have traction."
+      setupId="startups-setup"
+    />
+
+    <div class="space-y-24 py-24 sm:space-y-32 sm:py-32">
+      <section class="site-frame" aria-labelledby="order-heading">
+        <SectionHeading
+          id="order-heading"
+          title="Startup SEO in the order it pays off"
+          text="Each step needs the one before it. A page Google hasn’t indexed can’t rank, and a page that doesn’t rank is rarely the one an AI answer cites."
+        />
+        <div class="max-w-3xl">
+          <PlanSteps {steps} />
+        </div>
+      </section>
+
+      <section class="site-frame" aria-labelledby="numbers-heading">
+        <SectionHeading
+          id="numbers-heading"
+          title="How four new sites grew in search"
+          text="Ian's own sites, each from its first months in Google. Every number is a click from the site's own Search Console, with November to the 23rd."
+        />
+        <div class="grid grid-cols-1 gap-10">
+          {sites.map((site) => (
+            <VerticalBars
+              data={site.data}
+              markers={site.markers}
+              unit="clicks"
+              title={site.title}
+              caption={site.caption}
+            />
+          ))}
+        </div>
+      </section>
+
+      <section class="site-frame" aria-labelledby="brand-heading">
+        <SectionHeading
+          id="brand-heading"
+          title="Where a new domain's first clicks come from"
+          text="On seoskill.dev, searches for the name brought the first clicks, and searches without it grew month by month behind them."
+        />
+        <div class="max-w-3xl">
+          <TrafficCurve
+            series={[
+              { name: 'All clicks', data: clicks },
+              { name: 'Non-brand clicks', data: nonBrand },
+            ]}
+            unit="clicks"
+            title="seoskill.dev Google clicks a month"
+            caption="Non-brand leaves out searches for the name and Google's anonymized queries, so it is a minimum."
+          />
+        </div>
+      </section>
+
+      <section class="site-frame" aria-labelledby="pages-heading">
+        <SectionHeading
+          id="pages-heading"
+          title="The first pages to write"
+          text="Write for the search a buyer makes the week they choose a tool. Each of these is a small search with a buyer behind it."
+        />
+        <div class="docs-prose max-w-3xl">
+          <table>
+            <thead><tr><th>Page</th><th>The search it answers</th><th>What it needs</th></tr></thead>
+            <tbody>
+              <tr><td>Alternatives</td><td>"[rival] alternatives"</td><td>Who the rival suits, who it doesn't, and where you fit. Name the cases where the rival is the better pick.</td></tr>
+              <tr><td>Comparison</td><td>"[you] vs [rival]"</td><td>The differences a buyer would check, side by side, with what each costs in your own words.</td></tr>
+              <tr><td>Pricing</td><td>"[you] pricing"</td><td>Every plan and what it includes, the same on every page that mentions it.</td></tr>
+              <tr><td>Use case</td><td>"[job] tool" or "how to [job]"</td><td>One page for each job the product does, with the steps and a real example.</td></tr>
+              <tr><td>Integration</td><td>"[you] [tool] integration"</td><td>What connects, how to set it up, and what it lets someone do.</td></tr>
+            </tbody>
+          </table>
+          <p>
+            Use the words buyers use in the title and headings where they
+            read naturally, and keep one page per question group. A page for
+            every rewording of the same search splits the work and helps
+            nobody.
+          </p>
+        </div>
+      </section>
+
+      <section class="site-frame" aria-labelledby="later-heading">
+        <SectionHeading
+          id="later-heading"
+          title="What can wait until you have traction"
+          text="None of these is wrong. Each one just pays off later than the steps above."
+        />
+        <div class="grid grid-cols-1 gap-2 sm:grid-cols-2">
+          {later.map((item) => <HomeCard {...item} />)}
+        </div>
+      </section>
+
+      <section class="site-frame" aria-labelledby="agent-heading">
+        <SectionHeading
+          id="agent-heading"
+          title="Run startup SEO with your agent"
+          text="SEO Skill gives Claude Code, Codex, Cursor or ChatGPT your Search Console, crawl and AI answer data, so the agent you already use can do each step and show its evidence."
+        />
+        <div class="grid grid-cols-1 gap-2 sm:grid-cols-2">
+          {tools.map((item) => <HomeCard {...item} />)}
+        </div>
+        <div class="docs-prose mt-10 max-w-3xl">
+          <p>Once it is connected, ask:</p>
+          <CodeBlock value="We launched last month. Which of our pages are indexed, what do people search to find us, and which page should we write next?" wrap />
+          <p>
+            Your agent checks your index status and Search Console, then
+            comes back with the next step and the numbers behind it. If you
+            would rather someone else did the work, see{' '}
+            <a href="/services">AI SEO services</a>.
+          </p>
+        </div>
+      </section>
+
+      <section class="site-frame" aria-labelledby="startup-faq">
+        <SectionHeading
+          id="startup-faq"
+          title="Questions about SEO for startups"
+          text="The follow-ups founders ask most."
+        />
+        <FaqAccordion items={faq} id="startup-faq-list" />
+      </section>
+    </div>
+  </main>
+</BaseLayout>

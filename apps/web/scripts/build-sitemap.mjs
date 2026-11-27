@@ -46,6 +46,7 @@ const paths = [
   ...cmsPaths,
   ...alternativePaths,
   '/services',
+  '/seo-for-startups',
   '/pricing',
   '/about',
   '/stats',

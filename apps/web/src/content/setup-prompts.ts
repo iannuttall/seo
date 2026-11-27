@@ -2,7 +2,7 @@
 // agent installs the CLI, adds the hosted MCP, waits while the person signs
 // in, checks it connects and then works through the hosted MCP. Every
 // command here must work on the published CLI and match the client steps in
-// integrations.ts.
+// integrations.ts. The server URL comes from integrations.ts.
 import { mcpUrl } from './integrations'
 
 export type SetupPrompt = {
@@ -16,7 +16,7 @@ export type SetupPrompt = {
 }
 
 const install =
-  'If `seo --version` fails, install the SEO Skill CLI with `npm i -g seo`. It needs Node.js 22.23.4, 24.22.1, 26.12.1 or a later release of the same line. If Node.js is missing or older, tell me to install the LTS release from https://nodejs.org and wait.'
+  'If `seo --version` fails, install the SEO Skill CLI with `npm i -g seo`. If Node.js is missing or too old for it, install the current LTS release of Node.js yourself, such as with Homebrew, winget or nvm, and ask me only when it needs my password or approval.'
 
 const link =
   'Run `seo login`. It prints a link and a code. Show me both and ask me to open the link, sign in with the same Google account and click "Link this machine". Wait until I say it is done, then run `seo login` again to finish.'

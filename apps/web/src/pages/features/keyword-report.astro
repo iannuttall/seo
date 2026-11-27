@@ -69,7 +69,7 @@ const related = [
     sign in with Google (access is read only). Start with the overview,
     which runs <code>seo_report</code>:
   </p>
-  <CodeBlock value={`Show me the overview section of the SEO report for example.com`} wrap />
+  <CodeBlock prompt value={`Show me the overview section of the SEO report for example.com`} wrap />
   <CodeBlock value={`seo report --site example.com --section overview`} wrap />
   <p>
     It returns the site's clicks, impressions, CTR and average position
@@ -81,7 +81,7 @@ const related = [
     For every keyword, ask for the rows. Your agent runs{' '}
     <code>seo_data</code> grouped by query and page:
   </p>
-  <CodeBlock value={`Give me a keyword report for example.com: every query with the page that ranks for it, clicks, impressions, CTR and average position for the last 28 days against the 28 days before. Leave out searches for my brand.`} wrap />
+  <CodeBlock prompt value={`Give me a keyword report for example.com: every query with the page that ranks for it, clicks, impressions, CTR and average position for the last 28 days against the 28 days before. Leave out searches for my brand.`} wrap />
   <p>
     In a terminal, after <code>npm i -g seo</code> and <code>seo start</code>,
     the same rows come from <code>seo data</code>:

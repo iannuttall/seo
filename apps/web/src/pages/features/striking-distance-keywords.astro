@@ -61,7 +61,7 @@ const related = [
     the commands at the top of this page, and sign in with Google (access
     is read only). Then ask:
   </p>
-  <CodeBlock value={`Show me the striking distance keywords for example.com`} wrap />
+  <CodeBlock prompt value={`Show me the striking distance keywords for example.com`} wrap />
   <p>In a terminal, after <code>npm i -g seo</code> and <code>seo start</code>:</p>
   <CodeBlock value={`seo report --site example.com --section striking-distance`} wrap />
   <p>
@@ -94,7 +94,7 @@ const related = [
     should. Ask for the
     quick wins:
   </p>
-  <CodeBlock value={`Show me the quick wins for example.com`} wrap />
+  <CodeBlock prompt value={`Show me the quick wins for example.com`} wrap />
   <p>
     Quick wins are query and page pairs at positions 4 to 10 with a
     click-through rate below your site's own curve for that position. A
@@ -109,7 +109,7 @@ const related = [
     rate points at the title, the description or what else Google shows on
     the results page. Ask for the low CTR section:
   </p>
-  <CodeBlock value={`Show me the low-ctr section for example.com, then read the live title and description of the top 5 pages`} wrap />
+  <CodeBlock prompt value={`Show me the low-ctr section for example.com, then read the live title and description of the top 5 pages`} wrap />
   <p>
     Your agent can then run <a href="/docs/page">seo page</a> on each URL to
     read its live title, description and queries before it suggests a new
@@ -136,7 +136,7 @@ const related = [
     well. A competitor publishes something better, the search changes, or
     the page goes out of date. Ask for it by name:
   </p>
-  <CodeBlock value={`Show me the content decay for example.com`} wrap />
+  <CodeBlock prompt value={`Show me the content decay for example.com`} wrap />
   <CodeBlock value={`seo report --site example.com --section content-decay`} wrap />
   <p>
     The content decay section lists the query and page pairs that lost
@@ -156,7 +156,7 @@ const related = [
     page's Search Console clicks and impressions for the 28 and 56 days
     after the fix against the same number of days before.
   </p>
-  <CodeBlock value={`Show me the issues list for example.com`} wrap />
+  <CodeBlock prompt value={`Show me the issues list for example.com`} wrap />
   <CodeBlock value={`seo report --site example.com --mark fixed --issues 3f9a1c2e --note "Added a contractors section and a new title"`} wrap />
   <p>
     The CLI keeps the list in a file on your machine. The hosted server

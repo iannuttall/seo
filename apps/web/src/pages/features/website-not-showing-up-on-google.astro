@@ -56,7 +56,7 @@ const related = [
 
   <h2>Get Google's reason for every page on your site</h2>
   <p>Ask your agent:</p>
-  <CodeBlock value={`Why is example.com not showing up on Google? Check which pages are indexed and which need fixing.`} wrap />
+  <CodeBlock prompt value={`Why is example.com not showing up on Google? Check which pages are indexed and which need fixing.`} wrap />
   <p>Or run it in a terminal:</p>
   <CodeBlock value={`seo index --site example.com`} />
   <p>
@@ -128,7 +128,7 @@ const related = [
     ranking. Your Search Console already shows which searches
     your pages appear for and at what position. Ask your agent for them:
   </p>
-  <CodeBlock value={`Which searches does example.com show up for on Google, and at what position?`} wrap />
+  <CodeBlock prompt value={`Which searches does example.com show up for on Google, and at what position?`} wrap />
   <p>
     The <a href="/docs/report">SEO report</a> lists the queries just outside
     the top positions and the pages that rank but get few clicks.

@@ -58,7 +58,7 @@ const summary = (agent: string) =>
           <div class="flex flex-col gap-3 sm:flex-row sm:items-center sm:gap-4">
             <div class="min-w-0 flex-1">
               <p class="text-sm text-foreground-muted">Give this prompt to {client.agent}</p>
-              <p class="mt-1 truncate font-mono text-sm text-foreground">{firstLine(client.prompt)}</p>
+              <p class="mt-1 truncate text-base text-foreground">{firstLine(client.prompt)}</p>
             </div>
             <div class="flex shrink-0 gap-2">
               <button
@@ -84,7 +84,7 @@ const summary = (agent: string) =>
           </div>
           <pre
             id={`${id}-prompt-${client.id}`}
-            class="mt-4 hidden whitespace-pre-wrap break-words rounded-lg bg-background p-4 font-mono text-sm/6 text-foreground"
+            class="mt-4 hidden whitespace-pre-wrap break-words rounded-lg bg-background p-4 font-sans text-base/7 text-foreground"
             data-setup-full>{client.prompt}</pre>
         </div>
         <div class="mt-2 flex flex-col gap-1 text-sm/6 sm:flex-row sm:items-start sm:justify-between sm:gap-6">

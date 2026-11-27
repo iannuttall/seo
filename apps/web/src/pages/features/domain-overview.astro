@@ -139,7 +139,7 @@ const related = [
     </li>
     <li>Ask for the overview in plain words:</li>
   </ol>
-  <CodeBlock value={`Give me a domain overview of example.com in the US: estimated search traffic, top keywords and pages, top 5 search competitors, backlinks and Domain Rating. Say how much of the traffic comes from brand searches.`} wrap />
+  <CodeBlock prompt value={`Give me a domain overview of example.com in the US: estimated search traffic, top keywords and pages, top 5 search competitors, backlinks and Domain Rating. Say how much of the traffic comes from brand searches.`} wrap />
   <p>
     The agent runs four research requests and writes the summary. Ask a
     follow-up in the same chat, such as "which pages rank 4th to 20th for
@@ -175,7 +175,7 @@ seo research backlinks --target example.com`} />
     against another estimate from the same provider, and read your own site
     in Search Console. Your agent keeps the two apart:
   </p>
-  <CodeBlock value={`Run a domain overview of example.com, then compare the estimated traffic with my Search Console clicks for the last 28 days by country, and list the pages Search Console shows that the estimate misses.`} wrap />
+  <CodeBlock prompt value={`Run a domain overview of example.com, then compare the estimated traffic with my Search Console clicks for the last 28 days by country, and list the pages Search Console shows that the estimate misses.`} wrap />
   <p>
     In a terminal, the <a href="/docs/report">SEO report</a> gives the Search
     Console side for the same site:

@@ -127,7 +127,7 @@ const related = [
   </p>
 
   <h3>1. Pick 2 or 3 real competitors</h3>
-  <CodeBlock value={`Who are the SEO competitors of example.com in the US? Leave out publishers and keep sites that sell what I sell.`} wrap />
+  <CodeBlock prompt value={`Who are the SEO competitors of example.com in the US? Leave out publishers and keep sites that sell what I sell.`} wrap />
   <p>
     Compare against sites that win the searches your buyers make. The{' '}
     <a href="/features/seo-competitor-analysis">SEO competitor analysis</a>{' '}
@@ -155,7 +155,7 @@ seo research ranked_keywords --target example.net --country us`} />
   </p>
 
   <h3>4. Ask the agent to compare and group</h3>
-  <CodeBlock value={`Compare example.org's and example.net's ranked keywords with my Search Console queries for example.com. List searches where a competitor is in the top 10 and I'm missing or below 10th. Drop brand searches, group by the competitor page that ranks, and keep my clicks apart from the competitors' estimates.`} wrap />
+  <CodeBlock prompt value={`Compare example.org's and example.net's ranked keywords with my Search Console queries for example.com. List searches where a competitor is in the top 10 and I'm missing or below 10th. Drop brand searches, group by the competitor page that ranks, and keep my clicks apart from the competitors' estimates.`} wrap />
   <p>
     That is the whole keyword gap analysis. Then ask for the SERP on the
     groups you keep, to check who else ranks before you write anything.

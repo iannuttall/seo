@@ -79,7 +79,7 @@ const related = [
     questions show up in your Search Console as long, chat-style queries. With
     Google connected, ask:
   </p>
-  <CodeBlock value={`Check whether AI answers cite example.com for the questions people ask about it`} wrap />
+  <CodeBlock prompt value={`Check whether AI answers cite example.com for the questions people ask about it`} wrap />
   <p>
     The checker takes the top 10 chat-style and long questions from the last
     90 days of your Search Console, and shows each one's impressions beside
@@ -93,7 +93,7 @@ const related = [
     To check prompts you choose, give up to 10 questions. The target can then
     be any site, and Google does not need to be connected:
   </p>
-  <CodeBlock value={`Ask ChatGPT, AI Mode and AI Overviews "what is the best crm for a small team" and "how do I import contacts into a crm", and check whether they cite competitor.example`} wrap />
+  <CodeBlock prompt value={`Ask ChatGPT, AI Mode and AI Overviews "what is the best crm for a small team" and "how do I import contacts into a crm", and check whether they cite competitor.example`} wrap />
   <CodeBlock value={`seo research ai_answers --target competitor.example --keywords "what is the best crm for a small team,how do I import contacts into a crm"`} wrap />
   <p>
     Run the same questions for your site and a competitor's, and the
@@ -120,7 +120,7 @@ const related = [
     to 5 keywords it says whether Google showed an AI Overview, lists the
     sites it cited, and shows the ranking pages underneath.
   </p>
-  <CodeBlock value={`Show the top 10 for "free ai visibility checker" and the sites its AI Overview cites`} wrap />
+  <CodeBlock prompt value={`Show the top 10 for "free ai visibility checker" and the sites its AI Overview cites`} wrap />
   <p>
     Each ranking page comes with Domain Rating by{' '}
     <a href="https://ahrefs.com" target="_blank" rel="noreferrer">Ahrefs</a>,
@@ -170,7 +170,7 @@ const related = [
     agent to run the check again on the same site, country and questions,
     and compare the two results:
   </p>
-  <CodeBlock value={`Run the AI answer check for example.com again with the same 10 questions as last month, and show which answers changed`} wrap />
+  <CodeBlock prompt value={`Run the AI answer check for example.com again with the same 10 questions as last month, and show which answers changed`} wrap />
   <p>
     In a terminal, add <code>--json</code> and save each run to a file. Once a
     month is often enough. Each answer is one sample, and the same question
@@ -186,7 +186,7 @@ const related = [
     visits from ChatGPT, Perplexity, Claude, Gemini and Copilot by source,
     with the pages they land on:
   </p>
-  <CodeBlock value={`Which AI assistants sent visits to example.com in the last 28 days, and which pages did they land on?`} wrap />
+  <CodeBlock prompt value={`Which AI assistants sent visits to example.com in the last 28 days, and which pages did they land on?`} wrap />
   <p>
     Only visits that pass a referrer count. An AI app that sends none shows
     up as Direct traffic, so treat the number as a minimum.

@@ -63,7 +63,7 @@ const related = [
     </li>
     <li>Ask your agent:</li>
   </ol>
-  <CodeBlock value={`Which pages on example.com are crawled but not indexed, and which of them matter?`} wrap />
+  <CodeBlock prompt value={`Which pages on example.com are crawled but not indexed, and which of them matter?`} wrap />
   <p>Or run it in a terminal:</p>
   <CodeBlock value={`seo index --site example.com`} />
   <p>
@@ -115,7 +115,7 @@ const related = [
 
   <h2>What to check on a page you want indexed</h2>
   <p>Give your agent the job for the whole list at once:</p>
-  <CodeBlock value={`For each crawled, not indexed page on example.com that is in the sitemap, read the page, compare it with our other pages on the same topic, and tell me whether to improve it, merge it or leave it out.`} wrap />
+  <CodeBlock prompt value={`For each crawled, not indexed page on example.com that is in the sitemap, read the page, compare it with our other pages on the same topic, and tell me whether to improve it, merge it or leave it out.`} wrap />
   <p>Check three things on each page:</p>
   <ul>
     <li>

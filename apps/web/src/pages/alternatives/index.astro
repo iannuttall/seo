@@ -13,7 +13,6 @@ import BaseLayout from '@/layouts/BaseLayout.astro'
 import type { SchemaBreadcrumb } from '@/lib/schema'
 
 const breadcrumbs: SchemaBreadcrumb[] = [{ label: 'Home', href: '/' }, { label: 'Alternatives' }]
-const latest = competitors.map((item) => item.checked).sort().at(-1)
 
 const why = [
   { title: 'Free SEO tools, no account', text: 'Backlinks, Domain Rating, competitor keywords, SERPs, traffic estimates and site checks in your browser.', href: '/tools' },
@@ -34,7 +33,7 @@ const faqs = [
   { question: 'What is the best free Google Search Console MCP server?', answer: `SEO Skill is free for every on-demand tool with no usage cap, and it runs hosted, so there is nothing to install. The free open source servers (${names(openSource)}) run on your own machine with your own Google Cloud project.` },
   { question: 'Which Search Console MCP servers work in claude.ai and ChatGPT?', answer: `SEO Skill does, and so do ${names(webChat)}, according to their own pages.` },
   { question: 'Do I need a Google Cloud project?', answer: 'Not for SEO Skill. You add one URL and sign in with Google. Most open source servers ask you to create a Google Cloud project and an OAuth client first.' },
-  { question: 'Where do the facts on these pages come from?', answer: 'From each tool\'s own product, docs, pricing and GitHub pages, linked at the bottom of every comparison. GitHub numbers are refreshed by script, and a person re-reads prices and plans.' },
+  { question: 'Where do the facts on these pages come from?', answer: 'From each tool\'s own product, docs, pricing and GitHub pages. GitHub numbers are refreshed by script, and a person re-reads prices and plans.' },
 ]
 ---
 
@@ -44,7 +43,6 @@ const faqs = [
   canonicalPath="/alternatives"
   schemaType="CollectionPage"
   {breadcrumbs}
-  dateModified={latest}
   framed={false}
 >
   <main data-agent-content>

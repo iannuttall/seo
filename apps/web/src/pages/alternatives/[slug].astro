@@ -31,13 +31,6 @@ export function getStaticPaths() {
 type Props = { item: CompetitorEntry }
 const { item } = Astro.props
 
-const readDate = (date: string) =>
-  new Date(`${date}T00:00:00Z`).toLocaleDateString('en-GB', {
-    day: 'numeric',
-    month: 'long',
-    year: 'numeric',
-    timeZone: 'UTC',
-  })
 const breadcrumbs: SchemaBreadcrumb[] = [
   { label: 'Home', href: '/' },
   { label: 'Alternatives', href: '/alternatives' },
@@ -94,7 +87,7 @@ const faq = [
 ]
 ---
 
-<BaseLayout title={suite ? `Free ${item.short} alternative` : `${item.short} alternative for your AI agent`} {description} canonicalPath={`/alternatives/${item.slug}`} {breadcrumbs} dateModified={item.checked} framed={false}>
+<BaseLayout title={suite ? `Free ${item.short} alternative` : `${item.short} alternative for your AI agent`} {description} canonicalPath={`/alternatives/${item.slug}`} {breadcrumbs} framed={false}>
   <main data-agent-content>
     <LandingHero
       title={suite ? `Free ${item.short} alternative` : `SEO Skill vs ${item.short}`}
@@ -176,7 +169,7 @@ const faq = [
         <SectionHeading
           id="side-heading"
           title="How do they compare feature by feature?"
-          text={`Row by row below, with ${item.short}'s facts taken from the sources at the end of this page.`}
+          text={`Row by row below, with ${item.short}'s facts from its own pages.`}
         />
         <div class="rounded-lg bg-muted px-6">
           <div class="hidden gap-6 border-b border-border py-4 text-sm font-medium text-foreground sm:grid sm:grid-cols-[8rem_1fr_1fr]">
@@ -210,7 +203,7 @@ const faq = [
                 <div class="text-sm leading-6 text-foreground-muted">
                   <div class="font-medium text-foreground sm:hidden">{item.short}</div>
                   <p>
-                  <a class="underline underline-offset-4" href={`https://github.com/${item.github.repo}`} target="_blank" rel="noreferrer">{item.github.repo}</a>,{' '}
+                  {item.github.repo},{' '}
                   {item.github.stars.toLocaleString('en-GB')} stars, last commit {item.github.lastCommit}
                   </p>
                 </div>
@@ -253,16 +246,6 @@ const faq = [
         <div class="mt-10">
           <FaqAccordion items={faq} id="alt-faq-list" />
         </div>
-        <p class="mt-10 text-sm leading-6 text-foreground-muted">
-          Sources for {item.short}, read on {readDate(item.checked)}.{' '}
-          {item.sources.map((source, index) => (
-            <>
-              {index ? ', ' : ''}
-              <a class="underline underline-offset-4" href={source.url} target="_blank" rel="noreferrer">{source.fact}</a>
-            </>
-          ))}
-          .
-        </p>
       </section>
 
       <section class="site-frame" aria-labelledby="start-heading">

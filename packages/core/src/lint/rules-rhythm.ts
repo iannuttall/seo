@@ -181,8 +181,9 @@ export function pithyFragment(ctx: Context) {
         text.split(',').length === 2 &&
         words(left).length <= 3 &&
         words(right).length <= 3 &&
-        !LEADING_CLAUSE.test(left.trim()) &&
-        !LEADING_CLAUSE.test(right.trim())
+        // Only the opening half can be a leading clause ("In 2024, ..."). A
+        // second half such as "in order" is still a slogan beat.
+        !LEADING_CLAUSE.test(left.trim())
       if (!strong && !twoBeat) continue
       ctx.hit(
         rule,

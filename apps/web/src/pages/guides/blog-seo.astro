@@ -1,0 +1,463 @@
+---
+import {
+  ChartIncreaseIcon,
+  GoogleIcon,
+  QuillWrite01Icon,
+  SearchList01Icon,
+  Target02Icon,
+  TextCheckIcon,
+  WebValidationIcon,
+} from '@hugeicons/core-free-icons'
+import BeforeAfter from '@/components/blog/BeforeAfter.astro'
+import KeywordTable from '@/components/blog/KeywordTable.astro'
+import PlanSteps from '@/components/blog/PlanSteps.astro'
+import SerpLadder from '@/components/blog/SerpLadder.astro'
+import CodeBlock from '@/components/CodeBlock.astro'
+import FaqAccordion from '@/components/FaqAccordion.astro'
+import HomeCard from '@/components/HomeCard.astro'
+import LandingHero from '@/components/LandingHero.astro'
+import SectionHeading from '@/components/SectionHeading.astro'
+import SetupPrompts from '@/components/SetupPrompts.astro'
+import SplitList from '@/components/SplitList.astro'
+import MigrationChecklist, { type ChecklistPhase } from '@/components/tools/MigrationChecklist.astro'
+import BaseLayout from '@/layouts/BaseLayout.astro'
+import type { SchemaBreadcrumb } from '@/lib/schema'
+
+// Keyword and results data: Ahrefs, US. CMS facts: each platform's own help
+// centre or developer docs, linked from the tab. Re-read those docs before
+// changing a menu name. The page names other SEO tools but does not link to
+// them.
+
+const breadcrumbs: SchemaBreadcrumb[] = [
+  { label: 'Home', href: '/' },
+  { label: 'Guides', href: '/guides' },
+  { label: 'Blog SEO' },
+]
+
+const parts = [
+  { title: '1. Pick posts that bring customers', text: 'Start with posts you already have that sit just off page one, then write for searches your buyers make about what you sell.', icon: Target02Icon },
+  { title: '2. Make each post the best answer', text: 'Answer the search in the first lines, then add what the pages ranking today leave out.', icon: QuillWrite01Icon },
+  { title: '3. Let Google find and read it', text: 'Each post needs its own title, a clean slug, a place in the sitemap and links from other posts, with its text in the HTML.', icon: GoogleIcon },
+  { title: '4. Measure what each post did', text: 'Search Console shows the clicks and positions each post got in the weeks after you published or changed it.', icon: ChartIncreaseIcon },
+]
+
+const checklist: ChecklistPhase[] = [
+  {
+    id: 'checklist-before',
+    title: 'Before you write',
+    when: 'Pick each post from your own search data.',
+    items: [
+      { id: 'topic-customers', title: 'The topic is close to what you sell', detail: 'A post a buyer would read on the way to choosing you. Traffic from searches nobody buys from is a vanity number.' },
+      { id: 'topic-existing', title: 'No post of yours already covers it', detail: 'If one does, improve that post instead. Two posts that answer the same need split the clicks. The <a href="/tools/keyword-cannibalization-checker">keyword cannibalization checker</a> finds them.' },
+      { id: 'topic-serp', title: 'You read the pages that rank now', detail: 'Note what each one answers and what it skips. Your post needs a reason to beat them, such as your own data or examples.' },
+      { id: 'topic-intent', title: 'The format matches the search', detail: 'A how-to for “how to”, a list for “best”, a comparison for “vs”. The top results show which one Google expects.' },
+    ],
+  },
+  {
+    id: 'checklist-post',
+    title: 'On the post',
+    when: 'These cover what the reader and Google see on the page.',
+    items: [
+      { id: 'post-title', title: 'A title tag of its own, under about 60 characters', detail: 'Lead with the words people search for. Check it with the <a href="/tools/title-and-meta-description-checker">title and meta description checker</a>.' },
+      { id: 'post-h1', title: 'One H1 that matches the title', detail: 'Google often uses the H1 as the title link when the two disagree.' },
+      { id: 'post-answer', title: 'The answer is in the first lines', detail: 'Put the detail after it, so a reader who stops after one paragraph still got what they came for.' },
+      { id: 'post-headings', title: 'Headings say what each section gives', detail: 'A reader scanning only the headings should follow the post.' },
+      { id: 'post-slug', title: 'A short slug with no date in it', detail: 'The post then keeps its address and its links when you update it.' },
+      { id: 'post-description', title: 'A meta description that says what is in the post', detail: 'Google may rewrite it, but a specific one is often kept.' },
+      { id: 'post-links', title: 'Links to and from related posts', detail: 'At least one older post links to the new one, with link text that names it.' },
+      { id: 'post-images', title: 'Alt text on every image that carries meaning', detail: 'Describe what the image shows. Leave decorative images empty.' },
+      { id: 'post-author', title: 'An author and sources the reader can check', detail: 'Google’s guidance asks for clear sourcing and author information.' },
+      { id: 'post-lint', title: 'The copy reads like a person wrote it', detail: 'Paste it into the <a href="/tools/seo-content-checker">SEO content checker</a>, or run <code>seo lint</code> on the file.' },
+    ],
+  },
+  {
+    id: 'checklist-after',
+    title: 'After you publish',
+    when: 'Check that Google can index the post, then start measuring.',
+    items: [
+      { id: 'after-200', title: 'The post returns 200 with no noindex', detail: 'Check with the <a href="/tools/noindex-checker">noindex checker</a>. A CMS setting can hide the whole blog (see the CMS tabs below).' },
+      { id: 'after-sitemap', title: 'It is in your sitemap', detail: 'Most CMSs add it on publish. The <a href="/tools/sitemap-validator">sitemap validator</a> reads the file.' },
+      { id: 'after-indexed', title: 'Google has indexed it', detail: 'Check in Search Console’s URL Inspection or the <a href="/tools/google-index-checker">Google index checker</a> a few days after publishing.' },
+      { id: 'after-measure', title: 'You noted the date to compare from', detail: 'Compare clicks and positions for the same number of days before and after.' },
+    ],
+  },
+]
+
+// Ahrefs, US monthly searches and Keyword Difficulty (0 to 100).
+const demand = [
+  { keyword: 'seo blog', volume: 3600, global: 11000, difficulty: 87 },
+  { keyword: 'blog seo', volume: 3000, global: 8400, difficulty: 79 },
+  { keyword: 'seo blog writing', volume: 800, global: 1600, difficulty: 24 },
+  { keyword: 'seo for blog posts', volume: 500, global: 800, difficulty: 14 },
+  { keyword: 'seo blog post', volume: 500, global: 1000, difficulty: 24 },
+  { keyword: 'blog seo tools', volume: 500, global: 800, difficulty: 52 },
+  { keyword: 'blogging seo', volume: 450, global: 1000, difficulty: 23 },
+  { keyword: 'seo checklist for blog posts', volume: 400, global: 700, difficulty: 15 },
+  { keyword: 'seo blog software', volume: 400, global: 500, difficulty: 5 },
+  { keyword: 'blog seo checklist', volume: 350, global: 450, difficulty: 36 },
+  { keyword: 'seo blog writer', volume: 150, global: 350, difficulty: 4 },
+  { keyword: 'how to seo a blog', volume: 100, global: 100, difficulty: 22 },
+]
+
+const ladder = [
+  { position: 1, domain: 'blogseo.io', dr: 52, tag: 'AI blogging tool' },
+  { position: 3, domain: 'backlinko.com', dr: 90, tag: 'SEO guide' },
+  { position: 4, domain: 'reddit.com', dr: 95, tag: 'Forum thread' },
+  { position: 5, domain: 'yoast.com', dr: 91, tag: 'SEO plugin guide' },
+  { position: 7, domain: 'semrush.com', dr: 92, tag: 'SEO guide' },
+  { position: 8, domain: 'developers.google.com', dr: 100, tag: 'Google docs' },
+  { position: 10, domain: 'ahrefs.com', dr: 91, tag: 'SEO blog' },
+]
+
+const lookFor = [
+  { title: 'It starts from your Search Console', text: 'The posts that already show for a search, and how close each one is, beat a keyword list made from scratch.' },
+  { title: 'You decide the topics', text: 'A calendar that fills itself picks a topic for every slot, whether or not your customers search for it.' },
+  { title: 'You read each post before it publishes', text: 'The tool should save drafts or wait for you to press publish. Google asks for AI text to be fact-checked and reviewed before it goes live.' },
+  { title: 'It improves posts you already have', text: 'Rewriting a post at position 12 often pays sooner than a new post that does not rank yet, as a rule of thumb.' },
+  { title: 'It checks the copy', text: 'Titles, descriptions, headings and the patterns that make text read as generated, with a fix for each.' },
+  { title: 'It works with your CMS', text: 'Through the CMS’s own MCP server or API, so edits land where you would make them by hand and are not overwritten later.' },
+  { title: 'No link exchange', text: 'Google’s spam policies count excessive link exchanges and automated link building as link spam.' },
+  { title: 'It shows what each change did', text: 'Clicks and positions after the date you published, next to the same days before.' },
+]
+
+const ext = (href: string, text: string) => `<a href="${href}" target="_blank" rel="noreferrer">${text}</a>`
+const cms = (rows: [string, string][], doc: string, more?: string) =>
+  `<dl class="space-y-3">${rows.map(([term, text]) => `<div><dt class="font-medium">${term}</dt><dd class="text-foreground-muted">${text}</dd></div>`).join('')}</dl><p class="text-sm text-foreground-muted">From ${doc}.${more ? ` ${more}` : ''}</p>`
+
+const cmsTabs = [
+  {
+    label: 'WordPress',
+    html: cms(
+      [
+        ['Title, description and slug', 'The Slug field is in the post settings sidebar. Self-hosted WordPress has no meta description or separate SEO title field, so an SEO plugin adds them. On WordPress.com they are in the Jetpack SEO panel on Premium plans and up.'],
+        ['Sitemap', 'Built in at /wp-sitemap.xml since WordPress 5.5. WordPress.com uses /sitemap.xml.'],
+        ['The setting that hides it', 'Settings, then Reading, then “Discourage search engines from indexing this site”. It adds noindex, nofollow and turns the built-in sitemap off.'],
+        ['For your agent', 'The WordPress.com MCP server for WordPress.com sites. A self-hosted site can reach it through Jetpack on a plan that includes Jetpack AI, or for free through the official MCP Adapter plugin with an Application Password. The plugin works with desktop and coding agents only, and can use only the abilities your plugins make public.'],
+      ],
+      `WordPress’s ${ext('https://wordpress.org/documentation/article/settings-reading-screen', 'Reading settings')}, ${ext('https://make.wordpress.org/core/2020/07/22/new-xml-sitemaps-functionality-in-wordpress-5-5', 'sitemaps')}, ${ext('https://wordpress.com/support/seo/optimize-posts-pages/', 'WordPress.com SEO')} and ${ext('https://wordpress.com/support/mcp/', 'WordPress.com MCP')} docs and the ${ext('https://github.com/WordPress/mcp-adapter', 'MCP Adapter')}`,
+      'See also the <a href="/integrations/wordpress">WordPress MCP guide</a>.',
+    ),
+  },
+  {
+    label: 'Shopify',
+    html: cms(
+      [
+        ['Title, description and slug', 'Content, then Blog posts, open the post, then the pencil on Search engine listing. Page title, Meta description and URL handle are there, and changing the handle offers a redirect.'],
+        ['Sitemap', 'Automatic at /sitemap.xml, blog posts included.'],
+        ['The setting that hides it', 'The password page. New stores start in private mode, which hides every page from search. Change it from the access menu on the Online Store page.'],
+        ['For your agent', 'The Shopify connector, or the Admin API, which edits a post’s title, handle, body and image alt text.'],
+      ],
+      `Shopify’s ${ext('https://help.shopify.com/en/manual/online-store/blogs/writing-blogs/working-with-blog-posts', 'blog posts')} and ${ext('https://help.shopify.com/en/manual/online-store/themes/password-page', 'password page')} help`,
+      'See also the <a href="/integrations/shopify">Shopify guide</a>.',
+    ),
+  },
+  {
+    label: 'Webflow',
+    html: cms(
+      [
+        ['Title, description and slug', 'On the blog’s Collection template page, open Page settings, then SEO settings, and bind the title tag and meta description to Collection fields with Add field. Each item has its own Slug.'],
+        ['Sitemap', 'Turn on Auto-generate sitemap under Site settings, then SEO. It lives at /sitemap.xml and updates on publish.'],
+        ['The setting that hides it', 'Staging indexing, under Site settings, then SEO, decides whether the webflow.io copy of your site can be indexed.'],
+        ['For your agent', 'The Webflow MCP server, which manages CMS items and their meta titles and descriptions.'],
+      ],
+      `Webflow’s ${ext('https://university.webflow.com/lesson/seo-title-meta-description', 'SEO title and description')}, ${ext('https://help.webflow.com/hc/en-us/articles/33961355371667-Create-a-sitemap-in-Webflow', 'sitemap')}, ${ext('https://help.webflow.com/hc/en-us/articles/33961368603539-Disable-search-engine-indexing', 'indexing')} and ${ext('https://developers.webflow.com/mcp/reference/overview', 'MCP')} docs`,
+      'See also the <a href="/integrations/webflow">Webflow MCP guide</a>.',
+    ),
+  },
+  {
+    label: 'Ghost',
+    html: cms(
+      [
+        ['Title, description and slug', 'In the post settings menu: Post URL for the slug, and Meta data for the meta title and description.'],
+        ['Sitemap', 'Automatic at /sitemap.xml.'],
+        ['The setting that hides it', 'Private Site Mode under Settings, then General. It adds a password and serves noindex.'],
+        ['For your agent', 'The Ghost Admin API, which reads and edits posts.'],
+      ],
+      `Ghost’s ${ext('https://ghost.org/help/post-settings', 'post settings')}, ${ext('https://ghost.org/help/seo', 'SEO')}, ${ext('https://docs.ghost.org/jamstack/', 'private site')} and ${ext('https://docs.ghost.org/admin-api', 'Admin API')} docs`,
+      'A Canonical URL field in Meta data overrides the default and drops the post from the sitemap, so leave it empty unless the post lives elsewhere first.',
+    ),
+  },
+  {
+    label: 'Wix',
+    html: cms(
+      [
+        ['Title, description and slug', 'Blog in the dashboard, Edit on the post, then the SEO tab. Title tag, meta description and URL slug are under Basics.'],
+        ['Sitemap', 'Automatic. Blog posts are in /blog-posts-sitemap.xml, linked from /sitemap.xml.'],
+        ['The setting that hides it', '“Let search engines index your site” in SEO Settings must be on. Each post has its own index toggle on the SEO tab too.'],
+        ['For your agent', 'The Wix MCP server, which calls Wix’s APIs on your site.'],
+      ],
+      `Wix’s ${ext('https://support.wix.com/en/article/wix-blog-seo-for-blog-posts-in-wix-blog', 'blog SEO')} and ${ext('https://dev.wix.com/docs/overview/ai-the-wix-platform/the-wix-mcp', 'MCP')} docs`,
+    ),
+  },
+  {
+    label: 'Framer',
+    html: cms(
+      [
+        ['Title, description and slug', 'In the blog CMS page’s Page Settings, put {{Title}} in Title and {{Description}} in Page Description, from plain text fields. Each post’s URL is /blog/ and its slug.'],
+        ['Sitemap', 'Automatic at /sitemap.xml when you publish.'],
+        ['The setting that hides it', '“Show page in search engines” in Page Settings. When it is off the page gets noindex, and it is easy to leave off after building.'],
+        ['For your agent', 'The Framer MCP server, which manages CMS collections.'],
+      ],
+      `Framer’s ${ext('https://www.framer.com/help/articles/how-to-update-page-titles-descriptions-and-social-images', 'page titles')} and ${ext('https://www.framer.com/help/articles/getting-started-with-framer-mcp/', 'MCP')} help`,
+    ),
+  },
+  {
+    label: 'HubSpot',
+    html: cms(
+      [
+        ['Title, description and slug', 'Content, then Blog, open the post, then Settings. Page title, Content slug and Meta description are there.'],
+        ['Sitemap', 'Live posts are added to /sitemap.xml automatically.'],
+        ['The setting that hides it', 'There is no site-wide switch. HubSpot’s own system domains are always noindexed, so connect your real domain before you publish.'],
+        ['For your agent', 'HubSpot’s remote MCP server, which creates and updates blog posts from Claude, ChatGPT or Gemini.'],
+      ],
+      `HubSpot’s ${ext('https://knowledge.hubspot.com/blog/create-and-publish-blog-posts', 'blog posts')} and ${ext('https://developers.hubspot.com/docs/apps/developer-platform/build-apps/integrate-with-the-remote-hubspot-mcp-server', 'MCP')} docs`,
+    ),
+  },
+  {
+    label: 'Squarespace',
+    html: cms(
+      [
+        ['Title, description and slug', 'Open the post’s settings. The SEO tab has the SEO title and description, and Post URL on the Content tab sets the slug.'],
+        ['Sitemap', 'Automatic at /sitemap.xml, but not on trial sites.'],
+        ['The setting that hides it', '“Block Search engine crawlers” under Settings, then Crawlers. It blocks the whole site in robots.txt.'],
+        ['For your agent', 'Squarespace’s MCP server covers domains and commerce, not blog posts, so your agent writes the draft and you paste it in.'],
+      ],
+      `Squarespace’s ${ext('https://support.squarespace.com/hc/en-us/articles/206543727-Blogging-with-Squarespace', 'blogging')}, ${ext('https://support.squarespace.com/hc/en-us/articles/206543547-Your-site-map', 'sitemap')}, ${ext('https://support.squarespace.com/hc/en-us/articles/21829426828045-Hiding-your-site-from-search-results', 'hiding your site')} and ${ext('https://developers.squarespace.com/mcp/overview', 'MCP')} docs`,
+    ),
+  },
+]
+
+const steps = [
+  { title: 'Find the posts closest to page one', body: 'Your agent reads your Search Console for posts at positions 8 to 20, posts with many impressions and few clicks, and searches with impressions but no post that answers them.' },
+  { title: 'Check demand and who ranks', body: 'With your DataForSEO or Ahrefs key it adds volumes, difficulty and the pages that rank now, and it can ask ChatGPT, Gemini and Google’s AI answers which sites they cite.' },
+  { title: 'Write the brief, then the post', body: 'The brief names the post, the searches it shows for and what to change. The agent writes in your CMS through its MCP server, or in your codebase.' },
+  { title: 'Lint it, then read it', body: '`seo lint` flags titles that are too long, missing descriptions and lines that read as AI-written, with a fix for each. You approve the result.' },
+  { title: 'Mark it fixed and compare', body: 'The issue is marked fixed, and its clicks 28 and 56 days later sit next to the days before.' },
+]
+
+const lintFile = 'seo lint content/blog/how-to-choose-a-crm.md'
+
+const faq = [
+  {
+    question: 'Is blogging still good for SEO?',
+    answer:
+      'Yes, when each post answers a search your customers make and is better than what ranks now. A blog is where most sites answer the questions buyers ask before they choose. Posts on topics far from what you sell bring visits that rarely turn into customers.',
+  },
+  {
+    question: 'How often should I publish blog posts for SEO?',
+    answer:
+      'Publish as often as you can pick a topic from research and have someone read the post before it goes live. Publishing on many topics in the hope that some rank is what Google’s helpful content guidance warns against.',
+  },
+  {
+    question: 'How long should a blog post be for SEO?',
+    answer:
+      'A post should be as long as the answer needs, because Google has no word count target. Read the pages that rank for the search: if they all cover five steps, a post that covers two is probably too thin, and padding past the answer helps nobody.',
+  },
+  {
+    question: 'Can ChatGPT do SEO for my blog?',
+    answer:
+      'It can write and rewrite posts well, but it cannot see your Search Console, so it does not know which posts are close to page one or which searches you already show for. Connect SEO Skill to ChatGPT, Claude or another agent and it can.',
+    links: [{ text: 'Connect SEO Skill to ChatGPT', href: '/features/chatgpt-seo' }],
+  },
+  {
+    question: 'What is a blog SEO checklist?',
+    answer:
+      'The checks a post needs before and after it goes live: a topic close to what you sell, a title of its own, one H1, an answer in the first lines, a clean slug, internal links, alt text, no noindex, a place in the sitemap, and a date to measure from. The checklist on this page saves your ticks in this browser.',
+  },
+  {
+    question: 'What is the best blog SEO software?',
+    answer:
+      'It depends who you want writing. Article tools such as BlogSEO, Outrank and SEObot suit a team that wants posts written and published on a schedule, and will read each one first. SEO Skill suits a team that already uses an agent such as Claude Code or Codex: it gives the agent your Search Console data and checks the copy, and the agent writes.',
+    links: [{ text: 'BlogSEO', href: '/alternatives/blogseo' }],
+  },
+  {
+    question: 'Is blog SEO the same as BlogSEO?',
+    answer:
+      'No. Blog SEO is the work on this page. BlogSEO (blogseo.io) is an AI blogging tool with the same name, which writes and publishes posts for you.',
+    links: [{ text: 'BlogSEO', href: '/alternatives/blogseo' }],
+  },
+]
+
+const tools = [
+  { title: 'SEO content checker', text: 'Paste a draft for its headings, title, description, link text and copy, with a fix for each line.', href: '/tools/seo-content-checker', icon: TextCheckIcon, link: 'Check a draft' },
+  { title: 'SEO checker', text: 'Check one live post for access, title, headings, canonical, structured data and links.', href: '/tools/seo-checker', icon: WebValidationIcon, link: 'Check a post' },
+  { title: 'Striking distance keywords', text: 'The searches your posts rank just off page one for, from your own Search Console.', href: '/features/striking-distance-keywords', icon: SearchList01Icon, link: 'Find them' },
+  { title: 'Title and meta description checker', text: 'Check a post’s title tag and meta description for length and for titles shared with other pages.', href: '/tools/title-and-meta-description-checker', icon: TextCheckIcon, link: 'Check a title' },
+]
+---
+
+<BaseLayout
+  title="Blog SEO: checklist, CMS setup and your own agent"
+  description="A blog SEO checklist for every post, where each SEO setting lives in eight CMSs, and how your agent picks the next post from Search Console."
+  canonicalPath="/guides/blog-seo"
+  {breadcrumbs}
+  framed={false}
+>
+  <main data-agent-content>
+    <LandingHero
+      author
+      title="Blog SEO checklist and setup for every CMS"
+      lead="Pick posts your customers search for, make each one the best answer, make sure Google can find it, then measure what it did. Here is the checklist, where each setting lives in your CMS, and how your own agent picks the next post from Search Console."
+      setupId="blog-seo-setup"
+    />
+
+    <div class="space-y-24 py-24 sm:space-y-32 sm:py-32">
+      <section class="site-frame" aria-labelledby="parts-heading">
+        <SectionHeading
+          id="parts-heading"
+          title="What does blog SEO cover?"
+          text="Do these in order, because each one depends on the one before. A post Google can’t index won’t rank however good its title is, and a post on a topic your buyers never search for won’t bring you customers."
+        />
+        <div class="grid grid-cols-1 gap-2 sm:grid-cols-2">
+          {parts.map((item) => <HomeCard {...item} />)}
+        </div>
+      </section>
+
+      <section class="site-frame" aria-labelledby="checklist-heading">
+        <SectionHeading
+          id="checklist-heading"
+          title="18 checks for every blog post"
+          text="Four of these come before you write, ten are on the post itself and four come after it goes live. You can tick them off here as you work through a post."
+        />
+        <div class="max-w-3xl">
+          <MigrationChecklist phases={checklist} storageKey="seo:blog-seo-checklist" />
+        </div>
+      </section>
+
+      <section class="site-frame" aria-labelledby="topics-heading">
+        <SectionHeading
+          id="topics-heading"
+          title="Which blog posts should you write first?"
+          text="Posts you already have that sit just off page one, then specific searches your buyers make. Broad head terms belong to sites with years of links."
+        />
+        <div class="max-w-3xl">
+          <KeywordTable
+            rows={demand}
+            title="Searches around blog SEO, sorted by volume"
+            caption="Ahrefs, US monthly searches and Keyword Difficulty (0 to 100). Click a heading to sort."
+          />
+        </div>
+        <div class="docs-prose max-w-3xl">
+          <p>
+            The two head terms, “seo blog” and “blog seo”, get about 6,600 US
+            searches a month between them at difficulty 79 and 87. The ten
+            longer searches under them add about 4,150 more, and eight of those
+            score 24 or less. Those low scores suggest a new blog can rank for the
+            long ones first, and they say more about what the searcher wants.
+          </p>
+        </div>
+        <div class="max-w-3xl">
+          <SerpLadder
+            keyword="blog seo"
+            volume={3000}
+            rows={ladder}
+            title="Who ranks for “blog seo” in the US"
+            caption="Ahrefs, US top 10 organic results. Positions 2, 6 and 9 (search features and one more AI blogging tool) are left out."
+          />
+        </div>
+        <div class="docs-prose max-w-3xl">
+          <p>
+            Six of these seven are SEO publishers, Google and a forum thread, all
+            with Domain Rating 90 or more. The seventh is BlogSEO, an AI blogging
+            tool with the same name. Read the top results before you write for any
+            search, and write only when you can add something they don’t have.
+          </p>
+        </div>
+      </section>
+
+      <SplitList
+        id="look-heading"
+        title="What should you look for in blog SEO software?"
+        text="Eight things to check in any blog SEO tool, whether it writes for you on a calendar or checks one post at a time. Ask the vendor about each before you connect your CMS."
+        items={lookFor}
+      />
+
+      <section class="site-frame" aria-labelledby="cms-heading">
+        <SectionHeading
+          id="cms-heading"
+          title="How do you set up blog SEO in your CMS?"
+          text="Find where the title, description and slug live, confirm the sitemap, and check the one setting that hides the whole blog. Pick your CMS."
+        />
+        <div class="max-w-3xl">
+          <BeforeAfter sides={cmsTabs} title="Blog SEO settings by CMS" caption="Menu names from each platform’s own help centre or developer docs, linked in each tab." />
+        </div>
+        <div class="docs-prose max-w-3xl">
+          <p>
+            Most of them set a canonical tag on posts for you. Leave a custom
+            canonical empty unless the post was published somewhere else first,
+            because one pointing elsewhere tells Google to index the other page.
+          </p>
+        </div>
+      </section>
+
+      <section class="site-frame" aria-labelledby="agent-heading">
+        <SectionHeading
+          id="agent-heading"
+          title="How do you do blog SEO with SEO Skill?"
+          text="Your agent reads your Search Console through SEO Skill, picks the post to write or fix, writes it in your CMS or codebase, and checks it with seo lint before you approve it."
+        />
+        <div class="max-w-3xl">
+          <PlanSteps {steps} />
+        </div>
+        <div class="docs-prose max-w-3xl">
+          <p>Connect SEO Skill with the prompt at the top of this page, then ask:</p>
+          <CodeBlock prompt value="Find the blog posts on example.com that rank at positions 8 to 20 in Search Console, pick the one with the most impressions, write a brief for it, rewrite it as a draft in my CMS, then check the new copy with seo lint, fix every error and show me the result before you publish anything." wrap />
+          <p>To check a post in a repository yourself, run this in the project folder:</p>
+          <CodeBlock value={lintFile} />
+          <p>
+            SEO Skill never writes to your site. Your agent makes the change
+            through the CMS’s own MCP server or in your code, so every edit is
+            one you can see.
+          </p>
+        </div>
+      </section>
+
+      <section class="site-frame" aria-labelledby="ai-heading">
+        <SectionHeading
+          id="ai-heading"
+          title="Should AI write your blog posts?"
+          text="It can, when a person picks each topic from research and reads each post before it ships. What goes wrong at scale is publishing without that judgement, with AI or without."
+        />
+        <div class="docs-prose max-w-3xl">
+          <p>
+            Google’s guidance on <a href="https://developers.google.com/search/docs/fundamentals/using-gen-ai-content" target="_blank" rel="noreferrer">using generative AI content</a> says
+            it is “critical to manually factcheck and review all AI-generated
+            content”, and its scaled content abuse policy applies “no matter how
+            it’s created”. What counts is whether a person decided the post
+            should exist and checked what it says.
+          </p>
+          <p>
+            Article tools that pick, write and publish for you can skip that step
+            unless you turn auto-publish off and edit the calendar yourself. The <a href="/alternatives/blogseo">BlogSEO</a>, <a href="/alternatives/outrank">Outrank</a> and <a href="/alternatives/seobot">SEObot</a> comparisons
+            show what each one does and how writing in your own agent differs.
+          </p>
+        </div>
+      </section>
+
+      <section class="site-frame" aria-labelledby="faq-heading">
+        <SectionHeading
+          id="faq-heading"
+          title="Blog SEO questions"
+          text="These answer how often to post, how long a post should be, whether ChatGPT can do it, and which software to use."
+        />
+        <FaqAccordion items={faq} id="blog-seo-faq" />
+      </section>
+
+      <section class="site-frame" aria-labelledby="tools-heading">
+        <SectionHeading id="tools-heading" title="Tools for blog SEO" text="You can check one post in your browser for free, or let your agent find the next one from Search Console." />
+        <div class="grid grid-cols-1 gap-2 sm:grid-cols-2">
+          {tools.map((item) => <HomeCard {...item} />)}
+        </div>
+      </section>
+
+      <section class="site-frame" aria-labelledby="start-heading">
+        <SectionHeading
+          id="start-heading"
+          title="Let your agent pick your next blog post"
+          text="Add SEO Skill to your agent and sign in with the Google account that can read your Search Console. Then ask which posts are closest to page one."
+        />
+        <SetupPrompts id="blog-seo-setup-end" />
+      </section>
+    </div>
+  </main>
+</BaseLayout>

@@ -13,7 +13,14 @@ import { siteProgress } from '../progress.ts'
 import { accountsOf } from '../store.ts'
 import { addUnmetered, flushUnmetered } from '../usage.ts'
 import type { Google } from './checks.ts'
-import { type GapSite, included, topCountry } from './competitors.ts'
+import {
+  chargeCheck,
+  type GapSite,
+  NO_USAGE,
+  payer,
+  topCountry,
+  usageLeftUsd,
+} from './competitors.ts'
 import type { Meter } from './meter.ts'
 
 // The weekly audit's AI answer check, on SEO Skill's own DataForSEO
@@ -25,8 +32,9 @@ import type { Meter } from './meter.ts'
 // business context, else the Search Console questions fixed at the first
 // check; a new set starts the comparison again. Each run also joins the
 // site's progress, with the context's competitors judged on the same
-// answers. Only paid sites and unlimited-sites accounts get it. Spend is
-// capped per site a month before each run.
+// answers. Only paid sites and unlimited-sites accounts get it; a usage
+// plan's account pays for each run from its usage. Spend is capped per site
+// a month before each run.
 
 const HOUR_MS = 3_600_000
 const DAY_MS = 24 * HOUR_MS
@@ -227,7 +235,8 @@ export async function runAiCheck(
   if (!env.DATAFORSEO_LOGIN || !env.DATAFORSEO_PASSWORD) return null
   const state = aiState(meter)
   if (state?.next_at && state.next_at > now) return state.next_at
-  if (!(await included(env, site.user_id))) {
+  const pays = await payer(env, site.user_id)
+  if (!pays) {
     saveState(meter, { next_at: now + DAY_MS })
     return now + DAY_MS
   }
@@ -260,6 +269,9 @@ export async function runAiCheck(
           others,
           // The audit keeps its own runs; a retry must not reuse a cached one.
           store: null,
+          // A scheduled check reads late answers back hourly, so it takes
+          // DataForSEO's cheaper standard queue.
+          standard: true,
           ...input,
         },
         headers,
@@ -359,6 +371,13 @@ export async function runAiCheck(
       ),
     )
   }
+  // A usage plan pays for the run from its usage, inside the budget above.
+  if (
+    pays === 'usage' &&
+    (await usageLeftUsd(env, site.user_id)) < RUN_ESTIMATE_USD
+  ) {
+    return block(NO_USAGE, now + DAY_MS)
+  }
   const { alpha3, country } = await topCountry(search, site.property)
   if (!country) {
     return block(
@@ -381,7 +400,15 @@ export async function runAiCheck(
   try {
     data = await ask({ country, questions, waitSeconds: WAIT_SECONDS })
   } catch (error) {
-    // Tasks may have been queued and paid for before the failure.
+    // Tasks may have been queued and paid for before the failure. A usage
+    // plan is charged only a cost DataForSEO reported.
+    if (pays === 'usage') {
+      await chargeCheck(
+        env,
+        site.user_id,
+        (error as { cost?: number }).cost ?? 0,
+      )
+    }
     meter.transaction(() => {
       saveState(meter, { month, spent_usd: spent + RUN_ESTIMATE_USD })
       addUnmetered(
@@ -438,6 +465,7 @@ export async function runAiCheck(
       next_at: data.pendingTasks.length ? now + HOUR_MS : now + WEEK_MS,
     })
   })
+  if (pays === 'usage') await chargeCheck(env, site.user_id, data.costUsd)
   await keepProgress(env, site, now, country, data, null)
   return data.pendingTasks.length ? now + HOUR_MS : now + WEEK_MS
 }

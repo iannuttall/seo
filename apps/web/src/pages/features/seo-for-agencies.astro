@@ -120,7 +120,7 @@ const faq = [
   {
     question: 'How much does SEO Skill cost an agency?',
     answer:
-      'Every tool your agent calls on demand is free for every client. The weekly site audit is $50 a month per site, so you pay only for the clients you want watched in the background. Keyword and link research uses your own DataForSEO or Ahrefs account.',
+      'Every tool your agent calls on demand is free for every client. Plans from $10 a month add the weekly site audit for as many client sites as you like, with no seats, and usage for keyword and link research on our DataForSEO account. With your own DataForSEO or Ahrefs key, research runs on it instead.',
   },
   {
     question: 'How do I get access to a client’s Search Console?',
@@ -220,7 +220,7 @@ const faq = [
       <SplitList
         id="audit-heading"
         title="How do I keep watch on every client site?"
-        text="Add the sites that matter to the weekly site audit. It runs on our servers for $50 a month per site and tells you when something breaks, without you asking."
+        text="Add the sites that matter to the weekly site audit. It comes with every plan, from $10 a month for unlimited sites, runs on our servers and tells you when something breaks, without you asking."
         items={audit}
       >
         <a class:list={[getButtonClasses('secondary', 'lg'), 'mt-6']} href="/docs/weekly-site-audit">Weekly site audit</a>
@@ -237,7 +237,7 @@ const faq = [
         <SectionHeading
           id="cost-heading"
           title="How much does it cost per client?"
-          text="Nothing for the work your agent does when you ask. $50 a month for each client site you want watched every week."
+          text="Nothing for the work your agent does when you ask. One plan from $10 a month covers every client site you want watched each week."
         />
         <div class="grid grid-cols-1 gap-2 sm:grid-cols-2">
           <HomeCard
@@ -246,9 +246,9 @@ const faq = [
             text="Reports, page checks, index checks, comparisons, raw data and the next step, for as many client sites as your linked accounts can read. No usage cap."
           />
           <HomeCard
-            title="$50 a month per audited site"
+            title="Plans from $10 a month"
             icon={Analytics01Icon}
-            text="The weekly crawl, daily index checks, AI answer check and alerts, only for the sites you add. Research runs on your own DataForSEO or Ahrefs account."
+            text="The weekly crawl, daily index checks, AI answer check and alerts for every site you add, with no per site price. Each plan includes usage for research, or use your own DataForSEO or Ahrefs key."
             href="/pricing"
             link="Pricing"
           />

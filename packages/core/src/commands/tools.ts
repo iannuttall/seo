@@ -1,5 +1,6 @@
 import { z } from 'zod'
 import { LINT_MAX_CHARS } from '../lint/types.js'
+import { ACCOUNT_INPUTS, runAccount } from './account.js'
 import {
   AI_ANSWER_DOMAINS,
   AI_ANSWER_ENGINES,
@@ -66,6 +67,7 @@ import {
   type CommandResult,
   type StartAudit,
 } from './types.js'
+import { onIncludedUsage } from './usage.js'
 import { runAllSites } from './week.js'
 
 // The MCP tools for the shared commands, defined once for the hosted MCP and
@@ -229,6 +231,10 @@ const listSites = async (surface: ToolSurface) =>
     signIn: surface.signIn,
     bing: surface.deps.bing ? await surface.deps.bing() : undefined,
     connect: surface.connect,
+    // The account's paid usage, where the surface has an account.
+    usage: surface.deps.usage
+      ? await surface.deps.usage().catch(() => null)
+      : undefined,
   })
 
 export const SHARED_TOOLS: SharedTool[] = [
@@ -237,15 +243,18 @@ export const SHARED_TOOLS: SharedTool[] = [
     command: 'data',
     title: 'List sites',
     description:
-      "Lists the Search Console and Google Analytics properties the connected Google accounts can read, the Bing Webmaster site for each, and which research keys are set. Call it first. With add: starts the weekly site audit of that site on the hosted server (a weekly crawl, daily Google index checks, a Monday email and webhook with what changed, and alerts when a page drops out of Google's index). A site that needs paying for returns a Stripe Checkout link: give it to the person to open, and the audit starts once they pay.",
+      "Lists the Search Console and Google Analytics properties the connected Google accounts can read, the Bing Webmaster site for each, and which research keys are set. Call it first. With add: starts the weekly site audit of that site on the hosted server (a weekly crawl, daily Google index checks, a Monday email and webhook with what changed, and alerts when a page drops out of Google's index). A site that needs paying for returns a link to give the person: a Stripe Checkout link, after which the audit starts once they pay, or their account page to pick a plan, after which you add the site again. With plan: moves the account to that usage plan. With a plan already and a saved card it's charged at once, with no link (a lower plan starts at the next reset); the first plan returns a Stripe Checkout link to give the person. With top_up, auto_reload or cancel: does what the account page's Plan tab does, on the saved card, so the person never needs the page.",
     input: z.object({
       add: site
         .optional()
         .describe(
           'Optional. A site to add to the weekly site audit. Only when the person asks for it: a site can cost money.',
         ),
+      ...ACCOUNT_INPUTS,
     }),
     run: async (surface, input) => {
+      const chosen = await runAccount(surface.deps, input)
+      if (typeof chosen !== 'string') return chosen
       if (!input.add) return listSites(surface)
       const start = surface.deps.startAudit
       if (!start) {
@@ -265,13 +274,18 @@ export const SHARED_TOOLS: SharedTool[] = [
           result.status === 'checkout'
             ? `${property} needs a plan: $${result.price} a month per site, cancel at any time. Give the person this Stripe Checkout link to open and pay: ${result.url}\nThe audit of ${property} starts once they pay. Call seo_sites with add again afterwards to confirm.`
             : '',
+        plan:
+          result.status === 'plan'
+            ? `${property} needs a plan. Plans start at $${result.price} a month for the whole account, with unlimited sites and research usage included. Ask the person whether to start on the $${result.price} plan. If they say yes, call seo_sites with plan ${result.price} and add ${property}, and give them the Stripe link it returns. They can also pick a plan at ${result.url}.`
+            : '',
         full:
           result.status === 'full'
             ? `This account already audits ${result.limit} sites, the most it can. Remove one on the account page first.`
             : '',
         payment_failed: `Stripe could not take the payment for another site, so ${property} was not added. The person can check their card under Manage billing on the account page.`,
       }
-      return { text: texts[result.status], data: { property, ...result } }
+      const text = `${chosen}${texts[result.status]}`
+      return { text, data: { property, ...result } }
     },
   }),
   tool({
@@ -305,6 +319,13 @@ export const SHARED_TOOLS: SharedTool[] = [
           context: input.context,
           saved: input.saved,
           autopilot: input.autopilot,
+          researchKey: await surface
+            .keys()
+            .then(
+              (keys) =>
+                !onIncludedUsage(keys) &&
+                (keys.has('x-dataforseo-login') || keys.has('x-ahrefs-key')),
+            ),
         },
         surface.deps,
       ),

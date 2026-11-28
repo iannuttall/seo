@@ -248,9 +248,9 @@ export const seoSkill = {
   webChat: 'Yes',
   free: 'Every on-demand tool, with no usage cap and no time limit.',
   price:
-    'The weekly site audit is $50 a month per site: weekly crawl, daily Google index checks, stored history, drop and return alerts, and a Monday email and webhook. Cancel any time.',
+    'Plans from $10 to $200 a month per account, with unlimited sites. Each includes the weekly site audit (weekly crawl, daily Google index checks, stored history, drop and return alerts, and a Monday email and webhook) and usage for research on our DataForSEO account. Cancel any time.',
   writeActions:
-    'Read-only Google sign-in. Your agent can start the paid audit for a site, which returns a Stripe Checkout link for you to open.',
+    'Read-only Google sign-in. Your agent can pick or change your plan, buy top-ups and add sites to the weekly audit, after it asks you.',
   dataStorage:
     'Search Console and analytics rows are fetched on each request and never stored, except what the paid weekly audit keeps for its sites. Your linked accounts and saved keys are kept, encrypted, with the issues list and business context your agent saves.',
   history:
@@ -326,14 +326,14 @@ export const reasonsFor = (item: Competitor): string[] => {
         free,
         sources,
         'You want your Search Console rows fetched on each request and never stored, except what the paid weekly audit keeps for its sites.',
-        'You want a weekly crawl, daily index checks and drop alerts done for you, for $50 a month per site.',
+        'You want a weekly crawl, daily index checks and drop alerts done for you, on plans from $10 a month, with unlimited sites.',
       ]
     case 'seo suite':
       return [
         'You want free backlink, Domain Rating, competitor keyword, SERP and traffic lookups, with no account.',
         'You want your AI agent to answer from your own Search Console and Google Analytics data, not only from an index estimate.',
         'You already pay for keyword data. SEO Skill uses your own DataForSEO or Ahrefs key, so you pay that provider and nothing on top.',
-        'You want a weekly crawl, daily index checks and drop alerts for $50 a month per site, with no seats to buy.',
+        'You want a weekly crawl, daily index checks and drop alerts from $10 a month, with unlimited sites and no seats to buy.',
       ]
     default:
       return [

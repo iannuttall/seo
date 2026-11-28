@@ -126,12 +126,12 @@ const costs = [
     text: 'There is no usage cap on any tool Claude calls.',
   },
   {
-    title: 'Keyword research uses your own key',
-    text: 'Keyword research uses your own DataForSEO or Ahrefs key, so you pay that provider directly. Each DataForSEO result says what it cost (the research for this page came to under 20 cents).',
+    title: 'Keyword research uses a plan or your own key',
+    text: 'On the hosted MCP, research uses your plan\'s usage or your free credit. With your own DataForSEO or Ahrefs key saved, it runs on that key and the provider bills you directly.',
   },
   {
     title: 'Weekly site audit',
-    text: 'The only paid part, at $50 a month per site. It crawls the site every week and checks Google’s index every day in the background.',
+    text: 'On every plan, from $10 a month with unlimited sites. It crawls each site every week and checks Google’s index every day in the background.',
     href: '/docs/weekly-site-audit',
   },
 ]
@@ -162,7 +162,7 @@ const faq = [
   {
     question: 'Is the Claude SEO skill free?',
     answer:
-      'Yes. Every tool Claude calls is free with no usage cap. Keyword research uses your own DataForSEO or Ahrefs key, which that provider bills directly, and the only paid part of SEO Skill is the weekly site audit at $50 a month per site.',
+      'Yes. Every tool Claude calls is free without a plan. Keyword research uses a plan\'s usage or your own DataForSEO or Ahrefs key, and plans from $10 a month add the weekly site audit for unlimited sites.',
   },
   {
     question: 'Do I need to upload the skill file to claude.ai?',
@@ -377,7 +377,7 @@ seo compare --site example.com --date 2026-10-07`}
       <SplitList
         id="cost-heading"
         title="What does Claude SEO with SEO Skill cost?"
-        text="Nothing for the tools Claude calls, with no usage cap. You pay your own research provider for keyword data, and the weekly site audit is the only paid part of SEO Skill."
+        text="Nothing for the tools Claude calls. Keyword data uses a plan's usage or your own research key, and plans from $10 a month add the weekly site audit."
         items={costs}
       />
 

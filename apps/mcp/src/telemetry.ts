@@ -45,6 +45,8 @@ const FAILURES: Record<ErrorCode, [string, string]> = {
   RATE_LIMITED: ['network', 'rate_limited'],
   GOOGLE_ERROR: ['network', 'provider_unavailable'],
   PROVIDER_ERROR: ['network', 'provider_unavailable'],
+  // A usage quota, like a rate limit, not a broken setup.
+  USAGE_LIMIT: ['config', 'rate_limited'],
 }
 
 export function events(input: {

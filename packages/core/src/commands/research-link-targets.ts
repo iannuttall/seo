@@ -13,6 +13,7 @@ import {
 } from './research-providers.js'
 import { PAGE_SIZE, rowsText } from './rows.js'
 import { CommandError, type CommandResult } from './types.js'
+import { INCLUDED_NOTE, onIncludedUsage } from './usage.js'
 
 // Link and listicle targets: the pages that link to competitors, with the
 // words around each link, and the pages AI answers cite beside them. Each
@@ -365,9 +366,12 @@ export async function runLinkPages(
   }
   const { rows, available, read } = found
   const cost = saved ? 0 : found.cost
+  const included = onIncludedUsage(headers)
   const costNote = saved
-    ? `Read from the result saved at ${saved.savedAt}, at no new cost (it cost $${saved.cost} then). Results are kept for a day.`
-    : `DataForSEO cost: $${cost}.`
+    ? `Read from the result saved at ${saved.savedAt}, at no new cost${included ? '' : ` (it cost $${saved.cost} then)`}. Results are kept for a day.`
+    : included
+      ? INCLUDED_NOTE
+      : `DataForSEO cost: $${cost}.`
   const offset = input.offset ?? 0
   const notes = [
     gap
@@ -636,7 +640,7 @@ export async function runCitedPages(
   if (rivals.length > LINK_TARGET_RIVALS) {
     throw new CommandError(
       'INVALID_INPUT',
-      `ai_answers with competitors reads up to ${LINK_TARGET_RIVALS} competitors at a time, about $0.35 each.`,
+      `ai_answers with competitors reads up to ${LINK_TARGET_RIVALS} competitors at a time${onIncludedUsage(headers) ? '' : ', about $0.35 each'}.`,
     )
   }
   const keys = dataForSeoKeys(headers)
@@ -655,16 +659,20 @@ export async function runCitedPages(
     answered.push(`${rival} ${got.answers.length}`)
   }
   if (failed.length === (rivals.length + 1) * PLATFORMS.length) {
-    throw new CommandError(
-      'PROVIDER_ERROR',
-      'DataForSEO LLM mentions failed for every site and engine.',
+    // Failed tasks can still cost money; the error carries it.
+    throw Object.assign(
+      new CommandError(
+        'PROVIDER_ERROR',
+        'DataForSEO LLM mentions failed for every site and engine.',
+      ),
+      { cost },
     )
   }
   const { rows, asked, buyer } = citedRows(byRival, target, own.answers)
   const spent = Math.round(cost * 10_000) / 10_000
   const offset = input.offset ?? 0
   const notes = [
-    `AI answers that cite or name each site, from DataForSEO's LLM mentions database (ChatGPT and Google AI Overviews, ${input.country}), up to ${ANSWERS} per site and engine by AI search volume: ${target} ${own.answers.length}, ${answered.join(', ')}. DataForSEO cost: $${spent}.`,
+    `AI answers that cite or name each site, from DataForSEO's LLM mentions database (ChatGPT and Google AI Overviews, ${input.country}), up to ${ANSWERS} per site and engine by AI search volume: ${target} ${own.answers.length}, ${answered.join(', ')}. ${onIncludedUsage(headers) ? INCLUDED_NOTE : `DataForSEO cost: $${spent}.`}`,
     `${buyer} of the competitors' ${asked} answers are buyer questions (best, top, alternatives, vs, app, software); how-to and price questions are left out. Rows are the other pages those answers cite, leaving out the sites themselves, ${NOT_TARGETS.slice(0, 3).join(', ')} and other platforms, and help or docs subdomains.`,
     'answers: buyer answers that cite the page. ai_search_volume: the sum of those questions’ AI search volume, DataForSEO’s estimate. cited_with_target: the page is also cited in an answer that names the target, so it may already include it; read it to see.',
     'These pages already shape AI answers. A mention on one can get the site named in those answers. context is a guess from the URL and title, as with link_gap pages.',

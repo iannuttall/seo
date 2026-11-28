@@ -40,6 +40,14 @@
     // The paid weekly audit's Stripe price, $50 a month per site. Empty
     // keeps billing off.
     "STRIPE_PRICE_ID": "price_1UXIsj7DEU8hlDUtVD9aqd1A",
+    // The usage plans' Stripe prices, as "10:price_...,50:price_...,
+    // 100:price_...,200:price_...". Empty keeps the usage plans off and the
+    // per-site plan above on (src/billing.ts).
+    "STRIPE_PLAN_PRICES": "",
+    // Cloudflare Turnstile's public site key for the sign-in pages, which
+    // the free credit's checks use (src/credit.ts). Its secret is
+    // TURNSTILE_SECRET; without both, no sign-in counts as checked.
+    "TURNSTILE_SITE_KEY": "",
     // SEO Skill's confidential OAuth client at Index My Site, for Connect
     // Index My Site on the account page. Its secret is
     // INDEXMYSITE_CLIENT_SECRET; without it the connection stays off.

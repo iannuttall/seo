@@ -107,12 +107,12 @@ const cloud = [
 const costs = [
   { title: 'Every tool Codex calls is free', text: 'There is no usage cap.' },
   {
-    title: 'Keyword research uses your own key',
-    text: 'It runs on your DataForSEO or Ahrefs key, so you pay that provider directly.',
+    title: 'Keyword research uses a plan or your own key',
+    text: 'On the hosted MCP it uses your plan\'s usage or your free credit, or your own DataForSEO or Ahrefs key if you save one.',
   },
   {
-    title: 'The weekly site audit is $50 a month per site',
-    text: "This is the paid part. It crawls the site every week and checks Google's index every day.",
+    title: 'Plans start at $10 a month',
+    text: "Every plan has unlimited sites and the weekly site audit, which crawls each site every week and checks Google's index every day.",
     href: '/docs/weekly-site-audit',
   },
 ]
@@ -148,7 +148,7 @@ const faq = [
   {
     question: 'What does SEO Skill cost in Codex?',
     answer:
-      'Every tool Codex calls is free with no usage cap. Keyword research uses your own DataForSEO or Ahrefs key. The weekly site audit is $50 a month per site.',
+      'Every tool Codex calls is free without a plan. Keyword research uses a plan\'s usage or your own DataForSEO or Ahrefs key. Plans start at $10 a month, with unlimited sites, the weekly site audit and included research usage.',
   },
 ]
 ---
@@ -252,7 +252,7 @@ const faq = [
       <SplitList
         id="cost-heading"
         title="What does SEO Skill cost in Codex?"
-        text="The tools cost nothing. Every tool Codex calls is free with no usage cap, and the only paid part is the weekly site audit."
+        text="The tools cost nothing. Every tool Codex calls is free without a plan, and plans from $10 a month add the weekly site audit and research usage."
         items={costs}
       />
 

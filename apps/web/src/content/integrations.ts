@@ -132,7 +132,7 @@ export const sources: Source[] = [
       {
         question: 'Is the Search Console MCP free?',
         answer:
-          'Yes. Every tool your agent calls on demand is free with no usage cap. The only paid part is the weekly site audit, which runs on our servers in the background for $50 a month per site.',
+          'Yes. Every tool your agent calls on demand is free without a plan. Plans from $10 a month add the weekly site audit for unlimited sites and usage for keyword, competitor, backlink and AI answer research on our DataForSEO account.',
       },
       {
         question: 'Does it store my Search Console data?',

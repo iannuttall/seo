@@ -2,8 +2,9 @@ import { ACTIVE_SQL } from './billing.ts'
 
 // Beta features, granted one account at a time by a maintainer
 // (scripts/beta.mjs). A granted account sees the feature on its account page
-// and in the tools; every other account sees nothing of it. A paid weekly
-// audit (billing.ts) grants weekly-audit too.
+// and in the tools; every other account sees nothing of it. An active
+// subscription (billing.ts), the per-site plan or a usage plan, grants
+// weekly-audit too.
 
 export const BETA = {
   'weekly-audit': {
@@ -23,7 +24,8 @@ export type BetaFlag = keyof typeof BETA
 const isFlag = (flag: string): flag is BetaFlag => Object.hasOwn(BETA, flag)
 
 // SQL that is true when the account in column has the weekly audit: the
-// beta flag (or unlimited-sites), or a paid subscription that is still active.
+// beta flag (or unlimited-sites), or a paid subscription that is still
+// active: the per-site plan or a usage plan.
 export const hasWeeklyAudit = (column: string) =>
   `(EXISTS (SELECT 1 FROM beta_flags f WHERE f.user_id = ${column} AND f.flag IN ('weekly-audit', 'unlimited-sites'))
     OR EXISTS (SELECT 1 FROM billing b WHERE b.user_id = ${column} AND b.status IN ${ACTIVE_SQL}))`

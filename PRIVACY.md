@@ -1,10 +1,10 @@
 # Privacy policy
 
-Last updated: 18 November 2026
+Last updated: 28 November 2026
 
 This policy covers SEO Skill: the `seo` command-line tool and library, the
-local and hosted MCP servers, your account at seoskill.dev, the paid weekly
-site audit, and the seoskill.dev website and its free tools.
+local and hosted MCP servers, your account at seoskill.dev, its paid plans
+and weekly site audit, and the seoskill.dev website and its free tools.
 
 ## In short
 
@@ -63,7 +63,8 @@ encrypted before they are written.
   URLs or results.
 - **Beta features** the maintainer turned on for your account.
 - **Research results for a day.** What `seo_research` got from DataForSEO
-  or Ahrefs with your key, and the AI answer tasks it queued, so the next
+  or Ahrefs, with your key or on our DataForSEO account, and the AI answer
+  tasks it queued, so the next
   page of rows and the same questions asked again that day cost you
   nothing more. Each is filed under a hash of your provider key and the
   request, and deleted after 24 hours.
@@ -78,10 +79,30 @@ only.
 The account page sets one essential cookie, `seo_session`, which holds your
 encrypted account id for up to 30 days.
 
-## The weekly site audit
+## Plans, top-ups and auto-reload
 
-If you pay, Stripe takes the payment and keeps your card. We keep only your
-Stripe ids, your plan's status and how many sites you pay for.
+If you pick a plan, buy a top-up or turn on auto-reload, Stripe takes the
+payment and keeps your card. We keep your Stripe ids, your plan, its status
+and the date its usage resets, your auto-reload setting and its monthly cap,
+and your balances: how much of the plan's usage, your top-ups and your free
+credit is left.
+
+## The free credit
+
+A new account can get a one-off $1 of free usage once it connects a Search
+Console site. To give it only once for each group of sites, we keep:
+
+- salted hashes of the Search Console properties of each account that asks
+  for it, kept after the account is deleted, so the same sites can't claim
+  it again;
+- a salted hash of the network block your sign-in came from, for 30 days;
+- whether that sign-in passed Cloudflare Turnstile;
+- if you add a card to get the credit, a salted hash of the card's Stripe
+  fingerprint.
+
+We never keep the sites, your IP address or the card themselves for this.
+
+## The weekly site audit
 
 For each site you add, we crawl it once a week as `SEOSkillBot`, up to 5,000
 pages, following its `robots.txt`. Some pages are loaded in Cloudflare's
@@ -281,8 +302,9 @@ send it on purpose.
 - **Hosted account.** **Delete everything** on the
   [account page](https://seoskill.dev/account) deletes your account, linked
   accounts, keys, Clicky sites, machines, audited sites and their data, alert
-  history and how you signed up. It cancels a paid plan and revokes the
-  Google sign-ins.
+  history, balances and how you signed up. It cancels a paid plan and
+  revokes the Google sign-ins. The salted hashes kept for the free credit
+  stay, so it isn't given twice.
 - **Your machine.** Run `seo reset --yes`.
 
 Deleting with us does not delete data already held by Google, a provider,

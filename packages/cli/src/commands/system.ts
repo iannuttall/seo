@@ -1,5 +1,7 @@
 import { cancel, confirm } from '@clack/prompts'
 import {
+  cloudLinked,
+  cloudUsage,
   getCacheStats,
   getPrivacySnapshot,
   listSearchUpdates,
@@ -7,6 +9,7 @@ import {
   resetSeoData,
   SeoError,
 } from '@seo/core'
+import { usageLine } from '@seo/core/commands'
 import { defineCommand } from 'citty'
 import { booleanArg, jsonFlag, numberArg, stringArg } from '../args.js'
 import {
@@ -101,18 +104,20 @@ export const sitesCommand = defineCommand({
     },
   },
   run: async ({ args }) => {
-    const sites = await listSites(
-      booleanArg(args.refresh),
-      stringArg(args.account),
-    )
+    const [sites, usage] = await Promise.all([
+      listSites(booleanArg(args.refresh), stringArg(args.account)),
+      // A machine linked to a seoskill.dev account also shows its plan usage.
+      cloudLinked() ? cloudUsage() : undefined,
+    ])
     if (jsonFlag(args)) {
-      printJson({ sites })
+      printJson(usage === undefined ? { sites } : { sites, usage })
       return
     }
     printTable(
       ['Property', 'Permission'],
       sites.map((site) => [site.siteUrl, site.permissionLevel ?? 'unknown']),
     )
+    if (usage !== undefined) process.stdout.write(`\n${usageLine(usage)}\n`)
   },
 })
 

@@ -1,12 +1,14 @@
 ---
 // What SEO Skill costs. Facts must match apps/mcp/README.md (Paid plan).
+// The hero's setup box is the only call to action. Ian wants no heading
+// or subheading above the plans, and a slider rather than plan cards.
 import {
   AiChat02Icon,
   Analytics01Icon,
   CheckListIcon,
   CommandLineIcon,
-  CreditCardIcon,
   Database01Icon,
+  GiftIcon,
   Globe02Icon,
   Key01Icon,
   Link04Icon,
@@ -24,60 +26,152 @@ import type { SchemaBreadcrumb } from '@/lib/schema'
 
 const breadcrumbs: SchemaBreadcrumb[] = [{ label: 'Home', href: '/' }, { label: 'Pricing' }]
 
+// Monthly price to the usage it includes, in US dollars.
+const plans = [
+  { price: 10, usage: 10 },
+  { price: 50, usage: 50 },
+  { price: 100, usage: 100 },
+  { price: 200, usage: 200 },
+]
+
+const every = [
+  'Unlimited sites, with no seats to buy',
+  'The weekly site audit on every site you add',
+  'Research with DataForSEO data',
+  'Top-ups of $10, $25 or $50 that never expire',
+]
+
+const audit = [
+  { title: 'AI answer tracking', icon: AiChat02Icon, text: 'Every week we ask ChatGPT search, the Gemini app, Google AI Mode and AI Overviews the same 10 questions: the buying questions you pick, or the top questions from your Search Console until you do. You see which answers started or stopped citing you, how often they name your competitors, and which sites they cite instead.' },
+  { title: 'Competitor opportunities', icon: Target02Icon, text: 'Every week we check what your competitors rank for. You only hear about a keyword or free tool idea that competitors prove, that\'s worth money and that looks winnable. Some weeks that\'s nothing (which is the point).' },
+  { title: 'A weekly crawl that sees what Google sees', icon: WebDesign01Icon, text: 'Broken links, titles, canonicals, noindex and sitemap problems, with what\'s new, back or resolved since last week. Pages that need JavaScript are rendered in a real browser.' },
+  { title: 'Daily Google index checks', icon: Globe02Icon, text: "Up to each property's full 2,000 URL Inspection checks a day, top pages first, so your agent answers index questions at once. Drops and returns come in one daily roundup." },
+  { title: 'A fix list your agent remembers', icon: CheckListIcon, text: 'What the crawl, index checks and Search Console reports find goes on one list per site. Your agent marks what it fixed, and 28 and 56 days later it sees the Search Console clicks for that page against the same days before.' },
+  { title: 'Internal links on up to 5,000 pages', icon: Link04Icon, text: 'The internal linking tool reads up to 5,000 pages of an audited site, against 100 without a plan.', href: '/tools/internal-linking-tool', link: 'Internal linking tool' },
+]
+
 const free = [
-  { title: 'Every on-demand tool', icon: Database01Icon, text: 'Search Console reports, page checks, before and after comparisons, index checks and raw data. No usage cap, no trial and no time limit.' },
+  { title: 'Every on-demand tool', icon: Database01Icon, text: 'Search Console reports, page checks, before and after comparisons, index checks and raw data. No trial and no time limit.' },
   { title: 'Google Analytics and Clicky', icon: Analytics01Icon, text: 'Search sessions, landing pages and visits from AI assistants, with your own sign-in.' },
-  { title: 'Keyword research with your own key', icon: Key01Icon, text: 'DataForSEO or Ahrefs results through your agent. You pay the provider for what you use, and nothing to us on top.' },
+  { title: '$1 of free usage to try research', icon: GiftIcon, text: 'A new account gets it once, after you connect a Search Console site.' },
+  { title: 'Research with your own key', icon: Key01Icon, text: 'Save a DataForSEO or Ahrefs key on your account page and research runs on it, with or without a plan. The provider bills you, and SEO Skill adds nothing.', href: '/docs/keys', link: 'Research keys' },
   { title: 'The CLI and local MCP server', icon: CommandLineIcon, text: 'The site crawl, internal links and Bing Webmaster Tools, open source under Apache 2.0.' },
   { title: 'Free web tools', icon: Wrench01Icon, text: 'Backlinks, Domain Rating, competitor keywords, SERPs, traffic estimates and more in your browser, with no account.', href: '/tools', link: 'Free SEO tools' },
   { title: 'The hosted MCP server', icon: Plug01Icon, text: 'Add seoskill.dev/mcp to your agent and sign in with Google. Nothing to install on your machine.', href: '/docs/mcp', link: 'Set up the hosted MCP' },
 ]
 
-const paid = [
-  { title: 'AI answer tracking', icon: AiChat02Icon, text: 'Every week we ask ChatGPT search, the Gemini app, Google AI Mode and AI Overviews the same 10 questions, on our own DataForSEO account: the buying questions you pick, or the top questions from your Search Console until you do. You see which answers started or stopped citing you, how often they name your competitors, and which sites they cite instead.' },
-  { title: 'Competitor opportunities', icon: Target02Icon, text: 'Every week we check what your competitors rank for, on our own DataForSEO account. You only hear about a keyword or free tool idea that competitors prove, that is worth money and that looks winnable. Some weeks that is nothing (which is the point).' },
-  { title: 'A weekly crawl that sees what Google sees', icon: WebDesign01Icon, text: 'Broken links, titles, canonicals, noindex and sitemap problems, with what is new, back or resolved since last week. Pages that need JavaScript are rendered in a real browser.' },
-  { title: 'Daily Google index monitoring', icon: Globe02Icon, text: "Up to each property's full 2,000 URL Inspection checks a day, top pages first, so your agent answers index questions at once. Drops and returns come in one daily roundup." },
-  { title: 'A fix list your agent remembers', icon: CheckListIcon, text: 'What the crawl, index checks and Search Console reports find goes on one list per site. Your agent marks what it fixed, and 28 and 56 days later it sees the Search Console clicks for that page against the same days before.' },
-  { title: 'Internal links on up to 5,000 pages', icon: Link04Icon, text: 'The internal linking tool reads up to 5,000 pages of an audited site, against 100 on the free plan.', href: '/tools/internal-linking-tool', link: 'Internal linking tool' },
-  { title: 'Start with one site', icon: CreditCardIcon, text: 'Pick a site on your account page. Your first one opens Stripe Checkout, and you can add or remove sites and cancel any time.', href: '/account', link: 'Your account page' },
-]
-
 const faqs = [
-  { question: 'Is SEO Skill really free?', answer: 'Yes. Every tool your agent calls on demand is free with no usage cap and no trial that ends. The weekly site audit is the only paid part, because it runs on our servers in the background.' },
-  { question: 'How much does the weekly site audit cost?', answer: '$50 a month per site. A site is one Search Console property. There are no seats and no plan sizes to choose: the plan is the sites you audit.' },
-  { question: 'What happens when I add or remove a site?', answer: 'Your first site opens Stripe Checkout. Each site after that raises the plan by one, charged for the rest of the month at once. Removing a site lowers the plan from the next bill.' },
-  { question: 'Do I pay for keyword data?', answer: "For your agent's own research, you pay DataForSEO or Ahrefs directly, on your own key. SEO Skill adds nothing on top, and without a key everything else still works. The weekly audit's competitor check and AI answer tracking run on our account and are included in the $50." },
-  { question: 'Can my agent start the paid audit?', answer: 'Yes. Ask it to audit a site. Without a plan it returns a Stripe Checkout link for you to open, and it cannot pay for you. With a plan, it adds the site and raises the plan by one, charged to your card at once.' },
-  { question: 'How do I cancel?', answer: 'Choose Manage billing on your account page. It opens Stripe, where you can change the card, read invoices or cancel.' },
+  { question: 'Which plan should I pick?', answer: 'Start with $10. Every plan has unlimited sites and the weekly site audit, so the only difference is how much research it includes. If the bar runs low before it resets, top up or move to a bigger plan on your account page.' },
+  { question: 'What uses my usage?', answer: 'Research is charged at what DataForSEO charges us, plus 30%. Each site\'s weekly crawl uses a little too, 1% of the $10 plan\'s usage a week. Search Console, Google Analytics, Bing and index checks are free, and asking for the same research again within a day uses nothing.' },
+  { question: 'How do I see what\'s left?', answer: 'Your account page shows the share of usage left this month, the date it resets and your top-up balance. Your agent sees the same when it lists your sites, and tells you when you pass 50% and 80%.' },
+  { question: 'What happens when usage runs out?', answer: 'Research on our DataForSEO account stops until the reset, a top-up or your own key, and your agent says so. The weekly crawl waits too. Search Console, index checks and every on-demand tool keep working. Plan usage doesn\'t roll over to the next month.' },
+  { question: 'How do top-ups and auto-reload work?', answer: 'Top up $10, $25 or $50 on your account page. A top-up is used after your plan\'s usage, never expires and needs an active plan. Auto-reload adds a top-up when your top-ups run low, up to a monthly cap you set.' },
+  { question: 'Can I use my own DataForSEO key?', answer: 'Yes. Save it under Keys on your account page and research runs on it, so research doesn\'t use the bar and DataForSEO bills you directly. Ahrefs research always runs on your own Ahrefs key.' },
+  { question: 'How does the $1 of free usage work?', answer: 'A new account gets it once, after a Search Console site is connected, and once for each group of sites. We may ask you to add a card first, with no charge, to stop people claiming it twice.' },
+  { question: 'Can my agent pick a plan for me?', answer: 'Yes. Your agent can do everything the account page does: pick or change your plan, buy a top-up, set auto-reload, add sites to the weekly audit and cancel. It asks you first. Your first plan needs your card once, so your agent gives you a Stripe link to pay. After that, plan changes and top-ups go on that card with nothing to open.' },
+  { question: 'How do I cancel?', answer: 'Ask your agent, or choose Manage billing on your account page. Your plan and its usage last until the end of the month you paid for. Manage billing also opens Stripe to change the card or read invoices.' },
 ]
 ---
 
 <BaseLayout
-  title="Pricing for the weekly site audit"
-  description="The weekly site audit is $50 a month per site: AI answer tracking for your buying questions, competitor opportunities, a weekly crawl and daily index monitoring. Tools your agent calls on demand have no usage cap."
+  title="Pricing and plans from $10 a month"
+  description="Plans from $10 to $200 a month with unlimited sites, the weekly site audit and included research usage. Every on-demand tool is free without a plan."
   canonicalPath="/pricing"
   {breadcrumbs}
   framed={false}
 >
   <main data-agent-content>
     <LandingHero
-      title="Autonomous SEO and AI search that runs every week"
-      lead="Every week we check your pages in Google, what your competitors rank for and which companies AI answers recommend to your buyers. Your agent starts each session knowing what to fix next. $50 a month per site."
+      title="Pricing from $10 a month"
+      lead="Every plan has unlimited sites, the weekly site audit and research usage included. Every tool your agent calls on demand stays free without a plan."
       setupId="pricing-setup"
     />
 
+    <section class="site-frame mt-16 sm:mt-20" aria-label="Plans">
+      <div class="rounded-lg bg-muted p-6 sm:p-8" data-plan-slider>
+        <p class="flex items-baseline gap-2">
+          <span data-plan-price class="text-4xl font-medium -tracking-[0.8px] text-foreground xl:text-5xl xl:-tracking-[1px]">${plans[0].price}</span>
+          <span class="text-base font-medium text-foreground-muted">a month</span>
+        </p>
+        <p class="mt-2 text-base text-foreground">Includes <span data-plan-usage>${plans[0].usage}</span> of usage a month</p>
+        <label class="mt-6 block">
+          <span class="sr-only">Plan</span>
+          <input
+            data-plan-range
+            type="range"
+            min="0"
+            max={plans.length - 1}
+            step="1"
+            value="0"
+            aria-valuetext={`$${plans[0].price} a month`}
+            class="plan-range w-full"
+            style="--fill: 0%"
+          />
+        </label>
+        <div class="relative mt-3 h-8 text-sm">
+          {plans.map((plan, index) => (
+            <button
+              type="button"
+              data-plan-pick={index}
+              aria-pressed={index === 0 ? 'true' : 'false'}
+              aria-label={`$${plan.price} a month`}
+              class={`absolute top-0 cursor-pointer rounded-md px-2.5 py-1 font-medium text-foreground-muted transition-colors hover:text-foreground aria-pressed:bg-card aria-pressed:text-foreground ${index === 0 ? '-ml-2.5' : index === plans.length - 1 ? '-mr-2.5 -translate-x-full' : '-translate-x-1/2'}`}
+              style={`left: ${(index / (plans.length - 1)) * 100}%`}
+            >
+              ${plan.price}
+            </button>
+          ))}
+        </div>
+      </div>
+
+      <div class="mt-2 grid grid-cols-1 gap-6 rounded-lg bg-muted p-6 sm:grid-cols-2 sm:p-8">
+        <div>
+          <p class="text-base font-medium text-foreground">Every plan</p>
+          <ul class="mt-3 list-disc space-y-1.5 pl-5 text-sm leading-6 text-foreground-muted">
+            {every.map((item) => <li>{item}</li>)}
+          </ul>
+        </div>
+        <div>
+          <p class="text-base font-medium text-foreground">Your account page shows what's left</p>
+          <div class="mt-4 rounded-md bg-background p-4" aria-hidden="true">
+            <div class="flex items-baseline justify-between gap-4 text-sm">
+              <span class="font-medium text-foreground">72% of usage left</span>
+              <span class="text-foreground-muted">Resets 1 Jan</span>
+            </div>
+            <div class="mt-3 h-2 overflow-hidden rounded-full bg-muted">
+              <div class="h-full w-[72%] rounded-full bg-primary"></div>
+            </div>
+          </div>
+          <p class="mt-3 text-sm leading-6 text-foreground-muted">
+            The bar resets each month. Research and each site's weekly crawl use it. Search Console, Google Analytics, Bing and index checks don't.
+          </p>
+        </div>
+      </div>
+    </section>
+
+
     <div class="space-y-24 py-24 sm:space-y-32 sm:py-32">
-      <section class="site-frame" aria-labelledby="paid-heading">
+      <section class="site-frame" aria-labelledby="audit-heading">
         <SectionHeading
-          id="paid-heading"
-          title="What the weekly audit checks"
+          id="audit-heading"
+          title="The weekly site audit on every plan"
           text="It runs on our servers for each site you add, with no work from you or your agent."
         />
         <div class="grid grid-cols-1 gap-2 sm:grid-cols-2">
-          {paid.map((item, index) =>
+          {audit.map((item) => <HomeCard {...item} />)}
+        </div>
+      </section>
+
+      <section class="site-frame" aria-labelledby="free-heading">
+        <SectionHeading
+          id="free-heading"
+          title="Free without a plan"
+          text="Every tool your agent calls on demand, with no credit card."
+        />
+        <div class="grid grid-cols-1 gap-2 sm:grid-cols-2">
+          {free.map((item, index) =>
             // The last card of an odd count spans the row, so none sits alone.
-            index === paid.length - 1 && paid.length % 2 ? (
+            index === free.length - 1 && free.length % 2 ? (
               <div class="row-span-4 grid grid-rows-subgrid sm:col-span-2">
                 <HomeCard {...item} />
               </div>
@@ -85,17 +179,6 @@ const faqs = [
               <HomeCard {...item} />
             ),
           )}
-        </div>
-      </section>
-
-      <section class="site-frame" aria-labelledby="free-heading">
-        <SectionHeading
-          id="free-heading"
-          title="Included without a plan"
-          text="Every tool your agent calls on demand, with no usage cap and no credit card."
-        />
-        <div class="grid grid-cols-1 gap-2 sm:grid-cols-2">
-          {free.map((item) => <HomeCard {...item} />)}
         </div>
       </section>
 
@@ -110,5 +193,82 @@ const faqs = [
         </div>
       </section>
     </div>
+    <script is:inline define:vars={{ plans }}>
+      // Moves the plan shown with the slider.
+      for (const slider of document.querySelectorAll('[data-plan-slider]')) {
+        const range = slider.querySelector('[data-plan-range]')
+        const price = slider.querySelector('[data-plan-price]')
+        const usage = slider.querySelector('[data-plan-usage]')
+        const picks = slider.querySelectorAll('[data-plan-pick]')
+        const show = () => {
+          const index = Number(range.value)
+          const plan = plans[index]
+          price.textContent = `$${plan.price}`
+          usage.textContent = `$${plan.usage}`
+          range.setAttribute('aria-valuetext', `$${plan.price} a month`)
+          range.style.setProperty('--fill', `${(index / (plans.length - 1)) * 100}%`)
+          for (const pick of picks) {
+            pick.setAttribute('aria-pressed', String(pick.dataset.planPick === range.value))
+          }
+        }
+        range.addEventListener('input', show)
+        for (const pick of picks) {
+          pick.addEventListener('click', () => {
+            range.value = pick.dataset.planPick
+            show()
+          })
+        }
+      }
+    </script>
+    <style>
+      /* The plan slider: a soft track filled up to the thumb, no border. */
+      .plan-range {
+        appearance: none;
+        height: 1.5rem;
+        background: transparent;
+        cursor: pointer;
+      }
+      .plan-range:active {
+        cursor: grabbing;
+      }
+      .plan-range::-webkit-slider-runnable-track {
+        height: 0.5rem;
+        border-radius: 9999px;
+        background: linear-gradient(to right, var(--primary) var(--fill), var(--background) var(--fill));
+      }
+      .plan-range::-moz-range-track {
+        height: 0.5rem;
+        border-radius: 9999px;
+        background: linear-gradient(to right, var(--primary) var(--fill), var(--background) var(--fill));
+      }
+      .plan-range::-webkit-slider-thumb {
+        appearance: none;
+        margin-top: -0.375rem;
+        width: 1.25rem;
+        height: 1.25rem;
+        border-radius: 9999px;
+        background: var(--primary);
+        border: 3px solid var(--card);
+        cursor: inherit;
+        transition: transform 120ms;
+      }
+      .plan-range::-moz-range-thumb {
+        width: 1.25rem;
+        height: 1.25rem;
+        border-radius: 9999px;
+        background: var(--primary);
+        border: 3px solid var(--card);
+        cursor: inherit;
+      }
+      .plan-range:hover::-webkit-slider-thumb {
+        transform: scale(1.15);
+      }
+      .plan-range:focus-visible {
+        outline: none;
+      }
+      .plan-range:focus-visible::-webkit-slider-thumb {
+        outline: 3px solid color-mix(in oklch, var(--ring) 30%, transparent);
+      }
+    </style>
   </main>
 </BaseLayout>

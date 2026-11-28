@@ -13,6 +13,7 @@ import {
   pageKey as key,
 } from './research-serp.js'
 import { CommandError, type CommandResult } from './types.js'
+import { INCLUDED_NOTE, onIncludedUsage } from './usage.js'
 
 // Is one URL in Google's index? Asks Google through DataForSEO's live SERP,
 // on desktop and mobile: site:<url>, and an exact phrase from the page. When nothing matches a site: search, Google drops the
@@ -224,7 +225,7 @@ export async function runIndexCheck(
     ),
     '',
     'This asks Google search, not Search Console. Google can index a page and still not show it for a site: or phrase search, so not found is evidence, not proof.',
-    `DataForSEO cost: $${usd}.`,
+    onIncludedUsage(headers) ? INCLUDED_NOTE : `DataForSEO cost: $${usd}.`,
   ]
   return {
     text: lines.join('\n'),

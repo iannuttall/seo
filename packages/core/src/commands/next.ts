@@ -37,6 +37,7 @@ import {
   type CommandResult,
   type DateRange,
 } from './types.js'
+import { usageNextSteps } from './usage.js'
 
 // seo next: where a site is in the SEO loop and the one step that is due.
 // The loop is know the business, unblock pages, improve the pages that
@@ -78,6 +79,9 @@ export type NextInput = {
   saved?: string
   // Return the autopilot setup steps instead of the due step.
   autopilot?: boolean
+  // A research key of the person's own is set on this surface, so research
+  // does not use the account's paid usage.
+  researchKey?: boolean
 }
 
 type Job = {
@@ -132,13 +136,21 @@ export async function runNext(
   }
 
   const range = dateWindow({}, KEY_EVENT_DAYS)
-  const [list, ga, week] = await Promise.all([
+  const [list, ga, week, usage] = await Promise.all([
     issuesList(site, saved, deps, now),
     organicPages(deps.analytics, site, range),
     recordWeek(site, deps),
+    // Research runs on the account's paid usage only without a key of the
+    // person's own.
+    deps.usage && !input.researchKey
+      ? deps.usage().catch(() => null)
+      : Promise.resolve(null),
   ])
+  const included = Boolean(usage && !usage.ownKey)
+  // Nothing paid is left, so steps that need research wait.
+  const waits = included && usage?.empty ? usage : null
   const pages = conversionPaths(context.text)
-  const tracking = trackingNote(site, context, call)
+  const tracking = trackingNote(site, context, call, !waits)
   const open = list.issues.filter((issue) => issue.mark === 'open')
   const active = open.filter((issue) => issue.seen !== 'not-found')
   const gone = open.filter((issue) => issue.seen === 'not-found')
@@ -185,10 +197,14 @@ export async function runNext(
       savedNote,
       week,
       tracking,
-      `The next step for ${site} is to ${STEP_TITLES[step]}.`,
+      waits && step === 'new-pages'
+        ? `The next step for ${site} is to ${STEP_TITLES[step]}, which needs research, and research waits for usage. ${usageNextSteps(waits)} Until then, do only the work below that needs no research.`
+        : `The next step for ${site} is to ${STEP_TITLES[step]}.`,
       `The loop:\n${loop.join('\n')}`,
       started.length ? startedSection(site, started, call) : null,
-      `## ${heading(step)}\n${stepGuide(step, site, call)}`,
+      waits && step === 'new-pages'
+        ? null
+        : `## ${heading(step)}\n${stepGuide(step, site, call)}`,
       toBuild.length
         ? buildSection(
             site,
@@ -197,7 +213,9 @@ export async function runNext(
             call,
           )
         : null,
-      step === 'new-pages' ? `## Earn links\n${linksGuide(site, call)}` : null,
+      step === 'new-pages' && !waits
+        ? `## Earn links\n${linksGuide(site, call, included)}`
+        : null,
       shown.length
         ? `Jobs ${shown.length} of ${step === 'unblock' ? unblock.length : improve.length}, pages with key events first, then conversion pages:\n${jobsTable(shown)}`
         : null,
@@ -226,6 +244,7 @@ export async function runNext(
     data: {
       site,
       step,
+      ...(waits && step === 'new-pages' ? { research: 'waits_for_usage' } : {}),
       autopilot,
       context: {
         updated_at: context.updated_at,
@@ -276,6 +295,7 @@ function trackingNote(
   site: string,
   context: SiteContext,
   call: Caller,
+  research: boolean,
 ): string | null {
   const { definition, problems } = contextDefinition(site, context)
   const missing = [
@@ -284,7 +304,7 @@ function trackingNote(
   ].filter(Boolean)
   const parts = [
     missing.length
-      ? `The business context has no ${missing.join(' and no ')}, so the work cannot be measured by what buyers search for and ask. Before the step below, propose them to the person under "## Tracked searches" and "## AI questions". ${BUYING_SEARCHES} ${BUYING_QUESTIONS} Check each search with ${call('research', { action: 'keyword_metrics', keywords: '<searches>' })} and ${call('data', { site, query: '<search>' })}. Save the context again once the person agrees.`
+      ? `The business context has no ${missing.join(' and no ')}, so the work can't be measured by what buyers search for and ask. Before the step below, propose them to the person under "## Tracked searches" and "## AI questions". ${BUYING_SEARCHES} ${BUYING_QUESTIONS} Check each search with ${research ? `${call('research', { action: 'keyword_metrics', keywords: '<searches>' })} and ` : ''}${call('data', { site, query: '<search>' })}. Save the context again once the person agrees.`
       : null,
     ...problems,
   ].filter(Boolean)
@@ -350,9 +370,9 @@ function stepGuide(step: NextStep, site: string, call: Caller): string {
 
 // Link and listicle targets beside the competitors in the business
 // context, and how to pitch them.
-function linksGuide(site: string, call: Caller): string {
+function linksGuide(site: string, call: Caller, included: boolean): string {
   const target = new URL(originOf(site)).hostname.replace(/^www\./, '')
-  return `Find the pages that already send links and AI answers to the competitors in the business context. Tell the person the cost first, about $0.40 a competitor. Run ${call('research', { action: 'ai_answers', target, competitors: '<up to 3 competitors>' })} for the pages AI answers cite beside them, ${call('research', { action: 'link_gap', target, competitors: '<2 to 5 competitors>', pages: true })} for pages that link to two or more of them, and ${call('research', { action: 'mentions', target })} for pages that name the site without a link. ${OUTREACH_GUIDE}`
+  return `Find the pages that already send links and AI answers to the competitors in the business context. ${included ? "Tell the person first: it uses this account's research usage." : 'Tell the person the cost first, about $0.40 a competitor.'} Run ${call('research', { action: 'ai_answers', target, competitors: '<up to 3 competitors>' })} for the pages AI answers cite beside them, ${call('research', { action: 'link_gap', target, competitors: '<2 to 5 competitors>', pages: true })} for pages that link to two or more of them, and ${call('research', { action: 'mentions', target })} for pages that name the site without a link. ${OUTREACH_GUIDE}`
 }
 
 // Open issues as jobs: pages with key events first, most first, then

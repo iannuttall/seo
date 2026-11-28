@@ -132,6 +132,11 @@ const USAGE_LINES: [string, (row: UsageRow) => string][] = [
       `Weekly audit competitor check on SEO Skill's DataForSEO: ${usd(row.amount / 1e6)}, ${accounts(row.accounts)}`,
   ],
   [
+    'included_research_microusd',
+    (row) =>
+      `seo_research on SEO Skill's DataForSEO, on usage plans and free credits (DataForSEO's cost): ${usd(row.amount / 1e6)}, ${accounts(row.accounts)}`,
+  ],
+  [
     'included_typesafe_microusd',
     (row) =>
       `Internal linking tool on SEO Skill's TypeSafe key: ${usd(row.amount / 1e6)}, ${accounts(row.accounts)}`,
@@ -196,11 +201,67 @@ async function dataForSeoLines(env: Env, now: number): Promise<string[]> {
   ]
 }
 
+type PlanRow = { plan: number; accounts: number; past_due: number }
+type CreditRow = { state: string; accounts: number; week: number }
+
+// The usage plans (migrations/0026_plans.sql): accounts and list revenue
+// by plan, top-up balances held, auto-reload bought this month, and the
+// free credits by state. Totals only.
+async function planLines(env: Env, at: number): Promise<string[]> {
+  const month = new Date(at).toISOString().slice(0, 7)
+  const [plans, balances, credits] = await Promise.all([
+    env.DB.prepare(
+      `SELECT plan, COUNT(*) AS accounts, COALESCE(SUM(status = 'past_due'), 0) AS past_due
+       FROM billing WHERE status IN ${ACTIVE_SQL} AND plan IS NOT NULL
+       GROUP BY plan ORDER BY plan`,
+    ).all<PlanRow>(),
+    env.DB.prepare(
+      `SELECT COALESCE(SUM(MAX(topup, 0)), 0) AS topup,
+         COALESCE(SUM(topup > 0), 0) AS holders,
+         COALESCE(SUM(CASE WHEN reload_month = ?1 THEN reloaded ELSE 0 END), 0) AS reloaded,
+         COALESCE(SUM(reload_month = ?1 AND reloaded > 0), 0) AS reloaders
+       FROM balances`,
+    )
+      .bind(month)
+      .first<{
+        topup: number
+        holders: number
+        reloaded: number
+        reloaders: number
+      }>(),
+    env.DB.prepare(
+      `SELECT state, COUNT(*) AS accounts, COALESCE(SUM(granted_at >= ?1), 0) AS week
+       FROM credits GROUP BY state ORDER BY state`,
+    )
+      .bind(at - DAYS * DAY_MS)
+      .all<CreditRow>(),
+  ])
+  const rows = plans.results
+  const revenue = rows.reduce((sum, row) => sum + row.plan * row.accounts, 0)
+  const granted = credits.results.find((row) => row.state === 'granted')
+  return [
+    rows.length
+      ? `Usage plans now: ${rows
+          .map(
+            (row) =>
+              `$${row.plan} ${accounts(row.accounts)}${row.past_due ? ` (${count(row.past_due)} past due)` : ''}`,
+          )
+          .join(
+            ', ',
+          )}; ${usd(revenue)} a month at list price, before Stripe fees, discounts and tax.`
+      : 'Usage plans now: none.',
+    `Top-up balances held: ${usd((balances?.topup ?? 0) / 1e6)} of usage across ${accounts(balances?.holders ?? 0)}. Auto-reload bought ${usd(balances?.reloaded ?? 0)} so far in ${month} (UTC), ${accounts(balances?.reloaders ?? 0)}. One-off top-ups are not recorded by week here.`,
+    credits.results.length
+      ? `Free credits by state: ${credits.results.map((row) => `${row.state} ${count(row.accounts)}`).join(', ')}; ${count(granted?.week ?? 0)} granted in the last 7 days.`
+      : 'Free credits: none recorded.',
+  ]
+}
+
 export async function costReport(env: Env, now: Date): Promise<string> {
   const at = now.getTime()
   const to = utcDay(at)
   const from = utcDay(at - DAYS * DAY_MS)
-  const [dataforseo, cloudflare, usage, paid] = await Promise.all([
+  const [dataforseo, cloudflare, usage, paid, plans] = await Promise.all([
     dataForSeoLines(env, at),
     cloudflareUsage(env, at),
     env.DB.prepare(
@@ -212,8 +273,9 @@ export async function costReport(env: Env, now: Date): Promise<string> {
     env.DB.prepare(
       `SELECT COUNT(*) AS accounts, COALESCE(SUM(sites), 0) AS sites,
          COALESCE(SUM(status = 'past_due'), 0) AS past_due
-       FROM billing WHERE status IN ${ACTIVE_SQL}`,
+       FROM billing WHERE status IN ${ACTIVE_SQL} AND plan IS NULL`,
     ).first<{ accounts: number; sites: number; past_due: number }>(),
+    planLines(env, at),
   ])
   const byKind = new Map(usage.results.map((row) => [row.kind, row]))
   const used = USAGE_LINES.flatMap(([kind, line]) => {
@@ -229,7 +291,9 @@ export async function costReport(env: Env, now: Date): Promise<string> {
     `Metered use, ${from} to ${to} (UTC days, last day not included; deleted accounts drop out):`,
     ...(used.length ? used : ['- None recorded.']),
     '',
-    `Paid weekly audit now: ${accounts(paidAccounts)}${paid?.past_due ? ` (${count(paid.past_due)} past due)` : ''}, ${count(sites)} sites, ${usd(sites * PRICE_PER_SITE_USD)} a month at list price, before Stripe fees, discounts and tax.`,
+    ...plans,
+    '',
+    `Per-site weekly audit plan now: ${accounts(paidAccounts)}${paid?.past_due ? ` (${count(paid.past_due)} past due)` : ''}, ${count(sites)} sites, ${usd(sites * PRICE_PER_SITE_USD)} a month at list price, before Stripe fees, discounts and tax.`,
     '',
     ...cloudflareLines(cloudflare),
   ].join('\n')

@@ -22,6 +22,7 @@ import {
 import { PAGE_SIZE, rowsText } from './rows.js'
 import { dateWindow } from './shared.js'
 import { type CommandDeps, CommandError, type CommandResult } from './types.js'
+import { INCLUDED_NOTE, onIncludedUsage } from './usage.js'
 
 // Whether AI answers cite or mention a site, for the questions people
 // already ask AI about it: the top AI-shaped questions in the site's own
@@ -543,6 +544,10 @@ export async function runAiAnswers(
     samples?: number
     // Only these engines, by name, such as ['chatgpt']. Default: all four.
     engines?: string[]
+    // DataForSEO's standard queue: cheaper, but answers take minutes, so
+    // only for a caller that reads them back later, such as a scheduled
+    // check. Default: high priority.
+    standard?: boolean
   },
   headers: Headers,
   deps: Pick<CommandDeps, 'searchAnalytics' | 'context'>,
@@ -701,7 +706,7 @@ export async function runAiAnswers(
             asks.map((question) => ({
               ...engine.task(question.query, market),
               // High priority: about 15 seconds instead of minutes.
-              priority: 2,
+              priority: input.standard ? 1 : 2,
             })),
           )
         } catch (error) {
@@ -801,6 +806,7 @@ export async function runAiAnswers(
         ENGINES.findIndex((e) => e.name === b.engine),
   )
   const cost = usd(rows.reduce((sum, row) => sum + row.cost_usd, 0))
+  const included = onIncludedUsage(headers)
   const count = (result: Answer['result']) =>
     rows.filter((row) => row.result === result).length
   const left = rows.filter((row) => row.task).map((row) => row.task as string)
@@ -913,7 +919,7 @@ export async function runAiAnswers(
             : `No askable questions in Search Console’s AI-shaped queries for ${range.startDate} to ${range.endDate}, so no answers were checked and nothing was spent.`,
     ...(rows.length
       ? [
-          `Cited ${count('cited')}, mentioned ${count('mentioned')}, neither ${count('neither')}, no answer shown ${count('no_answer')}, unavailable ${count('unavailable')}, not ready ${count('pending')}. DataForSEO cost: $${cost}.`,
+          `Cited ${count('cited')}, mentioned ${count('mentioned')}, neither ${count('neither')}, no answer shown ${count('no_answer')}, unavailable ${count('unavailable')}, not ready ${count('pending')}. ${included ? INCLUDED_NOTE : `DataForSEO cost: $${cost}.`}`,
           ...(ratesNote ? [ratesNote] : []),
           ...(voiceNote ? [voiceNote] : []),
           ...(searchesNote ? [searchesNote] : []),
@@ -960,7 +966,8 @@ export async function runAiAnswers(
     searches: searchesText(row),
     model: row.model,
     answered_at: row.answered_at,
-    cost_usd: row.cost_usd,
+    // Left out on included usage, which never shows what data costs.
+    ...(included ? {} : { cost_usd: row.cost_usd }),
     task: row.task,
     error: row.error ?? null,
   }))

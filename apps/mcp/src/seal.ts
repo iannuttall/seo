@@ -14,6 +14,9 @@ export type Sealed =
       redirectUri: string
       state: string | null
       challenge: string
+      // Whether the connect page's Turnstile check passed (credit.ts);
+      // absent when Turnstile is not set up.
+      human?: boolean
       exp: number
     }
   // A Google sign-in from the account page: to sign in, or to link another
@@ -23,6 +26,8 @@ export type Sealed =
       userId: string | null
       link?: string
       next?: string
+      // Whether the sign-in page's Turnstile check passed (credit.ts).
+      human?: boolean
       exp: number
     }
   // The write scope for one click of "Create these in Search Console".

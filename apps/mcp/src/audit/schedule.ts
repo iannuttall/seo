@@ -4,16 +4,19 @@ import type {
   StoredIssue,
   WeekAiAnswers,
 } from '@seo/core/commands'
-import { ACTIVE_SQL, MAX_PAID_SITES } from '../billing.ts'
+import { ACTIVE_SQL, MAX_PAID_SITES, MAX_PLAN_SITES } from '../billing.ts'
+import { AUDIT_USAGE_USD, MARKUP, spendable } from '../meter.ts'
 import { sha256Base64Url } from '../seal.ts'
 import type { AuditMonitor } from './checks.ts'
-import type { GapResult } from './competitors.ts'
+import { chargeCheck, type GapResult, payer } from './competitors.ts'
 
 // The weekly-audit schedule in D1: add and remove a site, list an account's
 // sites without waking their objects, and the hourly cron that starts the
 // runs that are due.
 
 const WEEK_MS = 7 * 86_400_000
+const NO_AUDIT_USAGE =
+  "this account has no usage left, so it waits for a top-up, an upgrade or the plan's reset"
 const DUE_PER_TICK = 50
 // A run that has not reported back after this long is woken again; start()
 // on a running site only re-arms its alarm, so this never doubles a run.
@@ -21,18 +24,22 @@ const STALE_MS = 6 * 3_600_000
 // Sites per account in the beta.
 export const MAX_SITES = 5
 
-// SQL for how many sites the account in column may audit: MAX_PAID_SITES
-// free with unlimited-sites, plus the sites an active plan pays for. The
+// SQL for how many sites the account in column may audit: MAX_PLAN_SITES
+// with an active usage plan; otherwise MAX_PAID_SITES free with
+// unlimited-sites, plus the sites an active per-site plan pays for. The
 // beta flag's MAX_SITES free sites apply only without an active plan, so a
 // plan never adds free sites to what it pays for.
 const siteLimitSql = (column: string) =>
-  `(CASE WHEN EXISTS (SELECT 1 FROM beta_flags f WHERE f.user_id = ${column} AND f.flag = 'unlimited-sites')
-      THEN ${MAX_PAID_SITES}
-    WHEN EXISTS (SELECT 1 FROM billing b WHERE b.user_id = ${column} AND b.status IN ${ACTIVE_SQL})
-      THEN 0
-    WHEN EXISTS (SELECT 1 FROM beta_flags f WHERE f.user_id = ${column} AND f.flag = 'weekly-audit')
-      THEN ${MAX_SITES} ELSE 0 END
-    + COALESCE((SELECT b.sites FROM billing b WHERE b.user_id = ${column} AND b.status IN ${ACTIVE_SQL}), 0))`
+  `(CASE WHEN EXISTS (SELECT 1 FROM billing b WHERE b.user_id = ${column} AND b.status IN ${ACTIVE_SQL} AND b.plan IS NOT NULL)
+      THEN ${MAX_PLAN_SITES}
+    ELSE (CASE WHEN EXISTS (SELECT 1 FROM beta_flags f WHERE f.user_id = ${column} AND f.flag = 'unlimited-sites')
+        THEN ${MAX_PAID_SITES}
+      WHEN EXISTS (SELECT 1 FROM billing b WHERE b.user_id = ${column} AND b.status IN ${ACTIVE_SQL})
+        THEN 0
+      WHEN EXISTS (SELECT 1 FROM beta_flags f WHERE f.user_id = ${column} AND f.flag = 'weekly-audit')
+        THEN ${MAX_SITES} ELSE 0 END
+      + COALESCE((SELECT b.sites FROM billing b WHERE b.user_id = ${column} AND b.status IN ${ACTIVE_SQL}), 0))
+    END)`
 
 // How many sites the account may audit.
 export async function siteLimit(env: Env, userId: string): Promise<number> {
@@ -297,11 +304,24 @@ export function auditAccess(
 // Starts one site's run and moves its schedule only once the object said
 // yes. A failed wake backs off 15 minutes, 1 hour, then 4 hours.
 async function wake(env: Env, row: Row, now: number): Promise<boolean> {
+  // A usage plan pays AUDIT_USAGE_USD of usage for each site's weekly run,
+  // so the sites it audits are bounded by its usage. With none left the
+  // run tries again the next hour.
+  const usage = (await payer(env, row.user_id)) === 'usage'
+  if (usage && (await spendable(env, row.user_id)) <= 0) {
+    await env.DB.prepare(
+      'UPDATE audit_sites SET next_run_at = ?, last_error = ? WHERE user_id = ? AND property = ?',
+    )
+      .bind(now + 3_600_000, NO_AUDIT_USAGE, row.user_id, row.property)
+      .run()
+    return false
+  }
   try {
     await siteObject(env, row.user_id, row.property).start(
       row.user_id,
       row.property,
     )
+    if (usage) await chargeCheck(env, row.user_id, AUDIT_USAGE_USD / MARKUP)
     await env.DB.prepare(
       `UPDATE audit_sites SET next_run_at = ?, last_requested_at = ?, attempts = 0,
          last_error = NULL WHERE user_id = ? AND property = ?`,

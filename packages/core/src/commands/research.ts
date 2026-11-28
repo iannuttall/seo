@@ -45,6 +45,7 @@ import {
 } from './research-zero-volume.js'
 import { PAGE_SIZE, rowsText } from './rows.js'
 import { CommandError, type CommandResult } from './types.js'
+import { INCLUDED_NOTE, onIncludedUsage } from './usage.js'
 
 export type { InstalledSerp } from './research-installed.js'
 export type {
@@ -537,13 +538,15 @@ export async function runResearch(
           : []),
         ...(kept
           ? [
-              `Read from the result saved at ${kept.savedAt}, at no new cost${paid ? ` (it cost $${paid} then)` : ''}. Results are kept for a day.`,
+              `Read from the result saved at ${kept.savedAt}, at no new cost${paid && !onIncludedUsage(keys) ? ` (it cost $${paid} then)` : ''}. Results are kept for a day.`,
             ]
           : costUsd !== null
             ? [
-                builtIn
-                  ? `DataForSEO cost: $${costUsd}.`
-                  : `Cost the ${provider} package reports: $${costUsd}.`,
+                builtIn && onIncludedUsage(keys)
+                  ? INCLUDED_NOTE
+                  : builtIn
+                    ? `DataForSEO cost: $${costUsd}.`
+                    : `Cost the ${provider} package reports: $${costUsd}.`,
               ]
             : []),
         ...(partial
@@ -848,7 +851,9 @@ async function zeroVolume(
         saved
           ? `Read from the result saved at ${saved.savedAt}, at no new cost. Results are kept for a day.`
           : costUsd !== null
-            ? `DataForSEO cost: $${costUsd}.`
+            ? provider === 'dataforseo' && onIncludedUsage(keys)
+              ? INCLUDED_NOTE
+              : `DataForSEO cost: $${costUsd}.`
             : provider === 'ahrefs'
               ? "Ahrefs charges API units for each keyword returned; its response doesn't say how many."
               : 'No keywords to ask about, so nothing was spent.',

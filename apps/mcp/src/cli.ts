@@ -8,10 +8,13 @@ import {
 import { siteIssues } from './audit/schedule.ts'
 import { weekData } from './audit/week.ts'
 import { betaFlags } from './beta.ts'
+import { plansOn } from './billing.ts'
 import { refreshClicky } from './clicky.ts'
 import { siteContext } from './context.ts'
-import { freshAccess } from './google.ts'
+import { settleCredit } from './credit.ts'
+import { directory, freshAccess } from './google.ts'
 import { indexMySiteAccess, indexNowKeysOf } from './indexmysite.ts'
+import { usageOf } from './meter.ts'
 import { seal, unseal } from './seal.ts'
 import { cliAgent, userAgentOf } from './signup.ts'
 import {
@@ -211,6 +214,28 @@ export async function cliWeek(request: Request, env: Env): Promise<Response> {
     )
   }
   return json(await weekData(env, link.userId))
+}
+
+// seo sites on a linked machine: the account's paid usage (meter.ts), as
+// the Usage JSON. 404 not_found while the usage plans are off.
+export async function cliUsage(request: Request, env: Env): Promise<Response> {
+  const link = await linkOf(request, env)
+  if (!link) return unlinked()
+  if (!plansOn(env)) {
+    return error('not_found', 'This server has no usage plans.', 404)
+  }
+  const [accounts, keys] = await Promise.all([
+    accountsOf(env, link.userId),
+    keysOf(env, link.userId),
+    touchCliLink(env, link.id),
+  ])
+  // A credit waiting for a site is decided before it is shown.
+  await settleCredit(env, link.userId, directory(env, accounts)).catch(
+    (failure) => console.error('credit: settling failed', failure),
+  )
+  return json(
+    await usageOf(env, link.userId, Boolean(keys['x-dataforseo-login'])),
+  )
 }
 
 // The most a store request body can hold: the longest saved issues list,

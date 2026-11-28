@@ -5,6 +5,7 @@ import type { ProgressDefinition } from './progress-data.js'
 import { type ResearchDevice, research } from './research-providers.js'
 import type { ToolSurface } from './tools.js'
 import { type CommandDeps, CommandError, type CommandResult } from './types.js'
+import { INCLUDED_NOTE, onIncludedUsage } from './usage.js'
 
 // A site's tracking runs: the live Google positions of its tracked searches
 // and the AI answers to its questions, for the site and its competitors,
@@ -105,9 +106,16 @@ export async function trackProgress(
   const today = ranAt.slice(0, 10)
   const mine = runs.filter((run) => run.kind === kind)
   const last = mine.at(-1)
-  const show = (lines: string[], all: ProgressRun[], saved: ProgressRun[]) => ({
+  // costUsd is what this call spent on DataForSEO: reading answers back or
+  // a check already kept today spends nothing.
+  const show = (
+    lines: string[],
+    all: ProgressRun[],
+    saved: ProgressRun[],
+    costUsd = 0,
+  ) => ({
     text: [...lines, '', ...runsText(definition, all, kind)].join('\n'),
-    data: { site, kind, runs: saved },
+    data: { site, kind, runs: saved, costUsd },
   })
 
   if (last?.kind === 'ai_answers' && last.answers.some((a) => a.task)) {
@@ -163,12 +171,14 @@ export async function trackProgress(
         })
   const run = { id: `${kind}-${ranAt}`, ran_at: ranAt, ...body } as ProgressRun
   await store.saveRun(site, run)
+  const costUsd = Math.round((run.cost_usd ?? 0) * 10_000) / 10_000
   return show(
     [
-      `Kept this check for ${site} on ${today}, beside its progress. DataForSEO cost: $${Math.round((run.cost_usd ?? 0) * 10_000) / 10_000}.`,
+      `Kept this check for ${site} on ${today}, beside its progress. ${onIncludedUsage(headers) ? INCLUDED_NOTE : `DataForSEO cost: $${costUsd}.`}`,
     ],
     [...runs, run],
     [run],
+    costUsd,
   )
 }
 

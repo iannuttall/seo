@@ -80,9 +80,15 @@ button.danger { background: oklch(57.7% 0.215 27.325); color: oklch(98.5% 0 0); 
 
 // The page state the site's account shell shows. See
 // apps/web/src/pages/account-shell.astro.
+// turnstile: the Cloudflare Turnstile site key for the sign-in form, when
+// Turnstile is set up.
 export type View =
-  | { view: 'connect'; connect: { client: string; host: string; flow: string } }
-  | { view: 'signin'; message?: string; link?: string }
+  | {
+      view: 'connect'
+      connect: { client: string; host: string; flow: string }
+      turnstile?: string
+    }
+  | { view: 'signin'; message?: string; link?: string; turnstile?: string }
   | { view: 'notice'; notice: { title: string; text: string } }
   | {
       view: 'account'

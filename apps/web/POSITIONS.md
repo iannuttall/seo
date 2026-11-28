@@ -8,6 +8,10 @@ a post, and check each claim in your draft against it.
   exceptions, in the same PR, and ask Ian when it's a judgement call.
 - A changed stance: update every post listed under it in the same PR.
 - Keep each entry to the stance, the evidence, the exceptions and the posts.
+- On landing, product and alternatives pages, marketing copy speaks for SEO
+  Skill. A stance from this file may be in Ian's first person only when the
+  page shows his author badge (`LandingHero` `author`). Never write about Ian
+  in the third person.
 
 ## AI answers cite search results, and recommend from training
 
@@ -76,6 +80,43 @@ guide calls a page for every fan-out query scaled content abuse.
 
 - Posts: query-fan-out, how-to-get-cited-by-chatgpt, keyword-clustering.
 
+## Publish at scale only with research and a person deciding
+
+Volume isn't the risk; publishing without judgement is. Ian publishes more
+than 30 pages a month, with a person choosing each topic from research and
+reviewing each page. Scatter-gun publishing, with AI or without, goes wrong
+three ways:
+
+- It chases traffic, not the topics and keywords that bring customers.
+- It leaves the site's topical authority. Google's helpful content guidance
+  asks whether you're "producing lots of content on many different topics in
+  hopes that some of it might perform well" or entering a niche "without any
+  real expertise". Lily Ray saw sites hit in 2026 that added hundreds or
+  thousands of pages "across topics the site has no real experience in", and
+  folders of templated pages on searches "not closely related to the business
+  offering" falling in the November 2026 core update while product pages held.
+- It skips research and review, so quality and accuracy fall. Google calls AI
+  text at scale "without manual oversight or curation" "little to no effort",
+  says it's "critical to manually factcheck and review all AI-generated
+  content" (titles, descriptions, structured data and alt text too), and its
+  scaled content abuse policy applies "no matter how it's created". Its
+  attribution and factuality page for AI features asks for clear sourcing,
+  author and About pages, no factual errors, and no date changes unless the
+  page substantially changed.
+
+The person has to decide what gets published, not only proofread it: Ray
+found sites that said editors reviewed every AI draft were devalued anyway,
+because the pattern of what they published was the problem.
+
+- Never say fewer pages are always better or that AI writing is the problem.
+  Name the risk: no research, no topical focus, no person deciding, no fact
+  check.
+- Ray's, Glenn Gabe's and Marie Haynes' readings of updates are theirs; label
+  them. Google says core updates don't target specific sites, and its notice
+  for the December 2026 update is about relevance and personalisation, so
+  never say an update targets AI content.
+- Pages: alternatives/outrank, alternatives/seobot.
+
 ## llms.txt and schema don't win AI citations
 
 Google Search ignores llms.txt, and OpenAI's search docs don't mention it. AI
@@ -129,4 +170,13 @@ plainly that Google's spam policies and Bing's guidelines both count link
 buying against you unless the link is qualified, and never present a paid
 link as a ranking tactic.
 
-- Posts: agent-link-outreach.
+Ian would never use a link exchange or network, such as Outrank's Backlink
+Exchange or SEObot's backlinks, or anyone else's. Pages say so plainly, in
+Ian's first person, on pages that show his author badge. Google's link spam policy lists "excessive link exchanges" and "using
+automated programs or services to create links to your site". In Ian's
+experience (his post on X, 3 September 2026), links swapped across one
+network form a pattern that leads to every buyer and seller; at best they're
+ignored, at worst the site drops out of Google.
+
+- Never present an exchange as a feature or a reason to pick a tool.
+- Posts: agent-link-outreach, alternatives/outrank, alternatives/seobot.

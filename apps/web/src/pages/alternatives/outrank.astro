@@ -1,0 +1,322 @@
+---
+import {
+  AiChat02Icon,
+  Calendar03Icon,
+  News01Icon,
+  PlugSocketIcon,
+  QuillWrite01Icon,
+  Robot01Icon,
+  SearchList01Icon,
+  TextCheckIcon,
+} from '@hugeicons/core-free-icons'
+import BeforeAfter from '@/components/blog/BeforeAfter.astro'
+import PlanSteps from '@/components/blog/PlanSteps.astro'
+import CodeBlock from '@/components/CodeBlock.astro'
+import FaqAccordion from '@/components/FaqAccordion.astro'
+import HomeCard from '@/components/HomeCard.astro'
+import LandingHero from '@/components/LandingHero.astro'
+import SectionHeading from '@/components/SectionHeading.astro'
+import SetupPrompts from '@/components/SetupPrompts.astro'
+import BaseLayout from '@/layouts/BaseLayout.astro'
+import type { SchemaBreadcrumb } from '@/lib/schema'
+
+// Every Outrank fact below comes from Outrank's own homepage, pricing page,
+// reviews page and terms of use. Re-read them before changing a price or a
+// plan. The page names other SEO tools but does not link to them.
+
+const breadcrumbs: SchemaBreadcrumb[] = [
+  { label: 'Home', href: '/' },
+  { label: 'Alternatives', href: '/alternatives' },
+  { label: 'Outrank alternatives' },
+]
+
+const outrankDoes = [
+  { title: 'An article a day', text: 'It researches keywords, plans a month and publishes one article a day to WordPress, Webflow, Shopify, Framer and others, or to a free hosted blog.', icon: Calendar03Icon },
+  { title: 'Drafts you can read first', text: 'Drafts mode saves each article for you to read before it goes live, instead of publishing it straight away.', icon: TextCheckIcon },
+  { title: 'Refreshes from Search Console', text: 'It uses your Search Console data to pick published articles that slipped or sit just outside the top five, then rewrites them.', icon: News01Icon },
+  { title: 'An MCP server and a CLI', text: 'Claude, ChatGPT or Cursor can plan content and queue articles in Outrank through its tools, and anything paid waits for your OK.', icon: PlugSocketIcon },
+]
+
+const options = [
+  { title: 'SEO Skill', text: 'Pick it if you want your own agent to write as many pages as you can review, each topic picked from your Search Console data and each draft checked before you approve it.', icon: TextCheckIcon, href: '/docs/lint', link: 'See seo lint' },
+  { title: 'SEObot', text: 'Pick it if you want under ten autopilot articles a month for a lower entry price: $49 a month buys 9.', icon: Robot01Icon, href: '/alternatives/seobot', link: 'SEObot alternatives' },
+  { title: 'Koala AI', text: 'Pick it if you want to steer each article yourself in an AI writer, from $25 a month, with 5,000 free words to try it.', icon: QuillWrite01Icon },
+  { title: 'Outrank', text: 'Stay with it if you want 30 or more articles a month on autopilot, and you will read each draft before it goes live.', icon: News01Icon },
+]
+
+const month = {
+  before: {
+    label: 'A month on autopilot',
+    html: '<ul class="list-disc space-y-2 pl-5"><li>30 articles a month on the $99 plan, one a day, or 60 and 90 with add-ons.</li><li>Backlink Exchange links are placed in your articles and on other customers’ sites automatically, with no preview of each link.</li><li>Drafts mode saves each article for you to read first, which at this pace is an article a day. Human editors cost $1,399 a month.</li></ul>',
+  },
+  after: {
+    label: 'A month with your own agent',
+    html: '<ul class="list-disc space-y-2 pl-5"><li>Your agent starts from a ranked list: the pages Search Console shows just off page one, and the questions you nearly answer.</li><li>It writes or rewrites each one from its own brief, in your codebase and your voice.</li><li><code>seo lint</code> reads every draft, and nothing ships until you say so. No links go on your site that you did not add.</li><li>Each fixed page’s clicks 28 and 56 days later sit next to the days before.</li></ul>',
+  },
+}
+
+const draft = `# The Ultimate Guide to Choosing a CRM for Small Teams
+
+In today's fast-paced digital landscape, choosing the
+right CRM is more important than ever. It's not just a
+tool, it's the backbone of your entire sales process.
+
+Whether you're a startup or a growing business, the
+right CRM can unlock seamless collaboration and
+supercharge your growth. Let's dive in.
+
+The truth is, most teams pick a CRM the wrong way. They
+focus on features. They focus on price. They focus on
+integrations. But the real secret? Adoption.`
+
+const lint = `114 words: 10 errors, 1 warning
+
+stock-opener: "In today's fast-paced..."
+  Open with the specific problem or number.
+negative-parallelism: "It's not just a tool"
+  Drop the "isn't" half and state the claim.
+banned-word: "unlock", "seamless"
+  Use "get", "smooth" or "simple".
+cliche: "Let's dive in"
+  Say the specific thing, or cut it.
+pithy-fragment: "They focus on features."
+  Join them into one plain sentence.
+
+...and 6 more, each with a fix.`
+
+const lintDemo = {
+  before: { label: 'The unreviewed draft', code: draft, note: 'Our own example, written the way unreviewed AI drafts often read. It is not Outrank output.' },
+  after: { label: 'What seo lint says', code: lint, note: 'Real seo lint output for that draft. Each finding has a fix, so your agent can rewrite the lines before you read it.' },
+}
+
+const steps = [
+  { title: 'Pick the page from your own data', body: 'Your agent reads your Search Console for pages just off page one and searches that bring impressions but no page that answers them.' },
+  { title: 'Check demand and who ranks now', body: 'With your DataForSEO or Ahrefs key it adds volumes and the top pages, and it can ask ChatGPT, Gemini and Google’s AI answers which sites they cite.' },
+  { title: 'Write it with the model you already use', body: 'The agent drafts or rewrites the page in your codebase, from the brief, next to the rest of your site.' },
+  { title: 'Lint it, then read it', body: '`seo lint` flags the lines that read as AI-written with a fix for each. You read the result and approve it.' },
+  { title: 'See what the change did', body: 'Mark the page fixed, and its Search Console clicks 28 and 56 days later sit next to the days before.' },
+]
+
+const rows = [
+  { label: 'How many pages', outrank: '30 a month on $99, up to 90 with add-ons', ours: 'As many as your data supports, one brief each' },
+  { label: 'Who writes', outrank: 'Outrank’s AI, on a daily schedule', ours: 'The model in your own agent, such as Claude Code, Codex or Cursor' },
+  { label: 'Who reads it first', outrank: 'You, in drafts mode, or human editors at $1,399 a month', ours: 'seo lint, then you, before anything ships' },
+  { label: 'Links on your site', outrank: 'Exchange links placed automatically, with no per-link preview', ours: 'Only the links you or your agent add' },
+  { label: 'Pages you already have', outrank: 'Refreshes its own published articles', ours: 'Any page in your codebase, starting with the ones closest to page one' },
+  { label: 'Price', outrank: '$99 a month, $999 a year', ours: 'Free. Research data bills your own provider account' },
+]
+
+const before = [
+  'Backlink Exchange links are created and published automatically once Outrank’s checks pass, with no preview or approval of each link, according to its terms of use.',
+  'Its terms also say no backlink service can remove the risk that search engines reduce a site’s visibility for links that break their rules.',
+  'The terms give no warranty that articles are accurate or follow search engine guidelines. Human editors who fact-check each article are a $1,399 a month add-on.',
+  'The 3-day trial needs a card and starts the $99 plan unless you cancel. First-time subscribers can ask for a full refund within 7 days of the first payment.',
+  'Outrank’s own reviews page says most complaints are about billing, cancelling and slow support replies.',
+]
+
+const faq = [
+  {
+    question: 'What is Outrank?',
+    answer:
+      'Outrank (outrank.so) is an AI SEO tool that researches keywords, writes and publishes one article a day to your site, and builds backlinks through an exchange with other customers. The plan is $99 a month for 30 articles.',
+  },
+  {
+    question: 'What is the best Outrank alternative?',
+    answer:
+      'It depends how much you want published without a person reading it. For a cheaper autopilot with fewer articles, look at SEObot. To steer each article in an AI writer, look at Koala AI. To have your own agent write pages on topics your Search Console data picks, check each one with seo lint and wait for your approval, use SEO Skill.',
+  },
+  {
+    question: 'Is there a free Outrank alternative?',
+    answer:
+      'SEO Skill is free, and its CLI and seo lint are open source. It does not write articles itself: the agent you already pay for writes them, and SEO Skill gives it the data and checks the copy. Research such as search volumes runs on your own DataForSEO or Ahrefs account.',
+  },
+  {
+    question: 'How much does Outrank cost?',
+    answer:
+      'Outrank’s pricing page lists $99 a month or $999 a year for 30 articles a month. 60 articles cost $85 a month more and 90 cost $160 more. Human editors are $1,399 a month, and backlink plans run from $199 to $1,899 a month.',
+  },
+  {
+    question: 'Are Outrank backlinks safe?',
+    answer:
+      'We don’t think so, and we would never use them, or any link exchange. Google’s spam policies list excessive link exchanges and links made by automated services as link spam. Outrank’s own terms say no backlink service can remove the risk that search engines reduce a site’s visibility, and exchange links go live with no preview of each one.',
+  },
+  {
+    question: 'Is Outrank the same as Outrank Brand?',
+    answer:
+      'No. This page is about outrank.so, the AI SEO tool. Outrank Brand is a clothing company that ranks first for the word “outrank” on its own.',
+  },
+]
+---
+
+<BaseLayout
+  title="Outrank alternatives: AI SEO with a person in the loop"
+  description="Outrank alternatives compared on how many pages, who writes, who reads them first and what links land on your site, from Outrank's own pricing and terms."
+  canonicalPath="/alternatives/outrank"
+  {breadcrumbs}
+  framed={false}
+>
+  <main data-agent-content>
+    <LandingHero
+      title="Outrank alternatives"
+      lead="Outrank publishes an AI article a day and builds backlinks for you. Here is what it does well, the alternatives for each job, and how to publish at your own pace, with research behind each page and a person deciding, using the agent you already use."
+      setupId="outrank-alternatives-setup"
+      author
+    />
+
+    <div class="space-y-24 py-24 sm:space-y-32 sm:py-32">
+      <section class="site-frame" aria-labelledby="outrank-heading">
+        <SectionHeading
+          id="outrank-heading"
+          title="What does Outrank do well?"
+          text="It keeps a blog publishing every day with very little setup. These four points come from Outrank’s own pages."
+        />
+        <div class="grid grid-cols-1 gap-2 sm:grid-cols-2">
+          {outrankDoes.map((item) => <HomeCard {...item} />)}
+        </div>
+      </section>
+
+      <section class="site-frame" aria-labelledby="options-heading">
+        <SectionHeading
+          id="options-heading"
+          title="Which Outrank alternative fits your job?"
+          text="The one that matches how much you want published before a person reads it."
+        />
+        <div class="grid grid-cols-1 gap-2 sm:grid-cols-2">
+          {options.map((item) => <HomeCard {...item} />)}
+        </div>
+      </section>
+
+      <section class="site-frame" aria-labelledby="scale-heading">
+        <SectionHeading
+          id="scale-heading"
+          title="Is AI content at scale safe without review?"
+          text="Not without research and a person deciding. Thirty articles a month can be fine when each topic is picked for your customers and someone checks every page. Autopilot skips both, and adds links you never see."
+        />
+        <div class="max-w-3xl">
+          <BeforeAfter
+            before={month.before}
+            after={month.after}
+            title="The same month, two ways to work"
+            caption="Outrank’s side comes from its own pricing page and terms of use."
+          />
+        </div>
+        <div class="docs-prose max-w-3xl">
+          <p>
+            Google’s guidance on <a href="https://developers.google.com/search/docs/fundamentals/using-gen-ai-content" target="_blank" rel="noreferrer">using generative AI content</a> says it is
+            “critical to manually factcheck and review all AI-generated content”
+            before publishing, titles and descriptions included. Its <a href="https://developers.google.com/search/docs/fundamentals/creating-helpful-content" target="_blank" rel="noreferrer">helpful content guidance</a> calls
+            AI text at scale “without manual oversight or curation” little to no
+            effort, and asks whether you are publishing on many topics “in hopes
+            that some of it might perform well”.
+          </p>
+          <p>
+            Review has to mean deciding, not only proofreading. In her <a href="https://lilyraynyc.substack.com/p/prediction-the-next-massive-google" target="_blank" rel="noreferrer">read of sites hit in 2026</a>, the
+            SEO consultant Lily Ray found sites that said editors checked every
+            AI draft were devalued anyway, because the problem was the pattern
+            of what they published, not the quality of each sentence. That is
+            her reading of the updates, not a rule Google states.
+          </p>
+        </div>
+      </section>
+
+      <section class="site-frame" aria-labelledby="own-agent-heading">
+        <SectionHeading
+          id="own-agent-heading"
+          title="How do you publish at scale with your own agent?"
+          text="Give the agent you already use a brief from your own search data, let it write, and check every draft before you approve it. SEO Skill supplies the data and the checks."
+        />
+        <div class="max-w-3xl">
+          <PlanSteps {steps} />
+        </div>
+        <div class="max-w-3xl">
+          <BeforeAfter
+            before={lintDemo.before}
+            after={lintDemo.after}
+            title="What a reviewer catches in one paragraph"
+          />
+        </div>
+        <div class="docs-prose max-w-3xl">
+          <p>Connect SEO Skill with the prompt at the top of this page, then ask:</p>
+          <CodeBlock prompt value="Find the pages on example.com that rank just off page one in Search Console, pick the one with the most impressions, rewrite it to answer those searches better, then check the new copy with seo lint, fix every error and show me the result before you change anything." wrap />
+          <p>
+            No agent to hand? Paste a draft into the free <a href="/tools/seo-content-checker">SEO content checker</a> for
+            its headings, title, description, link text and copy, with a fix
+            for each line.
+          </p>
+        </div>
+      </section>
+
+      <section class="site-frame" aria-labelledby="compare-heading">
+        <SectionHeading
+          id="compare-heading"
+          title="How does Outrank compare with SEO Skill?"
+          text="Outrank writes, publishes and links for you on a schedule. SEO Skill gives your own agent the data and the checks, and you approve what ships."
+        />
+        <div class="docs-prose max-w-4xl">
+          <table>
+            <thead>
+              <tr><th></th><th>Outrank</th><th>SEO Skill</th></tr>
+            </thead>
+            <tbody>
+              {rows.map((row) => (
+                <tr><th scope="row">{row.label}</th><td>{row.outrank}</td><td>{row.ours}</td></tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      </section>
+
+      <section class="site-frame" aria-labelledby="before-heading">
+        <SectionHeading
+          id="before-heading"
+          title="What should you check before you buy Outrank?"
+          text="How its backlinks, content warranty, trial and support work. Each point comes from Outrank’s own terms of use, pricing page or reviews page."
+        />
+        <div class="docs-prose max-w-3xl">
+          <ul>
+            {before.map((item) => <li>{item}</li>)}
+          </ul>
+          <p>
+            I would never turn Outrank’s exchange on, or use any link exchange.
+            Google’s <a href="https://developers.google.com/search/docs/essentials/spam-policies" target="_blank" rel="noreferrer">spam policies</a> list “excessive link exchanges” and “using
+            automated programs or services to create links to your site” as
+            link spam. In my experience, links swapped across one network form
+            a pattern that leads to every site buying and selling them, and at
+            best the links are ignored. I <a href="https://x.com/iannuttall/status/2095420271754702994" target="_blank" rel="noreferrer">explained the risk on X</a> when
+            the exchange launched.
+          </p>
+        </div>
+      </section>
+
+      <section class="site-frame" aria-labelledby="outrank-faq">
+        <SectionHeading
+          id="outrank-faq"
+          title="Questions about Outrank alternatives"
+          text="Price, backlinks, free options, and the other Outrank that ranks for the name."
+        />
+        <FaqAccordion id="outrank-faq-list" items={faq} />
+      </section>
+
+      <section class="site-frame" aria-labelledby="more-heading">
+        <SectionHeading
+          id="more-heading"
+          title="Where can you read more on writing with your agent?"
+          text="On these pages, which compare the other article bot and cover the copy checks."
+        />
+        <div class="grid grid-cols-1 gap-2 sm:grid-cols-2">
+          <HomeCard title="SEObot alternatives" text="SEObot compared with writing in your own agent, with a real brief from seoskill.dev’s Search Console." icon={AiChat02Icon} href="/alternatives/seobot" link="SEObot alternatives" />
+          <HomeCard title="SEO content checker" text="Check a draft or a page for heading, title, description, link text and copy problems, free in your browser." icon={SearchList01Icon} href="/tools/seo-content-checker" link="Check a draft" />
+        </div>
+      </section>
+
+      <section class="site-frame" aria-labelledby="start-heading">
+        <SectionHeading
+          id="start-heading"
+          title="Write your next page with your own agent"
+          text="Add SEO Skill to your agent and sign in with Google. Then ask which pages are closest to page one, and have the agent rewrite and lint the first one for you to approve."
+        />
+        <SetupPrompts id="outrank-setup-end" />
+      </section>
+    </div>
+  </main>
+</BaseLayout>

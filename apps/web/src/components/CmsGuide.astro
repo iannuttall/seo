@@ -13,20 +13,14 @@ import { type Cms, cmsList } from '@/content/cms'
 import BaseLayout from '@/layouts/BaseLayout.astro'
 import type { SchemaBreadcrumb } from '@/lib/schema'
 
-type Props = { cms: Cms }
-const { cms } = Astro.props
+type Props = { cms: Cms; author?: boolean }
+const { cms, author = false } = Astro.props
 
 const breadcrumbs: SchemaBreadcrumb[] = [
   { label: 'Home', href: '/' },
   { label: 'Integrations', href: '/integrations' },
   { label: cms.name },
 ]
-const readDate = new Date(`${cms.checked}T00:00:00Z`).toLocaleDateString('en-GB', {
-  day: 'numeric',
-  month: 'long',
-  year: 'numeric',
-  timeZone: 'UTC',
-})
 
 const loop = [
   { title: 'Find what to fix', text: 'Ask for the issues section of the report. It lists striking distance queries, low click-through rates and quick wins from your Search Console, each with an id.', code: 'seo_report' },
@@ -41,7 +35,7 @@ const others = cmsList.filter((item) => item.id !== cms.id)
 
 <BaseLayout title={cms.metaTitle} description={cms.description} canonicalPath={`/integrations/${cms.id}`} {breadcrumbs} dateModified={cms.checked} framed={false}>
   <main data-agent-content>
-    <LandingHero title={cms.title} lead={cms.lead} setupId="cms-setup" setupSteps={cms.setupSteps}>
+    <LandingHero title={cms.title} lead={cms.lead} setupId="cms-setup" setupSteps={cms.setupSteps} {author}>
       <p slot="note" class="mt-4 max-w-2xl text-pretty text-base leading-7 text-foreground-muted">{cms.needs}</p>
     </LandingHero>
 
@@ -102,7 +96,7 @@ const others = cmsList.filter((item) => item.id !== cms.id)
           <FaqAccordion items={cms.faq} id="cms-faq-list" />
         </div>
         <p class="mt-10 text-sm leading-6 text-foreground-muted">
-          Sources for {cms.name}, read {readDate}:{' '}
+          Sources for {cms.name}:{' '}
           {cms.sources.map((source, index) => (
             <>
               {index ? ', ' : ''}

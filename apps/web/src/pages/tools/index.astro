@@ -1,7 +1,6 @@
 ---
-import FounderBadge from '@/components/FounderBadge.astro'
 import HomeCard from '@/components/HomeCard.astro'
-import { getButtonClasses } from '@/components/ui/button'
+import LandingHero from '@/components/LandingHero.astro'
 import { toolIcon } from '@/content/tool-icons'
 import { tools } from '@/content/tools/manifest.mjs'
 import BaseLayout from '@/layouts/BaseLayout.astro'
@@ -12,41 +11,24 @@ import BaseLayout from '@/layouts/BaseLayout.astro'
   description="Use free SEO tools to check websites, technical files, search traffic, structured data and keyword lists in your browser without signing in."
   canonicalPath="/tools"
   schemaType="CollectionPage"
+  framed={false}
 >
   <main data-agent-content>
-    <section class="flex flex-col items-center pt-8 text-center sm:pt-12">
-      <FounderBadge prefix="Written by AI and" ai />
-      <h1 class="mt-4 max-w-3xl text-pretty text-4xl/tight font-medium -tracking-[0.8px] xl:text-5xl/tight xl:-tracking-[1px]">
-        Free SEO tools
-      </h1>
-      <p class="mt-4 max-w-2xl text-pretty text-xl/8 font-medium -tracking-[0.2px] text-foreground-muted">
-        Check a website, a technical file or a keyword list in your browser.
-        No account, no sign-in.
-      </p>
-    </section>
+    <LandingHero
+      title="Free SEO tools"
+      lead="Check a website, a technical file or a keyword list in your browser, with no account. To check your own site with your Search Console and analytics data, set up the agent."
+      setupId="tools-setup"
+      author
+    />
 
-    <h2 class="sr-only">Every free SEO tool on seoskill.dev</h2>
-    <div class="mt-14 grid grid-cols-1 gap-2 sm:grid-cols-2">
-      {
-        tools.map((tool) => (
-          <HomeCard title={tool.title} text={tool.description} icon={toolIcon(tool.id)} href={tool.path} />
-        ))
-      }
-    </div>
-
-    <section class="mt-16 flex items-start gap-4 rounded-lg bg-muted p-6 sm:p-8" aria-labelledby="larger-jobs">
-      <div class="max-w-2xl">
-        <h2 id="larger-jobs" class="text-xl/7 font-medium text-foreground">
-          Ask your agent about your own site
-        </h2>
-        <p class="mt-2 text-base/7 text-foreground-muted">
-          These tools check one file or one site at a time. For your own
-          Search Console and analytics data, <a class="underline underline-offset-4" href="/docs/getting-started">connect the free hosted MCP</a> or
-          install the CLI and ask your agent.
-        </p>
-        <div class="mt-5 flex flex-wrap gap-2">
-          <a class={getButtonClasses('outline', 'lg')} href="/docs#docs-commands">See the commands</a>
-        </div>
+    <section class="site-frame py-24 sm:py-32">
+      <h2 class="sr-only">Every free SEO tool on seoskill.dev</h2>
+      <div class="grid grid-cols-1 gap-2 sm:grid-cols-2">
+        {
+          tools.map((tool) => (
+            <HomeCard title={tool.title} text={tool.description} icon={toolIcon(tool.id)} href={tool.path} />
+          ))
+        }
       </div>
     </section>
   </main>

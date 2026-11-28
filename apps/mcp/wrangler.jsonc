@@ -43,11 +43,11 @@
     // The usage plans' Stripe prices, as "10:price_...,50:price_...,
     // 100:price_...,200:price_...". Empty keeps the usage plans off and the
     // per-site plan above on (src/billing.ts).
-    "STRIPE_PLAN_PRICES": "",
+    "STRIPE_PLAN_PRICES": "10:price_1UgnEm7DEU8hlDUtrhYlZbib,50:price_1UgnEn7DEU8hlDUthBZnihHM,100:price_1UgnEn7DEU8hlDUt5hqn71IC,200:price_1UgnEn7DEU8hlDUtBB9GUXQh",
     // Cloudflare Turnstile's public site key for the sign-in pages, which
     // the free credit's checks use (src/credit.ts). Its secret is
     // TURNSTILE_SECRET; without both, no sign-in counts as checked.
-    "TURNSTILE_SITE_KEY": "",
+    "TURNSTILE_SITE_KEY": "0x4AAAAAAELILTANEKSe0zaB",
     // SEO Skill's confidential OAuth client at Index My Site, for Connect
     // Index My Site on the account page. Its secret is
     // INDEXMYSITE_CLIENT_SECRET; without it the connection stays off.

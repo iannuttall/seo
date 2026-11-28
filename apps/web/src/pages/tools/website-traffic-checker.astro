@@ -1,9 +1,20 @@
 ---
-import Breadcrumbs from '@/components/Breadcrumbs.astro'
+import {
+  Alert02Icon,
+  Analytics01Icon,
+  ChartIncreaseIcon,
+  ChartLineData01Icon,
+  CheckListIcon,
+  DatabaseIcon,
+  FileSearchIcon,
+  SearchList01Icon,
+} from '@hugeicons/core-free-icons'
 import CodeBlock from '@/components/CodeBlock.astro'
 import FaqAccordion from '@/components/FaqAccordion.astro'
-import PageHeader from '@/components/PageHeader.astro'
+import HomeCard from '@/components/HomeCard.astro'
+import SectionHeading from '@/components/SectionHeading.astro'
 import SetupPrompts from '@/components/SetupPrompts.astro'
+import SplitList from '@/components/SplitList.astro'
 import WebsiteTrafficChecker from '@/components/tools/WebsiteTrafficChecker.astro'
 import BaseLayout from '@/layouts/BaseLayout.astro'
 import type { SchemaBreadcrumb } from '@/lib/schema'
@@ -12,6 +23,51 @@ const breadcrumbs: SchemaBreadcrumb[] = [
   { label: 'Home', href: '/' },
   { label: 'Tools', href: '/tools' },
   { label: 'Website traffic checker' },
+]
+
+// The figures in one result, in the order the result shows them.
+const figures = [
+  { title: 'Estimated monthly traffic', icon: Analytics01Icon, text: 'Organic Google visits a month in the country you picked, from rankings and search volumes, with its change on the month before and over the year.' },
+  { title: 'Ranking keywords', icon: SearchList01Icon, text: 'Keywords the site ranks for in the top 100 in that market.' },
+  { title: 'Pages with traffic', icon: FileSearchIcon, text: 'How many of the site\u2019s pages rank for at least one keyword.' },
+  { title: 'Traffic value', icon: DatabaseIcon, text: 'What the same clicks would cost as Google Ads, in US dollars.' },
+  { title: 'Top 3 and top 10', icon: ChartIncreaseIcon, text: 'How many keywords rank on the first page, or near the top of it. These matter more than the total keyword count.' },
+  { title: 'New, up, down and lost', icon: ChartLineData01Icon, text: 'Keywords that started ranking, improved, slipped or dropped out that month, with a twelve-month chart.' },
+]
+
+const breakdown = [
+  { title: 'Top pages', text: 'Where the traffic lands, and each page\u2019s share of the total. When one page brings half the traffic, losing one ranking shows up straight away. Traffic spread over many pages is steadier.' },
+  { title: 'Top keywords', text: 'What people searched to get there, with the position, monthly searches, estimated visits and the page that ranks.' },
+  { title: 'Sort by searches', text: 'Find big keywords where the site ranks low.' },
+  { title: 'Filter by a word', text: 'See one topic on its own.' },
+]
+
+const blindSpots = [
+  { title: 'Keywords outside the index', text: 'Most long, rare searches are not in it, so they count for nothing. Sites that live on the long tail look smaller than they are.' },
+  { title: 'A typical click curve', text: 'A result under an AI Overview, a map or a row of ads is counted as if it got normal clicks.' },
+  { title: 'Organic Google only', text: 'Paid search, social, email, referrals, direct visits, AI assistants and other search engines are not in the number.' },
+  { title: 'One market at a time', text: 'A United States estimate is not worldwide traffic. A site that sells in Germany will look tiny in the United States.' },
+]
+
+const comparing = [
+  { title: 'Keep the country fixed', text: 'Pick the country the site serves, and use the same one for every site you compare.' },
+  { title: 'Compare ratios, not visits', text: 'A competitor with three times the estimate very likely gets more search traffic, even when neither number is exact.' },
+  { title: 'Watch the trend', text: 'Month by month, the direction is usually right even when the level is not.' },
+  { title: 'Calibrate with your own site', text: 'Set the estimate for your domain beside your Search Console clicks. The gap tells you roughly how far off estimates run in your niche.' },
+]
+
+const drop = [
+  { title: 'More lost keywords', text: 'Rankings disappeared.' },
+  { title: 'Fewer top 3 keywords, same total', text: 'Positions slipped.' },
+  { title: 'Steady keywords, less traffic', text: 'Search demand fell, which is often seasonal.' },
+  { title: 'A drop that starts in one month', text: 'Check it against the Google algorithm update checker. A core update on the same dates shows the timing lines up. It does not prove the update caused the drop.', href: '/tools/google-algorithm-update-checker' },
+]
+
+const tools = [
+  { title: 'Domain overview', text: 'A site\u2019s estimated traffic, top pages, competitors and links in one answer from your agent.', href: '/features/domain-overview', icon: Analytics01Icon, link: 'See the domain overview' },
+  { title: 'Competitor keyword research', text: 'The keywords any domain ranks for, with positions and estimated visits. Free, with no account.', href: '/tools/competitor-keyword-research', icon: SearchList01Icon, link: 'Research a competitor' },
+  { title: 'Google algorithm update checker', text: 'Line a traffic drop up with the Google updates that ran on the same dates.', href: '/tools/google-algorithm-update-checker', icon: Alert02Icon, link: 'Check the updates' },
+  { title: 'SEO report', text: 'Your own Search Console clicks and Google Analytics sessions for the same dates.', href: '/docs/report', icon: CheckListIcon, link: 'SEO report docs' },
 ]
 
 const faq = [
@@ -43,12 +99,12 @@ const faq = [
   {
     question: 'Why does a site show no traffic?',
     answer:
-      'It means DataForSEO found no Google rankings for that domain in that market. That is not the same as no visitors. Try the country the site actually serves, and remember that a new or very small site may not be in the index yet.',
+      'It means DataForSEO found no Google rankings for that domain in that market. The site may still get visitors from other channels or countries. Try the country the site actually serves, and remember that a new or very small site may not be in the index yet.',
   },
   {
     question: 'Can I check daily website traffic?',
     answer:
-      'The estimate is monthly, because search volumes are monthly. For daily numbers you need the site’s own data. Your agent can read daily clicks for your site from Search Console with seo data.',
+      'The estimate is monthly, because search volumes are monthly. For daily numbers you need the site\u2019s own data. Your agent can read daily clicks for your site from Search Console with seo data.',
   },
 ]
 ---
@@ -58,160 +114,115 @@ const faq = [
   description="Check any website's estimated monthly Google organic traffic, its twelve-month trend, and the top pages and keywords that bring it. Free, with no account."
   canonicalPath="/tools/website-traffic-checker"
   {breadcrumbs}
+  framed={false}
 >
   <main data-agent-content>
-    <Breadcrumbs {breadcrumbs} />
-    <PageHeader
-      title="Website traffic checker"
-      description="Enter a domain and choose a country to check its estimated organic search traffic from Google, with a year of history and the pages and keywords behind it."
-    />
+    <section class="pt-4">
+      <div class="site-frame flex flex-col items-center pt-14 text-center sm:pt-20">
+        <h1 class="mt-4 max-w-3xl text-pretty text-4xl/tight font-medium -tracking-[0.8px] xl:text-5xl/tight xl:-tracking-[1px]">
+          Website traffic checker
+        </h1>
+        <p class="mt-4 max-w-2xl text-pretty text-xl/8 font-medium -tracking-[0.2px] text-foreground-muted">
+          Enter a domain and choose a country to check its estimated organic
+          search traffic from Google, with a year of history and the pages
+          and keywords behind it.
+        </p>
+      </div>
+      <div class="site-frame mt-10 max-w-3xl sm:mt-12">
+        <WebsiteTrafficChecker />
+      </div>
+    </section>
 
-    <WebsiteTrafficChecker />
+    <div class="space-y-24 py-24 sm:space-y-32 sm:py-32">
+      <section class="site-frame" aria-labelledby="figures-heading">
+        <SectionHeading
+          id="figures-heading"
+          title="What does the traffic checker show?"
+          text="A site's estimated monthly visits from Google in one country, and the figures behind them. A site with 40,000 keywords at position 60 gets almost nothing from them, while one with 300 in the top 3 can get a lot."
+        />
+        <div class="grid grid-cols-1 gap-2 sm:grid-cols-2">
+          {figures.map((item) => <HomeCard title={item.title} text={item.text} icon={item.icon} />)}
+        </div>
+      </section>
 
-    <div class="docs-prose mt-16">
-      <h2>Read the traffic estimate</h2>
-      <p>
-        The big number is the estimated organic visits the site gets from
-        Google in one month, in the country you picked, with its change on
-        the month before and over the year. Under it you get a twelve-month
-        chart, where its keywords rank now, its ten biggest pages and its
-        twenty biggest keywords.
-      </p>
-      <table>
-        <thead>
-          <tr>
-            <th>Figure</th>
-            <th>What it tells you</th>
-          </tr>
-        </thead>
-        <tbody>
-          <tr>
-            <td>Estimated monthly traffic</td>
-            <td>Organic Google visits a month, from rankings and search volumes.</td>
-          </tr>
-          <tr>
-            <td>Ranking keywords</td>
-            <td>Keywords the site ranks for in the top 100 in that market.</td>
-          </tr>
-          <tr>
-            <td>Pages with traffic</td>
-            <td>How many of the site's pages rank for at least one keyword.</td>
-          </tr>
-          <tr>
-            <td>Traffic value</td>
-            <td>What the same clicks would cost as Google Ads, in US dollars.</td>
-          </tr>
-          <tr>
-            <td>Top 3 and top 10</td>
-            <td>How many of those keywords rank on the first page, or near the top of it.</td>
-          </tr>
-          <tr>
-            <td>New, up, down and lost</td>
-            <td>Keywords that started ranking, improved, slipped or dropped out that month.</td>
-          </tr>
-        </tbody>
-      </table>
-      <p>
-        The top 3 and top 10 counts matter more than the total keyword count.
-        A site with 40,000 keywords at position 60 gets almost nothing from
-        them. A site with 300 keywords in the top 3 can get a lot.
-      </p>
+      <SplitList
+        id="breakdown-heading"
+        title="Which pages and keywords bring a site its traffic?"
+        text="The result lists the ten biggest pages and the twenty biggest keywords, so you can see where the traffic lands and what people searched to get there."
+        items={breakdown}
+      />
 
-      <h2>See which pages and keywords bring the traffic</h2>
-      <p>
-        The top pages show where the traffic lands, and each page's share of
-        the total. When one page brings half the traffic, the site depends
-        on a handful of rankings, and losing one of them shows up straight
-        away in the total. Traffic spread over many pages is steadier.
-      </p>
-      <p>
-        The top keywords show what people searched to get there, with the
-        position, the monthly searches and the estimated visits. Sort them
-        by searches to find big keywords where the site ranks low, or filter
-        by a word to see one topic. Each keyword shows the page that ranks
-        for it.
-      </p>
-      <h2>How the estimate is built</h2>
-      <p>
-        Nobody outside a website can see its analytics, so every traffic
-        checker works backwards from search results. DataForSEO keeps an
-        index of Google results for millions of keywords. For each keyword a
-        site ranks for, it takes the monthly searches and the share of
-        clicks a result usually gets at that position, and adds them up.
-      </p>
-      <p>
-        That method has two blind spots. Keywords that are not in the index
-        (most long, rare searches) count for nothing. And the click share is
-        a typical curve, so a result under an AI Overview, a map or a row of
-        ads is counted as if it got normal clicks. Small sites and sites that
-        live on long-tail searches tend to look smaller than they are.
-      </p>
+      <SplitList
+        id="method-heading"
+        title="How is a website traffic estimate built?"
+        text="From search results, because nobody outside a site can see its analytics. DataForSEO adds up, for each keyword a site ranks for, the monthly searches times the share of clicks a result usually gets at that position. That method has blind spots."
+        items={blindSpots}
+      />
 
-      <h2>Compare sites, not exact visits</h2>
-      <p>
-        The estimate is at its best as a comparison. Check two competitors
-        in the same country and the one with three times the estimate very
-        likely gets more search traffic. Check one site month by month and
-        the trend is usually right even when the level is not.
-      </p>
-      <p>
-        Keep the market fixed. A United States estimate is not worldwide
-        traffic, and a site that sells in Germany will look tiny in the
-        United States. Pick the country the site serves before you compare.
-      </p>
+      <SplitList
+        id="compare-heading"
+        title="How do you compare two sites' traffic?"
+        text="Use the estimate to compare sites. It is at its best when every site is checked the same way."
+        items={comparing}
+      />
 
-      <h2>Spot a traffic drop in the history</h2>
-      <p>
-        When the estimate falls, switch the chart between traffic, keywords
-        and top 10, and open the monthly numbers to see why. More lost
-        keywords means rankings disappeared. Fewer top 3 keywords with the
-        same total means positions slipped. Steady keywords with less traffic
-        usually means search demand fell, which is often seasonal.
-      </p>
-      <p>
-        If the drop starts in one month, check it against the{' '}
-        <a href="/tools/google-algorithm-update-checker">Google algorithm update checker</a>.
-        A core update on the same dates shows the timing lines up. It does
-        not prove the update caused the drop.
-      </p>
+      <SplitList
+        id="drop-heading"
+        title="Why did a site's traffic drop?"
+        text="The monthly history usually shows which kind of drop it was. Switch the chart between traffic, keywords and top 10, and open the monthly numbers."
+        items={drop}
+      />
 
-      <h2>Use real numbers for your own site</h2>
-      <p>
-        For your own site, an estimate is the wrong tool. Search Console
-        counts the clicks Google sent, and Google Analytics counts sessions
-        from every channel. The two never match exactly (a click is not a
-        session), but both are measured, not modelled.
-      </p>
-      <p>
-        That gives you a useful check, too. Run your own domain through this
-        page and set the estimate beside your Search Console clicks. The gap
-        tells you roughly how far off the estimates are in your niche, which
-        helps you read the numbers for your competitors.
-      </p>
+      <SplitList
+        id="agent-heading"
+        title="How do you check traffic with your AI agent?"
+        text="Ask it, once SEO Skill is connected. It reads measured numbers for your own site and estimates for competitors, and keeps the two apart."
+        items={[
+          { title: 'Your own site', text: 'The SEO report reads Search Console clicks and Google Analytics sessions for the same dates. A click is not a session, so the two never match exactly, but both are measured.' },
+          { title: 'A competitor', text: 'seo research pulls the keywords it ranks for with your own DataForSEO or Ahrefs key, with estimated visits for each.' },
+          { title: 'Both side by side', text: 'A domain overview puts a site\u2019s estimated traffic, top pages, competitors and links in one answer.' },
+        ]}
+      >
+        <div class="mt-6">
+          <CodeBlock
+            label="Ask your agent"
+            prompt
+            value="Compare my Search Console clicks for example.com with the estimated organic traffic for competitor.example, and show which of their top pages I have no equivalent for"
+            wrap
+          />
+        </div>
+      </SplitList>
 
-      <h2>Check traffic with your AI agent</h2>
-      <p>
-        With SEO Skill your agent can do both halves of the job. For your own
-        site, the <a href="/docs/report">SEO report</a> reads Search Console
-        clicks and Google Analytics sessions for the same dates. For a
-        competitor, <a href="/docs/research">seo research</a> pulls the
-        keywords it ranks for with your own DataForSEO or Ahrefs key, and
-        keeps those estimates apart from your measured numbers. A{' '}
-        <a href="/features/domain-overview">domain overview</a> puts a
-        site's estimated traffic, top pages, competitors and links in one
-        answer. Ask:
-      </p>
-      <CodeBlock prompt value="Compare my Search Console clicks for example.com with the estimated organic traffic for competitor.example, and show which of their top pages I have no equivalent for" wrap />
-      <p>To set it up, give your agent this prompt:</p>
-    </div>
+      <section class="site-frame" aria-labelledby="tools-heading">
+        <SectionHeading
+          id="tools-heading"
+          title="Which tools go with a traffic check?"
+          text="These, which cover a competitor's keywords, a drop's timing and your own measured numbers."
+        />
+        <div class="grid grid-cols-1 gap-2 sm:grid-cols-2">
+          {tools.map((item) => <HomeCard {...item} />)}
+        </div>
+      </section>
 
-    <SetupPrompts id="traffic-setup" class="mt-6" />
+      <section class="site-frame" aria-labelledby="faq-heading">
+        <div class="max-w-2xl">
+          <h2 id="faq-heading" class="text-pretty text-2xl font-medium -tracking-[0.4px] text-foreground xl:text-3xl xl:-tracking-[0.6px]">
+            Website traffic questions
+          </h2>
+        </div>
+        <div class="mt-10">
+          <FaqAccordion items={faq} id="traffic-faq" />
+        </div>
+      </section>
 
-    <div class="docs-prose mt-16">
-      <h2>Website traffic questions</h2>
-    </div>
-    <div class="mt-6">
-      <FaqAccordion id="traffic-faq" items={faq} />
+      <section class="site-frame" aria-labelledby="start-heading">
+        <SectionHeading
+          id="start-heading"
+          title="Compare your traffic with your competitors'"
+          text="Add SEO Skill to your agent, sign in with Google and ask how your Search Console clicks compare with a competitor's estimated traffic."
+        />
+        <SetupPrompts id="traffic-setup" />
+      </section>
     </div>
   </main>
 </BaseLayout>

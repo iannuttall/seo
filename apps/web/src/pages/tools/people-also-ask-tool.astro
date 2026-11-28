@@ -1,9 +1,11 @@
 ---
-import Breadcrumbs from '@/components/Breadcrumbs.astro'
+import { AiSearchIcon, BrowserIcon, SearchList01Icon, TextCheckIcon } from '@hugeicons/core-free-icons'
 import CodeBlock from '@/components/CodeBlock.astro'
 import FaqAccordion from '@/components/FaqAccordion.astro'
-import PageHeader from '@/components/PageHeader.astro'
+import HomeCard from '@/components/HomeCard.astro'
+import SectionHeading from '@/components/SectionHeading.astro'
 import SetupPrompts from '@/components/SetupPrompts.astro'
+import SplitList from '@/components/SplitList.astro'
 import ResearchLookup from '@/components/tools/ResearchLookup.astro'
 import BaseLayout from '@/layouts/BaseLayout.astro'
 import type { SchemaBreadcrumb } from '@/lib/schema'
@@ -12,6 +14,26 @@ const breadcrumbs: SchemaBreadcrumb[] = [
   { label: 'Home', href: '/' },
   { label: 'Tools', href: '/tools' },
   { label: 'People Also Ask tool' },
+]
+
+const topics = [
+  { title: 'Steady traffic means real searches', text: 'A question with an answer page that gets steady traffic is a topic people search for, even when keyword tools show little volume for the exact wording.' },
+  { title: 'Look for small sites that rank', text: 'Look for answer pages on small or narrow sites. If a modest page gets real traffic from a question, a better answer has room to compete.' },
+  { title: 'Answer in the first two sentences', text: 'Write the answer in the first two sentences under a heading that matches the question. That is the shape Google quotes when it does link a page.' },
+]
+
+const sources = [
+  { title: 'Most answers are Google’s own AI text', text: 'Google now answers most of these questions with its own AI text instead of a link to a page. When it does that, the tool searches the question by itself and shows the first result.' },
+  { title: 'Redirect links that cannot be followed', text: 'Google sometimes sends results through its own redirect links. When one cannot be followed, the tool shows the site without the exact page, and no traffic estimate.' },
+  { title: 'Traffic covers the whole page', text: 'The traffic figure is an estimate of the whole page across every keyword it ranks for. It does not count only the visits that one question sends, so use it to compare pages.' },
+  { title: 'The full results page', text: 'For the full results page of any question, use the SERP checker.', href: '/tools/serp-checker' },
+]
+
+const tools = [
+  { title: 'SERP checker', text: 'The live Google results for any keyword or question, with who ranks and where your domain ranks.', href: '/tools/serp-checker', icon: BrowserIcon, link: 'Check a SERP' },
+  { title: 'AI Overview checker', text: 'Whether Google shows an AI Overview for up to five keywords, what it says and the sources it cites.', href: '/tools/ai-overview-checker', icon: AiSearchIcon, link: 'Check AI Overviews' },
+  { title: 'Keyword clustering tool', text: 'Group up to 50 keywords by the pages Google ranks for each, to see which questions one page can answer.', href: '/tools/keyword-clustering-tool', icon: SearchList01Icon, link: 'Cluster keywords' },
+  { title: 'SEO content checker', text: 'Check the headings, title, meta description, link text and copy of a draft, with a fix for each problem.', href: '/tools/seo-content-checker', icon: TextCheckIcon, link: 'Check your content' },
 ]
 
 const faq = [
@@ -37,8 +59,7 @@ const faq = [
   },
   {
     question: 'Is this People Also Ask tool free?',
-    answer:
-      'Yes. You get 3 free lookups a day without an account. Your agent can pull questions for every topic you plan with your own DataForSEO key.',
+    answer: 'Yes. You get 3 free lookups a day without an account. Your agent can pull questions for every topic you plan with your own DataForSEO key.',
   },
   {
     question: 'Why is there no People Also Ask box for my keyword?',
@@ -53,98 +74,125 @@ const faq = [
   description="Find the People Also Ask questions Google shows for any keyword, the page that answers each one, and that page's estimated monthly traffic, free."
   canonicalPath="/tools/people-also-ask-tool"
   {breadcrumbs}
+  framed={false}
 >
   <main data-agent-content>
-    <Breadcrumbs {breadcrumbs} />
-    <PageHeader
-      title="People Also Ask tool"
-      description="List the questions Google shows under a keyword, the page that answers each one, and how much traffic that page gets."
-    />
+    <section class="pt-4">
+      <div class="site-frame flex flex-col items-center pt-14 text-center sm:pt-20">
+        <h1 class="mt-4 max-w-3xl text-pretty text-4xl/tight font-medium -tracking-[0.8px] xl:text-5xl/tight xl:-tracking-[1px]">
+          People Also Ask tool
+        </h1>
+        <p class="mt-4 max-w-2xl text-pretty text-xl/8 font-medium -tracking-[0.2px] text-foreground-muted">
+          List the questions Google shows under a keyword, the page that
+          answers each one, and how much traffic that page gets.
+        </p>
+      </div>
+      <div class="site-frame mt-10 sm:mt-12">
+        <ResearchLookup
+          kind="paa"
+          heading="Find People Also Ask questions"
+          description="Enter a keyword and pick a country. Questions work well too."
+          example="what is a 401k"
+        />
+      </div>
+    </section>
 
-    <ResearchLookup
-      kind="paa"
-      heading="Find People Also Ask questions"
-      description="Enter a keyword and pick a country. Questions work well too."
-      example="what is a 401k"
-    />
+    <div class="space-y-24 py-24 sm:space-y-32 sm:py-32">
+      <section class="site-frame" aria-labelledby="columns-heading">
+        <SectionHeading
+          id="columns-heading"
+          title="What does the People Also Ask tool show?"
+          text="Each row is one question from the People Also Ask box, in the order Google showed it. Next to it is the page that answers it and that page's estimated monthly organic traffic."
+        />
+        <div class="docs-prose max-w-4xl">
+          <table>
+            <thead>
+              <tr>
+                <th>Column</th>
+                <th>What it tells you</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td>Question</td>
+                <td>The question as Google wrote it in the box.</td>
+              </tr>
+              <tr>
+                <td>Page that answers it</td>
+                <td>The page Google linked in the box, or the first result when the question is searched on its own.</td>
+              </tr>
+              <tr>
+                <td>Traffic</td>
+                <td>DataForSEO's estimate of the page's monthly organic visits, from all its keywords.</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </section>
 
-    <div class="docs-prose mt-16">
-      <h2>Read the questions and answer pages</h2>
-      <p>
-        Each row is one question from the People Also Ask box, in the order
-        Google showed it. Next to it is the page that answers it and that
-        page's estimated monthly organic traffic.
-      </p>
-      <table>
-        <thead>
-          <tr>
-            <th>Column</th>
-            <th>What it tells you</th>
-          </tr>
-        </thead>
-        <tbody>
-          <tr>
-            <td>Question</td>
-            <td>The question as Google wrote it in the box.</td>
-          </tr>
-          <tr>
-            <td>Page that answers it</td>
-            <td>The page Google linked in the box, or the first result when the question is searched on its own.</td>
-          </tr>
-          <tr>
-            <td>Traffic</td>
-            <td>DataForSEO's estimate of the page's monthly organic visits, from all its keywords.</td>
-          </tr>
-        </tbody>
-      </table>
+      <SplitList
+        id="topics-heading"
+        title="How do you find questions that already bring traffic?"
+        text="Look for questions whose answer page gets steady traffic. Those are topics people search for, whatever the keyword tools say about the exact wording."
+        items={topics}
+      />
 
-      <h2>Find topics that already bring traffic</h2>
-      <p>
-        A question with an answer page that gets steady traffic is a topic
-        people search for, even when keyword tools show little volume for the
-        exact wording. Look for answer pages on small or narrow sites. If a
-        modest page gets real traffic from a question, a better answer has
-        room to compete.
-      </p>
-      <p>
-        Then write the answer in the first two sentences under a heading that
-        matches the question. That is the shape Google quotes when it does
-        link a page.
-      </p>
+      <SplitList
+        id="sources-heading"
+        title="Where do the answer pages come from?"
+        text="From the box itself when Google links a page, and from the top result for the question when it does not."
+        items={sources}
+      />
 
-      <h2>Where the answer pages come from</h2>
-      <p>
-        Google now answers most of these questions with its own AI text, not a
-        link to a page. When it does that, the tool searches the question by
-        itself and shows the first result. Google sometimes sends results
-        through its own redirect links; when one cannot be followed, the tool
-        shows the site without the exact page, and no traffic estimate.
-      </p>
-      <p>
-        The traffic figure is an estimate of the whole page across every
-        keyword it ranks for, not the visits that one question sends. Use it to
-        compare pages. For the full results page of any
-        question, use the <a href="/tools/serp-checker">SERP checker</a>.
-      </p>
+      <SplitList
+        id="agent-heading"
+        title="How do you answer the questions your site already gets?"
+        text="Ask your agent, once SEO Skill is connected. It pulls these questions and checks them against your own Search Console."
+        items={[
+          { title: 'Questions for every topic', text: 'Your agent pulls People Also Ask questions with seo research and your own DataForSEO key.', href: '/docs/research' },
+          { title: 'Questions your pages already show for', text: 'It then checks your own Search Console for the questions your pages already show up for.' },
+        ]}
+      >
+        <div class="mt-6">
+          <CodeBlock
+            label="Ask your agent"
+            prompt
+            value="Find the People Also Ask questions for my top five topics on example.com and tell me which ones my pages already get impressions for"
+            wrap
+          />
+        </div>
+      </SplitList>
 
-      <h2>Answer the questions your site already gets</h2>
-      <p>
-        With SEO Skill your agent can pull these questions with{' '}
-        <a href="/docs/research">seo research</a> and your own DataForSEO key,
-        then check your own Search Console for the questions your pages already
-        show up for. Ask:
-      </p>
-      <CodeBlock prompt value="Find the People Also Ask questions for my top five topics on example.com and tell me which ones my pages already get impressions for" wrap />
-      <p>To set it up, give your agent this prompt:</p>
-    </div>
+      <section class="site-frame" aria-labelledby="tools-heading">
+        <SectionHeading
+          id="tools-heading"
+          title="Which tools go with a People Also Ask check?"
+          text="These, which cover the rest of the results page, Google's AI answers and the page you write next."
+        />
+        <div class="grid grid-cols-1 gap-2 sm:grid-cols-2">
+          {tools.map((item) => <HomeCard {...item} />)}
+        </div>
+      </section>
 
-    <SetupPrompts id="paa-setup" class="mt-6" />
+      <section class="site-frame" aria-labelledby="faq-heading">
+        <div class="max-w-2xl">
+          <h2 id="faq-heading" class="text-pretty text-2xl font-medium -tracking-[0.4px] text-foreground xl:text-3xl xl:-tracking-[0.6px]">
+            People Also Ask tool questions
+          </h2>
+        </div>
+        <div class="mt-10">
+          <FaqAccordion items={faq} id="paa-faq" />
+        </div>
+      </section>
 
-    <div class="docs-prose mt-16">
-      <h2>People Also Ask tool questions</h2>
-    </div>
-    <div class="mt-6">
-      <FaqAccordion id="paa-faq" items={faq} />
+      <section class="site-frame" aria-labelledby="start-heading">
+        <SectionHeading
+          id="start-heading"
+          title="Find the questions your pages should answer"
+          text="Add SEO Skill to your agent, connect your own DataForSEO key and sign in with Google, then ask which questions your pages already show for."
+        />
+        <SetupPrompts id="paa-setup" />
+      </section>
     </div>
   </main>
 </BaseLayout>

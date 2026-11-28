@@ -1,9 +1,11 @@
 ---
-import Breadcrumbs from '@/components/Breadcrumbs.astro'
+import { Analytics01Icon, Link01Icon, SearchList01Icon, SpamIcon } from '@hugeicons/core-free-icons'
 import CodeBlock from '@/components/CodeBlock.astro'
 import FaqAccordion from '@/components/FaqAccordion.astro'
-import PageHeader from '@/components/PageHeader.astro'
+import HomeCard from '@/components/HomeCard.astro'
+import SectionHeading from '@/components/SectionHeading.astro'
 import SetupPrompts from '@/components/SetupPrompts.astro'
+import SplitList from '@/components/SplitList.astro'
 import BacklinkChecker from '@/components/tools/BacklinkChecker.astro'
 import BaseLayout from '@/layouts/BaseLayout.astro'
 import type { SchemaBreadcrumb } from '@/lib/schema'
@@ -12,6 +14,51 @@ const breadcrumbs: SchemaBreadcrumb[] = [
   { label: 'Home', href: '/' },
   { label: 'Tools', href: '/tools' },
   { label: 'Backlink checker' },
+]
+
+const lists = [
+  { title: 'Twelve months of history', text: 'The chart shows twelve months of referring domains, backlinks, or the sites won and lost each month.' },
+  { title: 'The 100 strongest linking sites', text: 'The list shows one link from each of the 100 strongest linking sites, with the anchor text, where the link sits on the page and whether it is followed.' },
+  { title: 'Filter, sort or download it', text: 'Filter the list, switch to the newest links, or download it as a spreadsheet.' },
+]
+
+const basics = [
+  { title: 'Links help search engines find pages', text: 'Search engines follow links to find new pages.' },
+  { title: 'A link reads as a recommendation', text: 'Search engines read a link as a sign that the linking page thinks the target is worth visiting.' },
+  { title: 'Many independent sites build trust', text: 'Many links from many independent sites about the same subject tell Google that a page is known and trusted on that subject.' },
+  { title: 'Referring domains matter more than backlinks', text: 'Ten thousand links from one site are still one site’s opinion. Fifty links from fifty different sites are fifty opinions. When you compare two sites, compare referring domains first.' },
+]
+
+const anchors = [
+  { title: 'Brand and domain anchors are normal', text: 'Most sites earn anchors that are their brand name, their domain or a plain phrase like “this guide”. That is normal.' },
+  { title: 'Check the anchors match your subject', text: 'Read the anchor list to check that the anchors describe what you want the site to be known for.' },
+  { title: 'Watch for exact match anchors from unrelated sites', text: 'Many exact match keyword anchors from unrelated sites are a warning sign. Google’s spam policies name links with keyword rich anchors placed in bulk as a link scheme.' },
+]
+
+const audit = [
+  { title: 'Look at the trend first', text: 'A steady rise in referring domains means the site keeps earning links. A sharp drop often means a partner removed a site wide link, or pages that earned links were deleted.' },
+  { title: 'Read the strongest linking sites', text: 'Are they real sites about your subject? A few strong, relevant sites are worth more than the total suggests.' },
+  { title: 'Check where the links sit', text: 'Links in the main content of an article count for more than footer or sidebar links, which repeat on every page.' },
+  { title: 'Fix broken backlinks', text: 'When links point at pages that no longer exist, redirect those URLs to the closest live page so the links count again.' },
+  { title: 'Leave most spam alone', text: 'Every site collects junk links. Google ignores most of them. Only act when you know links were bought or traded.' },
+]
+
+const opportunities = [
+  { title: 'Run the checker on a competing page', text: 'Check who links to the pages that outrank you, then switch the list to followed links.' },
+  { title: 'Look for sites that cover your subject', text: 'Resource pages, guides that cite sources, and directories people actually use.' },
+  { title: 'Start with sites that link to your competitors', text: 'Sites that link to two or three of your competitors but not to you are the best place to start.' },
+  {
+    title: 'Find the pages that earned their links',
+    text: 'Links follow content people want to cite: original data, useful tools, clear explanations. Competitor keyword research shows which of their pages bring their traffic, which is often the same set of pages that earned their links.',
+    href: '/tools/competitor-keyword-research',
+  },
+]
+
+const tools = [
+  { title: 'Spam score checker', text: 'What the 0 to 100 spam score measures, what counts as low or high, and when a high score matters for links.', href: '/tools/spam-score-checker', icon: SpamIcon, link: 'Check a spam score' },
+  { title: 'Domain Rating checker', text: 'The strength of a domain’s backlinks as one 0 to 100 score, to compare sites in the same market.', href: '/tools/domain-rating-checker', icon: Analytics01Icon, link: 'Check Domain Rating' },
+  { title: 'Backlink gap analysis', text: 'The sites that link to two or more of your competitors but not to you, from your own DataForSEO or Ahrefs key.', href: '/features/backlink-gap', icon: Link01Icon, link: 'See the backlink gap' },
+  { title: 'Competitor keyword research', text: 'The keywords a competitor ranks for and the pages that bring their traffic. Free, with no account.', href: '/tools/competitor-keyword-research', icon: SearchList01Icon, link: 'Research a competitor' },
 ]
 
 const faq = [
@@ -56,185 +103,200 @@ const faq = [
 
 <BaseLayout
   title="Free backlink checker for any site or page"
-  description="Check the backlinks to any domain or page for free. See referring domains, a year of link history, the 100 strongest linking sites, anchor text and followed links."
+  description="Check the backlinks to any domain or page for free. See referring domains, a year of link history, the 100 strongest linking sites and their anchor text."
   canonicalPath="/tools/backlink-checker"
   {breadcrumbs}
+  framed={false}
 >
   <main data-agent-content>
-    <Breadcrumbs {breadcrumbs} />
-    <PageHeader
-      title="Backlink checker"
-      description="Enter a domain or a page to see which websites link to it, how strong those sites are, what the links say and how the link count changed over the last year."
-    />
+    <section class="pt-4">
+      <div class="site-frame flex flex-col items-center pt-14 text-center sm:pt-20">
+        <h1 class="mt-4 max-w-3xl text-pretty text-4xl/tight font-medium -tracking-[0.8px] xl:text-5xl/tight xl:-tracking-[1px]">
+          Backlink checker
+        </h1>
+        <p class="mt-4 max-w-2xl text-pretty text-xl/8 font-medium -tracking-[0.2px] text-foreground-muted">
+          Enter a domain or a page to see which websites link to it, how
+          strong those sites are, what the links say and how the link count
+          changed over the last year.
+        </p>
+      </div>
+      <div class="site-frame mt-10 sm:mt-12">
+        <BacklinkChecker />
+      </div>
+    </section>
 
-    <BacklinkChecker />
+    <div class="space-y-24 py-24 sm:space-y-32 sm:py-32">
+      <section class="site-frame" aria-labelledby="figures-heading">
+        <SectionHeading
+          id="figures-heading"
+          title="What does the backlink checker show?"
+          text="Referring domains first: how many different websites link to the site or page. Under it you get the total number of links and how the profile looks from every angle."
+        />
+        <div class="docs-prose max-w-4xl">
+          <table>
+            <thead>
+              <tr>
+                <th>Figure</th>
+                <th>What it tells you</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td>Referring domains</td>
+                <td>Different websites with at least one live link to the target.</td>
+              </tr>
+              <tr>
+                <td>Backlinks</td>
+                <td>Every live link, counting each page and each repeat. One site wide footer link can add thousands.</td>
+              </tr>
+              <tr>
+                <td>Linking pages</td>
+                <td>Pages that hold at least one of those links.</td>
+              </tr>
+              <tr>
+                <td>Link strength</td>
+                <td>DataForSEO's score for the target from 0 to 100, based on the links pointing at it. Each linking site in the list has the same score.</td>
+              </tr>
+              <tr>
+                <td>Spam score</td>
+                <td>DataForSEO's estimate of how many of the links look like spam. The <a href="/tools/spam-score-checker">spam score checker</a> explains it.</td>
+              </tr>
+              <tr>
+                <td>Broken backlinks</td>
+                <td>Links that point at a URL on the target that no longer works.</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </section>
 
-    <div class="docs-prose mt-16">
-      <h2>Read the backlink result</h2>
-      <p>
-        The big number is referring domains: how many different websites link
-        to the site or page. Under it you get the total number of links and
-        how the profile looks from every angle.
-      </p>
-      <table>
-        <thead>
-          <tr>
-            <th>Figure</th>
-            <th>What it tells you</th>
-          </tr>
-        </thead>
-        <tbody>
-          <tr>
-            <td>Referring domains</td>
-            <td>Different websites with at least one live link to the target.</td>
-          </tr>
-          <tr>
-            <td>Backlinks</td>
-            <td>Every live link, counting each page and each repeat. One site wide footer link can add thousands.</td>
-          </tr>
-          <tr>
-            <td>Linking pages</td>
-            <td>Pages that hold at least one of those links.</td>
-          </tr>
-          <tr>
-            <td>Link strength</td>
-            <td>DataForSEO's score for the target from 0 to 100, based on the links pointing at it. Each linking site in the list has the same score.</td>
-          </tr>
-          <tr>
-            <td>Spam score</td>
-            <td>DataForSEO's estimate of how many of the links look like spam. The <a href="/tools/spam-score-checker">spam score checker</a> explains it.</td>
-          </tr>
-          <tr>
-            <td>Broken backlinks</td>
-            <td>Links that point at a URL on the target that no longer works.</td>
-          </tr>
-        </tbody>
-      </table>
-      <p>
-        The chart shows twelve months of referring domains, backlinks, or the
-        sites won and lost each month. The list shows one link from each of
-        the 100 strongest linking sites, with the anchor text, where the link
-        sits on the page and whether it is followed. Filter it, switch to the
-        newest links, or download it as a spreadsheet.
-      </p>
+      <SplitList
+        id="lists-heading"
+        title="What do the link chart and list show?"
+        text="Where the links come from and how they changed. The chart covers a year and the list covers the strongest sites."
+        items={lists}
+      />
 
-      <h2>What are backlinks?</h2>
-      <p>
-        A backlink is a link on another website that points to yours. Search
-        engines use them in two ways. They follow links to find new pages,
-        and they read a link as a sign that the linking page thinks the
-        target is worth visiting. Many links from many independent sites
-        about the same subject tell Google that a page is known and trusted
-        on that subject.
-      </p>
-      <p>
-        That is why referring domains matter more than backlinks. Ten
-        thousand links from one site are still one site's opinion. Fifty
-        links from fifty different sites are fifty opinions. When you compare
-        two sites, compare referring domains first.
-      </p>
+      <SplitList
+        id="basics-heading"
+        title="What are backlinks?"
+        text="A backlink is a link on another website that points to yours. Search engines use them in two ways, which is why the number of sites matters more than the number of links."
+        items={basics}
+      />
 
-      <h2>Followed and nofollow links</h2>
-      <p>
-        A link can carry a <code>rel</code> attribute that tells search
-        engines how to treat it. Google reads these as hints, not orders.
-      </p>
-      <table>
-        <thead>
-          <tr>
-            <th>Attribute</th>
-            <th>Meaning</th>
-          </tr>
-        </thead>
-        <tbody>
-          <tr>
-            <td>None (followed)</td>
-            <td>A normal link. It can pass ranking signals to the target.</td>
-          </tr>
-          <tr>
-            <td><code>nofollow</code></td>
-            <td>The site does not vouch for the target.</td>
-          </tr>
-          <tr>
-            <td><code>sponsored</code></td>
-            <td>The link was paid for, or is an ad or affiliate link.</td>
-          </tr>
-          <tr>
-            <td><code>ugc</code></td>
-            <td>The link was added by users, for example in comments or forums.</td>
-          </tr>
-        </tbody>
-      </table>
-      <p>
-        A healthy profile has both kinds. Nofollow links from busy sites
-        still bring visitors and get pages found. A profile where every link
-        is followed and the anchor text matches one keyword can look built
-        rather than earned.
-      </p>
+      <section class="site-frame" aria-labelledby="follow-heading">
+        <SectionHeading
+          id="follow-heading"
+          title="What is the difference between followed and nofollow links?"
+          text="A followed link can pass ranking signals, and a nofollow, sponsored or ugc link asks search engines to treat it differently. The link carries a rel attribute that says how, and Google reads these as hints rather than orders."
+        />
+        <div class="docs-prose max-w-4xl">
+          <table>
+            <thead>
+              <tr>
+                <th>Attribute</th>
+                <th>Meaning</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td>None (followed)</td>
+                <td>A normal link. It can pass ranking signals to the target.</td>
+              </tr>
+              <tr>
+                <td><code>nofollow</code></td>
+                <td>The site does not vouch for the target.</td>
+              </tr>
+              <tr>
+                <td><code>sponsored</code></td>
+                <td>The link was paid for, or is an ad or affiliate link.</td>
+              </tr>
+              <tr>
+                <td><code>ugc</code></td>
+                <td>The link was added by users, for example in comments or forums.</td>
+              </tr>
+            </tbody>
+          </table>
+          <p>
+            A healthy profile has both kinds. Nofollow links from busy sites
+            still bring visitors and get pages found. A profile where every link
+            is followed and the anchor text matches one keyword can look built
+            rather than earned.
+          </p>
+        </div>
+      </section>
 
-      <h2>Anchor text</h2>
-      <p>
-        Anchor text is the clickable text of a link. Google uses it to
-        understand what the target page is about, so it is one of the
-        clearest signals a link carries. Most sites earn anchors that are
-        their brand name, their domain or a plain phrase like "this guide".
-        That is normal.
-      </p>
-      <p>
-        Read the anchor list for two things. First, check that the anchors
-        describe what you want the site to be known for. Second, watch for
-        many exact match keyword anchors from unrelated sites. Google's spam
-        policies name links with keyword rich anchors placed in bulk as a
-        link scheme.
-      </p>
+      <SplitList
+        id="anchors-heading"
+        title="What should backlink anchor text say?"
+        text="What the target page is about. Anchor text is the clickable text of a link, and Google uses it to understand the page, so it is one of the clearest signals a link carries."
+        items={anchors}
+      />
 
-      <h2>How to check backlinks and audit them</h2>
-      <ol>
-        <li><strong>Look at the trend first.</strong> A steady rise in referring domains means the site keeps earning links. A sharp drop often means a partner removed a site wide link, or pages that earned links were deleted.</li>
-        <li><strong>Read the strongest linking sites.</strong> Are they real sites about your subject? A few strong, relevant sites are worth more than the total suggests.</li>
-        <li><strong>Check where the links sit.</strong> Links in the main content of an article count for more than footer or sidebar links, which repeat on every page.</li>
-        <li><strong>Fix broken backlinks.</strong> When links point at pages that no longer exist, redirect those URLs to the closest live page so the links count again.</li>
-        <li><strong>Leave most spam alone.</strong> Every site collects junk links. Google ignores most of them. Only act when you know links were bought or traded.</li>
-      </ol>
+      <SplitList
+        id="audit-heading"
+        title="How do you check backlinks and audit them?"
+        text="Start with the trend, then read the sites behind it. These five steps cover most of an audit."
+        items={audit}
+      />
 
-      <h2>Find link opportunities from competitors</h2>
-      <p>
-        The fastest way to find sites that might link to you is to check who
-        links to the pages that outrank you. Run the checker on a competing
-        page, switch the list to followed links, and look for sites that
-        cover your subject: resource pages, guides that cite sources, and
-        directories people actually use. Sites that link to two or three of
-        your competitors but not to you are the best place to start.
-      </p>
-      <p>
-        Links follow content people want to cite: original data, useful
-        tools, clear explanations. The <a href="/tools/competitor-keyword-research">competitor keyword research</a>{' '}
-        tool shows which of their pages bring their traffic, which is often
-        the same set of pages that earned their links.
-      </p>
+      <SplitList
+        id="opportunities-heading"
+        title="How do you find link opportunities from competitors?"
+        text="Check who links to the pages that outrank you. That is the fastest way to find sites that might link to you."
+        items={opportunities}
+      />
 
-      <h2>Check backlinks with your AI agent</h2>
-      <p>
-        One check shows one site. With SEO Skill your agent can list the
-        referring domains for your site and several competitors with{' '}
-        <a href="/docs/research">seo research</a>, using your own DataForSEO
-        or Ahrefs key, then compare the lists and set them beside your own
-        Search Console data. Research data stays labelled as research and is
-        never mixed into your own numbers. The{' '}
-        <a href="/features/backlink-gap">backlink gap analysis</a> does that
-        comparison for up to 5 competitors in one run. Ask:
-      </p>
-      <CodeBlock prompt value="List the referring domains for competitor.example and other.example, and show the sites that link to both of them but not to example.com" wrap />
-      <p>To set it up, give your agent this prompt:</p>
-    </div>
+      <SplitList
+        id="agent-heading"
+        title="How do you check backlinks with your AI agent?"
+        text="Ask it, once SEO Skill is connected with your own DataForSEO or Ahrefs key. One check here shows one site, and your agent can compare several."
+        items={[
+          { title: 'Referring domains for several sites', text: 'Your agent lists the referring domains for your site and several competitors with seo research, then compares the lists.', href: '/docs/research' },
+          { title: 'Beside your own Search Console data', text: 'Research data stays labelled as research and is never mixed into your own numbers.' },
+          { title: 'A backlink gap for up to 5 competitors', text: 'The backlink gap analysis does that comparison for up to 5 competitors in one run.', href: '/features/backlink-gap' },
+        ]}
+      >
+        <div class="mt-6">
+          <CodeBlock
+            label="Ask your agent"
+            prompt
+            value="List the referring domains for competitor.example and other.example, and show the sites that link to both of them but not to example.com"
+            wrap
+          />
+        </div>
+      </SplitList>
 
-    <SetupPrompts id="backlink-setup" class="mt-6" />
+      <section class="site-frame" aria-labelledby="tools-heading">
+        <SectionHeading
+          id="tools-heading"
+          title="Which tools go with a backlink check?"
+          text="These, which cover the quality of the links, the strength of a domain and the sites your competitors earn links from."
+        />
+        <div class="grid grid-cols-1 gap-2 sm:grid-cols-2">
+          {tools.map((item) => <HomeCard {...item} />)}
+        </div>
+      </section>
 
-    <div class="docs-prose mt-16">
-      <h2>Backlink questions</h2>
-    </div>
-    <div class="mt-6">
-      <FaqAccordion id="backlink-faq" items={faq} />
+      <section class="site-frame" aria-labelledby="faq-heading">
+        <div class="max-w-2xl">
+          <h2 id="faq-heading" class="text-pretty text-2xl font-medium -tracking-[0.4px] text-foreground xl:text-3xl xl:-tracking-[0.6px]">
+            Backlink questions
+          </h2>
+        </div>
+        <div class="mt-10">
+          <FaqAccordion items={faq} id="backlink-faq" />
+        </div>
+      </section>
+
+      <section class="site-frame" aria-labelledby="start-heading">
+        <SectionHeading
+          id="start-heading"
+          title="Compare your backlinks with your competitors'"
+          text="Add SEO Skill to your agent, connect your own DataForSEO or Ahrefs key and ask which sites link to your competitors but not to you."
+        />
+        <SetupPrompts id="backlink-setup" />
+      </section>
     </div>
   </main>
 </BaseLayout>

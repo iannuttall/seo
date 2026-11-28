@@ -1,8 +1,11 @@
 ---
+import { AiSearchIcon, FileValidationIcon, Robot01Icon, SourceCodeIcon } from '@hugeicons/core-free-icons'
 import CodeBlock from '@/components/CodeBlock.astro'
 import FaqAccordion from '@/components/FaqAccordion.astro'
+import HomeCard from '@/components/HomeCard.astro'
+import SectionHeading from '@/components/SectionHeading.astro'
 import SetupPrompts from '@/components/SetupPrompts.astro'
-import PageHeader from '@/components/PageHeader.astro'
+import SplitList from '@/components/SplitList.astro'
 import LlmsTxtValidator from '@/components/tools/LlmsTxtValidator.astro'
 import BaseLayout from '@/layouts/BaseLayout.astro'
 import type { SchemaBreadcrumb } from '@/lib/schema'
@@ -13,26 +16,63 @@ const breadcrumbs: SchemaBreadcrumb[] = [
   { label: 'llms.txt validator' },
 ]
 
+const checks = [
+  { title: 'One H1 project name', text: 'The file starts with a single H1 that names the project.' },
+  { title: 'The optional blockquote summary', text: 'A short summary under the title, when the file has one.' },
+  { title: 'H2 file-list sections', text: 'Sections whose list items are links, with the Optional section for secondary links.' },
+  { title: 'Complete and unique links', text: 'Every link is a full HTTP or HTTPS URL, and none is listed twice.' },
+  { title: 'Line numbers and suggestions', text: 'Errors include a line number when the problem belongs to one line. Suggestions cover valid but thin files, such as a title with no summary or useful links.' },
+]
+
+const results = [
+  { title: 'Errors break the format', text: 'No H1, more than one H1, links that are not full HTTP or HTTPS URLs, or list items that are not links. Fix those first.' },
+  { title: 'Suggestions point at a thin file', text: 'The file is valid but thin, such as a title with no summary or a section with no links.' },
+  { title: 'Each finding gives its line', text: 'Every finding gives the line where it applies.' },
+]
+
+const limits = [
+  { title: 'Only the file is downloaded', text: 'When you enter a URL, this tool downloads that llms.txt file.' },
+  { title: 'The listed pages are not requested', text: 'It does not request the pages listed inside it or inspect their response headers.' },
+  { title: 'Agent use is not confirmed', text: 'It does not confirm that an agent uses the file.' },
+]
+
+const optional = [
+  { title: 'A curated page list for systems that read it', text: 'The proposal gives systems that choose to read it a curated page list.' },
+  { title: 'Google needs no new file', text: 'Google says AI Overviews and AI Mode need no new machine-readable file or special AI markup. Pages still need the normal technical and content foundations used by Google Search.' },
+  { title: 'A clean result predicts nothing', text: 'A clean validation result does not predict crawling, indexing, rankings, citations, or traffic.' },
+]
+
+const problems = [
+  { title: 'Served as HTML', text: 'Some servers return an error page or a site template for /llms.txt. The validator shows what it actually received.' },
+  { title: 'Relative links', text: 'Write each link as a full URL.' },
+  { title: 'The whole sitemap pasted in', text: 'A long list defeats the point. Keep the pages an agent should read first.' },
+  { title: 'Links to pages that moved', text: 'A file can be valid Markdown and still point at moved pages. Check the links when you change your site.' },
+  { title: 'A cleaner draft from the generator', text: 'Fix a small file with the llms.txt generator. It creates the same basic shape from links you choose and can import page URLs from a sitemap.', href: '/tools/llms-txt-generator' },
+]
+
+const tools = [
+  { title: 'llms.txt generator', text: 'Generate an llms.txt file from your own links or sitemap, with the right Markdown structure.', href: '/tools/llms-txt-generator', icon: SourceCodeIcon, link: 'Generate a file' },
+  { title: 'robots.txt checker', text: 'See which search, AI and training crawlers can read each URL, and the line that decides.', href: '/tools/robots-txt-validator', icon: Robot01Icon, link: 'Check robots.txt' },
+  { title: 'Sitemap validator', text: 'Find broken XML, bad URLs and dates, duplicates and size limit problems in an XML sitemap.', href: '/tools/sitemap-validator', icon: FileValidationIcon, link: 'Validate a sitemap' },
+  { title: 'AI search', text: 'The questions people ask AI that show in Search Console, whether AI answers cite you, and what AI crawlers can read.', href: '/features/ai-search', icon: AiSearchIcon, link: 'See AI search' },
+]
+
 const faq = [
   {
-    question: "How do I check my llms.txt file?",
-    answer:
-      "Enter the URL of the file, or paste its Markdown. The validator checks the structure and lists errors and suggestions with line numbers.",
+    question: 'How do I check my llms.txt file?',
+    answer: 'Enter the URL of the file, or paste its Markdown. The validator checks the structure and lists errors and suggestions with line numbers.',
   },
   {
-    question: "What makes an llms.txt file valid?",
-    answer:
-      "One H1 with the project name, an optional blockquote summary, and H2 sections whose list items are Markdown links with full URLs.",
+    question: 'What makes an llms.txt file valid?',
+    answer: 'One H1 with the project name, an optional blockquote summary, and H2 sections whose list items are Markdown links with full URLs.',
   },
   {
-    question: "Does a valid llms.txt get me cited in AI answers?",
-    answer:
-      "No. It only means the file follows the proposal. Whether an AI tool reads it, and whether it cites you, is up to that tool.",
+    question: 'Does a valid llms.txt get me cited in AI answers?',
+    answer: 'No. It only means the file follows the proposal. Whether an AI tool reads it, and whether it cites you, is up to that tool.',
   },
   {
-    question: "Why does the validator say the file is not Markdown?",
-    answer:
-      "The server probably returned an HTML page instead, such as a 404 template. Open the URL in a browser and check what comes back.",
+    question: 'Why does the validator say the file is not Markdown?',
+    answer: 'The server probably returned an HTML page instead, such as a 404 template. Open the URL in a browser and check what comes back.',
   },
 ]
 ---
@@ -42,111 +82,120 @@ const faq = [
   description="Validate an llms.txt file by URL or pasted Markdown. Find structure errors, bad and duplicate links and thin sections, with the line for each problem."
   canonicalPath="/tools/llms-txt-validator"
   {breadcrumbs}
+  framed={false}
 >
   <main data-agent-content>
-    <nav aria-label="Breadcrumb" class="mb-6 text-sm text-foreground-muted">
-      <ol class="flex flex-wrap items-center gap-1.5">
-        {breadcrumbs.map((crumb, index) => (
-          <li class="flex items-center gap-1.5">
-            {crumb.href ? (
-              <a class="underline decoration-border underline-offset-4 hover:decoration-foreground" href={crumb.href}>
-                {crumb.label}
-              </a>
-            ) : (
-              <span class="text-foreground">{crumb.label}</span>
-            )}
-            {index < breadcrumbs.length - 1 ? <span aria-hidden="true" class="text-border">/</span> : null}
-          </li>
-        ))}
-      </ol>
-    </nav>
+    <section class="pt-4">
+      <div class="site-frame flex flex-col items-center pt-14 text-center sm:pt-20">
+        <h1 class="mt-4 max-w-3xl text-pretty text-4xl/tight font-medium -tracking-[0.8px] xl:text-5xl/tight xl:-tracking-[1px]">
+          llms.txt validator
+        </h1>
+        <p class="mt-4 max-w-2xl text-pretty text-xl/8 font-medium -tracking-[0.2px] text-foreground-muted">
+          Enter a public llms.txt URL, paste the content, or open a local file.
+          Get line-specific format and link-list checks.
+        </p>
+      </div>
+      <div class="site-frame mt-10 sm:mt-12">
+        <LlmsTxtValidator />
+      </div>
+    </section>
 
-    <PageHeader
-      title="llms.txt validator"
-      description="Enter a public llms.txt URL, paste the content, or open a local file. Get line-specific format and link-list checks."
-    />
+    <div class="space-y-24 py-24 sm:space-y-32 sm:py-32">
+      <SplitList
+        id="checks-heading"
+        title="What does the llms.txt validator check?"
+        text="The structure the current llms.txt proposal sets out, from the H1 down to each link."
+        items={checks}
+      >
+        <p class="mt-4 text-base leading-7 text-foreground-muted">
+          The checker follows the
+          {' '}<a class="text-foreground underline underline-offset-4" href="https://llmstxt.org/" target="_blank" rel="noreferrer">llms.txt proposal</a>.
+        </p>
+      </SplitList>
 
-    <LlmsTxtValidator />
+      <SplitList
+        id="results-heading"
+        title="How do you read the validation result?"
+        text="Fix the errors first, because they break the format. Suggestions point at a file that works but could say more."
+        items={results}
+      />
 
-    <div class="docs-prose mt-16">
-      <h2>What the validator checks</h2>
-      <p>
-        The checker follows the current{' '}
-        <a href="https://llmstxt.org/" target="_blank" rel="noreferrer">llms.txt proposal</a>.
-        {' '}It looks for one H1 project name, the optional blockquote summary,
-        H2 file-list sections, complete HTTP or HTTPS links, duplicate links,
-        and the Optional section for secondary links.
-      </p>
-      <p>
-        Errors include a line number when the problem belongs to one line.
-        Suggestions cover valid but thin files, such as a title with no summary
-        or useful links.
-      </p>
+      <SplitList
+        id="limits-heading"
+        title="Does a valid file prove the links work?"
+        text="No. The validator reads the file itself, and the pages it lists are left unchecked."
+        items={limits}
+      />
 
-      <h2>A valid file does not prove the links work</h2>
-      <p>
-        When you enter a URL, this tool downloads that llms.txt file. It does
-        not request the pages listed inside it, inspect their response headers,
-        or confirm that an agent uses the file.
-      </p>
+      <SplitList
+        id="optional-heading"
+        title="Do you need llms.txt for AI search?"
+        text="No. llms.txt is optional, and Google says its AI features need no new file."
+        items={optional}
+      >
+        <p class="mt-4 text-base leading-7 text-foreground-muted">
+          Google's
+          {' '}<a class="text-foreground underline underline-offset-4" href="https://developers.google.com/search/docs/appearance/ai-features" target="_blank" rel="noreferrer">AI features guidance</a>
+          {' '}covers the current requirements and controls.
+        </p>
+      </SplitList>
 
-      <h2>llms.txt is optional for AI search</h2>
-      <p>
-        The proposal gives systems that choose to read it a curated page list.
-        Google says AI Overviews and AI Mode need no new machine-readable file
-        or special AI markup. Pages still need the normal technical and content
-        foundations used by Google Search.
-      </p>
-      <p>
-        Google's{' '}
-        <a href="https://developers.google.com/search/docs/appearance/ai-features" target="_blank" rel="noreferrer">AI features guidance</a>
-        {' '}covers the current requirements and controls. A clean validation
-        result does not predict crawling, indexing, rankings, citations, or
-        traffic.
-      </p>
+      <SplitList
+        id="problems-heading"
+        title="How do you fix common llms.txt problems?"
+        text="Find which of these it is, then fix the file or start a cleaner draft."
+        items={problems}
+      />
 
-      <h2>Create a cleaner draft</h2>
-      <p>
-        Fix a small file with the{' '}
-        <a href="/tools/llms-txt-generator">llms.txt generator</a>. It creates
-        the same basic shape from links you choose and can import page URLs from
-        a sitemap.
-      </p>
+      <SplitList
+        id="agent-heading"
+        title="How do you check the links in your llms.txt with your agent?"
+        text="With seo crawl, which checks both the file and the pages it lists. This page checks only the file."
+        items={[
+          { title: 'Finds the file', text: 'The crawl finds /llms.txt on your site.', href: '/docs/crawl' },
+          { title: 'Checks that its links load', text: 'It checks that every link in the file loads.' },
+        ]}
+      >
+        <div class="mt-6">
+          <CodeBlock
+            label="Ask your agent"
+            prompt
+            value="Check whether example.com has an llms.txt with working links, and list the pages that are missing from it"
+            wrap
+          />
+        </div>
+      </SplitList>
 
-      <h2>Read the validation result</h2>
-      <p>
-        Errors break the format: no H1, more than one H1, links that are not
-        full HTTP or HTTPS URLs, or list items that are not links. Fix those
-        first. Suggestions point at a file that is valid but thin, such as a
-        title with no summary or a section with no links. Each finding gives
-        the line where it applies.
-      </p>
+      <section class="site-frame" aria-labelledby="tools-heading">
+        <SectionHeading
+          id="tools-heading"
+          title="Which tools go with an llms.txt check?"
+          text="These, which cover writing the file, the crawler rules beside it and what AI search reads from your site."
+        />
+        <div class="grid grid-cols-1 gap-2 sm:grid-cols-2">
+          {tools.map((item) => <HomeCard {...item} />)}
+        </div>
+      </section>
 
-      <h2>Fix common llms.txt problems</h2>
-      <ul>
-        <li><strong>Served as HTML.</strong> Some servers return an error page or a site template for <code>/llms.txt</code>. The validator shows what it actually received.</li>
-        <li><strong>Relative links.</strong> Write each link as a full URL.</li>
-        <li><strong>The whole sitemap pasted in.</strong> A long list defeats the point. Keep the pages an agent should read first.</li>
-        <li><strong>Links to pages that moved.</strong> Valid Markdown, broken result. Check the links when you change your site.</li>
-      </ul>
+      <section class="site-frame" aria-labelledby="faq-heading">
+        <div class="max-w-2xl">
+          <h2 id="faq-heading" class="text-pretty text-2xl font-medium -tracking-[0.4px] text-foreground xl:text-3xl xl:-tracking-[0.6px]">
+            llms.txt validator questions
+          </h2>
+        </div>
+        <div class="mt-10">
+          <FaqAccordion items={faq} id="llms-txt-validator-faq" />
+        </div>
+      </section>
 
-      <h2>Check the links in your llms.txt with your agent</h2>
-      <p>
-        This page checks the file, not the pages it lists. The{' '}
-        <a href="/docs/crawl">seo crawl</a> command does both: it finds{' '}
-        <code>/llms.txt</code> and checks that its links load. Ask:
-      </p>
-      <CodeBlock prompt value="Check whether example.com has an llms.txt with working links, and list the pages that are missing from it" wrap />
-      <p>The crawl runs from the CLI on your machine. Give your agent this prompt and it installs the CLI and adds the hosted MCP server:</p>
-    </div>
-
-    <SetupPrompts id="llms-txt-validator-setup" class="mt-6" />
-
-    <div class="docs-prose mt-16">
-      <h2>llms.txt validator questions</h2>
-    </div>
-    <div class="mt-6">
-      <FaqAccordion id="llms-txt-validator-faq" items={faq} />
+      <section class="site-frame" aria-labelledby="start-heading">
+        <SectionHeading
+          id="start-heading"
+          title="Check every link in your llms.txt"
+          text="The crawl runs from the CLI on your machine. Give your agent this prompt and it installs the CLI and adds the hosted MCP server."
+        />
+        <SetupPrompts id="llms-txt-validator-setup" />
+      </section>
     </div>
   </main>
 </BaseLayout>

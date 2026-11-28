@@ -1,9 +1,11 @@
 ---
-import Breadcrumbs from '@/components/Breadcrumbs.astro'
+import { Analytics01Icon, BrowserIcon, Link01Icon, SearchList01Icon } from '@hugeicons/core-free-icons'
 import CodeBlock from '@/components/CodeBlock.astro'
 import FaqAccordion from '@/components/FaqAccordion.astro'
-import PageHeader from '@/components/PageHeader.astro'
+import HomeCard from '@/components/HomeCard.astro'
+import SectionHeading from '@/components/SectionHeading.astro'
 import SetupPrompts from '@/components/SetupPrompts.astro'
+import SplitList from '@/components/SplitList.astro'
 import ResearchLookup from '@/components/tools/ResearchLookup.astro'
 import BaseLayout from '@/layouts/BaseLayout.astro'
 import type { SchemaBreadcrumb } from '@/lib/schema'
@@ -12,6 +14,41 @@ const breadcrumbs: SchemaBreadcrumb[] = [
   { label: 'Home', href: '/' },
   { label: 'Tools', href: '/tools' },
   { label: 'Competitor keyword research' },
+]
+
+const keywords = [
+  { title: 'Keep Keywords it ranks for selected', text: 'Enter a competitor’s domain. You get its 50 keywords with the most estimated traffic, the position it holds for each one, how many people search for it a month and the page that ranks.' },
+  { title: 'Read the page column first', text: 'It shows which of their pages pull in that traffic, which tells you more about what is working for them than the keyword list alone.' },
+  { title: 'Count the pages that earn the traffic', text: 'Three pages earning most of a site’s traffic is a very different competitor from three hundred pages earning a little each.' },
+]
+
+const rivals = [
+  { title: 'Choose Sites it competes with', text: 'Enter your own domain. You get the domains that rank for the most of the same keywords, with a Domain Rating for the first 25.' },
+  { title: 'Expect publishers and forums', text: 'These are often not the businesses you think of as competitors (a publisher or a forum can share more keywords with you than a rival shop does).' },
+  { title: 'Large platforms are left out', text: 'Platforms that share keywords with nearly every site are left out so the list stays useful, and the result says which ones.' },
+  { title: 'Look up any row next', text: 'Choose Its keywords on any row to look up that domain next.' },
+]
+
+const gap = [
+  { title: 'Find three to five search competitors', text: 'Use Sites it competes with. Pick sites near your size and leave the giants out.' },
+  { title: 'Note the keywords that match what you do', text: 'Look up each one’s keywords and note the ones that match what you sell or write about.' },
+  { title: 'Check each keyword against your Search Console', text: 'No impressions at all means you have no page Google shows for it. Impressions at position 20 or below means you have a page that is not good enough yet.' },
+  { title: 'Group the gaps by topic', text: 'One strong page usually ranks for a whole cluster of related searches, so group the gaps by topic.' },
+  { title: 'Trust your own data in step three', text: 'Step three is where most gap analyses go wrong. Comparing two estimates hides the keywords you already rank for but the index missed. Your own Search Console data is the side to trust.' },
+]
+
+const winnable = [
+  { title: 'A competitor’s keyword may not suit you', text: 'A competitor ranking for a keyword does not mean you should chase it.' },
+  { title: 'Look at who holds the top five', text: 'Run the keyword through the SERP checker. If they are much stronger sites than yours, a lower volume keyword where the results are thinner is often the better bet.', href: '/tools/serp-checker' },
+  { title: 'Positions and searches are estimates', text: 'The keywords, positions and search volumes come from DataForSEO’s own index for the country you pick. They are good for comparing sites in the same market.' },
+  { title: 'Positions count every block', text: 'Positions count every block on the results page, including the ones that are not organic results.' },
+]
+
+const tools = [
+  { title: 'Keyword gap analysis', text: 'The searches your competitors rank for and you don’t, from their ranked keywords and your Search Console queries.', href: '/features/keyword-gap', icon: SearchList01Icon, link: 'See the keyword gap' },
+  { title: 'SEO competitor analysis', text: 'Your real SEO competitors, the pages that earn their traffic and the sites that link to them and not you.', href: '/features/seo-competitor-analysis', icon: Analytics01Icon, link: 'Analyse competitors' },
+  { title: 'SERP checker', text: 'The live Google results for any keyword, with who ranks and where your domain ranks.', href: '/tools/serp-checker', icon: BrowserIcon, link: 'Check a SERP' },
+  { title: 'Backlink checker', text: 'Which websites link to a competitor’s site or page, and how strong those sites are. Free, with no account.', href: '/tools/backlink-checker', icon: Link01Icon, link: 'Check backlinks' },
 ]
 
 const faq = [
@@ -44,111 +81,117 @@ const faq = [
   },
   {
     question: 'Can I see a competitor’s paid keywords?',
-    answer:
-      'No. This page shows organic rankings only. Ads change by the hour and depend on bids, so they are not in the results.',
+    answer: 'No. This page shows organic rankings only. Ads change by the hour and depend on bids, so they are not in the results.',
   },
 ]
 ---
 
 <BaseLayout
   title="Free competitor keyword research tool"
-  description="Find the keywords a competitor ranks for in Google, with positions, monthly searches and the ranking page, find the sites you really compete with, and run a keyword gap analysis."
+  description="Find the keywords a competitor ranks for in Google, with positions, searches and the ranking page, and the sites you really compete with."
   canonicalPath="/tools/competitor-keyword-research"
   {breadcrumbs}
+  framed={false}
 >
   <main data-agent-content>
-    <Breadcrumbs {breadcrumbs} />
-    <PageHeader
-      title="Competitor keyword research"
-      description="Enter a competitor's domain to see the keywords it ranks for in Google, or find the sites that compete with any domain."
-    />
+    <section class="pt-4">
+      <div class="site-frame flex flex-col items-center pt-14 text-center sm:pt-20">
+        <h1 class="mt-4 max-w-3xl text-pretty text-4xl/tight font-medium -tracking-[0.8px] xl:text-5xl/tight xl:-tracking-[1px]">
+          Competitor keyword research
+        </h1>
+        <p class="mt-4 max-w-2xl text-pretty text-xl/8 font-medium -tracking-[0.2px] text-foreground-muted">
+          Enter a competitor's domain to see the keywords it ranks for in
+          Google, or find the sites that compete with any domain.
+        </p>
+      </div>
+      <div class="site-frame mt-10 sm:mt-12">
+        <ResearchLookup
+          kind="competitors"
+          heading="Look up a competitor"
+          description="Choose what to look up, enter a domain and pick the country you care about."
+        />
+      </div>
+    </section>
 
-    <ResearchLookup
-      kind="competitors"
-      heading="Look up a competitor"
-      description="Choose what to look up, enter a domain and pick the country you care about."
-    />
+    <div class="space-y-24 py-24 sm:space-y-32 sm:py-32">
+      <SplitList
+        id="keywords-heading"
+        title="How do you see the keywords a competitor ranks for?"
+        text="Enter its domain with Keywords it ranks for selected. You get the 50 keywords that bring it the most estimated traffic, and the pages behind them."
+        items={keywords}
+      />
 
-    <div class="docs-prose mt-16">
-      <h2>See the keywords a competitor ranks for</h2>
-      <p>
-        Enter a competitor's domain and keep <strong>Keywords it ranks
-        for</strong> selected. You get its 50 keywords with the most estimated
-        traffic, the position it holds for each one, how many people search
-        for it a month and the page that ranks.
-      </p>
-      <p>
-        Read the page column first. It shows which of their pages pull in
-        that traffic, which tells you more about what is working for them
-        than the keyword list alone. Three pages earning most of a site's
-        traffic is a very different competitor from three hundred pages
-        earning a little each.
-      </p>
+      <SplitList
+        id="rivals-heading"
+        title="Which sites do you actually compete with in search?"
+        text="The ones that rank for the most of the same keywords as you. Choose Sites it competes with and enter your own domain to find them."
+        items={rivals}
+      />
 
-      <h2>Find the sites you actually compete with</h2>
-      <p>
-        Choose <strong>Sites it competes with</strong> and enter your own
-        domain. You get the domains that rank for the most of the same
-        keywords, with a Domain Rating for the first 25. These are often not
-        the businesses you think of as competitors (a publisher or a forum
-        can share more keywords with you than a rival shop does).
-      </p>
-      <p>
-        Large platforms that share keywords with nearly every site are left
-        out so the list stays useful, and the result says which ones. Choose{' '}
-        <strong>Its keywords</strong> on any row to look up that domain next.
-      </p>
+      <SplitList
+        id="gap-heading"
+        title="How do you run a keyword gap analysis?"
+        text="Compare your competitors' keywords with your own Search Console queries, then group the gaps by topic. Four steps do it."
+        items={gap}
+      />
 
-      <h2>Run a keyword gap analysis</h2>
-      <ol>
-        <li>Find three to five search competitors with <strong>Sites it competes with</strong>. Pick sites near your size, not the giants.</li>
-        <li>Look up each one's keywords and note the ones that match what you sell or write about.</li>
-        <li>Check each keyword against your own Search Console. No impressions at all means you have no page Google shows for it. Impressions at position 20 or below means you have a page that is not good enough yet.</li>
-        <li>Group the gaps by topic, not by keyword. One strong page usually ranks for a whole cluster of related searches.</li>
-      </ol>
-      <p>
-        Step three is where most gap analyses go wrong. Comparing two
-        estimates hides the keywords you already rank for but the index
-        missed. Your own Search Console data is the side to trust.
-      </p>
+      <SplitList
+        id="winnable-heading"
+        title="How do you pick competitor keywords you can win?"
+        text="Look at who ranks before you chase a keyword, and treat the numbers as estimates."
+        items={winnable}
+      />
 
-      <h2>Pick keywords you can win</h2>
-      <p>
-        A competitor ranking for a keyword does not mean you should chase
-        it. Run the keyword through the <a href="/tools/serp-checker">SERP checker</a>{' '}
-        and look at who holds the top five. If they are much stronger sites
-        than yours, a lower volume keyword where the results are thinner is
-        often the better bet.
-      </p>
+      <SplitList
+        id="agent-heading"
+        title="How do you compare their keywords with yours using your agent?"
+        text="Ask it, once SEO Skill is connected. A competitor list only becomes a plan when you hold it up against your own site."
+        items={[
+          { title: 'Their ranked keywords', text: 'Your agent pulls them with seo research.', href: '/docs/research' },
+          { title: 'Your own queries', text: 'It reads your Search Console queries with seo data, then does step three for every keyword at once.', href: '/docs/data' },
+          { title: 'Research kept apart', text: 'Research data stays labelled as research and is never mixed into your own numbers.' },
+        ]}
+      >
+        <div class="mt-6">
+          <CodeBlock
+            label="Ask your agent"
+            prompt
+            value="Which keywords does competitor.example rank for in the top 10 that example.com gets no Search Console impressions for? Group them by topic."
+            wrap
+          />
+        </div>
+      </SplitList>
 
-      <h2>Positions and searches are estimates</h2>
-      <p>
-        The keywords, positions and search volumes come from DataForSEO's own
-        index for the country you pick. Positions count every block on the
-        results page, not just organic results. They are good for comparing
-        sites in the same market.
-      </p>
+      <section class="site-frame" aria-labelledby="tools-heading">
+        <SectionHeading
+          id="tools-heading"
+          title="Which tools go with competitor keyword research?"
+          text="These, which cover the gaps against your own site, the results page for a keyword and the links behind a competitor."
+        />
+        <div class="grid grid-cols-1 gap-2 sm:grid-cols-2">
+          {tools.map((item) => <HomeCard {...item} />)}
+        </div>
+      </section>
 
-      <h2>Compare their keywords with yours using your agent</h2>
-      <p>
-        A competitor list only becomes a plan when you hold it up against
-        your own site. With SEO Skill your agent pulls their ranked keywords
-        with <a href="/docs/research">seo research</a> and your own queries
-        with <a href="/docs/data">seo data</a>, then does step three for
-        every keyword at once. Research data stays labelled as research and
-        is never mixed into your own numbers. Ask:
-      </p>
-      <CodeBlock prompt value="Which keywords does competitor.example rank for in the top 10 that example.com gets no Search Console impressions for? Group them by topic." wrap />
-      <p>To set it up, give your agent this prompt:</p>
-    </div>
+      <section class="site-frame" aria-labelledby="faq-heading">
+        <div class="max-w-2xl">
+          <h2 id="faq-heading" class="text-pretty text-2xl font-medium -tracking-[0.4px] text-foreground xl:text-3xl xl:-tracking-[0.6px]">
+            Competitor keyword questions
+          </h2>
+        </div>
+        <div class="mt-10">
+          <FaqAccordion items={faq} id="competitor-faq" />
+        </div>
+      </section>
 
-    <SetupPrompts id="competitor-setup" class="mt-6" />
-
-    <div class="docs-prose mt-16">
-      <h2>Competitor keyword questions</h2>
-    </div>
-    <div class="mt-6">
-      <FaqAccordion id="competitor-faq" items={faq} />
+      <section class="site-frame" aria-labelledby="start-heading">
+        <SectionHeading
+          id="start-heading"
+          title="Find the keywords you're missing"
+          text="Add SEO Skill to your agent, sign in with Google and connect your own DataForSEO or Ahrefs key, then ask which competitor keywords you have no page for."
+        />
+        <SetupPrompts id="competitor-setup" />
+      </section>
     </div>
   </main>
 </BaseLayout>

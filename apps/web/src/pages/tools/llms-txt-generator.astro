@@ -1,8 +1,11 @@
 ---
+import { AiSearchIcon, FileValidationIcon, Robot01Icon, SearchList01Icon } from '@hugeicons/core-free-icons'
 import CodeBlock from '@/components/CodeBlock.astro'
 import FaqAccordion from '@/components/FaqAccordion.astro'
+import HomeCard from '@/components/HomeCard.astro'
+import SectionHeading from '@/components/SectionHeading.astro'
 import SetupPrompts from '@/components/SetupPrompts.astro'
-import PageHeader from '@/components/PageHeader.astro'
+import SplitList from '@/components/SplitList.astro'
 import LlmsTxtGenerator from '@/components/tools/LlmsTxtGenerator.astro'
 import BaseLayout from '@/layouts/BaseLayout.astro'
 import type { SchemaBreadcrumb } from '@/lib/schema'
@@ -13,31 +16,133 @@ const breadcrumbs: SchemaBreadcrumb[] = [
   { label: 'llms.txt generator' },
 ]
 
+const format = [
+  { title: 'One H1 title', text: 'The llms.txt proposal uses Markdown. A file starts with one H1 title.' },
+  { title: 'A short summary and notes', text: 'It can add a short blockquote summary and notes.' },
+  { title: 'H2 sections of links', text: 'H2 sections contain the links.' },
+  {
+    title: 'An Optional section for secondary pages',
+    text: 'By convention, a section named Optional holds secondary pages an agent can skip when it needs a shorter context.',
+  },
+  {
+    title: 'What the generator checks',
+    text: 'This generator checks its own fields and creates that basic structure. It does not fetch the linked pages or prove that another service reads them.',
+  },
+]
+
+const rankings = [
+  { title: 'Google Search ignores it', text: 'Google Search says it ignores llms.txt files for visibility and rankings.' },
+  {
+    title: 'Publish it for agents that use it',
+    text: 'Publish one only when an agent or service you care about explicitly uses it.',
+  },
+  {
+    title: 'Keep search work separate',
+    text: 'Keep normal crawling, indexing, internal links, and useful page content as separate work.',
+  },
+]
+
+const choosing = [
+  {
+    title: 'URLs come from your sitemap files',
+    text: 'This web tool reads URLs from the sitemap files you submit.',
+  },
+  {
+    title: 'Review the selection yourself',
+    text: 'It does not crawl the pages or decide which ones matter, so review the selected URLs before you publish the file.',
+  },
+  {
+    title: 'Validate before and after publishing',
+    text: 'Check the Markdown shape with the llms.txt validator before and after you publish it.',
+    href: '/tools/llms-txt-validator',
+  },
+]
+
+const contents = [
+  { title: 'Say what the site is', text: 'Start with what the site is in one sentence.' },
+  {
+    title: 'Link the most asked about pages',
+    text: 'Link the pages that answer the questions people ask most: documentation, pricing, setup, policies.',
+  },
+  { title: 'Leave out what a reader would skip', text: 'Leave out blog archives, tag pages and anything a reader would skip.' },
+  {
+    title: 'Put the rest under Optional',
+    text: 'Put the pages that matter less under an Optional heading. An agent short on space can drop that section and still get the main picture.',
+  },
+]
+
+const publishing = [
+  { title: 'At the root of the site', code: '/llms.txt', text: 'Save it as /llms.txt at the root of the site.' },
+  {
+    title: 'Or under a path',
+    code: '/docs/llms.txt',
+    text: 'Save it under a path such as /docs/llms.txt to cover only the pages in /docs/.',
+  },
+  { title: 'Serve it as text', text: 'Serve it as plain text or Markdown.' },
+  {
+    title: 'The most specific file applies',
+    text: 'When more than one file applies to a page, the proposal says agents use the most specific one.',
+  },
+  {
+    title: 'It does not control crawlers',
+    text: 'It does not replace robots.txt or the sitemap, and it does not control which crawlers can read the site.',
+  },
+]
+
+const tools = [
+  {
+    title: 'llms.txt validator',
+    text: 'Validate an llms.txt file by URL or pasted Markdown, with the line for each problem.',
+    href: '/tools/llms-txt-validator',
+    icon: FileValidationIcon,
+    link: 'Validate llms.txt',
+  },
+  {
+    title: 'Sitemap extractor',
+    text: "Find a website's sitemap and extract every URL, ready to pick from for the file.",
+    href: '/tools/sitemap-extractor',
+    icon: SearchList01Icon,
+    link: 'Extract a sitemap',
+  },
+  {
+    title: 'robots.txt checker',
+    text: 'See which search, AI and training crawlers can read each URL, which llms.txt does not control.',
+    href: '/tools/robots-txt-validator',
+    icon: Robot01Icon,
+    link: 'Check robots.txt',
+  },
+  {
+    title: 'AI search',
+    text: 'The questions people ask AI that show in Search Console, and whether AI answers cite you for them.',
+    href: '/features/ai-search',
+    icon: AiSearchIcon,
+    link: 'See AI search',
+  },
+]
+
 const faq = [
   {
-    question: "What is llms.txt?",
+    question: 'What is llms.txt?',
     answer:
-      "A proposed Markdown file, at /llms.txt or under a path such as /docs/llms.txt, that gives AI agents a short summary and a curated list of the most useful pages it covers.",
+      'A proposed Markdown file, at /llms.txt or under a path such as /docs/llms.txt, that gives AI agents a short summary and a curated list of the most useful pages it covers.',
   },
   {
-    question: "Does Google use llms.txt?",
+    question: 'Does Google use llms.txt?',
     answer:
-      "No. Google says Search ignores llms.txt for visibility and rankings. Some AI tools and agents read it when they visit a site.",
+      'No. Google says Search ignores llms.txt for visibility and rankings. Some AI tools and agents read it when they visit a site.',
   },
   {
-    question: "Do I need an llms.txt file?",
-    answer:
-      "It is optional. It costs little to publish and can help agents that read it. It will not help you rank.",
+    question: 'Do I need an llms.txt file?',
+    answer: 'It is optional. It costs little to publish and can help agents that read it. It will not help you rank.',
   },
   {
-    question: "What format does llms.txt use?",
+    question: 'What format does llms.txt use?',
     answer:
-      "Markdown: one H1 with the site name, an optional blockquote summary, then H2 sections that list links, each with a short note.",
+      'Markdown: one H1 with the site name, an optional blockquote summary, then H2 sections that list links, each with a short note.',
   },
   {
-    question: "Is llms.txt the same as robots.txt?",
-    answer:
-      "No. robots.txt controls which crawlers may fetch pages. llms.txt only suggests which pages are worth reading.",
+    question: 'Is llms.txt the same as robots.txt?',
+    answer: 'No. robots.txt controls which crawlers may fetch pages. llms.txt only suggests which pages are worth reading.',
   },
 ]
 ---
@@ -47,118 +152,136 @@ const faq = [
   description="Generate an llms.txt file from your own links or sitemap. Get the right Markdown structure for AI agents, and learn what the file can and cannot do."
   canonicalPath="/tools/llms-txt-generator"
   {breadcrumbs}
+  framed={false}
 >
   <main data-agent-content>
-    <nav aria-label="Breadcrumb" class="mb-6 text-sm text-foreground-muted">
-      <ol class="flex flex-wrap items-center gap-1.5">
-        {breadcrumbs.map((crumb, index) => (
-          <li class="flex items-center gap-1.5">
-            {crumb.href ? (
-              <a class="underline decoration-border underline-offset-4 hover:decoration-foreground" href={crumb.href}>
-                {crumb.label}
-              </a>
-            ) : (
-              <span class="text-foreground">{crumb.label}</span>
-            )}
-            {index < breadcrumbs.length - 1 ? <span aria-hidden="true" class="text-border">/</span> : null}
-          </li>
-        ))}
-      </ol>
-    </nav>
+    <section class="pt-4">
+      <div class="site-frame flex flex-col items-center pt-14 text-center sm:pt-20">
+        <h1 class="mt-4 max-w-3xl text-pretty text-4xl/tight font-medium -tracking-[0.8px] xl:text-5xl/tight xl:-tracking-[1px]">
+          llms.txt generator
+        </h1>
+        <p class="mt-4 max-w-2xl text-pretty text-xl/8 font-medium -tracking-[0.2px] text-foreground-muted">
+          Start with a sitemap or add links yourself, choose the pages an agent
+          should read first, then copy or download an llms.txt file.
+        </p>
+      </div>
+      <div class="site-frame mt-10 sm:mt-12">
+        <LlmsTxtGenerator />
+      </div>
+    </section>
 
-    <PageHeader
-      title="llms.txt generator"
-      description="Start with a sitemap or add links yourself, choose the pages an agent should read first, then copy or download an llms.txt file."
-    />
+    <div class="space-y-24 py-24 sm:space-y-32 sm:py-32">
+      <SplitList
+        id="format-heading"
+        title="What does the llms.txt generator create?"
+        text="A Markdown file in the shape the llms.txt proposal describes: a title, an optional summary and sections of links."
+        items={format}
+      >
+        <p class="mt-4 text-base leading-7 text-foreground-muted">
+          Read the current{' '}
+          <a class="text-foreground underline underline-offset-4" href="https://llmstxt.org/" target="_blank" rel="noreferrer"
+            >llms.txt proposal and format</a
+          >{' '}
+          before publishing the file.
+        </p>
+      </SplitList>
 
-    <LlmsTxtGenerator />
+      <SplitList
+        id="rankings-heading"
+        title="Does llms.txt improve Google rankings?"
+        text="No. Google Search says it ignores llms.txt files for visibility and rankings."
+        items={rankings}
+      >
+        <p class="mt-4 text-base leading-7 text-foreground-muted">
+          See Google's current{' '}
+          <a
+            class="text-foreground underline underline-offset-4"
+            href="https://developers.google.com/search/docs/fundamentals/ai-optimization-guide#mythbusting"
+            target="_blank"
+            rel="noreferrer">generative AI search guidance</a
+          >{' '}
+          for that distinction.
+        </p>
+      </SplitList>
 
-    <div class="docs-prose mt-16">
-      <h2>What this generator creates</h2>
-      <p>
-        The llms.txt proposal uses Markdown. A file starts with one H1 title and
-        can add a short blockquote summary, notes, and H2 sections containing
-        links. By convention, a section named Optional holds secondary pages an
-        agent can skip when it needs a shorter context.
-      </p>
-      <p>
-        Read the current{' '}
-        <a href="https://llmstxt.org/" target="_blank" rel="noreferrer">llms.txt proposal and format</a>
-        {' '}before publishing the file. This generator checks its own fields and
-        creates that basic structure. It does not fetch the linked pages or prove
-        that another service reads them.
-      </p>
+      <SplitList
+        id="choosing-heading"
+        title="Who chooses the pages in the file?"
+        text="You do. The generator lists the URLs from your sitemap, and you decide which ones an agent should read."
+        items={choosing}
+      />
 
-      <h2>llms.txt does not improve Google rankings</h2>
-      <p>
-        Google Search says it ignores llms.txt files for visibility and rankings.
-        Publish one only when an agent or service you care about explicitly uses
-        it. Keep normal crawling, indexing, internal links, and useful page content
-        as separate work.
-      </p>
-      <p>
-        See Google's current{' '}
-        <a href="https://developers.google.com/search/docs/fundamentals/ai-optimization-guide#mythbusting" target="_blank" rel="noreferrer">generative AI search guidance</a>
-        {' '}for that distinction.
-      </p>
+      <SplitList
+        id="contents-heading"
+        title="What should you put in llms.txt?"
+        text="A reading list for an agent that has a few seconds to understand your site, starting with what the site is."
+        items={contents}
+      />
 
-      <h2>Choose the pages yourself</h2>
-      <p>
-        This web tool reads URLs from the sitemap files you submit. It does not
-        crawl the pages or decide which ones matter, so review the selected URLs
-        before you publish the file.
-      </p>
+      <SplitList
+        id="publishing-heading"
+        title="Where do you publish the llms.txt file?"
+        text="At the root of the site as /llms.txt, or under a path to cover only that part of the site."
+        items={publishing}
+      />
 
-      <h2>Check the published file</h2>
-      <p>
-        Check the Markdown shape with the{' '}
-        <a href="/tools/llms-txt-validator">llms.txt validator</a> before and
-        after you publish it.
-      </p>
+      <SplitList
+        id="agent-heading"
+        title="How do you check your llms.txt with your agent?"
+        text="With seo crawl, which checks the file while it crawls your site on your own machine. Your agent can update the file in your codebase when pages move."
+        items={[
+          {
+            title: 'Whether the file exists and its links load',
+            text: 'The crawl checks whether /llms.txt exists and whether its links load.',
+            href: '/docs/crawl',
+          },
+          { title: 'Markdown copies of your pages', text: 'It also checks Markdown copies of your pages.' },
+          {
+            title: 'Rules for AI search and training crawlers',
+            text: 'And it reads the robots.txt rules for AI search and AI training crawlers.',
+          },
+        ]}
+      >
+        <div class="mt-6">
+          <CodeBlock
+            label="Ask your agent"
+            prompt
+            value="Check whether example.com has an llms.txt with working links, and list the pages that are missing from it"
+            wrap
+          />
+        </div>
+      </SplitList>
 
-      <h2>What to put in llms.txt</h2>
-      <p>
-        Think of the file as a reading list for an agent that has a few
-        seconds to understand your site. Start with what the site is in one
-        sentence. Then link the pages that answer the questions people ask
-        most: documentation, pricing, setup, policies. Leave out blog
-        archives, tag pages and anything a reader would skip.
-      </p>
-      <p>
-        Put the pages that matter less under an <strong>Optional</strong>{' '}
-        heading. An agent short on space can drop that section and still
-        get the main picture.
-      </p>
+      <section class="site-frame" aria-labelledby="tools-heading">
+        <SectionHeading
+          id="tools-heading"
+          title="Which tools go with an llms.txt file?"
+          text="These, which check the file, find the URLs to put in it and cover what AI crawlers can read."
+        />
+        <div class="grid grid-cols-1 gap-2 sm:grid-cols-2">
+          {tools.map((item) => <HomeCard {...item} />)}
+        </div>
+      </section>
 
-      <h2>Where to publish the file</h2>
-      <p>
-        Save it as <code>/llms.txt</code> at the root of the site, or under a
-        path such as <code>/docs/llms.txt</code> to cover only the pages in{' '}
-        <code>/docs/</code>. Serve it as plain text or Markdown. When more than
-        one file applies to a page, the proposal says agents use the most
-        specific one. It does not replace robots.txt or the sitemap, and it
-        does not control which crawlers can read the site.
-      </p>
+      <section class="site-frame" aria-labelledby="faq-heading">
+        <div class="max-w-2xl">
+          <h2 id="faq-heading" class="text-pretty text-2xl font-medium -tracking-[0.4px] text-foreground xl:text-3xl xl:-tracking-[0.6px]">
+            llms.txt generator questions
+          </h2>
+        </div>
+        <div class="mt-10">
+          <FaqAccordion id="llms-txt-generator-faq" items={faq} />
+        </div>
+      </section>
 
-      <h2>Check your llms.txt with your agent</h2>
-      <p>
-        The <a href="/docs/crawl">seo crawl</a> command checks whether{' '}
-        <code>/llms.txt</code> exists and whether its links load, along with
-        Markdown copies of your pages and the robots.txt rules for AI search
-        and AI training crawlers. Your agent can update the file in your
-        codebase when pages move. Ask:
-      </p>
-      <CodeBlock prompt value="Check whether example.com has an llms.txt with working links, and list the pages that are missing from it" wrap />
-      <p>The crawl runs from the CLI on your machine. Give your agent this prompt and it installs the CLI and adds the hosted MCP server:</p>
-    </div>
-
-    <SetupPrompts id="llms-txt-generator-setup" class="mt-6" />
-
-    <div class="docs-prose mt-16">
-      <h2>llms.txt generator questions</h2>
-    </div>
-    <div class="mt-6">
-      <FaqAccordion id="llms-txt-generator-faq" items={faq} />
+      <section class="site-frame" aria-labelledby="start-heading">
+        <SectionHeading
+          id="start-heading"
+          title="Keep your llms.txt in step with your site"
+          text="The crawl runs from the CLI on your machine. Give your agent this prompt and it installs the CLI and adds the hosted MCP server."
+        />
+        <SetupPrompts id="llms-txt-generator-setup" />
+      </section>
     </div>
   </main>
 </BaseLayout>

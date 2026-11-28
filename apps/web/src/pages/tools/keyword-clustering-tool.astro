@@ -1,9 +1,11 @@
 ---
-import Breadcrumbs from '@/components/Breadcrumbs.astro'
+import { Analytics01Icon, BookOpen01Icon, Layers01Icon, SearchList01Icon } from '@hugeicons/core-free-icons'
 import CodeBlock from '@/components/CodeBlock.astro'
 import FaqAccordion from '@/components/FaqAccordion.astro'
-import PageHeader from '@/components/PageHeader.astro'
+import HomeCard from '@/components/HomeCard.astro'
+import SectionHeading from '@/components/SectionHeading.astro'
 import SetupPrompts from '@/components/SetupPrompts.astro'
+import SplitList from '@/components/SplitList.astro'
 import KeywordClusteringTool from '@/components/tools/KeywordClusteringTool.astro'
 import BaseLayout from '@/layouts/BaseLayout.astro'
 import type { SchemaBreadcrumb } from '@/lib/schema'
@@ -12,6 +14,40 @@ const breadcrumbs: SchemaBreadcrumb[] = [
   { label: 'Home', href: '/' },
   { label: 'Tools', href: '/tools' },
   { label: 'Keyword clustering tool' },
+]
+
+const method = [
+  { title: 'It searches Google live for every keyword', text: 'In the country you pick, through DataForSEO, and reads the top 10 organic results for each.' },
+  { title: 'Two keywords link when they share enough pages', text: 'Their results must share at least as many pages as the setting, 4 by default.' },
+  { title: 'The best-linked keyword leads the first cluster', text: 'The keyword with the most links takes every keyword linked to it, then the next best lead takes what is left, until no links remain.' },
+  { title: 'Each cluster is named after its lead keyword', text: 'Under it you see how many pages each keyword shares with the lead and which pages rank for two or more of them.' },
+  { title: 'Add your domain to see where it ranks', text: 'The result shows your position for each keyword.' },
+]
+
+const meaning = [
+  { title: 'Grouping by meaning follows the words', text: 'It puts keywords together when the words are related, so \u201ccoffee grinder\u201d and \u201chow to grind coffee beans\u201d share a group.' },
+  { title: 'Google often disagrees', text: 'One search shows shops and reviews, the other shows guides. One page rarely ranks for both.' },
+  { title: 'Ranking pages follow what Google shows today', text: 'That is the thing you are trying to rank in.' },
+  { title: 'Meaning still helps you brainstorm', text: 'Grouping by meaning is handy for a topic before you have a list. Once you have one, the shared pages are the better test for which keywords one page can cover.' },
+]
+
+const snapshot = [
+  { title: 'Keywords near the line can move', text: 'Results change through the day and from place to place, so a keyword right at the line can move between checks.' },
+  { title: 'Not compared means missing evidence', text: 'A keyword that Google showed no results for, or that the check could not read, is listed as not compared. That says nothing about whether it shares pages.' },
+  { title: 'Google redirect links are matched by site and path', text: 'Some results come back as Google redirect links. Those are matched by the site and path Google shows under the title.' },
+]
+
+const next = [
+  { title: 'Two of your pages competing for one query', text: 'The keyword cannibalization checker reads your Search Console export.', href: '/tools/keyword-cannibalization-checker' },
+  { title: 'The full results for one keyword', text: 'The SERP checker shows them.', href: '/tools/serp-checker' },
+  { title: 'The whole method, step by step', text: 'The guide to clustering keywords by search intent walks through it.', href: '/blog/keyword-clustering' },
+]
+
+const tools = [
+  { title: 'Keyword cannibalization checker', text: 'Find two of your own pages competing for one query, from your Search Console export.', href: '/tools/keyword-cannibalization-checker', icon: Layers01Icon, link: 'Check cannibalization' },
+  { title: 'SERP checker', text: 'See the full live results for one keyword.', href: '/tools/serp-checker', icon: SearchList01Icon, link: 'Check the results' },
+  { title: 'Keyword clustering guide', text: 'How to cluster keywords by search intent, from the list to the page plan.', href: '/blog/keyword-clustering', icon: BookOpen01Icon, link: 'Read the guide' },
+  { title: 'seo research', text: 'Compare live results for any list of keywords with your own DataForSEO key.', href: '/docs/research', icon: Analytics01Icon, link: 'seo research docs' },
 ]
 
 const faq = [
@@ -53,83 +89,102 @@ const faq = [
   description="Group up to 50 keywords by the pages Google ranks for each, free. See which keywords one page can target, the pages they share, and export the clusters to CSV."
   canonicalPath="/tools/keyword-clustering-tool"
   {breadcrumbs}
+  framed={false}
 >
   <main data-agent-content>
-    <Breadcrumbs {breadcrumbs} />
-    <PageHeader
-      title="Keyword clustering tool"
-      description="Group keywords by the pages Google ranks for each, so you know which ones one page can target and which need their own."
-    />
+    <section class="pt-4">
+      <div class="site-frame flex flex-col items-center pt-14 text-center sm:pt-20">
+        <h1 class="mt-4 max-w-3xl text-pretty text-4xl/tight font-medium -tracking-[0.8px] xl:text-5xl/tight xl:-tracking-[1px]">
+          Keyword clustering tool
+        </h1>
+        <p class="mt-4 max-w-2xl text-pretty text-xl/8 font-medium -tracking-[0.2px] text-foreground-muted">
+          Group keywords by the pages Google ranks for each, so you know which
+          ones one page can target and which need their own.
+        </p>
+      </div>
+      <div class="site-frame mt-10 sm:mt-12">
+        <KeywordClusteringTool />
+      </div>
+    </section>
 
-    <KeywordClusteringTool />
+    <div class="space-y-24 py-24 sm:space-y-32 sm:py-32">
+      <SplitList
+        id="method-heading"
+        title="How does clustering by search results work?"
+        text="It links keywords whose Google results share enough pages, then groups the links into clusters around a lead keyword."
+        items={method}
+      />
 
-    <div class="docs-prose mt-16">
-      <h2>How clustering by search results works</h2>
-      <p>
-        The tool searches Google live for every keyword, in the country you
-        pick, through DataForSEO, and reads the top 10 organic results for
-        each. Two keywords are linked when their results share at least as many
-        pages as the setting, 4 by default. The keyword with the most links
-        leads the first cluster and takes every keyword linked to it, then the
-        next best lead takes what is left, until no links remain.
-      </p>
-      <p>
-        Each cluster is named after its lead keyword. Under it you see how many
-        pages each keyword shares with the lead and which pages rank for two or
-        more of them. Add your domain to see where it ranks for each keyword.
-      </p>
+      <SplitList
+        id="meaning-heading"
+        title="Is clustering by search results better than grouping by meaning?"
+        text="For deciding which keywords one page can cover, yes. Related words often get different results, and one page rarely ranks for both."
+        items={meaning}
+      />
 
-      <h2>Search results versus grouping by meaning</h2>
-      <p>
-        Grouping by meaning puts keywords together when the words are related,
-        so "coffee grinder" and "how to grind coffee beans" share a group. Google often disagrees: one search shows shops and
-        reviews, the other shows guides. One page rarely ranks for both.
-      </p>
-      <p>
-        Comparing the ranking pages follows what Google shows today, which is
-        the thing you are trying to rank in. Grouping by meaning is still handy
-        for brainstorming a topic before you have a list. Once you have a list,
-        the shared pages are the better test for which keywords one page can
-        cover.
-      </p>
+      <SplitList
+        id="snapshot-heading"
+        title="How far can you trust one clustering check?"
+        text="Read it as a snapshot. Results move, so look twice at keywords near the line and at any listed as not compared."
+        items={snapshot}
+      />
 
-      <h2>Read one check as a snapshot</h2>
-      <p>
-        Results change through the day and from place to place, so a keyword
-        right at the line can move between checks. A keyword that Google showed
-        no results for, or that the check could not read, is listed as not
-        compared. That is missing evidence, not a sign it shares nothing. Some
-        results come back as Google redirect links; those are matched by the
-        site and path Google shows under the title.
-      </p>
-      <p>
-        Use the clusters to plan pages, then check them against your own data.
-        For two pages of yours already competing for one query, the{' '}
-        <a href="/tools/keyword-cannibalization-checker">keyword cannibalization checker</a>{' '}
-        reads your Search Console export. To see the full results for one
-        keyword, use the <a href="/tools/serp-checker">SERP checker</a>. The{' '}
-        <a href="/blog/keyword-clustering">guide to clustering keywords by search intent</a>{' '}
-        walks through the whole method.
-      </p>
+      <SplitList
+        id="next-heading"
+        title="What should you do with the clusters?"
+        text="Use them to plan pages, then check them against your own data. These cover the nearby jobs."
+        items={next}
+      />
 
-      <h2>Cluster keywords from your agent</h2>
-      <p>
-        With SEO Skill your agent can compare the results for your keywords
-        with <a href="/docs/research">seo research</a> and your own DataForSEO
-        key, then check which ones your pages already get impressions for in
-        Search Console. Ask:
-      </p>
-      <CodeBlock prompt value="Compare the Google results for coffee grinder, best coffee grinder, burr coffee grinder and how to grind coffee beans. Which belong on one page on example.com?" wrap />
-      <p>To set it up, give your agent this prompt:</p>
-    </div>
+      <SplitList
+        id="agent-heading"
+        title="How do you cluster keywords with your agent?"
+        text="Ask it to compare the results for your keywords with seo research and your own DataForSEO key. It can then check which ones your pages already get impressions for in Search Console."
+        items={[
+          { title: 'Compare the live results', text: 'seo research reads the results for each keyword with your own DataForSEO key.', href: '/docs/research' },
+          { title: 'Match them to your pages', text: 'Search Console shows which keywords your pages already get impressions for.' },
+        ]}
+      >
+        <div class="mt-6">
+          <CodeBlock
+            label="Ask your agent"
+            prompt
+            value="Compare the Google results for coffee grinder, best coffee grinder, burr coffee grinder and how to grind coffee beans. Which belong on one page on example.com?"
+            wrap
+          />
+        </div>
+      </SplitList>
 
-    <SetupPrompts id="keyword-clustering-setup" class="mt-6" />
+      <section class="site-frame" aria-labelledby="tools-heading">
+        <SectionHeading
+          id="tools-heading"
+          title="Which tools go with a keyword clustering check?"
+          text="These, which cover your own competing pages, the results for one keyword and the method behind the clusters."
+        />
+        <div class="grid grid-cols-1 gap-2 sm:grid-cols-2">
+          {tools.map((item) => <HomeCard {...item} />)}
+        </div>
+      </section>
 
-    <div class="docs-prose mt-16">
-      <h2>Keyword clustering tool questions</h2>
-    </div>
-    <div class="mt-6">
-      <FaqAccordion id="keyword-clustering-faq" items={faq} />
+      <section class="site-frame" aria-labelledby="faq-heading">
+        <div class="max-w-2xl">
+          <h2 id="faq-heading" class="text-pretty text-2xl font-medium -tracking-[0.4px] text-foreground xl:text-3xl xl:-tracking-[0.6px]">
+            Keyword clustering tool questions
+          </h2>
+        </div>
+        <div class="mt-10">
+          <FaqAccordion items={faq} id="keyword-clustering-faq" />
+        </div>
+      </section>
+
+      <section class="site-frame" aria-labelledby="start-heading">
+        <SectionHeading
+          id="start-heading"
+          title="Cluster bigger keyword lists with your agent"
+          text="Add SEO Skill to your agent, add your DataForSEO key and sign in with Google, then ask which keywords belong on one page."
+        />
+        <SetupPrompts id="keyword-clustering-setup" />
+      </section>
     </div>
   </main>
 </BaseLayout>

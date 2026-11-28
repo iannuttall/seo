@@ -1,9 +1,11 @@
 ---
-import Breadcrumbs from '@/components/Breadcrumbs.astro'
+import { AiSearchIcon, AiChat02Icon, SearchList01Icon, UserGroupIcon } from '@hugeicons/core-free-icons'
 import CodeBlock from '@/components/CodeBlock.astro'
 import FaqAccordion from '@/components/FaqAccordion.astro'
-import PageHeader from '@/components/PageHeader.astro'
+import HomeCard from '@/components/HomeCard.astro'
+import SectionHeading from '@/components/SectionHeading.astro'
 import SetupPrompts from '@/components/SetupPrompts.astro'
+import SplitList from '@/components/SplitList.astro'
 import AiVisibilityChecker from '@/components/tools/AiVisibilityChecker.astro'
 import BaseLayout from '@/layouts/BaseLayout.astro'
 import type { SchemaBreadcrumb } from '@/lib/schema'
@@ -12,6 +14,39 @@ const breadcrumbs: SchemaBreadcrumb[] = [
   { label: 'Home', href: '/' },
   { label: 'Tools', href: '/tools' },
   { label: 'AI visibility checker' },
+]
+
+const matching = [
+  { title: 'Cited means a source on your site', text: 'A citation is a link or listed source on your site that the answer drew on.' },
+  { title: 'Named means your brand in the text', text: 'A mention is your brand named in the answer text, with no link to your site.' },
+  { title: 'A citation is checked first', text: 'The tool looks for a citation first, so an answer that links you and names you counts as cited.' },
+  { title: 'Add brand names that differ from the domain', text: 'A mention is a text match. Without brand names, the name in your domain is matched, so add your brand names when they differ from the domain.' },
+  { title: 'Check everyday words by hand', text: 'A brand that is also an everyday word can match by chance, so open the answer’s wording in your agent before you count on it.' },
+]
+
+const questions = [
+  { title: 'Ask before the buyer has picked', text: 'The useful questions are the ones where a buyer has not picked yet: “best invoicing app for freelancers”, “alternatives to example.com”, “how do I send an invoice in euros”.' },
+  { title: 'Leave your brand out', text: 'A question with your brand in it will nearly always name you, which tells you very little.' },
+  { title: 'Write each question in full', text: 'Write it the way someone would ask a person. AI engines answer short keywords too, but a whole question is closer to what people type into ChatGPT.' },
+]
+
+const competitors = [
+  { title: 'Share of voice for up to 3 competitors', text: 'Add up to 3 competitor domains and each answer also says which of them it cites or names. Share of voice adds that up over the answers that came back, with your site in the first row, so you can see who the engines reach for on your questions.' },
+  { title: 'The sites cited most are often not competitors', text: 'They are often review sites and forums. Those pages are what the engines read to write the answer, so open them first. A roundup that cites three competitors and not you is a page worth a polite email.' },
+  { title: 'ChatGPT’s own web searches', text: 'ChatGPT also reports the web searches it ran to write its answer. They are often more specific than your question, and each one is a search your pages could answer. When it answers from memory, it runs none.' },
+]
+
+const snapshot = [
+  { title: 'Answers change from run to run', text: 'Ask the same question twice and an AI engine can give a different answer, with different brands. One check is a snapshot of each answer, and it does not rank you.' },
+  { title: 'Look again before you act', text: 'A “not cited” on one run is a reason to look, and the same result across several runs is a pattern.' },
+  { title: 'Change your pages', text: 'Our guide to getting cited by ChatGPT covers what to change on your pages.', href: '/blog/how-to-get-cited-by-chatgpt' },
+]
+
+const tools = [
+  { title: 'AI Overview checker', text: 'Whether Google shows an AI Overview for up to five keywords, what it says, and each cited source matched to its organic rank.', href: '/tools/ai-overview-checker', icon: AiSearchIcon, link: 'Check AI Overviews' },
+  { title: 'Query fan-out tool', text: 'The real web searches ChatGPT runs behind a prompt, with the sites it cites and whether it cites your domain.', href: '/tools/query-fan-out-tool', icon: SearchList01Icon, link: 'See the fan-out' },
+  { title: 'AI visibility checker in SEO Skill', text: 'The same check from your agent, with a worked example and more prompts.', href: '/features/ai-visibility-checker', icon: AiChat02Icon, link: 'See the worked example' },
+  { title: 'AI search', text: 'The questions people ask AI that show in Search Console, visits from ChatGPT and Perplexity, and what AI crawlers can read.', href: '/features/ai-search', icon: UserGroupIcon, link: 'See AI search' },
 ]
 
 const faq = [
@@ -55,171 +90,191 @@ const faq = [
 
 <BaseLayout
   title="Free AI visibility checker for ChatGPT and Gemini"
-  description="Ask ChatGPT search, Gemini, Google AI Mode and AI Overviews your own questions, live, and see whether each answer cites or names your brand and which competitors it picks."
+  description="Ask ChatGPT search, Gemini, AI Mode and AI Overviews your own questions live, and see whether each answer cites or names your brand."
   canonicalPath="/tools/ai-visibility-checker"
   {breadcrumbs}
+  framed={false}
 >
   <main data-agent-content>
-    <Breadcrumbs {breadcrumbs} />
-    <PageHeader
-      title="Free AI visibility checker"
-      description="Ask the AI search engines your own questions and see whether each answer cites your site, names your brand, or picks a competitor instead."
-    />
+    <section class="pt-4">
+      <div class="site-frame flex flex-col items-center pt-14 text-center sm:pt-20">
+        <h1 class="mt-4 max-w-3xl text-pretty text-4xl/tight font-medium -tracking-[0.8px] xl:text-5xl/tight xl:-tracking-[1px]">
+          Free AI visibility checker
+        </h1>
+        <p class="mt-4 max-w-2xl text-pretty text-xl/8 font-medium -tracking-[0.2px] text-foreground-muted">
+          Ask the AI search engines your own questions and see whether each
+          answer cites your site, names your brand, or picks a competitor
+          instead.
+        </p>
+      </div>
+      <div class="site-frame mt-10 sm:mt-12">
+        <AiVisibilityChecker />
+      </div>
+    </section>
 
-    <AiVisibilityChecker />
+    <div class="space-y-24 py-24 sm:space-y-32 sm:py-32">
+      <section class="site-frame" aria-labelledby="engines-heading">
+        <SectionHeading
+          id="engines-heading"
+          title="Which AI engines does the checker ask?"
+          text="Four: ChatGPT search, the Gemini app, Google AI Mode and Google AI Overviews. You write up to 3 questions the way a customer would type them, and each is asked live through DataForSEO in the country you pick, so one check reads up to 12 answers."
+        />
+        <div class="docs-prose max-w-4xl">
+          <table>
+            <thead>
+              <tr>
+                <th>Engine</th>
+                <th>What is read</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td>ChatGPT search</td>
+                <td>The answer, the sources it cites and the web searches it ran.</td>
+              </tr>
+              <tr>
+                <td>Gemini app</td>
+                <td>The answer and the sources it cites.</td>
+              </tr>
+              <tr>
+                <td>Google AI Mode</td>
+                <td>The answer and the pages it references.</td>
+              </tr>
+              <tr>
+                <td>Google AI Overviews</td>
+                <td>The AI Overview on a normal Google search, when Google shows one.</td>
+              </tr>
+            </tbody>
+          </table>
+          <p>
+            Your questions are asked on the spot, so a question nobody has tracked
+            before works just as well as a common one (and the answer is from today).
+          </p>
+        </div>
+      </section>
 
-    <div class="docs-prose mt-16">
-      <h2>What the AI visibility checker asks, and where</h2>
-      <p>
-        You write up to 3 questions, the way a customer would type them. Each
-        one is asked live, through DataForSEO, of four engines in the country
-        you pick, so one check reads up to 12 answers:
-      </p>
-      <table>
-        <thead>
-          <tr>
-            <th>Engine</th>
-            <th>What is read</th>
-          </tr>
-        </thead>
-        <tbody>
-          <tr>
-            <td>ChatGPT search</td>
-            <td>The answer, the sources it cites and the web searches it ran.</td>
-          </tr>
-          <tr>
-            <td>Gemini app</td>
-            <td>The answer and the sources it cites.</td>
-          </tr>
-          <tr>
-            <td>Google AI Mode</td>
-            <td>The answer and the pages it references.</td>
-          </tr>
-          <tr>
-            <td>Google AI Overviews</td>
-            <td>The AI Overview on a normal Google search, when Google shows one.</td>
-          </tr>
-        </tbody>
-      </table>
-      <p>
-        Your questions are asked on the spot, so a question nobody has tracked
-        before works just as well as a common one (and the answer is from today).
-      </p>
+      <section class="site-frame" aria-labelledby="results-heading">
+        <SectionHeading
+          id="results-heading"
+          title="What does each AI visibility result mean?"
+          text="Each answer is cited, named, or neither, and an answer that never came back is kept apart from a no."
+        />
+        <div class="docs-prose max-w-4xl">
+          <table>
+            <thead>
+              <tr>
+                <th>Result</th>
+                <th>What it means</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td>Cited</td>
+                <td>The answer links or lists a page on your domain or one of its subdomains. The page is shown.</td>
+              </tr>
+              <tr>
+                <td>Named, no link</td>
+                <td>The answer text names your brand, but no source is on your site. The name it used is shown.</td>
+              </tr>
+              <tr>
+                <td>Not cited or named</td>
+                <td>The answer came back without a link to your site or your name in it.</td>
+              </tr>
+              <tr>
+                <td>No AI answer shown</td>
+                <td>The engine showed no AI answer for the question. Common for AI Overviews.</td>
+              </tr>
+              <tr>
+                <td>Not ready</td>
+                <td>The answer did not come back within the time limit. It is not a no.</td>
+              </tr>
+              <tr>
+                <td>Could not check</td>
+                <td>The engine could not be asked in that country, or the request failed. It is not a no either.</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </section>
 
-      <h2>Cited, named or neither: how each answer is read</h2>
-      <p>
-        A citation and a mention are different things. A citation is a link
-        or listed source on your site that the answer drew on. A mention is
-        your brand named in the answer text, with no link to your site. The
-        tool looks for a citation first, so an answer that links you and names
-        you counts as cited.
-      </p>
-      <table>
-        <thead>
-          <tr>
-            <th>Result</th>
-            <th>What it means</th>
-          </tr>
-        </thead>
-        <tbody>
-          <tr>
-            <td>Cited</td>
-            <td>The answer links or lists a page on your domain or one of its subdomains. The page is shown.</td>
-          </tr>
-          <tr>
-            <td>Named, no link</td>
-            <td>The answer text names your brand, but no source is on your site. The name it used is shown.</td>
-          </tr>
-          <tr>
-            <td>Not cited or named</td>
-            <td>The answer came back without a link to your site or your name in it.</td>
-          </tr>
-          <tr>
-            <td>No AI answer shown</td>
-            <td>The engine showed no AI answer for the question. Common for AI Overviews.</td>
-          </tr>
-          <tr>
-            <td>Not ready</td>
-            <td>The answer did not come back within the time limit. It is not a no.</td>
-          </tr>
-          <tr>
-            <td>Could not check</td>
-            <td>The engine could not be asked in that country, or the request failed. It is not a no either.</td>
-          </tr>
-        </tbody>
-      </table>
-      <p>
-        A mention is a text match. Without brand names, the name in your
-        domain is matched, so add your brand names when they differ from the
-        domain. A brand that is also an everyday word can match by chance, so
-        open the answer’s wording in your agent before you count on it.
-      </p>
+      <SplitList
+        id="matching-heading"
+        title="How is a citation told apart from a mention?"
+        text="A citation is a source on your site and a mention is your brand in the text. They are different things, and the tool reads each answer for both."
+        items={matching}
+      />
 
-      <h2>Write questions a customer would ask</h2>
-      <p>
-        The useful questions are the ones where a buyer has not picked yet:
-        “best invoicing app for freelancers”, “alternatives to example.com”,
-        “how do I send an invoice in euros”. A question with your brand in it
-        will nearly always name you, which tells you very little.
-      </p>
-      <p>
-        Write each question in full, the way someone would ask a person. AI
-        engines answer short keywords too, but a whole question is closer to
-        what people type into ChatGPT.
-      </p>
+      <SplitList
+        id="questions-heading"
+        title="Which questions should you check?"
+        text="The ones a customer would ask before they have chosen a product. Write them in full."
+        items={questions}
+      />
 
-      <h2>Read the competitors and the sites cited instead</h2>
-      <p>
-        Add up to 3 competitor domains and each answer also says which of them
-        it cites or names. Share of voice adds that up over the answers that
-        came back, with your site in the first row, so you can see who the
-        engines reach for on your questions.
-      </p>
-      <p>
-        The sites cited most are often not competitors at all: review sites,
-        roundups, forums and documentation. Those pages are what the engines
-        read to write the answer, so open them first. A roundup that cites
-        three competitors and not you is a page worth a polite email.
-      </p>
-      <p>
-        ChatGPT also reports the web searches it ran to write its answer. They
-        are often more specific than your question, and each one is a search
-        your pages could answer. When it answers from memory, it runs none.
-      </p>
+      <SplitList
+        id="competitors-heading"
+        title="Which sites do the AI answers cite instead of you?"
+        text="Your competitors, and often review sites and forums. The result shows both, and the second group is usually where to start."
+        items={competitors}
+      />
 
-      <h2>What one check can and cannot tell you</h2>
-      <p>
-        Ask the same question twice and an AI engine can give a different
-        answer, with different brands. One check is a snapshot of each
-        answer, not a ranking. A “not cited” on one run is a reason to look,
-        and the same result across several runs is a pattern. Our guide to{' '}
-        <a href="/blog/how-to-get-cited-by-chatgpt">getting cited by ChatGPT</a>{' '}
-        covers what to change on your pages.
-      </p>
+      <SplitList
+        id="snapshot-heading"
+        title="What can one AI visibility check tell you?"
+        text="Where each answer stood when you asked. AI engines can answer the same question differently next time, so read one check as a snapshot."
+        items={snapshot}
+      />
 
-      <h2>Run the same check from your agent</h2>
-      <p>
-        With SEO Skill your agent runs the same check with{' '}
-        <a href="/docs/research">seo research</a> and your own DataForSEO key,
-        for up to 10 questions at a time and several samples of each. With
-        Google connected it can take the questions from the AI-style searches
-        your site already gets in Search Console. Ask:
-      </p>
-      <CodeBlock prompt value={`Ask ChatGPT, Gemini, AI Mode and AI Overviews "best invoicing app for freelancers" and "alternatives to example.com", and check whether they cite or name example.com`} wrap />
-      <p>
-        The <a href="/features/ai-visibility-checker">AI visibility checker in SEO Skill</a>{' '}
-        has a worked example and more prompts. To set it up, give
-        your agent this prompt:
-      </p>
-    </div>
+      <SplitList
+        id="agent-heading"
+        title="How do you run the same check from your agent?"
+        text="With seo research and your own DataForSEO key, once SEO Skill is connected."
+        items={[
+          { title: 'Up to 10 questions at a time', text: 'Your agent runs the same check for up to 10 questions at a time and several samples of each.', href: '/docs/research' },
+          { title: 'Questions from your own Search Console', text: 'With Google connected it can take the questions from the AI-style searches your site already gets in Search Console.' },
+          { title: 'A worked example', text: 'The AI visibility checker in SEO Skill has a worked example and more prompts.', href: '/features/ai-visibility-checker' },
+        ]}
+      >
+        <div class="mt-6">
+          <CodeBlock
+            label="Ask your agent"
+            prompt
+            value={`Ask ChatGPT, Gemini, AI Mode and AI Overviews "best invoicing app for freelancers" and "alternatives to example.com", and check whether they cite or name example.com`}
+            wrap
+          />
+        </div>
+      </SplitList>
 
-    <SetupPrompts id="ai-visibility-setup" class="mt-6" />
+      <section class="site-frame" aria-labelledby="tools-heading">
+        <SectionHeading
+          id="tools-heading"
+          title="Which tools go with an AI visibility check?"
+          text="These, which cover Google's AI Overviews, the searches ChatGPT runs and how AI search reaches your site."
+        />
+        <div class="grid grid-cols-1 gap-2 sm:grid-cols-2">
+          {tools.map((item) => <HomeCard {...item} />)}
+        </div>
+      </section>
 
-    <div class="docs-prose mt-16">
-      <h2>AI visibility checker questions</h2>
-    </div>
-    <div class="mt-6">
-      <FaqAccordion id="ai-visibility-faq" items={faq} />
+      <section class="site-frame" aria-labelledby="faq-heading">
+        <div class="max-w-2xl">
+          <h2 id="faq-heading" class="text-pretty text-2xl font-medium -tracking-[0.4px] text-foreground xl:text-3xl xl:-tracking-[0.6px]">
+            AI visibility checker questions
+          </h2>
+        </div>
+        <div class="mt-10">
+          <FaqAccordion items={faq} id="ai-visibility-faq" />
+        </div>
+      </section>
+
+      <section class="site-frame" aria-labelledby="start-heading">
+        <SectionHeading
+          id="start-heading"
+          title="Check your AI visibility with your agent"
+          text="Add SEO Skill to your agent, connect your own DataForSEO key and ask it which AI answers cite you for the questions your customers ask."
+        />
+        <SetupPrompts id="ai-visibility-setup" />
+      </section>
     </div>
   </main>
 </BaseLayout>

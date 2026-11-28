@@ -1,9 +1,16 @@
 ---
-import Breadcrumbs from '@/components/Breadcrumbs.astro'
+import {
+  AiSearchIcon,
+  BubbleChatSearchIcon,
+  RankingIcon,
+  SearchList01Icon,
+} from '@hugeicons/core-free-icons'
 import CodeBlock from '@/components/CodeBlock.astro'
 import FaqAccordion from '@/components/FaqAccordion.astro'
-import PageHeader from '@/components/PageHeader.astro'
+import HomeCard from '@/components/HomeCard.astro'
+import SectionHeading from '@/components/SectionHeading.astro'
 import SetupPrompts from '@/components/SetupPrompts.astro'
+import SplitList from '@/components/SplitList.astro'
 import QueryFanOutTool from '@/components/tools/QueryFanOutTool.astro'
 import BaseLayout from '@/layouts/BaseLayout.astro'
 import type { SchemaBreadcrumb } from '@/lib/schema'
@@ -12,6 +19,46 @@ const breadcrumbs: SchemaBreadcrumb[] = [
   { label: 'Home', href: '/' },
   { label: 'Tools', href: '/tools' },
   { label: 'Query fan-out tool' },
+]
+
+const fanOut = [
+  { title: 'Hidden from your usual tools', text: 'You can’t see these searches in Search Console or a keyword tool.' },
+  {
+    title: 'Asked live, 3 times',
+    text: 'This tool asks ChatGPT search your prompt live through DataForSEO, 3 times, and shows the searches ChatGPT reported for each answer.',
+  },
+  { title: 'Recorded from real answers', text: 'Most tools that show fan-out queries predict them with a model. These were recorded from real answers.' },
+  {
+    title: 'Searches look nothing like keywords',
+    text: 'I logged the searches behind dozens of questions in my query fan-out tests: long, often with a year, a place or the word “official” in them.',
+    href: '/blog/query-fan-out',
+  },
+]
+
+const plan = [
+  {
+    title: 'Your page is missing from the results',
+    text: 'The search tells you what to cover: the year, the comparison, the place or the publisher ChatGPT asked for.',
+  },
+  { title: 'Check the Google results', text: 'The SERP checker shows the Google results for any of them.', href: '/tools/serp-checker' },
+  {
+    title: 'Searches in 2 or 3 runs come first',
+    text: 'Pay most attention to these. A search that turned up once is real, but it may not come back next time (ChatGPT’s searches vary from run to run).',
+  },
+]
+
+const engines = [
+  { title: 'Gemini, Google AI Mode and AI Overviews', text: 'They do not report the searches they run, so there is no real fan-out to show for them.' },
+  { title: 'Google AI Mode does fan out', text: 'You can only see the answer and its sources.' },
+  { title: 'Each check is one snapshot', text: 'The answers change from run to run and day to day, and nothing here means a page will be cited.' },
+  { title: '3 free checks a day', text: 'Without an email or account.' },
+]
+
+const tools = [
+  { title: 'AI visibility checker', text: 'Ask ChatGPT search, Gemini, Google AI Mode and AI Overviews your own questions and see whether each answer cites or names your brand.', href: '/tools/ai-visibility-checker', icon: AiSearchIcon, link: 'Check AI visibility' },
+  { title: 'AI Overview checker', text: 'See whether Google shows an AI Overview for your keywords, which pages it cites and where those pages rank.', href: '/tools/ai-overview-checker', icon: RankingIcon, link: 'Check AI Overviews' },
+  { title: 'SERP checker', text: 'The live Google results for a fan-out search, with who ranks and each site’s Domain Rating.', href: '/tools/serp-checker', icon: SearchList01Icon, link: 'Check a SERP' },
+  { title: 'People Also Ask tool', text: 'The questions Google shows for a keyword and the page that answers each one.', href: '/tools/people-also-ask-tool', icon: BubbleChatSearchIcon, link: 'Find the questions' },
 ]
 
 const faq = [
@@ -55,119 +102,137 @@ const faq = [
 
 <BaseLayout
   title="Free query fan-out tool for ChatGPT searches"
-  description="See the real web searches ChatGPT runs behind a prompt, asked 3 times, with the sites it cites and whether it cites your domain. Free, no signup."
+  description="See the real web searches ChatGPT runs behind a prompt, asked 3 times, with the sites it cites and whether it cites your domain, free with no signup."
   canonicalPath="/tools/query-fan-out-tool"
   {breadcrumbs}
+  framed={false}
 >
   <main data-agent-content>
-    <Breadcrumbs {breadcrumbs} />
-    <PageHeader
-      title="Query fan-out tool"
-      description="See the searches ChatGPT actually ran to answer a prompt, and the sites it cited from them. Recorded from live answers, not predicted."
-    />
+    <section class="pt-4">
+      <div class="site-frame flex flex-col items-center pt-14 text-center sm:pt-20">
+        <h1 class="mt-4 max-w-3xl text-pretty text-4xl/tight font-medium -tracking-[0.8px] xl:text-5xl/tight xl:-tracking-[1px]">
+          Query fan-out tool
+        </h1>
+        <p class="mt-4 max-w-2xl text-pretty text-xl/8 font-medium -tracking-[0.2px] text-foreground-muted">
+          See the searches ChatGPT actually ran to answer a prompt, and the
+          sites it cited from them. Every search is recorded from a live
+          answer.
+        </p>
+      </div>
+      <div class="site-frame mt-10 sm:mt-12">
+        <QueryFanOutTool />
+      </div>
+    </section>
 
-    <QueryFanOutTool />
+    <div class="space-y-24 py-24 sm:space-y-32 sm:py-32">
+      <SplitList
+        id="fan-out-heading"
+        title="What is query fan-out?"
+        text="It is ChatGPT rewriting a prompt into one or more searches of its own, reading the results and citing pages from them. When ChatGPT searches the web, it rarely searches for exactly what was typed, and this step decides which pages can be cited at all."
+        items={fanOut}
+      />
 
-    <div class="docs-prose mt-16">
-      <h2>What query fan-out is</h2>
-      <p>
-        When ChatGPT searches the web, it rarely searches for exactly what was
-        typed. It rewrites the prompt into one or more searches of its own,
-        reads the results, and cites pages from them. That step is query
-        fan-out, and it decides which pages can be cited at all.
-      </p>
-      <p>
-        You can't see these searches in Search Console or a keyword tool. This
-        tool asks ChatGPT search your prompt live through DataForSEO, 3 times,
-        and shows the searches ChatGPT reported for each answer. Most tools
-        that show fan-out queries predict them with a model. These were
-        recorded from real answers.
-      </p>
-      <p>
-        I logged the searches behind dozens of questions in my{' '}
-        <a href="/blog/query-fan-out">query fan-out tests</a>, and they
-        look nothing like keyword tool keywords: long, often with a year, a
-        place or the word "official" in them.
-      </p>
+      <section class="site-frame" aria-labelledby="read-heading">
+        <SectionHeading
+          id="read-heading"
+          title="What do the searches and cited sites tell you?"
+          text="Which searches ChatGPT reaches for every time, and which sites its answers cite. A search in 3 of 3 runs is one ChatGPT reaches for every time."
+        />
+        <div class="docs-prose max-w-4xl">
+          <table>
+            <thead>
+              <tr>
+                <th>Part</th>
+                <th>What it tells you</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td>Searches ChatGPT ran</td>
+                <td>Each search and how many of the 3 runs ran it. A search in 3 of 3 is one ChatGPT reaches for every time.</td>
+              </tr>
+              <tr>
+                <td>Sites ChatGPT cited</td>
+                <td>Each site the answers cited, with how many runs cited it.</td>
+              </tr>
+              <tr>
+                <td>Each run</td>
+                <td>Whether that run searched or answered without searching, the searches it ran, and, if you gave a domain, whether the answer cited your site, named it without a link, or did neither.</td>
+              </tr>
+            </tbody>
+          </table>
+          <p>
+            "Answered without searching" means ChatGPT answered from what it
+            already knew. The check did not fail, and a prompt that is often
+            answered that way gives a page less chance to be cited. A run that
+            could not be read is shown as not known, never as a miss.
+          </p>
+        </div>
+      </section>
 
-      <h2>Read the searches and cited sites</h2>
-      <table>
-        <thead>
-          <tr>
-            <th>Part</th>
-            <th>What it tells you</th>
-          </tr>
-        </thead>
-        <tbody>
-          <tr>
-            <td>Searches ChatGPT ran</td>
-            <td>Each search and how many of the 3 runs ran it. A search in 3 of 3 is one ChatGPT reaches for every time.</td>
-          </tr>
-          <tr>
-            <td>Sites ChatGPT cited</td>
-            <td>Each site the answers cited, with how many runs cited it.</td>
-          </tr>
-          <tr>
-            <td>Each run</td>
-            <td>Whether that run searched or answered without searching, the searches it ran, and, if you gave a domain, whether the answer cited your site, named it without a link, or did neither.</td>
-          </tr>
-        </tbody>
-      </table>
-      <p>
-        "Answered without searching" means ChatGPT answered from what it
-        already knew. It is not a failed check, and a prompt that is often
-        answered that way gives a page less chance to be cited. A run that
-        could not be read is shown as not known, never as a miss.
-      </p>
+      <SplitList
+        id="plan-heading"
+        title="How do you use fan-out searches to plan a page?"
+        text="Search each fan-out query in Google and Bing and see which pages rank. Those are the results ChatGPT read before it answered."
+        items={plan}
+      />
 
-      <h2>Use the searches to plan a page</h2>
-      <p>
-        Search each fan-out query in Google and Bing and see which pages rank.
-        Those are the results ChatGPT read before it answered. If your page is
-        missing from them, the search tells you what to cover: the year, the
-        comparison, the place or the publisher ChatGPT asked for. The{' '}
-        <a href="/tools/serp-checker">SERP checker</a> shows the Google results for
-        any of them.
-      </p>
-      <p>
-        Pay most attention to searches in 2 or 3 runs. A search that turned up
-        once is real, but it may not come back next time (ChatGPT's
-        searches vary from run to run).
-      </p>
+      <SplitList
+        id="engines-heading"
+        title="Why does this tool show ChatGPT only?"
+        text="Because ChatGPT search reports each search it runs, so it is the one engine this tool can show honestly."
+        items={engines}
+      />
 
-      <h2>Why this tool shows ChatGPT only</h2>
-      <p>
-        Gemini, Google AI Mode and AI Overviews do not report the searches they
-        run, so there is no real fan-out to show for them. Google AI Mode does
-        fan out, but you can only see the answer and its sources. ChatGPT
-        search reports each search, so it is the one engine this tool can show
-        honestly.
-      </p>
-      <p>
-        Each check is one snapshot. You get 3 free checks a day without an
-        email or account. The answers change from run to run and day to day,
-        and nothing here means a page will be cited.
-      </p>
+      <SplitList
+        id="agent-heading"
+        title="How do you see fan-out searches for your own questions?"
+        text="Ask your agent, once SEO Skill is connected. It asks ChatGPT the questions your site already gets in Search Console through seo research with your own DataForSEO key."
+        items={[
+          { title: 'The same check through seo research', text: 'Your agent can run it for as many prompts as you need with your own DataForSEO key.', href: '/docs/research' },
+          { title: 'Searches and citations for each answer', text: 'Your agent shows the searches behind each answer and whether it cited you.' },
+        ]}
+      >
+        <div class="mt-6">
+          <CodeBlock
+            label="Ask your agent"
+            prompt
+            value="Ask ChatGPT the top AI-style questions example.com gets in Search Console, show me the searches it ran for each, and tell me which of those searches my pages rank for"
+            wrap
+          />
+        </div>
+      </SplitList>
 
-      <h2>See fan-out searches for your own questions</h2>
-      <p>
-        With SEO Skill your agent asks ChatGPT the questions your site already
-        gets in Search Console through{' '}
-        <a href="/docs/research">seo research</a> with your own DataForSEO
-        key, and shows the searches behind each answer and whether it cited
-        you. Ask:
-      </p>
-      <CodeBlock prompt value="Ask ChatGPT the top AI-style questions example.com gets in Search Console, show me the searches it ran for each, and tell me which of those searches my pages rank for" wrap />
-      <p>To set it up, give your agent this prompt:</p>
-    </div>
+      <section class="site-frame" aria-labelledby="tools-heading">
+        <SectionHeading
+          id="tools-heading"
+          title="Which tools go with a query fan-out check?"
+          text="These, which show AI answers from other engines and the Google results behind each search."
+        />
+        <div class="grid grid-cols-1 gap-2 sm:grid-cols-2">
+          {tools.map((item) => <HomeCard {...item} />)}
+        </div>
+      </section>
 
-    <SetupPrompts id="query-fan-out-setup" class="mt-6" />
+      <section class="site-frame" aria-labelledby="faq-heading">
+        <div class="max-w-2xl">
+          <h2 id="faq-heading" class="text-pretty text-2xl font-medium -tracking-[0.4px] text-foreground xl:text-3xl xl:-tracking-[0.6px]">
+            Query fan-out tool questions
+          </h2>
+        </div>
+        <div class="mt-10">
+          <FaqAccordion items={faq} id="query-fan-out-faq" />
+        </div>
+      </section>
 
-    <div class="docs-prose mt-16">
-      <h2>Query fan-out tool questions</h2>
-    </div>
-    <div class="mt-6">
-      <FaqAccordion id="query-fan-out-faq" items={faq} />
+      <section class="site-frame" aria-labelledby="start-heading">
+        <SectionHeading
+          id="start-heading"
+          title="See the searches behind your own questions"
+          text="Add SEO Skill to your agent, sign in with the Google account that can read your Search Console, and ask which ChatGPT searches your pages rank for."
+        />
+        <SetupPrompts id="query-fan-out-setup" />
+      </section>
     </div>
   </main>
 </BaseLayout>

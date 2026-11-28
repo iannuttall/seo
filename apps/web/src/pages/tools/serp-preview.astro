@@ -1,10 +1,13 @@
 ---
+import { ChartIncreaseIcon, SourceCodeIcon, TextCheckIcon, TextFontIcon } from '@hugeicons/core-free-icons'
 import CodeBlock from '@/components/CodeBlock.astro'
 import FaqAccordion from '@/components/FaqAccordion.astro'
+import HomeCard from '@/components/HomeCard.astro'
+import SectionHeading from '@/components/SectionHeading.astro'
 import SetupPrompts from '@/components/SetupPrompts.astro'
-import Breadcrumbs from '@/components/Breadcrumbs.astro'
-import PageHeader from '@/components/PageHeader.astro'
+import SplitList from '@/components/SplitList.astro'
 import SerpPreview from '@/components/tools/SerpPreview.astro'
+import { getButtonClasses } from '@/components/ui/button'
 import BaseLayout from '@/layouts/BaseLayout.astro'
 import type { SchemaBreadcrumb } from '@/lib/schema'
 
@@ -12,6 +15,51 @@ const breadcrumbs: SchemaBreadcrumb[] = [
   { label: 'Home', href: '/' },
   { label: 'Tools', href: '/tools' },
   { label: 'SERP preview' },
+]
+
+const width = [
+  { title: 'Letters take up different space', text: 'A title full of wide characters can be shortened sooner than another title with the same character count.' },
+  { title: 'The preview measures the rendered text', text: 'It still shows the character count for a quick reference.' },
+  { title: 'Find what is wrong with a page\u2019s tags', text: 'For a missing or empty description, two title tags or a title that does not match the H1, use the title and meta description checker.', href: '/tools/title-and-meta-description-checker' },
+]
+
+const rewrites = [
+  { title: 'Title links come from several signals', text: 'Google can use the title element, the main visible heading, prominent text, anchor text and other sources.' },
+  { title: 'Snippets are usually drawn from page content', text: 'A good meta description can be used when it describes the page well.' },
+  { title: 'The snippet can change with the query', text: 'The same page can show different text for different searches.' },
+]
+
+const additions = [
+  { title: 'They show how the layout can change', text: 'The optional result details add stars, a date or an image to the draft result.' },
+  { title: 'They do not validate structured data', text: 'They also do not prove rich result eligibility.' },
+  { title: 'Inspect JSON-LD separately', text: 'Use the schema markup validator for that.', href: '/tools/schema-markup-validator' },
+]
+
+const loading = [
+  { title: 'The URL goes to the site worker', text: 'Loading a page sends its URL to the site worker.' },
+  { title: 'It reads the public HTML and a small favicon', text: 'Then it returns the title, meta description and site name.' },
+  { title: 'Your edits stay in this browser tab', text: 'Anything you change after loading is never sent anywhere.' },
+]
+
+const length = [
+  { title: 'About 600 pixels for a title on desktop', text: 'Google cuts titles to fit the width of the screen. A title of about 600 pixels shows in full, which is often 50 to 60 characters.' },
+  { title: 'About two lines for a description on desktop', text: 'Descriptions are cut at about two lines on desktop and a little more on phones.' },
+  { title: 'Trust the measured truncation', text: 'The preview measures the real width, so trust its truncation over a character count.' },
+  { title: 'Put the words that make someone click first', text: 'If the end is cut off, the searcher still sees what matters.' },
+]
+
+const writing = [
+  { title: 'Use the searcher\u2019s words', text: 'Name the thing the searcher is looking for, in their words.' },
+  { title: 'Say what is different about this page', text: 'A price, a date, a number, a free tool.' },
+  { title: 'Give each page its own title', text: 'Twenty pages called \u201cProducts\u201d all look the same in results.' },
+  { title: 'Keep the description true to the page', text: 'Google rewrites descriptions that do not match.' },
+]
+
+const tools = [
+  { title: 'Title and meta description checker', text: 'Find a missing or empty description, two title tags or a title that does not match the H1.', href: '/tools/title-and-meta-description-checker', icon: TextCheckIcon, link: 'Check titles' },
+  { title: 'Title tag word frequency', text: 'The words the ranking titles share for a keyword, so your title uses the language searchers expect.', href: '/tools/title-tag-word-frequency', icon: TextFontIcon, link: 'Count title words' },
+  { title: 'Schema markup validator', text: 'Inspect the JSON-LD on a page, which the preview additions do not check.', href: '/tools/schema-markup-validator', icon: SourceCodeIcon, link: 'Validate schema' },
+  { title: 'SEO report', text: 'The low click-through rate section lists the pages people see in Google but do not click.', href: '/docs/report', icon: ChartIncreaseIcon, link: 'SEO report docs' },
 ]
 
 const faq = [
@@ -23,7 +71,7 @@ const faq = [
   {
     question: "How many characters should a title tag be?",
     answer:
-      "Google measures width, not characters. About 600 pixels shows in full on desktop, which is often 50 to 60 characters depending on the letters.",
+      "Google measures the width in pixels. About 600 pixels shows in full on desktop, which is often 50 to 60 characters depending on the letters.",
   },
   {
     question: "Why did Google change my title?",
@@ -43,69 +91,138 @@ const faq = [
 ]
 ---
 
-<BaseLayout title="Free Google SERP preview tool" description="See how a page’s title, URL and meta description look in Google on desktop and mobile, with the point where Google cuts them off, then copy the HTML tags." canonicalPath="/tools/serp-preview" {breadcrumbs}>
+<BaseLayout
+  title="Free Google SERP preview tool"
+  description="See how a page’s title, URL and meta description look in Google on desktop and mobile, with the point where Google cuts them off, then copy the HTML tags."
+  canonicalPath="/tools/serp-preview"
+  {breadcrumbs}
+  framed={false}
+>
   <main data-agent-content>
-    <Breadcrumbs {breadcrumbs} />
-    <PageHeader title="SERP preview" description="Enter a URL to load its title, description and favicon, or write them yourself. Compare the result on desktop and mobile before copying the HTML." />
-    <SerpPreview checks={false} />
+    <section class="pt-4">
+      <div class="site-frame flex flex-col items-center pt-14 text-center sm:pt-20">
+        <h1 class="mt-4 max-w-3xl text-pretty text-4xl/tight font-medium -tracking-[0.8px] xl:text-5xl/tight xl:-tracking-[1px]">
+          SERP preview
+        </h1>
+        <p class="mt-4 max-w-2xl text-pretty text-xl/8 font-medium -tracking-[0.2px] text-foreground-muted">
+          Enter a URL to load its title, description and favicon, or write
+          them yourself. Compare the result on desktop and mobile before
+          copying the HTML.
+        </p>
+      </div>
+      <div class="site-frame mt-10 sm:mt-12">
+        <SerpPreview checks={false} />
+      </div>
+    </section>
 
-    <div class="docs-prose mt-16">
-      <h2>Pixel width is more useful than a character count</h2>
-      <p>Letters do not take up equal space. A title full of wide characters can be shortened sooner than another title with the same character count. The preview measures the rendered text and still shows the character count for a quick reference.</p>
-      <p>To find what is wrong with a page’s tags, such as a missing or empty description, two title tags or a title that does not match the H1, use the <a href="/tools/title-and-meta-description-checker">title and meta description checker</a>.</p>
+    <div class="space-y-24 py-24 sm:space-y-32 sm:py-32">
+      <SplitList
+        id="width-heading"
+        title="Why measure a title in pixels instead of characters?"
+        text="Because Google cuts titles by width, and letters do not take up equal space. Pixel width is more useful than a character count."
+        items={width}
+      />
 
-      <h2>Google may show different text</h2>
-      <p>Google creates <a href="https://developers.google.com/search/docs/appearance/title-link" target="_blank" rel="noreferrer">title links</a> from several page and link signals. It can use the title element, the main visible heading, prominent text, anchor text, and other sources.</p>
-      <p>Search <a href="https://developers.google.com/search/docs/appearance/snippet" target="_blank" rel="noreferrer">snippets are usually drawn from page content</a>. A good meta description can be used when it describes the page well, but the actual snippet can change with the query.</p>
+      <SplitList
+        id="rewrites-heading"
+        title="Will Google show the text you wrote?"
+        text="Sometimes. Google creates title links and snippets from several page and link signals, so it may show different text from your tags."
+        items={rewrites}
+      >
+        <div class="mt-6 flex flex-wrap gap-2">
+          <a
+            class={getButtonClasses('secondary', 'lg')}
+            href="https://developers.google.com/search/docs/appearance/title-link"
+            target="_blank"
+            rel="noreferrer">Read Google's title link guide</a
+          >{' '}
+          <a
+            class={getButtonClasses('secondary', 'lg')}
+            href="https://developers.google.com/search/docs/appearance/snippet"
+            target="_blank"
+            rel="noreferrer">Read Google's snippet guide</a
+          >
+        </div>
+      </SplitList>
 
-      <h2>Preview additions do not create rich results</h2>
-      <p>The optional result details show how the layout can change. They do not validate structured data or prove rich result eligibility. Use the <a href="/tools/schema-markup-validator">schema markup validator</a> to inspect JSON-LD separately.</p>
+      <SplitList
+        id="additions-heading"
+        title="Do the preview additions create rich results?"
+        text="No. They show how a result could look with extra details, and they check nothing about your structured data."
+        items={additions}
+      />
 
-      <h2>What happens when you load a page</h2>
-      <p>Loading a page sends its URL to the site worker. The worker reads the public HTML and a small favicon, then returns the title, meta description and site name. Any edits you make after that stay in this browser tab.</p>
+      <SplitList
+        id="loading-heading"
+        title="What happens when you load a page into the preview?"
+        text="The site worker fetches the page once and returns its tags. After that, everything happens in your browser."
+        items={loading}
+      />
 
-      <h2>How long should a title and description be?</h2>
-      <p>
-        Google sets no character limit. It cuts titles to fit the width of
-        the screen, so on desktop a title of about 600 pixels shows in full,
-        which is often 50 to 60 characters. Descriptions are cut at about
-        two lines on desktop and a little more on phones. The preview
-        measures the real width, so trust its truncation over a character
-        count.
-      </p>
-      <p>
-        Put the words that make someone click at the start. If the end is
-        cut off, the searcher still sees what matters.
-      </p>
+      <SplitList
+        id="length-heading"
+        title="How long should a title and description be?"
+        text="As long as fits the width Google shows. Google sets no character limit."
+        items={length}
+      />
 
-      <h2>Write a title and snippet people click</h2>
-      <ul>
-        <li>Name the thing the searcher is looking for, in their words.</li>
-        <li>Say what is different about this page: a price, a date, a number, a free tool.</li>
-        <li>Make each page’s title unique. Twenty pages called “Products” all look the same in results.</li>
-        <li>Keep the description true to the page. Google rewrites descriptions that do not match.</li>
-      </ul>
+      <SplitList
+        id="writing-heading"
+        title="How do you write a title and snippet people click?"
+        text="Name what the searcher wants and say what makes this page different. Then keep it unique and true to the page."
+        items={writing}
+      />
 
-      <h2>Find the titles worth rewriting with your agent</h2>
-      <p>
-        The pages to work on are the ones people see but do not click. The{' '}
-        <a href="/docs/report">SEO report</a> has a low click-through rate
-        section: queries where your page ranks in the top four and gets
-        fewer clicks than your own site gets at that position. Your agent
-        can pull that list from Search Console, draft new titles, and you
-        can check each one here before it ships. Ask:
-      </p>
-      <CodeBlock prompt value="Show the low click-through rate pages for example.com and suggest a clearer title for each one" wrap />
-      <p>To set it up, give your agent this prompt:</p>
-    </div>
+      <SplitList
+        id="agent-heading"
+        title="How do you find the titles worth rewriting with your agent?"
+        text="Ask it for the pages people see but do not click. The SEO report has a low click-through rate section: queries where your page ranks in the top four and gets fewer clicks than your own site gets at that position."
+        items={[
+          { title: 'Pull the list from Search Console', text: 'Your agent reads the low click-through rate section of the SEO report.', href: '/docs/report' },
+          { title: 'Draft new titles', text: 'It suggests a clearer title for each page.' },
+          { title: 'Check each one here', text: 'Paste the draft into the preview before it ships.' },
+        ]}
+      >
+        <div class="mt-6">
+          <CodeBlock
+            label="Ask your agent"
+            prompt
+            value="Show the low click-through rate pages for example.com and suggest a clearer title for each one"
+            wrap
+          />
+        </div>
+      </SplitList>
 
-    <SetupPrompts id="serp-preview-setup" class="mt-6" />
+      <section class="site-frame" aria-labelledby="tools-heading">
+        <SectionHeading
+          id="tools-heading"
+          title="Which tools go with a SERP preview?"
+          text="These, which cover problems in the tags, the words ranking titles share and the pages that need a new title."
+        />
+        <div class="grid grid-cols-1 gap-2 sm:grid-cols-2">
+          {tools.map((item) => <HomeCard {...item} />)}
+        </div>
+      </section>
 
-    <div class="docs-prose mt-16">
-      <h2>SERP preview questions</h2>
-    </div>
-    <div class="mt-6">
-      <FaqAccordion id="serp-preview-faq" items={faq} />
+      <section class="site-frame" aria-labelledby="faq-heading">
+        <div class="max-w-2xl">
+          <h2 id="faq-heading" class="text-pretty text-2xl font-medium -tracking-[0.4px] text-foreground xl:text-3xl xl:-tracking-[0.6px]">
+            SERP preview questions
+          </h2>
+        </div>
+        <div class="mt-10">
+          <FaqAccordion items={faq} id="serp-preview-faq" />
+        </div>
+      </section>
+
+      <section class="site-frame" aria-labelledby="start-heading">
+        <SectionHeading
+          id="start-heading"
+          title="Rewrite the titles people skip with your agent"
+          text="Add SEO Skill to your agent, sign in with the Google account that can read your Search Console, and ask which pages get seen but not clicked."
+        />
+        <SetupPrompts id="serp-preview-setup" />
+      </section>
     </div>
   </main>
 </BaseLayout>

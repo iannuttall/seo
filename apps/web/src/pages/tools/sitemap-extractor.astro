@@ -1,8 +1,20 @@
 ---
+import {
+  Calendar03Icon,
+  CsvIcon,
+  HierarchyIcon,
+  LanguageSkillIcon,
+  Robot01Icon,
+  Search01Icon,
+  TextCheckIcon,
+  WebValidationIcon,
+} from '@hugeicons/core-free-icons'
 import CodeBlock from '@/components/CodeBlock.astro'
 import FaqAccordion from '@/components/FaqAccordion.astro'
+import HomeCard from '@/components/HomeCard.astro'
+import SectionHeading from '@/components/SectionHeading.astro'
 import SetupPrompts from '@/components/SetupPrompts.astro'
-import PageHeader from '@/components/PageHeader.astro'
+import SplitList from '@/components/SplitList.astro'
 import SitemapExtractor from '@/components/tools/SitemapExtractor.astro'
 import BaseLayout from '@/layouts/BaseLayout.astro'
 import type { SchemaBreadcrumb } from '@/lib/schema'
@@ -13,161 +25,220 @@ const breadcrumbs: SchemaBreadcrumb[] = [
   { label: 'Sitemap URL extractor' },
 ]
 
+const finding = [
+  { title: 'Sitemap lines in robots.txt', code: 'Sitemap:', text: 'Most sites list their sitemap in robots.txt with a Sitemap: line, so that is the first place the extractor looks.' },
+  { title: 'The usual addresses', code: '/sitemap.xml', text: 'If there is none, it tries the usual addresses, such as /sitemap.xml and /sitemap_index.xml.' },
+  { title: 'Other names, or no sitemap', text: 'Some sites use other names, and some have no sitemap at all. When you know the address, enter it directly.' },
+]
+
+const fields = [
+  { title: 'Source sitemap and depth', icon: HierarchyIcon, text: 'Each URL keeps the sitemap it came from and how deep that sitemap sits in the nesting.' },
+  { title: 'Dates, change frequency and priority', icon: Calendar03Icon, text: 'The last modified value, change frequency and priority the sitemap declares for each URL.' },
+  { title: 'Hreflang, image, video and news counts', icon: LanguageSkillIcon, text: 'How many hreflang, image, video or news entries the sitemap lists for each URL.' },
+  {
+    title: 'CSV and JSON downloads',
+    icon: CsvIcon,
+    text: 'Every field above comes with the download. These are declarations in the sitemap. The tool does not request the page or confirm that its metadata is accurate.',
+  },
+]
+
+const size = [
+  { title: 'Google accepts 50,000 URLs', text: 'Up to 50,000 URLs or 50 MB uncompressed in one sitemap.' },
+  {
+    title: 'Files over 10,000 entries get a flag',
+    text: 'This tool flags individual files above 10,000 URL entries because many technical SEO teams use that as a practical working size.',
+  },
+  { title: 'Smaller files are easier to isolate', text: 'Smaller files can make failures, retries, and Search Console coverage groups easier to isolate.' },
+  { title: 'A working convention', text: 'The 10,000 URL threshold is a convention. Google does not require it, and it is no ranking factor.' },
+]
+
+const partial = [
+  {
+    title: 'Partial results are marked',
+    text: 'The result is marked as partial and lists the affected sitemap. Do not treat a partial export as the complete URL inventory for the site.',
+  },
+  { title: 'Some sites block automated requests', text: 'They can do this even when their sitemap works in a normal browser.' },
+  { title: 'Enter the exact sitemap URL', text: 'It may help when discovery fails, but it cannot bypass the target site\u2019s access controls.' },
+]
+
+const uses = [
+  { title: 'Count pages by section', text: 'Count the pages a site says it has, by section, before an audit or a migration.' },
+  { title: 'Build a redirect map', text: 'Build a redirect map from the old URL list before you move a site.' },
+  { title: 'Watch what a competitor publishes', text: 'Compare a competitor\u2019s sitemap month to month to see what they publish.' },
+  { title: 'Find gaps in your own sitemap', text: 'Find sections that are missing from your own sitemap, or listed twice.' },
+]
+
+const tools = [
+  { title: 'XML sitemap validator', text: 'Check one sitemap or sitemap index for broken XML, bad URLs and dates, and duplicates.', href: '/tools/sitemap-validator', icon: WebValidationIcon, link: 'Validate a sitemap' },
+  { title: 'Robots.txt validator', text: 'See whether robots.txt lists your sitemap, and what it blocks.', href: '/tools/robots-txt-validator', icon: Robot01Icon, link: 'Validate robots.txt' },
+  { title: 'SEO migration checklist', text: 'Plan a site move and check your redirect map before launch.', href: '/tools/seo-migration-checklist', icon: TextCheckIcon, link: 'Plan a migration' },
+  { title: 'SEO crawler', text: 'Crawl any site from your machine for broken links, redirects, canonicals and noindex tags.', href: '/features/seo-crawler', icon: Search01Icon, link: 'See the crawler' },
+]
+
 const faq = [
   {
-    question: "How do I find the sitemap of a website?",
+    question: 'How do I find the sitemap of a website?',
     answer:
-      "Enter the domain above. The extractor reads robots.txt for Sitemap lines, then tries common addresses such as /sitemap.xml. You can also open the site’s robots.txt in a browser and look for the line yourself.",
+      'Enter the domain above. The extractor reads robots.txt for Sitemap lines, then tries common addresses such as /sitemap.xml. You can also open the site’s robots.txt in a browser and look for the line yourself.',
   },
   {
-    question: "How do I extract all URLs from a sitemap?",
+    question: 'How do I extract all URLs from a sitemap?',
     answer:
-      "Enter the sitemap address or the domain. The extractor follows a sitemap index into each child sitemap and lists every URL it finds, up to 50,000 URLs from 50 sitemap files, which you can download as CSV or JSON. A bigger site comes back marked as partial.",
+      'Enter the sitemap address or the domain. The extractor follows a sitemap index into each child sitemap and lists every URL it finds, up to 50,000 URLs from 50 sitemap files, which you can download as CSV or JSON. A bigger site comes back marked as partial.',
   },
   {
-    question: "Can it read gzip sitemaps?",
-    answer:
-      "Yes. It reads .xml.gz files as well as plain XML sitemaps, sitemap indexes and text sitemaps.",
+    question: 'Can it read gzip sitemaps?',
+    answer: 'Yes. It reads .xml.gz files as well as plain XML sitemaps, sitemap indexes and text sitemaps.',
   },
   {
-    question: "Why did the extractor not find a sitemap?",
+    question: 'Why did the extractor not find a sitemap?',
     answer:
-      "The site may have none, use an unusual address, or block automated requests. Try the exact sitemap URL if you know it.",
+      'The site may have none, use an unusual address, or block automated requests. Try the exact sitemap URL if you know it.',
   },
   {
-    question: "Does the sitemap list every page on the site?",
+    question: 'Does the sitemap list every page on the site?',
     answer:
-      "Not always. A sitemap lists what the site chose to list. Pages can exist without being in it, and some listed pages may no longer work.",
+      'Not always. A sitemap lists what the site chose to list. Pages can exist without being in it, and some listed pages may no longer work.',
   },
 ]
 ---
 
 <BaseLayout
   title="Free sitemap URL extractor with CSV export"
-  description="Find a website’s sitemap and extract every URL from XML sitemaps, sitemap indexes, gzip and text sitemaps. Download the list as CSV or JSON with dates and sources."
+  description="Find a website’s sitemap and extract every URL from XML, index, gzip and text sitemaps. Download the list as CSV or JSON with dates and sources."
   canonicalPath="/tools/sitemap-extractor"
   {breadcrumbs}
+  framed={false}
 >
   <main data-agent-content>
-    <nav aria-label="Breadcrumb" class="mb-6 text-sm text-foreground-muted">
-      <ol class="flex flex-wrap items-center gap-1.5">
-        {breadcrumbs.map((crumb, index) => (
-          <li class="flex items-center gap-1.5">
-            {crumb.href ? (
-              <a class="underline decoration-border underline-offset-4 hover:decoration-foreground" href={crumb.href}>
-                {crumb.label}
-              </a>
-            ) : (
-              <span class="text-foreground">{crumb.label}</span>
-            )}
-            {index < breadcrumbs.length - 1 ? <span aria-hidden="true" class="text-border">/</span> : null}
-          </li>
-        ))}
-      </ol>
-    </nav>
+    <section class="pt-4">
+      <div class="site-frame flex flex-col items-center pt-14 text-center sm:pt-20">
+        <h1 class="mt-4 max-w-3xl text-pretty text-4xl/tight font-medium -tracking-[0.8px] xl:text-5xl/tight xl:-tracking-[1px]">
+          Sitemap URL extractor
+        </h1>
+        <p class="mt-4 max-w-2xl text-pretty text-xl/8 font-medium -tracking-[0.2px] text-foreground-muted">
+          Enter a sitemap URL or domain, follow nested sitemap indexes, then
+          filter and download the extracted URLs with their sitemap metadata.
+        </p>
+      </div>
+      <div class="site-frame mt-10 sm:mt-12">
+        <SitemapExtractor />
+      </div>
+    </section>
 
-    <PageHeader
-      title="Sitemap URL extractor"
-      description="Enter a sitemap URL or domain, follow nested sitemap indexes, then filter and download the extracted URLs with their sitemap metadata."
-    />
+    <div class="space-y-24 py-24 sm:space-y-32 sm:py-32">
+      <SplitList
+        id="find-heading"
+        title="How do you find a website's sitemap?"
+        text="Look in robots.txt first, because most sites list their sitemap there. The extractor does the same, then tries the usual addresses."
+        items={finding}
+      />
 
-    <SitemapExtractor />
+      <section class="site-frame" aria-labelledby="files-heading">
+        <SectionHeading
+          id="files-heading"
+          title="Which sitemap files can the extractor read?"
+          text="XML sitemaps, sitemap indexes, gzip files and text sitemaps. It follows linked child sitemaps, shows any files it could not read, and keeps each URL's sitemap metadata in the download."
+        />
+        <div class="grid grid-cols-1 gap-2 sm:grid-cols-2">
+          {fields.map((item) => <HomeCard title={item.title} text={item.text} icon={item.icon} />)}
+        </div>
+      </section>
 
-    <div class="docs-prose mt-16">
-      <h2>How to find a website’s sitemap</h2>
-      <p>
-        Most sites list their sitemap in robots.txt with a{' '}
-        <code>Sitemap:</code> line, so that is the first place the extractor
-        looks. If there is none, it tries the usual addresses, such as{' '}
-        <code>/sitemap.xml</code> and <code>/sitemap_index.xml</code>. Some
-        sites use other names, and some have no sitemap at all. When you
-        know the address, enter it directly.
-      </p>
+      <SplitList
+        id="size-heading"
+        title="Should you split a large sitemap around 10,000 URLs?"
+        text="Many technical SEO teams do, as a practical working size, and this tool flags any file above it. Google's own limit is higher."
+        items={size}
+      >
+        <p class="mt-4 text-base leading-7 text-foreground-muted">
+          Read Google's current{' '}
+          <a
+            class="text-foreground underline underline-offset-4"
+            href="https://developers.google.com/search/docs/crawling-indexing/sitemaps/build-sitemap"
+            target="_blank"
+            rel="noreferrer">sitemap size and format documentation</a
+          >{' '}for the protocol limits. Barry Adams also explains the 10,000 URL
+          working size in his{' '}
+          <a
+            class="text-foreground underline underline-offset-4"
+            href="https://www.polemicdigital.com/perfecting-xml-sitemaps/"
+            target="_blank"
+            rel="noreferrer">technical sitemap guidance</a
+          >.
+        </p>
+      </SplitList>
 
-      <h2>Extract URLs from sitemap files</h2>
-      <p>
-        The extractor reads XML sitemaps, sitemap indexes, gzip files, and text
-        sitemaps. When you enter a domain, it checks robots.txt first and then
-        common sitemap locations. It follows linked child sitemaps and shows any
-        files it could not read.
-      </p>
-      <p>
-        CSV and JSON downloads retain each URL's source sitemap, nesting depth,
-        last modified value, change frequency, priority, hreflang count, and
-        image, video, or news entry counts. These are declarations in the
-        sitemap. The tool does not request the page or confirm that its metadata
-        is accurate.
-      </p>
+      <SplitList
+        id="partial-heading"
+        title="What happens when part of a sitemap cannot be read?"
+        text="The URLs already extracted stay. A blocked child sitemap, timeout, invalid XML file or processing limit does not erase them."
+        items={partial}
+      />
 
-      <h2>Split large sitemap files around 10,000 URLs</h2>
-      <p>
-        Google accepts up to 50,000 URLs or 50 MB uncompressed in one sitemap.
-        This tool flags individual files above 10,000 URL entries because many
-        technical SEO teams use that as a practical working size. Smaller files
-        can make failures, retries, and Search Console coverage groups easier to
-        isolate. The 10,000 URL threshold is a convention, not a Google
-        requirement or ranking factor.
-      </p>
-      <p>
-        Read Google's current{' '}
-        <a href="https://developers.google.com/search/docs/crawling-indexing/sitemaps/build-sitemap" target="_blank" rel="noreferrer">sitemap size and format documentation</a>
-        {' '}for the protocol limits. Barry Adams also explains the 10,000 URL
-        working size in his{' '}
-        <a href="https://www.polemicdigital.com/perfecting-xml-sitemaps/" target="_blank" rel="noreferrer">technical sitemap guidance</a>.
-      </p>
+      <SplitList
+        id="uses-heading"
+        title="What can you do with a sitemap URL list?"
+        text="Plan an audit or a site move from the pages a site says it has. The last modified dates show what a site says it changed and when, and they are only as honest as the site that writes them."
+        items={uses}
+      />
 
-      <h2>Partial results stay visible</h2>
-      <p>
-        A blocked child sitemap, timeout, invalid XML file, or processing limit
-        does not erase the URLs already extracted. The result is marked as
-        partial and lists the affected sitemap. Do not treat a partial export as
-        the complete URL inventory for the site.
-      </p>
-      <p>
-        Some sites block automated requests even when their sitemap works in a
-        normal browser. Entering the exact sitemap URL may help when discovery
-        fails, but it cannot bypass the target site's access controls.
-      </p>
+      <SplitList
+        id="agent-heading"
+        title="How do you check the extracted URLs with your agent?"
+        text="Ask it to run seo crawl, once SEO Skill is connected. A sitemap is a list of what a site claims, and the extractor does not request the pages it lists."
+        items={[
+          {
+            title: 'Status and redirects for every URL',
+            text: 'seo crawl can read the sitemap and check each URL\u2019s status and redirects without reading every page.',
+            href: '/docs/crawl',
+          },
+          {
+            title: 'A full technical SEO site crawl',
+            text: 'HTTP status codes, canonicals, robots directives, and indexability need page requests. Ask your agent for a crawl when you need that evidence.',
+          },
+        ]}
+      >
+        <div class="mt-6">
+          <CodeBlock
+            label="Ask your agent"
+            prompt
+            value="Check every URL in https://example.com/sitemap.xml and list the ones that redirect or return an error"
+            wrap
+          />
+        </div>
+      </SplitList>
 
-      <h2>The tool does not crawl extracted pages</h2>
-      <p>
-        HTTP status codes, canonicals, robots directives, and indexability need
-        page requests. Ask your agent for a{' '}
-        <a href="/docs/crawl">technical SEO site crawl</a>
-        {' '}when you need that evidence.
-      </p>
+      <section class="site-frame" aria-labelledby="tools-heading">
+        <SectionHeading
+          id="tools-heading"
+          title="Which tools go with a sitemap check?"
+          text="These, which check the sitemap itself, the robots.txt that lists it and the pages behind each URL."
+        />
+        <div class="grid grid-cols-1 gap-2 sm:grid-cols-2">
+          {tools.map((item) => <HomeCard {...item} />)}
+        </div>
+      </section>
 
-      <h2>What you can do with the URL list</h2>
-      <ul>
-        <li>Count the pages a site says it has, by section, before an audit or a migration.</li>
-        <li>Build a redirect map from the old URL list before you move a site.</li>
-        <li>Compare a competitor’s sitemap month to month to see what they publish.</li>
-        <li>Find sections that are missing from your own sitemap, or listed twice.</li>
-      </ul>
-      <p>
-        The last modified dates show what a site says it changed and when.
-        They are only as honest as the site that writes them.
-      </p>
+      <section class="site-frame" aria-labelledby="faq-heading">
+        <div class="max-w-2xl">
+          <h2 id="faq-heading" class="text-pretty text-2xl font-medium -tracking-[0.4px] text-foreground xl:text-3xl xl:-tracking-[0.6px]">
+            Sitemap extractor questions
+          </h2>
+        </div>
+        <div class="mt-10">
+          <FaqAccordion items={faq} id="sitemap-extractor-faq" />
+        </div>
+      </section>
 
-      <h2>Check the extracted URLs with your agent</h2>
-      <p>
-        A sitemap is a list of what a site claims. To see which of those
-        pages work, ask your agent to check them with{' '}
-        <a href="/docs/crawl">seo crawl</a>, which can read the sitemap and
-        check each URL’s status and redirects without reading every page.
-        Ask:
-      </p>
-      <CodeBlock prompt value="Check every URL in https://example.com/sitemap.xml and list the ones that redirect or return an error" wrap />
-      <p>To set it up, give your agent this prompt:</p>
-    </div>
-
-    <SetupPrompts id="sitemap-extractor-setup" class="mt-6" />
-
-    <div class="docs-prose mt-16">
-      <h2>Sitemap extractor questions</h2>
-    </div>
-    <div class="mt-6">
-      <FaqAccordion id="sitemap-extractor-faq" items={faq} />
+      <section class="site-frame" aria-labelledby="start-heading">
+        <SectionHeading
+          id="start-heading"
+          title="Check every URL in your sitemap with your agent"
+          text="Add SEO Skill to your agent and ask which URLs in your sitemap redirect or return an error."
+        />
+        <SetupPrompts id="sitemap-extractor-setup" />
+      </section>
     </div>
   </main>
 </BaseLayout>

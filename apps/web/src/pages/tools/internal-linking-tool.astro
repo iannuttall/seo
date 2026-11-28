@@ -1,9 +1,11 @@
 ---
-import Breadcrumbs from '@/components/Breadcrumbs.astro'
+import { Link01Icon, Route01Icon, SearchList01Icon, WebValidationIcon } from '@hugeicons/core-free-icons'
 import CodeBlock from '@/components/CodeBlock.astro'
 import FaqAccordion from '@/components/FaqAccordion.astro'
-import PageHeader from '@/components/PageHeader.astro'
+import HomeCard from '@/components/HomeCard.astro'
+import SectionHeading from '@/components/SectionHeading.astro'
 import SetupPrompts from '@/components/SetupPrompts.astro'
+import SplitList from '@/components/SplitList.astro'
 import InternalLinksExplorer from '@/components/tools/InternalLinksExplorer.astro'
 import BaseLayout from '@/layouts/BaseLayout.astro'
 import { ONLINE_LIMITS } from '@/lib/internal-links-tool'
@@ -17,6 +19,64 @@ const breadcrumbs: SchemaBreadcrumb[] = [
   { label: 'Home', href: '/' },
   { label: 'Tools', href: '/tools' },
   { label: 'Internal linking tool' },
+]
+
+const does = [
+  { title: 'Runs here for a site in your Search Console', text: 'On this page it runs on our servers. Sign in with Google, pick the site and wait a minute or two (longer for a big site).' },
+  { title: 'Reads the HTML your server sends', text: 'It does not run JavaScript, so a site that only shows its text after JavaScript runs is better checked from your machine.' },
+  { title: 'Runs on any site from your machine', text: 'seo internal-links works on any site, with no account.', href: '/docs/internal-links' },
+  { title: 'Names the sentence and the link text', text: 'Each suggested link names the page to edit, the page it points to, a real sentence on that page that it fits in, and a real phrase from that sentence to use as the link text.' },
+  { title: 'Counts the searches both pages share', text: 'When your Search Console account has the site, it also counts the searches both pages appear for.' },
+]
+
+const matching = [
+  { title: 'On this page, Jev always judges the links', text: 'It runs on our key, so there is nothing to set up.' },
+  { title: 'From your machine, Jev needs your own key', text: 'Without one, links come from text matching, which finds pages that use the same words, and sentences that name the target page.' },
+  { title: 'Text matching finds good candidates', text: 'It cannot tell a helpful link from a forced one, so the result says Jev was not used.' },
+]
+
+const jev = [
+  { title: 'It answers a fixed question with a choice and a probability', text: 'You ask it a question such as “would this link help a reader of this page?”, and it answers with a choice and a probability, such as yes at 82%.' },
+  { title: 'It cannot invent a page, sentence or phrase', text: 'Because it only picks an answer and says how sure it is, it cannot invent anything that is not on your site.' },
+  { title: 'It is fast and cheap enough for every link', text: 'It can judge every candidate link on a site, which a chat model cannot.' },
+  { title: 'Add your key on the Keys tab of your account', text: 'The CLI on your machine uses it once it is linked to your account, which the setup prompt does. You can also set TYPESAFE_API_KEY on your machine to keep the key there. You pay TypeSafe for the requests directly.', href: '/account#keys' },
+]
+
+const audit = [
+  { title: 'Sorts every page into a type', text: 'Guide, article, tool, product page and so on.' },
+  { title: 'Judges each link', text: 'On how likely it is to help a reader, which real sentence it belongs in, which real phrase to use, and what the link does for the reader.' },
+  { title: 'Counts a link at 50% and calls it strong at 75%', text: 'A link needs a probability of 50% to count as possible and 75% to count as strong. Fixed rules still apply on top.' },
+  { title: 'Only picks among your own pages, sentences and phrases', text: 'It never writes text.' },
+  { title: 'Reports what it cost', text: 'The result says how many requests Jev made and what they cost.' },
+]
+
+const matter = [
+  { title: 'Search engines find pages by following links', text: 'They find most pages this way, and they read the links between your pages as a map of what matters.' },
+  { title: 'Linked pages look central to their topic', text: 'A page that many related pages link to looks central. A page nothing links to may not be found at all, and if it is, little tells Google it is important.' },
+  { title: 'Link text says what the target is about', text: 'That is why a descriptive phrase beats “click here”.' },
+  { title: 'Links move readers', text: 'A link in the right sentence takes someone to the next thing they need, which is the reason to add it in the first place.' },
+]
+
+const orphans = [
+  { title: 'An orphan page has no links from other pages', text: 'It often happens when a page lives only in the sitemap, or when the pages that linked to it were removed.' },
+  { title: 'A weakly linked page has fewer than three content links', text: 'It counts links from other pages’ main content. Navigation and footer links repeat on every page, so they say little about any one page; links in the content are about that page.' },
+  { title: 'Start with the pages that need links most', text: 'The tool lists both, so you can work down from the worst.' },
+  { title: 'Check whether the crawl hit its page limit', text: 'If it did, the result says so, because pages it did not reach could link to the ones it lists.' },
+]
+
+const strategy = [
+  { title: 'Link related pages to each other', text: 'Guides on one topic should point to each other where the text calls for it, and to the page that covers the topic best.' },
+  { title: 'Link from inside the content', text: 'A link inside a sentence that explains why to click is worth more than one more menu item.' },
+  { title: 'Use descriptive link text', text: 'Use the words that describe the target page, as they read naturally in the sentence. Avoid using the same exact phrase every time.' },
+  { title: 'Fix links that go through redirects', text: 'Point them straight at the final URL so readers and crawlers skip a hop.' },
+  { title: 'Check after you publish', text: 'Run the command again, or a crawl, to confirm the links are live.', href: '/docs/crawl' },
+]
+
+const tools = [
+  { title: 'seo internal-links', text: 'Audit a whole site or find the pages that should link to one page, from your own machine.', href: '/docs/internal-links', icon: Link01Icon, link: 'Internal links docs' },
+  { title: 'SEO crawler', text: 'Crawl the site after you publish, to confirm the new links are live.', href: '/features/seo-crawler', icon: WebValidationIcon, link: 'See the crawler' },
+  { title: 'Redirect checker', text: 'Find the final URL for a link that goes through a redirect, so you can link to it directly.', href: '/tools/redirect-checker', icon: Route01Icon, link: 'Trace redirects' },
+  { title: 'Keyword clustering tool', text: 'Group keywords by the pages Google ranks, to see which pages belong together.', href: '/tools/keyword-clustering-tool', icon: SearchList01Icon, link: 'Cluster keywords' },
 ]
 
 const faq = [
@@ -68,165 +128,168 @@ const faq = [
 
 <BaseLayout
   title="Free internal linking tool for SEO"
-  description="Find the internal links your site is missing, placed in sentences you already wrote. Run it here on a site in your Search Console, or audit a whole site or one page from your own machine."
+  description="Find the internal links your site is missing, placed in sentences you already wrote. Run it here on a site in your Search Console, or from your own machine."
   canonicalPath="/tools/internal-linking-tool"
   {breadcrumbs}
+  framed={false}
 >
   <main data-agent-content>
-    <Breadcrumbs {breadcrumbs} />
-    <PageHeader
-      title="Internal linking tool"
-      description="Find the internal links your site is missing, placed in sentences you already wrote. Run it here on a site in your Search Console, or from your own machine."
-    />
+    <section class="pt-4">
+      <div class="site-frame flex flex-col items-center pt-14 text-center sm:pt-20">
+        <h1 class="mt-4 max-w-3xl text-pretty text-4xl/tight font-medium -tracking-[0.8px] xl:text-5xl/tight xl:-tracking-[1px]">
+          Internal linking tool
+        </h1>
+        <p class="mt-4 max-w-2xl text-pretty text-xl/8 font-medium -tracking-[0.2px] text-foreground-muted">
+          Find the internal links your site is missing, placed in sentences
+          you already wrote. Run it here on a site in your Search Console, or
+          from your own machine.
+        </p>
+      </div>
+      <div class="site-frame mt-10 sm:mt-12">
+        <InternalLinksExplorer />
+      </div>
+    </section>
 
-    <InternalLinksExplorer />
+    <div class="space-y-24 py-24 sm:space-y-32 sm:py-32">
+      <SplitList
+        id="does-heading"
+        title="What does the internal linking tool do?"
+        text="It finds pages about the same things that do not link to each other yet. The tool crawls your site, honouring robots.txt and any crawl delay, and reads each page's main content."
+        items={does}
+      />
 
-    <div class="docs-prose mt-16">
-      <h2>What the internal linking tool does</h2>
-      <p>
-        The tool crawls your site, honouring robots.txt and any crawl delay.
-        It reads each page's main content, finds pages about the same things,
-        and checks which of them do not link to each other yet.
-      </p>
-      <p>
-        On this page it runs on our servers for a site in your Search
-        Console. Sign in with Google, pick the site and wait a minute or two
-        (longer for a big site). It reads the HTML your server sends and does
-        not run JavaScript, so a site that only shows its text after
-        JavaScript runs is better checked from your machine.
-      </p>
-      <p>
-        From your machine, <a href="/docs/internal-links">seo internal-links</a> works
-        on any site, with no account. It works in two ways.
-      </p>
-      <table>
-        <thead>
-          <tr>
-            <th>Command</th>
-            <th>What you get</th>
-          </tr>
-        </thead>
-        <tbody>
-          <tr>
-            <td><code>--site example.com</code></td>
-            <td>Links to add across the site (at most eight to each page), orphan pages, weakly linked pages, links through redirects and links with text like "click here".</td>
-          </tr>
-          <tr>
-            <td><code>--url https://example.com/page</code></td>
-            <td>Up to eight pages that should link to that one page.</td>
-          </tr>
-          <tr>
-            <td><code>--max-pages 2000</code></td>
-            <td>Site audits only. Crawls more than the default 500 pages, up to 5,000.</td>
-          </tr>
-        </tbody>
-      </table>
-      <p>
-        Each suggested link names the page to edit, the page it points to, a
-        real sentence on that page that it fits in, and a real phrase from
-        that sentence to use as the link text. When your Search Console
-        account has the site, it also counts the searches both pages appear
-        for.
-      </p>
+      <section class="site-frame" aria-labelledby="commands-heading">
+        <SectionHeading
+          id="commands-heading"
+          title="Which internal-links command should you run?"
+          text="The site audit for a whole site, or the page check for one page that needs links. Both run from your machine on any site, with no account."
+        />
+        <div class="docs-prose max-w-4xl">
+          <table>
+            <thead>
+              <tr>
+                <th>Command</th>
+                <th>What you get</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td><code>--site example.com</code></td>
+                <td>Links to add across the site (at most eight to each page), orphan pages, weakly linked pages, links through redirects and links with text like "click here".</td>
+              </tr>
+              <tr>
+                <td><code>--url https://example.com/page</code></td>
+                <td>Up to eight pages that should link to that one page.</td>
+              </tr>
+              <tr>
+                <td><code>--max-pages 2000</code></td>
+                <td>Site audits only. Crawls more than the default 500 pages, up to 5,000.</td>
+              </tr>
+            </tbody>
+          </table>
+          <p>
+            The <a href="/docs/internal-links">seo internal-links docs</a> cover every option.
+          </p>
+        </div>
+      </section>
 
-      <h2>Text matching or Jev</h2>
-      <p>
-        On this page Jev always judges the links, on our key. From your
-        machine it needs your own key. Without one, links come from text
-        matching, which finds pages that use the
-        same words, and sentences that name the target page. That finds good
-        candidates, but it cannot tell a helpful link from a forced one, so
-        the result says Jev was not used.
-      </p>
+      <SplitList
+        id="matching-heading"
+        title="Does the tool need Jev to suggest links?"
+        text="No. Without Jev it falls back to text matching and says so. Jev is what tells a helpful link from a forced one."
+        items={matching}
+      />
 
-      <h3>What Jev is</h3>
-      <p>
-        <a href="https://typesafe.ai" target="_blank" rel="noreferrer">Jev</a> is an AI model from TypeSafe AI built to make decisions inside
-        software. You ask it a fixed question, such as
-        "would this link help a reader of this page?", and it answers with a
-        choice and a probability, such as yes at 82%. Because it only
-        picks an answer and says how sure it is, it cannot invent a page,
-        sentence or phrase that is not on your site. It is also fast and
-        cheap enough to judge every candidate link on a site, which a chat
-        model is not.
-      </p>
-      <p>
-        To use it with the command, get an API key from <a href="https://typesafe.ai" target="_blank" rel="noreferrer">TypeSafe AI</a> and add it on the <a href="/account#keys">Keys tab of your account</a>.
-        The CLI on your machine uses it once it is linked to your account, which the setup prompt does.
-        You can also set <code>TYPESAFE_API_KEY</code> on your machine to keep the key there.
-        You pay TypeSafe for the requests directly.
-      </p>
+      <SplitList
+        id="jev-heading"
+        title="What is Jev?"
+        text="An AI model from TypeSafe AI built to make decisions inside software. To use it with the command, get an API key from TypeSafe AI and add it to your account."
+        items={jev}
+      >
+        <p class="mt-6 text-base leading-7 text-foreground-muted">
+          Read about
+          {' '}<a class="text-foreground underline underline-offset-4" href="https://typesafe.ai" target="_blank" rel="noreferrer">Jev at TypeSafe AI</a>.
+        </p>
+      </SplitList>
 
-      <h3>What Jev does in an audit</h3>
-      <p>
-        With a TypeSafe key, Jev sorts every page into a type (guide,
-        article, tool, product page and so on), then judges each link on how
-        likely it is to help a reader, which real sentence it belongs in,
-        which real phrase to use, and what the link does for the reader. A
-        link needs a probability of 50% to count as possible and 75% to
-        count as strong. Fixed rules still apply on top, and Jev only picks
-        among your own pages, sentences and phrases. It never writes text.
-        The result says how many requests Jev made and what they cost.
-      </p>
+      <SplitList
+        id="audit-heading"
+        title="What does Jev do in an audit?"
+        text="It judges every candidate link with a TypeSafe key, and only among your own pages, sentences and phrases."
+        items={audit}
+      />
 
-      <h2>Why internal links matter for SEO</h2>
-      <p>
-        Search engines find most pages by following links, and they read the
-        links between your pages as a map of what matters. A page that many
-        related pages link to looks central to its topic. A page nothing
-        links to may not be found at all, and if it is, little tells Google
-        it is important.
-      </p>
-      <p>
-        Internal links also carry meaning. The link text tells Google what
-        the target page is about, which is why a descriptive phrase beats
-        "click here". And they move readers, since a link in the right sentence
-        takes someone to the next thing they need, which is the reason to
-        add it in the first place.
-      </p>
+      <SplitList
+        id="matter-heading"
+        title="Why do internal links matter for SEO?"
+        text="Because search engines find pages and judge what matters by following them. Internal links also carry meaning and move readers."
+        items={matter}
+      />
 
-      <h2>Orphan pages and weakly linked pages</h2>
-      <p>
-        An orphan page has no links from other pages on the site. It often
-        happens when a page lives only in the sitemap, or when the pages that
-        linked to it were removed. A weakly linked page has fewer than three
-        links from other pages' main content. Navigation and footer links
-        repeat on every page, so they say little about any one page; links in
-        the content are about that page.
-      </p>
-      <p>
-        The tool lists both, so you can start with the pages that need links
-        most. If the crawl hit its page limit, it says so, because pages it
-        did not reach could link to the ones it lists.
-      </p>
+      <SplitList
+        id="orphans-heading"
+        title="What are orphan pages and weakly linked pages?"
+        text="Pages with no links, or fewer than three, from other pages' main content. Both are the first pages to fix."
+        items={orphans}
+      />
 
-      <h2>Build an internal linking strategy that lasts</h2>
-      <ol>
-        <li><strong>Link related pages to each other.</strong> Guides on one topic should point to each other where the text calls for it, and to the page that covers the topic best.</li>
-        <li><strong>Link from inside the content.</strong> A link inside a sentence that explains why to click is worth more than one more menu item.</li>
-        <li><strong>Use descriptive link text.</strong> Use the words that describe the target page, as they read naturally in the sentence. Avoid using the same exact phrase every time.</li>
-        <li><strong>Fix links that go through redirects.</strong> Point them straight at the final URL so readers and crawlers skip a hop.</li>
-        <li><strong>Check after you publish.</strong> Run the command again, or a <a href="/docs/crawl">crawl</a>, to confirm the links are live.</li>
-      </ol>
+      <SplitList
+        id="strategy-heading"
+        title="How do you build an internal linking strategy that lasts?"
+        text="Link related pages to each other from inside the content, and check the links after you publish."
+        items={strategy}
+      />
 
-      <h2>Add internal links with your AI agent</h2>
-      <p>
-        The command is built for an agent to run. Ask your agent to audit the
-        site, read each suggestion, open the source page and add the link
-        where it helps a reader. Your agent can then check the work with a
-        crawl. A person approves every change. Ask:
-      </p>
-      <CodeBlock prompt value="Run seo internal-links on example.com, open the strong suggestions, and add each link to the source page in the sentence it names. Show me the diff before you save." wrap />
-      <p>The command runs from the CLI or the local MCP server. Give your agent this prompt and it installs the CLI and adds the hosted MCP server:</p>
-    </div>
+      <SplitList
+        id="agent-heading"
+        title="How do you add internal links with your AI agent?"
+        text="Ask it to audit the site with seo internal-links, read each suggestion, open the source page and add the link where it helps a reader. The command is built for an agent to run."
+        items={[
+          { title: 'Runs from the CLI or the local MCP server', text: 'The command runs on your own machine.' },
+          { title: 'Checks its own work', text: 'Your agent can then check the work with a crawl.', href: '/docs/crawl' },
+          { title: 'A person approves every change', text: 'Your agent shows the edit before it saves.' },
+        ]}
+      >
+        <div class="mt-6">
+          <CodeBlock
+            label="Ask your agent"
+            prompt
+            value="Run seo internal-links on example.com, open the strong suggestions, and add each link to the source page in the sentence it names. Show me the diff before you save."
+            wrap
+          />
+        </div>
+      </SplitList>
 
-    <SetupPrompts id="internal-links-setup" class="mt-6" />
+      <section class="site-frame" aria-labelledby="tools-heading">
+        <SectionHeading
+          id="tools-heading"
+          title="Which tools go with an internal linking check?"
+          text="These, which cover the command, the crawl that checks your work, redirects to skip and the pages that belong together."
+        />
+        <div class="grid grid-cols-1 gap-2 sm:grid-cols-2">
+          {tools.map((item) => <HomeCard {...item} />)}
+        </div>
+      </section>
 
-    <div class="docs-prose mt-16">
-      <h2>Internal linking questions</h2>
-    </div>
-    <div class="mt-6">
-      <FaqAccordion id="internal-links-faq" items={faq} />
+      <section class="site-frame" aria-labelledby="faq-heading">
+        <div class="max-w-2xl">
+          <h2 id="faq-heading" class="text-pretty text-2xl font-medium -tracking-[0.4px] text-foreground xl:text-3xl xl:-tracking-[0.6px]">
+            Internal linking questions
+          </h2>
+        </div>
+        <div class="mt-10">
+          <FaqAccordion items={faq} id="internal-links-faq" />
+        </div>
+      </section>
+
+      <section class="site-frame" aria-labelledby="start-heading">
+        <SectionHeading
+          id="start-heading"
+          title="Add internal links across your site with your agent"
+          text="The command runs from the CLI or the local MCP server. Give your agent this prompt and it installs the CLI and adds the hosted MCP server."
+        />
+        <SetupPrompts id="internal-links-setup" />
+      </section>
     </div>
   </main>
 </BaseLayout>

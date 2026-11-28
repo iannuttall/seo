@@ -1,9 +1,11 @@
 ---
-import Breadcrumbs from '@/components/Breadcrumbs.astro'
+import { Analytics01Icon, Award01Icon, Link01Icon, Shield01Icon } from '@hugeicons/core-free-icons'
 import CodeBlock from '@/components/CodeBlock.astro'
 import FaqAccordion from '@/components/FaqAccordion.astro'
-import PageHeader from '@/components/PageHeader.astro'
+import HomeCard from '@/components/HomeCard.astro'
+import SectionHeading from '@/components/SectionHeading.astro'
 import SetupPrompts from '@/components/SetupPrompts.astro'
+import SplitList from '@/components/SplitList.astro'
 import DomainAgeChecker from '@/components/tools/DomainAgeChecker.astro'
 import BaseLayout from '@/layouts/BaseLayout.astro'
 import type { SchemaBreadcrumb } from '@/lib/schema'
@@ -14,6 +16,106 @@ const breadcrumbs: SchemaBreadcrumb[] = [
   { label: 'Domain age checker' },
 ]
 
+const source = [
+  {
+    title: 'One registry for each top-level domain',
+    text: 'Each top-level domain is run by one registry, and the registry keeps the record for every domain under it.',
+  },
+  {
+    title: 'No third-party database in between',
+    text: "The checker reads IANA's RDAP bootstrap file to find the registry's server, then asks it directly, so the date is the registry's own.",
+  },
+  {
+    title: 'Some country registries have no RDAP',
+    text: 'RDAP is the standard that replaced WHOIS for generic top-level domains. Some country registries still do not offer it, and the checker says so rather than guessing.',
+  },
+  {
+    title: 'Owner details are usually withheld',
+    text: 'Personal details of the owner are usually withheld, so the result does not show who owns a domain.',
+  },
+]
+
+const siteAge = [
+  {
+    title: 'The clock restarts after a lapse',
+    text: "The registration date is when the current owner's registration began. If a domain lapsed and someone registered it again, the clock restarts.",
+  },
+  {
+    title: 'A domain can sit unused for years',
+    text: 'A domain can also be bought years before a site goes live on it.',
+  },
+  {
+    title: 'Search traffic shows when a site started',
+    text: 'To see when a site started getting search traffic, the website traffic checker shows a year of estimated history.',
+    href: '/tools/website-traffic-checker',
+  },
+]
+
+const seo = [
+  {
+    title: 'Age does not help a domain rank',
+    text: 'Google has said that the age of a domain does not help it rank.',
+  },
+  {
+    title: 'Old domains do well for other reasons',
+    text: 'Years of links from other sites, a large body of content and a name people search for. A new domain with better pages can and does outrank them.',
+  },
+  {
+    title: 'Age is useful for due diligence',
+    text: 'Before you buy a domain, a link or a business, a long registration with the same registrar and steady name servers is a good sign.',
+  },
+  {
+    title: 'A recent registration is worth a question',
+    text: 'A recent registration on a name that claims a long history, or a recent transfer, is worth a question.',
+  },
+]
+
+const buying = [
+  { title: 'Look at the registration date', text: 'Check the registration date and any recent transfer here.' },
+  {
+    title: 'See whether it gets search traffic',
+    text: 'Use the website traffic checker.',
+    href: '/tools/website-traffic-checker',
+  },
+  {
+    title: 'Check the strength of its links',
+    text: 'Use the Domain Rating checker.',
+    href: '/tools/domain-rating-checker',
+  },
+  { title: 'Look for spam patterns', text: 'Use the spam score checker.', href: '/tools/spam-score-checker' },
+]
+
+const tools = [
+  {
+    title: 'Website traffic checker',
+    text: "Any site's estimated monthly Google organic traffic, with a year of history.",
+    href: '/tools/website-traffic-checker',
+    icon: Analytics01Icon,
+    link: 'Check traffic',
+  },
+  {
+    title: 'Domain Rating checker',
+    text: "Any website's Domain Rating by Ahrefs, and what a good score is in its market.",
+    href: '/tools/domain-rating-checker',
+    icon: Award01Icon,
+    link: 'Check Domain Rating',
+  },
+  {
+    title: 'Spam score checker',
+    text: 'The 0 to 100 spam score of any website, and when a high score matters for links.',
+    href: '/tools/spam-score-checker',
+    icon: Shield01Icon,
+    link: 'Check spam score',
+  },
+  {
+    title: 'Backlink checker',
+    text: 'Referring domains, a year of link history and the strongest sites linking to any domain.',
+    href: '/tools/backlink-checker',
+    icon: Link01Icon,
+    link: 'Check backlinks',
+  },
+]
+
 const faq = [
   {
     question: 'How do I check the age of a domain?',
@@ -22,8 +124,7 @@ const faq = [
   },
   {
     question: 'Is the domain age checker free?',
-    answer:
-      'Yes, with no account. Each visitor can check 10 domains a day.',
+    answer: 'Yes, with no account. Each visitor can check 10 domains a day.',
   },
   {
     question: 'Why does the checker say a domain has no RDAP server?',
@@ -38,7 +139,7 @@ const faq = [
   {
     question: 'Does domain age affect SEO?',
     answer:
-      'Google has said that domain age on its own does not help rankings. Older domains often rank well because they have had years to earn links and publish content, not because of the date.',
+      'Google has said that domain age on its own does not help rankings. Older domains often rank well because they have had years to earn links and publish content.',
   },
   {
     question: 'Can I check when a subdomain was created?',
@@ -55,132 +156,174 @@ const faq = [
 
 <BaseLayout
   title="Free domain age checker with registration dates"
-  description="Check how old any domain is, for free. Get the registration date, expiry, registrar and name servers straight from the registry, and compare up to five domains on a timeline."
+  description="Check how old any domain is, for free. Get the registration date, expiry, registrar and name servers from the registry, and compare five domains."
   canonicalPath="/tools/domain-age-checker"
   {breadcrumbs}
+  framed={false}
 >
   <main data-agent-content>
-    <Breadcrumbs {breadcrumbs} />
-    <PageHeader
-      title="Domain age checker"
-      description="Enter a domain to see when it was registered and how old it is, read live from the registry's own record."
-    />
+    <section class="pt-4">
+      <div class="site-frame flex flex-col items-center pt-14 text-center sm:pt-20">
+        <h1 class="mt-4 max-w-3xl text-pretty text-4xl/tight font-medium -tracking-[0.8px] xl:text-5xl/tight xl:-tracking-[1px]">
+          Domain age checker
+        </h1>
+        <p class="mt-4 max-w-2xl text-pretty text-xl/8 font-medium -tracking-[0.2px] text-foreground-muted">
+          Enter a domain to see when it was registered and how old it is, read
+          live from the registry's own record.
+        </p>
+      </div>
+      <div class="site-frame mt-10 sm:mt-12">
+        <DomainAgeChecker />
+      </div>
+    </section>
 
-    <DomainAgeChecker />
+    <div class="space-y-24 py-24 sm:space-y-32 sm:py-32">
+      <section class="site-frame" aria-labelledby="result-heading">
+        <SectionHeading
+          id="result-heading"
+          title="How do you read the domain age result?"
+          text="The big number is the age of the current registration, in years and months. Under it, each domain gets its own record from the registry."
+        />
+        <div class="docs-prose max-w-4xl">
+          <table>
+            <thead>
+              <tr>
+                <th>Field</th>
+                <th>What it tells you</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td>Registered</td>
+                <td>The day the current registration began.</td>
+              </tr>
+              <tr>
+                <td>Paid until</td>
+                <td>The date the registration runs out unless the owner renews it.</td>
+              </tr>
+              <tr>
+                <td>Last changed</td>
+                <td>The last time the record changed, such as a renewal or new name servers.</td>
+              </tr>
+              <tr>
+                <td>Transferred</td>
+                <td>The last move to a new registrar, when the registry reports one.</td>
+              </tr>
+              <tr>
+                <td>Registrar and name servers</td>
+                <td>Where the domain is registered and which DNS servers answer for it.</td>
+              </tr>
+            </tbody>
+          </table>
+          <p>
+            Enter several domains and the timeline puts them side by side, so
+            you can see at a glance which site has been around longest and which
+            registrations run out soon.
+          </p>
+        </div>
+      </section>
 
-    <div class="docs-prose mt-16">
-      <h2>Read the domain age result</h2>
-      <p>
-        The big number is the age of the current registration, in years and
-        months. Under it, each domain gets its own record from the registry.
-      </p>
-      <table>
-        <thead>
-          <tr>
-            <th>Field</th>
-            <th>What it tells you</th>
-          </tr>
-        </thead>
-        <tbody>
-          <tr>
-            <td>Registered</td>
-            <td>The day the current registration began.</td>
-          </tr>
-          <tr>
-            <td>Paid until</td>
-            <td>The date the registration runs out unless the owner renews it.</td>
-          </tr>
-          <tr>
-            <td>Last changed</td>
-            <td>The last time the record changed, such as a renewal or new name servers.</td>
-          </tr>
-          <tr>
-            <td>Transferred</td>
-            <td>The last move to a new registrar, when the registry reports one.</td>
-          </tr>
-          <tr>
-            <td>Registrar and name servers</td>
-            <td>Where the domain is registered and which DNS servers answer for it.</td>
-          </tr>
-        </tbody>
-      </table>
-      <p>
-        Enter several domains and the timeline puts them side by side, so you
-        can see at a glance which site has been around longest and which
-        registrations run out soon.
-      </p>
+      <SplitList
+        id="source-heading"
+        title="Where do the domain age dates come from?"
+        text="From the registry that runs the domain's top-level domain, asked directly over RDAP."
+        items={source}
+      >
+        <p class="mt-4 text-base leading-7 text-foreground-muted">
+          The checker finds each registry's server in IANA's{' '}
+          <a
+            class="text-foreground underline underline-offset-4"
+            href="https://data.iana.org/rdap/dns.json"
+            target="_blank"
+            rel="noreferrer">RDAP bootstrap file</a
+          >.
+        </p>
+      </SplitList>
 
-      <h2>Where the dates come from</h2>
-      <p>
-        Each top-level domain is run by one registry, and the registry keeps
-        the record for every domain under it. The checker reads IANA's{' '}
-        <a href="https://data.iana.org/rdap/dns.json" target="_blank" rel="noreferrer">RDAP bootstrap file</a>{' '}
-        to find the registry's server, then asks it directly. No third-party
-        database sits in between, so the date is the registry's own.
-      </p>
-      <p>
-        RDAP is the standard that replaced WHOIS for generic top-level
-        domains. Some country registries still do not offer it, and the
-        checker says so rather than guessing. Personal details of the owner
-        are usually withheld, so the result does not show who owns a domain.
-      </p>
+      <SplitList
+        id="site-age-heading"
+        title="Is domain age the same as the age of the website?"
+        text="Not always. The date is when the current registration began, which can be years after or before the site itself."
+        items={siteAge}
+      />
 
-      <h2>Domain age is not the age of the website</h2>
-      <p>
-        The registration date is when the current owner's registration
-        began. If a domain lapsed and someone registered it again, the clock
-        restarts. A domain can also be bought years before a site goes live
-        on it. To see when a site started getting search traffic, the{' '}
-        <a href="/tools/website-traffic-checker">website traffic checker</a>{' '}
-        shows a year of estimated history.
-      </p>
+      <SplitList
+        id="seo-heading"
+        title="Does domain age matter for SEO?"
+        text="Not by itself. Google has said that the age of a domain does not help it rank, but age is still useful when you check a domain before a deal."
+        items={seo}
+      />
 
-      <h2>Does domain age matter for SEO?</h2>
-      <p>
-        Not by itself. Google has said that the age of a domain does not
-        help it rank. Old domains often do well for other reasons: years of
-        links from other sites, a large body of content and a name people
-        search for. A new domain with better pages can and does outrank them.
-      </p>
-      <p>
-        Where age is useful is due diligence. Before you buy a domain, a link
-        or a business, a long registration with the same registrar and steady
-        name servers is a good sign. A recent registration on a name that
-        claims a long history, or a recent transfer, is worth a question.
-      </p>
+      <SplitList
+        id="buying-heading"
+        title="How do you check a domain before you buy it?"
+        text="Look at its age, traffic, links and spam score together. An expired domain with a big Domain Rating, no traffic and a spam score in the high band was usually used for link schemes, and its old links are unlikely to help a new site."
+        items={buying}
+      >
+        <p class="mt-4 text-base leading-7 text-foreground-muted">
+          Domain Rating here means Domain Rating by{' '}
+          <a class="text-foreground underline underline-offset-4" href="https://ahrefs.com" target="_blank" rel="noreferrer"
+            >Ahrefs</a
+          >.
+        </p>
+      </SplitList>
 
-      <h2>Check a domain before you buy it</h2>
-      <ul>
-        <li>Look at the registration date and any recent transfer here.</li>
-        <li>See whether it gets search traffic with the <a href="/tools/website-traffic-checker">website traffic checker</a>.</li>
-        <li>Check the strength of its links with the <a href="/tools/domain-rating-checker">Domain Rating checker</a>.</li>
-        <li>Look for spam patterns with the <a href="/tools/spam-score-checker">spam score checker</a>.</li>
-      </ul>
-      <p>
-        An expired domain with a big Domain Rating, no traffic and a spam
-        score in the high band was usually used for link schemes. Its old
-        links are unlikely to help a new site.
-      </p>
+      <SplitList
+        id="agent-heading"
+        title="How do you research a domain with your AI agent?"
+        text="Use this page for the date, because SEO Skill has no domain age command. Your agent can do the rest of the check."
+        items={[
+          {
+            title: 'Keywords the domain ranks for',
+            text: 'With your own DataForSEO or Ahrefs key, seo research lists the keywords a domain ranks for.',
+            href: '/docs/research',
+          },
+          {
+            title: 'Sites that link to it',
+            text: 'It also lists the sites that link to the domain, each with a Domain Rating.',
+          },
+        ]}
+      >
+        <div class="mt-6">
+          <CodeBlock
+            label="Ask your agent"
+            prompt
+            value="Show the keywords example.com ranks for and its referring domains, and tell me whether its links look natural"
+            wrap
+          />
+        </div>
+      </SplitList>
 
-      <h2>Research a domain with your AI agent</h2>
-      <p>
-        SEO Skill has no domain age command, so this page is the place for
-        the date. Your agent can do the rest of the check. With your own
-        DataForSEO or Ahrefs key, <a href="/docs/research">seo research</a>{' '}
-        lists the keywords a domain ranks for and the sites that link to it,
-        each with a Domain Rating. Ask:
-      </p>
-      <CodeBlock prompt value="Show the keywords example.com ranks for and its referring domains, and tell me whether its links look natural" wrap />
-      <p>To set it up, give your agent this prompt:</p>
-    </div>
+      <section class="site-frame" aria-labelledby="tools-heading">
+        <SectionHeading
+          id="tools-heading"
+          title="Which tools go with a domain age check?"
+          text="These, which cover a domain's traffic, the strength of its links and signs of spam."
+        />
+        <div class="grid grid-cols-1 gap-2 sm:grid-cols-2">
+          {tools.map((item) => <HomeCard {...item} />)}
+        </div>
+      </section>
 
-    <SetupPrompts id="domain-age-setup" class="mt-6" />
+      <section class="site-frame" aria-labelledby="faq-heading">
+        <div class="max-w-2xl">
+          <h2 id="faq-heading" class="text-pretty text-2xl font-medium -tracking-[0.4px] text-foreground xl:text-3xl xl:-tracking-[0.6px]">
+            Domain age questions
+          </h2>
+        </div>
+        <div class="mt-10">
+          <FaqAccordion id="domain-age-faq" items={faq} />
+        </div>
+      </section>
 
-    <div class="docs-prose mt-16">
-      <h2>Domain age questions</h2>
-    </div>
-    <div class="mt-6">
-      <FaqAccordion id="domain-age-faq" items={faq} />
+      <section class="site-frame" aria-labelledby="start-heading">
+        <SectionHeading
+          id="start-heading"
+          title="Research any domain with your agent"
+          text="Add SEO Skill to your agent, add your DataForSEO or Ahrefs key, and ask it whether a domain's links and keywords look natural."
+        />
+        <SetupPrompts id="domain-age-setup" />
+      </section>
     </div>
   </main>
 </BaseLayout>

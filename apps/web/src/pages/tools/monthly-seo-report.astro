@@ -1,9 +1,11 @@
 ---
+import { Alert02Icon, ChartLineData01Icon, CheckListIcon, SearchList01Icon } from '@hugeicons/core-free-icons'
 import CodeBlock from '@/components/CodeBlock.astro'
 import FaqAccordion from '@/components/FaqAccordion.astro'
-import Breadcrumbs from '@/components/Breadcrumbs.astro'
-import PageHeader from '@/components/PageHeader.astro'
+import HomeCard from '@/components/HomeCard.astro'
+import SectionHeading from '@/components/SectionHeading.astro'
 import SetupPrompts from '@/components/SetupPrompts.astro'
+import SplitList from '@/components/SplitList.astro'
 import MonthlyReportBuilder from '@/components/tools/MonthlyReportBuilder.astro'
 import BaseLayout from '@/layouts/BaseLayout.astro'
 import type { SchemaBreadcrumb } from '@/lib/schema'
@@ -14,133 +16,173 @@ const breadcrumbs: SchemaBreadcrumb[] = [
   { label: 'Monthly SEO report' },
 ]
 
+const exportSteps = [
+  { title: 'Open the search results report', text: 'In Search Console, open Performance, then Search results.' },
+  { title: 'Compare two periods', text: 'Open the date filter, choose Compare and pick the last 28 days against the previous period. For calendar months, use Custom and set both months.' },
+  { title: 'Download the export', text: 'Choose Export, then Download CSV, and drop the zip above.' },
+  { title: 'Or export 3 months without a comparison', text: 'The report then compares the last two complete calendar months. The page and query tables cover the whole export rather than one month, and the report says so.' },
+]
+
+const contents = [
+  { title: 'The four headline numbers', text: 'Clicks, impressions, click-through rate and average position, each against the previous period.' },
+  { title: 'Daily clicks on one chart', text: 'Daily clicks for both periods, drawn together.' },
+  { title: 'Clicks by device and by country', text: 'Where the clicks came from in each period.' },
+  { title: 'The biggest movers', text: 'The pages and queries that gained and lost the most clicks.' },
+  { title: 'Your own notes, word for word', text: 'Every number comes from your export. The report adds no score and no advice, so what you send is what Search Console recorded.' },
+  { title: 'Every query, from your agent', text: 'For every query rather than the biggest movers, run an SEO keyword report with your agent.', href: '/features/keyword-report' },
+]
+
+const notes = [
+  { title: 'What you shipped this month', text: 'The numbers say what changed. They cannot say why, so use the notes for the work behind them.' },
+  { title: 'Anything that broke', text: 'And what you will check next.' },
+  { title: 'Keep what happened apart from its cause', text: 'Keep what happened apart from what you think caused it, and the reader can judge both.' },
+]
+
+const reading = [
+  { title: 'Clicks fall, impressions flat', text: 'Fewer people clicked. Check titles, a new feature on the results page, or a lower position.' },
+  { title: 'Clicks and impressions both fall', text: 'Fewer people saw you. Rankings or demand moved.' },
+  { title: 'Average position rises while clicks fall', text: 'Losing a query you ranked badly for lifts the average.' },
+  { title: 'Seasonal months', text: 'Many sites are seasonal. A December dip after a strong November may be normal. When you have a year of data, compare a month with the same month last year as well.' },
+]
+
+const tools = [
+  { title: 'SEO reporting', text: 'Weekly, monthly or white label client SEO reports your agent builds from real clicks, queries and sessions.', href: '/features/seo-reporting', icon: CheckListIcon, link: 'See SEO reporting' },
+  { title: 'Keyword report', text: 'Every query your site shows for, with its page, clicks, impressions, CTR and position against last period.', href: '/features/keyword-report', icon: SearchList01Icon, link: 'See the keyword report' },
+  { title: 'Google algorithm update checker', text: 'Line a change in clicks up with the Google updates that ran on the same dates.', href: '/tools/google-algorithm-update-checker', icon: Alert02Icon, link: 'Check the updates' },
+  { title: 'How to track SEO progress', text: 'Which numbers to watch over time, and how to compare one period fairly with the next.', href: '/guides/how-to-track-seo-progress', icon: ChartLineData01Icon, link: 'Read the guide' },
+]
+
 const faq = [
   {
-    question: "What should a monthly SEO report include?",
+    question: 'What should a monthly SEO report include?',
     answer:
-      "Clicks, impressions, click-through rate and average position against the previous period, the pages and queries that moved most, and short notes on what changed on the site and what comes next.",
+      'Clicks, impressions, click-through rate and average position against the previous period, the pages and queries that moved most, and short notes on what changed on the site and what comes next.',
   },
   {
-    question: "Is this monthly SEO report free?",
-    answer:
-      "Yes. It builds from your own Search Console export in the browser, with no account, and the export is not uploaded.",
+    question: 'Is this monthly SEO report free?',
+    answer: 'Yes. It builds from your own Search Console export in the browser, with no account, and the export is not uploaded.',
   },
   {
-    question: "Should I compare calendar months or 28 days?",
+    question: 'Should I compare calendar months or 28 days?',
     answer:
-      "Either, as long as you keep it the same every month. 28 days has the same mix of weekdays each time, which makes the numbers fairer to compare.",
+      'Either, as long as you keep it the same every month. 28 days has the same mix of weekdays each time, which makes the numbers fairer to compare.',
   },
   {
-    question: "Can I send the report to a client?",
+    question: 'Can I send the report to a client?',
     answer:
-      "Yes. Download it and send it. Every number comes from Search Console, so the client sees what Google recorded, with your notes on top.",
+      'Yes. Download it and send it. Every number comes from Search Console, so the client sees what Google recorded, with your notes on top.',
   },
   {
-    question: "Why are my export numbers lower than the Search Console chart?",
+    question: 'Why are my export numbers lower than the Search Console chart?',
     answer:
-      "The export’s page and query tables leave out rare and anonymised queries, so they add up to less than the totals. The totals and the chart use all the data.",
+      'The export’s page and query tables leave out rare and anonymised queries, so they add up to less than the totals. The totals and the chart use all the data.',
   },
 ]
 ---
 
 <BaseLayout
   title="Free monthly SEO report from Search Console"
-  description="Build a monthly SEO report from a Search Console export in your browser: clicks, impressions, CTR and position against the previous period, top movers and your notes."
+  description="Build a monthly SEO report from a Search Console export in your browser, with clicks, CTR and position against last period, top movers and your notes."
   canonicalPath="/tools/monthly-seo-report"
   {breadcrumbs}
+  framed={false}
 >
   <main data-agent-content>
-    <Breadcrumbs {breadcrumbs} />
-    <PageHeader
-      title="Monthly SEO report"
-      description="Turn your Search Console export into a month-on-month report you can send, then download it as HTML or Markdown."
-    />
+    <section class="pt-4">
+      <div class="site-frame flex flex-col items-center pt-14 text-center sm:pt-20">
+        <h1 class="mt-4 max-w-3xl text-pretty text-4xl/tight font-medium -tracking-[0.8px] xl:text-5xl/tight xl:-tracking-[1px]">
+          Monthly SEO report
+        </h1>
+        <p class="mt-4 max-w-2xl text-pretty text-xl/8 font-medium -tracking-[0.2px] text-foreground-muted">
+          Turn your Search Console export into a month-on-month report you can
+          send, then download it as HTML or Markdown.
+        </p>
+      </div>
+      <div class="site-frame mt-10 sm:mt-12">
+        <MonthlyReportBuilder />
+      </div>
+    </section>
 
-    <MonthlyReportBuilder />
+    <div class="space-y-24 py-24 sm:space-y-32 sm:py-32">
+      <SplitList
+        id="export-heading"
+        title="Which Search Console data does the report need?"
+        text="A Performance export that compares two periods. Three steps in Search Console get it, and an export without a comparison works too."
+        items={exportSteps}
+      />
 
-    <div class="docs-prose mt-16">
-      <h2>Export the right data from Search Console</h2>
-      <ol>
-        <li>Open <strong>Performance</strong>, then <strong>Search results</strong>.</li>
-        <li>
-          Open the date filter, choose <strong>Compare</strong> and pick the
-          last 28 days against the previous period. For calendar months, use{' '}
-          <strong>Custom</strong> and set both months.
-        </li>
-        <li>Choose <strong>Export</strong>, then <strong>Download CSV</strong>, and drop the zip above.</li>
-      </ol>
-      <p>
-        An export without a comparison works too. Export the last 3 months
-        and the report compares the last two complete calendar months. The
-        page and query tables then cover the whole export rather than one
-        month, and the report says so.
-      </p>
+      <SplitList
+        id="contents-heading"
+        title="What goes in a monthly SEO report?"
+        text="The four headline numbers against the previous period, where the clicks came from, the biggest movers and your notes."
+        items={contents}
+      />
 
-      <h2>What goes in the report</h2>
-      <ul>
-        <li>Clicks, impressions, click-through rate and average position, each against the previous period.</li>
-        <li>Daily clicks for both periods on one chart.</li>
-        <li>Clicks by device and by country.</li>
-        <li>The pages and queries that gained and lost the most clicks.</li>
-        <li>Your own notes, word for word.</li>
-      </ul>
-      <p>
-        Every number comes from your export. The report adds no score and no
-        advice, so what you send is what Search Console recorded. For every
-        query rather than the biggest movers, run an{' '}
-        <a href="/features/keyword-report">SEO keyword report</a> with your
-        agent.
-      </p>
+      <SplitList
+        id="notes-heading"
+        title="What should you write in the report notes?"
+        text="The part only you know: why the numbers moved. Search Console records what changed, and the notes say what you did."
+        items={notes}
+      />
 
-      <h2>Write the part only you know</h2>
-      <p>
-        The numbers say what changed. They cannot say why. Use the notes for
-        what you shipped this month, anything that broke, and what you will
-        check next. Keep what happened apart from what you think caused it,
-        and the reader can judge both.
-      </p>
+      <SplitList
+        id="reading-heading"
+        title="How do you read a month-on-month change?"
+        text="Read clicks and impressions together. Which one moved tells you whether fewer people saw you or fewer people clicked."
+        items={reading}
+      />
 
-      <h2>Read a month-on-month change</h2>
-      <p>
-        A fall in clicks with flat impressions means fewer people clicked:
-        check titles, a new feature on the results page, or a lower
-        position. A fall in both means fewer people saw you: rankings or
-        demand moved. Average position can rise while clicks fall, because
-        losing a query you ranked badly for lifts the average.
-      </p>
-      <p>
-        Many sites are seasonal. A December dip after a strong November may
-        be normal. When you have a year of data, compare a month with the
-        same month last year as well.
-      </p>
+      <SplitList
+        id="agent-heading"
+        title="How do you have your agent write the report every month?"
+        text="Ask it on the first of the month, once SEO Skill is connected, and keep the same 28-day window each time so one month compares fairly with the next. Agents that run on a schedule can do this without you asking."
+        items={[
+          { title: 'Search Console read directly', text: 'An export only has totals, pages and queries. The SEO report your agent runs reads Search Console directly.', href: '/docs/report' },
+          { title: 'Quick wins and losing pages', text: 'It also finds quick wins, low click-through rates, pages losing clicks and queries split across several of your pages.' },
+          { title: 'The day a traffic drop started', text: 'With the Google updates around it.' },
+          { title: 'Google Analytics and Bing beside Google', text: 'It adds Google Analytics sessions for the same dates and, when you run it from the CLI with Bing connected, Bing beside Google.' },
+        ]}
+      >
+        <div class="mt-6">
+          <CodeBlock
+            label="Ask your agent"
+            prompt
+            value="Write the monthly SEO report for example.com for last month, compared with the month before"
+            wrap
+          />
+        </div>
+      </SplitList>
 
-      <h2>Have your agent write it every month</h2>
-      <p>
-        An export only has totals, pages and queries. The{' '}
-        <a href="/docs/report">SEO report</a> your agent runs reads
-        Search Console directly, so it also finds quick wins, low
-        click-through rates, pages losing clicks, queries split across
-        several of your pages and the day a traffic drop started, with the
-        Google updates around it. It adds Google Analytics sessions for the
-        same dates and, when you run it from the CLI with Bing connected,
-        Bing beside Google.
-      </p>
-      <p>
-        Ask it on the first of the month and keep the same 28-day window each time, so one
-        month compares fairly with the next. Agents that run on a schedule
-        can do this without you asking.
-      </p>
-      <CodeBlock prompt value="Write the monthly SEO report for example.com for last month, compared with the month before" wrap />
-      <p>To set it up, give your agent this prompt:</p>
-    </div>
+      <section class="site-frame" aria-labelledby="tools-heading">
+        <SectionHeading
+          id="tools-heading"
+          title="Which tools go with a monthly SEO report?"
+          text="These, which cover every query, a drop's timing and the reports your agent can send for you."
+        />
+        <div class="grid grid-cols-1 gap-2 sm:grid-cols-2">
+          {tools.map((item) => <HomeCard {...item} />)}
+        </div>
+      </section>
 
-    <SetupPrompts id="monthly-report-setup" class="mt-6" />
+      <section class="site-frame" aria-labelledby="faq-heading">
+        <div class="max-w-2xl">
+          <h2 id="faq-heading" class="text-pretty text-2xl font-medium -tracking-[0.4px] text-foreground xl:text-3xl xl:-tracking-[0.6px]">
+            Monthly SEO report questions
+          </h2>
+        </div>
+        <div class="mt-10">
+          <FaqAccordion items={faq} id="monthly-seo-report-faq" />
+        </div>
+      </section>
 
-    <div class="docs-prose mt-16">
-      <h2>Monthly SEO report questions</h2>
-    </div>
-    <div class="mt-6">
-      <FaqAccordion id="monthly-seo-report-faq" items={faq} />
+      <section class="site-frame" aria-labelledby="start-heading">
+        <SectionHeading
+          id="start-heading"
+          title="Have your agent write the report every month"
+          text="Add SEO Skill to your agent, sign in with the Google account that can read your Search Console, and ask it for last month's report."
+        />
+        <SetupPrompts id="monthly-report-setup" />
+      </section>
     </div>
   </main>
 </BaseLayout>

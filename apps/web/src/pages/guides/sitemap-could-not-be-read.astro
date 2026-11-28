@@ -16,6 +16,7 @@ import FaqAccordion from '@/components/FaqAccordion.astro'
 import HomeCard from '@/components/HomeCard.astro'
 import LandingHero from '@/components/LandingHero.astro'
 import SectionHeading from '@/components/SectionHeading.astro'
+import SetupPrompts from '@/components/SetupPrompts.astro'
 import StatusGuides from '@/components/StatusGuides.astro'
 import BaseLayout from '@/layouts/BaseLayout.astro'
 import type { SchemaBreadcrumb } from '@/lib/schema'
@@ -103,8 +104,8 @@ const faq = [
       <section class="site-frame" aria-labelledby="meaning-heading">
         <SectionHeading
           id="meaning-heading"
-          title="What a readable sitemap looks like"
-          text="Google has to find the file, fetch it without a redirect or a block, and parse valid XML with full URLs. A failure at any step shows as could not be read."
+          title="What does a readable sitemap look like?"
+          text="It is a file Google can find, fetch without a redirect or a block, and parse as valid XML with full URLs. A failure at any step shows as could not be read."
         />
         <div class="max-w-3xl">
           <UrlMap
@@ -124,8 +125,8 @@ const faq = [
       <section class="site-frame" aria-labelledby="cause-heading">
         <SectionHeading
           id="cause-heading"
-          title="What usually causes it"
-          text="Work down this list in order. The first ones are the most common and the quickest to rule out."
+          title="What usually causes it?"
+          text="One of these, and the first ones are the most common and the quickest to rule out, so work down the list in order."
         />
         <div class="grid grid-cols-1 gap-2 sm:grid-cols-2">
           {causes.map((item) => <HomeCard {...item} />)}
@@ -135,8 +136,8 @@ const faq = [
       <section class="site-frame" aria-labelledby="check-heading">
         <SectionHeading
           id="check-heading"
-          title="Check your sitemap the way Google gets it"
-          text="SEO Skill reads your sitemaps from robots.txt, or from /sitemap.xml when robots.txt names none, and says which file it could not read and why."
+          title="How do you check your sitemap the way Google gets it?"
+          text="With SEO Skill, which reads your sitemaps from robots.txt, or from /sitemap.xml when robots.txt names none, and says which file it could not read and why."
         />
         <div class="docs-prose max-w-3xl">
           <p>Connect SEO Skill to your agent, then ask:</p>
@@ -162,7 +163,7 @@ const faq = [
       <section class="site-frame" aria-labelledby="after-heading">
         <SectionHeading
           id="after-heading"
-          title="After you fix it"
+          title="What do you do after you fix it?"
           text="Resubmit the sitemap, then check that Google can use the pages in it."
         />
         <div class="grid grid-cols-1 gap-2 sm:grid-cols-2">
@@ -175,12 +176,21 @@ const faq = [
         <SectionHeading
           id="sitemap-faq"
           title="Questions about sitemap could not be read"
-          text="What people ask after they see it in Search Console."
+          text="These are the follow-ups people ask after they see it in Search Console."
         />
         <FaqAccordion items={faq} id="sitemap-faq-list" />
       </section>
 
       <StatusGuides current="/guides/sitemap-could-not-be-read" />
+
+      <section class="site-frame" aria-labelledby="start-heading">
+        <SectionHeading
+          id="start-heading"
+          title="Check your sitemap with your agent"
+          text="Add SEO Skill to your agent, sign in with Google and ask whether Google can read every sitemap on your site."
+        />
+        <SetupPrompts id="sitemap-setup-end" />
+      </section>
     </div>
   </main>
 </BaseLayout>

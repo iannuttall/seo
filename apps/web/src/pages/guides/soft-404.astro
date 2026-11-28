@@ -16,6 +16,7 @@ import FaqAccordion from '@/components/FaqAccordion.astro'
 import HomeCard from '@/components/HomeCard.astro'
 import LandingHero from '@/components/LandingHero.astro'
 import SectionHeading from '@/components/SectionHeading.astro'
+import SetupPrompts from '@/components/SetupPrompts.astro'
 import StatusGuides from '@/components/StatusGuides.astro'
 import BaseLayout from '@/layouts/BaseLayout.astro'
 import type { SchemaBreadcrumb } from '@/lib/schema'
@@ -108,8 +109,8 @@ const faq = [
       <section class="site-frame" aria-labelledby="meaning-heading">
         <SectionHeading
           id="meaning-heading"
-          title="What a soft 404 means"
-          text="The server says the page exists. What is on the page says it doesn't. Google goes by what is on the page and reports a soft 404."
+          title="What does a soft 404 mean?"
+          text="It means the page looks empty or missing to Google even though the server answers 200. Google goes by what is on the page and reports a soft 404."
         />
         <div class="max-w-3xl">
           <UrlMap
@@ -129,8 +130,8 @@ const faq = [
       <section class="site-frame" aria-labelledby="cause-heading">
         <SectionHeading
           id="cause-heading"
-          title="What usually causes a soft 404"
-          text="Most soft 404s come from a page that changed while its URL kept answering 200."
+          title="What usually causes a soft 404?"
+          text="A page that changed while its URL kept answering 200 causes most of them."
         />
         <div class="grid grid-cols-1 gap-2 sm:grid-cols-2">
           {causes.map((item) => <HomeCard {...item} />)}
@@ -140,7 +141,7 @@ const faq = [
       <section class="site-frame" aria-labelledby="fix-heading">
         <SectionHeading
           id="fix-heading"
-          title="The fix for each kind of page"
+          title="How do you fix each kind of page?"
           text="Decide what the URL should be, then make the status code and the page agree."
         />
         <div class="grid grid-cols-1 gap-2 sm:grid-cols-2">
@@ -151,8 +152,8 @@ const faq = [
       <section class="site-frame" aria-labelledby="check-heading">
         <SectionHeading
           id="check-heading"
-          title="Find every soft 404 on your site"
-          text="SEO Skill asks URL Inspection about each page it knows, loads each one live and reports what it returns now, so you can see which soft 404s are still live."
+          title="How do you find every soft 404 on your site?"
+          text="With SEO Skill, which asks URL Inspection about each page it knows, loads each one live and reports what it returns now, so you can see which soft 404s are still live."
         />
         <div class="docs-prose max-w-3xl">
           <p>Connect SEO Skill to your agent, then ask:</p>
@@ -182,12 +183,21 @@ const faq = [
         <SectionHeading
           id="soft-404-faq"
           title="Questions about soft 404 errors"
-          text="What people ask after they see it in Search Console."
+          text="These are the follow-ups people ask after they see it in Search Console."
         />
         <FaqAccordion items={faq} id="soft-404-faq-list" />
       </section>
 
       <StatusGuides current="/guides/soft-404" />
+
+      <section class="site-frame" aria-labelledby="start-heading">
+        <SectionHeading
+          id="start-heading"
+          title="Find your soft 404s with your agent"
+          text="Add SEO Skill to your agent, sign in with Google and ask which soft 404s are still live on your site."
+        />
+        <SetupPrompts id="soft-404-setup-end" />
+      </section>
     </div>
   </main>
 </BaseLayout>

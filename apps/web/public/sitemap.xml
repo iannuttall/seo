@@ -8,8 +8,6 @@
   <url><loc>https://seoskill.dev/features/chatgpt-seo</loc></url>
   <url><loc>https://seoskill.dev/features/claude-seo</loc></url>
   <url><loc>https://seoskill.dev/features/codex-seo</loc></url>
-  <url><loc>https://seoskill.dev/features/crawled-currently-not-indexed</loc></url>
-  <url><loc>https://seoskill.dev/features/discovered-currently-not-indexed</loc></url>
   <url><loc>https://seoskill.dev/features/domain-overview</loc></url>
   <url><loc>https://seoskill.dev/features/google-analytics</loc></url>
   <url><loc>https://seoskill.dev/features/google-index-checker</loc></url>
@@ -34,6 +32,8 @@
   <url><loc>https://seoskill.dev/guides</loc></url>
   <url><loc>https://seoskill.dev/guides/alternate-page-with-proper-canonical-tag</loc></url>
   <url><loc>https://seoskill.dev/guides/astro-seo</loc></url>
+  <url><loc>https://seoskill.dev/guides/crawled-currently-not-indexed</loc></url>
+  <url><loc>https://seoskill.dev/guides/discovered-currently-not-indexed</loc></url>
   <url><loc>https://seoskill.dev/guides/duplicate-without-user-selected-canonical</loc></url>
   <url><loc>https://seoskill.dev/guides/excluded-by-noindex-tag</loc></url>
   <url><loc>https://seoskill.dev/guides/how-to-get-google-to-index-your-site</loc></url>

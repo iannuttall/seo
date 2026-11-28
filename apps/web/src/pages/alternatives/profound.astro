@@ -17,7 +17,7 @@ import HomeCard from '@/components/HomeCard.astro'
 import LandingHero from '@/components/LandingHero.astro'
 import SectionHeading from '@/components/SectionHeading.astro'
 import SetupPrompts from '@/components/SetupPrompts.astro'
-import { checked, seoSkillTracker, sources, trackers } from '@/content/ai-visibility-trackers'
+import { seoSkillTracker, trackers } from '@/content/ai-visibility-trackers'
 import { researchKeyStep } from '@/content/setup-prompts'
 import BaseLayout from '@/layouts/BaseLayout.astro'
 import type { SchemaBreadcrumb } from '@/lib/schema'
@@ -50,8 +50,8 @@ const rows = [
 const options = [
   { title: 'SEO Skill', text: 'Pick it if you want the work Profound’s agents do done by your own coding agent, in your own codebase, with your Search Console beside the AI answers.', icon: Robot01Icon, href: '/features/ai-visibility-checker', link: 'See the AI visibility checker' },
   { title: peec.name, text: `Pick it if ${peec.pickIf[0]}, or ${peec.pickIf[1]}.`, icon: ChartLineData01Icon, href: '/alternatives/peec-ai', link: 'Peec AI alternatives' },
-  { title: otterly.name, text: `Pick it if ${otterly.pickIf[0]}, or ${otterly.pickIf[1]}.`, icon: Analytics01Icon, href: otterly.url, link: 'Visit otterly.ai' },
-  { title: brandRadar.name, text: `Pick it if ${brandRadar.pickIf[0]}, or ${brandRadar.pickIf[1]}.`, icon: DatabaseIcon, href: brandRadar.url, link: 'Visit Brand Radar' },
+  { title: otterly.name, text: `Pick it if ${otterly.pickIf[0]}, or ${otterly.pickIf[1]}.`, icon: Analytics01Icon },
+  { title: brandRadar.name, text: `Pick it if ${brandRadar.pickIf[0]}, or ${brandRadar.pickIf[1]}.`, icon: DatabaseIcon },
 ]
 
 const crawlerTools = [
@@ -107,7 +107,7 @@ const faq = [
         <SectionHeading
           id="profound-heading"
           title="What does Profound do?"
-          text={`It measures your AI visibility, then drafts the fixes. These points come from Profound’s own pages, read on ${checked}.`}
+          text={`It measures your AI visibility, then drafts the fixes. These points come from Profound’s own pages.`}
         />
         <div class="grid grid-cols-1 gap-2 sm:grid-cols-2">
           {profoundDoes.map((item) => <HomeCard {...item} />)}
@@ -198,14 +198,6 @@ const faq = [
         <div class="grid grid-cols-1 gap-2 sm:grid-cols-2">
           <HomeCard title="Peec AI alternatives" text="What Peec AI does well, the alternatives for each job, and Peec AI next to SEO Skill." icon={CloudServerIcon} href="/alternatives/peec-ai" link="Peec AI alternatives" />
           <HomeCard title="AI search tracking" text="The questions people ask AI that show in your Search Console, visits from AI assistants and crawler access." icon={SearchList01Icon} href="/features/ai-search" link="See AI search tracking" />
-        </div>
-        <div class="docs-prose mt-10 max-w-3xl text-sm">
-          <p>Where these facts come from, read on {checked}:</p>
-          <ul>
-            {sources.map((source) => (
-              <li><a href={source.url} target="_blank" rel="noreferrer">{source.fact}</a></li>
-            ))}
-          </ul>
         </div>
       </section>
 

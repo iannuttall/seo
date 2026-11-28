@@ -1,13 +1,11 @@
 // The AI visibility trackers on /alternatives/peec-ai and
-// /alternatives/profound. Each fact comes from the vendor's own pages on
-// the date in `checked`, with the source in `sources`. These pages never
-// state another tool's price.
-
-export const checked = '27 November 2026'
+// /alternatives/profound. Each fact comes from the vendor's own pages,
+// listed in `sources` for whoever re-reads them. The site never links to
+// them or shows when they were read. These pages never state another
+// tool's price.
 
 export type Tracker = {
   name: string
-  url: string
   engines: string
   cadence: string
   extras: string
@@ -20,7 +18,6 @@ export type Tracker = {
 export const trackers = {
   peec: {
     name: 'Peec AI',
-    url: 'https://peec.ai',
     engines:
       'ChatGPT, Perplexity, Gemini, Google AI Overviews, Google AI Mode and Bing AI Mode on every plan. Claude, Grok, DeepSeek, Qwen, Mistral and others as add-ons.',
     cadence: 'Each prompt once a day on every engine you pick.',
@@ -37,7 +34,6 @@ export const trackers = {
   },
   profound: {
     name: 'Profound',
-    url: 'https://www.tryprofound.com',
     engines:
       'ChatGPT, Perplexity, Claude, Gemini, DeepSeek, Google AI Overviews, Google AI Mode, Exa, Muse Spark and Qwen.',
     cadence:
@@ -55,7 +51,6 @@ export const trackers = {
   },
   otterly: {
     name: 'Otterly.AI',
-    url: 'https://otterly.ai',
     engines:
       'ChatGPT, Google AI Overviews, Google AI Mode, Perplexity, Gemini, Microsoft Copilot and Claude.',
     cadence: 'Daily by default, or weekly on its larger plans.',
@@ -70,7 +65,6 @@ export const trackers = {
   },
   brandRadar: {
     name: 'Ahrefs Brand Radar',
-    url: 'https://ahrefs.com/brand-radar',
     engines:
       'AI Overviews, AI Mode, ChatGPT, Perplexity, Gemini and Copilot, plus Claude for your own prompts.',
     cadence:

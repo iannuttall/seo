@@ -10,8 +10,10 @@ import {
 
 // The comparison pages under /alternatives. Each competitor's facts live in
 // its own JSON file in ./alternatives, read from that vendor's own pages on
-// the date in `checked`, with a source URL for each fact. SEO Skill's own
-// column comes from `seoSkill` below and must match apps/mcp/README.md.
+// the date in `checked`, with a source URL for each fact. Those two are for
+// scripts/refresh-alternatives.mjs and whoever re-reads the facts: the site
+// never shows the date or links to the vendor. SEO Skill's own column comes
+// from `seoSkill` below and must match apps/mcp/README.md.
 
 export type Competitor = {
   slug: string

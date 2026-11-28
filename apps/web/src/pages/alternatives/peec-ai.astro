@@ -17,7 +17,7 @@ import HomeCard from '@/components/HomeCard.astro'
 import LandingHero from '@/components/LandingHero.astro'
 import SectionHeading from '@/components/SectionHeading.astro'
 import SetupPrompts from '@/components/SetupPrompts.astro'
-import { checked, seoSkillTracker, sources, trackers } from '@/content/ai-visibility-trackers'
+import { seoSkillTracker, trackers } from '@/content/ai-visibility-trackers'
 import { researchKeyStep } from '@/content/setup-prompts'
 import BaseLayout from '@/layouts/BaseLayout.astro'
 import type { SchemaBreadcrumb } from '@/lib/schema'
@@ -40,8 +40,8 @@ const peecDoes = [
 const options = [
   { title: 'SEO Skill', text: 'Pick it if you want your own agent to check the answers and then fix the pages, starting from the questions already in your Search Console.', icon: Robot01Icon, href: '/features/ai-visibility-checker', link: 'See the AI visibility checker' },
   { title: profound.name, text: `Pick it if ${profound.pickIf[0]}, or ${profound.pickIf[1]}.`, icon: CloudServerIcon, href: '/alternatives/profound', link: 'Profound alternatives' },
-  { title: otterly.name, text: `Pick it if ${otterly.pickIf[0]}, or ${otterly.pickIf[1]}.`, icon: Analytics01Icon, href: otterly.url, link: 'Visit otterly.ai' },
-  { title: brandRadar.name, text: `Pick it if ${brandRadar.pickIf[0]}, or ${brandRadar.pickIf[1]}.`, icon: DatabaseIcon, href: brandRadar.url, link: 'Visit Brand Radar' },
+  { title: otterly.name, text: `Pick it if ${otterly.pickIf[0]}, or ${otterly.pickIf[1]}.`, icon: Analytics01Icon },
+  { title: brandRadar.name, text: `Pick it if ${brandRadar.pickIf[0]}, or ${brandRadar.pickIf[1]}.`, icon: DatabaseIcon },
 ]
 
 const rows = [
@@ -108,7 +108,7 @@ const faq = [
         <SectionHeading
           id="peec-heading"
           title="What does Peec AI do well?"
-          text={`It is a clean daily tracker for marketing teams and agencies. These four points come from Peec AI’s own pages, read on ${checked}.`}
+          text={`It is a clean daily tracker for marketing teams and agencies. These four points come from Peec AI’s own pages.`}
         />
         <div class="grid grid-cols-1 gap-2 sm:grid-cols-2">
           {peecDoes.map((item) => <HomeCard {...item} />)}
@@ -207,14 +207,6 @@ const faq = [
         <div class="grid grid-cols-1 gap-2 sm:grid-cols-2">
           <HomeCard title="Profound alternatives" text="Profound compared with Peec AI and SEO Skill, and the alternatives for each job." icon={CloudServerIcon} href="/alternatives/profound" link="Profound alternatives" />
           <HomeCard title="AEO and GEO agency" text="The weekly work that gets a business named in AI answers, and how to judge it." icon={SearchList01Icon} href="/services/aeo-agency" link="See the weekly work" />
-        </div>
-        <div class="docs-prose mt-10 max-w-3xl text-sm">
-          <p>Where these facts come from, read on {checked}:</p>
-          <ul>
-            {sources.map((source) => (
-              <li><a href={source.url} target="_blank" rel="noreferrer">{source.fact}</a></li>
-            ))}
-          </ul>
         </div>
       </section>
 

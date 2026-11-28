@@ -90,6 +90,32 @@ test('labels Google reasons from the URL Inspection payload and live checks', ()
       label: 'expected',
     },
     {
+      url: 'https://example.com/removed',
+      status: inspection({
+        verdict: 'NEUTRAL',
+        coverageState: 'Blocked by robots.txt',
+        robotsTxtState: 'DISALLOWED',
+      }),
+      live: still(page('https://example.com/removed', { status: 404 })),
+      inSitemap: false,
+      label: 'fix',
+    },
+    {
+      url: 'https://example.com/retired',
+      status: inspection({
+        verdict: 'FAIL',
+        coverageState: 'Soft 404',
+        pageFetchState: 'SOFT_404',
+      }),
+      live: redirect(
+        'https://example.com/retired',
+        301,
+        'https://example.com/',
+      ),
+      inSitemap: false,
+      label: 'check',
+    },
+    {
       url: 'https://example.com/a',
       status: inspection({
         verdict: 'NEUTRAL',
@@ -204,6 +230,7 @@ test('labels Google reasons from the URL Inspection payload and live checks', ()
   assert.deepEqual(
     rows.map((row) => `${row.reason} ${row.url}`),
     [
+      'Blocked by robots.txt https://example.com/removed',
       'Blocked due to unauthorized request (401) https://example.com/mcp',
       'Crawled - currently not indexed https://example.com/b',
       'Excluded by ‘noindex’ tag https://example.com/c',
@@ -211,6 +238,7 @@ test('labels Google reasons from the URL Inspection payload and live checks', ()
       'Not found (404) https://example.com/old',
       'Page with redirect http://example.com/docs',
       'Page with redirect https://example.com/a',
+      'Soft 404 https://example.com/retired',
       'Submitted and indexed https://example.com/d',
       'Submitted and indexed https://example.com/docs',
     ],

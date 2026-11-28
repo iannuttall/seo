@@ -168,6 +168,8 @@ export async function crawlSite(
   }
   let sitemapDiscovery: CrawlSitemapDiscovery | undefined
   let sitemapSample: SitemapSampleCaveat | undefined
+  // Page URLs the sitemaps listed, as the crawl normalizes them.
+  const sitemapUrls = new Set<string>()
   let externalLinkVerification:
     | CrawlReport['externalLinkVerification']
     | undefined
@@ -370,6 +372,10 @@ export async function crawlSite(
         (url) => normalizeUrl(url, config.url),
       )
       sitemapSample = sample.caveat
+      for (const url of sitemap.urls) {
+        const normalized = normalizeUrl(url, config.url)
+        if (normalized) sitemapUrls.add(normalized)
+      }
       sample.urls.forEach((url, index) => {
         enqueue(url, 0, index + 1)
       })
@@ -988,6 +994,7 @@ export async function crawlSite(
       requestEvidenceStatus,
       ...(ai ? { ai } : {}),
       ...(sitemapDiscovery ? { sitemapDiscovery } : {}),
+      sitemapUrls,
       ...(externalLinkVerification ? { externalLinkVerification } : {}),
       ...(siteCheckResult ? { siteChecks: siteCheckResult.checks } : {}),
       additionalIssues: [

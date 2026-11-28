@@ -79,6 +79,9 @@ quota, and reuses saved inspections up to 7 days old, so paging or `--detail
 full` costs no quota. Run it once for a baseline and keep the full result (`--detail full`).
 Run it again each week with the same number and compare by URL and reason: a
 new reason, or a URL that moved to fix, is what to report.
+404s in Search Console are normal and don't hurt rankings: act only on the
+ones labelled fix, and never block removed URLs in robots.txt or redirect them
+to the home page.
 `seo` keeps no history, so you store the results. Once this runs weekly, the
 person can turn off Search Console's indexing emails. For one URL from such an
 email, run `seo page --url <url>`.

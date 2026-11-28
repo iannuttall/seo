@@ -456,7 +456,7 @@ const RULE_DEFINITIONS = [
     howToFix:
       'Return 404 or 410 for missing URLs. If a replacement exists, redirect only the specific retired URL to its closest relevant replacement rather than sending every unknown path to a generic page.',
     impactIfIgnored:
-      'Missing URLs can remain in crawl queues, waste crawl attention, and create confusing search or monitoring evidence.',
+      'Google treats these responses as soft 404s, people who reach a missing URL are not told it is missing, and search and monitoring evidence about missing pages becomes hard to read.',
     howToVerify:
       'Request several made-up paths, including one at the site root and one nested path, and confirm each returns 404 or 410 without redirecting to a generic successful page.',
     agentHints: {
@@ -488,13 +488,13 @@ const RULE_DEFINITIONS = [
     category: 'response',
     defaultSeverity: 'high',
     whyItMatters:
-      'A 4xx URL is a dead end for users and search engines. Internal links to 4xx pages waste crawl attention and leak authority.',
+      'A 4xx URL is a dead end for anyone who reaches it. A 404 or 410 on a page that was removed on purpose is normal and does not harm the rest of the site in Google; it matters when a link or the sitemap still sends people there, or when the page was removed by mistake.',
     howToFix:
-      'Restore the page, update links to the correct URL, or add one direct 301 to the best replacement.',
+      'If the page was removed by mistake, restore it. If it moved or has a matching replacement, add one direct 301 to that page. Otherwise leave the 404 or 410, and update the internal links and sitemap entries that point to it. Do not redirect it to the home page or block it in robots.txt.',
     impactIfIgnored:
-      'Users hit broken pages and search engines may drop the URL or reduce trust in nearby internal links.',
+      'Users who follow a link or sitemap entry to the URL hit a dead end.',
     howToVerify:
-      'Re-run the crawl and confirm the URL returns a 2xx status or redirects once to a useful replacement.',
+      'Re-run the crawl and confirm no internal link or sitemap entry points to the URL, and that it returns 404 or 410, or redirects once to a matching page.',
   },
   {
     id: 'server_error',
@@ -662,7 +662,7 @@ const RULE_DEFINITIONS = [
     category: 'links',
     defaultSeverity: 'high',
     whyItMatters:
-      'Internal links that land on broken URLs waste crawl paths, frustrate users, and leak authority inside the site.',
+      'Internal links that land on broken URLs send users to a dead end and keep pointing search engines at a page that is not there.',
     howToFix:
       'Update every internal link to the working destination, restore the missing page, or add one direct 301 to the best replacement.',
     impactIfIgnored:

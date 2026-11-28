@@ -1,9 +1,16 @@
 ---
-import Breadcrumbs from '@/components/Breadcrumbs.astro'
+import {
+  Analytics01Icon,
+  ChartIncreaseIcon,
+  Link01Icon,
+  SearchList01Icon,
+} from '@hugeicons/core-free-icons'
 import CodeBlock from '@/components/CodeBlock.astro'
 import FaqAccordion from '@/components/FaqAccordion.astro'
-import PageHeader from '@/components/PageHeader.astro'
+import HomeCard from '@/components/HomeCard.astro'
+import SectionHeading from '@/components/SectionHeading.astro'
 import SetupPrompts from '@/components/SetupPrompts.astro'
+import SplitList from '@/components/SplitList.astro'
 import ResearchLookup from '@/components/tools/ResearchLookup.astro'
 import BaseLayout from '@/layouts/BaseLayout.astro'
 import type { SchemaBreadcrumb } from '@/lib/schema'
@@ -12,6 +19,35 @@ const breadcrumbs: SchemaBreadcrumb[] = [
   { label: 'Home', href: '/' },
   { label: 'Tools', href: '/tools' },
   { label: 'SERP checker' },
+]
+
+const columns = [
+  { title: '#', text: 'The position on the page, counting every block above it.' },
+  { title: 'Title and page', text: 'The title Google shows and the page that ranks.' },
+  { title: 'Domain Rating', text: 'Domain Rating by Ahrefs for the site, from 0 to 100, for the first 25 sites.' },
+  { title: 'Your domain', text: 'Add it and the result says where it ranks and highlights the row.' },
+]
+
+const intent = [
+  { title: 'Every result is a product page', text: 'A long guide is unlikely to fit.' },
+  { title: 'Every result is a guide', text: 'A product page will struggle.' },
+  { title: 'Forums near the top', text: 'People often want real experience rather than polished copy.' },
+  { title: 'Sites at DR 80 and above', text: 'A first page of them is a hard fight for a new site.' },
+  { title: 'A few DR 20 sites in the top ten', text: 'A sign that the right page can get in.' },
+]
+
+const snapshot = [
+  { title: 'Results move during the day', text: 'Check again before you act on a small change, and do not read much into a move of one or two places.' },
+  { title: 'They differ by city, device and language', text: 'A single check is one moment in one country, so it is not your average position.' },
+  { title: 'Search Console is steadier', text: 'For keywords your site already shows up for, it has the average position across every real search.' },
+  { title: 'Every keyword a site ranks for', text: 'Competitor keyword research shows the whole picture instead of one search.', href: '/tools/competitor-keyword-research' },
+]
+
+const tools = [
+  { title: 'Competitor keyword research', text: 'Every keyword a domain ranks for, with positions and estimated visits.', href: '/tools/competitor-keyword-research', icon: SearchList01Icon, link: 'Research a competitor' },
+  { title: 'Domain rating checker', text: 'Ahrefs Domain Rating for any site, to size up who ranks above you.', href: '/tools/domain-rating-checker', icon: Link01Icon, link: 'Check a Domain Rating' },
+  { title: 'SEO report', text: 'Your own positions from Search Console, including the quick wins at positions 4 to 10.', href: '/docs/report', icon: ChartIncreaseIcon, link: 'SEO report docs' },
+  { title: 'seo research', text: 'Live results, keywords and links with your own DataForSEO or Ahrefs key.', href: '/docs/research', icon: Analytics01Icon, link: 'seo research docs' },
 ]
 
 const faq = [
@@ -55,114 +91,114 @@ const faq = [
 
 <BaseLayout
   title="Free SERP checker for live Google results"
-  description="Check the live Google results for any keyword in ten countries for free. See who ranks, each site's Domain Rating, where your domain ranks, and how to read the results page."
+  description="Check the live Google results for any keyword in ten countries for free. See who ranks, each site's Domain Rating and where your domain ranks."
   canonicalPath="/tools/serp-checker"
   {breadcrumbs}
+  framed={false}
 >
   <main data-agent-content>
-    <Breadcrumbs {breadcrumbs} />
-    <PageHeader
-      title="SERP checker"
-      description="See who ranks in Google for a keyword right now, and where your own domain sits in the results."
-    />
+    <section class="pt-4">
+      <div class="site-frame flex flex-col items-center pt-14 text-center sm:pt-20">
+        <h1 class="mt-4 max-w-3xl text-pretty text-4xl/tight font-medium -tracking-[0.8px] xl:text-5xl/tight xl:-tracking-[1px]">
+          SERP checker
+        </h1>
+        <p class="mt-4 max-w-2xl text-pretty text-xl/8 font-medium -tracking-[0.2px] text-foreground-muted">
+          See who ranks in Google for a keyword right now, and where your own
+          domain sits in the results.
+        </p>
+      </div>
+      <div class="site-frame mt-10 sm:mt-12">
+        <ResearchLookup
+          kind="serp"
+          heading="Check the live results"
+          description="Enter a keyword and pick a country. Add your domain to find its position."
+        />
+      </div>
+    </section>
 
-    <ResearchLookup
-      kind="serp"
-      heading="Check the live results"
-      description="Enter a keyword and pick a country. Add your domain to find its position."
-    />
+    <div class="space-y-24 py-24 sm:space-y-32 sm:py-32">
+      <SplitList
+        id="results-heading"
+        title="What does the SERP checker show?"
+        text="The organic Google results for a keyword at the moment you press the button. Each row shows the page that ranks and its position, with the Domain Rating of the first 25 sites."
+        items={columns}
+      />
 
-    <div class="docs-prose mt-16">
-      <h2>Read the live results</h2>
-      <p>
-        The checker asks Google for the keyword at the moment you press the
-        button and lists the organic results: each page's title, address and
-        position, with the Domain Rating of the first 25 sites. Add your domain and the
-        result says where it ranks and highlights the row.
-      </p>
-      <table>
-        <thead>
-          <tr>
-            <th>Column</th>
-            <th>What it tells you</th>
-          </tr>
-        </thead>
-        <tbody>
-          <tr>
-            <td>#</td>
-            <td>The position on the page, counting every block above it.</td>
-          </tr>
-          <tr>
-            <td>Result</td>
-            <td>The title Google shows and the page that ranks.</td>
-          </tr>
-          <tr>
-            <td>Domain Rating</td>
-            <td>Domain Rating by Ahrefs for the site, from 0 to 100.</td>
-          </tr>
-        </tbody>
-      </table>
+      <SplitList
+        id="position-heading"
+        title="Why can the first result be position 3?"
+        text="Because the checker counts every block on the page. Answer boxes, video rows, people also ask and other blocks sit between the blue links, so a gap in the numbers means something else took that spot. That is closer to what a person sees when they scroll, and closer to how Search Console counts your position. Ads and the blocks themselves are not listed."
+        items={[
+          { title: 'Answer boxes', text: 'Count as a position above the first link.' },
+          { title: 'Video rows and people also ask', text: 'Each takes a spot in the numbering.' },
+          { title: 'Organic results only', text: 'Only the blue links are listed in the table.' },
+        ]}
+      />
 
-      <h2>Why the first result can be position 3</h2>
-      <p>
-        A results page is more than ten blue links. Answer boxes, video rows,
-        people also ask and other blocks sit between them. The checker
-        counts every block, so a gap in the numbers means something else
-        took that spot. That is closer to what a person sees when they
-        scroll, and closer to how Search Console counts your position. Ads
-        and the blocks themselves are not listed.
-      </p>
+      <SplitList
+        id="intent-heading"
+        title="How do you read search intent from the results?"
+        text="From the kind of page that ranks, which tells you what Google thinks the search wants. Look at this before you write anything. The Domain Rating column shows who you are up against."
+        items={intent}
+      />
 
-      <h2>Read search intent from the page</h2>
-      <p>
-        The kind of page that ranks tells you what Google thinks the search
-        wants. If every result is a product page, a long guide is unlikely
-        to fit. If they are all guides, a product page will struggle. Forums
-        near the top often mean people want real experience, not polished
-        copy. Look at this before you write anything.
-      </p>
-      <p>
-        The Domain Rating column shows who you are up against. A first page
-        of sites at DR 80 and above is a hard fight for a new site. A page
-        with a few DR 20 sites in the top ten is a sign that the right page
-        can get in.
-      </p>
+      <SplitList
+        id="snapshot-heading"
+        title="How much should you trust one SERP check?"
+        text="Treat it as a snapshot. A single check is one moment in one country, so use it to see who ranks and what kind of page wins."
+        items={snapshot}
+      />
 
-      <h2>One check is a snapshot</h2>
-      <p>
-        Results move during the day, and they differ by city, device and
-        language. A single check is one moment in one country, not your
-        average position. Check again before you act on a small change, and
-        do not read much into a move of one or two places.
-      </p>
-      <p>
-        For keywords your site already shows up for, Search Console has the
-        average position across every real search, which is steadier than
-        any check. The <a href="/tools/competitor-keyword-research">competitor keyword research</a>{' '}
-        tool shows every keyword a site ranks for, when you want the whole
-        picture instead of one search.
-      </p>
+      <SplitList
+        id="agent-heading"
+        title="How do you check rankings with your AI agent?"
+        text="Connect SEO Skill and it joins both sides: your own positions and the live results above them."
+        items={[
+          { title: 'Your positions', text: 'The SEO report reads your own positions from Search Console, including the quick wins at positions 4 to 10.', href: '/docs/report' },
+          { title: 'The live results', text: 'seo research pulls the live results for those queries with your own DataForSEO or Ahrefs key.', href: '/docs/research' },
+          { title: 'What the winners share', text: 'So you can see which pages sit above yours and what they have in common.' },
+        ]}
+      >
+        <div class="mt-6">
+          <CodeBlock
+            label="Ask your agent"
+            prompt
+            value="Find my quick wins for example.com, then check the live Google results for the top five and tell me what the pages above mine have in common"
+            wrap
+          />
+        </div>
+      </SplitList>
 
-      <h2>Check rankings with your AI agent</h2>
-      <p>
-        With SEO Skill your agent can join both sides. The{' '}
-        <a href="/docs/report">SEO report</a> reads your own positions from
-        Search Console, including the quick wins at positions 4 to 10. Then{' '}
-        <a href="/docs/research">seo research</a> pulls the live results for
-        those queries with your own DataForSEO or Ahrefs key, so you can see
-        which pages sit above yours and what they have in common. Ask:
-      </p>
-      <CodeBlock prompt value="Find my quick wins for example.com, then check the live Google results for the top five and tell me what the pages above mine have in common" wrap />
-      <p>To set it up, give your agent this prompt:</p>
-    </div>
+      <section class="site-frame" aria-labelledby="tools-heading">
+        <SectionHeading
+          id="tools-heading"
+          title="Which tools go with a SERP check?"
+          text="These, which cover a site's whole keyword list, its authority and your own positions."
+        />
+        <div class="grid grid-cols-1 gap-2 sm:grid-cols-2">
+          {tools.map((item) => <HomeCard {...item} />)}
+        </div>
+      </section>
 
-    <SetupPrompts id="serp-setup" class="mt-6" />
+      <section class="site-frame" aria-labelledby="faq-heading">
+        <div class="max-w-2xl">
+          <h2 id="faq-heading" class="text-pretty text-2xl font-medium -tracking-[0.4px] text-foreground xl:text-3xl xl:-tracking-[0.6px]">
+            SERP checker questions
+          </h2>
+        </div>
+        <div class="mt-10">
+          <FaqAccordion id="serp-faq" items={faq} />
+        </div>
+      </section>
 
-    <div class="docs-prose mt-16">
-      <h2>SERP checker questions</h2>
-    </div>
-    <div class="mt-6">
-      <FaqAccordion id="serp-faq" items={faq} />
+      <section class="site-frame" aria-labelledby="start-heading">
+        <SectionHeading
+          id="start-heading"
+          title="Find the searches you can win"
+          text="Add SEO Skill to your agent, sign in with Google and ask which of your quick wins have weak pages above them."
+        />
+        <SetupPrompts id="serp-setup" />
+      </section>
     </div>
   </main>
 </BaseLayout>

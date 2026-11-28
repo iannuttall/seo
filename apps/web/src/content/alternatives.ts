@@ -344,3 +344,32 @@ export const reasonsFor = (item: Competitor): string[] => {
       ]
   }
 }
+
+/**
+ * One real brief from seoskill.dev's issues list: a page just off page one
+ * and the searches it shows for. The same three rows feed the raw Search
+ * Console side of the comparison pages, so the two sides match.
+ */
+export const seoSkillBrief = {
+  label: 'The brief SEO Skill gives your agent',
+  html: '<p><strong>Page:</strong> /tools/google-algorithm-update-checker</p><ul class="list-disc space-y-1 pl-5"><li>“google algorithm checker”: position 9.5, 380 impressions, 0 clicks</li><li>“algorithm update checker”: position 11.5, 273 impressions, 9 clicks</li><li>“google algorithm update checker”: position 9.1, 246 impressions, 2 clicks</li></ul><p><strong>Change:</strong> name the tool the way people search for it in the title and H1, and answer “did an update hit my site?” in the first lines.</p><p><strong>Check:</strong> run seo lint on the draft, then compare the page’s clicks 28 and 56 days after the fix.</p>',
+}
+
+/** The same three searches as rows straight from the Search Console API. */
+export const searchConsoleRows = {
+  label: 'Rows from the Search Console API',
+  code: `{
+  "rows": [
+    { "keys": ["google algorithm checker"],
+      "clicks": 0, "impressions": 380,
+      "ctr": 0, "position": 9.5 },
+    { "keys": ["algorithm update checker"],
+      "clicks": 9, "impressions": 273,
+      "ctr": 0.033, "position": 11.5 },
+    { "keys": ["google algorithm update checker"],
+      "clicks": 2, "impressions": 246,
+      "ctr": 0.008, "position": 9.1 },
+    ...
+  ]
+}`,
+}

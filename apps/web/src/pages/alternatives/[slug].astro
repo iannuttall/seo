@@ -1,12 +1,13 @@
 ---
 // SEO Skill compared with one alternative, from its fact file, laid out as
 // a landing page: the choice first, then the facts side by side.
+import BeforeAfter from '@/components/blog/BeforeAfter.astro'
+import PlanSteps from '@/components/blog/PlanSteps.astro'
 import FaqAccordion from '@/components/FaqAccordion.astro'
 import HomeCard from '@/components/HomeCard.astro'
 import LandingHero from '@/components/LandingHero.astro'
 import SectionHeading from '@/components/SectionHeading.astro'
 import SetupPrompts from '@/components/SetupPrompts.astro'
-import SplitList from '@/components/SplitList.astro'
 import {
   type CompetitorEntry,
   cell,
@@ -16,7 +17,9 @@ import {
   competitors,
   kindIcon,
   reasonsFor,
+  searchConsoleRows,
   seoSkill,
+  seoSkillBrief,
   suiteTools,
 } from '@/content/alternatives'
 import { toolIcon } from '@/content/tool-icons'
@@ -66,12 +69,17 @@ const glance = [
 ]
 
 const switchSteps = [
-  { title: 'Add SEO Skill to your agent', text: 'Use the setup box above, or the steps for your client on the integrations page.', href: '/integrations' },
-  { title: 'Check your access', text: 'Ask "list my Search Console properties". Every Google account you link shows up.' },
-  { title: 'Add your research key', text: 'Save a DataForSEO or Ahrefs key on your account page if you use keyword research.' },
+  { title: 'Add SEO Skill to your agent', body: 'Give your agent the setup prompt at the top of this page. It adds the server, and you sign in with Google.' },
+  { title: 'Check your access', body: 'Ask "list my Search Console properties". Every Google account you link shows up.' },
+  { title: 'Add your research key', body: 'Save a DataForSEO or Ahrefs key on your account page if you use keyword research.' },
   suite
-    ? { title: 'Keep what you still need', text: `Projects and history you built in ${item.short} stay there. SEO Skill reads Search Console live, so you can run both while you decide.` }
-    : { title: 'Carry your prompts over', text: `Prompts in plain words work as they are. Prompts that name ${item.short}'s own tools need rewording.` },
+    ? { title: 'Keep what you still need', body: `Projects and history you built in ${item.short} stay there. SEO Skill reads Search Console live, so you can run both while you decide.` }
+    : { title: 'Carry your prompts over', body: `Prompts in plain words work as they are. Prompts that name ${item.short}'s own tools need rewording.` },
+]
+
+const fits = [
+  { name: item.short, lead: `Pick ${item.short} if`, reasons: item.pickIf },
+  { name: 'SEO Skill', lead: 'Pick SEO Skill if', reasons: reasonsFor(item) },
 ]
 
 const faq = [
@@ -97,6 +105,7 @@ const faq = [
           : `${item.summary} SEO Skill gives your agent your own Search Console, Google Analytics and keyword data for free, with nothing to install.`
       }
       setupId="alternative-setup"
+      author
     />
 
     <div class="space-y-24 py-24 sm:space-y-32 sm:py-32">
@@ -128,6 +137,24 @@ const faq = [
         </div>
       </section>
 
+      <section class="site-frame" aria-labelledby="brief-heading">
+        <SectionHeading
+          id="brief-heading"
+          title="What does your agent work from?"
+          text={suite
+            ? `Your own Search Console, next to ${item.short}'s index. SEO Skill turns your clicks and impressions into a brief with the page to change, the searches it shows for and how to check the fix.`
+            : 'SEO Skill reads the Search Console API, then hands your agent a brief with the page to change, the searches it shows for and how to check the fix.'}
+        />
+        <div class="max-w-3xl">
+          <BeforeAfter
+            before={searchConsoleRows}
+            after={seoSkillBrief}
+            title="The same three searches, two ways"
+            caption="Real rows from seoskill.dev's own Search Console, for its Google algorithm update checker."
+          />
+        </div>
+      </section>
+
       {
         freeTools.length ? (
           <section class="site-frame" aria-labelledby="free-tools-heading">
@@ -145,25 +172,32 @@ const faq = [
         ) : null
       }
 
-      <SplitList
-        id="pick-them"
-        title={`When should you pick ${item.short}?`}
-        text={`Pick ${item.short} if one of these fits you. Each reason comes from ${item.short}'s own pages.`}
-        items={item.pickIf.map((reason) => ({ text: reason }))}
-      />
-
-      <SplitList
-        id="pick-us"
-        title="When should you pick SEO Skill?"
-        text={suite ? 'Pick SEO Skill if you want free SEO tools in your browser and your own search data in your AI agent.' : 'Pick SEO Skill if you want one hosted MCP server for your own search data.'}
-        items={reasonsFor(item).map((reason) => ({ text: reason }))}
-      >
+      <section class="site-frame" aria-labelledby="fit-heading">
+        <SectionHeading
+          id="fit-heading"
+          title={`Which one fits your job, ${item.short} or SEO Skill?`}
+          text={suite
+            ? `${item.short} if you work from its index and projects. SEO Skill if you want free lookups in your browser and your own search data in your AI agent.`
+            : `${item.short} if one of its reasons fits you. SEO Skill if you want one hosted MCP server for your own search data.`}
+        />
+        <div class="grid grid-cols-1 gap-2 sm:grid-cols-2">
+          {fits.map((side) => (
+            <div class="rounded-lg bg-muted p-6">
+              <h3 class="text-base font-medium text-foreground">{side.lead}</h3>
+              <ul class="mt-4 divide-y divide-border">
+                {side.reasons.map((reason) => (
+                  <li class="py-3 text-base leading-7 text-foreground-muted">{reason.charAt(0).toUpperCase() + reason.slice(1)}</li>
+                ))}
+              </ul>
+            </div>
+          ))}
+        </div>
         {featureLink ? (
-          <p class="mt-4 text-base leading-7 text-foreground-muted">
+          <p class="mt-6 text-base leading-7 text-foreground-muted">
             The <a class="underline underline-offset-4" href={featureLink.href}>{featureLink.anchor}</a> page shows the setup and the prompts to try.
           </p>
         ) : null}
-      </SplitList>
+      </section>
 
       <section class="site-frame" aria-labelledby="side-heading">
         <SectionHeading
@@ -213,12 +247,16 @@ const faq = [
         </div>
       </section>
 
-      <SplitList
-        id="switch-heading"
-        title={`How do you switch from ${item.short}?`}
-        text={`There is nothing to migrate, because SEO Skill reads your accounts live. When you are done, remove ${item.short} from your agent and revoke its access.`}
-        items={switchSteps}
-      />
+      <section class="site-frame" aria-labelledby="switch-heading">
+        <SectionHeading
+          id="switch-heading"
+          title={`How do you switch from ${item.short}?`}
+          text={`There is nothing to migrate, because SEO Skill reads your accounts live. When you are done, remove ${item.short} from your agent and revoke its access.`}
+        />
+        <div class="max-w-3xl">
+          <PlanSteps steps={switchSteps} />
+        </div>
+      </section>
 
       <section class="site-frame" aria-labelledby="more-heading">
         <SectionHeading id="more-heading" title="What are the other alternatives?" text="These give your agent search data too, each compared with SEO Skill." />

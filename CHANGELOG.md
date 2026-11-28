@@ -1,5 +1,28 @@
 # Changelog
 
+## 0.28.0
+
+### Changed
+
+- `seo index` labels a page that redirects to the home page check, as a
+  soft 404, instead of expected. Google treats a removed page sent to the
+  home page as a soft 404 unless the home page really replaces it.
+- `seo crawl` no longer asks you to fix every 404. A page removed on
+  purpose can stay a 404 or 410 once no link or sitemap entry points to
+  it. Restore a page removed by mistake, and redirect only to a matching
+  replacement, never to the home page. The crawl rules no longer say 404s
+  waste crawl budget or leak authority, which Google says they don't.
+- The skill says 404s in Search Console are normal and don't hurt
+  rankings: act only on the ones labelled fix.
+
+### Added
+
+- `seo index` labels a 404 or 410 fix when robots.txt blocks Google from
+  it, because Google has to crawl a removed URL to see the 404 and drop
+  it from its index.
+- `seo crawl` says when the sitemap still lists a page that returns an
+  error (`inSitemap` in the finding's evidence).
+
 ## 0.27.1
 
 ### Fixed

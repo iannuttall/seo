@@ -10,8 +10,7 @@ import {
 } from '@hugeicons/core-free-icons'
 
 // One page for each Search Console Page indexing reason, on the guides
-// index and at the end of each status page. The crawled and discovered
-// pages live under /features.
+// index and at the end of each status page.
 export const statusGuides = [
   {
     path: '/guides/alternate-page-with-proper-canonical-tag',
@@ -50,13 +49,13 @@ export const statusGuides = [
     icon: HierarchyIcon,
   },
   {
-    path: '/features/crawled-currently-not-indexed',
+    path: '/guides/crawled-currently-not-indexed',
     title: 'Crawled, currently not indexed',
     text: 'Google fetched the page and chose to leave it out.',
     icon: Alert02Icon,
   },
   {
-    path: '/features/discovered-currently-not-indexed',
+    path: '/guides/discovered-currently-not-indexed',
     title: 'Discovered, currently not indexed',
     text: 'Google knows the URL and has not crawled it yet.',
     icon: Clock01Icon,

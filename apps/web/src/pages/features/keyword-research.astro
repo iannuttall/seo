@@ -7,8 +7,177 @@ import {
   UserGroupIcon,
 } from '@hugeicons/core-free-icons'
 import CodeBlock from '@/components/CodeBlock.astro'
-import FeaturePage from '@/components/FeaturePage.astro'
+import FaqAccordion from '@/components/FaqAccordion.astro'
+import HomeCard from '@/components/HomeCard.astro'
+import LandingHero from '@/components/LandingHero.astro'
+import SectionHeading from '@/components/SectionHeading.astro'
+import SetupPrompts from '@/components/SetupPrompts.astro'
+import SplitList from '@/components/SplitList.astro'
 import { researchKeyStep } from '@/content/setup-prompts'
+import BaseLayout from '@/layouts/BaseLayout.astro'
+import type { SchemaBreadcrumb } from '@/lib/schema'
+
+const title = 'AI keyword research tool'
+const setupSteps = [researchKeyStep('research')]
+
+const breadcrumbs: SchemaBreadcrumb[] = [
+  { label: 'Home', href: '/' },
+  { label: 'Features', href: '/features' },
+  { label: title },
+]
+
+const why = [
+  {
+    title: 'Models make up numbers that look plausible',
+    text: 'Models have no live keyword database, so the volumes, difficulty scores and "top ranking pages" they list are made up to look plausible.',
+  },
+  {
+    title: 'SEO Skill gives your agent the real thing',
+    text: 'Through an MCP server it reads your own Search Console queries, plus keyword, SERP, competitor and backlink data from your DataForSEO or Ahrefs account.',
+  },
+  {
+    title: 'The agent still does the thinking',
+    text: 'It groups keywords, spots gaps and picks a target, and every number it quotes came from a source you can check.',
+  },
+]
+
+const setup = [
+  {
+    title: 'Save a DataForSEO or Ahrefs key',
+    text: 'Save it under Keys on your account page, never in the chat.',
+    href: '/docs/keys',
+  },
+  {
+    title: 'The provider bills you directly',
+    text: 'Every DataForSEO result says what the request cost.',
+  },
+  {
+    title: 'Then ask in plain words',
+    text: 'Ask for keyword research in plain words, like the prompts on this page.',
+  },
+]
+
+const searches = [
+  {
+    title: 'Queries just outside the top positions',
+    text: 'The SEO report lists striking distance keywords just outside the top positions, and pages that rank but get fewer clicks than they should.',
+  },
+  {
+    title: 'Searches that read like AI prompts',
+    code: 'ai-queries',
+    text: 'This section finds searches that read like AI prompts and follow-ups, which often name a gap in your content.',
+  },
+  {
+    title: 'What people actually typed',
+    text: 'This is Search Console data, so it is what people actually typed.',
+  },
+  {
+    title: 'Every query with its page',
+    text: 'For every query with its page, clicks and position, ask for an SEO keyword report.',
+    href: '/features/keyword-report',
+  },
+  {
+    title: 'Which searches to work on first',
+    text: 'The keyword opportunities page shows how each one is scored by the clicks it could win.',
+    href: '/features/keyword-opportunities',
+  },
+]
+
+const longTail = [
+  {
+    title: 'Up to 5 seed keywords',
+    text: 'Keyword ideas return the searches that contain each seed, highest volume first.',
+  },
+  {
+    title: 'Where the long tail lives',
+    text: 'In the "free invoice template for contractors" searches that one focused page can win when the head term cannot.',
+  },
+]
+
+const metrics = [
+  {
+    title: 'Up to 100 keywords at once',
+    text: 'Keyword metrics give search volume, keyword difficulty and cost per click for each one.',
+  },
+  {
+    title: 'Read cost per click next to volume',
+    text: 'A keyword advertisers pay $20 a click for usually has buyers behind it, even at 50 searches a month.',
+  },
+]
+
+const serp = [
+  {
+    title: 'The ranking pages for up to 5 keywords',
+    text: 'A SERP request lists each ranking page with its domain’s authority and a free Domain Rating column.',
+  },
+  {
+    title: 'The sites an AI Overview cites',
+    text: 'When Google shows an AI Overview, the SERP lists the sites it cites.',
+  },
+  {
+    title: 'A weak page one beats a low difficulty score',
+    text: 'A page one full of sites weaker than yours is a better bet than a lower difficulty score.',
+  },
+  {
+    title: 'One page or several',
+    text: 'To decide whether a set of keywords needs one page or several, ask for a SERP overlap. It counts how many top 10 pages each pair of searches shares. Lots of shared pages usually means Google treats them as one topic.',
+  },
+]
+
+const competitors = [
+  {
+    title: 'What a competitor ranks for',
+    code: 'competitor.example/blog/',
+    text: 'Ranked keywords list what a site, a subfolder or one page ranks for.',
+  },
+  {
+    title: 'Where their search traffic comes from',
+    text: 'Top pages show which of a competitor’s pages earn its search traffic.',
+  },
+  {
+    title: 'Domains that share your keywords',
+    text: 'Competitors finds the domains that rank for the same keywords as you.',
+  },
+  {
+    title: 'The gaps against your own queries',
+    text: 'Your agent can set those beside your own Search Console queries to find the gaps. The two sources stay apart, and a provider’s estimate never gets added to your clicks.',
+  },
+]
+
+const ai = [
+  {
+    title: 'Up to 10 questions a run',
+    text: 'Your agent asks ChatGPT search, Google AI Mode and AI Overviews and sees whether each answer cites or mentions your site.',
+  },
+  {
+    title: 'Which sites they cite instead',
+    text: 'Your agent also sees which sites each answer cites instead.',
+  },
+  {
+    title: 'About 7 cents a run',
+    text: 'A run of 10 questions costs about 7 cents.',
+  },
+  {
+    title: 'AI visibility checker',
+    text: 'The AI visibility checker page covers it in full.',
+    href: '/features/ai-visibility-checker',
+  },
+]
+
+const limits = [
+  {
+    title: 'Providers model volume differently',
+    text: 'DataForSEO reports Google Ads’ 12-month average and Ahrefs uses its own model. The two can differ several times over for the same keyword, so compare keywords within one provider.',
+  },
+  {
+    title: 'No data means an unknown volume',
+    text: 'A keyword with no data has an unknown volume. Read it as unknown, and never as zero.',
+  },
+  {
+    title: 'Difficulty is each provider’s own score',
+    text: 'Difficulty scores are a provider’s model, and each provider has its own.',
+  },
+]
 
 const related = [
   { title: 'seo research', text: 'Every research action, its inputs and how to run it from the CLI.', href: '/docs/research', icon: SearchList01Icon },
@@ -17,179 +186,255 @@ const related = [
   { title: 'Competitor keyword research', text: 'See what any domain ranks for in your browser, with no account.', href: '/tools/competitor-keyword-research', icon: UserGroupIcon, link: 'Free tool' },
   { title: 'AI visibility checker', text: 'Whether ChatGPT search, AI Mode and AI Overviews cite your site.', href: '/features/ai-visibility-checker', icon: AiChat02Icon, link: 'AI visibility checker' },
   { title: 'SEO competitor analysis', text: 'Find the sites that compete with you in Google and the pages that earn their traffic.', href: '/features/seo-competitor-analysis', icon: UserGroupIcon, link: 'Competitor analysis' },
-  { title: 'Keyword gap analysis', text: 'The searches your competitors rank for and you don\'t, set beside your own queries.', href: '/features/keyword-gap', icon: SearchList01Icon, link: 'Keyword gap' },
+  { title: 'Keyword gap analysis', text: 'The searches your competitors rank for and you don’t, set beside your own queries.', href: '/features/keyword-gap', icon: SearchList01Icon, link: 'Keyword gap' },
+]
+
+const faq = [
+  {
+    question: 'Can ChatGPT or Claude do keyword research on its own?',
+    answer:
+      'It can group keywords and pick a target, but it has no live keyword database. The search volumes and difficulty scores a chat model gives you on its own are made up to look plausible. With SEO Skill your agent reads real numbers from your Search Console and your DataForSEO or Ahrefs account.',
+  },
+  {
+    question: 'Do I need a DataForSEO or Ahrefs key?',
+    answer:
+      'Yes, for keyword ideas, metrics, SERPs and competitor keywords. Save it under Keys on your account page, never in the chat, and the provider bills you directly. The striking distance and quick wins queries come from your own Search Console, so you can start there before you spend a credit.',
+  },
+  {
+    question: 'How many keywords can I check at once?',
+    answer:
+      'Keyword metrics take up to 100 keywords at once. Keyword ideas take up to 5 seed keywords, and a SERP request lists the ranking pages for up to 5 keywords.',
+  },
+  {
+    question: 'Why do DataForSEO and Ahrefs show different search volumes?',
+    answer:
+      'Both are estimates. DataForSEO reports Google Ads’ 12-month average and Ahrefs uses its own model, so the two can differ several times over for the same keyword. Compare keywords within one provider, and trust your Search Console for what your pages actually get.',
+  },
+  {
+    question: 'Can I do keyword research for AI search?',
+    answer:
+      'Yes, with a DataForSEO key. Your agent asks ChatGPT search, Google AI Mode and AI Overviews up to 10 questions and sees whether each answer cites or mentions your site. A run of 10 questions costs about 7 cents.',
+    links: [{ text: 'ChatGPT search, Google AI Mode and AI Overviews', href: '/features/ai-visibility-checker' }],
+  },
+  {
+    question: 'Can I research keywords for another country?',
+    answer: 'Yes. Every request takes a two-letter country code.',
+  },
 ]
 ---
 
-<FeaturePage
-  title="AI keyword research tool"
-  metaTitle="AI keyword research tool and MCP for agents"
+<BaseLayout
+  title="AI keyword research tool and MCP for agents"
   description="Keyword research in Claude, Codex or ChatGPT through an MCP server, with real search volumes, SERPs and competitor keywords from your DataForSEO or Ahrefs key."
-  path="/features/keyword-research"
-  setupSteps={[researchKeyStep('research')]}
-  lead="Ask your agent for keyword ideas, search volume, who ranks and what a competitor ranks for. It answers from your Search Console and your own DataForSEO or Ahrefs account."
-  {related}
-  relatedHeading="Read more"
+  canonicalPath="/features/keyword-research"
+  {breadcrumbs}
+  framed={false}
 >
-  <h2>Why an agent needs real keyword data</h2>
-  <p>
-    Ask a chat model for the search volume of a keyword and it will give you
-    a number. That number is a guess. Models have no live keyword database,
-    so the volumes, difficulty scores and "top ranking pages" they list are
-    made up to look plausible.
-  </p>
-  <p>
-    SEO Skill gives your agent the real thing through an MCP server. It reads your
-    own Search Console queries, plus keyword, SERP, competitor and backlink
-    data from your DataForSEO or Ahrefs account. The agent still does the
-    thinking (grouping keywords, spotting gaps, picking a target), but every
-    number it quotes came from a source you can check.
-  </p>
+  <main data-agent-content>
+    <LandingHero
+      {title}
+      lead="Ask your agent for keyword ideas, search volume, who ranks and what a competitor ranks for. It answers from your Search Console and your own DataForSEO or Ahrefs account."
+      setupId="keyword-research-setup"
+      {setupSteps}
+      author
+    />
 
-  <h2>Set up keyword research in your agent</h2>
-  <p>
-    Copy the prompt for your agent at the top of this page. It sets up SEO
-    Skill and asks you to save a <a href="/docs/keys">DataForSEO or Ahrefs key</a> under Keys on your account page,
-    never in the chat. The provider bills you directly, and every DataForSEO result says what the request cost. Then ask for keyword research in plain words, like the prompts below.
-  </p>
+    <div class="space-y-24 py-24 sm:space-y-32 sm:py-32">
+      <SplitList
+        id="why-heading"
+        title="Why does an agent need real keyword data?"
+        text="Because a chat model has no live keyword database, so any search volume it gives you on its own is a guess. Ask one for the search volume of a keyword and it will give you a number anyway."
+        items={why}
+      />
 
-  <h2>Start from the searches you already get</h2>
-  <p>
-    For a site that already gets traffic, start with the searches Google
-    already shows it for. Before you spend a credit, ask for the queries
-    where you are close:
-  </p>
-  <CodeBlock prompt value={`Show me the striking-distance and quick-wins queries for example.com`} wrap />
-  <p>
-    The <a href="/docs/report">SEO report</a> lists{' '}
-    <a href="/features/striking-distance-keywords">striking distance keywords</a>{' '}
-    just outside the top positions and pages that rank but get fewer clicks
-    than they should. The <code>ai-queries</code> section finds searches that read like
-    AI prompts and follow-ups, which often name a gap in your content. This
-    is Search Console data, so it is what people actually typed.
-  </p>
-  <p>
-    For every query with its page, clicks and position, ask for an{' '}
-    <a href="/features/keyword-report">SEO keyword report</a>. To pick which
-    searches to work on first, the{' '}
-    <a href="/features/keyword-opportunities">keyword opportunities</a> page
-    shows how each one is scored by the clicks it could win.
-  </p>
+      <SplitList
+        id="setup-heading"
+        title="What do I need for keyword research in my agent?"
+        text="SEO Skill and a DataForSEO or Ahrefs key. Setup adds SEO Skill to your agent and asks you to save the key on your account page."
+        items={setup}
+      />
 
-  <h2>Find long-tail keywords from a seed</h2>
-  <CodeBlock prompt value={`Give me keyword ideas for "invoice template" and "invoice generator" in the UK`} wrap />
-  <p>
-    Keyword ideas take up to 5 seed keywords and return the searches that
-    contain each one, highest volume first. That is where the long tail
-    lives, in the "free invoice template for contractors" searches that one
-    focused page can win when the head term cannot.
-  </p>
+      <SplitList
+        id="searches-heading"
+        title="Where should keyword research start for a site that gets traffic?"
+        text="With the searches Google already shows it for. Before you spend a credit, ask for the queries where you are close."
+        items={searches}
+      >
+        <div class="mt-6">
+          <CodeBlock label="Ask your agent" prompt value="Show me the striking-distance and quick-wins queries for example.com" wrap />
+        </div>
+        <p class="mt-6 text-base leading-7 text-foreground-muted">
+          The <a class="text-foreground underline underline-offset-4" href="/docs/report">SEO report</a> docs cover every section, and the{' '}
+          <a class="text-foreground underline underline-offset-4" href="/features/striking-distance-keywords">striking distance keywords</a>{' '}
+          page shows how to read them.
+        </p>
+      </SplitList>
 
-  <h2>Size keywords with volume, difficulty and CPC</h2>
-  <CodeBlock prompt value={`Get search volume, keyword difficulty and CPC for this list of 40 keywords`} wrap />
-  <p>
-    Keyword metrics take up to 100 keywords at once. Read cost per click
-    next to volume, because a keyword advertisers pay $20 a click for usually has
-    buyers behind it, even at 50 searches a month.
-  </p>
+      <SplitList
+        id="long-tail-heading"
+        title="How do I find long-tail keywords from a seed?"
+        text="Ask for keyword ideas. They take up to 5 seed keywords and return the searches that contain each one, highest volume first."
+        items={longTail}
+      >
+        <div class="mt-6">
+          <CodeBlock label="Ask your agent" prompt value={`Give me keyword ideas for "invoice template" and "invoice generator" in the UK`} wrap />
+        </div>
+      </SplitList>
 
-  <h2>Check who ranks before you pick a keyword</h2>
-  <CodeBlock prompt value={`Show the top 10 for "ai tools for keyword research" with each site's Domain Rating`} wrap />
-  <p>
-    Difficulty scores are a provider's model. The results page is the
-    evidence. A SERP request lists the ranking pages for up to 5 keywords,
-    each with its domain's authority and a free column of Domain Rating by{' '}
-    <a href="https://ahrefs.com" target="_blank" rel="noreferrer">Ahrefs</a>,
-    and the sites an AI Overview cites when Google shows one. A page one full of
-    sites weaker than yours is a better bet than a lower difficulty score.
-  </p>
-  <p>
-    To decide whether a set of keywords needs one page or several, ask for
-    a SERP overlap. It counts how many top 10 pages each pair of searches
-    shares. Lots of shared pages usually means Google treats them as one
-    topic.
-  </p>
+      <SplitList
+        id="metrics-heading"
+        title="How do I size keywords with volume, difficulty and CPC?"
+        text="Ask for keyword metrics. They take up to 100 keywords at once and return search volume, keyword difficulty and cost per click."
+        items={metrics}
+      >
+        <div class="mt-6">
+          <CodeBlock label="Ask your agent" prompt value="Get search volume, keyword difficulty and CPC for this list of 40 keywords" wrap />
+        </div>
+      </SplitList>
 
-  <h2>Find the keywords your competitors rank for</h2>
-  <CodeBlock prompt value={`What does competitor.example rank for that example.com doesn't?`} wrap />
-  <p>
-    Ranked keywords list what a site, a subfolder such as{' '}
-    <code>competitor.example/blog/</code>, or one page ranks for. Top pages
-    show where a competitor's search traffic comes from, and competitors
-    finds the domains that share your keywords. Your agent can set those
-    beside your own Search Console queries to find the gaps. The two
-    sources stay apart, and a provider's estimate never gets added to your
-    clicks. The <a href="/features/keyword-gap">keyword gap analysis</a>{' '}
-    page walks through that comparison, and{' '}
-    <a href="/features/seo-competitor-analysis">SEO competitor analysis</a>{' '}
-    starts one step earlier, with who your search competitors are.
-  </p>
+      <SplitList
+        id="serp-heading"
+        title="How do I check who ranks before I pick a keyword?"
+        text="Ask for the SERP. Difficulty scores are a provider's model, and the results page is the evidence."
+        items={serp}
+      >
+        <div class="mt-6">
+          <CodeBlock label="Ask your agent" prompt value={`Show the top 10 for "ai tools for keyword research" with each site's Domain Rating`} wrap />
+        </div>
+        <p class="mt-6 text-base leading-7 text-foreground-muted">
+          The Domain Rating column is Domain Rating by{' '}
+          <a class="text-foreground underline underline-offset-4" href="https://ahrefs.com" target="_blank" rel="noreferrer">Ahrefs</a>.
+        </p>
+      </SplitList>
 
-  <h2>See whether AI answers cite you</h2>
-  <p>
-    Keyword research for AI search starts from the questions people ask.
-    With a DataForSEO key, your agent can ask ChatGPT search, Google AI Mode
-    and AI Overviews up to 10 questions and see whether each answer cites or
-    mentions your site, and which sites it cites instead. A run of 10
-    questions costs about 7 cents. The <a href="/features/ai-visibility-checker">AI
-    visibility checker</a> page covers it in full.
-  </p>
+      <SplitList
+        id="competitors-heading"
+        title="How do I find the keywords my competitors rank for?"
+        text="Ask for ranked keywords. They list what a site, a subfolder such as competitor.example/blog/, or one page ranks for."
+        items={competitors}
+      >
+        <div class="mt-6">
+          <CodeBlock label="Ask your agent" prompt value="What does competitor.example rank for that example.com doesn't?" wrap />
+        </div>
+        <p class="mt-6 text-base leading-7 text-foreground-muted">
+          The <a class="text-foreground underline underline-offset-4" href="/features/keyword-gap">keyword gap analysis</a> page walks through that comparison, and{' '}
+          <a class="text-foreground underline underline-offset-4" href="/features/seo-competitor-analysis">SEO competitor analysis</a>{' '}
+          starts one step earlier, with who your search competitors are.
+        </p>
+      </SplitList>
 
-  <h2>A real example from this page</h2>
-  <p>
-    We researched this page the way it describes. Keyword ideas for "ai
-    keyword research" and "keyword research mcp", then keyword metrics, from
-    DataForSEO for the US in November 2026. Searches are monthly, and KD is
-    DataForSEO's keyword difficulty from 0 to 100:
-  </p>
-  <table>
-    <thead><tr><th>Keyword</th><th>Searches (KD)</th></tr></thead>
-    <tbody>
-      <tr><td>keyword research</td><td>135,000 (KD 88)</td></tr>
-      <tr><td>keyword research tool</td><td>3,600 (KD 81)</td></tr>
-      <tr><td>ai keyword research tool</td><td>170 (KD 68)</td></tr>
-      <tr><td>long tail keyword research tool</td><td>140 (KD 32)</td></tr>
-      <tr><td>ai tools for keyword research</td><td>110 (KD 32)</td></tr>
-      <tr><td>how to use ai for keyword research</td><td>50 (KD 5)</td></tr>
-      <tr><td>keyword research mcp</td><td>10 (no KD)</td></tr>
-    </tbody>
-  </table>
-  <p>
-    The head terms belong to the big keyword tools, and a new page will not
-    move them. The SERP for "ai tools for keyword research" told a
-    different story. Four of its top six results came from sites with a
-    Domain Rating under 20. That is the kind of keyword a focused page can win, so it is one
-    this page aims at.
-  </p>
+      <SplitList
+        id="ai-heading"
+        title="Do AI answers cite my site?"
+        text="Your agent can check with a DataForSEO key. Keyword research for AI search starts from the questions people ask."
+        items={ai}
+      >
+        <div class="mt-6">
+          <CodeBlock label="Ask your agent" prompt value="Ask ChatGPT search, AI Mode and AI Overviews these 10 questions and tell me which answers cite or mention example.com" wrap />
+        </div>
+      </SplitList>
 
-  <h2>What each research action returns</h2>
-  <table>
-    <thead><tr><th>Ask for</th><th>What comes back</th></tr></thead>
-    <tbody>
-      <tr><td>Keyword ideas</td><td>Searches containing up to 5 seed keywords, by volume.</td></tr>
-      <tr><td>Keyword metrics</td><td>Search volume, keyword difficulty and cost per click for up to 100 keywords.</td></tr>
-      <tr><td>SERP</td><td>The pages that rank for up to 5 keywords, with authority and AI Overview sources.</td></tr>
-      <tr><td>SERP overlap</td><td>How many top 10 pages 2 to 10 keywords share, pair by pair.</td></tr>
-      <tr><td>Ranked keywords</td><td>The keywords a domain, subfolder or page ranks for.</td></tr>
-      <tr><td>Top pages</td><td>The pages with the most estimated search traffic.</td></tr>
-      <tr><td>Competitors</td><td>Domains that rank for the same keywords.</td></tr>
-      <tr><td>AI answers</td><td>Whether AI answers cite or mention a site (DataForSEO only).</td></tr>
-    </tbody>
-  </table>
-  <p>
-    Every request takes a two-letter country code. Backlinks are covered on
-    the <a href="/tools/backlink-checker">backlink checker</a>, link gaps on
-    the <a href="/features/backlink-gap">backlink gap analysis</a> page, and
-    both in the <a href="/docs/research">seo research</a> docs.
-  </p>
+      <section class="site-frame" aria-labelledby="example-heading">
+        <SectionHeading
+          id="example-heading"
+          title="What did keyword research for this page find?"
+          text="The head terms belong to the big keyword tools, and the smaller searches are where a focused page can win. We researched this page the way it describes."
+        />
+        <p class="mb-6 max-w-2xl text-base leading-7 text-foreground-muted">
+          Keyword ideas for "ai keyword research" and "keyword research mcp",
+          then keyword metrics, from DataForSEO for the US. Searches are
+          monthly, and KD is DataForSEO's keyword difficulty from 0 to 100.
+        </p>
+        <div class="docs-prose max-w-4xl">
+          <table>
+            <thead><tr><th>Keyword</th><th>Searches (KD)</th></tr></thead>
+            <tbody>
+              <tr><td>keyword research</td><td>135,000 (KD 88)</td></tr>
+              <tr><td>keyword research tool</td><td>3,600 (KD 81)</td></tr>
+              <tr><td>ai keyword research tool</td><td>170 (KD 68)</td></tr>
+              <tr><td>long tail keyword research tool</td><td>140 (KD 32)</td></tr>
+              <tr><td>ai tools for keyword research</td><td>110 (KD 32)</td></tr>
+              <tr><td>how to use ai for keyword research</td><td>50 (KD 5)</td></tr>
+              <tr><td>keyword research mcp</td><td>10 (no KD)</td></tr>
+            </tbody>
+          </table>
+        </div>
+        <p class="mt-6 max-w-2xl text-base leading-7 text-foreground-muted">
+          A new page will not move the head terms. The SERP for "ai tools for
+          keyword research" told a different story. Four of its top six
+          results came from sites with a Domain Rating under 20. That is the
+          kind of keyword a focused page can win, so it is one this page aims
+          at.
+        </p>
+      </section>
 
-  <h2>What keyword data cannot tell you</h2>
-  <p>
-    Search volumes are estimates. DataForSEO reports Google Ads' 12-month
-    average, Ahrefs uses its own model, and the two can differ several
-    times over for the same keyword, so compare keywords within one
-    provider. A keyword with no data has an unknown volume, not zero.
-    Difficulty is each provider's own score. When you want to know what your pages actually get, your
-    Search Console is the number to trust.
-  </p>
-</FeaturePage>
+      <section class="site-frame" aria-labelledby="actions-heading">
+        <SectionHeading
+          id="actions-heading"
+          title="What does each research action return?"
+          text="Each action returns one kind of evidence, from keyword ideas to AI answers. Every request takes a two-letter country code."
+        />
+        <div class="docs-prose max-w-4xl">
+          <table>
+            <thead><tr><th>Ask for</th><th>What comes back</th></tr></thead>
+            <tbody>
+              <tr><td>Keyword ideas</td><td>Searches containing up to 5 seed keywords, by volume.</td></tr>
+              <tr><td>Keyword metrics</td><td>Search volume, keyword difficulty and cost per click for up to 100 keywords.</td></tr>
+              <tr><td>SERP</td><td>The pages that rank for up to 5 keywords, with authority and AI Overview sources.</td></tr>
+              <tr><td>SERP overlap</td><td>How many top 10 pages 2 to 10 keywords share, pair by pair.</td></tr>
+              <tr><td>Ranked keywords</td><td>The keywords a domain, subfolder or page ranks for.</td></tr>
+              <tr><td>Top pages</td><td>The pages with the most estimated search traffic.</td></tr>
+              <tr><td>Competitors</td><td>Domains that rank for the same keywords.</td></tr>
+              <tr><td>AI answers</td><td>Whether AI answers cite or mention a site (DataForSEO only).</td></tr>
+            </tbody>
+          </table>
+        </div>
+        <p class="mt-6 max-w-2xl text-base leading-7 text-foreground-muted">
+          Backlinks are covered on the{' '}
+          <a class="text-foreground underline underline-offset-4" href="/tools/backlink-checker">backlink checker</a>, link gaps on the{' '}
+          <a class="text-foreground underline underline-offset-4" href="/features/backlink-gap">backlink gap analysis</a>{' '}
+          page, and both in the{' '}
+          <a class="text-foreground underline underline-offset-4" href="/docs/research">seo research</a> docs.
+        </p>
+      </section>
+
+      <SplitList
+        id="limits-heading"
+        title="What can't keyword data tell you?"
+        text="It can't give you exact search volumes, because every volume is an estimate. When you want to know what your pages actually get, your Search Console is the number to trust."
+        items={limits}
+      />
+
+      <section class="site-frame" aria-labelledby="related-heading">
+        <SectionHeading
+          id="related-heading"
+          title="Which tools and docs go with keyword research?"
+          text="The research docs and key setup, a free tool for any domain, and the pages that take keyword research further."
+        />
+        <div class="grid grid-cols-1 gap-2 sm:grid-cols-2">
+          {related.map((item) => <HomeCard {...item} link={item.link ?? `${item.title} docs`} />)}
+        </div>
+      </section>
+
+      <section class="site-frame" aria-labelledby="faq-heading">
+        <div class="max-w-2xl">
+          <h2 id="faq-heading" class="text-pretty text-2xl font-medium -tracking-[0.4px] text-foreground xl:text-3xl xl:-tracking-[0.6px]">
+            Keyword research questions
+          </h2>
+        </div>
+        <div class="mt-10">
+          <FaqAccordion items={faq} id="keyword-research-faq" />
+        </div>
+      </section>
+
+      <section class="site-frame" aria-labelledby="start-heading">
+        <SectionHeading
+          id="start-heading"
+          title="Start your keyword research"
+          text="Add SEO Skill to your agent, save a DataForSEO or Ahrefs key on your account page, and start with the searches Google already shows your site for."
+        />
+        <SetupPrompts id="keyword-research-setup-end" extraSteps={setupSteps} />
+      </section>
+    </div>
+  </main>
+</BaseLayout>

@@ -5,7 +5,58 @@ import {
   FileSearchIcon,
   McpServerIcon,
 } from '@hugeicons/core-free-icons'
-import FeaturePage from '@/components/FeaturePage.astro'
+import CodeBlock from '@/components/CodeBlock.astro'
+import FaqAccordion from '@/components/FaqAccordion.astro'
+import HomeCard from '@/components/HomeCard.astro'
+import LandingHero from '@/components/LandingHero.astro'
+import SectionHeading from '@/components/SectionHeading.astro'
+import SetupPrompts from '@/components/SetupPrompts.astro'
+import SplitList from '@/components/SplitList.astro'
+import BaseLayout from '@/layouts/BaseLayout.astro'
+import type { SchemaBreadcrumb } from '@/lib/schema'
+
+const breadcrumbs: SchemaBreadcrumb[] = [
+  { label: 'Home', href: '/' },
+  { label: 'Features', href: '/features' },
+  { label: 'Google index checker' },
+]
+
+const needs = [
+  { title: 'Sign in with Google', text: 'Give your agent the setup prompt at the top of this page and sign in with Google.' },
+  { title: 'It is free', text: 'Checking your own Search Console properties costs nothing.' },
+  { title: 'Your own sites only', text: "It checks your own sites. It cannot check a list of pages on other people's sites." },
+]
+
+const everyPage = [
+  { title: 'A fixed order', text: 'Pages that lost their clicks come first, then pages by clicks and impressions, then sitemap pages, then the rest.' },
+  { title: '100 pages a run', text: 'Each run checks 100. The result says how many it checked out of how many it knows.' },
+  { title: 'A short run is never an all-clear', text: 'A page it did not reach has no result.' },
+]
+
+const morePages = [
+  { title: 'The hosted MCP checks 100 each run', text: 'Use a terminal or the local MCP server for bigger runs.' },
+  { title: "Google's answers are saved for 7 days", text: 'On your machine, the next run reuses them instead of spending quota again, and says how old they are.' },
+  { title: 'Ask Google again', text: 'Add --refresh to ask Google again.', code: '--refresh' },
+  { title: 'The live check runs every time', text: 'Each page is loaded live on every run, whether the answer from Google is new or saved.' },
+]
+
+const oneUrl = [
+  { title: 'The live page as it loads now', text: 'Its status, redirect and head tags.' },
+  { title: "Google's index status and queries", text: "Google's index status for the URL, and its Search Console queries against the period before." },
+  { title: 'URL Inspection can lag', text: "URL Inspection reports Google's last known state, so it can lag behind a change you made today." },
+]
+
+const inspection = [
+  { title: 'Many pages at once', text: "Your agent reads the same data through Google's API for many pages at once." },
+  { title: 'A live check of each page', text: 'It adds the live check, so you can go straight to the pages that need work.' },
+]
+
+const daily = [
+  { title: "Each property's full 2,000 checks a day", text: 'Your top pages are checked daily and the rest as often as the quota allows.' },
+  { title: 'Answers at once', text: 'Your agent gets answers at once from those stored results.' },
+  { title: 'Alerts when a page drops out', text: "You get an alert when a page drops out of Google's index or comes back." },
+  { title: 'Find problems Google has not seen yet', text: 'The index check tells you what Google did with your pages. To find technical problems across the whole site, including pages Google has not seen yet, run the SEO crawler.', href: '/features/seo-crawler' },
+]
 
 const related = [
   { title: 'seo index', text: 'Google indexing reasons for every known page, each checked live and labelled.', href: '/docs/indexing', icon: Alert02Icon },
@@ -15,108 +66,175 @@ const related = [
   { title: 'Free Google index checker', text: 'Check up to five pages in your browser, with the searches as evidence.', href: '/tools/google-index-checker', icon: FileSearchIcon, link: 'Free tool' },
   { title: 'How to get Google to index your site', text: 'The steps that get new pages into Google, and what keeps them out.', href: '/guides/how-to-get-google-to-index-your-site', icon: Alert02Icon, link: 'Read the guide' },
 ]
+
+const faq = [
+  {
+    question: 'Where does the index status come from?',
+    answer:
+      "From Google's URL Inspection in Search Console. For each page you get Google's reason word for word, next to a live check of what the page does now.",
+  },
+  {
+    question: 'Can I check pages on a site I do not own?',
+    answer:
+      "No. The site has to be a Search Console property your Google account can read. For a few pages on any site, the free Google index checker on this site checks up to five pages in your browser.",
+    links: [{ text: 'free Google index checker', href: '/tools/google-index-checker' }],
+  },
+  {
+    question: 'How many pages can I check a day?',
+    answer:
+      'Google allows 2,000 URL Inspection checks a day for each Search Console property. The hosted MCP checks 100 each run, and a terminal or the local MCP server can use what is left of the day’s quota in one go.',
+  },
+  {
+    question: 'What do the fix, check, expected and indexed labels mean?',
+    answer:
+      'SEO Skill sets them with simple rules over the evidence, and Google does not give them. Fix means the evidence shows a fault on the site, check means a person should look, expected means the site works as built, and indexed means Google indexes the page and nothing looks wrong.',
+  },
+  {
+    question: 'Why does a page I just fixed still show as not indexed?',
+    answer:
+      "URL Inspection reports Google's last known state, so it can lag behind a change you made today. The live check shows what the page does now.",
+  },
+]
 ---
 
-<FeaturePage
+<BaseLayout
   title="Google index checker for AI agents"
-  description="Check whether Google has indexed your pages, in bulk or one URL at a time, with Google's own reason from Search Console URL Inspection and a live check of each page."
-  path="/features/google-index-checker"
-  lead="See which of your pages Google has indexed, and Google's own reason for the ones it has not. Your agent checks them in bulk through Search Console, then loads each page to see whether the reason still holds."
-  {related}
+  description="Check whether Google has indexed your pages, in bulk or one URL at a time, with Google's own reason from URL Inspection and a live check of each page."
+  canonicalPath="/features/google-index-checker"
+  {breadcrumbs}
+  framed={false}
 >
-  <h2>What you need to check indexing</h2>
-  <p>
-    The answers come from Google's URL Inspection, so the site has to be a
-    Search Console property your Google account can read. Give your agent
-    the setup prompt at the top of this page and sign in with Google. It is free. It checks your own sites, not a
-    list of pages on other people's sites.
-  </p>
+  <main data-agent-content>
+    <LandingHero
+      title="Google index checker for AI agents"
+      lead="See which of your pages Google has indexed, and Google's own reason for the ones it has not. Your agent checks them in bulk through Search Console, then loads each page to see whether the reason still holds."
+      setupId="google-index-checker-setup"
+      author
+    />
 
-  <h2>Check every page Google knows about</h2>
-  <p>Ask your agent:</p>
-  <pre><code>Which pages on example.com are not indexed by Google, and which ones need fixing?</code></pre>
-  <p>Or run it in a terminal:</p>
-  <pre><code>seo index --site example.com</code></pre>
-  <p>
-    It finds the pages it knows from Search Console and your sitemap, and
-    checks them in a fixed order: pages that lost their clicks, then pages by
-    clicks and impressions, then sitemap pages, then the rest. Each run checks
-    100. The result says how many it checked out of how many it knows. A page
-    it did not reach has no result, so a short run is never an all-clear.
-  </p>
+    <div class="space-y-24 py-24 sm:space-y-32 sm:py-32">
+      <SplitList
+        id="needs-heading"
+        title="What do I need to check indexing?"
+        text="A Search Console property your Google account can read. The answers come from Google's URL Inspection, so the check only works on sites you have in Search Console."
+        items={needs}
+      />
 
-  <h2>Check more pages in one run</h2>
-  <p>
-    Google allows 2,000 URL Inspection checks a day for each Search Console
-    property. In a terminal or the local MCP server you can use what is left
-    of today's quota in one go:
-  </p>
-  <pre><code>seo index --site example.com --max-urls 500</code></pre>
-  <p>
-    The hosted MCP checks 100 each run. On your machine, Google's answers are
-    saved for 7 days, so the next run reuses them instead of spending quota
-    again and says how old they are. Add <code>--refresh</code> to ask Google
-    again. The live check of each page runs every time either way.
-  </p>
+      <SplitList
+        id="every-page-heading"
+        title="How do I check every page Google knows about?"
+        text="Ask your agent which pages are not indexed. It finds the pages it knows from Search Console and your sitemap, and checks them in a fixed order."
+        items={everyPage}
+      >
+        <div class="mt-6 space-y-4">
+          <CodeBlock label="Ask your agent" prompt value="Which pages on example.com are not indexed by Google, and which ones need fixing?" wrap />
+          <CodeBlock label="Or run it in a terminal" value="seo index --site example.com" wrap />
+        </div>
+      </SplitList>
 
-  <h2>What each result tells you</h2>
-  <p>
-    For each page you get Google's reason, word for word, such as "Page with
-    redirect" or "Alternate page with proper canonical tag". Next to it is what the
-    page does now: its status code, any redirect, the canonical it declares
-    and the one Google chose, whether your sitemap lists it, and when Google
-    last crawled it. Each page then gets a label:
-  </p>
-  <table>
-    <thead><tr><th>Label</th><th>What it means</th></tr></thead>
-    <tbody>
-      <tr><td>fix</td><td>The evidence shows a fault on the site, such as a temporary redirect or a missing page your sitemap still lists.</td></tr>
-      <tr><td>check</td><td>A person should look, such as a page Google crawled and chose not to index (<a href="/features/crawled-currently-not-indexed">crawled, currently not indexed</a>) or one it knows about but has not crawled (<a href="/features/discovered-currently-not-indexed">discovered, currently not indexed</a>).</td></tr>
-      <tr><td>expected</td><td>The site works as built, such as an http page that redirects to https.</td></tr>
-      <tr><td>indexed</td><td>Google indexes it and nothing looks wrong.</td></tr>
-    </tbody>
-  </table>
-  <p>
-    SEO Skill sets the labels with simple rules over this evidence. Google
-    does not give them, so treat each check as a question to look into. If most of your pages
-    are missing, start with{' '}
-    <a href="/features/website-not-showing-up-on-google">website not showing
-    up on Google</a>.
-  </p>
+      <SplitList
+        id="more-pages-heading"
+        title="Can I check more pages in one run?"
+        text="Yes, in a terminal or the local MCP server. Google allows 2,000 URL Inspection checks a day for each Search Console property, and on your machine you can use what is left of today's quota in one go."
+        items={morePages}
+      >
+        <div class="mt-6">
+          <CodeBlock label="Run it in a terminal" value="seo index --site example.com --max-urls 500" wrap />
+        </div>
+      </SplitList>
 
-  <h2>Check one URL</h2>
-  <p>
-    For a page you just changed, or one from a Search Console email, check
-    that URL on its own:
-  </p>
-  <pre><code>seo page --url https://example.com/pricing</code></pre>
-  <p>
-    You get the live page as it loads now (status, redirect and head tags),
-    Google's index status for the URL, and its Search Console queries
-    against the period before. URL Inspection reports Google's last known
-    state, so it can lag behind a change you made today.
-  </p>
+      <section class="site-frame" aria-labelledby="results-heading">
+        <SectionHeading
+          id="results-heading"
+          title="What does each index check result tell me?"
+          text={'Google\'s reason word for word, such as "Page with redirect" or "Alternate page with proper canonical tag", next to what the page does now and a label.'}
+        />
+        <div class="docs-prose max-w-4xl">
+          <p>
+            Next to the reason you see the page's status code, any redirect, the
+            canonical it declares and the one Google chose, whether your sitemap
+            lists it, and when Google last crawled it. Each page then gets a
+            label.
+          </p>
+          <table>
+            <thead><tr><th>Label</th><th>What it means</th></tr></thead>
+            <tbody>
+              <tr><td>fix</td><td>The evidence shows a fault on the site, such as a temporary redirect or a missing page your sitemap still lists.</td></tr>
+              <tr><td>check</td><td>A person should look, such as a page Google crawled and chose not to index (<a href="/guides/crawled-currently-not-indexed">crawled, currently not indexed</a>) or one it knows about but has not crawled (<a href="/guides/discovered-currently-not-indexed">discovered, currently not indexed</a>).</td></tr>
+              <tr><td>expected</td><td>The site works as built, such as an http page that redirects to https.</td></tr>
+              <tr><td>indexed</td><td>Google indexes it and nothing looks wrong.</td></tr>
+            </tbody>
+          </table>
+          <p>
+            SEO Skill sets the labels with simple rules over this evidence. Google
+            does not give them, so treat each check as a question to look into. If
+            most of your pages are missing, start with{' '}
+            <a href="/features/website-not-showing-up-on-google">website not showing up on Google</a>.
+          </p>
+        </div>
+      </section>
 
-  <h2>The same data as Google's URL Inspection tool</h2>
-  <p>
-    The <a href="https://support.google.com/webmasters/answer/9012289" target="_blank" rel="noreferrer">URL
-    Inspection tool</a> in Search Console shows the same data for one URL at a
-    time, typed in by hand. Your agent reads it through Google's API for many
-    pages at once and adds the live check, so you can go straight to the
-    pages that need work.
-  </p>
+      <SplitList
+        id="one-url-heading"
+        title="How do I check one URL?"
+        text="Run seo page on it. Use it for a page you just changed, or one from a Search Console email."
+        items={oneUrl}
+      >
+        <div class="mt-6">
+          <CodeBlock label="Run it in a terminal" value="seo page --url https://example.com/pricing" wrap />
+        </div>
+      </SplitList>
 
-  <h2>Daily index checks with the weekly site audit</h2>
-  <p>
-    The weekly site audit ($50 a month per site) runs the checks for you on
-    the hosted server, using each property's full 2,000 checks a day. Your top
-    pages are checked daily and the rest as often as the quota allows. Your
-    agent then gets answers at once from those stored results, and you get an
-    alert when a page drops out of Google's index or comes back.
-  </p>
-  <p>
-    The index check tells you what Google did with your pages. To find
-    technical problems across the whole site, including pages Google has not
-    seen yet, run the <a href="/features/seo-crawler">SEO crawler</a>.
-  </p>
-</FeaturePage>
+      <SplitList
+        id="inspection-heading"
+        title="How is this different from Google's URL Inspection tool?"
+        text="It reads the same data. The URL Inspection tool in Search Console shows it for one URL at a time, typed in by hand."
+        items={inspection}
+      >
+        <p class="mt-4 text-base leading-7 text-foreground-muted">
+          Google explains the tool in its{' '}
+          <a class="text-foreground underline underline-offset-4" href="https://support.google.com/webmasters/answer/9012289" target="_blank" rel="noreferrer">URL Inspection tool</a>{' '}
+          help page.
+        </p>
+      </SplitList>
+
+      <SplitList
+        id="daily-heading"
+        title="Can Google index checks run every day?"
+        text="Yes, with the weekly site audit ($50 a month per site). It runs the checks for you on the hosted server."
+        items={daily}
+      />
+
+      <section class="site-frame" aria-labelledby="related-heading">
+        <SectionHeading
+          id="related-heading"
+          title="Which tools and docs go with the Google index checker?"
+          text="Check one URL, see where clicks went, or try the free checker in your browser with no agent set up."
+        />
+        <div class="grid grid-cols-1 gap-2 sm:grid-cols-2">
+          {related.map((item) => <HomeCard {...item} link={item.link ?? `${item.title} docs`} />)}
+        </div>
+      </section>
+
+      <section class="site-frame" aria-labelledby="faq-heading">
+        <div class="max-w-2xl">
+          <h2 id="faq-heading" class="text-pretty text-2xl font-medium -tracking-[0.4px] text-foreground xl:text-3xl xl:-tracking-[0.6px]">
+            Google index checker questions
+          </h2>
+        </div>
+        <div class="mt-10">
+          <FaqAccordion items={faq} id="google-index-checker-faq" />
+        </div>
+      </section>
+
+      <section class="site-frame" aria-labelledby="start-heading">
+        <SectionHeading
+          id="start-heading"
+          title="Check which of your pages Google has indexed"
+          text="Add SEO Skill to your agent, sign in with Google, and ask which pages on your site are not indexed."
+        />
+        <SetupPrompts id="google-index-checker-setup-end" />
+      </section>
+    </div>
+  </main>
+</BaseLayout>

@@ -6,7 +6,108 @@ import {
   SourceCodeIcon,
 } from '@hugeicons/core-free-icons'
 import CodeBlock from '@/components/CodeBlock.astro'
-import FeaturePage from '@/components/FeaturePage.astro'
+import FaqAccordion from '@/components/FaqAccordion.astro'
+import HomeCard from '@/components/HomeCard.astro'
+import LandingHero from '@/components/LandingHero.astro'
+import SectionHeading from '@/components/SectionHeading.astro'
+import SetupPrompts from '@/components/SetupPrompts.astro'
+import SplitList from '@/components/SplitList.astro'
+import BaseLayout from '@/layouts/BaseLayout.astro'
+import type { SchemaBreadcrumb } from '@/lib/schema'
+
+const breadcrumbs: SchemaBreadcrumb[] = [
+  { label: 'Home', href: '/' },
+  { label: 'Features', href: '/features' },
+  { label: 'SEO for developers' },
+]
+
+const parts = [
+  {
+    title: 'A crawler you can run on localhost',
+    icon: Route01Icon,
+    text: 'The crawl needs no sign-in, so for a one-off run, or in CI, use npx -y seo in place of seo and skip setup.',
+  },
+  {
+    title: 'An MCP server for your coding agent',
+    icon: McpServerIcon,
+    text: 'The setup prompt adds the hosted MCP server and installs the CLI.',
+  },
+  {
+    title: 'A TypeScript library',
+    icon: SourceCodeIcon,
+    text: 'The same checks for a build script, a test or your own tool, all from the open source seo package.',
+  },
+]
+
+const localCrawl = [
+  {
+    title: 'Build with your local address as the site URL',
+    text: 'Otherwise every canonical and Markdown link will point at production and show up as an issue.',
+  },
+  {
+    title: 'Start the build and crawl it',
+    text: 'Use astro preview, next start or wrangler dev, then run the crawl.',
+  },
+  {
+    title: 'It lists what search engines see',
+    text: 'It follows links from the start page and your sitemap, and lists broken links, redirects, missing or duplicate titles and descriptions, canonical and robots tags, and structured data.',
+  },
+  {
+    title: 'It checks what AI agents get',
+    text: "Which AI crawlers your robots.txt allows, whether each page's Markdown copy loads, and whether llms.txt links work.",
+  },
+  {
+    title: 'The crawl stops at 500 pages',
+    text: 'Unless you raise --max-pages, and it says so when it does.',
+  },
+  {
+    title: 'A noindex is reported as what the page says',
+    text: 'The same goes for a canonical pointing elsewhere. It is only a bug if you did not mean it.',
+  },
+]
+
+const ci = [
+  {
+    title: 'Staging must be reachable without a sign-in',
+    text: 'If staging sits behind Cloudflare Access or similar, crawl the local build in CI instead.',
+  },
+  {
+    title: 'Check a large sitemap quickly',
+    text: "A sitemap health pass checks every listed URL's status and redirects without reading page bodies, and writes a JUnit file most CI systems can show as test results.",
+  },
+  {
+    title: 'Keep the full result as a file',
+    text: 'Add --json --output crawl.json to any crawl, for a diff against the last run or for your agent to read.',
+  },
+]
+
+const library = [
+  {
+    title: 'A full crawl reports completed',
+    text: 'Otherwise report.status is partial or failed.',
+  },
+  {
+    title: 'A partial crawl is never an all-clear',
+    text: 'It stopped early, for example at the page limit, so a missing issue in it proves nothing.',
+  },
+  {
+    title: 'seo/mcp exports the MCP server',
+    text: 'Use it if you want to run the server inside your own process.',
+  },
+]
+
+const frameworks = [
+  {
+    title: 'Astro SEO guide',
+    text: 'A static site on Cloudflare with build checks that fail.',
+    href: '/guides/astro-seo',
+  },
+  {
+    title: 'Next.js SEO guide',
+    text: 'The Metadata API, sitemaps and real 404s in the App Router.',
+    href: '/guides/nextjs-seo',
+  },
+]
 
 const related = [
   { title: 'Astro SEO', text: 'Static pages on Cloudflare, one layout for head tags, Markdown copies, sitemaps and build checks.', href: '/guides/astro-seo', icon: SourceCodeIcon, link: 'Astro SEO guide' },
@@ -26,108 +127,176 @@ for (const group of report.issueGroups) {
 
 const page = await auditPage({ url: 'http://localhost:4321/about' })
 console.log(page.issues.map((issue) => issue.title))`
+
+const faq = [
+  {
+    question: 'Do I need to sign in to crawl a site?',
+    answer: 'No. The crawl needs no sign-in, so for a one-off run, or in CI, use npx -y seo in place of seo and skip setup.',
+  },
+  {
+    question: 'Should I crawl the dev server or the production build?',
+    answer:
+      'The production build, so you see the HTML that will ship. Build with your local address as the site URL first, or every canonical and Markdown link will point at production and show up as an issue.',
+  },
+  {
+    question: 'How do I fail a CI build on SEO problems?',
+    answer:
+      'Add --fail-on with a severity, such as --fail-on high. The crawl exits with an error when it finds an issue at that severity or above, so a pipeline step can stop a deploy.',
+  },
+  {
+    question: 'How many pages does the crawl check?',
+    answer: 'It stops at 500 pages unless you raise --max-pages, and it says so when it does.',
+  },
+  {
+    question: 'Can the hosted MCP server crawl my site?',
+    answer:
+      'No. The crawl and internal links fetch many pages, so they run only in the CLI. When your agent asks the hosted server for a crawl, it is told to run seo crawl instead.',
+  },
+]
 ---
 
-<FeaturePage
+<BaseLayout
   title="SEO for developers"
-  description="SEO for developers: crawl local and staging builds with the open source seo CLI, give your coding agent your Search Console through MCP, and run the same checks from TypeScript."
-  path="/features/seo-for-developers"
-  lead="Check SEO the way you check types. Crawl the build before it ships, fail CI on real problems, and let your coding agent read your own Search Console data."
-  {related}
-  relatedHeading="Guides and docs"
+  description="Crawl local and staging builds with the open source seo CLI, give your coding agent your Search Console through MCP, and run the checks from TypeScript."
+  canonicalPath="/features/seo-for-developers"
+  {breadcrumbs}
+  framed={false}
 >
-  <p>
-    Most SEO problems a developer causes are visible in the build: a template
-    that lost its canonical, a moved page with no redirect, a staging <code>noindex</code> that reached production. SEO Skill gives you a crawler
-    you can run on localhost, an MCP server for your coding agent, and a
-    TypeScript library, all from the open source <code>seo</code> package.
-    The setup prompt above adds the hosted MCP server and installs the CLI. The
-    crawl needs no sign-in, so for a one-off run, or in CI, use <code>npx -y seo</code> in place of <code>seo</code> and skip setup.
-  </p>
+  <main data-agent-content>
+    <LandingHero
+      title="SEO for developers"
+      lead="Check SEO the way you check types. Crawl the build before it ships, fail CI on real problems, and let your coding agent read your own Search Console data."
+      setupId="seo-for-developers-setup"
+      author
+    />
 
-  <h2>Crawl a local build before you deploy</h2>
-  <p>
-    Crawl the production build, not the dev server, so you see the HTML that
-    will ship. Build with your local address as the site URL first, or every
-    canonical and Markdown link will point at production and show up as an
-    issue. Then start the build (<code>astro preview</code>, <code>next start</code> or <code>wrangler dev</code>) and crawl it:
-  </p>
-  <CodeBlock value="seo crawl http://localhost:4321 --max-pages 2000" wrap />
-  <p>
-    It follows links from the start page and your sitemap, and lists broken
-    links, redirects, missing or duplicate titles and descriptions, canonical
-    and robots tags, and structured data. It also checks what AI agents get:
-    which AI crawlers your robots.txt allows, whether each page's Markdown copy
-    loads, and whether <code>llms.txt</code> links work. The crawl stops at 500
-    pages unless you raise <code>--max-pages</code>, and says so when it does.
-  </p>
-  <p>
-    A <code>noindex</code> or a canonical pointing elsewhere is reported as what
-    the page says. It is only a bug if you did not mean it.
-  </p>
+    <div class="space-y-24 py-24 sm:space-y-32 sm:py-32">
+      <section class="site-frame" aria-labelledby="parts-heading">
+        <SectionHeading
+          id="parts-heading"
+          title="What does SEO Skill give developers?"
+          text="Three tools from the open source seo package. Most SEO problems a developer causes are visible in the build: a template that lost its canonical, a moved page with no redirect, a staging noindex that reached production."
+        />
+        <div class="grid grid-cols-1 gap-2 sm:grid-cols-2 lg:grid-cols-3">
+          {parts.map((item) => <HomeCard title={item.title} text={item.text} icon={item.icon} />)}
+        </div>
+      </section>
 
-  <h2>Crawl staging and fail CI on real problems</h2>
-  <p> <code>--fail-on</code> exits with an error when the crawl finds an issue at
-    that severity or above, so a pipeline step can stop a deploy:
-  </p>
-  <CodeBlock value="npx -y seo crawl https://staging.example.com --fail-on high" wrap />
-  <p>
-    The crawler needs to reach staging without a sign-in. If staging sits
-    behind Cloudflare Access or similar, crawl the local build in CI instead.
-    For a large site, a sitemap health pass checks every listed URL's status
-    and redirects without reading page bodies, and writes a JUnit file most CI
-    systems can show as test results:
-  </p>
-  <CodeBlock value="npx -y seo crawl --sitemap-url https://staging.example.com/sitemap.xml --health --format junit --output seo-health.xml" wrap />
-  <p>
-    Add <code>--json --output crawl.json</code> to any crawl to keep the full
-    result as a file, for a diff against the last run or for your agent to read.
-  </p>
+      <SplitList
+        id="local-heading"
+        title="How do I crawl a local build before I deploy?"
+        text="Crawl the production build instead of the dev server, so you see the HTML that will ship."
+        items={localCrawl}
+      >
+        <div class="mt-6">
+          <CodeBlock label="Run it in a terminal" value="seo crawl http://localhost:4321 --max-pages 2000" wrap />
+          <CodeBlock
+            label="Ask your agent"
+            prompt
+            value="Crawl the production build of example.com running on http://localhost:4321 and list the broken links, redirects and missing titles it finds"
+            wrap
+          />
+        </div>
+      </SplitList>
 
-  <h2>Give your coding agent your search data</h2>
-  <p>
-    The crawl tells you what the site says. Search Console tells you what
-    Google did with it. With the MCP server connected, your agent can answer
-    questions like these from your own data while it works in the code:
-  </p>
-  <table>
-    <thead><tr><th>Ask</th><th>What it reads</th></tr></thead>
-    <tbody>
-      <tr><td>Did last Tuesday's release change search clicks?</td><td>Clicks and positions before and after the date, with Google updates in the same window.</td></tr>
-      <tr><td>Is this page indexed, and which queries find it?</td><td>Google's URL Inspection result and the page's queries.</td></tr>
-      <tr><td>Which pages lost their clicks this month?</td><td>Pages that lost clicks, each checked live and with URL Inspection.</td></tr>
-      <tr><td>Which queries are we on page two for?</td><td>The striking distance section of the Search Console report.</td></tr>
-    </tbody>
-  </table>
-  <p>
-    The hosted server needs nothing installed. To run the server on your
-    machine instead, with the sign-in from <code>seo start</code>, add it to
-    every MCP client it finds (Claude Code, Codex, Cursor and Claude Desktop):
-  </p>
-  <CodeBlock value="seo mcp install --all" wrap />
-  <p>
-    The crawl and internal links fetch many pages, so they run only in the CLI.
-    When your agent asks the hosted server for a crawl, it is told to run <code>seo crawl</code> instead.
-  </p>
+      <SplitList
+        id="ci-heading"
+        title="How do I fail CI on real SEO problems?"
+        text="Add --fail-on to the crawl. It exits with an error when the crawl finds an issue at that severity or above, so a pipeline step can stop a deploy."
+        items={ci}
+      >
+        <div class="mt-6">
+          <CodeBlock label="Crawl staging" value="npx -y seo crawl https://staging.example.com --fail-on high" wrap />
+          <CodeBlock
+            label="Check the sitemap's health"
+            value="npx -y seo crawl --sitemap-url https://staging.example.com/sitemap.xml --health --format junit --output seo-health.xml"
+            wrap
+          />
+        </div>
+      </SplitList>
 
-  <h2>Run the same checks from TypeScript</h2>
-  <p>
-    The package is also a library, for a build script, a test or your own
-    tool. Install it in your project:
-  </p>
-  <CodeBlock value="npm i seo" wrap />
-  <p>Then crawl a site and check a single page. Save this as <code>check.mjs</code> and run <code>node check.mjs</code>:</p>
-  <CodeBlock value={libraryExample} />
-  <p> <code>report.status</code> is <code>completed</code> for a full crawl. Otherwise it is <code>partial</code> or <code>failed</code>. A partial crawl stopped early, for example at the
-    page limit, so a missing issue in it is not an all-clear. <code>seo/mcp</code> exports the MCP server, if you want to run it inside
-    your own process.
-  </p>
+      <section class="site-frame" aria-labelledby="agent-heading">
+        <SectionHeading
+          id="agent-heading"
+          title="How does my coding agent read my search data?"
+          text="Through the MCP server. The crawl tells you what the site says, and Search Console tells you what Google did with it, so your agent can answer questions like these from your own data while it works in the code."
+        />
+        <div class="docs-prose max-w-4xl">
+          <table>
+            <thead><tr><th>Ask</th><th>What it reads</th></tr></thead>
+            <tbody>
+              <tr><td>Did last Tuesday's release change search clicks?</td><td>Clicks and positions before and after the date, with Google updates in the same window.</td></tr>
+              <tr><td>Is this page indexed, and which queries find it?</td><td>Google's URL Inspection result and the page's queries.</td></tr>
+              <tr><td>Which pages lost their clicks this month?</td><td>Pages that lost clicks, each checked live and with URL Inspection.</td></tr>
+              <tr><td>Which queries are we on page two for?</td><td>The striking distance section of the Search Console report.</td></tr>
+            </tbody>
+          </table>
+          <p>
+            The hosted server needs nothing installed. To run the server on your
+            machine instead, with the sign-in from <code>seo start</code>, add it
+            to every MCP client it finds (Claude Code, Codex, Cursor and Claude
+            Desktop):
+          </p>
+        </div>
+        <div class="max-w-4xl">
+          <CodeBlock value="seo mcp install --all" wrap />
+        </div>
+        <p class="mt-6 max-w-2xl text-base leading-7 text-foreground-muted">
+          The crawl and internal links fetch many pages, so they run only in the
+          CLI. When your agent asks the hosted server for a crawl, it is told to
+          run <code>seo crawl</code> instead.
+        </p>
+      </section>
 
-  <h2>Set up your framework</h2>
-  <p>
-    The crawler finds problems; the framework guides show how to avoid them in
-    the first place. The <a href="/guides/astro-seo">Astro SEO guide</a> covers
-    a static site on Cloudflare with build checks that fail, and the <a href="/guides/nextjs-seo">Next.js SEO guide</a> covers the Metadata API,
-    sitemaps and real 404s in the App Router.
-  </p>
-</FeaturePage>
+      <SplitList
+        id="library-heading"
+        title="Can I run the same checks from TypeScript?"
+        text="Yes. The package is also a library, for a build script, a test or your own tool. Install it with npm i seo, then save the example as check.mjs and run node check.mjs to crawl a site and check a single page."
+        items={library}
+      >
+        <div class="mt-6">
+          <CodeBlock label="Install it in your project" value="npm i seo" wrap />
+          <CodeBlock label="check.mjs" value={libraryExample} />
+        </div>
+      </SplitList>
+
+      <SplitList
+        id="frameworks-heading"
+        title="How do I set up my framework for SEO?"
+        text="Follow the framework guide for your stack. The crawler finds problems, and the framework guides show how to avoid them in the first place."
+        items={frameworks}
+      />
+
+      <section class="site-frame" aria-labelledby="related-heading">
+        <SectionHeading
+          id="related-heading"
+          title="Which guides and docs go with SEO for developers?"
+          text="Framework guides for Astro and Next.js, then the crawl, the hosted MCP and the CLI."
+        />
+        <div class="grid grid-cols-1 gap-2 sm:grid-cols-2">
+          {related.map((item) => <HomeCard {...item} link={item.link ?? `${item.title} docs`} />)}
+        </div>
+      </section>
+
+      <section class="site-frame" aria-labelledby="faq-heading">
+        <div class="max-w-2xl">
+          <h2 id="faq-heading" class="text-pretty text-2xl font-medium -tracking-[0.4px] text-foreground xl:text-3xl xl:-tracking-[0.6px]">
+            SEO for developers questions
+          </h2>
+        </div>
+        <div class="mt-10">
+          <FaqAccordion items={faq} id="seo-for-developers-faq" />
+        </div>
+      </section>
+
+      <section class="site-frame" aria-labelledby="start-heading">
+        <SectionHeading
+          id="start-heading"
+          title="Crawl your first build"
+          text="Add SEO Skill to your coding agent, sign in with the Google account that can read your Search Console, and ask it to crawl your local build."
+        />
+        <SetupPrompts id="seo-for-developers-setup-end" />
+      </section>
+    </div>
+  </main>
+</BaseLayout>

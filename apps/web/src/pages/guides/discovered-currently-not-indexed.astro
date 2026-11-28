@@ -1,0 +1,215 @@
+---
+import {
+  Alert02Icon,
+  Clock01Icon,
+  FileNotFoundIcon,
+  FileSearchIcon,
+  FilterIcon,
+  Notification01Icon,
+  Search01Icon,
+} from '@hugeicons/core-free-icons'
+import CodeBlock from '@/components/CodeBlock.astro'
+import FaqAccordion from '@/components/FaqAccordion.astro'
+import HomeCard from '@/components/HomeCard.astro'
+import LandingHero from '@/components/LandingHero.astro'
+import SectionHeading from '@/components/SectionHeading.astro'
+import SetupPrompts from '@/components/SetupPrompts.astro'
+import SplitList from '@/components/SplitList.astro'
+import StatusGuides from '@/components/StatusGuides.astro'
+import BaseLayout from '@/layouts/BaseLayout.astro'
+import type { SchemaBreadcrumb } from '@/lib/schema'
+
+const breadcrumbs: SchemaBreadcrumb[] = [
+  { label: 'Home', href: '/' },
+  { label: 'Guides', href: '/guides' },
+  { label: 'Discovered, currently not indexed' },
+]
+
+const example = `URLs labelled fix or check, 1 to 3 of 3:
+reason | label | url | live | in_sitemap | last_crawl | why
+Discovered - currently not indexed | check | /guides/composting | 200 | yes | | Google knows the URL but has not crawled it yet. The sitemap lists it. It returns 200 now.
+Discovered - currently not indexed | check | /shop?colour=red&size=9 | 200 | no | | Google knows the URL but has not crawled it yet. It returns 200 now.
+Discovered - currently not indexed | fix | /guides/old-compost-bins | 404 | yes | | It returns 404 now, and the sitemap lists it.`
+
+const meaning = [
+  { title: 'Google found the URL', text: 'Discovered, currently not indexed is a reason in Search Console’s Page indexing report. Google found the URL, through a link or your sitemap, and has not crawled it yet.' },
+  { title: 'The crawl was put off', text: 'Google’s Page indexing report help says that typically Google wanted to crawl the URL but expected it to overload the site, so it rescheduled the crawl. That is also why the last crawl date is empty.', href: 'https://support.google.com/webmasters/answer/7440203' },
+  { title: 'Rewriting the text comes later', text: 'Google has not read the page. Check that the URL works, that you want it indexed, and that Google can reach it easily.' },
+]
+
+const finding = [
+  { title: 'Search Console shows a sample', text: 'Its report shows up to 1,000 example URLs for each reason.' },
+  { title: 'SEO Skill checks each page', text: 'It asks Google’s URL Inspection about each page it knows from your Search Console and your sitemap, and sorts them by reason.' },
+  { title: '100 pages a run, in a fixed order', text: 'Pages that lost their clicks, pages by clicks and impressions, sitemap pages, then the rest.' },
+  { title: 'Up to 2,000 a day on your machine', text: 'Google allows each property 2,000 checks a day. The result always says how many pages it checked out of how many it knows.', code: '--max-urls' },
+]
+
+const rows = [
+  { title: 'A real page Google has not crawled yet', text: 'The guide returns 200 and the sitemap lists it.', icon: Clock01Icon },
+  { title: 'A URL you probably never wanted in Google', text: 'The filter URL returns 200 and is not in the sitemap.', icon: FilterIcon },
+  { title: 'A page that is gone', text: 'The old guide returns 404, and the sitemap still sends Google to it. It is labelled fix.', icon: FileNotFoundIcon },
+]
+
+const checks = [
+  { title: '1. Check the URL works', text: 'A page that returns 404, redirects or carries a noindex tag now will not be indexed when Google does crawl it. Fix the sitemap or the link that sends Google there instead.' },
+  { title: '2. Decide whether you want it indexed', text: 'Filter, sort and tracking URLs add to Google’s crawl queue without adding a page anyone searches for. Take them out of your sitemap and stop linking to them.' },
+  { title: '3. Check your server answers quickly', text: 'Google puts off crawls it expects to overload the site. Search Console’s Crawl stats report shows how fast your server answered Googlebot and any host problems.', href: 'https://support.google.com/webmasters/answer/9679690' },
+  { title: '4. Make sure your own pages link to it', text: 'A page that only your sitemap mentions is easy to put off. seo internal-links crawls your site from your machine and returns up to eight pages that should link to it.', href: '/docs/internal-links' },
+]
+
+const recheck = [
+  { title: 'A last crawl date appears', text: 'Once Google crawls the page, URL Inspection shows a last crawl date and the reason changes.' },
+  { title: 'Ask Google for a crawl', text: 'seo cannot submit URLs to Google. Use Request indexing in Search Console’s URL Inspection tool.', href: 'https://support.google.com/webmasters/answer/9012289' },
+  { title: 'A live index check', text: 'It searches Google itself for the URL with the site operator and an exact phrase from the page, on desktop and mobile. It needs a DataForSEO key and costs about 2 to 4 cents a page.' },
+]
+
+const related = [
+  { title: 'seo index', text: "Google's indexing reason for every known page, each checked live and labelled.", href: '/docs/indexing', icon: Alert02Icon, link: 'seo index docs' },
+  { title: 'seo page', text: 'One URL: what it serves now, its Google index status and its queries.', href: '/docs/page', icon: FileSearchIcon, link: 'seo page docs' },
+  { title: 'Website not showing up on Google', text: 'Every indexing reason across your site, and what to check for each.', href: '/features/website-not-showing-up-on-google', icon: Search01Icon, link: 'Website not on Google' },
+  { title: 'Weekly site audit', text: 'Daily Google index checks and an email when a page drops out.', href: '/docs/weekly-site-audit', icon: Notification01Icon, link: 'Weekly site audit docs' },
+]
+
+const faq = [
+  {
+    question: 'What does discovered, currently not indexed mean?',
+    answer:
+      'Google found the URL, through a link or your sitemap, and has not crawled it yet. Google says it typically expected the crawl to overload the site and rescheduled it, which is why the last crawl date is empty.',
+  },
+  {
+    question: 'How do I fix discovered, currently not indexed pages?',
+    answer:
+      'Check that each URL works, decide whether you want it indexed, check your server answers quickly, and make sure your own pages link to it. None of this makes Google crawl the page. It removes the reasons on your side that Google could have.',
+  },
+  {
+    question: 'Why are hundreds of URLs in one folder discovered but not indexed?',
+    answer:
+      'Hundreds of discovered URLs in one folder usually trace back to that folder as a whole, such as a filter system or a batch you published at once. Look at the pattern before the pages.',
+  },
+  {
+    question: 'What is the difference between discovered and crawled, currently not indexed?',
+    answer:
+      'Discovered means Google has the URL and has not fetched it. Crawled means Google fetched it and left it out, and URL Inspection shows when. A page can move from discovered to crawled, so watch for the reason changing.',
+  },
+  {
+    question: 'Does seoskill.dev have any discovered pages?',
+    answer:
+      'None of its 272 known URLs had this reason when we ran seo index on it, which is why the example on this page uses example.com. Three URLs were unknown to Google, a step before discovered.',
+  },
+]
+---
+
+<BaseLayout
+  title="Discovered, currently not indexed: check every page"
+  description="Find every page Google knows about but has not crawled, with a live check of each one, and see whether the page, your server or your links hold it up."
+  canonicalPath="/guides/discovered-currently-not-indexed"
+  {breadcrumbs}
+  framed={false}
+>
+  <main data-agent-content>
+    <LandingHero
+      title="Discovered, currently not indexed"
+      lead="See every page Google knows about but has not crawled yet. Your agent reads Google's reason for each one and checks what the page does now, so you can tell a broken or unwanted URL from a good page Google has not got to."
+      setupId="discovered-setup"
+      author
+    />
+
+    <div class="space-y-24 py-24 sm:space-y-32 sm:py-32">
+      <SplitList
+        id="meaning-heading"
+        title="What does discovered, currently not indexed mean?"
+        text="Google knows the URL and has not crawled it yet."
+        items={meaning}
+      />
+
+      <SplitList
+        id="find-heading"
+        title="How do you find every discovered, not indexed page on your site?"
+        text="Ask URL Inspection about every page, which SEO Skill does for you. Give your agent the setup prompt and sign in with Google when it asks. It is free, and the site has to be a Search Console property your Google account can read."
+        items={finding}
+      >
+        <div class="mt-6 space-y-4">
+          <CodeBlock
+            label="Ask your agent"
+            prompt
+            value="Which pages on example.com are discovered but not indexed? Group them by folder and tell me which ones we want in Google."
+            wrap
+          />
+          <CodeBlock label="Or run it in a terminal" value="seo index --site example.com" />
+        </div>
+      </SplitList>
+
+      <section class="site-frame" aria-labelledby="result-heading">
+        <SectionHeading
+          id="result-heading"
+          title="What do you get for a page Google has not crawled?"
+          text="A live check of the page, because Google's side of the answer is mostly empty. It reports the page's status, any redirect, its canonical and robots tags, and whether your sitemap lists it. A page that loads is labelled check. A missing page your sitemap still lists is labelled fix."
+        />
+        <CodeBlock label="The kind of result to expect, for example.com" value={example} wrap />
+        <div class="mt-8 grid grid-cols-1 gap-2 lg:grid-cols-3">
+          {rows.map((item) => <HomeCard {...item} />)}
+        </div>
+      </section>
+
+      <SplitList
+        id="checks-heading"
+        title="What should you check, and in what order?"
+        text="These four, in this order. Look at the pattern before the pages: hundreds of discovered URLs in one folder usually trace back to that folder as a whole, such as a filter system or a batch you published at once."
+        items={checks}
+      />
+
+      <SplitList
+        id="recheck-heading"
+        title="How do you see whether Google has crawled it since?"
+        text="Check that URL on its own and look for a last crawl date."
+        items={recheck}
+      >
+        <div class="mt-6 space-y-4">
+          <CodeBlock label="One page" value="seo page --url https://example.com/guides/composting" wrap />
+          <CodeBlock label="A live index check" value="seo research index_check --target https://example.com/guides/composting" wrap />
+        </div>
+      </SplitList>
+
+      <SplitList
+        id="alerts-heading"
+        title="Can you get an alert when a page drops out of Google's index?"
+        text="Yes, with the weekly site audit ($50 a month per site), which runs these checks every day on our servers, using each property's full 2,000 checks."
+        items={[
+          { title: 'Instant answers for your agent', text: 'seo index answers at once from the stored results.' },
+          { title: 'An email when a page drops out or comes back', text: 'Alerts covers each email.', href: '/docs/alerts' },
+        ]}
+      />
+
+      <section class="site-frame" aria-labelledby="related-heading">
+        <SectionHeading
+          id="related-heading"
+          title="Which docs go with this guide?"
+          text="These, which cover the index check, one page at a time, every reason at once and the daily checks."
+        />
+        <div class="grid grid-cols-1 gap-2 sm:grid-cols-2">
+          {related.map((item) => <HomeCard {...item} />)}
+        </div>
+      </section>
+
+      <section class="site-frame" aria-labelledby="faq-heading">
+        <SectionHeading
+          id="faq-heading"
+          title="Questions about discovered, currently not indexed"
+          text="These are the follow-ups people ask after they see it in Search Console."
+        />
+        <FaqAccordion items={faq} id="discovered-faq" />
+      </section>
+
+      <StatusGuides current="/guides/discovered-currently-not-indexed" />
+
+      <section class="site-frame" aria-labelledby="start-heading">
+        <SectionHeading
+          id="start-heading"
+          title="Find your discovered, not indexed pages with your agent"
+          text="Add SEO Skill to your agent, sign in with Google and ask which discovered pages on your site you want in Google."
+        />
+        <SetupPrompts id="discovered-setup-end" />
+      </section>
+    </div>
+  </main>
+</BaseLayout>

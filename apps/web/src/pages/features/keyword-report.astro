@@ -1,14 +1,89 @@
 ---
 import {
   Analytics01Icon,
+  Calendar03Icon,
   DatabaseIcon,
   SearchList01Icon,
   Target02Icon,
   TaskDone01Icon,
-  Calendar03Icon,
 } from '@hugeicons/core-free-icons'
 import CodeBlock from '@/components/CodeBlock.astro'
-import FeaturePage from '@/components/FeaturePage.astro'
+import FaqAccordion from '@/components/FaqAccordion.astro'
+import HomeCard from '@/components/HomeCard.astro'
+import LandingHero from '@/components/LandingHero.astro'
+import SectionHeading from '@/components/SectionHeading.astro'
+import SetupPrompts from '@/components/SetupPrompts.astro'
+import SplitList from '@/components/SplitList.astro'
+import BaseLayout from '@/layouts/BaseLayout.astro'
+import type { SchemaBreadcrumb } from '@/lib/schema'
+
+const title = 'SEO keyword report'
+
+const breadcrumbs: SchemaBreadcrumb[] = [
+  { label: 'Home', href: '/' },
+  { label: 'Features', href: '/features' },
+  { label: title },
+]
+
+const what = [
+  {
+    title: 'Real searches Google recorded',
+    text: 'Every row is a real search that Google recorded for your site over a period, with how it did against the period before. Nobody picked the keyword and no tool estimated it.',
+  },
+  {
+    title: 'Three names for one report',
+    text: 'People also call it a keyword ranking report or a keyword performance report. On this page all three mean your own Search Console numbers for the searches you already appear in.',
+  },
+  {
+    title: 'Read live each time you ask',
+    text: 'SEO Skill reads the report live from your own Search Console each time you ask.',
+  },
+  {
+    title: 'The query and the page in one row',
+    text: 'That matters more than it looks. A keyword that moves from one page to another is a different problem from a keyword that drops, and a list of queries alone hides it.',
+  },
+]
+
+const leaves = [
+  {
+    title: 'No daily rank tracking',
+    text: 'It does not check your positions every day or keep a ranking history. Each report reads Search Console when you ask.',
+  },
+  {
+    title: 'No list of keywords to watch',
+    text: 'It shows the searches Google recorded for your site, so a keyword you never appeared for has no row.',
+  },
+  {
+    title: 'No competitors or search volume',
+    text: 'It does not show where competitors rank, or the search volume and difficulty of a keyword.',
+  },
+  {
+    title: 'About 16 months of history',
+    text: 'It cannot go further back than Search Console keeps, which is about 16 months.',
+  },
+  {
+    title: 'Hidden searches stay hidden',
+    text: 'It does not include searches Search Console hides for privacy, so the query rows add up to less than the site totals.',
+  },
+]
+
+const next = [
+  {
+    title: 'Striking distance keywords',
+    text: 'Keywords at positions 11 to 20, or on page one with too few clicks, are covered by striking distance keywords, which ranks them and measures each fix later.',
+    href: '/features/striking-distance-keywords',
+  },
+  {
+    title: 'seo page',
+    text: 'For one page that lost a keyword, seo page shows its live title, H1, index status and every query it gets.',
+    href: '/docs/page',
+  },
+  {
+    title: 'SEO report',
+    text: 'For a keyword where two of your pages split the impressions, ask for the cannibalization section of the SEO report.',
+    href: '/docs/report',
+  },
+]
 
 const related = [
   { title: 'seo data', text: 'Raw Search Console rows by query, page, country or device, each beside the previous period.', href: '/docs/data', icon: DatabaseIcon },
@@ -18,227 +93,371 @@ const related = [
   { title: 'Monthly SEO report', text: 'Turn a Search Console export into a month-on-month report in your browser, free.', href: '/tools/monthly-seo-report', icon: Calendar03Icon, link: 'Monthly SEO report' },
   { title: 'AI keyword research tool', text: 'Search volume, difficulty and who ranks for keywords you do not get yet, from your own DataForSEO or Ahrefs key.', href: '/features/keyword-research', icon: SearchList01Icon, link: 'Keyword research' },
 ]
+
+const faq = [
+  {
+    question: 'What is a keyword ranking report?',
+    answer:
+      'It is another name for the keyword report on this page. It lists the searches that showed your pages in Google, from your own Search Console, with the page, clicks, impressions, CTR and average position for each, against the period before.',
+  },
+  {
+    question: 'Is SEO Skill a rank tracker?',
+    answer:
+      'No. It does not check your positions every day, keep a ranking history or take a list of keywords to watch. Each keyword report reads Search Console when you ask.',
+  },
+  {
+    question: 'What dates does the keyword report cover?',
+    answer:
+      'The last 28 days of final Search Console data unless you give other dates. The comparison is always the same number of days just before, so a 28-day report compares with the 28 days before it.',
+  },
+  {
+    question: 'Why do the query rows add up to less than the site total?',
+    answer:
+      'Search Console hides some searches for privacy, and the keyword report does not include them. The site totals still count those clicks and impressions.',
+  },
+  {
+    question: 'Does the keyword report show search volume or keyword difficulty?',
+    answer:
+      'No. For volume, difficulty and competitors’ keywords, use keyword research with your own DataForSEO or Ahrefs key. Its numbers are estimates, so they stay out of this report.',
+    links: [{ text: 'keyword research', href: '/features/keyword-research' }],
+  },
+  {
+    question: 'How far back can a keyword report go?',
+    answer: 'About 16 months, which is as far back as Search Console keeps data.',
+  },
+]
 ---
 
-<FeaturePage
-  title="SEO keyword report"
-  metaTitle="SEO keyword ranking report from Search Console"
+<BaseLayout
+  title="SEO keyword ranking report from Search Console"
   description="A keyword report from your own Search Console. Every query your site shows for, with its page, clicks, impressions, CTR and position against last period."
-  path="/features/keyword-report"
-  lead="Ask your agent which keywords your site gets from Google. It reads your own Search Console and returns each query with the page that ranks, its clicks, impressions, CTR and average position, and how they changed against the period before."
-  {related}
-  relatedHeading="Read more"
+  canonicalPath="/features/keyword-report"
+  {breadcrumbs}
+  framed={false}
 >
-  <h2>A keyword report lists the searches your site already gets</h2>
-  <p>
-    An SEO keyword report from Search Console answers one question. Which
-    searches showed your pages in Google over a period, and how did each one
-    do against the period before? Every row is a real search that Google
-    recorded, not a keyword someone picked and a tool estimated.
-  </p>
-  <p>
-    People also call it a keyword ranking report or a keyword performance
-    report. On this page all three mean your own Search Console numbers
-    for the searches you already appear in.
-  </p>
-  <p>
-    SEO Skill reads that report live from your own Search Console each time
-    you ask. Each row holds these keyword metrics:
-  </p>
-  <table>
-    <thead><tr><th>Column</th><th>What it tells you</th></tr></thead>
-    <tbody>
-      <tr><td>Query</td><td>The search people typed, as Search Console recorded it.</td></tr>
-      <tr><td>Page</td><td>The URL on your site that Google showed for that search.</td></tr>
-      <tr><td>Clicks</td><td>Visits from Google Search to that page for that query.</td></tr>
-      <tr><td>Impressions</td><td>How often a link to the page was seen in the results.</td></tr>
-      <tr><td>CTR</td><td>Clicks divided by impressions.</td></tr>
-      <tr><td>Average position</td><td>Where the page appeared, averaged over every impression.</td></tr>
-      <tr><td>Previous period</td><td>Last period's clicks and average position, and the change in clicks.</td></tr>
-    </tbody>
-  </table>
-  <p>
-    The query and the page sit in one row. That matters more than it looks,
-    because a keyword that moves from one page to another is a different problem
-    from a keyword that drops, and a list of queries alone hides it.
-  </p>
+  <main data-agent-content>
+    <LandingHero
+      title={title}
+      lead="Ask your agent which keywords your site gets from Google. It reads your own Search Console and returns each query with the page that ranks, its clicks, impressions, CTR and average position, and how they changed against the period before."
+      setupId="keyword-report-setup"
+      author
+    />
 
-  <h2>Run a keyword report for your site in two prompts</h2>
-  <p>
-    Give your agent the setup prompt at the top of this page and sign in
-    with Google when it asks (access is read only). Start with the overview,
-    which runs <code>seo_report</code>:
-  </p>
-  <CodeBlock prompt value={`Show me the overview section of the SEO report for example.com`} wrap />
-  <CodeBlock value={`seo report --site example.com --section overview`} wrap />
-  <p>
-    It returns the site's clicks, impressions, CTR and average position
-    against the previous period, then the top 10 queries and pages by
-    clicks and the ones that gained or lost the most. For a quick keyword
-    performance report, that is often enough.
-  </p>
-  <p>
-    For every keyword, ask for the rows. Your agent runs{' '}
-    <code>seo_data</code> grouped by query and page:
-  </p>
-  <CodeBlock prompt value={`Give me a keyword report for example.com: every query with the page that ranks for it, clicks, impressions, CTR and average position for the last 28 days against the 28 days before. Leave out searches for my brand.`} wrap />
-  <p>
-    In a terminal, the same rows come from <code>seo data</code>:
-  </p>
-  <CodeBlock value={`seo data --site example.com --dimensions query,page`} wrap />
-  <p>
-    Both cover the last 28 days of final Search Console data unless you give
-    other dates. The comparison is always the same number of days just
-    before, so a 28-day report compares with the 28 days before it.
-  </p>
+    <div class="space-y-24 py-24 sm:space-y-32 sm:py-32">
+      <SplitList
+        id="what-heading"
+        title="What is an SEO keyword report?"
+        text="It lists the searches your site already gets in Google. An SEO keyword report from Search Console answers one question. Which searches showed your pages over a period, and how did each one do against the period before?"
+        items={what}
+      />
 
-  <h2>Narrow the keyword report by folder, country or device</h2>
-  <p>
-    A whole-site list gets long fast (a site with a few hundred pages can
-    have thousands of query and page rows). Filter it to the part you care
-    about. This lists the keywords for one folder, a page of rows at a time:
-  </p>
-  <CodeBlock value={`seo data --site example.com --dimensions query,page --page /blog/ --detail rows`} wrap />
-  <p>
-    Swap the second dimension to split keywords by market or device instead
-    of page:
-  </p>
-  <CodeBlock value={`seo data --site example.com --dimensions query,country --query invoice`} wrap />
-  <p>
-    For a calendar month, give the dates, and add <code>--json</code> when a
-    spreadsheet or script reads the result:
-  </p>
-  <CodeBlock value={`seo data --site example.com --dimensions query,page --start-date 2026-10-01 --end-date 2026-10-31 --json`} wrap />
-  <p>
-    The same filters work in a prompt, such as "keywords for pages under
-    /blog/, split by country". Queries that look like referral spam
-    or rank tracker test searches are labelled in the rows and kept in, so
-    the numbers still match Search Console.
-  </p>
+      <section class="site-frame" aria-labelledby="columns-heading">
+        <SectionHeading
+          id="columns-heading"
+          title="Which keyword metrics does each row hold?"
+          text="Each row holds the query, the page, its clicks, impressions, CTR and average position, and the previous period."
+        />
+        <div class="docs-prose max-w-4xl">
+          <table>
+            <thead><tr><th>Column</th><th>What it tells you</th></tr></thead>
+            <tbody>
+              <tr><td>Query</td><td>The search people typed, as Search Console recorded it.</td></tr>
+              <tr><td>Page</td><td>The URL on your site that Google showed for that search.</td></tr>
+              <tr><td>Clicks</td><td>Visits from Google Search to that page for that query.</td></tr>
+              <tr><td>Impressions</td><td>How often a link to the page was seen in the results.</td></tr>
+              <tr><td>CTR</td><td>Clicks divided by impressions.</td></tr>
+              <tr><td>Average position</td><td>Where the page appeared, averaged over every impression.</td></tr>
+              <tr><td>Previous period</td><td>Last period's clicks and average position, and the change in clicks.</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </section>
 
-  <h2>Average position is an average over every impression</h2>
-  <p>
-    Search Console's average position is the topmost spot a link to your
-    site held each time it was seen, averaged across all those impressions.{' '}
-    <a href="https://support.google.com/webmasters/answer/7042828" target="_blank" rel="noreferrer">Google's
-    own definition</a> says a position is only recorded when the result is
-    actually seen, and that it varies with location and search history.
-  </p>
-  <p>
-    So a keyword at an average position of 8.4 may have shown at 3 for some
-    people and 14 for others. Read position next to impressions. A move from
-    9 to 6 on 20 impressions is noise, while the same move on 4,000
-    impressions means far more people saw the page higher up. A query that showed only on page five,
-    where few people scroll, can show a poor average on a handful of
-    impressions.
-  </p>
-  <p>
-    A row with no impressions in the current period shows 0 clicks and no
-    position. That means Google recorded no impression for that query and
-    page, which is not the same as dropping to position 100.
-  </p>
+      <section class="site-frame" aria-labelledby="run-heading">
+        <SectionHeading
+          id="run-heading"
+          title="How do I run a keyword report for my site?"
+          text="Ask your agent in two prompts, once SEO Skill is set up and you have signed in with Google (access is read only). Start with the overview, then ask for every row."
+        />
+        <div class="divide-y divide-border">
+          <div class="grid gap-6 py-6 sm:grid-cols-[1fr_1.15fr]">
+            <div>
+              <h3 class="text-base leading-7 font-medium text-foreground">Start with the overview</h3>
+              <p class="mt-2 text-base leading-7 text-foreground-muted">
+                This runs <code>seo_report</code>. It returns the site's clicks,
+                impressions, CTR and average position against the previous
+                period, then the top 10 queries and pages by clicks and the ones
+                that gained or lost the most. For a quick keyword performance
+                report, that is often enough.
+              </p>
+            </div>
+            <div>
+              <CodeBlock label="Ask your agent" prompt value="Show me the overview section of the SEO report for example.com" wrap class="!mt-0" />
+              <CodeBlock label="In a terminal" value="seo report --site example.com --section overview" wrap />
+            </div>
+          </div>
+          <div class="grid gap-6 py-6 sm:grid-cols-[1fr_1.15fr]">
+            <div>
+              <h3 class="text-base leading-7 font-medium text-foreground">Ask for every keyword</h3>
+              <p class="mt-2 text-base leading-7 text-foreground-muted">
+                For every keyword, ask for the rows. Your agent runs{' '}
+                <code>seo_data</code> grouped by query and page. In a terminal,
+                the same rows come from <code>seo data</code>.
+              </p>
+              <p class="mt-4 text-base leading-7 text-foreground-muted">
+                Both cover the last 28 days of final Search Console data unless
+                you give other dates. The comparison is always the same number
+                of days just before, so a 28-day report compares with the 28
+                days before it.
+              </p>
+            </div>
+            <div>
+              <CodeBlock
+                label="Ask your agent"
+                prompt
+                value="Give me a keyword report for example.com: every query with the page that ranks for it, clicks, impressions, CTR and average position for the last 28 days against the 28 days before. Leave out searches for my brand."
+                wrap
+                class="!mt-0"
+              />
+              <CodeBlock label="In a terminal" value="seo data --site example.com --dimensions query,page" wrap />
+            </div>
+          </div>
+        </div>
+      </section>
 
-  <h2>What this keyword report does not do</h2>
-  <p>
-    SEO Skill is not a rank tracker, and the keyword report is built from
-    Search Console only. Here is what it leaves out:
-  </p>
-  <ul>
-    <li>It does not check your positions every day or keep a ranking history. Each report reads Search Console when you ask.</li>
-    <li>It does not take a list of keywords to watch. It shows the searches Google recorded for your site, so a keyword you never appeared for has no row.</li>
-    <li>It does not show where competitors rank, or the search volume and difficulty of a keyword.</li>
-    <li>It cannot go further back than Search Console keeps, which is about 16 months.</li>
-    <li>It does not include searches Search Console hides for privacy, so the query rows add up to less than the site totals.</li>
-  </ul>
-  <p>
-    For a live look at one results page, the{' '}
-    <a href="/tools/serp-checker">SERP checker</a> shows who ranks for a
-    keyword right now and where your domain sits. For volume, difficulty
-    and competitors' keywords, use{' '}
-    <a href="/features/keyword-research">keyword research</a> with your own
-    DataForSEO or Ahrefs key. Its numbers are estimates, so they stay out of
-    this report.
-  </p>
+      <section class="site-frame" aria-labelledby="narrow-heading">
+        <SectionHeading
+          id="narrow-heading"
+          title="How do I narrow the keyword report by folder, country or device?"
+          text="Filter it to the part you care about. A whole-site list gets long fast (a site with a few hundred pages can have thousands of query and page rows)."
+        />
+        <div class="divide-y divide-border">
+          <div class="grid gap-6 py-6 sm:grid-cols-[1fr_1.15fr]">
+            <div>
+              <h3 class="text-base leading-7 font-medium text-foreground">Keywords for one folder</h3>
+              <p class="mt-2 text-base leading-7 text-foreground-muted">
+                This lists the keywords for one folder, a page of rows at a
+                time.
+              </p>
+            </div>
+            <CodeBlock value="seo data --site example.com --dimensions query,page --page /blog/ --detail rows" wrap class="!mt-0" />
+          </div>
+          <div class="grid gap-6 py-6 sm:grid-cols-[1fr_1.15fr]">
+            <div>
+              <h3 class="text-base leading-7 font-medium text-foreground">Keywords by country or device</h3>
+              <p class="mt-2 text-base leading-7 text-foreground-muted">
+                Swap the second dimension to split keywords by market or device
+                instead of page.
+              </p>
+            </div>
+            <CodeBlock value="seo data --site example.com --dimensions query,country --query invoice" wrap class="!mt-0" />
+          </div>
+          <div class="grid gap-6 py-6 sm:grid-cols-[1fr_1.15fr]">
+            <div>
+              <h3 class="text-base leading-7 font-medium text-foreground">Keywords for a calendar month</h3>
+              <p class="mt-2 text-base leading-7 text-foreground-muted">
+                For a calendar month, give the dates, and add{' '}
+                <code>--json</code> when a spreadsheet or script reads the
+                result.
+              </p>
+            </div>
+            <CodeBlock value="seo data --site example.com --dimensions query,page --start-date 2026-10-01 --end-date 2026-10-31 --json" wrap class="!mt-0" />
+          </div>
+        </div>
+        <p class="mt-6 max-w-2xl text-base leading-7 text-foreground-muted">
+          The same filters work in a prompt, such as "keywords for pages under
+          /blog/, split by country". Queries that look like referral spam or
+          rank tracker test searches are labelled in the rows and kept in, so
+          the numbers still match Search Console.
+        </p>
+      </section>
 
-  <h2>Worked example: 5 rows from seoskill.dev's own keyword report</h2>
-  <p>
-    These rows come from a real keyword report for seoskill.dev, run with{' '}
-    <code>seo_data</code> grouped by query and page. It covers 11 October to
-    7 November 2026 against 13 September to 10 October 2026. Each row shows
-    the later period, with the earlier period's clicks and position in
-    brackets.
-  </p>
-  <table>
-    <thead><tr><th>Query on page</th><th>Last 28 days (28 days before)</th></tr></thead>
-    <tbody>
-      <tr><td>seo skills on the home page</td><td>61 clicks (31), 1,644 impressions, position 7.1 (16.6)</td></tr>
-      <tr><td>algorithm update checker on /tools/google-algorithm-update-checker</td><td>8 clicks (0), 100 impressions, position 15.8 (no position)</td></tr>
-      <tr><td>google search console mcp on /features/search-console</td><td>0 clicks (0), 517 impressions, position 64.2 (70.5)</td></tr>
-      <tr><td>mcp seo on /features/mcp</td><td>0 clicks (0), 130 impressions, position 80.7 (73.7)</td></tr>
-      <tr><td>ai seo skills on the home page</td><td>1 click (0), 15 impressions, position 11.9 (29.8)</td></tr>
-    </tbody>
-  </table>
-  <p>
-    Source: Search Console for seoskill.dev, web search, read with SEO Skill
-    on 11 November 2026. Impressions are for the later period only.
-  </p>
-  <p>
-    "seo skills" is the row that matters. It moved from an average position
-    of 16.6 to 7.1 on more than 1,600 impressions, and clicks went from 31
-    to 61. That is a page one result, and the click count backs it up.
-  </p>
-  <p>
-    The algorithm update checker row had no position before because the
-    page had no impressions for that query in the earlier period, so it is a new
-    keyword rather than a climb. "google search console mcp" improved from
-    70.5 to 64.2 on 517 impressions, but at page seven it brings no clicks
-    yet. "ai seo skills" jumped from 29.8 to 11.9 on 15 impressions, which
-    is too few to read as a trend.
-  </p>
+      <section class="site-frame grid gap-8 sm:grid-cols-[1fr_1.15fr] sm:items-start" aria-labelledby="position-heading">
+        <div class="sm:sticky sm:top-24">
+          <h2 id="position-heading" class="text-pretty text-2xl font-medium -tracking-[0.4px] text-foreground xl:text-3xl xl:-tracking-[0.6px]">
+            What does average position mean in a keyword report?
+          </h2>
+          <p class="mt-4 text-base leading-7 text-foreground-muted">
+            It is an average over every impression. Search Console's average
+            position is the topmost spot a link to your site held each time it
+            was seen, averaged across all those impressions.
+          </p>
+        </div>
+        <div class="rounded-lg bg-muted p-6 text-base leading-7 text-foreground-muted">
+          <p>
+            <a class="text-foreground underline underline-offset-4" href="https://support.google.com/webmasters/answer/7042828" target="_blank" rel="noreferrer">Google's own definition</a>{' '}
+            says a position is only recorded when the result is actually seen,
+            and that it varies with location and search history.
+          </p>
+          <p class="mt-4">
+            So a keyword at an average position of 8.4 may have shown at 3 for
+            some people and 14 for others. Read position next to impressions. A
+            move from 9 to 6 on 20 impressions is noise, while the same move on
+            4,000 impressions means far more people saw the page higher up. A
+            query that showed only on page five, where few people scroll, can
+            show a poor average on a handful of impressions.
+          </p>
+          <p class="mt-4">
+            A row with no impressions in the current period shows 0 clicks and
+            no position. That means Google recorded no impression for that query
+            and page, which is a different thing from dropping to position 100.
+          </p>
+        </div>
+      </section>
 
-  <h2>Turn the keyword report into a client or monthly report</h2>
-  <p>
-    The keyword report gives your agent the rows. The{' '}
-    <a href="/features/seo-reporting">SEO reporting tool</a> page shows how
-    to have it write a weekly or client report around them, with Google
-    Analytics sessions kept under their own name. If you only need a
-    month-on-month document from a Search Console export, the free{' '}
-    <a href="/tools/monthly-seo-report">monthly SEO report</a> builds one in
-    your browser with no sign-in.
-  </p>
+      <SplitList
+        id="leaves-heading"
+        title="What does this keyword report leave out?"
+        text="Anything outside your own Search Console. SEO Skill is no rank tracker, and the keyword report is built from Search Console only."
+        items={leaves}
+      >
+        <p class="mt-4 text-base leading-7 text-foreground-muted">
+          For a live look at one results page, the{' '}
+          <a class="text-foreground underline underline-offset-4" href="/tools/serp-checker">SERP checker</a>{' '}
+          shows who ranks for a keyword right now and where your domain sits.
+          For volume, difficulty and competitors' keywords, use{' '}
+          <a class="text-foreground underline underline-offset-4" href="/features/keyword-research">keyword research</a>{' '}
+          with your own DataForSEO or Ahrefs key. Its numbers are estimates, so
+          they stay out of this report.
+        </p>
+      </SplitList>
 
-  <h2>Act on the keywords that moved</h2>
-  <p>
-    A keyword report shows what changed. The next step depends on the
-    row.
-  </p>
-  <ul>
-    <li>Keywords at positions 11 to 20, or on page one with too few clicks, are covered by <a href="/features/striking-distance-keywords">striking distance keywords</a>, which ranks them and measures each fix later.</li>
-    <li>For one page that lost a keyword, <a href="/docs/page">seo page</a> shows its live title, H1, index status and every query it gets.</li>
-    <li>For a keyword where two of your pages split the impressions, ask for the cannibalization section of the <a href="/docs/report">SEO report</a>.</li>
-  </ul>
+      <section class="site-frame" aria-labelledby="example-heading">
+        <SectionHeading
+          id="example-heading"
+          title="What does a real keyword report show?"
+          text="5 rows from seoskill.dev's own keyword report, run with seo_data grouped by query and page, for 11 October to 7 November 2026 against 13 September to 10 October 2026."
+        />
+        <p class="mb-6 max-w-2xl text-base leading-7 text-foreground-muted">
+          Each row shows the later period, with the earlier period's clicks and
+          position in brackets.
+        </p>
+        <div class="docs-prose max-w-4xl">
+          <table>
+            <thead><tr><th>Query on page</th><th>Last 28 days (28 days before)</th></tr></thead>
+            <tbody>
+              <tr><td>seo skills on the home page</td><td>61 clicks (31), 1,644 impressions, position 7.1 (16.6)</td></tr>
+              <tr><td>algorithm update checker on /tools/google-algorithm-update-checker</td><td>8 clicks (0), 100 impressions, position 15.8 (no position)</td></tr>
+              <tr><td>google search console mcp on /features/search-console</td><td>0 clicks (0), 517 impressions, position 64.2 (70.5)</td></tr>
+              <tr><td>mcp seo on /features/mcp</td><td>0 clicks (0), 130 impressions, position 80.7 (73.7)</td></tr>
+              <tr><td>ai seo skills on the home page</td><td>1 click (0), 15 impressions, position 11.9 (29.8)</td></tr>
+            </tbody>
+          </table>
+        </div>
+        <div class="mt-6 max-w-2xl text-base leading-7 text-foreground-muted">
+          <p>
+            Source: Search Console for seoskill.dev, web search, read with SEO
+            Skill. Impressions are for the later period only.
+          </p>
+          <p class="mt-4">
+            "seo skills" is the row that matters. It moved from an average
+            position of 16.6 to 7.1 on more than 1,600 impressions, and clicks
+            went from 31 to 61. That is a page one result, and the click count
+            backs it up.
+          </p>
+          <p class="mt-4">
+            The algorithm update checker row had no position before because the
+            page had no impressions for that query in the earlier period, so it
+            is a new keyword and no climb. "google search console mcp" improved
+            from 70.5 to 64.2 on 517 impressions, but at page seven it brings no
+            clicks yet. "ai seo skills" jumped from 29.8 to 11.9 on 15
+            impressions, which is too few to read as a trend.
+          </p>
+        </div>
+      </section>
 
-  <h2>The keywords this page targets, and why</h2>
-  <p>
-    We picked them with the same tools. Search volume and KD (DataForSEO's
-    keyword difficulty, 0 to 100) are for the US in November 2026:
-  </p>
-  <table>
-    <thead><tr><th>Keyword</th><th>Searches (KD)</th></tr></thead>
-    <tbody>
-      <tr><td>keyword ranking report</td><td>880 (KD 51)</td></tr>
-      <tr><td>seo keyword report</td><td>140 (KD 16)</td></tr>
-      <tr><td>seo keyword ranking report</td><td>140 (KD 35)</td></tr>
-      <tr><td>keyword metrics</td><td>70 (KD 39)</td></tr>
-      <tr><td>keyword performance report</td><td>40 (KD 0)</td></tr>
-    </tbody>
-  </table>
-  <p>
-    In November 2026 the US results for these searches were a mix of
-    keyword tool home pages from Semrush, Moz and Google's Keyword Planner,
-    lists of rank tracking tools, and guides from reporting dashboard
-    companies such as DashThis and Klipfolio. None of the top ten showed a
-    real report from a site's own Search Console with the query and page in
-    one row. That is the gap this page is for.
-  </p>
-</FeaturePage>
+      <section class="site-frame grid gap-8 sm:grid-cols-[1fr_1.15fr] sm:items-start" aria-labelledby="client-heading">
+        <div class="sm:sticky sm:top-24">
+          <h2 id="client-heading" class="text-pretty text-2xl font-medium -tracking-[0.4px] text-foreground xl:text-3xl xl:-tracking-[0.6px]">
+            How do I turn the keyword report into a client or monthly report?
+          </h2>
+          <p class="mt-4 text-base leading-7 text-foreground-muted">
+            Have your agent write the report around the rows. The keyword report
+            gives your agent the rows, and it can write a weekly, monthly or
+            client report from them.
+          </p>
+        </div>
+        <div class="rounded-lg bg-muted p-6 text-base leading-7 text-foreground-muted">
+          <p>
+            The{' '}
+            <a class="text-foreground underline underline-offset-4" href="/features/seo-reporting">SEO reporting tool</a>{' '}
+            page shows how to have it write a weekly or client report around
+            them, with Google Analytics sessions kept under their own name.
+          </p>
+          <p class="mt-4">
+            If you only need a month-on-month document from a Search Console
+            export, the free{' '}
+            <a class="text-foreground underline underline-offset-4" href="/tools/monthly-seo-report">monthly SEO report</a>{' '}
+            builds one in your browser with no sign-in.
+          </p>
+        </div>
+      </section>
+
+      <SplitList
+        id="next-heading"
+        title="What should I do with the keywords that moved?"
+        text="It depends on the row. A keyword report shows what changed, and each kind of change has its own next step."
+        items={next}
+      />
+
+      <section class="site-frame" aria-labelledby="targets-heading">
+        <SectionHeading
+          id="targets-heading"
+          title="Which keywords does this page target, and why?"
+          text="We picked them with the same tools. Search volume and KD (DataForSEO's keyword difficulty, 0 to 100) are for the US."
+        />
+        <div class="docs-prose max-w-4xl">
+          <table>
+            <thead><tr><th>Keyword</th><th>Searches (KD)</th></tr></thead>
+            <tbody>
+              <tr><td>keyword ranking report</td><td>880 (KD 51)</td></tr>
+              <tr><td>seo keyword report</td><td>140 (KD 16)</td></tr>
+              <tr><td>seo keyword ranking report</td><td>140 (KD 35)</td></tr>
+              <tr><td>keyword metrics</td><td>70 (KD 39)</td></tr>
+              <tr><td>keyword performance report</td><td>40 (KD 0)</td></tr>
+            </tbody>
+          </table>
+        </div>
+        <p class="mt-6 max-w-2xl text-base leading-7 text-foreground-muted">
+          When we picked them, the US results for these searches were a mix of
+          keyword tool home pages from Semrush, Moz and Google's Keyword
+          Planner, lists of rank tracking tools, and guides from reporting
+          dashboard companies such as DashThis and Klipfolio. None of the top
+          ten showed a real report from a site's own Search Console with the
+          query and page in one row. That is the gap this page is for.
+        </p>
+      </section>
+
+      <section class="site-frame" aria-labelledby="related-heading">
+        <SectionHeading
+          id="related-heading"
+          title="Which tools and docs go with the keyword report?"
+          text="Raw rows, the full SEO report, the next fixes for keywords that moved, and the reports and research built on the same data."
+        />
+        <div class="grid grid-cols-1 gap-2 sm:grid-cols-2">
+          {related.map((item) => <HomeCard {...item} link={item.link ?? `${item.title} docs`} />)}
+        </div>
+      </section>
+
+      <section class="site-frame" aria-labelledby="faq-heading">
+        <div class="max-w-2xl">
+          <h2 id="faq-heading" class="text-pretty text-2xl font-medium -tracking-[0.4px] text-foreground xl:text-3xl xl:-tracking-[0.6px]">
+            Keyword report questions
+          </h2>
+        </div>
+        <div class="mt-10">
+          <FaqAccordion items={faq} id="keyword-report-faq" />
+        </div>
+      </section>
+
+      <section class="site-frame" aria-labelledby="start-heading">
+        <SectionHeading
+          id="start-heading"
+          title="Run your first keyword report"
+          text="Add SEO Skill to your agent, sign in with the Google account that can read your Search Console, and ask for a keyword report for your site."
+        />
+        <SetupPrompts id="keyword-report-setup-end" />
+      </section>
+    </div>
+  </main>
+</BaseLayout>

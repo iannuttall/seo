@@ -5,7 +5,94 @@ import {
   ComputerTerminal01Icon,
   McpServerIcon,
 } from '@hugeicons/core-free-icons'
-import FeaturePage from '@/components/FeaturePage.astro'
+import CodeBlock from '@/components/CodeBlock.astro'
+import FaqAccordion from '@/components/FaqAccordion.astro'
+import HomeCard from '@/components/HomeCard.astro'
+import LandingHero from '@/components/LandingHero.astro'
+import SectionHeading from '@/components/SectionHeading.astro'
+import SetupPrompts from '@/components/SetupPrompts.astro'
+import SplitList from '@/components/SplitList.astro'
+import BaseLayout from '@/layouts/BaseLayout.astro'
+import type { SchemaBreadcrumb } from '@/lib/schema'
+
+const breadcrumbs: SchemaBreadcrumb[] = [
+  { label: 'Home', href: '/' },
+  { label: 'Features', href: '/features' },
+  { label: 'AI SEO agent with your own search data' },
+]
+
+const can = [
+  {
+    title: 'SEO Skill fetches the facts',
+    text: 'SEO Skill fetches your data and returns facts with their dates and limits. It gives no advice.',
+  },
+  {
+    title: 'Your agent explains what changed',
+    text: 'Your agent reads those facts, explains what changed, and points to the pages and queries behind it.',
+  },
+  {
+    title: 'It can make the change you agree on',
+    text: "If the agent also works in your site's code, it can make the change you agree on and then check the page again.",
+  },
+  {
+    title: 'You still decide what ships',
+    text: 'The agent shows its evidence first, so you can see why it wants to touch a page before anything changes.',
+  },
+]
+
+const setup = [
+  { title: 'It adds the hosted MCP server', text: 'The prompt adds the server to your agent.' },
+  { title: 'It waits while you sign in with Google', text: 'Then it installs the skill and checks it connects.' },
+  {
+    title: 'It installs the CLI',
+    text: 'The CLI runs the site crawl, internal links and Bing Webmaster Tools on your own machine.',
+  },
+  {
+    title: 'The same setup in Claude Code',
+    text: 'The Claude SEO skill page walks through the same setup in Claude Code.',
+    href: '/features/claude-seo',
+  },
+]
+
+const automate = [
+  {
+    title: 'Start with a weekly task',
+    text: 'A weekly task that runs the Search Console report, opens the section that changed most and lists the pages to look at is a good start.',
+  },
+  {
+    title: 'Give a fresh agent access',
+    text: 'The cloud agents guide shows how to give an agent that starts fresh each time access to your account.',
+    href: '/docs/cloud-agents',
+  },
+  {
+    title: 'Keep a list of the issues it found',
+    text: 'The report can keep a list of the issues it found for a site, so the next session starts where the last one stopped. Your agent marks each issue fixed or ignored as you decide.',
+  },
+  {
+    title: 'Where that list is kept',
+    text: 'The hosted server keeps that list for sites in the weekly site audit. For any other site, your agent saves the list and passes it back next time.',
+  },
+  {
+    title: 'Let us watch the site for you',
+    text: "The weekly site audit crawls it every week and checks Google's index every day on our servers, with alerts when a page drops out. It costs $50 a month per site, and the SEO monitoring page explains what it covers.",
+    href: '/features/seo-monitoring',
+  },
+]
+
+const cause = [
+  {
+    title: 'A Google update in the same week shows the timing matched',
+    text: 'A Google update in the same week as a drop shows that the timing matched. It does not prove the update caused it.',
+  },
+  {
+    title: 'A noindex tag is reported as what the page says',
+    text: 'It is only a problem if you did not mean it.',
+  },
+  {
+    title: 'Ask for the evidence first',
+    text: 'Ask your agent to show the evidence for a claim before it rewrites twenty title tags on a hunch.',
+  },
+]
 
 const related = [
   { title: 'Hosted MCP', text: 'Connect seoskill.dev/mcp to Claude Code, Codex, Cursor or any remote MCP client.', href: '/docs/mcp', icon: McpServerIcon },
@@ -13,90 +100,166 @@ const related = [
   { title: 'Run in cloud agents', text: 'Set up the same tools for a cloud agent or CI job that starts on a fresh machine each run.', href: '/docs/cloud-agents', icon: CloudIcon },
   { title: 'seo report', text: 'The Search Console report your agent reads first.', href: '/docs/report', icon: Analytics01Icon },
 ]
+
+const faq = [
+  {
+    question: 'What is an AI SEO agent?',
+    answer:
+      'It is the coding agent you already use, such as Claude Code, Codex or Cursor, connected to SEO Skill. It reads your clicks, queries, index status and crawl before it suggests a change.',
+  },
+  {
+    question: 'Does SEO Skill give SEO advice?',
+    answer:
+      'No. SEO Skill fetches your data and returns facts with their dates and limits. Your agent reads those facts, explains what changed, and points to the pages and queries behind it.',
+  },
+  {
+    question: 'Can the agent change my site?',
+    answer:
+      "If the agent also works in your site's code, it can make the change you agree on and then check the page again. You still decide what ships, and the agent shows its evidence first.",
+  },
+  {
+    question: 'How many pages can it check for indexing?',
+    answer: "Up to 100 known URLs a run, each checked live, with Google's own indexing reasons.",
+  },
+  {
+    question: 'What does the weekly site audit cost?',
+    answer:
+      "$50 a month per site. It crawls the site every week and checks Google's index every day on our servers, with alerts when a page drops out.",
+  },
+]
 ---
 
-<FeaturePage
+<BaseLayout
   title="AI SEO agent with your own search data"
-  description="Turn Claude Code, Codex or Cursor into an AI SEO agent that reads your Search Console, Google Analytics and keyword data. Free MCP server, CLI and skill for SEO automation."
-  path="/features/seo-agent"
-  lead="The coding agent you already use can be your SEO agent. Connect SEO Skill and it reads your clicks, queries, index status and crawl before it suggests a change."
-  {related}
+  description="Turn Claude Code, Codex or Cursor into an AI SEO agent that reads your Search Console, Google Analytics and keyword data. Free MCP server, CLI and skill."
+  canonicalPath="/features/seo-agent"
+  {breadcrumbs}
+  framed={false}
 >
-  <h2>What your SEO agent can do with SEO Skill</h2>
-  <p>
-    SEO Skill fetches your data and returns facts with their dates and
-    limits. It gives no advice. Your agent reads those facts, explains what
-    changed, and points to the pages and queries behind it. If the agent
-    also works in your site's code, it can make the change you agree on and
-    then check the page again.
-  </p>
-  <p>
-    You still decide what ships. The agent shows its evidence first, so you
-    can see why it wants to touch a page before anything changes.
-  </p>
+  <main data-agent-content>
+    <LandingHero
+      title="AI SEO agent with your own search data"
+      lead="The coding agent you already use can be your SEO agent. Connect SEO Skill and it reads your clicks, queries, index status and crawl before it suggests a change."
+      setupId="seo-agent-setup"
+      author
+    />
 
-  <h2>Set it up with one prompt</h2>
-  <p>
-    Copy the prompt for your agent at the top of this page. It adds the
-    hosted MCP server, waits while you sign in with Google, installs the
-    skill and checks it connects. It also installs the CLI, which runs the
-    site crawl, internal links and Bing Webmaster Tools on your own machine.
-    The <a href="/features/claude-seo">Claude SEO skill</a> page walks
-    through the same setup in Claude Code.
-  </p>
+    <div class="space-y-24 py-24 sm:space-y-32 sm:py-32">
+      <SplitList
+        id="can-heading"
+        title="What can an SEO agent do with SEO Skill?"
+        text="It reads facts from your own search data, explains what changed and points to the pages and queries behind it. SEO Skill supplies the facts, and your agent does the explaining."
+        items={can}
+      />
 
-  <h2>Jobs to give your SEO agent</h2>
-  <table>
-    <thead><tr><th>Ask</th><th>What the agent reads</th></tr></thead>
-    <tbody>
-      <tr><td>What changed in search last week?</td><td>Clicks, impressions, click-through rate and position against the period before, with the pages and queries that moved.</td></tr>
-      <tr><td>Which titles should I rewrite?</td><td>Queries in positions 1 to 4 with a click-through rate below your site's own curve, and the page that ranks for each.</td></tr>
-      <tr><td>Why did this page stop getting clicks?</td><td>The live page, its Google index status and its queries against the period before.</td></tr>
-      <tr><td>Which pages are not indexed, and why?</td><td>Google's own indexing reasons for up to 100 known URLs a run, each checked live.</td></tr>
-      <tr><td>Did last week's release hurt search?</td><td>Equal periods before and after the release date, with any Google updates in the window.</td></tr>
-      <tr><td>What do competitors rank for that we don't?</td><td>Ranked keywords and SERPs from your own DataForSEO or Ahrefs key.</td></tr>
-    </tbody>
-  </table>
+      <SplitList
+        id="setup-heading"
+        title="How do I set up an SEO agent?"
+        text="Copy the prompt for your agent at the top of this page. It does the whole setup and checks it connects."
+        items={setup}
+      />
 
-  <h2>Automate SEO checks with a scheduled agent</h2>
-  <p>
-    SEO automation here means your agent runs the same checks on a schedule
-    and tells you what moved. A weekly task that runs the Search Console
-    report, opens the section that changed most and lists the pages to look
-    at is a good start. The <a href="/docs/cloud-agents">cloud agents
-    guide</a> shows how to give an agent that starts fresh each time access
-    to your account.
-  </p>
-  <p>
-    The report can also keep a list of the issues it found for a site, so
-    the next session starts where the last one stopped. Your agent marks
-    each issue fixed or ignored as you decide. The hosted server keeps that
-    list for sites in the weekly site audit. For any other site, your agent
-    saves the list and passes it back next time.
-  </p>
-  <p>
-    If you would rather we watch the site for you, the weekly site audit
-    crawls it every week and checks Google's index every day on our
-    servers, with alerts when a page drops out. It costs $50 a month per
-    site. The <a href="/features/seo-monitoring">SEO monitoring</a> page
-    explains what it covers.
-  </p>
+      <section class="site-frame" aria-labelledby="jobs-heading">
+        <SectionHeading
+          id="jobs-heading"
+          title="Which jobs can I give my SEO agent?"
+          text="Ask in plain words, and the agent reads the data each job needs. These six jobs show what it reads for each."
+        />
+        <div class="docs-prose max-w-4xl">
+          <table>
+            <thead><tr><th>Ask</th><th>What the agent reads</th></tr></thead>
+            <tbody>
+              <tr><td>What changed in search last week?</td><td>Clicks, impressions, click-through rate and position against the period before, with the pages and queries that moved.</td></tr>
+              <tr><td>Which titles should I rewrite?</td><td>Queries in positions 1 to 4 with a click-through rate below your site's own curve, and the page that ranks for each.</td></tr>
+              <tr><td>Why did this page stop getting clicks?</td><td>The live page, its Google index status and its queries against the period before.</td></tr>
+              <tr><td>Which pages are not indexed, and why?</td><td>Google's own indexing reasons for up to 100 known URLs a run, each checked live.</td></tr>
+              <tr><td>Did last week's release hurt search?</td><td>Equal periods before and after the release date, with any Google updates in the window.</td></tr>
+              <tr><td>What do competitors rank for that we don't?</td><td>Ranked keywords and SERPs from your own DataForSEO or Ahrefs key.</td></tr>
+            </tbody>
+          </table>
+        </div>
+        <div class="mt-6 max-w-4xl">
+          <CodeBlock
+            label="Ask your agent"
+            prompt
+            value="What changed in search last week for example.com? Show the pages and queries that moved."
+            wrap
+          />
+        </div>
+      </section>
 
-  <h2>Write the pages your data points to</h2>
-  <p>
-    The same agent can write the page the data points to, in your codebase
-    and your voice, then check the draft with <a href="/docs/lint">seo lint</a> before
-    it ships. If you are weighing that against a tool that writes and
-    publishes articles for you, the <a href="/alternatives/seobot">SEObot alternatives</a> page
-    compares both ways.
-  </p>
+      <SplitList
+        id="automate-heading"
+        title="How do I automate SEO checks with a scheduled agent?"
+        text="Have your agent run the same checks on a schedule and tell you what moved. That is what SEO automation means here."
+        items={automate}
+      >
+        <div class="mt-6">
+          <CodeBlock
+            label="Ask your agent"
+            prompt
+            value="Every week, run the Search Console report for example.com, open the section that changed most and list the pages to look at."
+            wrap
+          />
+        </div>
+      </SplitList>
 
-  <h2>Keep the agent honest about cause</h2>
-  <p>
-    A Google update in the same week as a drop shows that the timing
-    matched. It does not prove the update caused it.
-    A <code>noindex</code> tag is reported as what the page says, and it is only a problem if you
-    did not mean it. Ask your agent to show the evidence for a claim before
-    it rewrites twenty title tags on a hunch.
-  </p>
-</FeaturePage>
+      <section class="site-frame grid gap-8 sm:grid-cols-[1fr_1.15fr] sm:items-start" aria-labelledby="write-heading">
+        <div class="min-w-0 sm:sticky sm:top-24">
+          <h2 id="write-heading" class="text-pretty text-2xl font-medium -tracking-[0.4px] text-foreground xl:text-3xl xl:-tracking-[0.6px]">
+            Can the same agent write the pages your data points to?
+          </h2>
+        </div>
+        <div class="min-w-0 rounded-lg bg-muted p-6 text-base leading-7 text-foreground-muted">
+          <p>
+            Yes. It can write the page in your codebase and your voice, then
+            check the draft with{' '}
+            <a class="text-foreground underline underline-offset-4" href="/docs/lint">seo lint</a>{' '}
+            before it ships. If you are weighing that against a tool that
+            writes and publishes articles for you, the{' '}
+            <a class="text-foreground underline underline-offset-4" href="/alternatives/seobot">SEObot alternatives</a>{' '}
+            page compares both ways.
+          </p>
+        </div>
+      </section>
+
+      <SplitList
+        id="cause-heading"
+        title="How do I keep an SEO agent honest about cause?"
+        text="Ask it to show the evidence for a claim before it acts. Matching dates and page tags are leads to check."
+        items={cause}
+      />
+
+      <section class="site-frame" aria-labelledby="related-heading">
+        <SectionHeading
+          id="related-heading"
+          title="Which docs go with an SEO agent?"
+          text="Connect the hosted server, install the CLI, or run the same tools in a cloud agent."
+        />
+        <div class="grid grid-cols-1 gap-2 sm:grid-cols-2">
+          {related.map((item) => <HomeCard {...item} link={`${item.title} docs`} />)}
+        </div>
+      </section>
+
+      <section class="site-frame" aria-labelledby="faq-heading">
+        <div class="max-w-2xl">
+          <h2 id="faq-heading" class="text-pretty text-2xl font-medium -tracking-[0.4px] text-foreground xl:text-3xl xl:-tracking-[0.6px]">
+            SEO agent questions
+          </h2>
+        </div>
+        <div class="mt-10">
+          <FaqAccordion items={faq} id="seo-agent-faq" />
+        </div>
+      </section>
+
+      <section class="site-frame" aria-labelledby="start-heading">
+        <SectionHeading
+          id="start-heading"
+          title="Turn your agent into an SEO agent"
+          text="Add SEO Skill to the agent you already use, sign in with Google, and ask what changed in search last week."
+        />
+        <SetupPrompts id="seo-agent-setup-end" />
+      </section>
+    </div>
+  </main>
+</BaseLayout>

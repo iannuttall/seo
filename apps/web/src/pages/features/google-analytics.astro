@@ -7,7 +7,165 @@ import {
   UserGroupIcon,
 } from '@hugeicons/core-free-icons'
 import CodeBlock from '@/components/CodeBlock.astro'
-import FeaturePage from '@/components/FeaturePage.astro'
+import FaqAccordion from '@/components/FaqAccordion.astro'
+import HomeCard from '@/components/HomeCard.astro'
+import LandingHero from '@/components/LandingHero.astro'
+import SectionHeading from '@/components/SectionHeading.astro'
+import SetupPrompts from '@/components/SetupPrompts.astro'
+import SplitList from '@/components/SplitList.astro'
+import BaseLayout from '@/layouts/BaseLayout.astro'
+import type { SchemaBreadcrumb } from '@/lib/schema'
+
+const breadcrumbs: SchemaBreadcrumb[] = [
+  { label: 'Home', href: '/' },
+  { label: 'Features', href: '/features' },
+  { label: 'Google Analytics MCP server' },
+]
+
+const connect = [
+  {
+    title: 'You need Viewer access',
+    text: 'A Google account with Viewer access to the Google Analytics property, and access to at least one Search Console property on the same account.',
+  },
+  {
+    title: 'Your Google sign-in is your account',
+    text: 'That Google sign-in is your SEO Skill account, with no password or separate signup.',
+  },
+  {
+    title: 'One prompt adds the server',
+    text: 'Give the prompt for your agent at the top of this page to Claude Code, Codex, Cursor or any agent that runs commands. It adds the server, waits while you sign in with Google and checks it connects.',
+  },
+  {
+    title: 'Access is read-only',
+    text: 'Nothing the agent does can change your Google Analytics settings.',
+  },
+  {
+    title: 'Claude apps and ChatGPT use their settings',
+    text: 'In claude.ai and the Claude apps you add the server as a custom connector in settings, and in ChatGPT as a custom MCP server.',
+  },
+  {
+    title: 'Setup guides for each client',
+    text: 'The Google Analytics setup guides show each client (Claude, ChatGPT, Codex, Cursor, VS Code, Gemini CLI, Windsurf and Le Chat).',
+    href: '/integrations/google-analytics',
+  },
+]
+
+const sessions = [
+  {
+    title: 'Organic Search sessions from Google',
+    text: 'The number to set beside your clicks.',
+  },
+  {
+    title: 'Organic Search sessions from every search engine',
+    text: 'Bing and DuckDuckGo are listed when they send visits.',
+  },
+  {
+    title: 'Sessions from all channels',
+    text: 'So you can tell a search drop from a drop in all your traffic.',
+  },
+  {
+    title: 'You do not pick a property',
+    text: 'The server reads the properties your Google account can see, finds the one whose web stream matches the site, and names it in the answer (no hunting for a nine-digit property ID).',
+  },
+  {
+    title: 'Clicks and sessions rarely match',
+    text: "They should not be added together. Search Console counts clicks on Google's results. Google Analytics counts sessions, which start only when its tag loads, so consent banners and ad blockers hide some of them.",
+  },
+  {
+    title: 'Time zones are flagged',
+    text: 'When Google Analytics days use another time zone from Search Console, the answer says so.',
+  },
+]
+
+const landing = [
+  {
+    title: 'Four numbers for each page',
+    text: "Each page comes back with sessions, users, engaged sessions and key events, most sessions first, using Google Analytics' own names for each number.",
+  },
+  { title: 'The last 28 days by default', text: 'Without dates it reads the last 28 days.' },
+  {
+    title: 'Hidden rows are flagged',
+    text: 'The answer says when Google Analytics hid small rows or grouped some into "(other)", so you know a missing page is unknown and may not be zero.',
+  },
+  {
+    title: 'Key events change the order of the SEO report',
+    text: 'Its quick wins, low click-through rate, striking distance and second page lists put pages with key events from Organic Search first.',
+  },
+  {
+    title: 'Pages that convert come first',
+    text: 'A page one spot from the top 3 that brings in sign-ups is a better use of an afternoon than one that only gets read.',
+  },
+]
+
+const channelSteps = [
+  { title: 'Create a channel group', text: 'Open Admin, then Data display, then Channel groups, and choose Create new channel group.' },
+  { title: 'Add the AI assistants channel', text: 'Choose Add new channel, name it AI assistants, and add a condition: Source matches regex.' },
+  { title: 'Paste the regex', text: 'Paste the regex below, which matches the sources in the table, and save the channel.' },
+  { title: 'Move it above Referral', text: 'Choose Reorder and drag AI assistants above Referral, then save the group.' },
+  {
+    title: 'Pick the group in your reports',
+    text: 'In Reports, open Acquisition, then Traffic acquisition, and pick the new group as the dimension.',
+  },
+]
+
+const leftOut = [
+  {
+    title: 'Only tagged or referred visits count',
+    text: 'Only visits that pass a referrer or a utm_source tag can be counted. An AI app that sends neither shows up as Direct.',
+  },
+  {
+    title: 'AI Overviews and AI Mode arrive from Google',
+    text: "Clicks from Google's AI Overviews and AI Mode arrive from Google, in Organic Search.",
+  },
+  { title: 'Read the line as a minimum', text: 'Read the AI assistants line as a minimum.' },
+  {
+    title: 'Questions and citations live elsewhere',
+    text: 'To see the questions people ask AI and whether AI answers cite you, use AI search tracking.',
+    href: '/features/ai-search',
+  },
+]
+
+const official = [
+  {
+    title: "Google's server is open source and experimental",
+    text: 'Google publishes its own Google Analytics MCP server, open source and labelled experimental.',
+  },
+  {
+    title: 'It runs on your machine',
+    text: 'It needs Python 3.10 or higher, a Google Cloud project with the Analytics Admin and Data APIs turned on, and Google Application Default Credentials.',
+  },
+  {
+    title: "Pick Google's server for any report",
+    text: 'Realtime visitors, funnels, your custom dimensions and metrics, or account settings.',
+  },
+  {
+    title: 'Pick SEO Skill for search questions',
+    text: 'It sets sessions beside Search Console clicks and finds the property for you, from one URL and a Google sign-in.',
+  },
+  { title: 'They can sit in the same client', text: 'You can add both to one agent.' },
+  {
+    title: "The full comparison with Google's server",
+    text: "The comparison with Google's Google Analytics MCP server covers setup and tools line by line.",
+    href: '/alternatives/google-analytics-mcp',
+  },
+]
+
+const limits = [
+  {
+    title: 'A fixed set of search reports',
+    text: 'It reads a fixed set of search reports, and cannot build any Google Analytics report you can.',
+  },
+  {
+    title: 'No realtime or ecommerce data',
+    text: 'There is no realtime data, ecommerce revenue, funnel or custom dimension, and it cannot change a setting.',
+  },
+  { title: 'Landing pages cover Organic Search only' },
+  {
+    title: 'Other analytics tools',
+    text: 'Clicky and Simple Analytics work in the hosted server too. Fathom, Plausible and other tools work in the CLI on your own machine through a small provider package, and the analytics docs show how.',
+    href: '/docs/analytics',
+  },
+]
 
 const related = [
   { title: 'Analytics', text: 'Google Analytics, Clicky and Simple Analytics in the hosted MCP and the CLI, and how to add another tool.', href: '/docs/analytics', icon: ChartLineData01Icon },
@@ -15,6 +173,38 @@ const related = [
   { title: 'Google Analytics in your client', text: 'Step by step for Claude, ChatGPT, Codex, Cursor, VS Code, Gemini CLI and more.', href: '/integrations/google-analytics', icon: McpServerIcon, link: 'Setup guides' },
   { title: "Google's Google Analytics MCP server", text: 'What the official server reads, how it is set up, and when to pick it.', href: '/alternatives/google-analytics-mcp', icon: UserGroupIcon, link: 'Comparison' },
   { title: 'AI search tracking', text: 'The questions people ask AI in your Search Console, and whether AI answers cite you.', href: '/features/ai-search', icon: AiChat02Icon, link: 'AI search tracking' },
+]
+
+const faq = [
+  {
+    question: 'What is a Google Analytics MCP server?',
+    answer:
+      'It lets an AI agent such as Claude, Codex or ChatGPT read your Google Analytics data through the Model Context Protocol, so it answers from your real numbers instead of guessing.',
+  },
+  {
+    question: 'Do I need a Google Cloud project?',
+    answer:
+      'No. The SEO Skill MCP server is hosted at https://seoskill.dev/mcp. There is nothing to install and no Google Cloud project to create. You sign in with a Google account that has Viewer access to the property.',
+  },
+  {
+    question: 'Can the agent change my Google Analytics settings?',
+    answer: 'No. Access is read-only, so nothing the agent does can change your Google Analytics settings.',
+  },
+  {
+    question: 'Why do my clicks and sessions not match?',
+    answer:
+      "Search Console counts clicks on Google's results. Google Analytics counts sessions, which start only when its tag loads, so consent banners and ad blockers hide some of them. Compare them side by side and never add them together.",
+  },
+  {
+    question: 'Do I need to set anything up in Google Analytics to see AI assistant visits?',
+    answer:
+      'No. Ask your agent and it returns sessions from AI assistants by source, with the top landing pages. To see the same visits inside Google Analytics, build an AI assistants custom channel group, which needs the Editor role.',
+  },
+  {
+    question: 'Which other analytics tools work?',
+    answer:
+      'Clicky and Simple Analytics work in the hosted server too. Fathom, Plausible and other tools work in the CLI on your own machine through a small provider package.',
+  },
 ]
 
 const aiSourceRegex =
@@ -27,233 +217,229 @@ Google Analytics, property Example (123456789), matched by its web stream https:
 Visits from AI assistants (ChatGPT, Perplexity, Claude, Gemini, Copilot and others): 214 sessions (was 162, +32.1%). By source: chatgpt.com 151 (was 118), perplexity.ai 38 (was 29), gemini.google.com 14 (was 9), claude.ai 11 (was 6).`
 ---
 
-<FeaturePage
-  title="Google Analytics MCP server"
-  metaTitle="Google Analytics MCP server for Claude, Codex and ChatGPT"
+<BaseLayout
+  title="Google Analytics MCP server for Claude, Codex and ChatGPT"
   description="Connect Google Analytics to Claude, Codex or ChatGPT with a hosted MCP server. Search sessions beside your clicks, landing pages and AI referral traffic."
-  path="/features/google-analytics"
-  lead="Add one URL to your agent, sign in with Google, and ask about your Google Analytics: sessions from search beside your Search Console clicks, the pages search sends people to, and visits from ChatGPT, Perplexity and other AI assistants."
-  {related}
-  relatedHeading="Read more"
+  canonicalPath="/features/google-analytics"
+  {breadcrumbs}
+  framed={false}
 >
-  <h2>What a Google Analytics MCP server does</h2>
-  <p>
-    A Google Analytics MCP server lets an AI agent such as Claude, Codex or
-    ChatGPT read your Google Analytics data through the Model Context
-    Protocol, so it answers from your real numbers instead of guessing.
-  </p>
-  <p>
-    The SEO Skill MCP server is hosted at <code>https://seoskill.dev/mcp</code>.
-    There is nothing to install and no Google Cloud project to create. It is
-    read-only and built for one job: what happens after someone clicks your
-    site in search. These are the questions it answers:
-  </p>
-  <table>
-    <thead><tr><th>Ask your agent</th><th>What comes back</th></tr></thead>
-    <tbody>
-      <tr><td>Did search traffic drop, or all traffic?</td><td>Organic Search sessions from Google, from every search engine and from all channels, beside your Search Console clicks.</td></tr>
-      <tr><td>Which pages does search send people to?</td><td>Each landing page from Organic Search with sessions, users, engaged sessions and key events.</td></tr>
-      <tr><td>How much traffic do ChatGPT and Perplexity send?</td><td>Sessions from 12 AI assistants by source, and the pages they land on.</td></tr>
-      <tr><td>What changed after the release on 15 September?</td><td>Sessions and clicks in equal periods before and after the date.</td></tr>
-    </tbody>
-  </table>
+  <main data-agent-content>
+    <LandingHero
+      title="Google Analytics MCP server"
+      lead="Add one URL to your agent, sign in with Google, and ask about your Google Analytics: sessions from search beside your Search Console clicks, the pages search sends people to, and visits from ChatGPT, Perplexity and other AI assistants."
+      setupId="google-analytics-setup"
+      author
+    />
 
-  <h2>Connect Google Analytics to Claude, Codex or ChatGPT with one prompt</h2>
-  <p>
-    You need a Google account with Viewer access to the Google Analytics
-    property, and access to at least one Search Console property on the same
-    account. That Google sign-in is your SEO Skill account, with no password
-    or separate signup.
-  </p>
-  <p>
-    Copy the prompt for your agent at the top of this page and give it to
-    Claude Code, Codex, Cursor or any agent that runs commands. It adds the
-    server, waits while you sign in with Google (read-only, so nothing the
-    agent does can change your Google Analytics settings) and checks it
-    connects. Then ask a first question:
-  </p>
-  <CodeBlock prompt value="Which Google Analytics properties can you see?" wrap />
-  <p>
-    In claude.ai and the Claude apps you add the server as a custom connector
-    in settings, and in ChatGPT as a custom MCP server. The <a
-    href="/integrations/google-analytics">Google Analytics setup guides</a>{' '}
-    show each client (Claude, ChatGPT, Codex, Cursor, VS Code, Gemini CLI,
-    Windsurf and Le Chat).
-  </p>
+    <div class="space-y-24 py-24 sm:space-y-32 sm:py-32">
+      <section class="site-frame" aria-labelledby="what-heading">
+        <SectionHeading
+          id="what-heading"
+          title="What does a Google Analytics MCP server do?"
+          text="It lets an AI agent such as Claude, Codex or ChatGPT read your Google Analytics data through the Model Context Protocol, so it answers from your real numbers instead of guessing. The SEO Skill server is hosted at https://seoskill.dev/mcp, with nothing to install and no Google Cloud project to create. It is read-only and built for one job: what happens after someone clicks your site in search."
+        />
+        <div class="docs-prose max-w-4xl">
+          <table>
+            <thead><tr><th>Ask your agent</th><th>What comes back</th></tr></thead>
+            <tbody>
+              <tr><td>Did search traffic drop, or all traffic?</td><td>Organic Search sessions from Google, from every search engine and from all channels, beside your Search Console clicks.</td></tr>
+              <tr><td>Which pages does search send people to?</td><td>Each landing page from Organic Search with sessions, users, engaged sessions and key events.</td></tr>
+              <tr><td>How much traffic do ChatGPT and Perplexity send?</td><td>Sessions from 12 AI assistants by source, and the pages they land on.</td></tr>
+              <tr><td>What changed after the release on 15 September?</td><td>Sessions and clicks in equal periods before and after the date.</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </section>
 
-  <h2>See Google Analytics sessions beside Search Console clicks</h2>
-  <p>
-    Ask for the SEO report and your agent sets Google Analytics sessions next
-    to Search Console clicks for the same dates, each against the previous
-    period:
-  </p>
-  <CodeBlock prompt value="Run the SEO report for example.com" wrap />
-  <p>
-    You don't pick a property. The server reads the properties your Google
-    account can see, finds the one whose web stream matches the site, and
-    names it in the answer (no hunting for a nine-digit property ID). The
-    report shows three session counts:
-  </p>
-  <ul>
-    <li>Organic Search sessions from Google, the number to set beside your clicks.</li>
-    <li>Organic Search sessions from every search engine, with Bing and DuckDuckGo listed when they send visits.</li>
-    <li>Sessions from all channels, so you can tell a search drop from a drop in all your traffic.</li>
-  </ul>
-  <p>
-    Clicks and sessions rarely match, and they should not be added together.
-    Search Console counts clicks on Google's results. Google Analytics counts
-    sessions, which start only when its tag loads, so consent banners and ad
-    blockers hide some of them. When Google Analytics days use another time
-    zone from Search Console, the answer says so.
-  </p>
+      <SplitList
+        id="connect-heading"
+        title="How do I connect Google Analytics to Claude, Codex or ChatGPT?"
+        text="Give your agent one prompt and sign in with Google. You need Viewer access to the property, and the agent adds the server and checks it connects."
+        items={connect}
+      >
+        <div class="mt-6">
+          <CodeBlock label="Ask your agent" prompt value="Which Google Analytics properties can you see?" wrap />
+        </div>
+      </SplitList>
 
-  <h2>Worked example: a 16% drop in clicks on example.com</h2>
-  <p>
-    Say Search Console clicks to example.com fell from 5,020 to 4,210 over
-    28 days. The SEO report for those dates reads like this, trimmed to the
-    lines that matter (the numbers are made up for this example, and the
-    wording is the report's own):
-  </p>
-  <CodeBlock value={exampleResult} wrap />
-  <p>
-    Clicks fell 16.1% and Organic Search sessions from Google fell 17.1%, so
-    two separate counts agree. Sessions from all channels fell only 2.1%, so
-    the site did not lose its tracking and the rest of its traffic held up.
-    The drop is in Google search.
-  </p>
-  <p>
-    The next question is when it started. Ask your agent to compare the
-    periods either side of the first bad day:
-  </p>
-  <CodeBlock prompt value="Compare example.com before and after 2026-10-14" wrap />
-  <p>
-    <a href="/docs/compare">seo compare</a> lists the pages and queries that
-    moved most, the sessions in each period and any Google updates in the
-    window. An update with matching dates is a lead to check before you
-    blame it.
-  </p>
+      <SplitList
+        id="sessions-heading"
+        title="How do I see Google Analytics sessions beside Search Console clicks?"
+        text="Ask for the SEO report. Your agent sets Google Analytics sessions next to Search Console clicks for the same dates, each against the previous period, and the report shows three session counts."
+        items={sessions}
+      >
+        <div class="mt-6">
+          <CodeBlock label="Ask your agent" prompt value="Run the SEO report for example.com" wrap />
+        </div>
+      </SplitList>
 
-  <h2>Find the landing pages from search that convert</h2>
-  <p>
-    For every landing page from Organic Search, ask:
-  </p>
-  <CodeBlock prompt value="Show the Google Analytics search landing pages for example.com for the last 90 days" wrap />
-  <p>
-    Each page comes back with sessions, users, engaged sessions and key
-    events, most sessions first, using Google Analytics' own names for each
-    number. Without dates it reads the last 28 days. The answer says when
-    Google Analytics hid small rows or grouped some into "(other)", so a
-    missing page is unknown rather than zero.
-  </p>
-  <p>
-    Key events also change the order of the SEO report. Its quick wins,
-    low click-through rate, striking distance and second page lists put
-    pages with key events from Organic Search first. A page one spot from
-    the top 3 that brings in sign-ups is a better use of an afternoon than
-    one that only gets read.
-  </p>
-  <p>
-    In a terminal, list your properties, then pass the numeric ID to the
-    report:
-  </p>
-  <CodeBlock value={`seo analytics google properties\nseo analytics google report --property 123456789`} wrap />
+      <section class="site-frame" aria-labelledby="example-heading">
+        <SectionHeading
+          id="example-heading"
+          title="What does a 16% drop in clicks on example.com look like?"
+          text="Say Search Console clicks to example.com fell from 5,020 to 4,210 over 28 days. The SEO report for those dates reads like this, trimmed to the lines that matter (the numbers are made up for this example, and the wording is the report's own)."
+        />
+        <div class="max-w-4xl">
+          <CodeBlock value={exampleResult} wrap />
+          <div class="mt-6 space-y-4 text-base leading-7 text-foreground-muted">
+            <p>
+              Clicks fell 16.1% and Organic Search sessions from Google fell
+              17.1%, so two separate counts agree. Sessions from all channels
+              fell only 2.1%, so the site did not lose its tracking and the rest
+              of its traffic held up. The drop is in Google search.
+            </p>
+            <p>
+              The next question is when it started. Ask your agent to compare
+              the periods either side of the first bad day.
+            </p>
+          </div>
+          <div class="mt-6">
+            <CodeBlock label="Ask your agent" prompt value="Compare example.com before and after 2026-10-14" wrap />
+          </div>
+          <p class="mt-6 text-base leading-7 text-foreground-muted">
+            <a class="text-foreground underline underline-offset-4" href="/docs/compare">seo compare</a>{' '}
+            lists the pages and queries that moved most, the sessions in each
+            period and any Google updates in the window. An update with
+            matching dates is a lead to check before you blame it.
+          </p>
+        </div>
+      </section>
 
-  <h2 id="ai-referral-traffic">How to track AI referral traffic in Google Analytics</h2>
-  <p>
-    Google Analytics records a visit from an AI assistant under the session
-    source the assistant passes in its referrer or a <code>utm_source</code>{' '}
-    tag, such as <code>chatgpt.com</code> or <code>perplexity.ai</code>. In
-    the default channel group those visits are mixed in with Referral (or
-    Direct), so AI referral traffic has no line of its own until you make
-    one.
-  </p>
-  <p>
-    These are the session sources SEO Skill counts as AI assistants:
-  </p>
-  <table>
-    <thead><tr><th>AI assistant</th><th>Session source in Google Analytics</th></tr></thead>
-    <tbody>
-      <tr><td>ChatGPT</td><td>chatgpt.com, chatgpt, chat.openai.com</td></tr>
-      <tr><td>Perplexity</td><td>perplexity.ai, perplexity</td></tr>
-      <tr><td>Claude</td><td>claude.ai</td></tr>
-      <tr><td>Gemini</td><td>gemini.google.com</td></tr>
-      <tr><td>Copilot</td><td>copilot.microsoft.com, copilot.com</td></tr>
-      <tr><td>DeepSeek, Grok, Le Chat</td><td>chat.deepseek.com, grok.com, chat.mistral.ai</td></tr>
-      <tr><td>Meta AI, You.com, Phind, Poe</td><td>meta.ai, you.com, phind.com, poe.com</td></tr>
-    </tbody>
-  </table>
+      <SplitList
+        id="landing-heading"
+        title="Which landing pages from search convert?"
+        text="Ask your agent for the Google Analytics search landing pages. Every landing page from Organic Search comes back with its key events, so you can see which ones bring in sign-ups."
+        items={landing}
+      >
+        <div class="mt-6">
+          <CodeBlock
+            label="Ask your agent"
+            prompt
+            value="Show the Google Analytics search landing pages for example.com for the last 90 days"
+            wrap
+          />
+        </div>
+        <p class="mt-6 text-base leading-7 text-foreground-muted">
+          In a terminal, list your properties, then pass the numeric ID to the report.
+        </p>
+        <div class="mt-4">
+          <CodeBlock value={`seo analytics google properties\nseo analytics google report --property 123456789`} wrap />
+        </div>
+      </SplitList>
 
-  <h3>Ask your agent for AI assistant visits</h3>
-  <CodeBlock prompt value="How many visits did AI assistants send example.com in the last 28 days, and which pages did they land on?" wrap />
-  <p>
-    The answer gives sessions from AI assistants against the previous
-    period, split by source, with the top landing pages. Ask for a
-    comparison around a date to see whether a content change moved them.
-    Nothing needs setting up in Google Analytics first.
-  </p>
+      <section id="ai-referral-traffic" class="site-frame" aria-labelledby="ai-referral-heading">
+        <SectionHeading
+          id="ai-referral-heading"
+          title="How do I track AI referral traffic in Google Analytics?"
+          text="Google Analytics records a visit from an AI assistant under the session source the assistant passes in its referrer or a utm_source tag, such as chatgpt.com or perplexity.ai. In the default channel group those visits are mixed in with Referral (or Direct), so AI referral traffic has no line of its own until you make one. These are the session sources SEO Skill counts as AI assistants."
+        />
+        <div class="docs-prose max-w-4xl">
+          <table>
+            <thead><tr><th>AI assistant</th><th>Session source in Google Analytics</th></tr></thead>
+            <tbody>
+              <tr><td>ChatGPT</td><td>chatgpt.com, chatgpt, chat.openai.com</td></tr>
+              <tr><td>Perplexity</td><td>perplexity.ai, perplexity</td></tr>
+              <tr><td>Claude</td><td>claude.ai</td></tr>
+              <tr><td>Gemini</td><td>gemini.google.com</td></tr>
+              <tr><td>Copilot</td><td>copilot.microsoft.com, copilot.com</td></tr>
+              <tr><td>DeepSeek, Grok, Le Chat</td><td>chat.deepseek.com, grok.com, chat.mistral.ai</td></tr>
+              <tr><td>Meta AI, You.com, Phind, Poe</td><td>meta.ai, you.com, phind.com, poe.com</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </section>
 
-  <h3>Build an AI assistants channel in Google Analytics</h3>
-  <p>
-    To see the same visits inside Google Analytics, add a custom channel
-    group. You need the Editor role on the property.
-  </p>
-  <ol>
-    <li>Open Admin, then Data display, then Channel groups, and choose Create new channel group.</li>
-    <li>Choose Add new channel, name it AI assistants, and add a condition: Source matches regex.</li>
-    <li>Paste the regex below, which matches the sources in the table, and save the channel.</li>
-    <li>Choose Reorder and drag AI assistants above Referral, then save the group.</li>
-    <li>In Reports, open Acquisition, then Traffic acquisition, and pick the new group as the dimension.</li>
-  </ol>
-  <CodeBlock value={aiSourceRegex} wrap />
-  <p>
-    The order matters because Google Analytics puts each visit in the first
-    channel it matches. Custom channel groups also apply to past data, so
-    the new channel shows history straight away (per <a
-    href="https://support.google.com/analytics/answer/13051316"
-    target="_blank" rel="noreferrer">Google's custom channel groups
-    guide</a>, read in November 2026). That guide's own AI example starts
-    with <code>^.*ai|</code>, which matches any source containing "ai", such
-    as mail.yahoo.com, so a list of exact sources is safer.
-  </p>
+      <section class="site-frame" aria-labelledby="ai-visits-heading">
+        <SectionHeading
+          id="ai-visits-heading"
+          title="How do I ask my agent for AI assistant visits?"
+          text="Ask in plain words, and nothing needs setting up in Google Analytics first. The answer gives sessions from AI assistants against the previous period, split by source, with the top landing pages. Ask for a comparison around a date to see whether a content change moved them."
+        />
+        <div class="max-w-4xl">
+          <CodeBlock
+            label="Ask your agent"
+            prompt
+            value="How many visits did AI assistants send example.com in the last 28 days, and which pages did they land on?"
+            wrap
+          />
+        </div>
+      </section>
 
-  <h3>What AI referral traffic leaves out</h3>
-  <p>
-    Only visits that pass a referrer or a <code>utm_source</code> tag can be
-    counted. An AI app that sends neither shows up as Direct, and clicks from
-    Google's AI Overviews and AI Mode arrive from Google, in Organic Search.
-    Read the AI assistants line as a minimum. To see the questions people ask
-    AI and whether AI answers cite you, use <a href="/features/ai-search">AI
-    search tracking</a>.
-  </p>
+      <SplitList
+        id="channel-heading"
+        title="How do I build an AI assistants channel in Google Analytics?"
+        text="Add a custom channel group. You need the Editor role on the property, and it takes five steps."
+        items={channelSteps}
+      >
+        <div class="mt-6">
+          <CodeBlock label="Source regex" value={aiSourceRegex} wrap />
+        </div>
+        <p class="mt-6 text-base leading-7 text-foreground-muted">
+          The order matters because Google Analytics puts each visit in the
+          first channel it matches. Custom channel groups also apply to past
+          data, so the new channel shows history straight away (per{' '}
+          <a
+            class="text-foreground underline underline-offset-4"
+            href="https://support.google.com/analytics/answer/13051316"
+            target="_blank"
+            rel="noreferrer">Google's custom channel groups guide</a>). That guide's own AI example starts with{' '}
+          <code>^.*ai|</code>, which matches any source containing "ai", such
+          as mail.yahoo.com, so a list of exact sources is safer.
+        </p>
+      </SplitList>
 
-  <h2>Google's official server or a hosted Google Analytics MCP</h2>
-  <p>
-    Google publishes its own Google Analytics MCP server, open source and
-    labelled experimental. It runs on your machine with Python 3.10 or
-    higher, a Google Cloud project with the Analytics Admin and Data APIs
-    turned on, and Google Application Default Credentials.
-  </p>
-  <p>
-    Pick Google's server when you need any Google Analytics report: realtime
-    visitors, funnels, your custom dimensions and metrics, or account
-    settings. Pick SEO Skill when your questions are about search, because
-    it sets sessions beside Search Console clicks and finds the property for
-    you, from one URL and a Google sign-in. They can sit in the same client.
-    The <a href="/alternatives/google-analytics-mcp">comparison with Google's
-    Google Analytics MCP server</a> covers setup and tools line by line.
-  </p>
+      <SplitList
+        id="left-out-heading"
+        title="What does AI referral traffic leave out?"
+        text="It leaves out visits with no referrer or tag, and clicks from Google's own AI answers. Read the AI assistants line as a minimum."
+        items={leftOut}
+      />
 
-  <h2>What this Google Analytics MCP does not read</h2>
-  <p>
-    It reads a fixed set of search reports, not any Google Analytics report
-    you can build. There is no realtime data, ecommerce revenue, funnel or
-    custom dimension, and it cannot change a setting. Landing pages cover
-    Organic Search only.
-  </p>
-  <p>
-    Clicky and Simple Analytics work in the hosted server too. Fathom,
-    Plausible and other tools work in the CLI on your own machine through a
-    small provider package, and the <a href="/docs/analytics">analytics
-    docs</a> show how.
-  </p>
-</FeaturePage>
+      <SplitList
+        id="official-heading"
+        title="Should I use Google's official server or a hosted Google Analytics MCP?"
+        text="Use Google's server for any Google Analytics report, and SEO Skill for questions about search. They can sit in the same client."
+        items={official}
+      />
+
+      <SplitList
+        id="limits-heading"
+        title="What does this Google Analytics MCP not read?"
+        text="It skips anything outside a fixed set of search reports. There is no realtime data, ecommerce revenue, funnel or custom dimension, and it cannot change a setting."
+        items={limits}
+      />
+
+      <section class="site-frame" aria-labelledby="related-heading">
+        <SectionHeading
+          id="related-heading"
+          title="Which tools and docs go with the Google Analytics MCP?"
+          text="Setup guides for each client, the comparison with Google's server, and the reports that use your Google Analytics data."
+        />
+        <div class="grid grid-cols-1 gap-2 sm:grid-cols-2">
+          {related.map((item) => <HomeCard {...item} link={item.link ?? `${item.title} docs`} />)}
+        </div>
+      </section>
+
+      <section class="site-frame" aria-labelledby="faq-heading">
+        <div class="max-w-2xl">
+          <h2 id="faq-heading" class="text-pretty text-2xl font-medium -tracking-[0.4px] text-foreground xl:text-3xl xl:-tracking-[0.6px]">
+            Google Analytics MCP questions
+          </h2>
+        </div>
+        <div class="mt-10">
+          <FaqAccordion items={faq} id="google-analytics-faq" />
+        </div>
+      </section>
+
+      <section class="site-frame" aria-labelledby="start-heading">
+        <SectionHeading
+          id="start-heading"
+          title="Connect Google Analytics to your agent"
+          text="Add SEO Skill to your agent, sign in with the Google account that can read your Google Analytics, and ask which properties it can see."
+        />
+        <SetupPrompts id="google-analytics-setup-end" />
+      </section>
+    </div>
+  </main>
+</BaseLayout>

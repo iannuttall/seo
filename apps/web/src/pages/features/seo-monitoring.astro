@@ -5,7 +5,59 @@ import {
   McpServerIcon,
   Route01Icon,
 } from '@hugeicons/core-free-icons'
-import FeaturePage from '@/components/FeaturePage.astro'
+import CodeBlock from '@/components/CodeBlock.astro'
+import FaqAccordion from '@/components/FaqAccordion.astro'
+import HomeCard from '@/components/HomeCard.astro'
+import LandingHero from '@/components/LandingHero.astro'
+import SectionHeading from '@/components/SectionHeading.astro'
+import SetupPrompts from '@/components/SetupPrompts.astro'
+import SplitList from '@/components/SplitList.astro'
+import BaseLayout from '@/layouts/BaseLayout.astro'
+import type { SchemaBreadcrumb } from '@/lib/schema'
+
+const breadcrumbs: SchemaBreadcrumb[] = [
+  { label: 'Home', href: '/' },
+  { label: 'Features', href: '/features' },
+  { label: 'SEO monitoring' },
+]
+
+const alerts = [
+  { title: 'A second check for top pages', text: "A top page's drop is sent only after a second check agrees, so one odd answer from Google does not wake you up." },
+  { title: 'A site: search for each dropped page', text: "URL Inspection shows Google's latest indexing decision, and search results can take a few days to catch up, so each dropped page has a one-click site: search to see what Google shows right now." },
+  { title: 'One alert per run', text: "Each run of a site's background checks that finds changes sends one alert for that site." },
+  { title: 'Crawled, currently not indexed', text: 'When Google gives this reason, it read the page and chose to leave it out.', href: '/guides/crawled-currently-not-indexed' },
+  { title: 'A weekly summary on Monday morning', text: 'Each audited site gets its own weekly summary email with Google index checks, what the weekly crawl found and search clicks against the week before.' },
+]
+
+const settings = [
+  { title: 'On by default', text: 'Both email and webhook are on by default, and the webhook starts once you save a URL.' },
+  { title: 'Site by site', text: 'The weekly summary and Google index emails can also be turned off site by site.' },
+  { title: 'Where email goes', text: 'Email goes to your first linked Google account, and every email has a link that turns that type of email off.' },
+  { title: 'Webhook retries', text: 'After a timeout or a server error, a webhook is tried again up to 6 times over about a day.' },
+]
+
+const crawl = [
+  { title: 'Broken internal links', text: 'Internal links to errors, redirects and pages that could not be fetched.' },
+  { title: 'Title, description and H1 problems', text: 'Missing or duplicate titles, missing descriptions and missing H1s.' },
+  { title: 'Noindex and canonical changes', text: 'Pages that ask not to be indexed, and canonicals that point to another URL.' },
+  { title: 'Sitemap URLs that fail', text: 'Sitemap URLs that do not return 200.' },
+  { title: 'Thin pages', text: 'Pages under 100 words. This is a heuristic, and Google sets no word count.' },
+  { title: 'JavaScript changes', text: 'Pages where JavaScript changes the title, canonical or robots tag.' },
+]
+
+const start = [
+  { title: 'Your first site opens Stripe Checkout', text: 'Your agent can give you that link, but it cannot pay for you.' },
+  { title: 'The first checks start once the plan is active', text: 'The first crawl and index checks start then, and you can cancel any time.' },
+]
+
+const free = [
+  { title: 'Keep a baseline', text: 'Run the index check once for a baseline and keep the full result.' },
+  { title: 'Compare each week by page and reason', text: 'Run it again each week with the same number of pages and compare the two by page and reason. A new reason is the thing to look at.' },
+  { title: 'Save each week with a scheduled task', text: "The seo command keeps no history here, so a scheduled agent task that saves each week's result works well." },
+  { title: 'Crawl before and after a release', text: 'After a release, crawl the site and compare it with the crawl from before.' },
+  { title: 'Compare search data from the release date', text: 'Run seo compare on the release date once a week or two of Search Console data has come in. The report’s traffic drop section looks for a sudden change in daily clicks that lasted, with the date it started.', href: '/docs/compare' },
+  { title: 'Follow AI answers once a month', text: 'AI answers are not part of the weekly audit. Run the same questions through the AI visibility checker once a month and compare the two results.', href: '/features/ai-visibility-checker' },
+]
 
 const related = [
   { title: 'seo index', text: "Google's indexing reasons and pages that lost their clicks.", href: '/docs/indexing', icon: Alert02Icon },
@@ -13,106 +65,154 @@ const related = [
   { title: 'seo report', text: 'Search Console sections, including sudden traffic drops.', href: '/docs/report', icon: Analytics01Icon },
   { title: 'Hosted MCP', text: 'Connect seoskill.dev/mcp and sign in with Google.', href: '/docs/mcp', icon: McpServerIcon },
 ]
+
+const faq = [
+  {
+    question: 'How much does SEO monitoring cost?',
+    answer:
+      'The free tools are free, with no usage cap. The weekly site audit costs $50 a month per site and runs the checks for you on our servers.',
+  },
+  {
+    question: 'When do I get an alert?',
+    answer:
+      "Sites in the weekly site audit get an email and webhook when a page drops out of Google's index or comes back. A top page's drop is sent only after a second check agrees.",
+  },
+  {
+    question: 'How many pages does the Google index check cover?',
+    answer:
+      "The free tools check 100 known URLs a run on the hosted MCP, and more from the CLI. The weekly site audit uses up to the property's full 2,000 URL Inspection checks a day, top pages first.",
+  },
+  {
+    question: 'Does the weekly audit check AI answers?',
+    answer:
+      'No. To follow AI answers, run the same questions through the AI visibility checker once a month and compare the two results.',
+  },
+  {
+    question: 'Can I monitor a site for free?',
+    answer:
+      "Yes. Run the index check for a baseline, run it again each week with the same number of pages, and compare the two by page and reason. The seo command keeps no history here, so a scheduled agent task that saves each week's result works well.",
+  },
+]
 ---
 
-<FeaturePage
+<BaseLayout
   title="SEO monitoring for AI agents"
-  description="SEO monitoring for your own site: a weekly crawl, daily Google index checks and alerts when a page drops out of the index, plus free checks your agent runs when you ask."
-  path="/features/seo-monitoring"
-  lead="Find out when a page drops out of Google, a release breaks titles or links, or clicks fall away, from what Google and your own site report."
-  {related}
+  description="SEO monitoring for your own site with a weekly crawl, daily Google index checks and alerts, plus free checks your agent runs when you ask."
+  canonicalPath="/features/seo-monitoring"
+  {breadcrumbs}
+  framed={false}
 >
-  <h2>Two ways to monitor a site</h2>
-  <table>
-    <thead><tr><th>What</th><th>Free tools</th><th>Weekly site audit</th></tr></thead>
-    <tbody>
-      <tr><td>Who runs it</td><td>Your agent, when you ask or on a schedule you set.</td><td>Our servers, in the background.</td></tr>
-      <tr><td>Site crawl</td><td>On your machine with the CLI.</td><td>Every week, with what is new, back or resolved since the crawl before.</td></tr>
-      <tr><td>Google index</td><td>100 known URLs a run on the hosted MCP, more from the CLI, each checked live.</td><td>Up to the property's full 2,000 URL Inspection checks a day, top pages first.</td></tr>
-      <tr><td>Alerts</td><td>None. Your agent reports what it finds.</td><td>Email and webhook when a page drops out of the index or comes back.</td></tr>
-      <tr><td>History</td><td>Your agent keeps each result.</td><td>Kept on the server for each audited site.</td></tr>
-      <tr><td>Cost</td><td>Free, with no usage cap.</td><td>$50 a month per site.</td></tr>
-    </tbody>
-  </table>
+  <main data-agent-content>
+    <LandingHero
+      title="SEO monitoring for AI agents"
+      lead="Find out when a page drops out of Google, a release breaks titles or links, or clicks fall away, from what Google and your own site report."
+      setupId="seo-monitoring-setup"
+      author
+    />
 
-  <h2>SEO alerts when a page leaves Google's index</h2>
-  <p>
-    Sites in the weekly site audit get alerts without asking. You get one
-    when a page drops out of Google's index or comes back. A top page's drop
-    is sent only after a second check agrees, so one odd answer from Google
-    does not wake you up. URL Inspection shows Google's latest indexing
-    decision, and search results can take a few days to catch up, so each
-    dropped page has a one-click site: search to see what Google shows
-    right now. Each run of a site's background checks that finds
-    changes sends one alert for that site. When Google gives the reason{' '}
-    <a href="/features/crawled-currently-not-indexed">crawled, currently not
-    indexed</a>, it read the page and chose to leave it out.
-  </p>
-  <p>
-    Each alert type has its own email and webhook switch, under Alerts on
-    your <a href="/account">account
-    page</a>. Both are on by default, and the webhook starts once you save a
-    URL. The weekly summary and Google index emails can also be turned off
-    site by site.
-    Email goes to your first linked Google account, and every email has a
-    link that turns that type of email off.
-    Webhooks are signed the <a href="https://www.standardwebhooks.com/" target="_blank" rel="noreferrer">Standard Webhooks</a> way.
-    After a timeout or a server error, a webhook is tried again up to 6
-    times over about a day.
-  </p>
-  <p>
-    On Monday morning each audited site gets its own weekly summary email:
-    Google index checks, what the weekly crawl found and search clicks
-    against the week before.
-  </p>
+    <div class="space-y-24 py-24 sm:space-y-32 sm:py-32">
+      <section class="site-frame" aria-labelledby="ways-heading">
+        <SectionHeading
+          id="ways-heading"
+          title="What are the two ways to monitor a site?"
+          text="Free tools your agent runs when you ask, or the weekly site audit, which runs on our servers in the background for $50 a month per site."
+        />
+        <div class="docs-prose max-w-4xl">
+          <table>
+            <thead><tr><th>What</th><th>Free tools</th><th>Weekly site audit</th></tr></thead>
+            <tbody>
+              <tr><td>Who runs it</td><td>Your agent, when you ask or on a schedule you set.</td><td>Our servers, in the background.</td></tr>
+              <tr><td>Site crawl</td><td>On your machine with the CLI.</td><td>Every week, with what is new, back or resolved since the crawl before.</td></tr>
+              <tr><td>Google index</td><td>100 known URLs a run on the hosted MCP, more from the CLI, each checked live.</td><td>Up to the property's full 2,000 URL Inspection checks a day, top pages first.</td></tr>
+              <tr><td>Alerts</td><td>None. Your agent reports what it finds.</td><td>Email and webhook when a page drops out of the index or comes back.</td></tr>
+              <tr><td>History</td><td>Your agent keeps each result.</td><td>Kept on the server for each audited site.</td></tr>
+              <tr><td>Cost</td><td>Free, with no usage cap.</td><td>$50 a month per site.</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </section>
 
-  <h2>What the weekly crawl watches</h2>
-  <ul>
-    <li>Internal links to errors, redirects and pages that could not be fetched.</li>
-    <li>Missing or duplicate titles, missing descriptions and missing H1s.</li>
-    <li>Pages that ask not to be indexed, and canonicals that point to another URL.</li>
-    <li>Sitemap URLs that do not return 200.</li>
-    <li>Thin pages under 100 words (a heuristic, not a Google rule).</li>
-    <li>Pages where JavaScript changes the title, canonical or robots tag.</li>
-  </ul>
-  <p>
-    Each finding says whether it is new, back or resolved since the crawl
-    before, so a release that broke something stands out from the problems
-    you already knew about.
-  </p>
+      <SplitList
+        id="alerts-heading"
+        title="When do SEO alerts tell me a page left Google's index?"
+        text="When a page drops out of Google's index or comes back. Sites in the weekly site audit get these alerts without asking."
+        items={alerts}
+      />
 
-  <h2>Start the weekly site audit</h2>
-  <p>
-    Pick a Search Console property on the Sites tab of your account page,
-    or ask your agent:
-  </p>
-  <pre><code>Add example.com to the weekly site audit</code></pre>
-  <p>
-    Your first site opens Stripe Checkout. Your agent can give you that link,
-    but it cannot pay for you. The first crawl and index checks start once
-    the plan is active, and you can cancel any time.
-  </p>
+      <SplitList
+        id="settings-heading"
+        title="How do I set up email and webhook alerts?"
+        text="Under Alerts on your account page. Each alert type has its own email and webhook switch."
+        items={settings}
+      >
+        <p class="mt-4 text-base leading-7 text-foreground-muted">
+          Open Alerts on your{' '}
+          <a class="text-foreground underline underline-offset-4" href="/account">account page</a>.
+          Webhooks are signed the{' '}
+          <a class="text-foreground underline underline-offset-4" href="https://www.standardwebhooks.com/" target="_blank" rel="noreferrer">Standard Webhooks</a>{' '}
+          way.
+        </p>
+      </SplitList>
 
-  <h2>Monitor with the free tools instead</h2>
-  <p>
-    Run the index check once for a baseline and keep the full result. Run it
-    again each week with the same number of pages and compare the two by
-    page and reason. A new reason is the thing to look at.
-    The <code>seo</code> command keeps no history here, so a scheduled agent task that
-    saves each week's result works well.
-  </p>
-  <pre><code>seo index --site example.com --detail full</code></pre>
-  <p>
-    After a release, crawl the site and compare it with the crawl from
-    before, and run <a href="/docs/compare">seo compare</a> on the release
-    date once a week or two of Search Console data has come in. The report's
-    traffic drop section looks for a sudden change in daily clicks that
-    lasted, with the date it started.
-  </p>
-  <p>
-    AI answers are not part of the weekly audit. To follow them, run the
-    same questions through the{' '}
-    <a href="/features/ai-visibility-checker">AI visibility checker</a> once
-    a month and compare the two results.
-  </p>
-</FeaturePage>
+      <SplitList
+        id="crawl-heading"
+        title="What does the weekly crawl watch?"
+        text="Links, head tags, indexing signals and thin pages. Each finding says whether it is new, back or resolved since the crawl before, so a release that broke something stands out from the problems you already knew about."
+        items={crawl}
+      />
+
+      <SplitList
+        id="start-audit-heading"
+        title="How do I start the weekly site audit?"
+        text="Pick a Search Console property on the Sites tab of your account page, or ask your agent."
+        items={start}
+      >
+        <div class="mt-6">
+          <CodeBlock label="Ask your agent" prompt value="Add example.com to the weekly site audit" wrap />
+        </div>
+      </SplitList>
+
+      <SplitList
+        id="free-heading"
+        title="How do I monitor a site with the free tools?"
+        text="Run the same checks on a schedule and compare each result with the last. Your agent runs them and keeps the results, since the free tools send no alerts."
+        items={free}
+      >
+        <div class="mt-6">
+          <CodeBlock label="Run it in a terminal" value="seo index --site example.com --detail full" wrap />
+        </div>
+      </SplitList>
+
+      <section class="site-frame" aria-labelledby="related-heading">
+        <SectionHeading
+          id="related-heading"
+          title="Which docs go with SEO monitoring?"
+          text="The index check, the crawl and the report are the three checks behind monitoring. The hosted MCP connects them to your agent."
+        />
+        <div class="grid grid-cols-1 gap-2 sm:grid-cols-2">
+          {related.map((item) => <HomeCard {...item} link={`${item.title} docs`} />)}
+        </div>
+      </section>
+
+      <section class="site-frame" aria-labelledby="faq-heading">
+        <div class="max-w-2xl">
+          <h2 id="faq-heading" class="text-pretty text-2xl font-medium -tracking-[0.4px] text-foreground xl:text-3xl xl:-tracking-[0.6px]">
+            SEO monitoring questions
+          </h2>
+        </div>
+        <div class="mt-10">
+          <FaqAccordion items={faq} id="seo-monitoring-faq" />
+        </div>
+      </section>
+
+      <section class="site-frame" aria-labelledby="start-heading">
+        <SectionHeading
+          id="start-heading"
+          title="Start monitoring your site"
+          text="Add SEO Skill to your agent, sign in with Google, and run the index check once for a baseline."
+        />
+        <SetupPrompts id="seo-monitoring-setup-end" />
+      </section>
+    </div>
+  </main>
+</BaseLayout>

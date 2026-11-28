@@ -7,7 +7,76 @@ import {
   SearchList01Icon,
 } from '@hugeicons/core-free-icons'
 import CodeBlock from '@/components/CodeBlock.astro'
-import FeaturePage from '@/components/FeaturePage.astro'
+import FaqAccordion from '@/components/FaqAccordion.astro'
+import HomeCard from '@/components/HomeCard.astro'
+import LandingHero from '@/components/LandingHero.astro'
+import SectionHeading from '@/components/SectionHeading.astro'
+import SetupPrompts from '@/components/SetupPrompts.astro'
+import SplitList from '@/components/SplitList.astro'
+import BaseLayout from '@/layouts/BaseLayout.astro'
+import type { SchemaBreadcrumb } from '@/lib/schema'
+
+const breadcrumbs: SchemaBreadcrumb[] = [
+  { label: 'Home', href: '/' },
+  { label: 'Features', href: '/features' },
+  { label: 'Striking distance keywords' },
+]
+
+const find = [
+  { title: 'Sign in with Google', text: 'Give your agent the setup prompt at the top of this page, and sign in with Google when it asks. Access is read only.' },
+  { title: 'Ask for the striking distance keywords', text: 'Ask in plain words, or run the striking distance section of the SEO report in a terminal.' },
+  { title: 'One row per query and page', text: 'Each row is a query and the page that ranks for it, with clicks, impressions, click-through rate and average position for the last 28 days of final Search Console data.' },
+]
+
+const ranking = [
+  { title: 'Brand searches are left out', text: 'Searches for your own brand are left out, and the report names the brand terms it used.' },
+  { title: 'Rows with very few impressions are dropped', text: "The floor scales with your site's traffic. That is a heuristic, and the report says what floor it picked." },
+  { title: 'The top 20 pages are fetched live', text: 'A page that now redirects or returns an error shows up before you spend an hour on it.' },
+  { title: 'The full scoring formula', text: 'The keyword opportunities page has the formula for page one and page two.', href: '/features/keyword-opportunities' },
+]
+
+const quickWins = [
+  { title: 'Positions 4 to 10 below your own curve', text: "Quick wins are query and page pairs at positions 4 to 10 with a click-through rate below your site's own curve for that position." },
+  { title: 'A better bet than a new article', text: 'A page at position 5 that gets 1% of clicks, when your other pages at position 5 get 5%, is a better bet than a new article.' },
+  { title: 'Quick wins from your own data', text: 'These SEO quick wins come from your own Search Console, so they fit your site in a way a generic checklist cannot.' },
+]
+
+const lowCtr = [
+  { title: 'Ask for the low CTR section', text: 'It lists queries at positions 1 to 4 that get fewer clicks than your curve says. Those are the titles and snippets to review.' },
+  { title: 'Read the live page before a new title', text: 'Your agent can then run seo page on each URL to read its live title, description and queries before it suggests a new title.', href: '/docs/page' },
+]
+
+const curve = [
+  { title: 'A fallback for small sites', text: 'A site with too little data falls back to a built-in curve, and the report says which one it used.' },
+  { title: 'A heuristic for where to look', text: 'Google sets no such curve. Brand searches, AI Overviews and ads all change click-through rates, so treat a row below the curve as a page to open and check. It does not prove that its title is wrong.' },
+]
+
+const decay = [
+  { title: 'Why pages decay', text: 'A competitor publishes something better, the search changes, or the page goes out of date.' },
+  { title: 'What the section lists', text: 'The query and page pairs that lost clicks in the last 28 days against the 28 days before, with brand searches left out.' },
+  { title: 'See which queries one page lost', text: 'Run seo page on it.', href: '/docs/page' },
+  { title: 'Pages that lost almost all their clicks', text: "That is usually an indexing problem. seo index checks each page live and with Google's URL Inspection.", href: '/docs/indexing' },
+]
+
+const fixes = [
+  { title: 'The issues list keeps what the checks found', text: 'The issues section of the report keeps a list of what the striking distance, quick wins and low CTR checks found for a site.' },
+  { title: 'Before and after for each fix', text: "When you fix one, your agent marks it fixed, and the list later shows that page's Search Console clicks and impressions for the 28 and 56 days after the fix against the same number of days before." },
+  { title: 'Where the list is kept', text: 'The CLI keeps it in a file on your machine. The hosted server keeps it for sites in the weekly site audit ($50 a month per site). For any other site, it hands the list back to your agent to save and pass in next time.', href: '/docs/weekly-site-audit' },
+  { title: 'Google updates are named', text: 'Each result names any Google update whose dates overlap, because before and after is timing. It does not prove the fix caused the change.' },
+]
+
+const example = [
+  { title: 'Find the row', text: 'The striking distance section shows "invoice template for contractors" on example.com/templates/invoice at position 13.4, with 2,140 impressions and 9 clicks in 28 days.' },
+  { title: 'Check the page', text: 'You ask the agent to check the page. seo page --url https://example.com/templates/invoice shows the title and H1 say "Invoice templates" and never mention contractors.' },
+  { title: 'Fix it and mark it fixed', text: 'You add a section for contractors and a title that names them, then ask the agent to mark the issue fixed on 3 November 2026.' },
+  { title: 'Read the result 28 days later', text: 'Once final data covers 28 days after the fix, the issues list reads: "28 days from 2026-11-03 (query on page): 41 clicks (+33) and 2,380 impressions, average position 8.2, against 8 clicks and 2,050 impressions, average position 13.6 in the 28 days before." The 56-day line follows four weeks later.' },
+]
+
+const byHand = [
+  { title: 'Filter Performance by position', text: 'Open Performance, then Search results, turn on Average position, add a filter for position greater than 10, and sort by impressions. Ignore rows past 20.' },
+  { title: 'Find the page that ranks', text: 'Click a query, then the Pages tab, to see which page ranks for it.' },
+  { title: 'What the hand method leaves out', text: 'That works for one site, once. It does not give you the query and the page in one row, a click-through rate curve for your site, a check that each page is still live, or a record of what happened after you changed it.' },
+]
 
 const related = [
   { title: 'SEO report', text: 'Every section of the Search Console report, with its dates and how to ask for it.', href: '/docs/report', icon: Analytics01Icon, link: 'SEO report docs' },
@@ -17,224 +86,232 @@ const related = [
   { title: 'SEO keyword report', text: 'Every query your site shows for, with its page, clicks, impressions and position against last period.', href: '/features/keyword-report', icon: SearchList01Icon, link: 'Keyword report' },
   { title: 'AI keyword research tool', text: 'Search volume, difficulty and who ranks for a query, from your own DataForSEO or Ahrefs key.', href: '/features/keyword-research', icon: SearchList01Icon, link: 'Keyword research' },
 ]
+
+const faq = [
+  {
+    question: 'What are striking distance keywords?',
+    answer:
+      'Searches your site already ranks for at an average position of 11 to 20 in Google Search Console, the top of page two. Google already thinks the page is relevant, so a better section, title or internal link has a real chance of moving it onto page one.',
+  },
+  {
+    question: 'What is the difference between striking distance keywords and quick wins?',
+    answer:
+      "Striking distance keywords sit at positions 11 to 20. Quick wins sit at positions 4 to 10 and get fewer clicks than your site's own click-through rate curve says they should.",
+  },
+  {
+    question: 'Does SEO Skill use keyword tool estimates for these lists?',
+    answer:
+      'No. All four lists come from the SEO report, read live from your own Search Console each time you ask. No keyword tool estimates are mixed in.',
+  },
+  {
+    question: 'What is content decay?',
+    answer:
+      'Content decay is the slow loss of search clicks on pages that used to do well. The content decay section lists the query and page pairs that lost clicks in the last 28 days against the 28 days before.',
+  },
+  {
+    question: 'How do I know whether a fix worked?',
+    answer:
+      "Ask your agent to mark the issue fixed. The issues list later shows that page's Search Console clicks and impressions for the 28 and 56 days after the fix against the same number of days before, and names any Google update whose dates overlap.",
+  },
+]
 ---
 
-<FeaturePage
-  title="Striking distance keywords"
-  metaTitle="Find striking distance keywords in Search Console"
+<BaseLayout
+  title="Find striking distance keywords in Search Console"
   description="Find striking distance keywords, quick wins, low CTR and content decay in your own Search Console, then see each fixed page's clicks 28 and 56 days later."
-  path="/features/striking-distance-keywords"
-  lead="Striking distance keywords are searches your pages already rank for just off page one. Ask your agent for them, along with quick wins, low CTR and content decay, from your own Search Console."
-  {related}
-  relatedHeading="Read more"
+  canonicalPath="/features/striking-distance-keywords"
+  {breadcrumbs}
+  framed={false}
 >
-  <h2>What striking distance keywords are</h2>
-  <p>
-    A striking distance keyword is a search your site already ranks for at
-    an average position of 11 to 20 in Google Search Console. That is the
-    top of page two. Google already thinks the page is relevant, so a better
-    section, title or internal link has a real chance of moving it onto page
-    one.
-  </p>
-  <p>
-    Guides disagree on the range (some say 4 to 20, some 8 to 20). SEO
-    Skill splits it into four lists so each one points at a different fix:
-  </p>
-  <table>
-    <thead><tr><th>Ask for</th><th>What it lists</th></tr></thead>
-    <tbody>
-      <tr><td>Striking distance</td><td>Queries at average positions 11 to 20 for pages that already rank, with impressions.</td></tr>
-      <tr><td>Quick wins</td><td>Queries at positions 4 to 10 that get fewer clicks than your site's own curve says they should.</td></tr>
-      <tr><td>Low CTR</td><td>Queries at positions 1 to 4 that get fewer clicks than your curve says. Titles and snippets to review.</td></tr>
-      <tr><td>Content decay</td><td>Query and page pairs that lost clicks against the 28 days before.</td></tr>
-    </tbody>
-  </table>
-  <p>
-    All four come from the <a href="/docs/report">SEO report</a>, read live
-    from your own Search Console each time you ask. No keyword tool
-    estimates are mixed in.
-  </p>
+  <main data-agent-content>
+    <LandingHero
+      title="Striking distance keywords"
+      lead="Striking distance keywords are searches your pages already rank for just off page one. Ask your agent for them, along with quick wins, low CTR and content decay, from your own Search Console."
+      setupId="striking-distance-keywords-setup"
+      author
+    />
 
-  <h2>Find striking distance keywords for your site</h2>
-  <p>
-    Give your agent the setup prompt at the top of this page, and sign in
-    with Google when it asks (access is read only). Then ask:
-  </p>
-  <CodeBlock prompt value={`Show me the striking distance keywords for example.com`} wrap />
-  <p>The same section in a terminal:</p>
-  <CodeBlock value={`seo report --site example.com --section striking-distance`} wrap />
-  <p>
-    Each row is a query and the page that ranks for it, with clicks,
-    impressions, click-through rate and average position for the last 28
-    days of final Search Console data.
-  </p>
+    <div class="space-y-24 py-24 sm:space-y-32 sm:py-32">
+      <section class="site-frame" aria-labelledby="what-heading">
+        <SectionHeading
+          id="what-heading"
+          title="What are striking distance keywords?"
+          text="A striking distance keyword is a search your site already ranks for at an average position of 11 to 20 in Google Search Console, the top of page two. Google already thinks the page is relevant, so a better section, title or internal link has a real chance of moving it onto page one."
+        />
+        <div class="docs-prose max-w-4xl">
+          <p>
+            Guides disagree on the range (some say 4 to 20, some 8 to 20). SEO
+            Skill splits it into four lists so each one points at a different
+            fix.
+          </p>
+          <table>
+            <thead><tr><th>Ask for</th><th>What it lists</th></tr></thead>
+            <tbody>
+              <tr><td>Striking distance</td><td>Queries at average positions 11 to 20 for pages that already rank, with impressions.</td></tr>
+              <tr><td>Quick wins</td><td>Queries at positions 4 to 10 that get fewer clicks than your site's own curve says they should.</td></tr>
+              <tr><td>Low CTR</td><td>Queries at positions 1 to 4 that get fewer clicks than your curve says. Titles and snippets to review.</td></tr>
+              <tr><td>Content decay</td><td>Query and page pairs that lost clicks against the 28 days before.</td></tr>
+            </tbody>
+          </table>
+          <p>
+            All four come from the <a href="/docs/report">SEO report</a>, read live
+            from your own Search Console each time you ask. No keyword tool
+            estimates are mixed in.
+          </p>
+        </div>
+      </section>
 
-  <h2>How the striking distance list is ranked</h2>
-  <p>
-    Rows are sorted by impressions, weighted towards the top of page two. A
-    query at position 11 with 400 impressions comes before one at position
-    19 with the same 400, because it has less ground to make up.
-  </p>
-  <p>
-    Searches for your own brand are left out, and the report names the
-    brand terms it used. Rows with very few impressions are dropped, with a
-    floor that scales with your site's traffic (a heuristic, and the report
-    says what floor it picked). The top 20 pages are also fetched live, so a
-    page that now redirects or returns an error shows up before you spend
-    an hour on it. The{' '}
-    <a href="/features/keyword-opportunities">keyword opportunities</a> page
-    has the full scoring formula for page one and page two.
-  </p>
+      <SplitList
+        id="find-heading"
+        title="How do I find striking distance keywords for my site?"
+        text="Ask your agent for them once it can read your Search Console. It reads the last 28 days of final data and lists each query with the page that ranks for it."
+        items={find}
+      >
+        <div class="mt-6 space-y-4">
+          <CodeBlock label="Ask your agent" prompt value="Show me the striking distance keywords for example.com" wrap />
+          <CodeBlock label="Or run it in a terminal" value="seo report --site example.com --section striking-distance" wrap />
+        </div>
+      </SplitList>
 
-  <h2>Find "low-hanging fruit" keywords on page one</h2>
-  <p>
-    What most guides call "low-hanging fruit" keywords are searches where a
-    page already ranks on page one and still gets fewer clicks than it
-    should. Ask for the
-    quick wins:
-  </p>
-  <CodeBlock prompt value={`Show me the quick wins for example.com`} wrap />
-  <p>
-    Quick wins are query and page pairs at positions 4 to 10 with a
-    click-through rate below your site's own curve for that position. A
-    page at position 5 that gets 1% of clicks, when your other pages at
-    position 5 get 5%, is a better bet than a new article. These are SEO
-    quick wins from your own data, rather than a generic checklist.
-  </p>
+      <SplitList
+        id="ranking-heading"
+        title="How is the striking distance list ranked?"
+        text="By impressions, weighted towards the top of page two. A query at position 11 with 400 impressions comes before one at position 19 with the same 400, because it has less ground to make up."
+        items={ranking}
+      />
 
-  <h2>Fix low CTR in the top four positions</h2>
-  <p>
-    At positions 1 to 4 the ranking is mostly done, so a low click-through
-    rate points at the title, the description or what else Google shows on
-    the results page. Ask for the low CTR section:
-  </p>
-  <CodeBlock prompt value={`Show me the low-ctr section for example.com, then read the live title and description of the top 5 pages`} wrap />
-  <p>
-    Your agent can then run <a href="/docs/page">seo page</a> on each URL to
-    read its live title, description and queries before it suggests a new
-    title.
-  </p>
+      <SplitList
+        id="quick-wins-heading"
+        title="How do I find low-hanging fruit keywords on page one?"
+        text={'Ask for the quick wins. What most guides call "low-hanging fruit" keywords are searches where a page already ranks on page one and still gets fewer clicks than it should.'}
+        items={quickWins}
+      >
+        <div class="mt-6">
+          <CodeBlock label="Ask your agent" prompt value="Show me the quick wins for example.com" wrap />
+        </div>
+      </SplitList>
 
-  <h2>How the click-through rate curve is built</h2>
-  <p>
-    The curve is built from your own site's Search Console data. For each
-    position on page one, it takes the 75th percentile of your pages'
-    click-through rates at that position (the rate one page in four beats),
-    leaving out the page being judged. A site with too little data falls
-    back to a built-in curve, and the report says which one it used.
-  </p>
-  <p>
-    The curve is a heuristic, not a Google rule. Brand searches, AI
-    Overviews and ads all change click-through rates, so treat a row below
-    the curve as a page to open and check, not proof that its title is wrong.
-  </p>
+      <SplitList
+        id="low-ctr-heading"
+        title="How do I fix low CTR in the top four positions?"
+        text="Start with the title and description. At positions 1 to 4 the ranking is mostly done, so a low click-through rate points at the title, the description or what else Google shows on the results page."
+        items={lowCtr}
+      >
+        <div class="mt-6">
+          <CodeBlock label="Ask your agent" prompt value="Show me the low-ctr section for example.com, then read the live title and description of the top 5 pages" wrap />
+        </div>
+      </SplitList>
 
-  <h2>Find content decay before it costs you more clicks</h2>
-  <p>
-    Content decay is the slow loss of search clicks on pages that used to do
-    well. A competitor publishes something better, the search changes, or
-    the page goes out of date. Ask for it by name:
-  </p>
-  <CodeBlock prompt value={`Show me the content decay for example.com`} wrap />
-  <CodeBlock value={`seo report --site example.com --section content-decay`} wrap />
-  <p>
-    The content decay section lists the query and page pairs that lost
-    clicks in the last 28 days against the 28 days before, with brand
-    searches left out. To see which queries one page lost, run{' '}
-    <a href="/docs/page">seo page</a> on it. For pages that lost almost all
-    their clicks, which is usually an indexing problem rather than decay,{' '}
-    <a href="/docs/indexing">seo index</a> checks each page live and with
-    Google's URL Inspection.
-  </p>
+      <SplitList
+        id="curve-heading"
+        title="How is the click-through rate curve built?"
+        text="From your own site's Search Console data. For each position on page one, it takes the 75th percentile of your pages' click-through rates at that position (the rate one page in four beats), leaving out the page being judged."
+        items={curve}
+      />
 
-  <h2>Check whether a fix worked 28 and 56 days later</h2>
-  <p>
-    The <code>issues</code> section of the report keeps a list of what the
-    striking distance, quick wins and low CTR checks found for a site. When
-    you fix one, your agent marks it fixed, and the list later shows that
-    page's Search Console clicks and impressions for the 28 and 56 days
-    after the fix against the same number of days before.
-  </p>
-  <CodeBlock prompt value={`Show me the issues list for example.com`} wrap />
-  <CodeBlock value={`seo report --site example.com --mark fixed --issues 3f9a1c2e --note "Added a contractors section and a new title"`} wrap />
-  <p>
-    The CLI keeps the list in a file on your machine. The hosted server
-    keeps it for sites in the <a href="/docs/weekly-site-audit">weekly site
-    audit</a> ($50 a month per site). For any other site, it hands the list
-    back to your agent to save and pass in next time. Each result names any
-    Google update whose dates overlap, because before and after is timing,
-    not proof that the fix caused the change.
-  </p>
+      <SplitList
+        id="decay-heading"
+        title="How do I find content decay before it costs more clicks?"
+        text="Ask for it by name. Content decay is the slow loss of search clicks on pages that used to do well."
+        items={decay}
+      >
+        <div class="mt-6 space-y-4">
+          <CodeBlock label="Ask your agent" prompt value="Show me the content decay for example.com" wrap />
+          <CodeBlock label="Or run it in a terminal" value="seo report --site example.com --section content-decay" wrap />
+        </div>
+      </SplitList>
 
-  <h2>A worked example on example.com</h2>
-  <p>
-    One row, from the striking distance list to a measured result. The
-    numbers are made up for the example, and the last line is in the format
-    the issues list uses.
-  </p>
-  <ol>
-    <li>
-      The striking distance section shows "invoice template for
-      contractors" on <code>example.com/templates/invoice</code> at position
-      13.4, with 2,140 impressions and 9 clicks in 28 days.
-    </li>
-    <li>
-      You ask the agent to check the page. <code>seo page --url
-      https://example.com/templates/invoice</code> shows the title and H1 say
-      "Invoice templates" and never mention contractors.
-    </li>
-    <li>
-      You add a section for contractors and a title that names them, then
-      ask the agent to mark the issue fixed on 3 November 2026.
-    </li>
-    <li>
-      Once final data covers 28 days after the fix, the issues list reads:
-      "28 days from 2026-11-03 (query on page): 41 clicks (+33) and 2,380
-      impressions, average position 8.2, against 8 clicks and 2,050
-      impressions, average position 13.6 in the 28 days before." The
-      56-day line follows four weeks later.
-    </li>
-  </ol>
+      <SplitList
+        id="fixed-heading"
+        title="How do I check whether a fix worked?"
+        text="Mark it fixed, and the issues list shows the page's clicks and impressions 28 and 56 days later against the same number of days before."
+        items={fixes}
+      >
+        <div class="mt-6 space-y-4">
+          <CodeBlock label="Ask your agent" prompt value="Show me the issues list for example.com" wrap />
+          <CodeBlock label="Or run it in a terminal" value={'seo report --site example.com --mark fixed --issues 3f9a1c2e --note "Added a contractors section and a new title"'} wrap />
+        </div>
+      </SplitList>
 
-  <h2>Find striking distance keywords by hand in Search Console</h2>
-  <p>
-    You can do a rough version in Search Console. Open Performance, then
-    Search results, turn on Average position, add a filter for position
-    greater than 10, and sort by impressions. Ignore rows past 20. Click a
-    query, then the Pages tab, to see which page ranks for it.
-  </p>
-  <p>
-    That works for one site, once. What the hand method does not give you
-    is the query and the page in one row, a click-through rate curve for
-    your site, a check that each page is still live, or a record of what
-    happened after you changed it.
-  </p>
+      <SplitList
+        id="example-heading"
+        title="What does one striking distance fix look like on example.com?"
+        text="One row goes from the striking distance list to a measured result in four steps. The numbers are made up for the example, and the last line is in the format the issues list uses."
+        items={example}
+      />
 
-  <h2>The keywords this page targets, and why</h2>
-  <p>
-    We picked these keywords with the same tools. Keyword ideas and keyword
-    metrics came from DataForSEO for the US in November 2026. Searches are
-    monthly, and KD is DataForSEO's keyword difficulty from 0 to 100:
-  </p>
-  <table>
-    <thead><tr><th>Keyword</th><th>Searches (KD)</th></tr></thead>
-    <tbody>
-      <tr><td>seo quick wins</td><td>90 (KD 0)</td></tr>
-      <tr><td>how to find low hanging fruit keywords</td><td>50 (KD 0)</td></tr>
-      <tr><td>content decay</td><td>40 (KD 2)</td></tr>
-      <tr><td>what is content decay</td><td>40 (KD 0)</td></tr>
-      <tr><td>striking distance keywords</td><td>30 (KD 0)</td></tr>
-      <tr><td>low-hanging fruit keywords</td><td>20 (KD 2)</td></tr>
-    </tbody>
-  </table>
-  <p>
-    The volumes are small, and the results page is weak. In November 2026
-    the top results for "striking distance keywords" in the US included
-    sites with a <a href="https://ahrefs.com" target="_blank" rel="noreferrer">Domain
-    Rating by Ahrefs</a> of 12, 10 and 7, and a Reddit thread. Search
-    Console already showed seoskill.dev at an average position of 6.5 for
-    "striking distance seo" over the three months to 7 November 2026, from
-    an older docs page. A focused page with the method and a real follow-up
-    step is a fair bet to win it.
-  </p>
-</FeaturePage>
+      <SplitList
+        id="by-hand-heading"
+        title="Can I find striking distance keywords by hand in Search Console?"
+        text="Yes, a rough version. Filter the Performance report by average position and sort by impressions."
+        items={byHand}
+      />
+
+      <section class="site-frame" aria-labelledby="targets-heading">
+        <SectionHeading
+          id="targets-heading"
+          title="Which keywords does this page target, and why?"
+          text="Small searches with a weak results page. We picked them with the same tools, using keyword ideas and keyword metrics from DataForSEO for the US."
+        />
+        <div class="docs-prose max-w-4xl">
+          <p>
+            Searches are monthly, and KD is DataForSEO's keyword difficulty from
+            0 to 100.
+          </p>
+          <table>
+            <thead><tr><th>Keyword</th><th>Searches (KD)</th></tr></thead>
+            <tbody>
+              <tr><td>seo quick wins</td><td>90 (KD 0)</td></tr>
+              <tr><td>how to find low hanging fruit keywords</td><td>50 (KD 0)</td></tr>
+              <tr><td>content decay</td><td>40 (KD 2)</td></tr>
+              <tr><td>what is content decay</td><td>40 (KD 0)</td></tr>
+              <tr><td>striking distance keywords</td><td>30 (KD 0)</td></tr>
+              <tr><td>low-hanging fruit keywords</td><td>20 (KD 2)</td></tr>
+            </tbody>
+          </table>
+          <p>
+            The volumes are small, and the results page is weak. The top results
+            for "striking distance keywords" in the US included sites with a{' '}
+            <a href="https://ahrefs.com" target="_blank" rel="noreferrer">Domain Rating by Ahrefs</a>{' '}
+            of 12, 10 and 7, and a Reddit thread. Search Console already showed
+            seoskill.dev at an average position of 6.5 for "striking distance
+            seo" over the three months to 7 November 2026, from an older docs
+            page. A focused page with the method and a real follow-up step is a
+            fair bet to win it.
+          </p>
+        </div>
+      </section>
+
+      <section class="site-frame" aria-labelledby="related-heading">
+        <SectionHeading
+          id="related-heading"
+          title="Which reports and docs go with striking distance keywords?"
+          text="The SEO report holds all four lists. These pages cover checking one URL, pages that fell out of Google and the research behind new keywords."
+        />
+        <div class="grid grid-cols-1 gap-2 sm:grid-cols-2">
+          {related.map((item) => <HomeCard {...item} link={item.link ?? `${item.title} docs`} />)}
+        </div>
+      </section>
+
+      <section class="site-frame" aria-labelledby="faq-heading">
+        <div class="max-w-2xl">
+          <h2 id="faq-heading" class="text-pretty text-2xl font-medium -tracking-[0.4px] text-foreground xl:text-3xl xl:-tracking-[0.6px]">
+            Striking distance keyword questions
+          </h2>
+        </div>
+        <div class="mt-10">
+          <FaqAccordion items={faq} id="striking-distance-keywords-faq" />
+        </div>
+      </section>
+
+      <section class="site-frame" aria-labelledby="start-heading">
+        <SectionHeading
+          id="start-heading"
+          title="Find your striking distance keywords"
+          text="Add SEO Skill to your agent, sign in with Google, and ask for the striking distance keywords for your site."
+        />
+        <SetupPrompts id="striking-distance-keywords-setup-end" />
+      </section>
+    </div>
+  </main>
+</BaseLayout>

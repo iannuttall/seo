@@ -40,6 +40,11 @@ export const pageRedirects = {
   // Merged into the tools that now cover the same searches.
   '/features/google-updates': '/tools/google-algorithm-update-checker',
   '/tools/seo-report-template': '/tools/monthly-seo-report',
+  // Search Console status guides live under /guides.
+  '/features/crawled-currently-not-indexed':
+    '/guides/crawled-currently-not-indexed',
+  '/features/discovered-currently-not-indexed':
+    '/guides/discovered-currently-not-indexed',
   // The command pages moved up a level after the redesign preview.
   '/docs/commands': '/docs',
   ...Object.fromEntries(

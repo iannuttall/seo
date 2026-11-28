@@ -1,12 +1,53 @@
 ---
-import {
-  Analytics01Icon,
-  Exchange01Icon,
-  McpServerIcon,
-  PlugSocketIcon,
-} from '@hugeicons/core-free-icons'
+import { Analytics01Icon, Exchange01Icon, McpServerIcon, PlugSocketIcon } from '@hugeicons/core-free-icons'
 import CodeBlock from '@/components/CodeBlock.astro'
-import FeaturePage from '@/components/FeaturePage.astro'
+import FaqAccordion from '@/components/FaqAccordion.astro'
+import HomeCard from '@/components/HomeCard.astro'
+import LandingHero from '@/components/LandingHero.astro'
+import SectionHeading from '@/components/SectionHeading.astro'
+import SetupPrompts from '@/components/SetupPrompts.astro'
+import SplitList from '@/components/SplitList.astro'
+import BaseLayout from '@/layouts/BaseLayout.astro'
+import type { SchemaBreadcrumb } from '@/lib/schema'
+
+const title = 'Google Search Console MCP'
+
+const breadcrumbs: SchemaBreadcrumb[] = [
+  { label: 'Home', href: '/' },
+  { label: 'Features', href: '/features' },
+  { label: title },
+]
+
+const history = [
+  {
+    title: 'Search Console keeps 16 months',
+    text: 'A server that reads Search Console live sees the same 16 months.',
+  },
+  {
+    title: 'One point of numbers a week',
+    code: 'seo_next',
+    text: 'Once your agent saves a business context for a site, every week it runs seo_next or the report, it saves one point of that week\u2019s numbers, covering clicks and impressions for brand, non-brand and category searches, your conversion pages and up to 30 tracked searches.',
+  },
+  {
+    title: 'The first point is the baseline',
+    text: 'The points stay with your account after Google drops those days, so the report\u2019s progress section can compare this week with the week you started.',
+  },
+  {
+    title: 'Weekly totals only',
+    text: 'Each point holds those weekly totals and leaves out the single rows Search Console had. For a question about one query two years ago, only the rows Google still keeps can answer it.',
+  },
+]
+
+const limits = [
+  {
+    title: 'Some rare queries are hidden',
+    text: 'Search Console hides some rare queries for privacy, so query rows never add up to the site total. The reports say when a section is empty or capped, and never turn a missing row into zero.',
+  },
+  {
+    title: 'The last two or three days are not final',
+    text: 'The reports stop at the latest final day (on Google\u2019s Pacific time calendar), so a comparison never reads a half-counted day as a drop.',
+  },
+]
 
 const related = [
   { title: 'Search Console in 9 AI clients', text: 'Setup steps and prompts for VS Code, Gemini CLI, Windsurf, Le Chat and the clients on this page.', href: '/integrations/google-search-console', icon: PlugSocketIcon, link: 'Setup by client' },
@@ -14,261 +55,385 @@ const related = [
   { title: 'seo report', text: 'The overview and each section, from quick wins to traffic drops.', href: '/docs/report', icon: Analytics01Icon },
   { title: 'Search Console MCP servers compared', text: 'Hosted and open source servers side by side, from each one\u2019s own pages.', href: '/alternatives', icon: Exchange01Icon, link: 'Compare servers' },
 ]
+
+const faq = [
+  {
+    question: 'Is there an official Google Search Console MCP server?',
+    answer:
+      'No. Google publishes MCP servers for many Cloud and Workspace products, but none for Search Console. Every Search Console MCP, SEO Skill included, reads the public Search Console API.',
+  },
+  {
+    question: 'Is the Google Search Console MCP free?',
+    answer:
+      'Yes for everything your agent asks on demand, including reports, page checks, URL Inspection, comparisons and raw rows, with no cap. Only the weekly site audit costs money, $50 a month per site.',
+  },
+  {
+    question: 'Do I need a Google Cloud project or an API key?',
+    answer:
+      'No. You add the server URL to your client and sign in with Google. Keyword and backlink research is the one part that uses a key, your own DataForSEO or Ahrefs key, and it is optional.',
+  },
+  {
+    question: 'Can my agent change anything in Search Console?',
+    answer:
+      'The Google sign-in asks for read-only access. Your agent can read performance data and inspect URLs, and it cannot submit sitemaps, request indexing or change a property.',
+  },
+  {
+    question: 'Can I connect more than one Google account?',
+    answer:
+      'Yes. Add a client\u2019s or a work Google account on your account page. Each request uses the linked account that can read the site you asked about.',
+    links: [{ text: 'account page', href: '/account' }],
+  },
+]
 ---
 
-<FeaturePage
-  title="Google Search Console MCP"
-  metaTitle="Google Search Console MCP server for Claude, ChatGPT and Codex"
+<BaseLayout
+  title="Search Console MCP server for Claude, ChatGPT and Codex"
   description="Connect Google Search Console to Claude, ChatGPT, Codex or Cursor with one MCP URL and a Google sign-in. Read-only, no API key, free for every on-demand tool."
-  path="/features/search-console"
-  lead="Add one URL to your AI client, sign in with Google, and ask about your clicks, impressions, CTR, positions, queries and index status. There is no Google Cloud project to create and nothing to install."
-  {related}
-  relatedHeading="Read more"
+  canonicalPath="/features/search-console"
+  {breadcrumbs}
+  framed={false}
 >
-  <h2>A Search Console MCP server you add with one URL</h2>
-  <p>
-    The SEO Skill server lives at <code>https://seoskill.dev/mcp</code>. Your
-    AI client connects to it, you sign in with the Google account that can see
-    your Search Console, and the agent can read that data on each request. The
-    sign-in asks for read-only access, so nothing your agent does changes your
-    Search Console settings.
-  </p>
-  <p>
-    Google does not publish a Search Console MCP server. Its{' '}
-    <a href="https://docs.cloud.google.com/mcp/supported-products" target="_blank" rel="noreferrer">list of Google MCP servers</a>{' '}
-    had none for Search Console when we checked on 11 November 2026, so every
-    Search Console MCP is built on the public{' '}
-    <a href="https://developers.google.com/webmaster-tools" target="_blank" rel="noreferrer">Search Console API</a>.
-    SEO Skill reads that same API with your own sign-in, so the numbers match
-    what you see in Search Console.
-  </p>
+  <main data-agent-content>
+    <LandingHero
+      title={title}
+      lead="Add one URL to your AI client, sign in with Google, and ask about your clicks, impressions, CTR, positions, queries and index status. There is no Google Cloud project to create and nothing to install."
+      setupId="search-console-setup"
+      author
+    />
 
-  <h2>Connect Search Console with one prompt</h2>
-  <p>
-    You need a Google account that can see at least one Search Console
-    property. That is the whole list. Copy the prompt for your agent at the
-    top of this page and give it to Claude Code, Codex, Cursor or any agent
-    that runs commands. It adds the server, waits while you sign in with
-    Google, checks it connects and asks which site to start with. The same
-    prompt installs the open source CLI, which runs the site crawl and Bing
-    Webmaster Tools on your own machine.
-  </p>
-  <p>
-    ChatGPT and Claude on the web cannot add a server themselves, so you add
-    it in their settings. Follow the steps for{' '}
-    <a href="/integrations/google-search-console/chatgpt">ChatGPT</a> or{' '}
-    <a href="/integrations/google-search-console/claude">Claude</a>. The{' '}
-    <a href="/integrations/google-search-console">Search Console integration page</a>{' '}
-    covers VS Code, Gemini CLI, Windsurf and Le Chat too.
-  </p>
+    <div class="space-y-24 py-24 sm:space-y-32 sm:py-32">
+      <section class="site-frame grid gap-8 sm:grid-cols-[1fr_1.15fr] sm:items-start" aria-labelledby="what-heading">
+        <div class="sm:sticky sm:top-24">
+          <h2 id="what-heading" class="text-pretty text-2xl font-medium -tracking-[0.4px] text-foreground xl:text-3xl xl:-tracking-[0.6px]">
+            What is a Search Console MCP server?
+          </h2>
+          <p class="mt-4 text-base leading-7 text-foreground-muted">
+            It is a server your AI client connects to so your agent can read
+            your Search Console data on each request. The SEO Skill server
+            lives at <code>https://seoskill.dev/mcp</code>, and you add it with
+            that one URL.
+          </p>
+        </div>
+        <div class="rounded-lg bg-muted p-6 text-base leading-7 text-foreground-muted">
+          <p>
+            You sign in with the Google account that can see your Search
+            Console, and the agent can read that data on each request. The
+            sign-in asks for read-only access, so nothing your agent does
+            changes your Search Console settings.
+          </p>
+          <p class="mt-4">
+            Google does not publish a Search Console MCP server. Its{' '}
+            <a class="text-foreground underline underline-offset-4" href="https://docs.cloud.google.com/mcp/supported-products" target="_blank" rel="noreferrer">list of Google MCP servers</a>{' '}
+            has none for Search Console, so every Search Console MCP is built
+            on the public{' '}
+            <a class="text-foreground underline underline-offset-4" href="https://developers.google.com/webmaster-tools" target="_blank" rel="noreferrer">Search Console API</a>.
+            SEO Skill reads that same API with your own sign-in, so the numbers
+            match what you see in Search Console.
+          </p>
+        </div>
+      </section>
 
-  <h2>6 prompts to run once Search Console is connected</h2>
-  <p>
-    Type these in plain words. Your agent picks the tool, and every result
-    names the tool to run next. Each prompt also has a terminal command if you
-    want to see the same result without an agent.
-  </p>
+      <section class="site-frame grid gap-8 sm:grid-cols-[1fr_1.15fr] sm:items-start" aria-labelledby="connect-heading">
+        <div class="sm:sticky sm:top-24">
+          <h2 id="connect-heading" class="text-pretty text-2xl font-medium -tracking-[0.4px] text-foreground xl:text-3xl xl:-tracking-[0.6px]">
+            How do I connect Search Console to my agent?
+          </h2>
+          <p class="mt-4 text-base leading-7 text-foreground-muted">
+            Give your agent the setup prompt at the top of this page. You need
+            a Google account that can see at least one Search Console property.
+            That is the whole list.
+          </p>
+        </div>
+        <div class="rounded-lg bg-muted p-6 text-base leading-7 text-foreground-muted">
+          <p>
+            The prompt works in Claude Code, Codex, Cursor or any agent that
+            runs commands. It adds the server, waits while you sign in with
+            Google, checks it connects and asks which site to start with. The
+            same prompt installs the open source CLI, which runs the site crawl
+            and Bing Webmaster Tools on your own machine.
+          </p>
+          <p class="mt-4">
+            ChatGPT and Claude on the web cannot add a server themselves, so
+            you add it in their settings. Follow the steps for{' '}
+            <a class="text-foreground underline underline-offset-4" href="/integrations/google-search-console/chatgpt">ChatGPT</a>{' '}
+            or{' '}
+            <a class="text-foreground underline underline-offset-4" href="/integrations/google-search-console/claude">Claude</a>.
+            The{' '}
+            <a class="text-foreground underline underline-offset-4" href="/integrations/google-search-console">Search Console integration page</a>{' '}
+            covers VS Code, Gemini CLI, Windsurf and Le Chat too.
+          </p>
+        </div>
+      </section>
 
-  <h3>See which sites your agent can read</h3>
-  <CodeBlock prompt value="Which Search Console properties can you read?" wrap />
-  <p>
-    The agent lists the Search Console and Google Analytics properties your
-    linked Google accounts can see. Domain properties look like{' '}
-    <code>sc-domain:example.com</code>. If a site is missing, add the Google
-    account that owns it on your <a href="/account">account page</a>.
-  </p>
+      <section class="site-frame" aria-labelledby="prompts-heading">
+        <SectionHeading
+          id="prompts-heading"
+          title="What can I ask once Search Console is connected?"
+          text="Ask in plain words, and your agent picks the tool. Every result names the tool to run next, and most of these 6 prompts have a terminal command if you want the same result without an agent."
+        />
+        <div class="divide-y divide-border">
+          <div class="grid gap-6 py-6 sm:grid-cols-[1fr_1.15fr]">
+            <div class="min-w-0">
+              <h3 class="text-base leading-7 font-medium text-foreground">See which sites your agent can read</h3>
+              <p class="mt-2 text-base leading-7 text-foreground-muted">
+                The agent lists the Search Console and Google Analytics
+                properties your linked Google accounts can see. Domain
+                properties look like <code>sc-domain:example.com</code>. If a
+                site is missing, add the Google account that owns it on your{' '}
+                <a class="text-foreground underline underline-offset-4" href="/account">account page</a>.
+              </p>
+            </div>
+            <div class="min-w-0">
+              <CodeBlock label="Ask your agent" prompt value="Which Search Console properties can you read?" wrap class="!mt-0" />
+            </div>
+          </div>
+          <div class="grid gap-6 py-6 sm:grid-cols-[1fr_1.15fr]">
+            <div class="min-w-0">
+              <h3 class="text-base leading-7 font-medium text-foreground">Get the overview for last month</h3>
+              <p class="mt-2 text-base leading-7 text-foreground-muted">
+                Clicks, impressions, CTR and position against the previous
+                period, split by device, with the pages and queries that moved
+                most. Every section of the report shows its row count and top
+                rows, so the agent knows where to look next.
+              </p>
+            </div>
+            <div class="min-w-0">
+              <CodeBlock label="Ask your agent" prompt value="What happened in search for example.com in the last 28 days?" wrap class="!mt-0" />
+              <CodeBlock label="In a terminal" value="seo report --site example.com" />
+            </div>
+          </div>
+          <div class="grid gap-6 py-6 sm:grid-cols-[1fr_1.15fr]">
+            <div class="min-w-0">
+              <h3 class="text-base leading-7 font-medium text-foreground">Find quick wins and page two queries</h3>
+              <p class="mt-2 text-base leading-7 text-foreground-muted">
+                Striking distance lists queries just outside the top positions
+                for pages that already rank. Quick wins are queries at
+                positions 4 to 10 with a click-through rate below your own
+                site's curve for that position, which usually means the title
+                or description needs a rewrite.
+              </p>
+            </div>
+            <div class="min-w-0">
+              <CodeBlock label="Ask your agent" prompt value="Show me the striking-distance queries and quick wins for example.com" wrap class="!mt-0" />
+            </div>
+          </div>
+          <div class="grid gap-6 py-6 sm:grid-cols-[1fr_1.15fr]">
+            <div class="min-w-0">
+              <h3 class="text-base leading-7 font-medium text-foreground">Check why one page lost its clicks</h3>
+              <p class="mt-2 text-base leading-7 text-foreground-muted">
+                The agent loads the page live (status, redirect, title,
+                canonical, robots), asks Google's URL Inspection whether it is
+                indexed, and lists the page's queries against the previous
+                period. A noindex tag and a lost ranking look the same in a
+                clicks chart. They look nothing alike here.
+              </p>
+            </div>
+            <div class="min-w-0">
+              <CodeBlock label="Ask your agent" prompt value="Why did https://example.com/pricing lose clicks this month?" wrap class="!mt-0" />
+              <CodeBlock label="In a terminal" value="seo page --url https://example.com/pricing" />
+            </div>
+          </div>
+          <div class="grid gap-6 py-6 sm:grid-cols-[1fr_1.15fr]">
+            <div class="min-w-0">
+              <h3 class="text-base leading-7 font-medium text-foreground">Compare before and after a release or a Google update</h3>
+              <p class="mt-2 text-base leading-7 text-foreground-muted">
+                Equal periods either side of the date, with the pages and
+                queries that moved and any Google ranking updates in the
+                window. An update that lines up with a drop is reported as
+                timing only, because overlap alone cannot show what caused it.
+              </p>
+            </div>
+            <div class="min-w-0">
+              <CodeBlock label="Ask your agent" prompt value="Compare example.com before and after 2026-09-15, just the /blog/ pages" wrap class="!mt-0" />
+              <CodeBlock label="In a terminal" value="seo compare --site example.com --date 2026-09-15 --pages /blog/" />
+            </div>
+          </div>
+          <div class="grid gap-6 py-6 sm:grid-cols-[1fr_1.15fr]">
+            <div class="min-w-0">
+              <h3 class="text-base leading-7 font-medium text-foreground">Find pages that dropped out of Google</h3>
+              <p class="mt-2 text-base leading-7 text-foreground-muted">
+                Pages that kept 20% or less of their clicks over the last 28
+                days, each checked live, with Google's own index status for the
+                top ones. It also gives Google's indexing reason for up to 100
+                known URLs a run.
+              </p>
+            </div>
+            <div class="min-w-0">
+              <CodeBlock label="Ask your agent" prompt value="Which pages on example.com lost their clicks, and are they still indexed?" wrap class="!mt-0" />
+              <CodeBlock label="In a terminal" value="seo index --site example.com" />
+            </div>
+          </div>
+        </div>
+      </section>
 
-  <h3>Get the overview for last month</h3>
-  <CodeBlock prompt value="What happened in search for example.com in the last 28 days?" wrap />
-  <CodeBlock label="In a terminal" value="seo report --site example.com" />
-  <p>
-    Clicks, impressions, CTR and position against the previous period, split
-    by device, with the pages and queries that moved most. Every section of
-    the report shows its row count and top rows, so the agent knows where to
-    look next.
-  </p>
+      <section class="site-frame" aria-labelledby="example-heading">
+        <SectionHeading
+          id="example-heading"
+          title="What does a real Search Console question show?"
+          text="One search split across 7 of our own pages. We asked this on seoskill.dev while rebuilding this page."
+        />
+        <div class="max-w-4xl">
+          <CodeBlock label="Ask your agent" prompt value={'Which of my pages show up for searches containing "search console mcp", with impressions and position?'} wrap class="!mt-0" />
+          <p class="mt-6 text-base leading-7 text-foreground-muted">
+            The agent called the raw rows tool with a query filter, by query
+            and page, for 13 August to 7 November 2026. For &quot;google search
+            console mcp&quot; alone, Search Console showed 7 different
+            seoskill.dev URLs.
+          </p>
+        </div>
+        <div class="docs-prose mt-6 max-w-4xl">
+          <table>
+            <thead><tr><th>Page</th><th>Impressions (average position)</th></tr></thead>
+            <tbody>
+              <tr><td>/features/search-console</td><td>523 (64.2)</td></tr>
+              <tr><td>/integrations/google-search-console/cursor</td><td>57 (82.1)</td></tr>
+              <tr><td>/alternatives/search-console-mcp</td><td>51 (80.9)</td></tr>
+              <tr><td>/integrations/google-search-console</td><td>36 (81.0)</td></tr>
+              <tr><td>/integrations/google-search-console/vs-code</td><td>27 (85.8)</td></tr>
+              <tr><td>/alternatives and /features/google-analytics</td><td>19 and 4</td></tr>
+            </tbody>
+          </table>
+        </div>
+        <p class="mt-6 max-w-2xl text-base leading-7 text-foreground-muted">
+          This page got 523 of the 717 impressions (73%) and the best position,
+          so it is the one we built out. A page split like that is what the
+          report's cannibalization section looks for. It lists queries where
+          more than one of your pages gets impressions, with each page's share.
+          None of these rows had a click yet, so the table shows where Google is
+          testing the site. It says nothing about traffic so far.
+        </p>
+      </section>
 
-  <h3>Find quick wins and page two queries</h3>
-  <CodeBlock prompt value="Show me the striking-distance queries and quick wins for example.com" wrap />
-  <p>
-    Striking distance lists queries just outside the top positions for pages
-    that already rank. Quick wins are queries at positions 4 to 10 with a
-    click-through rate below your own site's curve for that position, which
-    usually means the title or description needs a rewrite.
-  </p>
+      <section class="site-frame" aria-labelledby="tools-read-heading">
+        <SectionHeading
+          id="tools-read-heading"
+          title="What does each tool read from Search Console?"
+          text="Each tool reads the part of Search Console your question is about, from the whole site down to one URL or raw rows."
+        />
+        <div class="docs-prose max-w-4xl">
+          <table>
+            <thead><tr><th>Ask about</th><th>What comes back</th></tr></thead>
+            <tbody>
+              <tr><td>The whole site</td><td>The <a class="text-foreground underline underline-offset-4" href="/docs/report">SEO report</a> overview: totals against the previous period by device, with top pages and queries, and Google Analytics sessions for the same dates when a property matches. The <a class="text-foreground underline underline-offset-4" href="/features/google-analytics">Google Analytics MCP server</a> page covers the rest of that data.</td></tr>
+              <tr><td>Opportunities</td><td>Report sections for quick wins, low CTR, striking distance, second page, content decay and cannibalization.</td></tr>
+              <tr><td>Drops</td><td>The traffic drop section finds the day a lasting change started. <a class="text-foreground underline underline-offset-4" href="/docs/indexing">seo index</a> finds pages that lost their clicks.</td></tr>
+              <tr><td>Google updates</td><td>One ranking update laid over your clicks and impressions, with the folders, pages and queries that moved most.</td></tr>
+              <tr><td>AI-style searches</td><td>Queries shaped like chat prompts and follow-ups, grouped into one question each. A heuristic, because Search Console does not mark AI Mode.</td></tr>
+              <tr><td>One URL</td><td><a class="text-foreground underline underline-offset-4" href="/docs/page">seo page</a> gives live page facts, URL Inspection status and the page's queries.</td></tr>
+              <tr><td>Anything else</td><td><a class="text-foreground underline underline-offset-4" href="/docs/data">Raw rows</a> by query, page, date, country, device or search appearance, each with the previous period.</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </section>
 
-  <h3>Check why one page lost its clicks</h3>
-  <CodeBlock prompt value="Why did https://example.com/pricing lose clicks this month?" wrap />
-  <CodeBlock label="In a terminal" value="seo page --url https://example.com/pricing" />
-  <p>
-    The agent loads the page live (status, redirect, title, canonical, robots),
-    asks Google's URL Inspection whether it is indexed, and lists the page's
-    queries against the previous period. A noindex tag and a lost ranking look
-    the same in a clicks chart. They look nothing alike here.
-  </p>
+      <section class="site-frame grid gap-8 sm:grid-cols-[1fr_1.15fr] sm:items-start" aria-labelledby="hosted-heading">
+        <div class="sm:sticky sm:top-24">
+          <h2 id="hosted-heading" class="text-pretty text-2xl font-medium -tracking-[0.4px] text-foreground xl:text-3xl xl:-tracking-[0.6px]">
+            Should I use a hosted, local or self-hosted Search Console MCP?
+          </h2>
+          <p class="mt-4 text-base leading-7 text-foreground-muted">
+            Use the hosted server for Search Console in claude.ai, ChatGPT or
+            Claude on your phone, and a self-hosted one from GitHub if you want
+            to read every line of the server code. The SEO Skill CLI is the
+            middle option.
+          </p>
+        </div>
+        <div class="rounded-lg bg-muted p-6 text-base leading-7 text-foreground-muted">
+          <p>
+            The open source Search Console MCP servers on GitHub, such as
+            mcp-gsc and mcp-server-gsc, run on your machine. Most ask you to
+            create a Google Cloud project, turn on the Search Console API and
+            download an OAuth client or a service account key first. Pick one
+            of those if you want to read and change every line of the server
+            code, or need sitemap and indexing write tools.
+          </p>
+          <p class="mt-4">
+            Pick the hosted SEO Skill server if you want Search Console where a
+            local server cannot run, or if you would rather skip the Google
+            Cloud step. The CLI is open source on GitHub and npm, runs locally,
+            and is signed in with Google by the setup prompt. The{' '}
+            <a class="text-foreground underline underline-offset-4" href="/alternatives">comparison of Search Console MCP servers</a>{' '}
+            shows how each one signs in and what it costs, checked on their own
+            pages.
+          </p>
+        </div>
+      </section>
 
-  <h3>Compare before and after a release or a Google update</h3>
-  <CodeBlock prompt value="Compare example.com before and after 2026-09-15, just the /blog/ pages" wrap />
-  <CodeBlock label="In a terminal" value="seo compare --site example.com --date 2026-09-15 --pages /blog/" />
-  <p>
-    Equal periods either side of the date, with the pages and queries that
-    moved and any Google ranking updates in the window. An update that lines
-    up with a drop is reported as timing only, because overlap alone cannot
-    show what caused it.
-  </p>
+      <section class="site-frame grid gap-8 sm:grid-cols-[1fr_1.15fr] sm:items-start" aria-labelledby="cost-heading">
+        <div class="sm:sticky sm:top-24">
+          <h2 id="cost-heading" class="text-pretty text-2xl font-medium -tracking-[0.4px] text-foreground xl:text-3xl xl:-tracking-[0.6px]">
+            How much does the Search Console MCP cost?
+          </h2>
+          <p class="mt-4 text-base leading-7 text-foreground-muted">
+            Every tool your agent calls on demand is free, with no usage cap.
+            The one paid part is the weekly site audit, at $50 a month per
+            site.
+          </p>
+        </div>
+        <div class="rounded-lg bg-muted p-6 text-base leading-7 text-foreground-muted">
+          <p>
+            The server fetches what the agent asks for and returns it. It
+            stores your linked Google accounts and any keys you save, encrypted,
+            and the issues list and business context your agent saves for a
+            site.
+          </p>
+          <p class="mt-4">
+            The{' '}
+            <a class="text-foreground underline underline-offset-4" href="/docs/weekly-site-audit">weekly site audit</a>{' '}
+            runs on our servers without you asking, with a weekly crawl, up to
+            2,000 URL Inspection checks a day, and an alert when a page drops
+            out of Google's index. For those sites it keeps what the audit
+            needs, such as index check results and the last two crawls. Your
+            agent can start it with &quot;Add example.com to the weekly site
+            audit&quot;, which returns a Stripe Checkout link for you to open.
+          </p>
+        </div>
+      </section>
 
-  <h3>Find pages that dropped out of Google</h3>
-  <CodeBlock prompt value="Which pages on example.com lost their clicks, and are they still indexed?" wrap />
-  <CodeBlock label="In a terminal" value="seo index --site example.com" />
-  <p>
-    Pages that kept 20% or less of their clicks over the last 28 days, each
-    checked live, with Google's own index status for the top ones. It also
-    gives Google's indexing reason for up to 100 known URLs a run.
-  </p>
+      <SplitList
+        id="history-heading"
+        title="Can I keep my numbers past Search Console's 16 months?"
+        text="Yes, as weekly points. Once your agent saves a business context for a site, SEO Skill keeps one point of that site's numbers each week, after Google has dropped those days."
+        items={history}
+      />
 
-  <h2>A worked example: one query split across 7 pages</h2>
-  <p>
-    We ran this on seoskill.dev while rebuilding this page. The prompt was:
-  </p>
-  <CodeBlock prompt value={'Which of my pages show up for searches containing "search console mcp", with impressions and position?'} wrap />
-  <p>
-    The agent called the raw rows tool with a query filter, by query and page,
-    for 13 August to 7 November 2026. For &quot;google search console mcp&quot;
-    alone, Search Console showed 7 different seoskill.dev URLs:
-  </p>
-  <table>
-    <thead><tr><th>Page</th><th>Impressions (average position)</th></tr></thead>
-    <tbody>
-      <tr><td>/features/search-console</td><td>523 (64.2)</td></tr>
-      <tr><td>/integrations/google-search-console/cursor</td><td>57 (82.1)</td></tr>
-      <tr><td>/alternatives/search-console-mcp</td><td>51 (80.9)</td></tr>
-      <tr><td>/integrations/google-search-console</td><td>36 (81.0)</td></tr>
-      <tr><td>/integrations/google-search-console/vs-code</td><td>27 (85.8)</td></tr>
-      <tr><td>/alternatives and /features/google-analytics</td><td>19 and 4</td></tr>
-    </tbody>
-  </table>
-  <p>
-    This page got 523 of the 717 impressions (73%) and the best position, so
-    it is the one we built out. A page split like that is what the report's
-    cannibalization section looks for. It lists queries where more than one of your
-    pages gets impressions, with each page's share. None of these rows had a
-    click yet, so the table shows where Google is testing the site. It says
-    nothing about traffic so far.
-  </p>
+      <SplitList
+        id="limits-heading"
+        title="What can Search Console data not tell you?"
+        text="It cannot show every query or the last few days in full. These are the 2 gaps, and how the reports handle each one."
+        items={limits}
+      />
 
-  <h2>What each tool reads from Search Console</h2>
-  <table>
-    <thead><tr><th>Ask about</th><th>What comes back</th></tr></thead>
-    <tbody>
-      <tr><td>The whole site</td><td>The <a href="/docs/report">SEO report</a> overview: totals against the previous period by device, with top pages and queries, and Google Analytics sessions for the same dates when a property matches. The <a href="/features/google-analytics">Google Analytics MCP server</a> page covers the rest of that data.</td></tr>
-      <tr><td>Opportunities</td><td>Report sections for quick wins, low CTR, striking distance, second page, content decay and cannibalization.</td></tr>
-      <tr><td>Drops</td><td>The traffic drop section finds the day a lasting change started. <a href="/docs/indexing">seo index</a> finds pages that lost their clicks.</td></tr>
-      <tr><td>Google updates</td><td>One ranking update laid over your clicks and impressions, with the folders, pages and queries that moved most.</td></tr>
-      <tr><td>AI-style searches</td><td>Queries shaped like chat prompts and follow-ups, grouped into one question each. A heuristic: Search Console does not mark AI Mode.</td></tr>
-      <tr><td>One URL</td><td><a href="/docs/page">seo page</a>: live page facts, URL Inspection status and the page's queries.</td></tr>
-      <tr><td>Anything else</td><td><a href="/docs/data">Raw rows</a> by query, page, date, country, device or search appearance, each with the previous period.</td></tr>
-    </tbody>
-  </table>
+      <section class="site-frame" aria-labelledby="related-heading">
+        <SectionHeading
+          id="related-heading"
+          title="Which docs go with the Search Console MCP?"
+          text="Setup steps for each AI client, the hosted server, the report and how the Search Console MCP servers compare."
+        />
+        <div class="grid grid-cols-1 gap-2 sm:grid-cols-2">
+          {related.map((item) => <HomeCard {...item} link={item.link ?? `${item.title} docs`} />)}
+        </div>
+      </section>
 
-  <h2>Hosted, local or self-hosted from GitHub</h2>
-  <p>
-    The open source Search Console MCP servers on GitHub, such as mcp-gsc and
-    mcp-server-gsc, run on your machine. Most ask you to create a Google Cloud
-    project, turn on the Search Console API and download an OAuth client or a
-    service account key first. Pick one of those if you want to read and
-    change every line of the server code, or need sitemap and indexing write
-    tools.
-  </p>
-  <p>
-    Pick the hosted SEO Skill server if you want Search Console in claude.ai,
-    ChatGPT or Claude on your phone, where a local server cannot run, or if
-    you would rather skip the Google Cloud step. The CLI is the middle option. It is
-    open source on GitHub and npm, runs locally, and is signed in with Google by the
-    setup prompt. The{' '}
-    <a href="/alternatives">comparison of Search Console MCP servers</a> shows
-    how each one signs in and what it costs, checked on their own pages.
-  </p>
+      <section class="site-frame" aria-labelledby="faq-heading">
+        <div class="max-w-2xl">
+          <h2 id="faq-heading" class="text-pretty text-2xl font-medium -tracking-[0.4px] text-foreground xl:text-3xl xl:-tracking-[0.6px]">
+            Search Console MCP questions
+          </h2>
+        </div>
+        <div class="mt-10">
+          <FaqAccordion items={faq} id="search-console-faq" />
+        </div>
+      </section>
 
-  <h2>Free on demand, $50 a month for the weekly audit</h2>
-  <p>
-    Every tool your agent calls on demand is free, with no usage cap. The
-    server fetches what the agent asks for and returns it. It stores your
-    linked Google accounts and any keys you save, encrypted, and the issues
-    list and business context your agent saves for a site.
-  </p>
-  <p>
-    The one paid part is the <a href="/docs/weekly-site-audit">weekly site audit</a>,
-    at $50 a month per site. It runs on our servers without you asking, with a
-    weekly crawl, up to 2,000 URL Inspection checks a day, and an alert when a
-    page drops out of Google's index. For those sites it keeps what the audit
-    needs, such as index check results and the last two crawls. Your agent can
-    start it with &quot;Add example.com to the weekly site audit&quot;, which
-    returns a Stripe Checkout link for you to open.
-  </p>
-
-  <h2>Keep your numbers past Search Console's 16 months</h2>
-  <p>
-    Search Console keeps 16 months of data, and a server that reads it live
-    sees the same 16 months. Once your agent saves a business context for a
-    site, every week it runs <code>seo_next</code> or the report, it saves
-    one point of that week's numbers, covering clicks and impressions for brand, not
-    brand and category searches, your conversion pages and up to 30 tracked
-    searches. The first point is the baseline. The points stay with your
-    account after Google drops those days, so the report's progress section
-    can compare this week with the week you started.
-  </p>
-  <p>
-    Each point holds those weekly totals, not every row Search Console had.
-    For a question about one query two years ago, only the rows Google still
-    keeps can answer it.
-  </p>
-
-  <h2>2 things Search Console data cannot tell you</h2>
-  <p>
-    Search Console hides some rare queries for privacy, so query rows never
-    add up to the site total. The reports say when a section is empty or
-    capped, rather than turning a missing row into zero.
-  </p>
-  <p>
-    The last two or three days are not final. The reports stop at the latest
-    final day (on Google's Pacific time calendar), so a comparison never reads
-    a half-counted day as a drop.
-  </p>
-
-  <h2>Questions about the Search Console MCP</h2>
-
-  <h3>Is there an official Google Search Console MCP server?</h3>
-  <p>
-    No. As of November 2026 Google publishes MCP servers for many Cloud and
-    Workspace products, but not for Search Console. Every Search Console MCP,
-    SEO Skill included, reads the public Search Console API.
-  </p>
-
-  <h3>Is the Google Search Console MCP free?</h3>
-  <p>
-    Yes for everything your agent asks on demand, including reports, page checks, URL
-    Inspection, comparisons and raw rows, with no cap. Only the weekly site
-    audit costs money, $50 a month per site.
-  </p>
-
-  <h3>Do I need a Google Cloud project or an API key?</h3>
-  <p>
-    No. You add the server URL to your client and sign in with Google. Keyword
-    and backlink research is the one part that uses a key, your own
-    DataForSEO or Ahrefs key, and it is optional.
-  </p>
-
-  <h3>Can my agent change anything in Search Console?</h3>
-  <p>
-    The Google sign-in asks for read-only access. Your agent can read
-    performance data and inspect URLs, and it cannot submit sitemaps, request
-    indexing or change a property.
-  </p>
-
-  <h3>Can I connect more than one Google account?</h3>
-  <p>
-    Yes. Add a client's or a work Google account on your{' '}
-    <a href="/account">account page</a>. Each request uses
-    the linked account that can read the site you asked about.
-  </p>
-</FeaturePage>
+      <section class="site-frame" aria-labelledby="start-heading">
+        <SectionHeading
+          id="start-heading"
+          title="Connect Search Console to your agent"
+          text="Add SEO Skill to your agent, sign in with the Google account that can see your Search Console, and ask what happened in search for your site."
+        />
+        <SetupPrompts id="search-console-setup-end" />
+      </section>
+    </div>
+  </main>
+</BaseLayout>

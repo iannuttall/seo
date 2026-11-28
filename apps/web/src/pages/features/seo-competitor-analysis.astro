@@ -8,8 +8,184 @@ import {
   UserGroupIcon,
 } from '@hugeicons/core-free-icons'
 import CodeBlock from '@/components/CodeBlock.astro'
-import FeaturePage from '@/components/FeaturePage.astro'
+import FaqAccordion from '@/components/FaqAccordion.astro'
+import HomeCard from '@/components/HomeCard.astro'
+import LandingHero from '@/components/LandingHero.astro'
+import SectionHeading from '@/components/SectionHeading.astro'
+import SetupPrompts from '@/components/SetupPrompts.astro'
+import SplitList from '@/components/SplitList.astro'
 import { researchKeyStep } from '@/content/setup-prompts'
+import BaseLayout from '@/layouts/BaseLayout.astro'
+import type { SchemaBreadcrumb } from '@/lib/schema'
+
+const title = 'SEO competitor analysis'
+const setupSteps = [researchKeyStep('research')]
+
+const breadcrumbs: SchemaBreadcrumb[] = [
+  { label: 'Home', href: '/' },
+  { label: 'Features', href: '/features' },
+  { label: title },
+]
+
+const answers = [
+  {
+    title: 'Who ranks for the searches you want',
+    text: 'The sites that appear in Google for the same searches as you.',
+  },
+  {
+    title: 'Which of their pages earn the traffic',
+    text: 'The guides, tools, comparisons and product pages that bring them search visits.',
+  },
+  {
+    title: 'Which sites link to them and not to you',
+    text: 'The link prospects that already cover your topic.',
+  },
+  {
+    title: 'Your search competitors may not be your sales rivals',
+    text: 'A software company can lose its best searches to a publisher, a forum or a tool directory, and those are the sites to study first.',
+  },
+]
+
+const plausible = [
+  {
+    title: 'Only 2 of the 10 sell website analytics',
+    text: 'Besides Google, they are MonsterInsights, a Google Analytics plugin for WordPress, and Matomo. Five are SEO tools or SEO blogs.',
+  },
+  {
+    title: 'A direct rival sits far down the list',
+    text: 'Simple Analytics, a direct rival, shares 127 keywords.',
+  },
+  {
+    title: 'One guide pulls in the SEO sites',
+    text: 'Plausible’s backlinks guide ranks for 170 keywords, including "backlinks" (4,400 US searches a month) in sixth place, and those are exactly the searches Semrush, Ahrefs and Backlinko compete for.',
+  },
+  {
+    title: 'The home page carries the business',
+    text: 'By DataForSEO’s estimate it earns 1,193 of the site’s 1,808 monthly visits from search (66%).',
+  },
+  {
+    title: 'Read the list next to your own top pages',
+    text: 'A competitor list counts shared keywords. A site that only shares one off-topic guide with you isn’t a competitor worth a strategy.',
+  },
+]
+
+const setup = [
+  {
+    title: 'Save a DataForSEO or Ahrefs key',
+    text: 'Save it under Keys on your account page, never in the chat.',
+    href: '/docs/keys',
+  },
+  {
+    title: 'The provider bills you directly',
+    text: 'Every DataForSEO result says what the request cost.',
+  },
+  {
+    title: 'Each step shows the prompt and the command',
+    text: 'The steps below give the prompt, and the seo research command your agent runs for it.',
+    href: '/docs/research',
+  },
+]
+
+const step1 = [
+  {
+    title: 'Shared keywords and average position',
+    text: 'The competitors list gives each domain’s shared keywords, its average position on them and its own keyword count.',
+  },
+  {
+    title: 'Platforms that share keywords with everyone are left out',
+    text: 'Your own site and platforms such as YouTube, Reddit and Wikipedia are dropped, and the result names each one it dropped.',
+  },
+  {
+    title: 'A quick read on any one of them',
+    text: 'A domain overview gives its estimated traffic, top pages, competitors and links in one answer.',
+    href: '/features/domain-overview',
+  },
+]
+
+const step2 = [
+  {
+    title: 'Pages ranked by estimated search traffic',
+    text: 'With how many keywords each page ranks for in first place, second or third, and fourth to tenth.',
+  },
+  {
+    title: 'Read one section',
+    code: 'example.org/blog/',
+    text: 'Add a trailing slash to the target to read one section of a site.',
+  },
+  {
+    title: 'Page types show what Google rewards',
+    text: 'The page types tell you what Google rewards in your market better than any keyword list.',
+  },
+]
+
+const step3 = [
+  {
+    title: 'A full URL reads one page',
+    text: 'Give the agent the page address and it lists what that page ranks for.',
+  },
+  {
+    title: 'The long tail of one strong page',
+    text: 'Each row has the keyword, its position, its monthly searches and its difficulty, so you can see the long tail a single strong page collects.',
+  },
+]
+
+const step4 = [
+  {
+    title: 'Who ranks today for up to 5 keywords',
+    text: 'The SERP lists each ranking page with its domain’s authority, and the sites an AI Overview cites.',
+  },
+  {
+    title: 'A weak first page beats a low difficulty score',
+    text: 'A first page full of sites with a lower Domain Rating than yours is a better target than a low difficulty score.',
+  },
+  {
+    title: 'One page or two',
+    text: 'SERP overlap counts how many top 10 pages and sites each pair of searches shares.',
+  },
+  {
+    title: 'Compare sites with DataForSEO',
+    text: 'DataForSEO often returns Google redirect links without the exact page, so compare sites with it, or use Ahrefs when you need pages.',
+  },
+]
+
+const step5 = [
+  {
+    title: 'Sites that link to two or more competitors',
+    text: 'Link gap reads each site’s top 1,000 referring domains and lists the sites that link to at least two of your competitors and not to you, highest Domain Rating first.',
+  },
+  {
+    title: 'Sites that link to everyone are left out',
+    text: 'URL shorteners, link lists and site-stats directories link to almost everyone, so they are left out and named.',
+  },
+  {
+    title: 'What earns a competitor its links',
+    code: 'pages_by_backlinks',
+    text: 'Ask for pages by backlinks, and for one site’s full list ask for backlinks.',
+  },
+  {
+    title: 'Best between sites of a similar size',
+    text: 'When one site has more than 1,000 referring domains, the list stops where the read stopped and does not guess below it.',
+  },
+]
+
+const limits = [
+  {
+    title: 'Every number is a provider estimate',
+    text: 'It comes from DataForSEO’s or Ahrefs’ own index, and the two providers count keywords and traffic differently, so compare competitors within one provider.',
+  },
+  {
+    title: 'Shared keywords show the same searches',
+    text: 'Two sites appear for the same searches. They may still sell different things.',
+  },
+  {
+    title: 'An empty list means no provider data',
+    text: 'The provider has nothing for that site in its database.',
+  },
+  {
+    title: 'Your Search Console is the number to trust',
+    text: 'For what your own pages actually get, and your agent keeps it apart from the estimates.',
+  },
+]
 
 const related = [
   { title: 'Keyword gap analysis', text: 'The searches your competitors rank for and you don’t, compared with your own Search Console.', href: '/features/keyword-gap', icon: GitCompareIcon, link: 'Keyword gap analysis' },
@@ -19,172 +195,240 @@ const related = [
   { title: 'Backlink checker', text: 'The sites that link to any domain, in your browser.', href: '/tools/backlink-checker', icon: Link04Icon, link: 'Free tool' },
   { title: 'API keys', text: 'Add a DataForSEO or Ahrefs key to the hosted MCP or the CLI.', href: '/docs/keys', icon: Key01Icon },
 ]
+
+const faq = [
+  {
+    question: 'What is an SEO competitor analysis?',
+    answer:
+      'It compares your site with the sites that rank for the same Google searches. It answers three questions: who ranks for the searches you want, which of their pages earn the traffic, and which sites link to them and not to you.',
+  },
+  {
+    question: 'Are my SEO competitors the same as my business competitors?',
+    answer:
+      'Often they are different. A software company can lose its best searches to a publisher, a forum or a tool directory. For plausible.io, five of the ten closest search competitors were SEO tools or SEO blogs.',
+  },
+  {
+    question: 'Do I need a DataForSEO or Ahrefs key?',
+    answer:
+      'Yes. Each step runs from your own key, saved under Keys on your account page. The provider bills you directly, and every DataForSEO result says what the request cost.',
+  },
+  {
+    question: 'Why are YouTube, Reddit and Wikipedia missing from my competitors?',
+    answer:
+      'They share keywords with almost every site, so the competitors list leaves them out, along with your own site, and names each one it dropped.',
+  },
+  {
+    question: 'How accurate is competitor traffic data?',
+    answer:
+      'It is a provider estimate, and DataForSEO and Ahrefs count keywords and traffic differently, so compare competitors within one provider. Your own Search Console is the number to trust for your own pages.',
+  },
+]
 ---
 
-<FeaturePage
-  title="SEO competitor analysis"
-  metaTitle="SEO competitor analysis tool for AI agents"
+<BaseLayout
+  title="SEO competitor analysis tool for AI agents"
   description="Find your real SEO competitors, the pages that earn their traffic and the sites that link to them and not you, from your own DataForSEO or Ahrefs key."
-  path="/features/seo-competitor-analysis"
-  setupSteps={[researchKeyStep('research')]}
-  lead="Find the sites that compete with you in Google, the pages that earn their traffic and the sites that link to them and not to you. Your agent runs each step from your own DataForSEO or Ahrefs key and shows the numbers it used."
-  {related}
-  relatedHeading="Read more"
+  canonicalPath="/features/seo-competitor-analysis"
+  {breadcrumbs}
+  framed={false}
 >
-  <h2>What an SEO competitor analysis answers</h2>
-  <p>
-    An SEO competitor analysis compares your site with the sites that rank
-    for the same Google searches. It answers three questions: who ranks for
-    the searches you want, which of their pages earn the traffic, and which
-    sites link to them and not to you.
-  </p>
-  <p>
-    Your SEO competitors are often not the companies you sell against. A
-    software company can lose its best searches to a publisher, a forum or a
-    tool directory, and those are the sites to study first.
-  </p>
+  <main data-agent-content>
+    <LandingHero
+      {title}
+      lead="Find the sites that compete with you in Google, the pages that earn their traffic and the sites that link to them and not to you. Your agent runs each step from your own DataForSEO or Ahrefs key and shows the numbers it used."
+      setupId="seo-competitor-analysis-setup"
+      {setupSteps}
+      author
+    />
 
-  <h2>Plausible's 10 closest search competitors include 5 SEO sites</h2>
-  <p>
-    We ran this page's first step on plausible.io, the privacy-friendly web
-    analytics product, with DataForSEO for the US on 11 November 2026.
-    DataForSEO counted 15,475 domains that share at least one ranking keyword
-    with plausible.io. These were the 10 with the most shared keywords, with
-    each site's Domain Rating by{' '}
-    <a href="https://ahrefs.com" target="_blank" rel="noreferrer">Ahrefs</a>:
-  </p>
-  <table>
-    <thead><tr><th>Domain</th><th>Shared keywords (DR)</th></tr></thead>
-    <tbody>
-      <tr><td>google.com</td><td>653 (DR 100)</td></tr>
-      <tr><td>semrush.com</td><td>590 (DR 92)</td></tr>
-      <tr><td>medium.com</td><td>535 (DR 94)</td></tr>
-      <tr><td>backlinko.com</td><td>481 (DR 90)</td></tr>
-      <tr><td>hubspot.com</td><td>474 (DR 93)</td></tr>
-      <tr><td>ahrefs.com</td><td>436 (DR 91)</td></tr>
-      <tr><td>neilpatel.com</td><td>436 (DR 91)</td></tr>
-      <tr><td>monsterinsights.com</td><td>423 (DR 83)</td></tr>
-      <tr><td>seranking.com</td><td>386 (DR 86)</td></tr>
-      <tr><td>matomo.org</td><td>369 (DR 92)</td></tr>
-    </tbody>
-  </table>
-  <p>
-    Besides Google, only 2 of the 10 sell website analytics. They are MonsterInsights,
-    a Google Analytics plugin for WordPress, and Matomo. Five are SEO tools or SEO
-    blogs. Simple Analytics, a direct rival, shares 127 keywords and sits
-    far down the list.
-  </p>
-  <p>
-    The top pages for plausible.io show the likely reason. Its backlinks
-    guide ranks for 170 keywords, including "backlinks" (4,400 US searches a
-    month) in sixth place, and those are exactly the searches Semrush, Ahrefs
-    and Backlinko compete for. The home page carries the business. By
-    DataForSEO's estimate it earns 1,193 of the site's 1,808 monthly visits
-    from search (66%).
-  </p>
-  <p>
-    The lesson works for any site. A competitor list counts shared keywords,
-    so read it next to your own top pages. A site that only shares one
-    off-topic guide with you is not a competitor worth a strategy.
-  </p>
+    <div class="space-y-24 py-24 sm:space-y-32 sm:py-32">
+      <SplitList
+        id="answers-heading"
+        title="What does an SEO competitor analysis answer?"
+        text="Who you compete with in Google, and how they win. It compares your site with the sites that rank for the same Google searches and answers three questions."
+        items={answers}
+      />
 
-  <h2>Set up competitor analysis in your agent</h2>
-  <p>
-    Copy the prompt for your agent at the top of this page. It sets up SEO
-    Skill and asks you to save a <a href="/docs/keys">DataForSEO or Ahrefs key</a> under Keys on your account page,
-    never in the chat. The provider bills you directly, and every DataForSEO result says what the request cost. Each step below shows the prompt, and the <a href="/docs/research">seo research</a> command your agent runs for it.
-  </p>
+      <section class="site-frame" aria-labelledby="example-heading">
+        <SectionHeading
+          id="example-heading"
+          title="Who are Plausible's closest search competitors?"
+          text="Mostly SEO sites. Five of the 10 domains that share the most ranking keywords with plausible.io are SEO tools or SEO blogs."
+        />
+        <p class="mb-6 max-w-2xl text-base leading-7 text-foreground-muted">
+          We ran this page's first step on plausible.io, the privacy-friendly
+          web analytics product, with DataForSEO for the US. DataForSEO
+          counted 15,475 domains that share at least one ranking keyword with
+          plausible.io. These were the 10 with the most shared keywords, with
+          each site's Domain Rating by{' '}
+          <a class="text-foreground underline underline-offset-4" href="https://ahrefs.com" target="_blank" rel="noreferrer">Ahrefs</a>.
+        </p>
+        <div class="docs-prose max-w-4xl">
+          <table>
+            <thead><tr><th>Domain</th><th>Shared keywords (DR)</th></tr></thead>
+            <tbody>
+              <tr><td>google.com</td><td>653 (DR 100)</td></tr>
+              <tr><td>semrush.com</td><td>590 (DR 92)</td></tr>
+              <tr><td>medium.com</td><td>535 (DR 94)</td></tr>
+              <tr><td>backlinko.com</td><td>481 (DR 90)</td></tr>
+              <tr><td>hubspot.com</td><td>474 (DR 93)</td></tr>
+              <tr><td>ahrefs.com</td><td>436 (DR 91)</td></tr>
+              <tr><td>neilpatel.com</td><td>436 (DR 91)</td></tr>
+              <tr><td>monsterinsights.com</td><td>423 (DR 83)</td></tr>
+              <tr><td>seranking.com</td><td>386 (DR 86)</td></tr>
+              <tr><td>matomo.org</td><td>369 (DR 92)</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </section>
 
-  <h2>Run an SEO competitor analysis in 5 steps</h2>
+      <SplitList
+        id="lesson-heading"
+        title="What does the Plausible list teach about any site?"
+        text="That a competitor list counts shared keywords, so you read it next to your own top pages. The top pages for plausible.io show why SEO sites crowd its list."
+        items={plausible}
+      />
 
-  <h3>1. Find your SEO competitors</h3>
-  <CodeBlock prompt value={`Who are the SEO competitors of example.com in the US? Group them into direct rivals, publishers and tools.`} wrap />
-  <CodeBlock value={`seo research competitors --target example.com --country us`} wrap />
-  <p>
-    The competitors list gives each domain's shared keywords, its average
-    position on them and its own keyword count. Your own site and platforms
-    that share keywords with almost everyone, such as YouTube, Reddit and
-    Wikipedia, are left out, and the result names each one it dropped. For
-    a quick read on any one of them, ask for a{' '}
-    <a href="/features/domain-overview">domain overview</a>, which gives its estimated
-    traffic, top pages, competitors and links in one answer.
-  </p>
+      <SplitList
+        id="setup-heading"
+        title="What do I need for competitor analysis in my agent?"
+        text="SEO Skill and a DataForSEO or Ahrefs key. Setup adds SEO Skill to your agent and asks you to save the key on your account page."
+        items={setup}
+      />
 
-  <h3>2. See which pages earn their traffic</h3>
-  <CodeBlock prompt value={`Show the top pages of example.org and say what each one is: guide, tool, comparison or product page.`} wrap />
-  <CodeBlock value={`seo research top_pages --target example.org --country us`} wrap />
-  <p>
-    Top pages rank a site's pages by estimated search traffic, with how many
-    keywords each page ranks for in first place, second or third, and fourth
-    to tenth. Add a trailing slash to read one section, such as{' '}
-    <code>example.org/blog/</code>. The page types tell you what Google
-    rewards in your market better than any keyword list.
-  </p>
+      <SplitList
+        id="step-1-heading"
+        title="Step 1: who are my SEO competitors?"
+        text="The domains that rank for the same keywords as you. Ask your agent to list them and group them."
+        items={step1}
+      >
+        <div class="mt-6">
+          <CodeBlock label="Ask your agent" prompt value="Who are the SEO competitors of example.com in the US? Group them into direct rivals, publishers and tools." wrap />
+          <CodeBlock label="Or run it in a terminal" value="seo research competitors --target example.com --country us" wrap />
+        </div>
+      </SplitList>
 
-  <h3>3. Read what one competitor page ranks for</h3>
-  <CodeBlock prompt value={`What does https://example.org/blog/pricing-guide rank for, and which of those searches could one of my pages win?`} wrap />
-  <CodeBlock value={`seo research ranked_keywords --target https://example.org/blog/pricing-guide`} wrap />
-  <p>
-    A full URL reads that one page. Each row has the keyword, its position,
-    its monthly searches and its difficulty, so you can see the long tail a
-    single strong page collects.
-  </p>
+      <SplitList
+        id="step-2-heading"
+        title="Step 2: which pages earn their traffic?"
+        text="Top pages show you. They rank a competitor's pages by estimated search traffic."
+        items={step2}
+      >
+        <div class="mt-6">
+          <CodeBlock label="Ask your agent" prompt value="Show the top pages of example.org and say what each one is: guide, tool, comparison or product page." wrap />
+          <CodeBlock label="Or run it in a terminal" value="seo research top_pages --target example.org --country us" wrap />
+        </div>
+      </SplitList>
 
-  <h3>4. Check who ranks for the searches you want</h3>
-  <CodeBlock prompt value={`Show the top 10 for "invoice software for freelancers" and "freelance invoice app" with each site's Domain Rating, and say whether they need one page or two.`} wrap />
-  <CodeBlock value={`seo research serp --keywords "invoice software for freelancers,freelance invoice app" --depth 10
-seo research serp_overlap --keywords "invoice software for freelancers,freelance invoice app"`} />
-  <p>
-    The SERP lists who ranks today for up to 5 keywords, each with its
-    domain's authority, and the sites an AI Overview cites. A first page full
-    of sites with a lower Domain Rating than yours is a better target than a
-    low difficulty score. SERP overlap counts how many top 10 pages and sites
-    each pair of searches shares. DataForSEO often returns Google redirect
-    links without the exact page, so compare sites with it, or use Ahrefs
-    when you need pages.
-  </p>
+      <SplitList
+        id="step-3-heading"
+        title="Step 3: what does one competitor page rank for?"
+        text="Ranked keywords for that page's full URL show it. Each row has the keyword, its position, its monthly searches and its difficulty."
+        items={step3}
+      >
+        <div class="mt-6">
+          <CodeBlock label="Ask your agent" prompt value="What does https://example.org/blog/pricing-guide rank for, and which of those searches could one of my pages win?" wrap />
+          <CodeBlock label="Or run it in a terminal" value="seo research ranked_keywords --target https://example.org/blog/pricing-guide" wrap />
+        </div>
+      </SplitList>
 
-  <h3>5. Find the sites that link to them and not you</h3>
-  <CodeBlock prompt value={`Run a link gap for example.com against example.org, example.net and competitor.example. Which sites link to two or more of them and not to me?`} wrap />
-  <CodeBlock value={`seo research link_gap --target example.com --competitors example.org,example.net,competitor.example`} wrap />
-  <p>
-    Link gap reads each site's top 1,000 referring domains and lists the
-    sites that link to at least two of your competitors and not to you,
-    highest Domain Rating first. URL shorteners, link lists and site-stats
-    directories link to almost everyone, so they are left out and named. To
-    see what earns a competitor its links, ask for{' '}
-    <code>pages_by_backlinks</code>, and for one site's full list ask for{' '}
-    <code>backlinks</code>.
-  </p>
-  <p>
-    Link gap works best between sites of a similar size. When one site has
-    more than 1,000 referring domains, the list stops where the read stopped
-    rather than guess below it. The{' '}
-    <a href="/features/backlink-gap">backlink gap analysis</a> page has a
-    worked run and how to read the result.
-  </p>
+      <SplitList
+        id="step-4-heading"
+        title="Step 4: who ranks for the searches I want?"
+        text="The SERP shows who ranks today for up to 5 keywords. SERP overlap then says whether they need one page or two."
+        items={step4}
+      >
+        <div class="mt-6">
+          <CodeBlock label="Ask your agent" prompt value={`Show the top 10 for "invoice software for freelancers" and "freelance invoice app" with each site's Domain Rating, and say whether they need one page or two.`} wrap />
+          <CodeBlock
+            label="Or run it in a terminal"
+            value={`seo research serp --keywords "invoice software for freelancers,freelance invoice app" --depth 10
+seo research serp_overlap --keywords "invoice software for freelancers,freelance invoice app"`}
+          />
+        </div>
+      </SplitList>
 
-  <h2>Compare their keywords with yours in a keyword gap</h2>
-  <p>
-    Steps 1 to 3 show what competitors rank for. The next question is which
-    of those searches you are missing. The{' '}
-    <a href="/features/keyword-gap">keyword gap analysis</a> page shows how
-    your agent compares each competitor's ranked keywords with your own
-    Search Console queries, with a worked example. For a quick look at one
-    competitor's keywords without an account, use the free{' '}
-    <a href="/tools/competitor-keyword-research">competitor keyword research</a>{' '}
-    tool.
-  </p>
+      <SplitList
+        id="step-5-heading"
+        title="Step 5: which sites link to them and not to me?"
+        text="A link gap lists them. It works best between sites of a similar size."
+        items={step5}
+      >
+        <div class="mt-6">
+          <CodeBlock label="Ask your agent" prompt value="Run a link gap for example.com against example.org, example.net and competitor.example. Which sites link to two or more of them and not to me?" wrap />
+          <CodeBlock label="Or run it in a terminal" value="seo research link_gap --target example.com --competitors example.org,example.net,competitor.example" wrap />
+        </div>
+        <p class="mt-6 text-base leading-7 text-foreground-muted">
+          The <a class="text-foreground underline underline-offset-4" href="/features/backlink-gap">backlink gap analysis</a> page has a
+          worked run and how to read the result.
+        </p>
+      </SplitList>
 
-  <h2>What competitor data can and cannot show</h2>
-  <p>
-    Every number on this page is a provider estimate from DataForSEO's or
-    Ahrefs' own index, and the two providers count keywords and traffic
-    differently, so compare competitors within one provider. Shared keywords
-    say two sites appear for the same searches, not that they sell the same
-    thing. An empty list means the provider has nothing for that site in its
-    database. When you want to know what your own pages actually get, your
-    Search Console is the number to trust, and your agent keeps it apart from
-    the estimates.
-  </p>
-</FeaturePage>
+      <section class="site-frame grid gap-8 sm:grid-cols-[1fr_1.15fr] sm:items-start" aria-labelledby="keyword-gap-heading">
+        <div class="min-w-0 sm:sticky sm:top-24">
+          <h2 id="keyword-gap-heading" class="text-pretty text-2xl font-medium -tracking-[0.4px] text-foreground xl:text-3xl xl:-tracking-[0.6px]">
+            Which of their searches am I missing?
+          </h2>
+          <p class="mt-4 text-base leading-7 text-foreground-muted">
+            A keyword gap shows you. Steps 1 to 3 show what competitors rank
+            for, and the next question is which of those searches you are
+            missing.
+          </p>
+        </div>
+        <div class="rounded-lg bg-muted p-6 text-base leading-7 text-foreground-muted">
+          <p>
+            The{' '}
+            <a class="text-foreground underline underline-offset-4" href="/features/keyword-gap">keyword gap analysis</a>{' '}
+            page shows how your agent compares each competitor's ranked
+            keywords with your own Search Console queries, with a worked
+            example.
+          </p>
+          <p class="mt-4">
+            For a quick look at one competitor's keywords without an account,
+            use the free{' '}
+            <a class="text-foreground underline underline-offset-4" href="/tools/competitor-keyword-research">competitor keyword research</a>{' '}
+            tool.
+          </p>
+        </div>
+      </section>
+
+      <SplitList
+        id="limits-heading"
+        title="What can competitor data show, and what can't it?"
+        text="It shows who appears for the same searches and roughly how much traffic they get. Every number is an estimate from the provider's own index."
+        items={limits}
+      />
+
+      <section class="site-frame" aria-labelledby="related-heading">
+        <SectionHeading
+          id="related-heading"
+          title="Which tools and docs go with competitor analysis?"
+          text="The keyword and backlink gaps that come next, the research docs and key setup, and two free tools for any domain."
+        />
+        <div class="grid grid-cols-1 gap-2 sm:grid-cols-2">
+          {related.map((item) => <HomeCard {...item} link={item.link ?? `${item.title} docs`} />)}
+        </div>
+      </section>
+
+      <section class="site-frame" aria-labelledby="faq-heading">
+        <div class="max-w-2xl">
+          <h2 id="faq-heading" class="text-pretty text-2xl font-medium -tracking-[0.4px] text-foreground xl:text-3xl xl:-tracking-[0.6px]">
+            SEO competitor analysis questions
+          </h2>
+        </div>
+        <div class="mt-10">
+          <FaqAccordion items={faq} id="seo-competitor-analysis-faq" />
+        </div>
+      </section>
+
+      <section class="site-frame" aria-labelledby="start-heading">
+        <SectionHeading
+          id="start-heading"
+          title="Find your real search competitors"
+          text="Add SEO Skill to your agent, save a DataForSEO or Ahrefs key on your account page, and ask who your SEO competitors are."
+        />
+        <SetupPrompts id="seo-competitor-analysis-setup-end" extraSteps={setupSteps} />
+      </section>
+    </div>
+  </main>
+</BaseLayout>

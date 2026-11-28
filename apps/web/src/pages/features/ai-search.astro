@@ -5,7 +5,83 @@ import {
   ChartLineData01Icon,
   Route01Icon,
 } from '@hugeicons/core-free-icons'
-import FeaturePage from '@/components/FeaturePage.astro'
+import CodeBlock from '@/components/CodeBlock.astro'
+import FaqAccordion from '@/components/FaqAccordion.astro'
+import HomeCard from '@/components/HomeCard.astro'
+import LandingHero from '@/components/LandingHero.astro'
+import SectionHeading from '@/components/SectionHeading.astro'
+import SetupPrompts from '@/components/SetupPrompts.astro'
+import SplitList from '@/components/SplitList.astro'
+import BaseLayout from '@/layouts/BaseLayout.astro'
+import type { SchemaBreadcrumb } from '@/lib/schema'
+
+const breadcrumbs: SchemaBreadcrumb[] = [
+  { label: 'Home', href: '/' },
+  { label: 'Features', href: '/features' },
+  { label: 'AI search tracking from your own data' },
+]
+
+const questions = [
+  { title: 'Bare replies', text: 'Such as "yes" or "tell me more".' },
+  { title: 'Follow-ups', text: 'Such as "what about smith" or "is it common".' },
+  { title: 'Long chat-style questions', text: 'Long, chat-style questions in full sentences.' },
+  { title: 'Agent searches', text: 'Such as a question with site: added, or a whole prompt.' },
+  {
+    title: 'Grouped, with the page Google picked',
+    text: 'Your agent finds these queries, groups the many rewordings of one question, and shows the page Google picked for each, with impressions, clicks and position. They are real questions from your own data instead of a list of prompts someone guessed.',
+  },
+]
+
+const citations = [
+  {
+    title: 'Cited, named or neither',
+    text: 'For every answer you see whether it cited a page on your site, named you without a link, or did neither.',
+  },
+  { title: 'About 7 cents a check', text: 'A full check costs about 7 cents of DataForSEO credit.' },
+  {
+    title: 'Only questions from your own Search Console',
+    text: 'It only asks questions from your own Search Console, so you are not checking prompts nobody types.',
+  },
+  {
+    title: 'Each answer is one sample',
+    text: 'AI answers change from day to day.',
+  },
+]
+
+const visits = [
+  {
+    title: 'Visits by source',
+    text: 'The visits that ChatGPT, Perplexity, Claude, Gemini and Copilot send you, by source, against the previous period.',
+  },
+  { title: 'The pages they land on', text: 'Each AI source comes with the pages its visitors land on.' },
+  {
+    title: 'Track AI referral traffic in Google Analytics',
+    text: 'To give those visits a line of their own in reports, see how to track AI referral traffic in Google Analytics.',
+    href: '/features/google-analytics#ai-referral-traffic',
+  },
+]
+
+const crawlers = [
+  { title: 'AI bots your robots.txt allows', text: 'Which AI search and training bots your robots.txt allows.' },
+  { title: 'Markdown copies of your pages', text: 'Whether your pages have Markdown copies.' },
+  { title: 'Your llms.txt and its links', text: 'Whether your llms.txt and its links work.' },
+  { title: 'Run it with the SEO audit tool', text: 'The crawl is part of the SEO audit tool.', href: '/features/seo-audit' },
+]
+
+const signal = [
+  {
+    title: 'Questions are found by their shape',
+    text: 'Search Console does not label AI Mode, so the questions are found by their shape, and some will have been typed by people.',
+  },
+  {
+    title: 'The counts are a minimum',
+    text: 'Search Console leaves out rare queries, so the counts are a minimum.',
+  },
+  {
+    title: 'Visits need a referrer',
+    text: 'Visits only count when the AI app passes a referrer.',
+  },
+]
 
 const related = [
   { title: 'seo report', text: 'The ai-queries section and visits from AI assistants in the overview.', href: '/docs/report', icon: Analytics01Icon },
@@ -16,73 +92,141 @@ const related = [
   { title: 'AI Overview checker', text: 'Whether Google shows an AI Overview for a keyword, and the pages it cites.', href: '/tools/ai-overview-checker', icon: AiChat02Icon, link: 'Free tool' },
   { title: 'Query fan-out tool', text: 'The searches ChatGPT runs behind a prompt, with the pages it cites.', href: '/tools/query-fan-out-tool', icon: Route01Icon, link: 'Free tool' },
 ]
+
+const faq = [
+  {
+    question: 'Where do the AI questions come from?',
+    answer:
+      "From your own Search Console. When people use Google's AI Mode, and when AI assistants search the web for them, their questions show up there. Your agent finds them by their shape and groups the rewordings of each question.",
+  },
+  {
+    question: 'Which AI answers does the citation check ask?',
+    answer:
+      'With a DataForSEO key, your agent takes the top 10 of your AI questions and asks each one on ChatGPT search, Google AI Mode and Google AI Overviews. A full check costs about 7 cents of DataForSEO credit.',
+  },
+  {
+    question: 'Which AI assistants show up in visits?',
+    answer:
+      'From Google Analytics, your agent sees the visits ChatGPT, Perplexity, Claude, Gemini and Copilot send you, by source, and the pages they land on. Visits only count when the AI app passes a referrer.',
+  },
+  {
+    question: 'Does Search Console label AI Mode searches?',
+    answer:
+      'No. The questions are found by their shape, and some will have been typed by people. Search Console also leaves out rare queries, so read the counts as a minimum.',
+  },
+  {
+    question: 'Can it see what AI crawlers can read?',
+    answer:
+      'Yes. A crawl of your site shows which AI search and training bots your robots.txt allows, whether your pages have Markdown copies, and whether your llms.txt and its links work.',
+  },
+]
 ---
 
-<FeaturePage
+<BaseLayout
   title="AI search tracking from your own data"
-  description="See how AI search reaches your site: the questions people ask AI that show in Search Console, whether AI answers cite you for them, visits from ChatGPT and Perplexity, and what AI crawlers can read."
-  path="/features/ai-search"
-  lead="See the questions people ask AI about your topic, the visits AI assistants send you, and what AI crawlers can read, all from your own Search Console, analytics and site."
-  {related}
+  description="See the questions people ask AI in your Search Console, whether AI answers cite you, visits from ChatGPT and Perplexity, and what AI crawlers can read."
+  canonicalPath="/features/ai-search"
+  {breadcrumbs}
+  framed={false}
 >
-  <h2>The questions people ask AI</h2>
-  <p>
-    When people use Google's AI Mode, and when AI assistants search the web
-    for them, their questions show up in your Search Console. They look
-    different from normal searches:
-  </p>
-  <ul>
-    <li>Bare replies, such as "yes" or "tell me more".</li>
-    <li>Follow-ups, such as "what about smith" or "is it common".</li>
-    <li>Long, chat-style questions in full sentences.</li>
-    <li>Agent searches, such as a question with <code>site:</code> added, or a whole prompt.</li>
-  </ul>
-  <p>
-    Your agent finds these queries, groups the many rewordings of one
-    question, and shows the page Google picked for each, with impressions,
-    clicks and position. These are real questions from your own data, not a
-    list of prompts someone guessed.
-  </p>
+  <main data-agent-content>
+    <LandingHero
+      title="AI search tracking from your own data"
+      lead="See the questions people ask AI about your topic, the visits AI assistants send you, and what AI crawlers can read, all from your own Search Console, analytics and site."
+      setupId="ai-search-setup"
+      author
+    />
 
-  <h2>Whether AI answers cite you</h2>
-  <p>
-    With a DataForSEO key, your agent can take the top 10 of those questions
-    and ask each one on ChatGPT search, Google AI Mode and Google AI
-    Overviews. For every answer you see whether it cited a page on your site,
-    named you without a link, or did neither. A full check costs about 7
-    cents of DataForSEO credit. See <a href="/docs/research">seo research</a>.
-  </p>
-  <p>
-    It only asks questions from your own Search Console, so you are not
-    checking prompts nobody types. Each answer is one sample, and AI answers
-    change from day to day. The{' '}
-    <a href="/features/ai-visibility-checker">AI visibility checker</a> page
-    shows a real check and how to ask your own questions.
-  </p>
+    <div class="space-y-24 py-24 sm:space-y-32 sm:py-32">
+      <SplitList
+        id="questions-heading"
+        title="Which questions do people ask AI about my topic?"
+        text="Your Search Console shows them. When people use Google's AI Mode, and when AI assistants search the web for them, their questions show up there, and they look different from normal searches."
+        items={questions}
+      >
+        <div class="mt-6">
+          <CodeBlock
+            label="Ask your agent"
+            prompt
+            value="Show the questions people ask AI that appear in example.com's Search Console, grouped by question, with the page Google picked for each."
+            wrap
+          />
+        </div>
+      </SplitList>
 
-  <h2>Visits from AI assistants</h2>
-  <p>
-    From Google Analytics, your agent sees the visits that ChatGPT,
-    Perplexity, Claude, Gemini and Copilot send you, by source, and the pages
-    they land on, against the previous period. To give those visits a line
-    of their own in reports, see how to{' '}
-    <a href="/features/google-analytics#ai-referral-traffic">track
-    AI referral traffic in Google Analytics</a>.
-  </p>
+      <SplitList
+        id="citations-heading"
+        title="Do AI answers cite my site?"
+        text="Your agent can check with a DataForSEO key. It takes the top 10 of those questions and asks each one on ChatGPT search, Google AI Mode and Google AI Overviews."
+        items={citations}
+      >
+        <p class="mt-4 text-base leading-7 text-foreground-muted">
+          See{' '}
+          <a class="text-foreground underline underline-offset-4" href="/docs/research">seo research</a>. The{' '}
+          <a class="text-foreground underline underline-offset-4" href="/features/ai-visibility-checker">AI visibility checker</a>{' '}
+          page shows a real check and how to ask your own questions.
+        </p>
+        <div class="mt-6">
+          <CodeBlock
+            label="Ask your agent"
+            prompt
+            value="Check whether ChatGPT search, Google AI Mode and Google AI Overviews cite example.com for its top 10 AI questions from Search Console."
+            wrap
+          />
+        </div>
+      </SplitList>
 
-  <h2>What AI crawlers can read</h2>
-  <p>
-    A crawl of your site shows which AI search and training bots your
-    robots.txt allows, whether your pages have Markdown copies, and whether
-    your llms.txt and its links work. See the <a href="/features/seo-audit">SEO
-    audit tool</a>.
-  </p>
+      <SplitList
+        id="visits-heading"
+        title="How many visits do AI assistants send me?"
+        text="Your agent reads them from Google Analytics, by source and landing page, against the previous period."
+        items={visits}
+      />
 
-  <h2>Read it as a signal</h2>
-  <p>
-    Search Console does not label AI Mode, so the questions are found by
-    their shape, and some will have been typed by people. Search Console also
-    leaves out rare queries, so the counts are a minimum. Visits only count
-    when the AI app passes a referrer.
-  </p>
-</FeaturePage>
+      <SplitList
+        id="crawlers-heading"
+        title="What can AI crawlers read on my site?"
+        text="A crawl of your site shows what AI crawlers are allowed to read and what they find there."
+        items={crawlers}
+      />
+
+      <SplitList
+        id="signal-heading"
+        title="How should I read AI search data?"
+        text="Read it as a signal. The questions, counts and visits each leave some AI traffic out."
+        items={signal}
+      />
+
+      <section class="site-frame" aria-labelledby="related-heading">
+        <SectionHeading
+          id="related-heading"
+          title="Which tools and docs go with AI search tracking?"
+          text="The reports behind each part of this page, and two free tools for AI answers."
+        />
+        <div class="grid grid-cols-1 gap-2 sm:grid-cols-2">
+          {related.map((item) => <HomeCard {...item} link={item.link ?? `${item.title} docs`} />)}
+        </div>
+      </section>
+
+      <section class="site-frame" aria-labelledby="faq-heading">
+        <div class="max-w-2xl">
+          <h2 id="faq-heading" class="text-pretty text-2xl font-medium -tracking-[0.4px] text-foreground xl:text-3xl xl:-tracking-[0.6px]">
+            AI search tracking questions
+          </h2>
+        </div>
+        <div class="mt-10">
+          <FaqAccordion items={faq} id="ai-search-faq" />
+        </div>
+      </section>
+
+      <section class="site-frame" aria-labelledby="start-heading">
+        <SectionHeading
+          id="start-heading"
+          title="Track AI search for your site"
+          text="Add SEO Skill to your agent, sign in with Google, and ask for the questions people ask AI in your Search Console."
+        />
+        <SetupPrompts id="ai-search-setup-end" />
+      </section>
+    </div>
+  </main>
+</BaseLayout>

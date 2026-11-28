@@ -1,10 +1,8 @@
 import {
   AiChat02Icon,
   AiSearch02Icon,
-  Alert02Icon,
   Analytics01Icon,
   ChartLineData01Icon,
-  Clock01Icon,
   ComputerTerminal01Icon,
   DashboardSquare01Icon,
   DatabaseIcon,
@@ -129,18 +127,6 @@ export const features = [
     title: 'Google index checker',
     text: "Check which of your pages Google has indexed, with Google's own reason for the rest.",
     icon: FileSearchIcon,
-  },
-  {
-    path: '/features/crawled-currently-not-indexed',
-    title: 'Crawled, currently not indexed',
-    text: 'Every page Google crawled and left out of its index, each checked live, so you can tell the ones to fix from the ones to leave.',
-    icon: Alert02Icon,
-  },
-  {
-    path: '/features/discovered-currently-not-indexed',
-    title: 'Discovered, currently not indexed',
-    text: 'Every page Google knows about but has not crawled, and whether the page, your server or your links hold it up.',
-    icon: Clock01Icon,
   },
   {
     path: '/features/website-not-showing-up-on-google',

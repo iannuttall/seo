@@ -1,0 +1,258 @@
+---
+import {
+  Alert02Icon,
+  Clock01Icon,
+  FileSearchIcon,
+  Link01Icon,
+  Notification01Icon,
+  Search01Icon,
+} from '@hugeicons/core-free-icons'
+import CodeBlock from '@/components/CodeBlock.astro'
+import FaqAccordion from '@/components/FaqAccordion.astro'
+import HomeCard from '@/components/HomeCard.astro'
+import LandingHero from '@/components/LandingHero.astro'
+import SectionHeading from '@/components/SectionHeading.astro'
+import SetupPrompts from '@/components/SetupPrompts.astro'
+import SplitList from '@/components/SplitList.astro'
+import StatusGuides from '@/components/StatusGuides.astro'
+import BaseLayout from '@/layouts/BaseLayout.astro'
+import type { SchemaBreadcrumb } from '@/lib/schema'
+
+const breadcrumbs: SchemaBreadcrumb[] = [
+  { label: 'Home', href: '/' },
+  { label: 'Guides', href: '/guides' },
+  { label: 'Crawled, currently not indexed' },
+]
+
+const meaning = [
+  { title: 'Google fetched the page', text: 'Crawled, currently not indexed is a reason in Search Console\u2019s Page indexing report. Google fetched the page and chose not to add it to its index.' },
+  { title: 'Not always a problem', text: 'Google\u2019s Page indexing report help says Google does not index every page on the web, so this reason "doesn\u2019t necessarily indicate an issue that needs attention".', href: 'https://support.google.com/webmasters/answer/7440203' },
+  { title: 'No further detail from Google', text: 'Google gives no more detail, in the report or in URL Inspection.' },
+  { title: 'The useful work', text: 'Find which affected pages you actually want in Google, then read each one for something Google would skip.' },
+]
+
+const finding = [
+  { title: 'Search Console shows a sample', text: 'Its report shows up to 1,000 example URLs for each reason, and not necessarily all of them.' },
+  { title: 'SEO Skill checks each page', text: 'It asks Google\u2019s URL Inspection about each page it knows from your Search Console and your sitemap, and sorts them by reason.' },
+  { title: 'A fixed order', text: 'Pages that lost their clicks first, then pages by clicks and impressions, then sitemap pages, then the rest.' },
+  { title: '100 pages a run', text: 'On your own machine you can check up to the quota Google has left today, which is 2,000 checks a day for each property.', code: '--max-urls 500' },
+  { title: 'A short run is never an all-clear', text: 'The result says how many pages it checked out of how many it knows. A page it did not reach has no result.' },
+]
+
+const evidence = [
+  { title: 'Live status and redirect', text: 'Whether the page still answers 200, or has moved or broken since Google crawled it.', icon: Search01Icon },
+  { title: 'In your sitemap', text: 'Whether you told Google you want this page indexed.', icon: FileSearchIcon },
+  { title: 'Canonical, yours and Google\u2019s', text: 'Whether the page points Google at another URL, or Google picked a different one.', icon: Alert02Icon },
+  { title: 'Pages linking to it', text: 'The pages Google saw linking to it at its last crawl.', icon: Link01Icon },
+  { title: 'Last crawl', text: 'How old Google\u2019s view of the page is.', icon: Clock01Icon },
+  { title: 'A label from simple rules', text: 'A page that still loads is labelled check. One that now returns 404 while your sitemap or pages point to it is labelled fix. Google does not set these labels.', icon: Notification01Icon },
+]
+
+const leave = [
+  { title: 'Feeds, tag and filter pages', text: 'They never needed to be search results.' },
+  { title: 'Internal search results and deep pagination', text: 'Leaving them out of Google is usually right.' },
+  { title: 'Plain text files', text: 'Such as an llms.txt file written for AI agents.' },
+  { title: 'Start with your sitemap pages', text: 'Those are the ones you have told Google you want indexed, so they are where this reason costs you.' },
+]
+
+const pageChecks = [
+  { title: 'Read what the page says', text: 'seo page with --detail full returns the main text as Markdown, as your server sends it. A template with a few fields filled in reads very differently from a page someone wrote.', code: 'seo page --detail full' },
+  { title: 'Look for a page that answers the same search', text: 'Two pages that cover the same thing usually read better merged into one, whatever Google does next.' },
+  { title: 'See which of your pages link to it', text: 'The result lists the pages Google saw linking there. seo internal-links crawls your site and returns up to eight pages that should link to it, each with a sentence the link fits in.', href: '/docs/internal-links' },
+  { title: 'Google still decides', text: 'None of this makes Google index the page. A better page is a better candidate.' },
+]
+
+const recheck = [
+  { title: 'URL Inspection lags behind your change', text: 'It reports Google\u2019s last known state until Google crawls the page again, so compare the last crawl date with the day you made the change.' },
+  { title: 'Ask Google for a fresh crawl', text: 'seo cannot submit URLs to Google. Use Request indexing in Search Console\u2019s URL Inspection tool.', href: 'https://support.google.com/webmasters/answer/9012289' },
+  { title: 'A live index check', text: 'It searches Google for the URL with the site operator and for an exact phrase from the page, on desktop and mobile, and answers indexed, not found or unknown. It needs a DataForSEO key and costs about 2 to 4 cents a page.' },
+  { title: 'Google search is not Search Console', text: 'So a not found result from the live check is evidence. It does not prove the page is out of the index.' },
+]
+
+const related = [
+  { title: 'seo index', text: "Google's indexing reason for every known page, each checked live and labelled.", href: '/docs/indexing', icon: Alert02Icon, link: 'seo index docs' },
+  { title: 'seo page', text: 'One URL: what it serves now, its Google index status and its queries.', href: '/docs/page', icon: FileSearchIcon, link: 'seo page docs' },
+  { title: 'Website not showing up on Google', text: 'Every indexing reason across your site, and what to check for each.', href: '/features/website-not-showing-up-on-google', icon: Search01Icon, link: 'Website not on Google' },
+  { title: 'Weekly site audit', text: 'Daily Google index checks and an email when a page drops out.', href: '/docs/weekly-site-audit', icon: Notification01Icon, link: 'Weekly site audit docs' },
+]
+
+const faq = [
+  {
+    question: 'What does crawled, currently not indexed mean?',
+    answer:
+      'Google fetched the page and chose not to add it to its index. Google says this reason does not necessarily mean there is a problem, and it gives no further detail in the report or in URL Inspection.',
+  },
+  {
+    question: 'Should I fix every crawled, not indexed page?',
+    answer:
+      'No. Feeds, tag and filter pages, internal search results, deep pagination and plain text files never needed to be search results. Start with the pages your sitemap lists, because those are the ones you asked Google to index.',
+  },
+  {
+    question: 'How do I find all of them?',
+    answer:
+      "Search Console shows up to 1,000 example URLs for each reason. SEO Skill asks URL Inspection about every page it knows from your Search Console and sitemap, checks each live page and sorts them by reason.",
+  },
+  {
+    question: 'Will improving the page get it indexed?',
+    answer:
+      'A better page is a better candidate, and Google still decides. After a change, ask for a fresh crawl with Request indexing in URL Inspection and compare the last crawl date with the day you made the change.',
+  },
+  {
+    question: 'What is the difference between crawled and discovered, currently not indexed?',
+    answer:
+      'Crawled means Google fetched the page, so URL Inspection has a last crawl date. Discovered means Google knows the URL and has not fetched it yet, so the last crawl date is empty. For crawled, look at the page itself. For discovered, look at your server and your links.',
+  },
+]
+---
+
+<BaseLayout
+  title="Crawled, currently not indexed: check every page"
+  description="Find every page Google crawled and left out of its index, with Google's own reason, a live check of each page, and what to look at before you change it."
+  canonicalPath="/guides/crawled-currently-not-indexed"
+  {breadcrumbs}
+  framed={false}
+>
+  <main data-agent-content>
+    <LandingHero
+      title="Crawled, currently not indexed"
+      lead="Find every page on your site that Google crawled and left out of its index. Your agent reads Google's own reason for each one and checks the live page, so you can tell the pages worth fixing from the ones to leave alone."
+      setupId="crawled-setup"
+      author
+    />
+
+    <div class="space-y-24 py-24 sm:space-y-32 sm:py-32">
+      <SplitList
+        id="meaning-heading"
+        title="What does crawled, currently not indexed mean?"
+        text="Google fetched the page and chose to leave it out of its index. The reason alone tells you very little."
+        items={meaning}
+      />
+
+      <SplitList
+        id="find-heading"
+        title="How do you find every crawled, not indexed page on your site?"
+        text="Ask URL Inspection about every page, which SEO Skill does for you. Give your agent the setup prompt and sign in with Google when it asks. It is free, and the site has to be a Search Console property your Google account can read."
+        items={finding}
+      >
+        <div class="mt-6 space-y-4">
+          <CodeBlock
+            label="Ask your agent"
+            prompt
+            value="Which pages on example.com are crawled but not indexed, and which of them matter?"
+            wrap
+          />
+          <CodeBlock label="Or run it in a terminal" value="seo index --site example.com" />
+        </div>
+      </SplitList>
+
+      <section class="site-frame" aria-labelledby="evidence-heading">
+        <SectionHeading
+          id="evidence-heading"
+          title="What should you read before you change a page?"
+          text="The evidence next to Google's reason, which shows what the page does now. Treat a check label as a question for you to answer."
+        />
+        <div class="grid grid-cols-1 gap-2 sm:grid-cols-2">
+          {evidence.map((item) => <HomeCard title={item.title} text={item.text} icon={item.icon} />)}
+        </div>
+      </section>
+
+      <SplitList
+        id="leave-heading"
+        title="Which crawled, not indexed pages can you leave out of Google?"
+        text="Any page that is not in your sitemap and that nothing you care about links to. Leaving it alone is usually the right call."
+        items={leave}
+      />
+
+      <SplitList
+        id="check-heading"
+        title="What should you check on a page you want indexed?"
+        text="What it says, what else on your site answers the same search, and which pages link to it. Give your agent the job for the whole list at once."
+        items={pageChecks}
+      >
+        <div class="mt-6">
+          <CodeBlock
+            label="Ask your agent"
+            prompt
+            value="For each crawled, not indexed page on example.com that is in the sitemap, read the page, compare it with our other pages on the same topic, and tell me whether to improve it, merge it or leave it out."
+            wrap
+          />
+        </div>
+      </SplitList>
+
+      <SplitList
+        id="recheck-heading"
+        title="How do you check a page again after you change it?"
+        text="Check that URL on its own, then look at the last crawl date."
+        items={recheck}
+      >
+        <div class="mt-6 space-y-4">
+          <CodeBlock label="One page" value="seo page --url https://example.com/guides/composting" wrap />
+          <CodeBlock label="A live index check" value="seo research index_check --target https://example.com/guides/composting" wrap />
+        </div>
+      </SplitList>
+
+      <section class="site-frame" aria-labelledby="example-heading">
+        <SectionHeading
+          id="example-heading"
+          title="How many crawled, not indexed pages does seoskill.dev have?"
+          text="One, out of 272 URLs. When we ran seo index on this site, Google had a current answer for all 272 URLs SEO Skill knows."
+        />
+        <div class="grid grid-cols-2 gap-2 sm:grid-cols-3">
+          <div class="rounded-lg bg-muted p-6"><p class="text-3xl font-medium text-foreground">185</p><p class="mt-2 text-sm text-foreground-muted">Indexed</p></div>
+          <div class="rounded-lg bg-muted p-6"><p class="text-3xl font-medium text-foreground">79</p><p class="mt-2 text-sm text-foreground-muted">Redirects</p></div>
+          <div class="rounded-lg bg-muted p-6"><p class="text-3xl font-medium text-foreground">4</p><p class="mt-2 text-sm text-foreground-muted">Noindex pages</p></div>
+          <div class="rounded-lg bg-muted p-6"><p class="text-3xl font-medium text-foreground">3</p><p class="mt-2 text-sm text-foreground-muted">Unknown to Google</p></div>
+          <div class="rounded-lg bg-muted p-6"><p class="text-3xl font-medium text-foreground">1</p><p class="mt-2 text-sm text-foreground-muted">Crawled, currently not indexed</p></div>
+        </div>
+        <p class="mt-6 max-w-3xl text-base leading-7 text-foreground-muted">
+          That one URL is <code>/llms.txt</code>, a plain text file for AI
+          agents that our sitemap does not list. The rules label it check,
+          like any page with this reason that still loads. We looked and left
+          it alone, because it was never meant to be a search result.
+        </p>
+      </section>
+
+      <SplitList
+        id="alerts-heading"
+        title="How do you hear when a page drops out of Google's index?"
+        text="With the weekly site audit ($50 a month per site), which runs the index checks for you on our servers, using each property's full 2,000 checks a day."
+        items={[
+          { title: 'Top pages checked daily', text: 'A top page\u2019s drop is only sent after a second check agrees.' },
+          { title: 'One email per drop', text: 'Grouped by Google\u2019s reason.' },
+          { title: 'Alerts', text: 'What each email covers.', href: '/docs/alerts' },
+        ]}
+      />
+
+      <section class="site-frame" aria-labelledby="related-heading">
+        <SectionHeading
+          id="related-heading"
+          title="Which docs go with this guide?"
+          text="These, which cover the index check, one page at a time, every reason at once and the daily checks."
+        />
+        <div class="grid grid-cols-1 gap-2 sm:grid-cols-2">
+          {related.map((item) => <HomeCard {...item} />)}
+        </div>
+      </section>
+
+      <section class="site-frame" aria-labelledby="faq-heading">
+        <SectionHeading
+          id="faq-heading"
+          title="Questions about crawled, currently not indexed"
+          text="These are the follow-ups people ask after they see it in Search Console."
+        />
+        <FaqAccordion items={faq} id="crawled-faq" />
+      </section>
+
+      <StatusGuides current="/guides/crawled-currently-not-indexed" />
+
+      <section class="site-frame" aria-labelledby="start-heading">
+        <SectionHeading
+          id="start-heading"
+          title="Find your crawled, not indexed pages with your agent"
+          text="Add SEO Skill to your agent, sign in with Google and ask which crawled, not indexed pages on your site are worth fixing."
+        />
+        <SetupPrompts id="crawled-setup-end" />
+      </section>
+    </div>
+  </main>
+</BaseLayout>

@@ -17,6 +17,7 @@ import FaqAccordion from '@/components/FaqAccordion.astro'
 import HomeCard from '@/components/HomeCard.astro'
 import LandingHero from '@/components/LandingHero.astro'
 import SectionHeading from '@/components/SectionHeading.astro'
+import SetupPrompts from '@/components/SetupPrompts.astro'
 import BaseLayout from '@/layouts/BaseLayout.astro'
 import type { SchemaBreadcrumb } from '@/lib/schema'
 
@@ -152,7 +153,7 @@ const faq = [
 
 <BaseLayout
   title="SEO for startups: what to do first, from real data"
-  description="SEO for startups in the order it pays off: get indexed, make your name findable, write the pages buyers read, then check AI answers. With seoskill.dev's own numbers."
+  description="SEO for startups in the order it pays off. Get indexed, make your name findable, write the pages buyers read, then check AI answers."
   canonicalPath="/seo-for-startups"
   {breadcrumbs}
   framed={false}
@@ -168,8 +169,8 @@ const faq = [
       <section class="site-frame" aria-labelledby="order-heading">
         <SectionHeading
           id="order-heading"
-          title="Startup SEO in the order it pays off"
-          text="Each step needs the one before it. A page Google hasn’t indexed can’t rank, and a page that doesn’t rank is rarely the one an AI answer cites."
+          title="In what order should a startup do SEO?"
+          text="In the order it pays off, because each step needs the one before it. A page Google hasn’t indexed can’t rank, and a page that doesn’t rank is rarely the one an AI answer cites."
         />
         <div class="max-w-3xl">
           <PlanSteps {steps} />
@@ -179,8 +180,8 @@ const faq = [
       <section class="site-frame" aria-labelledby="numbers-heading">
         <SectionHeading
           id="numbers-heading"
-          title="How four new sites grew in search"
-          text="Ian's own sites, each from its first months in Google. Every number is a click from the site's own Search Console, with November to the 23rd."
+          title="How fast do new sites grow in search?"
+          text="These are four of Ian's own sites, each from its first months in Google. Every number is a click from the site's own Search Console, with November to the 23rd."
         />
         <div class="grid grid-cols-1 gap-10">
           {sites.map((site) => (
@@ -198,8 +199,8 @@ const faq = [
       <section class="site-frame" aria-labelledby="brand-heading">
         <SectionHeading
           id="brand-heading"
-          title="Where a new domain's first clicks come from"
-          text="On seoskill.dev, searches for the name brought the first clicks, and searches without it grew month by month behind them."
+          title="Where do a new domain's first clicks come from?"
+          text="From searches for its name, on seoskill.dev. Searches without the name grew month by month behind them."
         />
         <div class="max-w-3xl">
           <TrafficCurve
@@ -217,8 +218,8 @@ const faq = [
       <section class="site-frame" aria-labelledby="pages-heading">
         <SectionHeading
           id="pages-heading"
-          title="The first pages to write"
-          text="Write for the search a buyer makes the week they choose a tool. Each of these is a small search with a buyer behind it."
+          title="Which pages should a startup write first?"
+          text="Pages for the search a buyer makes the week they choose a tool. Each of these is a small search with a buyer behind it."
         />
         <div class="docs-prose max-w-3xl">
           <table>
@@ -243,8 +244,8 @@ const faq = [
       <section class="site-frame" aria-labelledby="later-heading">
         <SectionHeading
           id="later-heading"
-          title="What can wait until you have traction"
-          text="None of these is wrong. Each one just pays off later than the steps above."
+          title="What can wait until you have traction?"
+          text="These can, because each one pays off later than the steps above, though none of them is wrong."
         />
         <div class="grid grid-cols-1 gap-2 sm:grid-cols-2">
           {later.map((item) => <HomeCard {...item} />)}
@@ -254,8 +255,8 @@ const faq = [
       <section class="site-frame" aria-labelledby="agent-heading">
         <SectionHeading
           id="agent-heading"
-          title="Run startup SEO with your agent"
-          text="SEO Skill gives Claude Code, Codex, Cursor or ChatGPT your Search Console, crawl and AI answer data, so the agent you already use can do each step and show its evidence."
+          title="Can your agent run startup SEO?"
+          text="Yes. SEO Skill gives Claude Code, Codex, Cursor or ChatGPT your Search Console, crawl and AI answer data, so the agent you already use can do each step and show its evidence."
         />
         <div class="grid grid-cols-1 gap-2 sm:grid-cols-2">
           {tools.map((item) => <HomeCard {...item} />)}
@@ -276,9 +277,18 @@ const faq = [
         <SectionHeading
           id="startup-faq"
           title="Questions about SEO for startups"
-          text="The follow-ups founders ask most."
+          text="These are the follow-ups founders ask most."
         />
         <FaqAccordion items={faq} id="startup-faq-list" />
+      </section>
+
+      <section class="site-frame" aria-labelledby="start-heading">
+        <SectionHeading
+          id="start-heading"
+          title="Start your startup SEO today"
+          text="Add SEO Skill to your agent, sign in with Google and ask which of your pages are indexed and which page to write next."
+        />
+        <SetupPrompts id="startup-setup-end" />
       </section>
     </div>
   </main>

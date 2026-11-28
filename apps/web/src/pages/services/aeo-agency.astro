@@ -18,6 +18,7 @@ import FaqAccordion from '@/components/FaqAccordion.astro'
 import HomeCard from '@/components/HomeCard.astro'
 import LandingHero from '@/components/LandingHero.astro'
 import SectionHeading from '@/components/SectionHeading.astro'
+import SetupPrompts from '@/components/SetupPrompts.astro'
 import BaseLayout from '@/layouts/BaseLayout.astro'
 import type { SchemaBreadcrumb } from '@/lib/schema'
 
@@ -141,8 +142,8 @@ const faq = [
       <section class="site-frame" aria-labelledby="names-heading">
         <SectionHeading
           id="names-heading"
-          title="AEO, GEO and AI SEO are one job"
-          text="Answer engine optimization, generative engine optimization, LLM SEO and AI search optimization all name the same work. Most of it is SEO, plus brand mentions on the sites AI answers trust."
+          title="Are AEO, GEO and AI SEO different jobs?"
+          text="No. Answer engine optimization, generative engine optimization, LLM SEO and AI search optimization all name the same work. Most of it is SEO, plus brand mentions on the sites AI answers trust."
         />
         <div class="docs-prose max-w-3xl">
           <table>
@@ -159,8 +160,8 @@ const faq = [
       <section class="site-frame" aria-labelledby="weekly-heading">
         <SectionHeading
           id="weekly-heading"
-          title="What an AEO agency should do each week"
-          text="The work runs as a loop. Each step depends on the one before it, and every week ends with a number you can check."
+          title="What should an AEO agency do each week?"
+          text="Run the same loop, where each step depends on the one before it and every week ends with a number you can check."
         />
         <div class="max-w-3xl">
           <PlanSteps {steps} />
@@ -170,8 +171,8 @@ const faq = [
       <section class="site-frame" aria-labelledby="questions-heading">
         <SectionHeading
           id="questions-heading"
-          title="Start from the questions people already ask"
-          text="Your Search Console already holds searches that read like AI prompts. On seoskill.dev, SEO Skill found 103 of them in three months, across 1,417 impressions."
+          title="Which questions should AEO start from?"
+          text="The ones people already ask, which your Search Console holds as searches that read like AI prompts. On seoskill.dev, SEO Skill found 103 of them in three months, across 1,417 impressions."
         />
         <div class="grid max-w-3xl grid-cols-1 gap-10">
           <CompareBars
@@ -201,8 +202,8 @@ const faq = [
       <section class="site-frame" aria-labelledby="deliverables-heading">
         <SectionHeading
           id="deliverables-heading"
-          title="What you should get from an AEO agency"
-          text="Whoever does the work, these six things let you check it. Ask for them at the start, and in every report after."
+          title="What should you get from an AEO agency?"
+          text="These six things, whoever does the work, because they let you check it. Ask for them at the start, and in every report after."
         />
         <div class="grid grid-cols-1 gap-2 sm:grid-cols-2">
           {deliverables.map((item) => <HomeCard {...item} />)}
@@ -212,8 +213,8 @@ const faq = [
       <section class="site-frame" aria-labelledby="agent-heading">
         <SectionHeading
           id="agent-heading"
-          title="Run the same work with your own agent"
-          text="SEO Skill gives Claude Code, Codex, Cursor or ChatGPT your Search Console, crawl and AI answer data, so the agent you already use can run each step and show its evidence."
+          title="Can your own agent do the same work?"
+          text="Yes. SEO Skill gives Claude Code, Codex, Cursor or ChatGPT your Search Console, crawl and AI answer data, so the agent you already use can run each step and show its evidence."
         />
         <div class="grid grid-cols-1 gap-2 sm:grid-cols-2">
           {tools.map((item) => <HomeCard {...item} />)}
@@ -234,7 +235,7 @@ const faq = [
         <SectionHeading
           id="aeo-faq"
           title="Questions about AEO and GEO agencies"
-          text="What people ask before they hire one."
+          text="These are the follow-ups people ask before they hire one."
         />
         <FaqAccordion items={faq} id="aeo-faq-list" />
       </section>
@@ -242,13 +243,22 @@ const faq = [
       <section class="site-frame" aria-labelledby="aeo-done-heading">
         <SectionHeading
           id="aeo-done-heading"
-          title="Where to go next"
-          text="Each step above has its own page."
+          title="Where can you read more?"
+          text="On these pages, which cover each step above in more depth."
         />
         <div class="grid grid-cols-1 gap-2 sm:grid-cols-2">
           <HomeCard title="AI SEO services" text="The five jobs AI SEO covers, and the questions to ask any provider." icon={TaskDone01Icon} href="/services" link="See AI SEO services" />
           <HomeCard title="SEO for startups" text="The order to do SEO in at launch, from four new sites' real numbers." icon={ChartLineData01Icon} href="/seo-for-startups" link="See SEO for startups" />
         </div>
+      </section>
+
+      <section class="site-frame" aria-labelledby="start-heading">
+        <SectionHeading
+          id="start-heading"
+          title="Start AEO with your own agent"
+          text="Add SEO Skill to your agent, sign in with Google and ask which questions your site should be named for in AI answers."
+        />
+        <SetupPrompts id="aeo-setup-end" />
       </section>
     </div>
   </main>

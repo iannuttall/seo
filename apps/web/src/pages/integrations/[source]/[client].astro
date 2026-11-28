@@ -80,9 +80,9 @@ const otherSources = hostedSources.filter((item) => item.id !== source.id)
   <main data-agent-content>
     {
       canRunSetup ? (
-        <LandingHero {title} {lead} setupId="pair-setup" setupClient={client.id} setupSteps={sourceSetupSteps(source)} />
+        <LandingHero {title} {lead} setupId="pair-setup" setupClient={client.id} setupSteps={sourceSetupSteps(source)} author />
       ) : (
-        <LandingHero {title} {lead} setupId="pair-setup" setupSteps={sourceSetupSteps(source)}>
+        <LandingHero {title} {lead} setupId="pair-setup" setupSteps={sourceSetupSteps(source)} author>
           <p slot="note" class="mt-4 max-w-2xl text-pretty text-base leading-7 text-foreground-muted">
             {client.name} adds connectors in its own settings, not from a prompt. Give this prompt to a coding agent, or follow the steps below in {client.name}.
           </p>

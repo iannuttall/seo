@@ -12,6 +12,7 @@ import {
 } from '@hugeicons/core-free-icons'
 import CodeBlock from '@/components/CodeBlock.astro'
 import FaqAccordion from '@/components/FaqAccordion.astro'
+import FounderBadge from '@/components/FounderBadge.astro'
 import HomeCard from '@/components/HomeCard.astro'
 import SectionHeading from '@/components/SectionHeading.astro'
 import SetupPrompts from '@/components/SetupPrompts.astro'
@@ -159,7 +160,7 @@ const faq = [
 
 <BaseLayout
   title="Free SEO title and meta description checker"
-  description="Check a page's SEO title and meta description in pixels on desktop and mobile, see the Google preview, and find the problems that make Google rewrite them. Free, with no account."
+  description="Check a page's SEO title and meta description in pixels on desktop and mobile, see the Google preview and find what makes Google rewrite them."
   canonicalPath="/tools/title-and-meta-description-checker"
   {breadcrumbs}
   framed={false}
@@ -167,6 +168,7 @@ const faq = [
   <main data-agent-content>
     <section class="pt-4">
       <div class="site-frame flex flex-col items-center pt-14 text-center sm:pt-20">
+        <FounderBadge prefix="Written by AI and" ai />
         <h1 class="mt-4 max-w-3xl text-pretty text-4xl/tight font-medium -tracking-[0.8px] xl:text-5xl/tight xl:-tracking-[1px]">
           SEO title and meta description checker
         </h1>

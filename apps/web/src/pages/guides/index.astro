@@ -11,12 +11,13 @@ const guides = (await getCollection('guides')).sort((a, b) => a.id.localeCompare
 
 <BaseLayout
   title="SEO guides: indexing reasons, frameworks and progress"
-  description="What each Search Console indexing reason means and how to check every URL it covers, Astro and Next.js setups that search engines and AI agents can read, and how to track SEO progress."
+  description="What each Search Console indexing reason means and how to check every URL it covers, plus SEO setups for Astro and Next.js and how to track SEO progress."
   canonicalPath="/guides"
   schemaType="CollectionPage"
 >
   <main data-agent-content>
     <PageHeader
+      author
       title="SEO guides"
       description="What Search Console's indexing reasons mean and what to do about each one, how to build a site search engines and AI agents can read, and how to measure what the work did."
     />

@@ -1,6 +1,6 @@
 ---
 title: Next.js SEO guide for the App Router
-description: Next.js SEO with the App Router in Next.js 16. Prerender pages, set metadata and canonicals, add JSON-LD, split sitemaps, return real 404s and 301s, and serve Markdown copies to AI agents.
+description: "Next.js SEO with the App Router in Next.js 16: prerendered pages, metadata, canonicals, JSON-LD, sitemaps, real 404s and 301s, and Markdown for agents."
 heading: Next.js SEO
 lead: Prerender the pages you want found, set every head tag through the Metadata API, and check the build before it ships. Tested on Next.js 16.4 with the App Router.
 checked: '2026-11-03'
@@ -40,7 +40,7 @@ export function generateStaticParams() {
 }
 ```
 
-Both exports go in the page file, shown in full in the next section. `next build` prints each route with its mode. A `○` or `●` next to a page means it was prerendered. Anything else is rendered on request, and worth a second look if it is a page you want in search. The <a href="https://nextjs.org/docs/app/api-reference/functions/generate-static-params" target="_blank" rel="noreferrer">generateStaticParams reference</a> covers routes with more than one segment.
+Both exports go in the page file, shown in full in the next section. `next build` prints each route with its mode. A `○` or `●` next to a page means it was prerendered. Anything else is rendered on request, so check that route if it is a page you want in search. The <a href="https://nextjs.org/docs/app/api-reference/functions/generate-static-params" target="_blank" rel="noreferrer">generateStaticParams reference</a> covers routes with more than one segment.
 
 ## Set titles, descriptions and canonicals with the Metadata API
 
@@ -120,7 +120,7 @@ export default async function Page({ params }: Props) {
 Two rules from the <a href="https://nextjs.org/docs/app/api-reference/functions/generate-metadata" target="_blank" rel="noreferrer">generateMetadata reference</a> catch people out:
 
 - Never put `alternates.canonical` in a layout. Every page below it inherits the same canonical, which tells Google they are all one page. Set it in each page, including the home page.
-- A page that sets `openGraph` replaces the layout's whole `openGraph` object, not just the fields it names. Set every Open Graph field you want in the page, or share them from a module.
+- A page that sets `openGraph` replaces the layout's whole `openGraph` object. Next.js does not merge the two. Set every Open Graph field you want in the page, or share them from a module.
 
 The `types` entry adds `<link rel="alternate" type="text/markdown">` to the page, which tells agents where its Markdown copy lives. The copy itself is further down.
 

@@ -113,7 +113,7 @@
     "@types/node": "^22.20.5",
     "citty": "^0.2.2",
     "cli-table3": "^0.6.5",
-    "defuddle": "^0.19.6",
+    "defuddle": "^0.19.12",
     "htmlparser2": "10.1.0",
     "jsonc-parser": "^3.3.1",
     "libsql": "^0.5.29",
@@ -125,20 +125,20 @@
     "picocolors": "^1.1.1",
     "pino": "^10.4.0",
     "pino-pretty": "^13.2.0",
-    "playwright-core": "1.65.0",
+    "playwright-core": "1.65.1",
     "proper-lockfile": "^4.1.2",
     "robots-parser": "^3.0.1",
     "string-width": "^8.3.0",
     "turndown": "^7.2.5",
-    "undici": "^8.12.4",
+    "undici": "^8.13.0",
     "update-notifier": "^7.3.1",
     "zod": "^4.6.7"
   },
   "devDependencies": {
-    "@biomejs/biome": "^2.6.7",
+    "@biomejs/biome": "^2.6.8",
     "@modelcontextprotocol/sdk": "^1.32.2",
     "tsdown": "^0.23.7",
-    "turbo": "^2.11.11",
+    "turbo": "^2.11.13",
     "typescript": "^6.0.3"
   }
 }

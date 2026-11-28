@@ -17,6 +17,7 @@ import HomeCard from '@/components/HomeCard.astro'
 import LandingHero from '@/components/LandingHero.astro'
 import SectionHeading from '@/components/SectionHeading.astro'
 import SetupPrompts from '@/components/SetupPrompts.astro'
+import { seoSkillBrief } from '@/content/alternatives'
 import BaseLayout from '@/layouts/BaseLayout.astro'
 import type { SchemaBreadcrumb } from '@/lib/schema'
 
@@ -77,10 +78,7 @@ const brief = {
     label: 'What an article tool starts from',
     html: '<p><strong>Your URL.</strong> The tool researches your site and keywords, makes its own plan and writes a new article each week.</p><p>It writes new articles, so the pages you already have stay as they are.</p>',
   },
-  after: {
-    label: 'The brief SEO Skill gives your agent',
-    html: '<p><strong>Page:</strong> /tools/google-algorithm-update-checker</p><ul class="list-disc space-y-1 pl-5"><li>“google algorithm checker”: position 9.5, 380 impressions, 0 clicks</li><li>“algorithm update checker”: position 11.5, 273 impressions, 9 clicks</li><li>“google algorithm update checker”: position 9.1, 246 impressions, 2 clicks</li></ul><p><strong>Change:</strong> name the tool the way people search for it in the title and H1, and answer “did an update hit my site?” in the first lines.</p><p><strong>Check:</strong> run seo lint on the draft, then compare the page’s clicks 28 and 56 days after the fix.</p>',
-  },
+  after: seoSkillBrief,
 }
 
 const faq = [

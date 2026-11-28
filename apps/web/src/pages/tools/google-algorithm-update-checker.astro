@@ -1,7 +1,16 @@
 ---
-import Breadcrumbs from '@/components/Breadcrumbs.astro'
-import PageHeader from '@/components/PageHeader.astro'
+import {
+  Analytics01Icon,
+  Calendar03Icon,
+  ChartLineData01Icon,
+  Mail01Icon,
+} from '@hugeicons/core-free-icons'
+import CodeBlock from '@/components/CodeBlock.astro'
+import FaqAccordion from '@/components/FaqAccordion.astro'
+import HomeCard from '@/components/HomeCard.astro'
+import SectionHeading from '@/components/SectionHeading.astro'
 import SetupPrompts from '@/components/SetupPrompts.astro'
+import SplitList from '@/components/SplitList.astro'
 import GoogleUpdateChecker from '@/components/tools/GoogleUpdateChecker.astro'
 import BaseLayout from '@/layouts/BaseLayout.astro'
 import type { SchemaBreadcrumb } from '@/lib/schema'
@@ -11,102 +20,181 @@ const breadcrumbs: SchemaBreadcrumb[] = [
   { label: 'Tools', href: '/tools' },
   { label: 'Google algorithm update checker' },
 ]
+
+const exportSteps = [
+  { title: 'Open Performance in Search Console', text: 'Then Search results, and set the date to the last 3 months. For an older update, pick a longer range.' },
+  { title: 'Export the report', text: 'Choose Export, then Download CSV.' },
+  { title: 'Drop the zip on the timeline', text: 'The change check runs in this tab and the file is not uploaded anywhere.' },
+]
+
+const changeCheck = [
+  { title: 'A new level that holds', text: 'It looks for the day your clicks or impressions moved to a new level and stayed there. One odd day or a slow slide does not count.' },
+  { title: 'The last 7 days as a fallback', text: 'If there is no such day, it compares the last 7 days with the days before them.' },
+  { title: 'Updates within 3 days', text: 'Then it lists the Google updates that ran within 3 days of the date.' },
+  { title: 'The same check as the SEO report', text: 'The traffic drop section of the SEO report runs it too, so you get the same date from this page or from your agent.', href: '/docs/report' },
+]
+
+const timing = [
+  { title: 'Releases on your own site', text: 'A deploy, a migration or a template change in the same week.' },
+  { title: 'Tracking changes', text: 'A new consent banner or tag setup can move the numbers without any change in rankings.' },
+  { title: 'Holidays and seasons', text: 'Search demand drops and recovers on its own calendar.' },
+  { title: 'Google\u2019s own advice', text: 'Wait until a rollout has finished, then compare at least a week after it with a period of the same length before it.', href: 'https://developers.google.com/search/docs/appearance/core-updates' },
+]
+
+const next = [
+  { title: 'Ask which pages moved', text: 'Give your agent the first day after an update and seo compare lines up equal periods on each side: clicks, impressions, position, the pages and queries that gained or lost the most, Google Analytics sessions and the updates in the window.', href: '/docs/compare', icon: ChartLineData01Icon, link: 'seo compare docs' },
+  { title: 'Get an email when Google updates', text: 'Sites in the weekly site audit get an email when an update starts and when it finishes, then one with the folders, pages and queries that moved once Search Console has caught up.', href: '/docs/alerts', icon: Mail01Icon, link: 'Google update alerts' },
+  { title: 'Website traffic checker', text: 'Twelve months of estimated Google traffic for any domain, to see whether a competitor moved in the same month.', href: '/tools/website-traffic-checker', icon: Analytics01Icon, link: 'Check a site\u2019s traffic' },
+  { title: 'SEO report', text: 'Your Search Console clicks and Google Analytics sessions, with the traffic drop check and the updates that ran.', href: '/docs/report', icon: Calendar03Icon, link: 'SEO report docs' },
+]
+
+const faq = [
+  {
+    question: 'How do I check whether a Google update hit my site?',
+    answer:
+      'Sign in with Google above and pick a Search Console property, or drop a Search Console export on the timeline. Your daily clicks draw over the update dates, and the change check lists any Google update that ran within 3 days of the day your traffic moved.',
+  },
+  {
+    question: 'Does the checker keep my Search Console data?',
+    answer:
+      'No. Signed in, the page reads your clicks through your free SEO Skill account and keeps nothing. Remove the Google account on your account page to stop it. With an export, the check runs in your browser tab and the file is not uploaded anywhere.',
+  },
+  {
+    question: 'Does a match prove the update caused my drop?',
+    answer:
+      'No. An update on the same dates shows the timing lines up. A release, a tracking change, a holiday or a seasonal dip can land in the same week, so check those too before you blame the update.',
+  },
+  {
+    question: 'Where do the update dates come from?',
+    answer:
+      "Google's Search Status Dashboard. The page reads Google's live feed when it opens, so a new update shows as soon as Google posts it, and its end date as soon as the rollout finishes.",
+  },
+  {
+    question: 'Why are there no updates before November 2021?',
+    answer:
+      "The Search Status Dashboard starts in November 2021, and the timeline only shows dates Google published there.",
+  },
+  {
+    question: 'How long should I wait after an update before comparing?',
+    answer:
+      "Google's guidance is to wait until the rollout has finished, then compare at least a week after it with a period of the same length before it.",
+  },
+]
 ---
 
 <BaseLayout
   title="Google algorithm update checker and timeline"
-  description="Check whether a Google algorithm update lines up with a change in your traffic. See every Google ranking update since 2021 on a live timeline, then add your Search Console clicks."
+  description="See every Google ranking update since 2021 on a live timeline, then add your Search Console clicks to check whether a drop lines up with one."
   canonicalPath="/tools/google-algorithm-update-checker"
   {breadcrumbs}
+  framed={false}
 >
   <main data-agent-content>
-    <Breadcrumbs {breadcrumbs} />
-    <PageHeader
-      title="Google algorithm update checker"
-      description="See every Google ranking update on one timeline, then add your Search Console clicks to check whether a drop lines up with one."
-    />
+    <section class="pt-4">
+      <div class="site-frame flex flex-col items-center pt-14 text-center sm:pt-20">
+        <h1 class="mt-4 max-w-3xl text-pretty text-4xl/tight font-medium -tracking-[0.8px] xl:text-5xl/tight xl:-tracking-[1px]">
+          Google algorithm update checker
+        </h1>
+        <p class="mt-4 max-w-2xl text-pretty text-xl/8 font-medium -tracking-[0.2px] text-foreground-muted">
+          See every Google ranking update on one timeline, then add your
+          Search Console clicks to check whether a drop lines up with one.
+        </p>
+      </div>
+      <div class="site-frame mt-10 sm:mt-12">
+        <GoogleUpdateChecker />
+      </div>
+    </section>
 
-    <GoogleUpdateChecker />
+    <div class="space-y-24 py-24 sm:space-y-32 sm:py-32">
+      <SplitList
+        id="clicks-heading"
+        title="How do you check your clicks against the update dates?"
+        text="Sign in with Google above and pick a Search Console property. Your daily clicks for the last 16 months draw over the updates, with nothing to export. Prefer not to sign in? Use an export instead."
+        items={exportSteps}
+      >
+        <p class="mt-4 text-base leading-7 text-foreground-muted">
+          The page reads your clicks through your free SEO Skill account and
+          keeps nothing. Remove the Google account on your{' '}
+          <a class="text-foreground underline underline-offset-4" href="/account">account page</a> to stop it.
+        </p>
+      </SplitList>
 
-    <div class="docs-prose mt-16">
-      <h2>Check your clicks against the update dates</h2>
-      <p>
-        Sign in with Google above and pick a Search Console property. Your
-        daily clicks for the last 16 months draw over the updates, with
-        nothing to export. The page reads them through your free SEO Skill
-        account and keeps nothing. Remove the Google account on your{' '}
-        <a href="/account">account page</a> to stop it.
-      </p>
-      <p>Prefer not to sign in? Use an export instead:</p>
-      <ol>
-        <li>
-          In Search Console, open <strong>Performance</strong>, then{' '}
-          <strong>Search results</strong>, and set the date to the last 3
-          months. For an older update, pick a longer range.
-        </li>
-        <li>Choose <strong>Export</strong>, then <strong>Download CSV</strong>.</li>
-        <li>
-          Drop the zip on the timeline above. The change check runs in this
-          tab and the file is not uploaded anywhere.
-        </li>
-      </ol>
+      <SplitList
+        id="check-heading"
+        title="How does the change check find a date?"
+        text="It finds the day your traffic moved to a new level, then lists the Google updates around it."
+        items={changeCheck}
+      />
 
-      <h2>How the change check finds a date</h2>
-      <p>
-        It looks for the day your clicks or impressions moved to a new level
-        and stayed there. One odd day or a slow slide does not count. If there
-        is no such day, it compares the last 7 days with the days before them.
-        Then it lists the Google updates that ran within 3 days of the date.
-      </p>
-      <p>
-        This is the same check as the traffic drop section of the{' '}
-        <a href="/docs/report">SEO report</a>, so you get the same date
-        whether you use this page or ask your agent.
-      </p>
+      <SplitList
+        id="timing-heading"
+        title="Does a matching update mean it caused the drop?"
+        text="No. An update on the same dates shows the timing lines up. Other things can land in the same week, so rule these out too."
+        items={timing}
+      />
 
-      <h2>Read a match as timing, not cause</h2>
-      <p>
-        An update on the same dates shows the timing lines up. It does not
-        show the update caused the change. A release, a tracking change, a
-        holiday or a seasonal dip can land in the same week, so check those
-        too.
-      </p>
-      <p>
-        Google's guidance on{' '}
-        <a href="https://developers.google.com/search/docs/appearance/core-updates" rel="noreferrer">core updates</a>{' '}
-        says to wait until a rollout has finished, then compare at least a
-        week after it with a period of the same length before it.
-      </p>
+      <section class="site-frame" aria-labelledby="source-heading">
+        <SectionHeading
+          id="source-heading"
+          title="Where do the update dates come from?"
+          text="Every date comes from Google's Search Status Dashboard. The page reads Google's live feed when it opens, so a new update shows here as soon as Google posts it, and its end date as soon as the rollout finishes."
+        />
+        <div class="grid grid-cols-1 gap-2 sm:grid-cols-2">
+          <HomeCard
+            title="Google's Search Status Dashboard"
+            text="The source for every start and end date. It begins in November 2021, so earlier updates are not on the timeline."
+            href="https://status.search.google.com/products/rGHU1u87FJnkP6W2GwMi/history"
+            icon={Calendar03Icon}
+            link="Open the dashboard"
+          />
+          <HomeCard
+            title="Google's guidance on core updates"
+            text="What Google says to check after a core update, and how long to wait before you compare."
+            href="https://developers.google.com/search/docs/appearance/core-updates"
+            icon={Analytics01Icon}
+            link="Read the guidance"
+          />
+        </div>
+      </section>
 
-      <h2>Where the dates come from</h2>
-      <p>
-        Every date comes from Google's{' '}
-        <a href="https://status.search.google.com/products/rGHU1u87FJnkP6W2GwMi/history" rel="noreferrer">Search Status Dashboard</a>.
-        The page reads Google's live feed when it opens, so a new update shows
-        here as soon as Google posts it, and its end date as soon as the
-        rollout finishes. The dashboard starts in November 2021, so earlier
-        updates are not on the timeline.
-      </p>
+      <section class="site-frame" aria-labelledby="next-heading">
+        <SectionHeading
+          id="next-heading"
+          title="What should you check after an update?"
+          text="Which pages and queries moved. The timeline shows when, and your agent can show what, straight from Search Console with nothing to export."
+        />
+        <div class="grid grid-cols-1 gap-2 sm:grid-cols-2">
+          {next.map((item) => <HomeCard {...item} />)}
+        </div>
+        <div class="mt-8">
+          <CodeBlock
+            label="Ask your agent"
+            prompt
+            value="Compare example.com's Search Console clicks for the two weeks before and after the last Google core update, and list the pages and queries that lost the most"
+            wrap
+          />
+        </div>
+      </section>
 
-      <h2>Ask your agent which pages moved</h2>
-      <p>
-        The timeline shows when. Your agent can show what. Give it the first
-        day after an update and <a href="/docs/compare">seo compare</a>{' '}
-        compares equal periods on each side: clicks, impressions and position,
-        the pages and queries that gained or lost the most, Google Analytics
-        sessions, and the Google updates in the window. It reads your Search
-        Console directly, so there is nothing to export.
-      </p>
+      <section class="site-frame" aria-labelledby="faq-heading">
+        <div class="max-w-2xl">
+          <h2 id="faq-heading" class="text-pretty text-2xl font-medium -tracking-[0.4px] text-foreground xl:text-3xl xl:-tracking-[0.6px]">
+            Google update questions
+          </h2>
+        </div>
+        <div class="mt-10">
+          <FaqAccordion items={faq} id="update-faq" />
+        </div>
+      </section>
 
-      <h2>Get an email when Google updates</h2>
-      <p>
-        Sites in the weekly site audit get <a href="/docs/alerts">Google update alerts</a>:
-        an email when an update starts and when it finishes, then one with
-        the folders, pages and queries that moved on each site once Search
-        Console has caught up.
-      </p>
+      <section class="site-frame" aria-labelledby="start-heading">
+        <SectionHeading
+          id="start-heading"
+          title="See which pages moved after an update"
+          text="Add SEO Skill to your agent, sign in with Google and ask what changed on your site after the last Google update."
+        />
+        <SetupPrompts id="update-checker-setup" />
+      </section>
     </div>
-
-    <SetupPrompts id="update-checker-setup" class="mt-6" />
   </main>
 </BaseLayout>

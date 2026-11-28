@@ -1,8 +1,11 @@
 ---
+import { ArrowLeftRightIcon, FileValidationIcon, Robot01Icon, WebValidationIcon } from '@hugeicons/core-free-icons'
 import CodeBlock from '@/components/CodeBlock.astro'
 import FaqAccordion from '@/components/FaqAccordion.astro'
+import HomeCard from '@/components/HomeCard.astro'
+import SectionHeading from '@/components/SectionHeading.astro'
 import SetupPrompts from '@/components/SetupPrompts.astro'
-import PageHeader from '@/components/PageHeader.astro'
+import SplitList from '@/components/SplitList.astro'
 import ServerLogAnalyzer from '@/components/tools/ServerLogAnalyzer.astro'
 import BaseLayout from '@/layouts/BaseLayout.astro'
 import type { SchemaBreadcrumb } from '@/lib/schema'
@@ -13,165 +16,297 @@ const breadcrumbs: SchemaBreadcrumb[] = [
   { label: 'SEO log file analyzer' },
 ]
 
+const grouping = [
+  {
+    title: 'Grouped by crawler, path and status',
+    text: 'The analyzer groups requests by crawler family, URL path, and HTTP status.',
+  },
+  {
+    title: 'Query strings removed',
+    text: 'Query strings are removed so tracking parameters do not split one page into hundreds of rows.',
+  },
+  {
+    title: 'The dates the file covers',
+    text: 'It also shows the first and last valid request dates found in the file.',
+  },
+  {
+    title: 'Apache, NGINX and JSON exports',
+    text: 'Combined Apache and NGINX access logs work directly. JSONL and NDJSON exports can use common names for the timestamp, method, URL, status, response bytes, and user agent.',
+  },
+]
+
+const privacy = [
+  {
+    title: 'No upload and no stored copy',
+    text: 'The page does not upload the log or keep a searchable copy of its raw requests.',
+  },
+  {
+    title: 'Cancel a large file at any time',
+    text: 'Large files can be cancelled by closing the tab or choosing another file.',
+  },
+]
+
+const verification = [
+  {
+    title: 'A user agent is only a claim',
+    text: 'A matching user-agent string shows what the request claimed to be. It does not prove that Google, Bing, OpenAI, Anthropic, or another company sent the request.',
+  },
+  {
+    title: 'Check before you block or allow',
+    text: 'Check important findings against the original log and your server configuration before blocking or allowing a crawler.',
+  },
+  {
+    title: 'A partial result is unknown',
+    text: 'A partial result means the file contained malformed rows or reached a processing limit. Treat missing crawler activity as unknown in that case, rather than a clean zero.',
+  },
+]
+
+const summary = [
+  { title: 'Mostly 200s', text: 'Healthy.' },
+  {
+    title: 'A run of 5xx responses',
+    text: 'Tells Googlebot your server is struggling, and Google slows its crawling when that happens.',
+  },
+  {
+    title: 'Lots of 404s for old URLs',
+    text: 'Normal and harmless unless they are pages that should exist.',
+  },
+  {
+    title: 'Lots of 301s',
+    text: 'Your internal links or sitemap still point at old addresses.',
+  },
+  {
+    title: 'Requests spent on the wrong paths',
+    text: 'Crawlers spending most of their requests on filters, search pages or old parameters, while new pages get few visits, is a sign the site wastes crawling on pages that do not matter.',
+  },
+]
+
+const reasons = [
+  {
+    title: 'Every request, where Search Console shows a sample',
+    text: 'Search Console shows a sample of what Google crawled. Your access log shows every request, so it is the only place to see exactly which pages crawlers fetch, how often and what your server sent back.',
+  },
+  {
+    title: 'Large sites',
+    text: 'It matters most for large sites, where Google cannot crawl everything often.',
+  },
+  {
+    title: 'After a migration',
+    text: 'You need to see crawlers reach the new URLs.',
+  },
+  {
+    title: 'Small sites can look elsewhere',
+    text: 'For a small site, crawling is rarely the problem. If Googlebot fetches your pages and gets 200s, look elsewhere.',
+  },
+]
+
+const verify = [
+  {
+    title: 'Run a reverse DNS lookup on the IP',
+    text: 'For a real Google crawler it should resolve to googlebot.com, google.com or googleusercontent.com.',
+  },
+  {
+    title: 'Confirm with a forward lookup',
+    text: 'A forward lookup on that name should return the same IP.',
+  },
+  {
+    title: "Compare with Google's IP ranges",
+    text: 'Google also publishes its crawler IP ranges.',
+  },
+  {
+    title: 'Do the same for other crawlers',
+    text: 'Use their own published details before you block or allow them.',
+  },
+]
+
+const tools = [
+  {
+    title: 'robots.txt checker',
+    text: 'See which search, AI and training crawlers your robots.txt lets read each URL, and the line that decides.',
+    href: '/tools/robots-txt-validator',
+    icon: Robot01Icon,
+    link: 'Check robots.txt',
+  },
+  {
+    title: 'Redirect checker',
+    text: 'Trace the 301s crawlers keep hitting, hop by hop, and find chains and loops.',
+    href: '/tools/redirect-checker',
+    icon: ArrowLeftRightIcon,
+    link: 'Trace redirects',
+  },
+  {
+    title: 'Sitemap validator',
+    text: 'Find bad URLs, duplicates and old addresses in the sitemap crawlers read.',
+    href: '/tools/sitemap-validator',
+    icon: FileValidationIcon,
+    link: 'Validate a sitemap',
+  },
+  {
+    title: 'Technical SEO site crawl',
+    text: 'Crawl the same site with seo crawl and set its links next to the pages crawlers request.',
+    href: '/docs/crawl',
+    icon: WebValidationIcon,
+    link: 'Site crawl docs',
+  },
+]
+
 const faq = [
   {
-    question: "What is log file analysis in SEO?",
+    question: 'What is log file analysis in SEO?',
     answer:
-      "Reading your web server’s access logs to see which pages search engine and AI crawlers request, how often, and what status your server returned.",
+      'Reading your web server’s access logs to see which pages search engine and AI crawlers request, how often, and what status your server returned.',
   },
   {
-    question: "Where do I find my server access logs?",
+    question: 'Where do I find my server access logs?',
     answer:
-      "On your web server or host. Apache and NGINX usually write them to an access.log file. Many hosts and CDNs let you download or export them from their dashboard.",
+      'On your web server or host. Apache and NGINX usually write them to an access.log file. Many hosts and CDNs let you download or export them from their dashboard.',
   },
   {
-    question: "Is my log file uploaded?",
+    question: 'Is my log file uploaded?',
     answer:
-      "No. The file is read in this browser tab. Only the summary you download leaves it, and only when you choose to.",
+      'No. The file is read in this browser tab. Only the summary you download leaves it, and only when you choose to.',
   },
   {
-    question: "Which log formats work?",
+    question: 'Which log formats work?',
     answer:
-      "Apache and NGINX combined logs, and JSONL or NDJSON exports with common field names for time, method, URL, status, bytes and user agent.",
+      'Apache and NGINX combined logs, and JSONL or NDJSON exports with common field names for time, method, URL, status, bytes and user agent.',
   },
   {
-    question: "How do I know a request was really from Googlebot?",
+    question: 'How do I know a request was really from Googlebot?',
     answer:
-      "The user agent can be faked. Run a reverse DNS lookup on the IP, check that it ends in googlebot.com, google.com or googleusercontent.com, then confirm with a forward lookup.",
+      'The user agent can be faked. Run a reverse DNS lookup on the IP, check that it ends in googlebot.com, google.com or googleusercontent.com, then confirm with a forward lookup.',
   },
   {
-    question: "Do small sites need log file analysis?",
+    question: 'Do small sites need log file analysis?',
     answer:
-      "Rarely. Crawling limits matter for large sites with many URLs. On a small site, Search Console’s crawl stats are usually enough.",
+      'Rarely. Crawling limits matter for large sites with many URLs. On a small site, Search Console’s crawl stats are usually enough.',
   },
 ]
 ---
 
 <BaseLayout
   title="Free SEO log file analyzer for crawler visits"
-  description="Analyze server access logs in your browser. See which search and AI crawlers request your pages, which URLs and status codes they get, and how to verify a real Googlebot."
+  description="Analyze server access logs in your browser. See which search and AI crawlers request your pages, the status codes they get, and how to verify Googlebot."
   canonicalPath="/tools/server-log-analyzer"
   {breadcrumbs}
+  framed={false}
 >
   <main data-agent-content>
-    <nav aria-label="Breadcrumb" class="mb-6 text-sm text-foreground-muted">
-      <ol class="flex flex-wrap items-center gap-1.5">
-        {breadcrumbs.map((crumb, index) => (
-          <li class="flex items-center gap-1.5">
-            {crumb.href ? (
-              <a class="underline decoration-border underline-offset-4 hover:decoration-foreground" href={crumb.href}>
-                {crumb.label}
-              </a>
-            ) : (
-              <span class="text-foreground">{crumb.label}</span>
-            )}
-            {index < breadcrumbs.length - 1 ? <span aria-hidden="true" class="text-border">/</span> : null}
-          </li>
-        ))}
-      </ol>
-    </nav>
+    <section class="pt-4">
+      <div class="site-frame flex flex-col items-center pt-14 text-center sm:pt-20">
+        <h1 class="mt-4 max-w-3xl text-pretty text-4xl/tight font-medium -tracking-[0.8px] xl:text-5xl/tight xl:-tracking-[1px]">
+          SEO log file analyzer
+        </h1>
+        <p class="mt-4 max-w-2xl text-pretty text-xl/8 font-medium -tracking-[0.2px] text-foreground-muted">
+          Find Googlebot, Bingbot, and AI crawler activity in a server access
+          log. The file is processed in your browser and can be exported as
+          four useful CSV tables.
+        </p>
+      </div>
+      <div class="site-frame mt-10 sm:mt-12">
+        <ServerLogAnalyzer />
+      </div>
+    </section>
 
-    <PageHeader
-      title="SEO log file analyzer"
-      description="Find Googlebot, Bingbot, and AI crawler activity in a server access log. The file is processed in your browser and can be exported as four useful CSV tables."
-    />
+    <div class="space-y-24 py-24 sm:space-y-32 sm:py-32">
+      <SplitList
+        id="crawlers-heading"
+        title="How do you see which crawlers request your pages?"
+        text="Load your access log above and the analyzer groups every crawler request by crawler, page and status code."
+        items={grouping}
+      />
 
-    <ServerLogAnalyzer />
+      <SplitList
+        id="privacy-heading"
+        title="Does your raw access log leave your machine?"
+        text="No. The file is read in this browser tab, and only the summary you download leaves it."
+        items={privacy}
+      />
 
-    <div class="docs-prose mt-16">
-      <h2>See which crawlers request your pages</h2>
-      <p>
-        The analyzer groups requests by crawler family, URL path, and HTTP
-        status. Query strings are removed so tracking parameters do not split
-        one page into hundreds of rows. It also shows the first and last valid
-        request dates found in the file.
-      </p>
-      <p>
-        Combined Apache and NGINX access logs work directly. JSONL and NDJSON
-        exports can use common names for the timestamp, method, URL, status,
-        response bytes, and user agent.
-      </p>
+      <SplitList
+        id="verification-heading"
+        title="Does a user-agent match prove which crawler sent a request?"
+        text="No. A match needs verification before you act on it, and a partial result cannot show that a crawler never came."
+        items={verification}
+      />
 
-      <h2>Your raw access log stays on your machine</h2>
-      <p>
-        The page does not upload the log or keep a searchable copy of its raw
-        requests. Large files can be cancelled by closing the tab or choosing
-        another file.
-      </p>
+      <SplitList
+        id="summary-heading"
+        title="How do you read the crawler summary?"
+        text="Start with the status codes for search crawlers, then look at the paths they request."
+        items={summary}
+      />
 
-      <h2>User-agent matches need verification</h2>
-      <p>
-        A matching user-agent string shows what the request claimed to be. It
-        does not prove that Google, Bing, OpenAI, Anthropic, or another company
-        sent the request. Check important findings against the original log and
-        your server configuration before blocking or allowing a crawler.
-      </p>
-      <p>
-        A partial result means the file contained malformed rows or reached a
-        processing limit. Treat missing crawler activity as unknown in that
-        case, rather than a clean zero.
-      </p>
+      <SplitList
+        id="why-heading"
+        title="Why do log files matter for SEO?"
+        text="Because your access log is the only record of every request a crawler made. That matters most on large sites and after a migration."
+        items={reasons}
+      />
 
-      <h2>Read the crawler summary</h2>
-      <p>
-        Start with the status codes for search crawlers. Mostly 200s is
-        healthy. A run of 5xx responses tells Googlebot your server is
-        struggling, and Google slows its crawling when that happens. Lots of
-        404s for old URLs are normal and harmless unless they are pages that
-        should exist. Lots of 301s mean your internal links or sitemap still
-        point at old addresses.
-      </p>
-      <p>
-        Then look at the paths. Crawlers spending most of their requests on
-        filters, search pages or old parameters, while new pages get few
-        visits, is a sign the site wastes crawling on pages that do not
-        matter.
-      </p>
+      <SplitList
+        id="verify-heading"
+        title="How do you verify a crawler before you act?"
+        text="Check its IP address with a reverse and a forward DNS lookup, because anyone can send a request that calls itself Googlebot."
+        items={verify}
+      />
 
-      <h2>Why log files matter for SEO</h2>
-      <p>
-        Search Console shows a sample of what Google crawled. Your access
-        log shows every request, so it is the only place to see exactly
-        which pages crawlers fetch, how often and what your server sent
-        back. That matters most for large sites, where Google cannot crawl
-        everything often, and after a migration, when you need to see
-        crawlers reach the new URLs.
-      </p>
-      <p>
-        For a small site, crawling is rarely the problem. If Googlebot
-        fetches your pages and gets 200s, look elsewhere.
-      </p>
+      <SplitList
+        id="agent-heading"
+        title="How do you use the log results with your AI agent?"
+        text="Download the CSV summary from here and give it to your agent. SEO Skill has no log command, and this page keeps your log in the browser."
+        items={[
+          {
+            title: 'Pages crawlers request that you no longer link to',
+            text: 'Next to a seo crawl of the same site, your agent can find pages crawlers keep requesting that your site no longer links to.',
+            href: '/docs/crawl',
+          },
+          {
+            title: 'Linked pages crawlers never reach',
+            text: 'It can also find linked pages crawlers never reach.',
+          },
+        ]}
+      >
+        <div class="mt-6">
+          <CodeBlock
+            label="Ask your agent"
+            prompt
+            value="Here is the crawler CSV from my server logs and a crawl of example.com. Which pages does Googlebot request that the site no longer links to?"
+            wrap
+          />
+        </div>
+      </SplitList>
 
-      <h2>Verify a crawler before you act</h2>
-      <p>
-        Anyone can send a request that calls itself Googlebot. To confirm a
-        real Google crawler, do a reverse DNS lookup on the IP address: it
-        should resolve to <code>googlebot.com</code>, <code>google.com</code>{' '}
-        or <code>googleusercontent.com</code>, and a forward lookup on that
-        name should return the same IP. Google also publishes its crawler IP
-        ranges. Do the same for other crawlers with their own published
-        details before you block or allow them.
-      </p>
+      <section class="site-frame" aria-labelledby="tools-heading">
+        <SectionHeading
+          id="tools-heading"
+          title="Which tools go with a log file check?"
+          text="These, which cover the rules crawlers follow, the redirects they hit and the pages your site links to."
+        />
+        <div class="grid grid-cols-1 gap-2 sm:grid-cols-2">
+          {tools.map((item) => <HomeCard {...item} />)}
+        </div>
+      </section>
 
-      <h2>Use the results with your AI agent</h2>
-      <p>
-        SEO Skill has no log command, and this page keeps your log in the
-        browser. Download the CSV summary from here and give it to your
-        agent. Next to a <a href="/docs/crawl">seo crawl</a> of the same
-        site, it can find pages crawlers keep requesting that your site no
-        longer links to, and linked pages crawlers never reach. Ask:
-      </p>
-      <CodeBlock prompt value="Here is the crawler CSV from my server logs and a crawl of example.com. Which pages does Googlebot request that the site no longer links to?" wrap />
-      <p>To set it up, give your agent this prompt:</p>
-    </div>
+      <section class="site-frame" aria-labelledby="faq-heading">
+        <div class="max-w-2xl">
+          <h2 id="faq-heading" class="text-pretty text-2xl font-medium -tracking-[0.4px] text-foreground xl:text-3xl xl:-tracking-[0.6px]">
+            Log file analysis questions
+          </h2>
+        </div>
+        <div class="mt-10">
+          <FaqAccordion id="server-log-analyzer-faq" items={faq} />
+        </div>
+      </section>
 
-    <SetupPrompts id="server-log-analyzer-setup" class="mt-6" />
-
-    <div class="docs-prose mt-16">
-      <h2>Log file analysis questions</h2>
-    </div>
-    <div class="mt-6">
-      <FaqAccordion id="server-log-analyzer-faq" items={faq} />
+      <section class="site-frame" aria-labelledby="start-heading">
+        <SectionHeading
+          id="start-heading"
+          title="Compare your logs with a crawl of your site"
+          text="Add SEO Skill to your agent, then give it the CSV summary from this page and ask it to crawl the same site."
+        />
+        <SetupPrompts id="server-log-analyzer-setup" />
+      </section>
     </div>
   </main>
 </BaseLayout>

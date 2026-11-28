@@ -1,9 +1,11 @@
 ---
-import Breadcrumbs from '@/components/Breadcrumbs.astro'
+import { Robot01Icon, SearchList01Icon, ViewOffIcon, WebValidationIcon } from '@hugeicons/core-free-icons'
 import CodeBlock from '@/components/CodeBlock.astro'
 import FaqAccordion from '@/components/FaqAccordion.astro'
-import PageHeader from '@/components/PageHeader.astro'
+import HomeCard from '@/components/HomeCard.astro'
+import SectionHeading from '@/components/SectionHeading.astro'
 import SetupPrompts from '@/components/SetupPrompts.astro'
+import SplitList from '@/components/SplitList.astro'
 import GoogleIndexChecker from '@/components/tools/GoogleIndexChecker.astro'
 import BaseLayout from '@/layouts/BaseLayout.astro'
 import type { SchemaBreadcrumb } from '@/lib/schema'
@@ -14,11 +16,73 @@ const breadcrumbs: SchemaBreadcrumb[] = [
   { label: 'Google index checker' },
 ]
 
+const method = [
+  {
+    title: 'Live searches on desktop and mobile',
+    text: 'For each URL, the checker runs live Google searches through DataForSEO in the country you pick, on desktop and on mobile.',
+  },
+  {
+    title: 'The address and two exact phrases',
+    code: 'site:',
+    text: "It runs a site search for the page address, then an exact phrase from the page's H1 or title and one from its meta description. If any search returns the page itself, the page is found.",
+  },
+  {
+    title: 'One snapshot of Google',
+    text: 'Each run is one snapshot of Google, so the answer can change from one run to the next.',
+  },
+  {
+    title: 'What the page tells Google',
+    text: 'At the same time it fetches the page the way a crawler would and reads the status code, every redirect, the robots meta tags, the X-Robots-Tag header, the canonical and robots.txt.',
+  },
+  {
+    title: 'A likely reason next to the answer',
+    text: 'A page that is not found next to a noindex has a likely reason. A page that is not found with nothing blocking it is probably waiting on Google.',
+  },
+]
+
+const blocks = [
+  { title: 'A noindex in a meta tag or header', text: 'It asks Google to leave the page out.' },
+  { title: 'A robots.txt rule', text: 'It stops Google crawling the page.' },
+  { title: 'A canonical that points to another URL', text: 'It asks Google to index that one instead.' },
+  { title: 'Each can be deliberate', text: 'These can all be deliberate, so check the intent before you change them.' },
+]
+
+const tools = [
+  {
+    title: 'Noindex checker',
+    text: 'The exact rule keeping one page out, and how to fix it on WordPress, Webflow, Shopify and other platforms.',
+    href: '/tools/noindex-checker',
+    icon: ViewOffIcon,
+    link: 'Check noindex',
+  },
+  {
+    title: 'Google index checker for your own site',
+    text: "Google's own reason from Search Console URL Inspection, in bulk or one URL at a time.",
+    href: '/features/google-index-checker',
+    icon: SearchList01Icon,
+    link: 'Check your own pages',
+  },
+  {
+    title: 'Canonical tag checker',
+    text: "See every canonical link in a page's HTML and the full URL it points to.",
+    href: '/tools/canonical-checker',
+    icon: WebValidationIcon,
+    link: 'Check canonicals',
+  },
+  {
+    title: 'robots.txt checker',
+    text: 'See which crawlers your robots.txt lets read each URL, and the line that decides.',
+    href: '/tools/robots-txt-validator',
+    icon: Robot01Icon,
+    link: 'Check robots.txt',
+  },
+]
+
 const faq = [
   {
     question: 'How do I check if a page is indexed by Google?',
     answer:
-      'Enter the URL above. The checker searches Google for site: plus the URL and for exact phrases from the page, on desktop and mobile, and says whether Google returned the page itself. If the site is yours, URL Inspection in Search Console gives the definitive answer for one page at a time.',
+      'Enter the URL above. The checker runs a Google site search for the URL and for exact phrases from the page, on desktop and mobile, and says whether Google returned the page itself. If the site is yours, URL Inspection in Search Console gives the definitive answer for one page at a time.',
   },
   {
     question: 'Is this Google index checker free?',
@@ -28,7 +92,7 @@ const faq = [
   {
     question: 'Does "not found" mean my page is not indexed?',
     answer:
-      'Not for certain. Google can hold a page in its index and still leave it out of a site: or exact phrase search. Found is strong evidence, because Google returned the page itself. Not found is weaker: the page may be missing, or indexed and not shown for those searches.',
+      'Not for certain. Google can hold a page in its index and still leave it out of a site search or an exact phrase search. Found is strong evidence, because Google returned the page itself. Not found is weaker: the page may be missing, or indexed and not shown for those searches.',
   },
   {
     question: 'Why does a result say not known?',
@@ -38,12 +102,12 @@ const faq = [
   {
     question: 'Why is the site: search showing other websites?',
     answer:
-      'When nothing matches a site: search, Google sometimes drops the filter and shows unrelated sites instead. The checker counts those as no match, not as rankings.',
+      'When nothing matches a site search, Google sometimes drops the filter and shows unrelated sites instead. The checker counts those as no match.',
   },
   {
     question: 'My page is not indexed. What should I do?',
     answer:
-      'Fix anything the checker flags first: a noindex, a robots.txt block, an error status or a canonical pointing elsewhere. Then use Request indexing in URL Inspection, make sure the page is in your sitemap, and link to it from pages Google already knows.',
+      'Fix anything the checker flags first, such as a noindex, a robots.txt block, an error status or a canonical pointing elsewhere. Then use Request indexing in URL Inspection, make sure the page is in your sitemap, and link to it from pages Google already knows.',
   },
   {
     question: 'How long does Google take to index a new page?',
@@ -58,101 +122,140 @@ const faq = [
   description="Check whether Google has indexed up to 5 pages. See every search as evidence, on desktop and mobile, and what could stop each page being indexed."
   canonicalPath="/tools/google-index-checker"
   {breadcrumbs}
+  framed={false}
 >
   <main data-agent-content>
-    <Breadcrumbs {breadcrumbs} />
-    <PageHeader
-      title="Google index checker"
-      description="Find out whether Google has a page in its index, with the searches that show it and anything on the page that keeps it out."
-    />
+    <section class="pt-4">
+      <div class="site-frame flex flex-col items-center pt-14 text-center sm:pt-20">
+        <h1 class="mt-4 max-w-3xl text-pretty text-4xl/tight font-medium -tracking-[0.8px] xl:text-5xl/tight xl:-tracking-[1px]">
+          Google index checker
+        </h1>
+        <p class="mt-4 max-w-2xl text-pretty text-xl/8 font-medium -tracking-[0.2px] text-foreground-muted">
+          Find out whether Google has a page in its index, with the searches
+          that show it and anything on the page that keeps it out.
+        </p>
+      </div>
+      <div class="site-frame mt-10 sm:mt-12">
+        <GoogleIndexChecker />
+      </div>
+    </section>
 
-    <GoogleIndexChecker />
+    <div class="space-y-24 py-24 sm:space-y-32 sm:py-32">
+      <SplitList
+        id="method-heading"
+        title="How does the Google index check work?"
+        text="It searches Google live for the page and fetches the page itself, so you see the evidence and anything that blocks indexing side by side."
+        items={method}
+      />
 
-    <div class="docs-prose mt-16">
-      <h2>How the index check works</h2>
-      <p>
-        For each URL, the checker runs live Google searches through
-        DataForSEO in the country you pick, on desktop and on mobile. It
-        searches <code>site:</code> plus the page address, then an exact
-        phrase from the page's H1 or title and one from its meta
-        description. If any search returns the page itself, the page is
-        found. Each run is one snapshot of Google, so the answer can change
-        from one run to the next.
-      </p>
-      <p>
-        At the same time it fetches the page the way a crawler would and
-        reads what it tells Google: the status code, every redirect, the
-        robots meta tags, the X-Robots-Tag header, the canonical and
-        robots.txt. A page that is not found next to a noindex has a likely
-        reason. A page that is not found with nothing blocking it is
-        probably waiting on Google.
-      </p>
+      <section class="site-frame" aria-labelledby="result-heading">
+        <SectionHeading
+          id="result-heading"
+          title="What do found, not found and not known mean?"
+          text="Found means a search returned the page itself. Not found means none did, and not known means a search failed. Not found is weaker evidence than found."
+        />
+        <div class="docs-prose max-w-4xl">
+          <table>
+            <thead>
+              <tr>
+                <th>Result</th>
+                <th>What it means</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td>Found in Google</td>
+                <td>At least one search returned the page itself. Strong evidence that it is indexed.</td>
+              </tr>
+              <tr>
+                <td>Not found</td>
+                <td>Every search ran and none returned the page. The page may be missing, or indexed and not shown for these searches.</td>
+              </tr>
+              <tr>
+                <td>Not known</td>
+                <td>A search failed, or Google's results could not be matched to a page. Run it again later.</td>
+              </tr>
+            </tbody>
+          </table>
+          <p>
+            Google can index a page and still leave it out of a <code>site:</code>{' '}
+            search (it does this more than you would expect for big sites). If
+            the site is yours, URL Inspection in Search Console gives the
+            definitive answer, because it reads Google's own record of the URL.
+          </p>
+        </div>
+      </section>
 
-      <h2>Read found, not found and not known</h2>
-      <table>
-        <thead>
-          <tr>
-            <th>Result</th>
-            <th>What it means</th>
-          </tr>
-        </thead>
-        <tbody>
-          <tr>
-            <td>Found in Google</td>
-            <td>At least one search returned the page itself. Strong evidence that it is indexed.</td>
-          </tr>
-          <tr>
-            <td>Not found</td>
-            <td>Every search ran and none returned the page. The page may be missing, or indexed and not shown for these searches.</td>
-          </tr>
-          <tr>
-            <td>Not known</td>
-            <td>A search failed, or Google's results could not be matched to a page. Run it again later.</td>
-          </tr>
-        </tbody>
-      </table>
-      <p>
-        Not found is weaker evidence than found. Google can index a page and
-        still leave it out of a <code>site:</code> search (it does this more
-        than you would expect for big sites). If the site is yours, URL
-        Inspection in Search Console gives the definitive answer, because it
-        reads Google's own record of the URL.
-      </p>
+      <SplitList
+        id="blocks-heading"
+        title="What can block a page from being indexed?"
+        text="A noindex, a robots.txt rule or a canonical pointing elsewhere. The second half of each result lists what the page tells Google."
+        items={blocks}
+      >
+        <p class="mt-4 text-base leading-7 text-foreground-muted">
+          For one page in detail, with the exact rule and how to fix it on
+          WordPress, Webflow, Shopify and other platforms, use the{' '}
+          <a class="text-foreground underline underline-offset-4" href="/tools/noindex-checker">noindex checker</a>.
+        </p>
+      </SplitList>
 
-      <h2>Check what blocks indexing</h2>
-      <p>
-        The second half of each result lists what the page tells Google. A
-        noindex in a meta tag or header asks Google to leave the page out. A
-        robots.txt rule stops Google crawling it. A canonical that points to
-        another URL asks Google to index that one instead. These can all be
-        deliberate, so check the intent before you change them.
-      </p>
-      <p>
-        For one page in detail, with the exact rule and how to fix it on
-        WordPress, Webflow, Shopify and other platforms, use the{' '}
-        <a href="/tools/noindex-checker">noindex checker</a>.
-      </p>
+      <SplitList
+        id="agent-heading"
+        title="How do you check indexing with your AI agent?"
+        text="Ask it. With SEO Skill your agent runs the same check on as many pages as you like, and for your own site it reads Google's own record."
+        items={[
+          {
+            title: 'The same check on as many pages as you like',
+            text: 'Your agent runs it with seo research and your own DataForSEO key.',
+            href: '/docs/research',
+          },
+          {
+            title: 'Why Google does or does not index your pages',
+            text: 'For your own site, seo index reads URL Inspection from Search Console for each page and says why Google does or does not index it.',
+            href: '/docs/indexing',
+          },
+        ]}
+      >
+        <div class="mt-6">
+          <CodeBlock
+            label="Ask your agent"
+            prompt
+            value="Check whether Google has indexed my five newest blog posts on example.com, and tell me what is keeping out any that are missing"
+            wrap
+          />
+        </div>
+      </SplitList>
 
-      <h2>Check indexing with your AI agent</h2>
-      <p>
-        With SEO Skill your agent runs the same check with{' '}
-        <a href="/docs/research">seo research</a> and your own DataForSEO
-        key, on as many pages as you like. For your own site it goes further:{' '}
-        <a href="/docs/indexing">seo index</a> reads URL Inspection from
-        Search Console for each page and says why Google does or does not
-        index it. Ask:
-      </p>
-      <CodeBlock prompt value="Check whether Google has indexed my five newest blog posts on example.com, and tell me what is keeping out any that are missing" wrap />
-      <p>To set it up, give your agent this prompt:</p>
-    </div>
+      <section class="site-frame" aria-labelledby="tools-heading">
+        <SectionHeading
+          id="tools-heading"
+          title="Which tools go with an index check?"
+          text="These, which find the rule that keeps a page out and give Google's own reason for your site."
+        />
+        <div class="grid grid-cols-1 gap-2 sm:grid-cols-2">
+          {tools.map((item) => <HomeCard {...item} />)}
+        </div>
+      </section>
 
-    <SetupPrompts id="index-checker-setup" class="mt-6" />
+      <section class="site-frame" aria-labelledby="faq-heading">
+        <div class="max-w-2xl">
+          <h2 id="faq-heading" class="text-pretty text-2xl font-medium -tracking-[0.4px] text-foreground xl:text-3xl xl:-tracking-[0.6px]">
+            Google index checker questions
+          </h2>
+        </div>
+        <div class="mt-10">
+          <FaqAccordion id="index-checker-faq" items={faq} />
+        </div>
+      </section>
 
-    <div class="docs-prose mt-16">
-      <h2>Google index checker questions</h2>
-    </div>
-    <div class="mt-6">
-      <FaqAccordion id="index-checker-faq" items={faq} />
+      <section class="site-frame" aria-labelledby="start-heading">
+        <SectionHeading
+          id="start-heading"
+          title="Find out why Google leaves your pages out"
+          text="Add SEO Skill to your agent, sign in with the Google account that can read your Search Console, and ask which pages are missing from Google and why."
+        />
+        <SetupPrompts id="index-checker-setup" />
+      </section>
     </div>
   </main>
 </BaseLayout>

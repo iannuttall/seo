@@ -1,9 +1,11 @@
 ---
-import Breadcrumbs from '@/components/Breadcrumbs.astro'
+import { BrowserIcon, FileSearchIcon, StarIcon, WebValidationIcon } from '@hugeicons/core-free-icons'
 import CodeBlock from '@/components/CodeBlock.astro'
 import FaqAccordion from '@/components/FaqAccordion.astro'
-import PageHeader from '@/components/PageHeader.astro'
+import HomeCard from '@/components/HomeCard.astro'
+import SectionHeading from '@/components/SectionHeading.astro'
 import SetupPrompts from '@/components/SetupPrompts.astro'
+import SplitList from '@/components/SplitList.astro'
 import OpenGraphChecker from '@/components/tools/OpenGraphChecker.astro'
 import BaseLayout from '@/layouts/BaseLayout.astro'
 import type { SchemaBreadcrumb } from '@/lib/schema'
@@ -24,6 +26,36 @@ const tags = `<meta property="og:title" content="How to brew pour-over coffee">
 <meta property="og:type" content="article">
 <meta property="og:site_name" content="Example Coffee">
 <meta name="twitter:card" content="summary_large_image">`
+
+const previews = [
+  { title: 'The crawler fetches the page and the image', text: 'When someone pastes a link, the platform’s crawler fetches the page, reads the tags in the head and fetches the image.' },
+  { title: 'Most crawlers skip JavaScript', text: 'Most of these crawlers do not run JavaScript, so tags added by a script after the page loads are invisible to them.' },
+  { title: 'This checker reads the page the same way', text: 'A tag missing here is missing for them too.' },
+  { title: 'Platforms cache the result', text: 'Often for days. That is why a fixed page can keep an old preview.' },
+  { title: 'X and chat apps lean on Open Graph', text: 'X falls back to Open Graph when its own tags are missing, and chat apps mostly use Open Graph alone.' },
+]
+
+const problems = [
+  { title: 'No image', text: 'og:image is missing, relative, or points at a file that redirects to a login or returns an error.' },
+  { title: 'Old image or title', text: 'The platform cached it. Refresh it in Facebook’s Sharing Debugger or LinkedIn’s Post Inspector.' },
+  { title: 'Tiny thumbnail instead of a big card', text: 'The image is under 600×315, or twitter:card is summary rather than summary_large_image.' },
+  { title: 'Cropped image', text: 'The image is not close to 1.91:1.' },
+  { title: 'Tags present in the browser but missing here', text: 'They are added by JavaScript. Render them on the server.' },
+  { title: 'Blocked crawler', text: 'A firewall or bot challenge can stop platform crawlers. If this checker could not fetch the page, they may not either.' },
+]
+
+const traffic = [
+  { title: 'Shared links bring a second wave of visits', text: 'A page that ranks gets shared in Slack, WhatsApp, LinkedIn and group chats, and a link with a clear title and a sharp image gets clicked more than a bare URL. For many sites, that second wave is a real share of their visits.' },
+  { title: 'Titles and descriptions do the same job in Google', text: 'Your title and meta description shape the result in Google. The title and meta description checker shows how those look.', href: '/tools/title-and-meta-description-checker' },
+  { title: 'The favicon sits beside your site’s name', text: 'The small icon beside your site’s name in Google’s results and in browser tabs is the favicon. The favicon checker shows whether it is declared and loads.', href: '/tools/favicon-checker' },
+]
+
+const tools = [
+  { title: 'Title and meta description checker', text: 'How a page’s title and meta description look in Google’s results.', href: '/tools/title-and-meta-description-checker', icon: FileSearchIcon, link: 'Check titles' },
+  { title: 'SERP preview', text: 'See a page’s title, URL and meta description in Google on desktop and mobile, with the point where Google cuts them off.', href: '/tools/serp-preview', icon: BrowserIcon, link: 'Preview a result' },
+  { title: 'Favicon checker', text: 'Every icon a site declares, with its size and response, and why a favicon is not showing in Google.', href: '/tools/favicon-checker', icon: StarIcon, link: 'Check a favicon' },
+  { title: 'SEO crawler', text: 'Crawl any site on your machine, including localhost and staging, for broken links, redirects, titles, canonicals and noindex tags.', href: '/features/seo-crawler', icon: WebValidationIcon, link: 'See the crawler' },
+]
 
 const faq = [
   {
@@ -66,170 +98,196 @@ const faq = [
 
 <BaseLayout
   title="Free Open Graph checker and link preview tester"
-  description="Check any page's Open Graph and X card tags for free. Preview the link on Facebook, X and chat apps, measure the og:image size and file, and find what to fix."
+  description="Check any page's Open Graph and X card tags for free. Preview the link on Facebook, X and chat apps, measure the og:image and find what to fix."
   canonicalPath="/tools/open-graph-checker"
   {breadcrumbs}
+  framed={false}
 >
   <main data-agent-content>
-    <Breadcrumbs {breadcrumbs} />
-    <PageHeader
-      title="Open Graph checker"
-      description="Enter a URL to see how the link will look when someone shares it, and which tags or image problems to fix."
-    />
+    <section class="pt-4">
+      <div class="site-frame flex flex-col items-center pt-14 text-center sm:pt-20">
+        <h1 class="mt-4 max-w-3xl text-pretty text-4xl/tight font-medium -tracking-[0.8px] xl:text-5xl/tight xl:-tracking-[1px]">
+          Open Graph checker
+        </h1>
+        <p class="mt-4 max-w-2xl text-pretty text-xl/8 font-medium -tracking-[0.2px] text-foreground-muted">
+          Enter a URL to see how the link will look when someone shares it,
+          and which tags or image problems to fix.
+        </p>
+      </div>
+      <div class="site-frame mt-10 sm:mt-12">
+        <OpenGraphChecker />
+      </div>
+    </section>
 
-    <OpenGraphChecker />
+    <div class="space-y-24 py-24 sm:space-y-32 sm:py-32">
+      <section class="site-frame" aria-labelledby="labels-heading">
+        <SectionHeading
+          id="labels-heading"
+          title="What do the Open Graph checker labels mean?"
+          text="Each check gets a label that says how much it matters, from Fix down to OK. The previews above them show the link as Facebook and LinkedIn, X and chat apps draw it, from the tags the page has now."
+        />
+        <div class="docs-prose max-w-4xl">
+          <table>
+            <thead>
+              <tr>
+                <th>Label</th>
+                <th>What it means</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td>Fix</td>
+                <td>The preview breaks or loses its image on at least one platform.</td>
+              </tr>
+              <tr>
+                <td>Check</td>
+                <td>It works, but looks worse than it could, or depends on a fallback.</td>
+              </tr>
+              <tr>
+                <td>Note</td>
+                <td>Good to know. Often fine as it is.</td>
+              </tr>
+              <tr>
+                <td>OK</td>
+                <td>The tag or image meets the platforms' published rules.</td>
+              </tr>
+            </tbody>
+          </table>
+          <p>
+            The image card gives the real size, shape and file size of the share
+            image, measured from the file itself. The tag table lists every Open Graph and X tag found in the
+            head, in order.
+          </p>
+        </div>
+      </section>
 
-    <div class="docs-prose mt-16">
-      <h2>Read the Open Graph result</h2>
-      <p>
-        The previews show the link as Facebook and LinkedIn, X and chat apps
-        draw it, from the tags the page has now. Under them, each check has
-        a label.
-      </p>
-      <table>
-        <thead>
-          <tr>
-            <th>Label</th>
-            <th>What it means</th>
-          </tr>
-        </thead>
-        <tbody>
-          <tr>
-            <td>Fix</td>
-            <td>The preview breaks or loses its image on at least one platform.</td>
-          </tr>
-          <tr>
-            <td>Check</td>
-            <td>It works, but looks worse than it could, or depends on a fallback.</td>
-          </tr>
-          <tr>
-            <td>Note</td>
-            <td>Good to know. Often fine as it is.</td>
-          </tr>
-          <tr>
-            <td>OK</td>
-            <td>The tag or image meets the platforms' published rules.</td>
-          </tr>
-        </tbody>
-      </table>
-      <p>
-        The image card gives the real size, shape and file size of the share
-        image, measured from the file, not from what the tags claim. The tag
-        table lists every Open Graph and X tag found in the head, in order.
-      </p>
+      <section class="site-frame" aria-labelledby="size-heading">
+        <SectionHeading
+          id="size-heading"
+          title="What size should an Open Graph image be?"
+          text="1200×630 pixels, because one image at that size works everywhere. The limits below are from each platform's own documentation."
+        />
+        <div class="docs-prose max-w-4xl">
+          <table>
+            <thead>
+              <tr>
+                <th>Platform</th>
+                <th>What it needs</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td>Facebook</td>
+                <td>At least 200×200. A large card from 600×315. Use 1200×630, at up to 8 MB.</td>
+              </tr>
+              <tr>
+                <td>LinkedIn</td>
+                <td>1200×627 or larger, 1.91:1. Up to 5 MB.</td>
+              </tr>
+              <tr>
+                <td>X</td>
+                <td>For a large card, at least 300×157, about 2:1. Up to 5 MB. PNG, JPEG, WebP or GIF. SVG does not work.</td>
+              </tr>
+              <tr>
+                <td>Chat apps</td>
+                <td>The same 1.91:1 image. Keep the file small, because some apps skip large images.</td>
+              </tr>
+            </tbody>
+          </table>
+          <p>
+            Keep the text and faces away from the edges. Each platform crops a
+            little differently, and a square or tall image is cropped hard to
+            fit a wide card.
+          </p>
+        </div>
+      </section>
 
-      <h2>Open Graph image size for each platform</h2>
-      <p>
-        One image at 1200×630 pixels works everywhere. The limits below are
-        from each platform's own documentation.
-      </p>
-      <table>
-        <thead>
-          <tr>
-            <th>Platform</th>
-            <th>What it needs</th>
-          </tr>
-        </thead>
-        <tbody>
-          <tr>
-            <td>Facebook</td>
-            <td>At least 200×200. A large card from 600×315. 1200×630 recommended. Up to 8 MB.</td>
-          </tr>
-          <tr>
-            <td>LinkedIn</td>
-            <td>1200×627 or larger, 1.91:1. Up to 5 MB.</td>
-          </tr>
-          <tr>
-            <td>X</td>
-            <td>For a large card, at least 300×157, about 2:1. Up to 5 MB. PNG, JPEG, WebP or GIF, not SVG.</td>
-          </tr>
-          <tr>
-            <td>Chat apps</td>
-            <td>The same 1.91:1 image. Keep the file small, because some apps skip large images.</td>
-          </tr>
-        </tbody>
-      </table>
-      <p>
-        Keep the text and faces away from the edges. Each platform crops a
-        little differently, and a square or tall image is cropped hard to
-        fit a wide card.
-      </p>
+      <section class="site-frame" aria-labelledby="tags-heading">
+        <SectionHeading
+          id="tags-heading"
+          title="Which Open Graph tags should a page have?"
+          text="These, in the head of every page you expect people to share. Write each one for that page instead of one set for the whole site."
+        />
+        <div class="max-w-4xl">
+          <CodeBlock value={tags} />
+          <p class="mt-4 text-base leading-7 text-foreground-muted">
+            The width, height and alt tags are optional but worth it. Facebook
+            shows the image on the very first share only when it knows the size
+            in advance, and the alt text is read to people using screen readers.
+          </p>
+        </div>
+      </section>
 
-      <h2>The Open Graph tags to add</h2>
-      <p>
-        These go in the head of every page you expect people to share. Write
-        each one for that page, not one set for the whole site.
-      </p>
-      <CodeBlock value={tags} />
-      <p>
-        The width, height and alt tags are optional but worth it. Facebook
-        shows the image on the very first share only when it knows the size
-        in advance, and the alt text is read to people using screen readers.
-      </p>
+      <SplitList
+        id="previews-heading"
+        title="How are link previews built?"
+        text="From the tags a platform's crawler finds in the page head, then cached. That explains most previews that look wrong."
+        items={previews}
+      />
 
-      <h2>How link previews are built</h2>
-      <p>
-        When someone pastes a link, the platform's crawler fetches the page,
-        reads the tags in the head and fetches the image. Most of these
-        crawlers do not run JavaScript, so tags added by a script after the
-        page loads are invisible to them. This checker reads the page the
-        same way, so a tag missing here is missing for them too.
-      </p>
-      <p>
-        Platforms then cache the result, often for days. That is why a fixed
-        page can keep an old preview. X falls back to Open Graph when its own
-        tags are missing, and chat apps mostly use Open Graph alone.
-      </p>
+      <SplitList
+        id="problems-heading"
+        title="How do you fix a broken link preview?"
+        text="Find which of these it is, fix the tag or image, then ask the platform to read the page again."
+        items={problems}
+      />
 
-      <h2>Fix common link preview problems</h2>
-      <ul>
-        <li><strong>No image.</strong> og:image is missing, relative, or points at a file that redirects to a login or returns an error.</li>
-        <li><strong>Old image or title.</strong> The platform cached it. Refresh it in Facebook's Sharing Debugger or LinkedIn's Post Inspector.</li>
-        <li><strong>Tiny thumbnail instead of a big card.</strong> The image is under 600×315, or twitter:card is summary rather than summary_large_image.</li>
-        <li><strong>Cropped image.</strong> The image is not close to 1.91:1.</li>
-        <li><strong>Tags present in the browser but not here.</strong> They are added by JavaScript. Render them on the server.</li>
-        <li><strong>Blocked crawler.</strong> A firewall or bot challenge can stop platform crawlers. If this checker could not fetch the page, they may not either.</li>
-      </ul>
+      <SplitList
+        id="traffic-heading"
+        title="Do Open Graph tags change search traffic?"
+        text="They do not change where a page ranks in Google. They change what happens after, when people share the page."
+        items={traffic}
+      />
 
-      <h2>Why Open Graph matters for search traffic</h2>
-      <p>
-        Open Graph tags do not change where a page ranks in Google. They
-        change what happens after: a page that ranks gets shared in Slack,
-        WhatsApp, LinkedIn and group chats, and a link with a clear title and
-        a sharp image gets clicked more than a bare URL. For many sites, that
-        second wave is a real share of their visits.
-      </p>
-      <p>
-        Your title and meta description do the same job in Google's results.
-        The <a href="/tools/title-and-meta-description-checker">title and meta description checker</a> shows how those
-        look.
-      </p>
-      <p>
-        The small icon beside your site's name in Google's results and in
-        browser tabs is the favicon. The{' '}
-        <a href="/tools/favicon-checker">favicon checker</a> shows whether it
-        is declared and loads.
-      </p>
+      <SplitList
+        id="agent-heading"
+        title="How do you check Open Graph tags across your site with your agent?"
+        text="With seo crawl, which checks every page it reaches on your own machine. One URL here tells you about one template."
+        items={[
+          { title: 'Pages missing their tags', text: 'The crawl reports pages with no Open Graph title, description or image, and no X card.', href: '/docs/crawl' },
+          { title: 'Fix the template, then check one page', text: 'Your agent can then add the missing tags to the right template and check one page here before it ships.' },
+        ]}
+      >
+        <div class="mt-6">
+          <CodeBlock
+            label="Ask your agent"
+            prompt
+            value="Crawl example.com and list the pages missing og:image or twitter:card, grouped by template"
+            wrap
+          />
+        </div>
+      </SplitList>
 
-      <h2>Check Open Graph tags across your site with your agent</h2>
-      <p>
-        One URL tells you about one template. The <a href="/docs/crawl">seo crawl</a>{' '}
-        command checks every page it reaches on your own machine and reports
-        pages with no Open Graph title, description or image, and no X card.
-        Your agent can then add the missing tags to the right template and
-        check one page here before it ships. Ask:
-      </p>
-      <CodeBlock prompt value="Crawl example.com and list the pages missing og:image or twitter:card, grouped by template" wrap />
-      <p>The crawl runs from the CLI on your machine. Give your agent this prompt and it installs the CLI and adds the hosted MCP server:</p>
-    </div>
+      <section class="site-frame" aria-labelledby="tools-heading">
+        <SectionHeading
+          id="tools-heading"
+          title="Which tools go with an Open Graph check?"
+          text="These, which cover how the same page looks in Google's results and the tags across the rest of your site."
+        />
+        <div class="grid grid-cols-1 gap-2 sm:grid-cols-2">
+          {tools.map((item) => <HomeCard {...item} />)}
+        </div>
+      </section>
 
-    <SetupPrompts id="open-graph-setup" class="mt-6" />
+      <section class="site-frame" aria-labelledby="faq-heading">
+        <div class="max-w-2xl">
+          <h2 id="faq-heading" class="text-pretty text-2xl font-medium -tracking-[0.4px] text-foreground xl:text-3xl xl:-tracking-[0.6px]">
+            Open Graph questions
+          </h2>
+        </div>
+        <div class="mt-10">
+          <FaqAccordion items={faq} id="open-graph-faq" />
+        </div>
+      </section>
 
-    <div class="docs-prose mt-16">
-      <h2>Open Graph questions</h2>
-    </div>
-    <div class="mt-6">
-      <FaqAccordion id="open-graph-faq" items={faq} />
+      <section class="site-frame" aria-labelledby="start-heading">
+        <SectionHeading
+          id="start-heading"
+          title="Check Open Graph tags across your whole site"
+          text="The crawl runs from the CLI on your machine. Give your agent this prompt and it installs the CLI and adds the hosted MCP server."
+        />
+        <SetupPrompts id="open-graph-setup" />
+      </section>
     </div>
   </main>
 </BaseLayout>

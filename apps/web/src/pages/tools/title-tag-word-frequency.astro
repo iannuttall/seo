@@ -1,9 +1,11 @@
 ---
-import Breadcrumbs from '@/components/Breadcrumbs.astro'
+import { Layers01Icon, SearchList01Icon, TextCheckIcon, WebDesign01Icon } from '@hugeicons/core-free-icons'
 import CodeBlock from '@/components/CodeBlock.astro'
 import FaqAccordion from '@/components/FaqAccordion.astro'
-import PageHeader from '@/components/PageHeader.astro'
+import HomeCard from '@/components/HomeCard.astro'
+import SectionHeading from '@/components/SectionHeading.astro'
 import SetupPrompts from '@/components/SetupPrompts.astro'
+import SplitList from '@/components/SplitList.astro'
 import ResearchLookup from '@/components/tools/ResearchLookup.astro'
 import BaseLayout from '@/layouts/BaseLayout.astro'
 import type { SchemaBreadcrumb } from '@/lib/schema'
@@ -12,6 +14,26 @@ const breadcrumbs: SchemaBreadcrumb[] = [
   { label: 'Home', href: '/' },
   { label: 'Tools', href: '/tools' },
   { label: 'Title tag word frequency' },
+]
+
+const writing = [
+  { title: 'Start with the words most titles use', text: 'They tell you what the searcher expects to see, such as \u201cguide\u201d, \u201ccost\u201d or a year.' },
+  { title: 'Add one thing the others do not say', text: 'So yours stands out in the list (a test you ran, a number, a narrower audience).' },
+  { title: 'Skip words that appear in only one title', text: 'They tell you about that one site and say little about the results page.' },
+  { title: 'Keep it under about 600 pixels', text: 'So Google does not cut it. The title tag and meta description checker measures a finished title on desktop and mobile.', href: '/tools/title-and-meta-description-checker' },
+]
+
+const limits = [
+  { title: 'A shared word is a pattern', text: 'It is no ranking factor. Pages rank for what they contain and who links to them, and the title is a small part of that.' },
+  { title: 'Results move by country and through the day', text: 'Check again before you rewrite a title that already gets clicks.' },
+  { title: 'See the full results page', text: 'The SERP checker shows each ranking site with its Domain Rating.', href: '/tools/serp-checker' },
+]
+
+const tools = [
+  { title: 'Title and meta description checker', text: 'Measure a finished title on desktop and mobile, so Google does not cut it.', href: '/tools/title-and-meta-description-checker', icon: TextCheckIcon, link: 'Check titles' },
+  { title: 'SERP preview', text: 'See how the new title and description look in Google before you copy the HTML.', href: '/tools/serp-preview', icon: WebDesign01Icon, link: 'Open the preview' },
+  { title: 'SERP checker', text: 'The full results page for a keyword, with each site\u2019s Domain Rating.', href: '/tools/serp-checker', icon: SearchList01Icon, link: 'Check the results' },
+  { title: 'Keyword clustering tool', text: 'Find which keywords one page and one title can target together.', href: '/tools/keyword-clustering-tool', icon: Layers01Icon, link: 'Cluster keywords' },
 ]
 
 const faq = [
@@ -48,95 +70,130 @@ const faq = [
   description="Count the words and phrases in the titles that rank in Google for any keyword, free, then write a title from the words the results already share."
   canonicalPath="/tools/title-tag-word-frequency"
   {breadcrumbs}
+  framed={false}
 >
   <main data-agent-content>
-    <Breadcrumbs {breadcrumbs} />
-    <PageHeader
-      title="Title tag word frequency"
-      description="See which words the ranking titles share for a keyword, so your title uses the language the results page already rewards."
-    />
+    <section class="pt-4">
+      <div class="site-frame flex flex-col items-center pt-14 text-center sm:pt-20">
+        <h1 class="mt-4 max-w-3xl text-pretty text-4xl/tight font-medium -tracking-[0.8px] xl:text-5xl/tight xl:-tracking-[1px]">
+          Title tag word frequency
+        </h1>
+        <p class="mt-4 max-w-2xl text-pretty text-xl/8 font-medium -tracking-[0.2px] text-foreground-muted">
+          See which words the ranking titles share for a keyword, so your
+          title uses the language the results page already rewards.
+        </p>
+      </div>
+      <div class="site-frame mt-10 sm:mt-12">
+        <ResearchLookup
+          kind="title-words"
+          heading="Count the words in ranking titles"
+          description="Enter a keyword and pick a country. The counter reads up to 50 live organic results."
+          example="what is a heat pump"
+        />
+      </div>
+    </section>
 
-    <ResearchLookup
-      kind="title-words"
-      heading="Count the words in ranking titles"
-      description="Enter a keyword and pick a country. The counter reads up to 50 live organic results."
-      example="what is a heat pump"
-    />
+    <div class="space-y-24 py-24 sm:space-y-32 sm:py-32">
+      <section class="site-frame" aria-labelledby="counts-heading">
+        <SectionHeading
+          id="counts-heading"
+          title="How do you read the word counts?"
+          text="Each row is a word, with the number of ranking titles that use it and its share of all the titles read. A title counts once per word, however often it repeats it."
+        />
+        <div class="docs-prose max-w-4xl">
+          <table>
+            <thead>
+              <tr>
+                <th>Column</th>
+                <th>What it tells you</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td>Titles</td>
+                <td>How many ranking titles contain the word at least once.</td>
+              </tr>
+              <tr>
+                <td>Share</td>
+                <td>Those titles as a share of every title read.</td>
+              </tr>
+              <tr>
+                <td>Phrases</td>
+                <td>Two-word phrases that appear in at least two titles.</td>
+              </tr>
+            </tbody>
+          </table>
+          <p>
+            Common words such as the, for and how are hidden by default.
+            Untick the box to see them, because a question word like "how" can
+            say a lot about what the searcher wants.
+          </p>
+        </div>
+      </section>
 
-    <div class="docs-prose mt-16">
-      <h2>Read the word counts</h2>
-      <p>
-        Each row is a word, with the number of ranking titles that use it and
-        its share of all the titles read. A title counts once per word, however
-        often it repeats it. Common words such as the, for and how are hidden
-        by default. Untick the box to see them, because a question word like
-        "how" can say a lot about what the searcher wants.
-      </p>
-      <table>
-        <thead>
-          <tr>
-            <th>Column</th>
-            <th>What it tells you</th>
-          </tr>
-        </thead>
-        <tbody>
-          <tr>
-            <td>Titles</td>
-            <td>How many ranking titles contain the word at least once.</td>
-          </tr>
-          <tr>
-            <td>Share</td>
-            <td>Those titles as a share of every title read.</td>
-          </tr>
-          <tr>
-            <td>Phrases</td>
-            <td>Two-word phrases that appear in at least two titles.</td>
-          </tr>
-        </tbody>
-      </table>
+      <SplitList
+        id="writing-heading"
+        title="How do you write a title from the shared words?"
+        text="Use the words most ranking titles share, then add one thing they leave out."
+        items={writing}
+      />
 
-      <h2>Write a title from the shared words</h2>
-      <p>
-        Start with the words that appear in most titles. They tell you what the
-        searcher expects to see, such as "guide", "cost" or a year. Then add one
-        thing the other titles do not say, so yours stands out in the list (a
-        test you ran, a number, a narrower audience). Words in only one title
-        tell you about that one site, not the results page.
-      </p>
-      <p>
-        Keep the result under about 600 pixels so Google does not cut it. The{' '}
-        <a href="/tools/title-and-meta-description-checker">title tag and meta description checker</a>{' '}
-        measures a finished title on desktop and mobile.
-      </p>
+      <SplitList
+        id="limits-heading"
+        title="What can the word counts not tell you?"
+        text="Whether a word helps a page rank. The counts show what the ranking titles have in common."
+        items={limits}
+      />
 
-      <h2>What the counts cannot tell you</h2>
-      <p>
-        A shared word is a pattern, not a ranking factor. Pages rank for what
-        they contain and who links to them, and the title is a small part of
-        that. Results also move by country and through the day, so check again
-        before you rewrite a title that already gets clicks. To see the full
-        results page with each site's Domain Rating, use the{' '}
-        <a href="/tools/serp-checker">SERP checker</a>.
-      </p>
+      <SplitList
+        id="agent-heading"
+        title="How do you draft titles with your AI agent?"
+        text="Ask it to read the live results with seo research and your own DataForSEO key, count the shared words, and draft titles next to the queries your page already gets in Search Console."
+        items={[
+          { title: 'Read the live results', text: 'seo research pulls the ranking titles with your own DataForSEO key.', href: '/docs/research' },
+          { title: 'Draft titles beside your queries', text: 'Your agent puts each draft next to the queries the page already gets in Search Console.' },
+        ]}
+      >
+        <div class="mt-6">
+          <CodeBlock
+            label="Ask your agent"
+            prompt
+            value="Read the top 50 Google titles for my main keyword on example.com/guide, count the words they share, and draft three titles that use them"
+            wrap
+          />
+        </div>
+      </SplitList>
 
-      <h2>Draft titles with your AI agent</h2>
-      <p>
-        With SEO Skill your agent can read the live results with{' '}
-        <a href="/docs/research">seo research</a> and your own DataForSEO key,
-        count the shared words, and draft titles next to the queries your page
-        already gets in Search Console. Ask:
-      </p>
-      <CodeBlock prompt value="Read the top 50 Google titles for my main keyword on example.com/guide, count the words they share, and draft three titles that use them" wrap />
-      <p>To set it up, give your agent this prompt:</p>
-    </div>
+      <section class="site-frame" aria-labelledby="tools-heading">
+        <SectionHeading
+          id="tools-heading"
+          title="Which tools go with a title word check?"
+          text="These, which measure the finished title, preview it in Google and show the results behind the counts."
+        />
+        <div class="grid grid-cols-1 gap-2 sm:grid-cols-2">
+          {tools.map((item) => <HomeCard {...item} />)}
+        </div>
+      </section>
 
-    <SetupPrompts id="title-words-setup" class="mt-6" />
+      <section class="site-frame" aria-labelledby="faq-heading">
+        <div class="max-w-2xl">
+          <h2 id="faq-heading" class="text-pretty text-2xl font-medium -tracking-[0.4px] text-foreground xl:text-3xl xl:-tracking-[0.6px]">
+            Title tag word frequency questions
+          </h2>
+        </div>
+        <div class="mt-10">
+          <FaqAccordion items={faq} id="title-words-faq" />
+        </div>
+      </section>
 
-    <div class="docs-prose mt-16">
-      <h2>Title tag word frequency questions</h2>
-    </div>
-    <div class="mt-6">
-      <FaqAccordion id="title-words-faq" items={faq} />
+      <section class="site-frame" aria-labelledby="start-heading">
+        <SectionHeading
+          id="start-heading"
+          title="Draft titles for every page you plan with your agent"
+          text="Add SEO Skill to your agent, add your DataForSEO key and sign in with Google, then ask for titles built from the words the results share."
+        />
+        <SetupPrompts id="title-words-setup" />
+      </section>
     </div>
   </main>
 </BaseLayout>

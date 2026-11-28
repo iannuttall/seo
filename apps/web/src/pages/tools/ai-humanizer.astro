@@ -1,9 +1,16 @@
 ---
-import Breadcrumbs from '@/components/Breadcrumbs.astro'
+import {
+  BookOpen01Icon,
+  CheckListIcon,
+  QuillWrite01Icon,
+  TextCheckIcon,
+} from '@hugeicons/core-free-icons'
 import CodeBlock from '@/components/CodeBlock.astro'
 import FaqAccordion from '@/components/FaqAccordion.astro'
-import PageHeader from '@/components/PageHeader.astro'
+import HomeCard from '@/components/HomeCard.astro'
+import SectionHeading from '@/components/SectionHeading.astro'
 import SetupPrompts from '@/components/SetupPrompts.astro'
+import SplitList from '@/components/SplitList.astro'
 import AiHumanizer from '@/components/tools/AiHumanizer.astro'
 import BaseLayout from '@/layouts/BaseLayout.astro'
 import type { SchemaBreadcrumb } from '@/lib/schema'
@@ -14,11 +21,42 @@ const breadcrumbs: SchemaBreadcrumb[] = [
   { label: 'AI humanizer' },
 ]
 
+const facts = [
+  {
+    title: 'A plain rewrite prompt adds claims',
+    text: 'Ask a model to make a draft sound human and it adds what a human would have written: a story, a customer name, a reason, a number. In the same test, a plain “make it sound like a person wrote it” prompt added 54 claims the drafts never made.',
+  },
+  { title: 'The fixes never ask for something new', text: 'Each one works with what the draft already says.' },
+  { title: 'Sales words', text: 'A sales word gets a plainer swap or a cut.' },
+  { title: 'Inflated significance', text: 'It gets cut, or replaced with a fact the text already states.' },
+  {
+    title: 'A fix that needs a fact you do not have',
+    text: 'Delete the phrase. The draft is usually better for it.',
+  },
+]
+
+const rewrite = [
+  { title: 'Start with the lines marked as a fix', text: 'Most drafts need a handful of edits, and doing them by hand takes a few minutes.' },
+  { title: 'Then read each line marked as your call', text: 'Change it only if it fails the question.' },
+  {
+    title: 'Hand the job to a chat assistant',
+    text: 'Use Copy rewrite prompt. It asks the model to make each marked line clearer and more direct, to leave other lines alone, and to add no new names, numbers, dates or quotes.',
+  },
+  { title: 'Paste the result back here', text: 'Check it again.' },
+]
+
+const tools = [
+  { title: 'SEO content checker', text: 'Check a post’s headings and copy, with a fix for each problem.', href: '/tools/seo-content-checker', icon: TextCheckIcon, link: 'Check your content' },
+  { title: 'Title and meta description checker', text: 'Check a title and meta description in pixels, with the Google preview.', href: '/tools/title-and-meta-description-checker', icon: QuillWrite01Icon, link: 'Check a title' },
+  { title: 'seo lint', text: 'The same AI pattern rules for files in your project, with presets for posts, landing pages and meta descriptions.', href: '/docs/lint', icon: CheckListIcon, link: 'seo lint docs' },
+  { title: 'Build your own humanizer skill', text: 'Each of the 8 patterns turned into a check and a rewrite rule for your agent.', href: '/blog/humanizer-skill', icon: BookOpen01Icon, link: 'Read the post' },
+]
+
 const faq = [
   {
     question: 'What does an AI humanizer do?',
     answer:
-      'This one makes AI-assisted writing clear and direct for the person reading it. It finds the sentence patterns that get in the reader\'s way, such as padded lists of three, drama nobody needs and closing lines that repeat the point, and shows how to fix each one with the facts already in your text.',
+      "This one makes AI-assisted writing clear and direct for the person reading it. It finds the sentence patterns that get in the reader's way, such as padded lists of three, drama nobody needs and closing lines that repeat the point, and shows how to fix each one with the facts already in your text.",
   },
   {
     question: 'Will this get my text past an AI detector?',
@@ -43,7 +81,7 @@ const faq = [
   {
     question: 'Does it work on writing that is not from ChatGPT?',
     answer:
-      'Yes. The rules look for sentence patterns, not one model\'s fingerprint, and Wikipedia\'s editors list the same patterns in their guide to signs of AI writing. Five texts written before ChatGPT came out got no AI pattern errors from these rules.',
+      "Yes. The rules look for sentence patterns, not one model's fingerprint, and Wikipedia's editors list the same patterns in their guide to signs of AI writing. Five texts written before ChatGPT came out got no AI pattern errors from these rules.",
   },
   {
     question: 'Can I run the same checks on files in my project?',
@@ -55,114 +93,149 @@ const faq = [
 
 <BaseLayout
   title="Free AI humanizer that keeps your facts"
-  description="Paste a draft to find the AI writing patterns that get in the reader's way, each marked in place with a clearer fix that uses only your facts. Free, no sign-up, runs in your browser."
+  description="Paste a draft to find the AI writing patterns that get in the reader's way, each with a clearer fix that uses only your facts. Free, in your browser."
   canonicalPath="/tools/ai-humanizer"
   {breadcrumbs}
+  framed={false}
 >
   <main data-agent-content>
-    <Breadcrumbs {breadcrumbs} />
-    <PageHeader
-      title="AI humanizer"
-      description="Make AI-assisted writing clear and direct for your reader. Paste a draft to find the patterns that get in the way, each marked in your text with a fix that keeps to the facts you already wrote."
-    />
+    <section class="pt-4">
+      <div class="site-frame flex flex-col items-center pt-14 text-center sm:pt-20">
+        <h1 class="mt-4 max-w-3xl text-pretty text-4xl/tight font-medium -tracking-[0.8px] xl:text-5xl/tight xl:-tracking-[1px]">
+          AI humanizer
+        </h1>
+        <p class="mt-4 max-w-2xl text-pretty text-xl/8 font-medium -tracking-[0.2px] text-foreground-muted">
+          Make AI-assisted writing clear and direct for your reader. Paste a
+          draft to find the patterns that get in the way, each marked in your
+          text with a fix that keeps to the facts you already wrote.
+        </p>
+      </div>
+      <div class="site-frame mt-10 sm:mt-12">
+        <AiHumanizer />
+      </div>
+    </section>
 
-    <AiHumanizer />
+    <div class="space-y-24 py-24 sm:space-y-32 sm:py-32">
+      <section class="site-frame" aria-labelledby="patterns-heading">
+        <SectionHeading
+          id="patterns-heading"
+          title="Which sentence patterns give AI drafts away?"
+          text="Eight of them account for most. A blind judge read 24 drafts written by Claude and counted 212 AI writing tells, and 187 of them came from these 8 patterns."
+        />
+        <div class="docs-prose max-w-4xl">
+          <table>
+            <thead>
+              <tr>
+                <th>Tell</th>
+                <th>An example from the drafts</th>
+                <th>Tells counted</th>
+              </tr>
+            </thead>
+            <tbody>
+              <!-- seo-lint-ignore -->
+              <tr><td>Forced triads</td><td>It is cheap, it is reversible, and it produces evidence rather than opinions.</td><td>63</td></tr>
+              <!-- seo-lint-ignore -->
+              <tr><td>Not X but Y</td><td>Four Days Is Not a Perk. It's a Strategy.</td><td>27</td></tr>
+              <!-- seo-lint-ignore -->
+              <tr><td>Bold labels on list items</td><td><strong>Better forecasts.</strong> We're investing in improved wave and tide modeling.</td><td>27</td></tr>
+              <!-- seo-lint-ignore -->
+              <tr><td>One-line closers and fragments</td><td>$299 per month. That's it.</td><td>26</td></tr>
+              <!-- seo-lint-ignore -->
+              <tr><td>Comment tails ending in -ing</td><td>Chair utilization improved dramatically, allowing the practice to serve 15% more patients without extending hours.</td><td>14</td></tr>
+              <!-- seo-lint-ignore -->
+              <tr><td>Inflated significance</td><td>I haven't experienced any hot spots or blisters across all those miles, a testament to the thoughtful design.</td><td>12</td></tr>
+              <!-- seo-lint-ignore -->
+              <tr><td>Sales words</td><td>Fiddle-leaf figs are stunning houseplants that require periodic repotting.</td><td>9</td></tr>
+              <!-- seo-lint-ignore -->
+              <tr><td>Arguing with no one</td><td>It isn't perfect. The tongue is slightly thin and can shift if you don't lace carefully.</td><td>9</td></tr>
+            </tbody>
+          </table>
+          <p>
+            Overused words such as "delve" and "testament" made up only 4, so a
+            word list on its own misses most of what readers notice.{' '}
+            <a href="/blog/humanizer-skill">How to build your own humanizer skill</a>
+            {' '}turns each pattern into a check and a rewrite rule for your
+            agent.
+          </p>
+          <p>
+            The humanizer files each line it marks under one of these, and puts
+            the rest (dashes, emoji, stock openers, chatbot leftovers) under
+            other AI patterns. Counts are the mean of three judge runs, rounded.
+          </p>
+        </div>
+      </section>
 
-    <div class="docs-prose mt-16">
-      <h2>8 sentence patterns give most AI drafts away</h2>
-      <p>
-        A blind judge read 24 drafts written by Claude and counted 212 AI
-        writing tells. 187 of them came from 8 patterns. Overused words such
-        as "delve" and "testament" made up only 4, so a word list on its own
-        misses most of what readers notice. <a href="/blog/humanizer-skill"
-          >How to build your own humanizer skill</a
-        > turns each pattern into a check and a rewrite rule for your
-        agent.
-      </p>
-      <table>
-        <thead>
-          <tr>
-            <th>Tell</th>
-            <th>An example from the drafts</th>
-            <th>Tells counted</th>
-          </tr>
-        </thead>
-        <tbody>
-          <!-- seo-lint-ignore -->
-          <tr><td>Forced triads</td><td>It is cheap, it is reversible, and it produces evidence rather than opinions.</td><td>63</td></tr>
-          <!-- seo-lint-ignore -->
-          <tr><td>Not X but Y</td><td>Four Days Is Not a Perk. It's a Strategy.</td><td>27</td></tr>
-          <!-- seo-lint-ignore -->
-          <tr><td>Bold labels on list items</td><td><strong>Better forecasts.</strong> We're investing in improved wave and tide modeling.</td><td>27</td></tr>
-          <!-- seo-lint-ignore -->
-          <tr><td>One-line closers and fragments</td><td>$299 per month. That's it.</td><td>26</td></tr>
-          <!-- seo-lint-ignore -->
-          <tr><td>Comment tails ending in -ing</td><td>Chair utilization improved dramatically, allowing the practice to serve 15% more patients without extending hours.</td><td>14</td></tr>
-          <!-- seo-lint-ignore -->
-          <tr><td>Inflated significance</td><td>I haven't experienced any hot spots or blisters across all those miles, a testament to the thoughtful design.</td><td>12</td></tr>
-          <!-- seo-lint-ignore -->
-          <tr><td>Sales words</td><td>Fiddle-leaf figs are stunning houseplants that require periodic repotting.</td><td>9</td></tr>
-          <!-- seo-lint-ignore -->
-          <tr><td>Arguing with no one</td><td>It isn't perfect. The tongue is slightly thin and can shift if you don't lace carefully.</td><td>9</td></tr>
-        </tbody>
-      </table>
-      <p>
-        The humanizer files each line it marks under one of these, and puts
-        the rest (dashes, emoji, stock openers, chatbot leftovers) under
-        other AI patterns. Counts are the mean of three judge runs, rounded.
-      </p>
+      <SplitList
+        id="facts-heading"
+        title="Does every fix keep to the facts in your text?"
+        text="Yes. Every fix works from what your draft already says, because a model asked to sound human tends to invent the details a human would have added."
+        items={facts}
+      />
 
-      <h2>Every fix keeps to the facts in your text</h2>
-      <p>
-        Ask a model to make a draft sound human and it adds what a human
-        would have written: a story, a customer name, a reason, a number.
-        In the same test, a plain "make it sound like a person wrote it"
-        prompt added 54 claims the drafts never made.
-      </p>
-      <p>
-        So the fixes here never ask you for something new. A sales word gets
-        a plainer swap or a cut. Inflated significance gets cut, or replaced
-        with a fact the text already states. When a fix needs a fact you do
-        not have, delete the phrase. The draft is usually better for it.
-      </p>
+      <SplitList
+        id="rewrite-heading"
+        title="How do you rewrite the marked lines?"
+        text="By hand or with your AI. Start with the fixes, then judge the lines marked as your call."
+        items={rewrite}
+      />
 
-      <h2>Rewrite the marked lines yourself or with your AI</h2>
-      <p>
-        Most drafts need a handful of edits, and doing them by hand takes a
-        few minutes. Start with the lines marked as a fix, then read each
-        line marked as your call and change it only if it fails the question.
-      </p>
-      <p>
-        To hand the job to a chat assistant, use <strong>Copy rewrite
-        prompt</strong>. It asks the model to make each marked line clearer
-        and more direct, to leave other lines alone, and to add no new
-        names, numbers, dates or quotes. Paste the result back here to check it again.
-      </p>
+      <SplitList
+        id="agent-heading"
+        title="How do you run the same checks in your agent?"
+        text="Ask it to run seo lint, once SEO Skill is set up. This page runs the AI pattern rules from seo lint, the writing check in the SEO Skill CLI, so your agent can run it on a draft, fix each finding and check again until nothing is left."
+        items={[
+          {
+            title: 'Presets for posts, landing pages and meta descriptions',
+            text: 'The seo lint docs cover them, and how to keep a flagged line on purpose.',
+            href: '/docs/lint',
+          },
+          {
+            title: 'The research behind the patterns',
+            text: 'What AI slop is and how to remove it explains it.',
+            href: '/blog/ai-slop',
+          },
+        ]}
+      >
+        <div class="mt-6">
+          <CodeBlock
+            label="Ask your agent"
+            prompt
+            value="Check drafts/launch-post.md with seo lint and fix every error and warning. Use only facts already in the text. Run seo lint again until it reports 0 errors and 0 warnings."
+            wrap
+          />
+        </div>
+      </SplitList>
 
-      <h2>Run the same checks in your agent with seo lint</h2>
-      <p>
-        This page runs the AI pattern rules from <code>seo lint</code>, the
-        writing check in the SEO Skill CLI. Your agent can run it on a draft,
-        fix each finding and check again until nothing is left. Once it is
-        set up (the prompt below does that), ask your agent:
-      </p>
-      <CodeBlock prompt value="Check drafts/launch-post.md with seo lint and fix every error and warning. Use only facts already in the text. Run seo lint again until it reports 0 errors and 0 warnings." wrap />
-      <p>
-        The <a href="/docs/lint">seo lint docs</a> cover presets for blog
-        posts, landing pages and meta descriptions, and how to keep a flagged
-        line on purpose. <a href="/blog/ai-slop">What AI slop is and how to
-        remove it</a> explains the research behind the patterns. To set it up,
-        give your agent this prompt:
-      </p>
-    </div>
+      <section class="site-frame" aria-labelledby="tools-heading">
+        <SectionHeading
+          id="tools-heading"
+          title="Which tools go with an AI writing check?"
+          text="These, which check the rest of a page's copy, its title and the files in your project."
+        />
+        <div class="grid grid-cols-1 gap-2 sm:grid-cols-2">
+          {tools.map((item) => <HomeCard {...item} />)}
+        </div>
+      </section>
 
-    <SetupPrompts id="ai-humanizer-setup" class="mt-6" />
+      <section class="site-frame" aria-labelledby="faq-heading">
+        <div class="max-w-2xl">
+          <h2 id="faq-heading" class="text-pretty text-2xl font-medium -tracking-[0.4px] text-foreground xl:text-3xl xl:-tracking-[0.6px]">
+            AI humanizer questions
+          </h2>
+        </div>
+        <div class="mt-10">
+          <FaqAccordion items={faq} id="ai-humanizer-faq" />
+        </div>
+      </section>
 
-    <div class="docs-prose mt-16">
-      <h2>AI humanizer questions</h2>
-    </div>
-    <div class="mt-6">
-      <FaqAccordion id="ai-humanizer-faq" items={faq} />
+      <section class="site-frame" aria-labelledby="start-heading">
+        <SectionHeading
+          id="start-heading"
+          title="Check every draft with your agent"
+          text="Add SEO Skill to your agent. The prompt installs the CLI that runs seo lint, so your agent can fix a draft and check it again until it comes back clean."
+        />
+        <SetupPrompts id="ai-humanizer-setup" />
+      </section>
     </div>
   </main>
 </BaseLayout>

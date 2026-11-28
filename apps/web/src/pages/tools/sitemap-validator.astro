@@ -1,9 +1,21 @@
 ---
+import {
+  Alert02Icon,
+  Calendar03Icon,
+  Copy01Icon,
+  FileSearchIcon,
+  Robot01Icon,
+  Search01Icon,
+  TableIcon,
+  WebValidationIcon,
+  Xml01Icon,
+} from '@hugeicons/core-free-icons'
 import CodeBlock from '@/components/CodeBlock.astro'
 import FaqAccordion from '@/components/FaqAccordion.astro'
+import HomeCard from '@/components/HomeCard.astro'
+import SectionHeading from '@/components/SectionHeading.astro'
 import SetupPrompts from '@/components/SetupPrompts.astro'
-import Breadcrumbs from '@/components/Breadcrumbs.astro'
-import PageHeader from '@/components/PageHeader.astro'
+import SplitList from '@/components/SplitList.astro'
 import SitemapValidator from '@/components/tools/SitemapValidator.astro'
 import BaseLayout from '@/layouts/BaseLayout.astro'
 import type { SchemaBreadcrumb } from '@/lib/schema'
@@ -14,159 +26,248 @@ const breadcrumbs: SchemaBreadcrumb[] = [
   { label: 'XML sitemap validator' },
 ]
 
+const checks = [
+  { title: 'XML root and namespace', icon: Xml01Icon, text: 'Whether the file is a sitemap or a sitemap index the protocol recognises.' },
+  { title: 'Required location values', icon: WebValidationIcon, text: 'Every entry needs a location, and each one is checked.' },
+  { title: 'Duplicate entries', icon: Copy01Icon, text: 'The same URL listed more than once in the file.' },
+  { title: 'Last modified dates', icon: Calendar03Icon, text: 'Each last modified date is checked, along with the change frequency and priority values.' },
+  { title: 'Limits for one sitemap file', icon: TableIcon, text: 'The entry count and uncompressed size the protocol allows in one file.' },
+  {
+    title: 'Extensions can stay',
+    icon: FileSearchIcon,
+    text: 'XML extensions for images, video, news, and alternate languages can remain in the file.',
+  },
+]
+
+const limits = [
+  { title: '50,000 entries and 50 MB', text: 'The sitemap protocol allows up to 50,000 entries and 50 MB uncompressed in one file.' },
+  { title: 'Split a file over either limit', text: 'Files above either limit need to be split and referenced from a sitemap index.' },
+  {
+    title: 'Advice above 10,000 entries',
+    text: 'The result also includes neutral advice when a file has more than 10,000 entries. Some technical SEO teams use that working size because smaller files make failures and coverage groups easier to isolate.',
+  },
+  { title: 'A working size Google does not require', text: 'The 10,000 entry advice is no Google requirement and no ranking factor.' },
+]
+
+const partial = [
+  { title: 'Marked as partial', text: 'The result shows how much of the file was checked.' },
+  { title: 'Fix and run it again', text: 'Fix the reported problems, then run the sitemap again for a complete result.' },
+]
+
+const local = [
+  { title: 'Paste the XML', text: 'Paste sitemap XML to find problems before it goes live.' },
+  { title: 'Open a local file', text: 'Open a local XML or gzip file.' },
+  { title: 'It stays in your browser', text: 'Pasted content and selected files stay in this browser tab.' },
+]
+
+const google = [
+  { title: 'The location of each URL', text: 'Google reads it for every entry.' },
+  {
+    title: 'An honest last modified date',
+    text: 'The date only helps if it is honest. A sitemap that stamps every URL with today’s date teaches Google to ignore the field. Change it when the main content of the page changes.',
+  },
+  { title: 'Change frequency and priority are ignored', text: 'Google ignores both, so there is no need to tune them.' },
+  { title: 'Finding pages and ranking them are separate', text: 'A sitemap helps Google find URLs and notice changes. It does not make Google index a page or rank it higher.' },
+]
+
+const errors = [
+  { title: 'Relative or wrong-host URLs', text: 'Every location must be a full URL on the same host and protocol as the sitemap.' },
+  { title: 'URLs that redirect, return errors or are noindexed', text: 'List only the final, indexable URL of each page.' },
+  { title: 'Unescaped characters', code: '&amp;amp;', text: 'An & in a URL must be written as &amp; or the XML breaks.' },
+  { title: 'Dates in the wrong form', code: '2026-10-21', text: 'Use W3C dates such as 2026-10-21 or a full timestamp with a time zone.' },
+  { title: 'A file over the limit', text: 'Split it and list the parts in a sitemap index.' },
+]
+
+const after = [
+  { title: 'Add it to Search Console', text: 'Under Sitemaps. Search Console then shows when Google last read it and how many URLs it found.' },
+  { title: 'Add a Sitemap: line to robots.txt', text: 'The robots.txt validator shows whether the line is there.', href: '/tools/robots-txt-validator' },
+  {
+    title: 'When Search Console says it could not be read',
+    text: 'The sitemap could not be read guide covers each cause.',
+    href: '/guides/sitemap-could-not-be-read',
+  },
+  { title: 'List every URL a sitemap holds', text: 'Use the sitemap extractor.', href: '/tools/sitemap-extractor' },
+]
+
+const tools = [
+  { title: 'Sitemap URL extractor', text: 'Find a site’s sitemap and download every URL in it as CSV or JSON.', href: '/tools/sitemap-extractor', icon: FileSearchIcon, link: 'Extract sitemap URLs' },
+  { title: 'Robots.txt validator', text: 'Check that robots.txt lists your sitemap and does not block it.', href: '/tools/robots-txt-validator', icon: Robot01Icon, link: 'Validate robots.txt' },
+  { title: 'Sitemap could not be read', text: 'What the Search Console error means and how to fix each cause.', href: '/guides/sitemap-could-not-be-read', icon: Alert02Icon, link: 'Read the guide' },
+  { title: 'SEO crawler', text: 'Crawl any site from your machine for broken links, redirects, canonicals and noindex tags.', href: '/features/seo-crawler', icon: Search01Icon, link: 'See the crawler' },
+]
+
 const faq = [
   {
-    question: "How do I check if my sitemap is valid?",
+    question: 'How do I check if my sitemap is valid?',
     answer:
-      "Enter the sitemap URL above, paste the XML or open the file. The validator checks the XML, the namespace, each location, dates and the protocol limits, and lists every problem with its line.",
+      'Enter the sitemap URL above, paste the XML or open the file. The validator checks the XML, the namespace, each location, dates and the protocol limits, and lists every problem with its line.',
   },
   {
-    question: "How many URLs can one sitemap have?",
+    question: 'How many URLs can one sitemap have?',
     answer:
-      "Up to 50,000 URLs and 50 MB uncompressed. A larger site needs several sitemaps and a sitemap index that lists them.",
+      'Up to 50,000 URLs and 50 MB uncompressed. A larger site needs several sitemaps and a sitemap index that lists them.',
   },
   {
-    question: "Does Google use priority and changefreq?",
-    answer:
-      "No. Google ignores both. It uses the location and, when it is consistently accurate, the last modified date.",
+    question: 'Does Google use priority and changefreq?',
+    answer: 'No. Google ignores both. It uses the location and, when it is consistently accurate, the last modified date.',
   },
   {
-    question: "Why does Search Console say my sitemap could not be read?",
+    question: 'Why does Search Console say my sitemap could not be read?',
     answer:
-      "Usually the URL returned an error or HTML instead of XML, the file is blocked by robots.txt, or the XML is broken. Validate the file here, then open its URL in a browser to check what the server returns.",
+      'Usually the URL returned an error or HTML instead of XML, the file is blocked by robots.txt, or the XML is broken. Validate the file here, then open its URL in a browser to check what the server returns.',
   },
   {
-    question: "Should every page be in the sitemap?",
+    question: 'Should every page be in the sitemap?',
     answer:
-      "Every page you want in search should be. Leave out redirects, error pages, noindexed pages and duplicates that point to another canonical.",
+      'Every page you want in search should be. Leave out redirects, error pages, noindexed pages and duplicates that point to another canonical.',
   },
   {
-    question: "Does a sitemap get my pages indexed?",
-    answer:
-      "It helps Google find them. Whether Google indexes a page depends on the page itself.",
+    question: 'Does a sitemap get my pages indexed?',
+    answer: 'It helps Google find them. Whether Google indexes a page depends on the page itself.',
   },
 ]
 ---
 
 <BaseLayout
   title="Free XML sitemap validator and checker"
-  description="Validate an XML sitemap or sitemap index in your browser. Find broken XML, bad URLs and dates, duplicates and size limit problems, and learn what Google uses from a sitemap."
+  description="Validate an XML sitemap or sitemap index in your browser. Find broken XML, bad URLs and dates, duplicates and size limit problems."
   canonicalPath="/tools/sitemap-validator"
   {breadcrumbs}
+  framed={false}
 >
   <main data-agent-content>
-    <Breadcrumbs {breadcrumbs} />
+    <section class="pt-4">
+      <div class="site-frame flex flex-col items-center pt-14 text-center sm:pt-20">
+        <h1 class="mt-4 max-w-3xl text-pretty text-4xl/tight font-medium -tracking-[0.8px] xl:text-5xl/tight xl:-tracking-[1px]">
+          XML sitemap validator
+        </h1>
+        <p class="mt-4 max-w-2xl text-pretty text-xl/8 font-medium -tracking-[0.2px] text-foreground-muted">
+          Check one XML sitemap or sitemap index for errors, invalid entries,
+          duplicate URLs, and incorrect dates.
+        </p>
+      </div>
+      <div class="site-frame mt-10 sm:mt-12">
+        <SitemapValidator />
+      </div>
+    </section>
 
-    <PageHeader
-      title="XML sitemap validator"
-      description="Check one XML sitemap or sitemap index for errors, invalid entries, duplicate URLs, and incorrect dates."
-    />
+    <div class="space-y-24 py-24 sm:space-y-32 sm:py-32">
+      <section class="site-frame" aria-labelledby="checks-heading">
+        <SectionHeading
+          id="checks-heading"
+          title="What does the sitemap validator check?"
+          text="The structure of one sitemap file and every entry in it. A valid result describes the file that was submitted: it does not fetch the listed pages, confirm their indexability, or show whether a search engine has indexed them."
+        />
+        <div class="grid grid-cols-1 gap-2 sm:grid-cols-2">
+          {checks.map((item) => <HomeCard title={item.title} text={item.text} icon={item.icon} />)}
+        </div>
+      </section>
 
-    <SitemapValidator />
+      <SplitList
+        id="limits-heading"
+        title="How many URLs can one sitemap hold?"
+        text="Up to 50,000 entries and 50 MB uncompressed, by the sitemap protocol. The validator also gives advice above 10,000 entries."
+        items={limits}
+      >
+        <p class="mt-4 text-base leading-7 text-foreground-muted">
+          Read Google's current{' '}
+          <a
+            class="text-foreground underline underline-offset-4"
+            href="https://developers.google.com/search/docs/crawling-indexing/sitemaps/build-sitemap"
+            target="_blank"
+            rel="noreferrer">sitemap format and size documentation</a
+          >{' '}for the accepted protocol rules.
+        </p>
+      </SplitList>
 
-    <div class="docs-prose mt-16">
-      <h2>Check sitemap structure and entries</h2>
-      <p>
-        The validator checks the XML root and namespace, required location
-        values, duplicate entries, last modified dates, change frequency,
-        priority, and the limits that apply to one sitemap file. XML extensions
-        for images, video, news, and alternate languages can remain in the file.
-      </p>
-      <p>
-        A valid result describes the file that was submitted. It does not fetch
-        the listed pages, confirm their indexability, or show whether a search
-        engine has indexed them.
-      </p>
+      <SplitList
+        id="partial-heading"
+        title="What happens when validation stops early?"
+        text="The result is marked as partial, so you can see that the whole file was not checked."
+        items={partial}
+      />
 
-      <h2>Protocol limits and the 10,000 entry advisory</h2>
-      <p>
-        The sitemap protocol allows up to 50,000 entries and 50 MB uncompressed
-        in one file. Files above either limit need to be split and referenced
-        from a sitemap index.
-      </p>
-      <p>
-        The result also includes neutral advice when a file has more than 10,000
-        entries. Some technical SEO teams use that working size because smaller
-        files make failures and coverage groups easier to isolate. It is not a
-        Google requirement or a ranking factor.
-      </p>
-      <p>
-        Read Google's current{' '}
-        <a href="https://developers.google.com/search/docs/crawling-indexing/sitemaps/build-sitemap" target="_blank" rel="noreferrer">sitemap format and size documentation</a>
-        {' '}for the accepted protocol rules.
-      </p>
+      <SplitList
+        id="local-heading"
+        title="Can you check a sitemap before publishing it?"
+        text="Yes. Paste the XML or open a local file to find problems before it goes live."
+        items={local}
+      />
 
-      <h2>Partial validation stays visible</h2>
-      <p>
-        If validation stops early, the result is marked as partial and shows how
-        much of the file was checked. Fix the reported problems, then run the
-        sitemap again for a complete result.
-      </p>
+      <SplitList
+        id="google-heading"
+        title="What does Google use from a sitemap?"
+        text="The location of each URL and, when it is accurate, the last modified date. Google ignores change frequency and priority."
+        items={google}
+      />
 
-      <h2>Check a local file before publishing it</h2>
-      <p>
-        Paste sitemap XML or open a local XML or gzip file to find problems
-        before it goes live. Pasted content and selected files stay in this
-        browser tab.
-      </p>
+      <SplitList
+        id="errors-heading"
+        title="How do you fix common sitemap errors?"
+        text="List only full, final URLs on the sitemap's own host, escape the XML and keep each file under the limit. These are the problems that come up most."
+        items={errors}
+      />
 
-      <h2>What Google uses from a sitemap</h2>
-      <p>
-        Google reads the location of each URL and, when it is accurate, the
-        last modified date. It ignores change frequency and priority, so
-        there is no need to tune them. A sitemap helps Google find URLs and
-        notice changes. It does not make Google index a page or rank it
-        higher.
-      </p>
-      <p>
-        The last modified date only helps if it is honest. A sitemap that
-        stamps every URL with today’s date teaches Google to ignore the
-        field. Change it when the main content of the page changes.
-      </p>
+      <SplitList
+        id="after-heading"
+        title="What should you do after the sitemap validates?"
+        text="Add it to Search Console under Sitemaps and add a Sitemap: line to your robots.txt."
+        items={after}
+      />
 
-      <h2>Fix common sitemap errors</h2>
-      <ul>
-        <li><strong>Relative or wrong-host URLs.</strong> Every location must be a full URL on the same host and protocol as the sitemap.</li>
-        <li><strong>URLs that redirect, return errors or are noindexed.</strong> List only the final, indexable URL of each page.</li>
-        <li><strong>Unescaped characters.</strong> An <code>&amp;</code> in a URL must be written as <code>&amp;amp;</code> or the XML breaks.</li>
-        <li><strong>Dates in the wrong form.</strong> Use W3C dates such as <code>2026-10-21</code> or a full timestamp with a time zone.</li>
-        <li><strong>A file over the limit.</strong> Split it and list the parts in a sitemap index.</li>
-      </ul>
+      <SplitList
+        id="agent-heading"
+        title="How do you check the URLs in your sitemap with your agent?"
+        text="Ask it to run seo crawl, once SEO Skill is connected. A valid file can still list broken pages, so your agent can tell you which entries should come out."
+        items={[
+          {
+            title: 'Status codes and redirects for every URL',
+            text: 'seo crawl can read your sitemap and check every URL in it without reading every page.',
+            href: '/docs/crawl',
+          },
+          { title: 'Runs from the CLI on your machine', text: 'The setup prompt installs the CLI and adds the hosted MCP server.' },
+        ]}
+      >
+        <div class="mt-6">
+          <CodeBlock
+            label="Ask your agent"
+            prompt
+            value="Check every URL in https://example.com/sitemap.xml and list the ones that redirect or return an error"
+            wrap
+          />
+        </div>
+      </SplitList>
 
-      <h2>After it validates</h2>
-      <p>
-        Add the sitemap to Search Console under Sitemaps and add a{' '}
-        <code>Sitemap:</code> line to your robots.txt. Search Console then
-        shows when Google last read it and how many URLs it found. The{' '}
-        <a href="/tools/robots-txt-validator">robots.txt validator</a> shows
-        whether the line is there.
-      </p>
-      <p>
-        When Search Console says your sitemap could not be read, the{' '}
-        <a href="/guides/sitemap-could-not-be-read">sitemap could not be read guide</a>{' '}
-        covers each cause. To list every URL a sitemap holds, use the{' '}
-        <a href="/tools/sitemap-extractor">sitemap extractor</a>.
-      </p>
+      <section class="site-frame" aria-labelledby="tools-heading">
+        <SectionHeading
+          id="tools-heading"
+          title="Which tools go with a sitemap check?"
+          text="These, which list the URLs in a sitemap, check the robots.txt that points to it and explain what Search Console says about it."
+        />
+        <div class="grid grid-cols-1 gap-2 sm:grid-cols-2">
+          {tools.map((item) => <HomeCard {...item} />)}
+        </div>
+      </section>
 
-      <h2>Check the URLs in your sitemap with your agent</h2>
-      <p>
-        A valid file can still list broken pages. The{' '}
-        <a href="/docs/crawl">seo crawl</a> command can read your sitemap and
-        check every URL in it for status codes and redirects, without
-        reading every page, so your agent can tell you which entries should
-        come out. Ask:
-      </p>
-      <CodeBlock prompt value="Check every URL in https://example.com/sitemap.xml and list the ones that redirect or return an error" wrap />
-      <p>The crawl runs from the CLI on your machine. Give your agent this prompt and it installs the CLI and adds the hosted MCP server:</p>
-    </div>
+      <section class="site-frame" aria-labelledby="faq-heading">
+        <div class="max-w-2xl">
+          <h2 id="faq-heading" class="text-pretty text-2xl font-medium -tracking-[0.4px] text-foreground xl:text-3xl xl:-tracking-[0.6px]">
+            Sitemap validator questions
+          </h2>
+        </div>
+        <div class="mt-10">
+          <FaqAccordion items={faq} id="sitemap-validator-faq" />
+        </div>
+      </section>
 
-    <SetupPrompts id="sitemap-validator-setup" class="mt-6" />
-
-    <div class="docs-prose mt-16">
-      <h2>Sitemap validator questions</h2>
-    </div>
-    <div class="mt-6">
-      <FaqAccordion id="sitemap-validator-faq" items={faq} />
+      <section class="site-frame" aria-labelledby="start-heading">
+        <SectionHeading
+          id="start-heading"
+          title="Check every URL in your sitemap with your agent"
+          text="Add SEO Skill to your agent. The prompt installs the CLI, which runs the crawl on your machine, and adds the hosted MCP server."
+        />
+        <SetupPrompts id="sitemap-validator-setup" />
+      </section>
     </div>
   </main>
 </BaseLayout>

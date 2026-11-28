@@ -1,0 +1,291 @@
+---
+import {
+  Analytics01Icon,
+  LanguageSkillIcon,
+  News01Icon,
+  PlugSocketIcon,
+  QuillWrite01Icon,
+  Robot01Icon,
+  SearchList01Icon,
+  TextCheckIcon,
+} from '@hugeicons/core-free-icons'
+import BeforeAfter from '@/components/blog/BeforeAfter.astro'
+import PlanSteps from '@/components/blog/PlanSteps.astro'
+import CodeBlock from '@/components/CodeBlock.astro'
+import FaqAccordion from '@/components/FaqAccordion.astro'
+import HomeCard from '@/components/HomeCard.astro'
+import LandingHero from '@/components/LandingHero.astro'
+import SectionHeading from '@/components/SectionHeading.astro'
+import SetupPrompts from '@/components/SetupPrompts.astro'
+import BaseLayout from '@/layouts/BaseLayout.astro'
+import type { SchemaBreadcrumb } from '@/lib/schema'
+
+// Every SEObot, Outrank and Koala AI fact below comes from that vendor's
+// own site or help center. Re-read them before changing a price or plan.
+// The page names other tools but does not link to them.
+
+const breadcrumbs: SchemaBreadcrumb[] = [
+  { label: 'Home', href: '/' },
+  { label: 'Alternatives', href: '/alternatives' },
+  { label: 'SEObot alternatives' },
+]
+
+const seobotDoes = [
+  { title: 'A blog from one URL', text: 'Enter your site and SEObot researches your audience and keywords, makes a content plan and starts publishing articles every week.', icon: Robot01Icon },
+  { title: 'Long articles with sources', text: 'Up to 4,000 words with images, YouTube embeds and tables, plus a fact checking step that cites its sources.', icon: QuillWrite01Icon },
+  { title: 'Publishes to most CMSs', text: 'WordPress, Webflow, Framer, Ghost, HubSpot, Notion, Shopify, Wix and Unicorn Platform, plus a REST API and webhooks.', icon: PlugSocketIcon },
+  { title: '50 languages', text: 'Articles in 50 languages, with news articles, programmatic pages and small SEO tools as extra modules.', icon: LanguageSkillIcon },
+]
+
+const options = [
+  { title: 'SEO Skill', text: 'Pick it if you want the model in your own agent to write, from your Search Console and research data, with every draft checked before it ships.', icon: TextCheckIcon, href: '/docs/lint', link: 'See seo lint' },
+  { title: 'Outrank', text: 'Pick it if you want more articles for the money on autopilot: $99 a month buys 30.', icon: News01Icon },
+  { title: 'Koala AI', text: 'Pick it if you want to steer each article yourself in an AI writer, from $25 a month, with 5,000 free words to try it.', icon: QuillWrite01Icon },
+  { title: 'SEObot', text: 'Stay with it if you want under ten articles a month for the lowest entry price, or 150 to 300 a month on one site.', icon: Robot01Icon },
+]
+
+const rows = [
+  { label: 'Who writes', seobot: 'SEObot’s AI agents, on autopilot by default', ours: 'The model in your own agent, such as Claude Code, Codex or Cursor' },
+  { label: 'What it decides from', seobot: 'Its research on your site, audience and keywords', ours: 'Your Search Console, plus your own DataForSEO or Ahrefs key and AI answer checks' },
+  { label: 'Pages you already have', seobot: 'Not changed. It only updates articles it wrote', ours: 'Found first: pages that rank just off page one, and titles that get few clicks' },
+  { label: 'Where you edit', seobot: 'Inside SEObot, or your changes are overwritten', ours: 'In your own codebase or CMS, like any other page' },
+  { label: 'Checking the copy', seobot: 'Fact checking and anti-hallucination steps', ours: '`seo lint` and the free SEO content checker on every draft' },
+  { label: 'Price', seobot: '$49 a month for 9 articles, up to $1,050 for 300', ours: 'Free. Research data bills your own provider account' },
+]
+
+const steps = [
+  { title: 'Decide what to write from your own data', body: 'Your agent reads your Search Console for pages just off page one, questions you already show up for, and searches that bring impressions but no page that answers them.' },
+  { title: 'Check demand and the competition', body: 'With your DataForSEO or Ahrefs key it adds volumes and the pages that rank now, and it can ask ChatGPT, Gemini and Google’s AI answers which sites they cite.' },
+  { title: 'Write it with the model you already use', body: 'The agent drafts or rewrites the page in your codebase, in your voice, next to the rest of your site.' },
+  { title: 'Check the draft before it ships', body: '`seo lint` marks the lines that read as AI-written with a fix for each, and checks the title and description length.' },
+  { title: 'See what the change did', body: 'Mark the page fixed, and its Search Console clicks and impressions 28 and 56 days later sit next to the days before.' },
+]
+
+const before = [
+  { text: 'Article quality varies. SEObot’s own FAQ says it is sometimes at average human quality, sometimes below it and occasionally above it.' },
+  { text: 'Nobody edits the articles for you. SEObot does not offer human editing, so you review them yourself, or turn off auto-publish to get drafts.' },
+  { text: 'It writes new articles only. It cannot rewrite or change pages it did not create.' },
+  { text: 'Edit the article text, headline, meta description and slug inside SEObot. Change them in your CMS and SEObot overwrites them.' },
+  { text: 'The full plan list shows after you onboard your site. An upgrade charges the whole new plan that day, and unused credits carry over.' },
+  { text: 'Backlinks are opt-in. You agree to dofollow links to other sites in your own articles, and each credit is an attempt at one link, not a promise.' },
+]
+
+// One real brief from seoskill.dev's issues list, against what an article
+// tool starts from.
+const brief = {
+  before: {
+    label: 'What an article tool starts from',
+    html: '<p><strong>Your URL.</strong> The tool researches your site and keywords, makes its own plan and writes a new article each week.</p><p>It writes new articles, so the pages you already have stay as they are.</p>',
+  },
+  after: {
+    label: 'The brief SEO Skill gives your agent',
+    html: '<p><strong>Page:</strong> /tools/google-algorithm-update-checker</p><ul class="list-disc space-y-1 pl-5"><li>“google algorithm checker”: position 9.5, 380 impressions, 0 clicks</li><li>“algorithm update checker”: position 11.5, 273 impressions, 9 clicks</li><li>“google algorithm update checker”: position 9.1, 246 impressions, 2 clicks</li></ul><p><strong>Change:</strong> name the tool the way people search for it in the title and H1, and answer “did an update hit my site?” in the first lines.</p><p><strong>Check:</strong> run seo lint on the draft, then compare the page’s clicks 28 and 56 days after the fix.</p>',
+  },
+}
+
+const faq = [
+  {
+    question: 'What is SEObot?',
+    answer:
+      'SEObot is an AI SEO bot from seobotai.com that writes and publishes blog articles for you. You enter your site, and it researches keywords, plans the articles, writes them with images and internal links, and publishes them to your CMS every week.',
+  },
+  {
+    question: 'What is the best SEObot alternative?',
+    answer:
+      'It depends who you want doing the writing. For more autopilot articles per dollar, look at Outrank. To steer each article in an AI writer, look at Koala AI. To have the model in your own agent write from your Search Console data and check every draft with seo lint, use SEO Skill.',
+  },
+  {
+    question: 'Is there a free SEObot alternative?',
+    answer:
+      'SEO Skill is free, and its CLI and seo lint are open source. It does not write articles itself: the agent you already pay for writes them, and SEO Skill gives it the data and checks the copy. Research such as search volumes runs on your own DataForSEO or Ahrefs account.',
+  },
+  {
+    question: 'How much does SEObot cost?',
+    answer:
+      'SEObot’s help center lists $49 a month for 9 articles, $99 for 20, $199 for 50, $499 for 100 plus 20 directory listings, $570 for 150 and $1,050 for 300. Agencies ordering 300 or more pay $3.50 an article. It refunds the $49 plan if you are not happy after the first article.',
+  },
+  {
+    question: 'Can SEObot improve the pages I already have?',
+    answer:
+      'No. Its help center says it creates new articles only and cannot rewrite pages it did not make. It does re-link its own articles each month. If your traffic sits on pages that rank just off page one, start with those.',
+  },
+  {
+    question: 'Is seobot.ai the same as SEObot?',
+    answer:
+      'No. This page is about seobotai.com, the article writer. seobot.ai is a different product that sends Google Analytics reports to Slack, and SEOBot AI on wordpress.org is a separate plugin.',
+  },
+]
+
+---
+
+<BaseLayout
+  title="SEObot alternatives: AI SEO bots compared by job"
+  description="SEObot alternatives for AI blog writing, compared on who writes, what they decide from, where you edit and price, from each tool's own site and help center."
+  canonicalPath="/alternatives/seobot"
+  {breadcrumbs}
+  framed={false}
+>
+  <main data-agent-content>
+    <LandingHero
+      title="SEObot alternatives"
+      lead="SEObot is an AI SEO bot that writes and publishes blog articles for you on autopilot. Here is what it does well, the alternatives for each job, and how to write better pages with the agent you already use."
+      setupId="seobot-alternatives-setup"
+      author
+    />
+
+    <div class="space-y-24 py-24 sm:space-y-32 sm:py-32">
+      <section class="site-frame" aria-labelledby="seobot-heading">
+        <SectionHeading
+          id="seobot-heading"
+          title="What does SEObot do well?"
+          text="It turns a site with no blog into one that publishes every week, with almost no work from you. These four points come from SEObot’s own pages."
+        />
+        <div class="grid grid-cols-1 gap-2 sm:grid-cols-2">
+          {seobotDoes.map((item) => <HomeCard {...item} />)}
+        </div>
+      </section>
+
+      <section class="site-frame" aria-labelledby="options-heading">
+        <SectionHeading
+          id="options-heading"
+          title="Which SEObot alternative fits your job?"
+          text="The one that matches who you want writing: a content tool on autopilot, an AI writer you steer, or the model in your own agent."
+        />
+        <div class="grid grid-cols-1 gap-2 sm:grid-cols-2">
+          {options.map((item) => <HomeCard {...item} />)}
+        </div>
+      </section>
+
+      <section class="site-frame" aria-labelledby="own-agent-heading">
+        <SectionHeading
+          id="own-agent-heading"
+          title="Why write with your own agent instead?"
+          text="Because the writing stays yours. SEO Skill gives the agent you already use the data to decide what to write, and checks what it wrote, so no other company’s AI publishes under your name."
+        />
+        <div class="docs-prose max-w-3xl">
+          <p>
+            Agents such as Claude Code, Codex and Cursor run the newest Claude,
+            GPT and Gemini models, and they can read your codebase and your
+            product docs. What they lack is your search data. SEO Skill is an MCP
+            server that hands them your Search Console, keyword research and
+            AI answer checks, then <a href="/docs/lint">seo lint</a> reads the
+            draft for the patterns that make copy sound generated.
+          </p>
+          <p>
+            (This page was written that way, from Ahrefs and DataForSEO data,
+            and checked with <code>seo lint</code> before it shipped.)
+          </p>
+        </div>
+        <div class="max-w-3xl">
+          <PlanSteps {steps} />
+        </div>
+        <div class="docs-prose max-w-3xl">
+          <p>Connect SEO Skill with the prompt at the top of this page, then ask:</p>
+          <CodeBlock prompt value="Find the pages on example.com that rank just off page one in Search Console, pick the one with the most impressions, rewrite it to answer those searches better, then check the new copy with seo lint and fix every error." wrap />
+          <p>
+            No agent to hand? Paste a draft into the free <a href="/tools/seo-content-checker">SEO content checker</a> for
+            its headings, title, description, link text and copy, with a
+            fix for each line.
+          </p>
+        </div>
+      </section>
+
+      <section class="site-frame" aria-labelledby="compare-heading">
+        <SectionHeading
+          id="compare-heading"
+          title="How does SEObot compare with SEO Skill?"
+          text="SEObot writes and publishes the articles for you. SEO Skill gives your own agent the data and the checks, and the agent does the writing."
+        />
+        <div class="docs-prose max-w-4xl">
+          <table>
+            <thead>
+              <tr><th></th><th>SEObot</th><th>SEO Skill</th></tr>
+            </thead>
+            <tbody>
+              {rows.map((row) => (
+                <tr><th scope="row">{row.label}</th><td>{row.seobot}</td><td set:html={row.ours.replace(/`([^`]+)`/g, '<code>$1</code>')} /></tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      </section>
+
+      <section class="site-frame" aria-labelledby="own-data-heading">
+        <SectionHeading
+          id="own-data-heading"
+          title="What should your agent know before it writes?"
+          text="The page to change, the searches it already shows for, and what to change, all from your own Search Console. Give your agent that brief and it writes something an article plan made from scratch cannot."
+        />
+        <div class="max-w-3xl">
+          <BeforeAfter
+            before={brief.before}
+            after={brief.after}
+            title="The same site, two starting points"
+            caption="A real brief from seoskill.dev’s own Search Console, built from its quick wins and striking distance searches."
+          />
+        </div>
+        <div class="docs-prose max-w-3xl">
+          <p>
+            SEO Skill finds these as <a href="/features/striking-distance-keywords">striking distance keywords and quick wins</a>, and
+            keeps a list of them for each site, so the next session starts
+            where the last one stopped.
+          </p>
+        </div>
+      </section>
+
+      <section class="site-frame" aria-labelledby="before-heading">
+        <SectionHeading
+          id="before-heading"
+          title="What should you check before you buy SEObot?"
+          text="How editing, billing and backlinks work. Each point below comes from SEObot’s own FAQ and help center, so ask about them before you connect your CMS."
+        />
+        <div class="docs-prose max-w-3xl">
+          <ul>
+            {before.map((item) => (
+              <li>{item.text}</li>
+            ))}
+          </ul>
+          <p>
+            I would never turn SEObot’s backlinks on, or use any link exchange.
+            Google’s <a href="https://developers.google.com/search/docs/essentials/spam-policies" target="_blank" rel="noreferrer">spam policies</a> list “excessive link exchanges” and “using
+            automated programs or services to create links to your site” as
+            link spam. In my experience, links swapped across one network form
+            a pattern that leads to every site buying and selling them, and at
+            best the links are ignored. I <a href="https://x.com/iannuttall/status/2095420271754702994" target="_blank" rel="noreferrer">explained the risk on X</a> when
+            Outrank launched its exchange.
+          </p>
+        </div>
+      </section>
+
+      <section class="site-frame" aria-labelledby="seobot-faq">
+        <SectionHeading
+          id="seobot-faq"
+          title="Questions about SEObot alternatives"
+          text="Price, refunds, the pages you already have, and the other products called SEObot."
+        />
+        <FaqAccordion id="seobot-faq-list" items={faq} />
+      </section>
+
+      <section class="site-frame" aria-labelledby="more-heading">
+        <SectionHeading
+          id="more-heading"
+          title="Where can you read more on writing with your agent?"
+          text="On these pages, which cover the agent setup and the copy checks."
+        />
+        <div class="grid grid-cols-1 gap-2 sm:grid-cols-2">
+          <HomeCard title="AI SEO agent" text="What the coding agent you already use can do with your Search Console, Google Analytics and keyword data." icon={Analytics01Icon} href="/features/seo-agent" link="See the SEO agent" />
+          <HomeCard title="SEO content checker" text="Check a draft or a page for heading, title, description, link text and copy problems, free in your browser." icon={SearchList01Icon} href="/tools/seo-content-checker" link="Check a draft" />
+        </div>
+      </section>
+
+      <section class="site-frame" aria-labelledby="start-heading">
+        <SectionHeading
+          id="start-heading"
+          title="Write your next page with your own agent"
+          text="Add SEO Skill to your agent and sign in with Google. Then ask which pages are closest to page one, and have the agent rewrite and lint the first one."
+        />
+        <SetupPrompts id="seobot-setup-end" />
+      </section>
+    </div>
+  </main>
+</BaseLayout>

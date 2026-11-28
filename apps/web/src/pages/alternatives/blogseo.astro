@@ -34,14 +34,14 @@ const breadcrumbs: SchemaBreadcrumb[] = [
 const blogseoDoes = [
   { title: 'An article a day', text: 'It crawls your site, finds keywords, plans a content calendar and writes about one article a day on the $97 plan, 30 a month.', icon: Calendar03Icon },
   { title: 'Publishes to 23+ platforms', text: 'WordPress, Shopify, Webflow, Wix, Framer, Ghost, HubSpot, Contentful, Strapi, Drupal and more, a custom webhook, or a hosted blog on a subdomain.', icon: PlugSocketIcon },
-  { title: 'Drafts or manual publish', text: 'Auto-publish is a setting. Turn it off, or send articles as drafts where the CMS has them, and nothing goes live until you push it.', icon: TextCheckIcon },
+  { title: 'Drafts or manual publish', text: 'You can turn auto-publish off, or send articles as drafts where the CMS has them, and nothing goes live until you push it.', icon: TextCheckIcon },
   { title: 'Search Console built in', text: 'Connect Search Console and it tracks clicks and positions per article, and checks new topics against pages you already have.', icon: News01Icon },
 ]
 
 const options = [
   { title: 'SEO Skill', text: 'Pick it if you want your own agent to write each post from your Search Console data, checked with seo lint and approved by you before it ships.', icon: TextCheckIcon, href: '/docs/lint', link: 'See seo lint' },
-  { title: 'Outrank', text: 'Pick it if you want the same article-a-day autopilot with a refresh step for articles that slipped: $99 a month for 30.', icon: News01Icon, href: '/alternatives/outrank', link: 'Outrank alternatives' },
-  { title: 'SEObot', text: 'Pick it if you want fewer autopilot articles for less: $49 a month buys 9, and it refunds that plan if you are not happy after the first article.', icon: Robot01Icon, href: '/alternatives/seobot', link: 'SEObot alternatives' },
+  { title: 'Outrank', text: 'Pick it if you want the same article-a-day autopilot with a refresh step for articles that slipped, at $99 a month for 30.', icon: News01Icon, href: '/alternatives/outrank', link: 'Outrank alternatives' },
+  { title: 'SEObot', text: 'Pick it if you want fewer autopilot articles for less, since $49 a month buys 9, and it refunds that plan if you are not happy after the first article.', icon: Robot01Icon, href: '/alternatives/seobot', link: 'SEObot alternatives' },
   { title: 'BlogSEO', text: 'Stay with it if you want 15 or 30 articles a month in one price, on a CMS few other tools reach, and you will read each one before it publishes.', icon: QuillWrite01Icon },
 ]
 
@@ -88,7 +88,7 @@ const rows = [
 
 const before = [
   'Auto-publish sends articles straight to your live blog. On Shopify, which has no draft state for blog posts, BlogSEO’s docs say to keep manual publish on if you want to read them first.',
-  'In HubSpot, sync is one way: BlogSEO never pulls your HubSpot edits back, and a later sync overwrites the post with BlogSEO’s version.',
+  'In HubSpot, sync is one way. BlogSEO never pulls your HubSpot edits back, and a later sync overwrites the post with BlogSEO’s version.',
   'The backlink exchange places links to your site inside other members’ articles. Its docs say you cannot directly control which sites link to you, and a link costs credits equal to the linking site’s Domain Rating, 10 at least.',
   'The exchange is a paid feature, included with backlink credits in both plans and disabled during the 3-day free trial.',
   'Extra article languages are $29 a month each, AI visibility tracking is $89 a month per site, and premium backlinks are $149 a month per site.',
@@ -108,7 +108,7 @@ const faq = [
   {
     question: 'Is there a free BlogSEO alternative?',
     answer:
-      'SEO Skill is free, and its CLI and seo lint are open source. It does not write articles itself: the agent you already pay for writes them, and SEO Skill gives it the data and checks the copy. Research such as search volumes runs on your own DataForSEO or Ahrefs account.',
+      'SEO Skill is free, and its CLI and seo lint are open source. It does not write articles itself. The agent you already pay for writes them, and SEO Skill gives it the data and checks the copy. Research such as search volumes runs on your own DataForSEO or Ahrefs account.',
   },
   {
     question: 'How much does BlogSEO cost?',
@@ -159,7 +159,7 @@ const faq = [
         <SectionHeading
           id="options-heading"
           title="Which BlogSEO alternative fits your job?"
-          text="The one that matches who picks the topics and who reads each post before it goes live."
+          text="Each one suits a different answer to who picks the topics and who reads each post before it goes live."
         />
         <div class="grid grid-cols-1 gap-2 sm:grid-cols-2">
           {options.map((item) => <HomeCard {...item} />)}
@@ -170,7 +170,7 @@ const faq = [
         <SectionHeading
           id="month-heading"
           title="What changes when a person decides each post?"
-          text="The topics come from your own search data, nothing ships unread, and no links land on your site that you did not add. Thirty posts a month can still be fine when each one is picked and checked."
+          text="Your own search data picks the topics and you read every post before it ships. Thirty posts a month can still be fine when someone picks and checks each one."
         />
         <div class="max-w-3xl">
           <BeforeAfter
@@ -197,7 +197,7 @@ const faq = [
         <SectionHeading
           id="brief-heading"
           title="What should your agent know before it writes a post?"
-          text="The post to change, the searches it already shows for, and what to change, all from your own Search Console. That brief is worth more than a keyword list."
+          text="It should know which post to change, which searches that post already shows for, and what to change, all from your own Search Console."
         />
         <div class="max-w-3xl">
           <BeforeAfter
@@ -285,7 +285,7 @@ const faq = [
         <SectionHeading
           id="blogseo-faq"
           title="Questions about BlogSEO alternatives"
-          text="Price, backlinks, reviewing posts first, and free options."
+          text="These cover BlogSEO’s price, its backlinks, reviewing posts before they go live, and free options."
         />
         <FaqAccordion id="blogseo-faq-list" items={faq} />
       </section>
@@ -294,7 +294,7 @@ const faq = [
         <SectionHeading
           id="more-heading"
           title="Where can you read more on blog SEO with your agent?"
-          text="On these pages, which cover blog SEO in each CMS and compare the other article bots."
+          text="The blog SEO guide covers each CMS, and the Outrank page compares another article tool."
         />
         <div class="grid grid-cols-1 gap-2 sm:grid-cols-2">
           <HomeCard title="Blog SEO guide" text="What to check on every post, where each setting lives in eight CMSs, and how your agent picks the next post from Search Console." icon={SearchList01Icon} href="/guides/blog-seo" link="Read the guide" />

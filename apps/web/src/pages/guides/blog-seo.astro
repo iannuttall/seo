@@ -35,10 +35,10 @@ const breadcrumbs: SchemaBreadcrumb[] = [
 ]
 
 const parts = [
-  { title: '1. Pick posts that bring customers', text: 'Searches your buyers make, close to what you sell, and posts you already have that sit just off page one.', icon: Target02Icon },
+  { title: '1. Pick posts that bring customers', text: 'Start with posts you already have that sit just off page one, then write for searches your buyers make about what you sell.', icon: Target02Icon },
   { title: '2. Make each post the best answer', text: 'Answer the search in the first lines, then add what the pages ranking today leave out.', icon: QuillWrite01Icon },
-  { title: '3. Let Google find and read it', text: 'A title of its own, a clean slug, a sitemap, internal links and text in the HTML.', icon: GoogleIcon },
-  { title: '4. Measure what each post did', text: 'Clicks and positions in Search Console for the weeks after you publish or change a post.', icon: ChartIncreaseIcon },
+  { title: '3. Let Google find and read it', text: 'Each post needs its own title, a clean slug, a place in the sitemap and links from other posts, with its text in the HTML.', icon: GoogleIcon },
+  { title: '4. Measure what each post did', text: 'Search Console shows the clicks and positions each post got in the weeks after you published or changed it.', icon: ChartIncreaseIcon },
 ]
 
 const checklist: ChecklistPhase[] = [
@@ -56,13 +56,13 @@ const checklist: ChecklistPhase[] = [
   {
     id: 'checklist-post',
     title: 'On the post',
-    when: 'What the reader and Google see on the page.',
+    when: 'These cover what the reader and Google see on the page.',
     items: [
       { id: 'post-title', title: 'A title tag of its own, under about 60 characters', detail: 'Lead with the words people search for. Check it with the <a href="/tools/title-and-meta-description-checker">title and meta description checker</a>.' },
       { id: 'post-h1', title: 'One H1 that matches the title', detail: 'Google often uses the H1 as the title link when the two disagree.' },
-      { id: 'post-answer', title: 'The answer is in the first lines', detail: 'Then the detail. A reader who stops after one paragraph still got what they came for.' },
+      { id: 'post-answer', title: 'The answer is in the first lines', detail: 'Put the detail after it, so a reader who stops after one paragraph still got what they came for.' },
       { id: 'post-headings', title: 'Headings say what each section gives', detail: 'A reader scanning only the headings should follow the post.' },
-      { id: 'post-slug', title: 'A short slug with no date in it', detail: 'So the post keeps its address and its links when you update it.' },
+      { id: 'post-slug', title: 'A short slug with no date in it', detail: 'The post then keeps its address and its links when you update it.' },
       { id: 'post-description', title: 'A meta description that says what is in the post', detail: 'Google may rewrite it, but a specific one is often kept.' },
       { id: 'post-links', title: 'Links to and from related posts', detail: 'At least one older post links to the new one, with link text that names it.' },
       { id: 'post-images', title: 'Alt text on every image that carries meaning', detail: 'Describe what the image shows. Leave decorative images empty.' },
@@ -73,7 +73,7 @@ const checklist: ChecklistPhase[] = [
   {
     id: 'checklist-after',
     title: 'After you publish',
-    when: 'Make sure Google can index it, then measure.',
+    when: 'Check that Google can index the post, then start measuring.',
     items: [
       { id: 'after-200', title: 'The post returns 200 with no noindex', detail: 'Check with the <a href="/tools/noindex-checker">noindex checker</a>. A CMS setting can hide the whole blog (see the CMS tabs below).' },
       { id: 'after-sitemap', title: 'It is in your sitemap', detail: 'Most CMSs add it on publish. The <a href="/tools/sitemap-validator">sitemap validator</a> reads the file.' },
@@ -112,7 +112,7 @@ const ladder = [
 const lookFor = [
   { title: 'It starts from your Search Console', text: 'The posts that already show for a search, and how close each one is, beat a keyword list made from scratch.' },
   { title: 'You decide the topics', text: 'A calendar that fills itself picks a topic for every slot, whether or not your customers search for it.' },
-  { title: 'You read each post before it publishes', text: 'Drafts or a manual publish button. Google asks for AI text to be fact-checked and reviewed before it goes live.' },
+  { title: 'You read each post before it publishes', text: 'The tool should save drafts or wait for you to press publish. Google asks for AI text to be fact-checked and reviewed before it goes live.' },
   { title: 'It improves posts you already have', text: 'Rewriting a post at position 12 often pays sooner than a new post that does not rank yet, as a rule of thumb.' },
   { title: 'It checks the copy', text: 'Titles, descriptions, headings and the patterns that make text read as generated, with a fix for each.' },
   { title: 'It works with your CMS', text: 'Through the CMS’s own MCP server or API, so edits land where you would make them by hand and are not overwritten later.' },
@@ -246,12 +246,12 @@ const faq = [
   {
     question: 'How often should I publish blog posts for SEO?',
     answer:
-      'As often as you can pick a topic from research and have someone read the post before it goes live. Volume is not the risk. Publishing on many topics in the hope that some rank is what Google’s helpful content guidance warns against.',
+      'Publish as often as you can pick a topic from research and have someone read the post before it goes live. Publishing on many topics in the hope that some rank is what Google’s helpful content guidance warns against.',
   },
   {
     question: 'How long should a blog post be for SEO?',
     answer:
-      'As long as the answer needs. Google has no word count target. Read the pages that rank for the search: if they all cover five steps, a post that covers two is probably too thin, and padding past the answer helps nobody.',
+      'A post should be as long as the answer needs, because Google has no word count target. Read the pages that rank for the search: if they all cover five steps, a post that covers two is probably too thin, and padding past the answer helps nobody.',
   },
   {
     question: 'Can ChatGPT do SEO for my blog?',
@@ -305,7 +305,7 @@ const tools = [
         <SectionHeading
           id="parts-heading"
           title="What does blog SEO cover?"
-          text="Four jobs, in order. A post Google can’t index gains nothing from a better title, and a perfect post on a topic nobody buys from brings nobody who buys."
+          text="Do these in order, because each one depends on the one before. A post Google can’t index won’t rank however good its title is, and a post on a topic your buyers never search for won’t bring you customers."
         />
         <div class="grid grid-cols-1 gap-2 sm:grid-cols-2">
           {parts.map((item) => <HomeCard {...item} />)}
@@ -316,7 +316,7 @@ const tools = [
         <SectionHeading
           id="checklist-heading"
           title="18 checks for every blog post"
-          text="Eighteen checks: four before you write, ten on the post and four after it goes live. Tick them as you go; the ticks stay in this browser."
+          text="Four of these come before you write, ten are on the post itself and four come after it goes live. You can tick them off here as you work through a post."
         />
         <div class="max-w-3xl">
           <MigrationChecklist phases={checklist} storageKey="seo:blog-seo-checklist" />
@@ -437,13 +437,13 @@ const tools = [
         <SectionHeading
           id="faq-heading"
           title="Blog SEO questions"
-          text="How often to post, how long a post should be, ChatGPT, software, and the tool named after the topic."
+          text="These answer how often to post, how long a post should be, whether ChatGPT can do it, and which software to use."
         />
         <FaqAccordion items={faq} id="blog-seo-faq" />
       </section>
 
       <section class="site-frame" aria-labelledby="tools-heading">
-        <SectionHeading id="tools-heading" title="Tools for blog SEO" text="Check one post in your browser, or let your agent find the next one from Search Console." />
+        <SectionHeading id="tools-heading" title="Tools for blog SEO" text="You can check one post in your browser for free, or let your agent find the next one from Search Console." />
         <div class="grid grid-cols-1 gap-2 sm:grid-cols-2">
           {tools.map((item) => <HomeCard {...item} />)}
         </div>

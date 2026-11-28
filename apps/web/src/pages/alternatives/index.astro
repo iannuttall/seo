@@ -7,7 +7,7 @@ import LandingHero from '@/components/LandingHero.astro'
 import SectionHeading from '@/components/SectionHeading.astro'
 import SetupPrompts from '@/components/SetupPrompts.astro'
 import SplitList from '@/components/SplitList.astro'
-import { AiChat02Icon } from '@hugeicons/core-free-icons'
+import { AiChat02Icon, QuillWrite01Icon } from '@hugeicons/core-free-icons'
 import { competitors, groups } from '@/content/alternatives'
 import BaseLayout from '@/layouts/BaseLayout.astro'
 import type { SchemaBreadcrumb } from '@/lib/schema'
@@ -103,6 +103,18 @@ const faqs = [
         <div class="grid grid-cols-1 gap-2 sm:grid-cols-2">
           <HomeCard title="Peec AI" text="A daily tracker for marketing teams, with an MCP server and Looker Studio." icon={AiChat02Icon} href="/alternatives/peec-ai" link="Peec AI alternatives" />
           <HomeCard title="Profound" text="Ten engines, bot logs and agents that draft the content, for large teams." icon={AiChat02Icon} href="/alternatives/profound" link="Profound alternatives" />
+        </div>
+      </section>
+
+      <section class="site-frame" aria-labelledby="group-ai-writers">
+        <SectionHeading
+          id="group-ai-writers"
+          title="AI SEO bots and article writers"
+          text="Tools that write and publish blog articles for you, compared with writing in your own agent from your Search Console data."
+        />
+        <div class="grid grid-cols-1 gap-2 sm:grid-cols-2">
+          <HomeCard title="SEObot" text="Autopilot blog articles from $49 a month for 9, published to your CMS every week." icon={QuillWrite01Icon} href="/alternatives/seobot" link="SEObot alternatives" />
+          <HomeCard title="SEO content checker" text="Check any draft, whoever wrote it, for heading, title, description and copy problems." icon={QuillWrite01Icon} href="/tools/seo-content-checker" link="Check a draft" />
         </div>
       </section>
 

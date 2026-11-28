@@ -6,12 +6,13 @@ import {
   Rocket01Icon,
   Route01Icon,
 } from '@hugeicons/core-free-icons'
-import Breadcrumbs from '@/components/Breadcrumbs.astro'
 import CodeBlock from '@/components/CodeBlock.astro'
 import FaqAccordion from '@/components/FaqAccordion.astro'
 import HomeCard from '@/components/HomeCard.astro'
-import PageHeader from '@/components/PageHeader.astro'
+import LandingHero from '@/components/LandingHero.astro'
+import SectionHeading from '@/components/SectionHeading.astro'
 import SetupPrompts from '@/components/SetupPrompts.astro'
+import SplitList from '@/components/SplitList.astro'
 import BaseLayout from '@/layouts/BaseLayout.astro'
 import type { SchemaBreadcrumb } from '@/lib/schema'
 
@@ -55,6 +56,30 @@ const faq = [
       'Yes. SEO Skill gives your agent your Search Console, Google Analytics, crawl and AI answer data, and the agent works in your site’s code. You review each change before it ships. The tools your agent calls on demand are free.',
   },
 ]
+// The five jobs, in the order each one depends on the one before.
+const jobs = [
+  { title: 'Get crawled and indexed', text: 'Let search and AI crawlers read every page, and get the pages that matter into Google’s index. seo index checks Google’s index status for your pages.', href: '/docs/indexing' },
+  { title: 'Find the buyer questions', text: 'Find what buyers search and ask AI, and which pages show up for it today. AI search tracking pulls those questions from your own Search Console.', href: '/features/ai-search' },
+  { title: 'Write and fix pages', text: 'Comparison, alternatives and use-case pages, and sharper titles and copy. Your agent writes the change in your site’s code, and you review it before it ships.', href: '/features/seo-agent' },
+  { title: 'Track AI answers', text: 'Ask ChatGPT, Gemini and Google’s AI answers your buyer questions. The AI visibility checker lists the sites each answer cites, yours and your competitors’.', href: '/features/ai-visibility-checker' },
+  { title: 'Report what moved', text: 'Clicks, rankings, index status and AI answers, each week compared with the one before, from your own data.', href: '/features/seo-reporting' },
+]
+
+const loop = [
+  { title: 'Read what changed', text: 'Search Console and AI answers since last week, from your own data.' },
+  { title: 'Pick one change', text: 'The change most likely to help, with the evidence for it.' },
+  { title: 'Make it', text: 'Your agent makes the change in your codebase. Nothing ships without your say.' },
+  { title: 'Check it next week', text: 'The next run shows whether the change moved the numbers.' },
+]
+
+const checks = [
+  { title: 'Which questions do you track, and where did they come from?', text: 'Questions from your own Search Console are ones people already ask. A list someone guessed may be questions nobody types.' },
+  { title: 'How many times do you ask each one?', text: 'A rate across several runs means something. A single answer does not.' },
+  { title: 'Whose data is the report built on?', text: 'Your own Search Console and analytics show real clicks. Third-party estimates are useful for competitors, but they are estimates.' },
+  { title: 'Can you see every change and when it shipped?', text: 'If a number moves, you should be able to line it up with the change that came before it.' },
+  { title: 'Do they separate cause from timing?', text: 'A rise in the same week as a new page shows the timing matched. It does not prove the page caused it.' },
+]
+
 ---
 
 <BaseLayout
@@ -62,135 +87,84 @@ const faq = [
   description="What AI SEO services cover: indexing, pages for buyer questions, tracking who AI answers cite and weekly reports, run with your own agent and data."
   canonicalPath="/services"
   {breadcrumbs}
+  framed={false}
 >
   <main data-agent-content>
-    <Breadcrumbs {breadcrumbs} />
-
-    <PageHeader
+    <LandingHero
       title="AI SEO services"
-      description="AI SEO is the work of getting found in Google and named in ChatGPT, Gemini, Perplexity and Google's AI answers. This is what that work covers, how to check it is working, and how to run it with your own agent and data."
+      lead="AI SEO is the work of getting found in Google and named in ChatGPT, Gemini, Perplexity and Google's AI answers. This is what that work covers, how to check it is working, and how to run it with your own agent and data."
+      setupId="services-setup"
     />
 
-    <SetupPrompts id="services-setup" />
+    <div class="space-y-24 py-24 sm:space-y-32 sm:py-32">
+      <SplitList
+        id="jobs-heading"
+        title="What do AI SEO services cover?"
+        text="Five jobs, whatever a provider calls it (AI SEO, AEO, GEO or AI search optimization). Each depends on the one before it, because a page Google has not indexed cannot rank, and a page that does not rank is rarely the one an AI answer cites."
+        items={jobs}
+      />
 
-    <article class="docs-prose mt-14 min-w-0">
-      <h2>What AI SEO services cover</h2>
-      <p>
-        Whatever a provider calls it (AI SEO, AEO, GEO or AI search
-        optimization), the work comes down to five jobs. Each one depends on
-        the one before it: a page Google has not indexed cannot rank, and a
-        page that does not rank is rarely the one an AI answer cites.
-      </p>
-      <table>
-        <thead><tr><th>Job</th><th>What it involves</th><th>How SEO Skill runs it</th></tr></thead>
-        <tbody>
-          <tr>
-            <td>Get crawled and indexed</td>
-            <td>Let search and AI crawlers read every page, and get the pages that matter into Google's index.</td>
-            <td><a href="/docs/indexing">seo index</a> checks Google's index status for your pages, and the <a href="/tools/robots-txt-validator">robots.txt checker</a> shows which crawlers your rules let in.</td>
-          </tr>
-          <tr>
-            <td>Find the buyer questions</td>
-            <td>Find what buyers search and ask AI, and which pages show up for it today.</td>
-            <td><a href="/features/ai-search">AI search tracking</a> pulls the AI-style questions from your own Search Console; <a href="/features/keyword-research">keyword research</a> adds volumes and competitors.</td>
-          </tr>
-          <tr>
-            <td>Write and fix pages</td>
-            <td>Comparison, alternatives and use-case pages, and sharper titles and copy on the pages you have.</td>
-            <td>Your agent writes the change in your site's code from the evidence, and you review it before it ships.</td>
-          </tr>
-          <tr>
-            <td>Track AI answers</td>
-            <td>Ask ChatGPT, Gemini and Google's AI answers your buyer questions and see who they name and cite.</td>
-            <td>The <a href="/features/ai-visibility-checker">AI visibility checker</a> asks each question on four engines and lists the sites each answer cites, yours and your competitors'.</td>
-          </tr>
-          <tr>
-            <td>Report what moved</td>
-            <td>A regular report on clicks, rankings, index status and AI answers.</td>
-            <td><a href="/features/seo-reporting">SEO reporting</a> compares each week with the one before, from your own data.</td>
-          </tr>
-        </tbody>
-      </table>
+      <SplitList
+        id="loop-heading"
+        title="How does the work run each week?"
+        text="As a weekly loop. SEO Skill runs it through the agent you already use, picking the next step from your own data."
+        items={loop}
+      />
 
-      <h2>How the work runs each week</h2>
-      <p>
-        AI SEO runs as a weekly loop. Read what changed in Search Console
-        and AI answers, pick the one change most likely to help, make it,
-        and check it the next week.
-      </p>
-      <p>
-        SEO Skill runs that loop through the agent you already use. It
-        picks the next step from your own data, your agent makes the change
-        in your codebase, and the next run checks whether it worked. Nothing
-        ships without your say. The <a href="/features/seo-agent">SEO
-        agent</a> page shows the jobs to give it.
-      </p>
+      <SplitList
+        id="check-heading"
+        title="How do you check an AI SEO service before you pay for it?"
+        text="Ask these five questions of any provider, or of your own setup. AI answers vary from run to run, so a screenshot of one good answer proves very little."
+        items={checks}
+      />
 
-      <h2>Check an AI SEO service before you pay for it</h2>
-      <p>
-        AI answers vary from run to run, so a screenshot of one good answer
-        proves very little. Ask these questions of any provider, or of your
-        own setup:
-      </p>
-      <ul>
-        <li>
-          <strong>Which questions do you track, and where did they come
-          from?</strong> Questions from your own Search Console are ones
-          people already ask. A list someone guessed may be questions nobody
-          types.
-        </li>
-        <li>
-          <strong>How many times do you ask each one?</strong> A rate across
-          several runs means something. A single answer does not.
-        </li>
-        <li>
-          <strong>Whose data is the report built on?</strong> Your own Search
-          Console and analytics show real clicks. Third-party estimates are
-          useful for competitors, but they are estimates.
-        </li>
-        <li>
-          <strong>Can you see every change and when it shipped?</strong> If
-          a number moves, you should be able to line it up with the change
-          that came before it.
-        </li>
-        <li>
-          <strong>Do they separate cause from timing?</strong> A rise in the
-          same week as a new page shows the timing matched. It does not
-          prove the page caused it.
-        </li>
-      </ul>
+      <section class="site-frame" aria-labelledby="services-list">
+        <SectionHeading
+          id="services-list"
+          title="Which AI SEO service do you need?"
+          text="The one that matches your job. Each page covers what the work should include and how to judge it."
+        />
+        <div class="grid grid-cols-1 gap-2 sm:grid-cols-2">
+          {services.map((item) => <HomeCard {...item} />)}
+        </div>
+      </section>
 
-      <h2>Run it yourself with your agent</h2>
-      <p>
-        Add the hosted MCP to Claude Code, Codex, Cursor or ChatGPT and sign
-        in with Google, or install the CLI for the site crawl. Then ask:
-      </p>
-      <CodeBlock prompt value="What should I fix first to get found in Google and named in AI answers?" wrap />
-      <p>
-        Your agent reads your Search Console, checks your pages and AI
-        answers, and comes back with the first step and the evidence for it.
-      </p>
-    </article>
+      <section class="site-frame" aria-labelledby="agent-heading">
+        <SectionHeading
+          id="agent-heading"
+          title="Can you run AI SEO with your own agent?"
+          text="Yes. SEO Skill gives Claude Code, Codex, Cursor or ChatGPT your Search Console, crawl and AI answer data, and these tools do each job."
+        />
+        <div class="grid grid-cols-1 gap-2 sm:grid-cols-2">
+          {related.map((item) => <HomeCard {...item} />)}
+        </div>
+        <div class="docs-prose mt-10 max-w-3xl">
+          <p>Once it is connected, ask:</p>
+          <CodeBlock prompt value="What should I fix first to get found in Google and named in AI answers?" wrap />
+          <p>
+            Your agent reads your Search Console, checks your pages and AI
+            answers, and comes back with the first step and the evidence for it.
+          </p>
+        </div>
+      </section>
 
-    <div class="docs-prose mt-16">
-      <h2>AI SEO questions</h2>
+      <section class="site-frame" aria-labelledby="services-faq-heading">
+        <SectionHeading
+          id="services-faq-heading"
+          title="Questions about AI SEO services"
+          text="These are the follow-ups people ask before they hire someone or start themselves."
+        />
+        <FaqAccordion id="services-faq" items={faq} />
+      </section>
+
+      <section class="site-frame" aria-labelledby="start-heading">
+        <SectionHeading
+          id="start-heading"
+          title="Start AI SEO with your own agent"
+          text="Add SEO Skill to your agent, sign in with Google and ask what to fix first to get found in Google and named in AI answers."
+        />
+        <SetupPrompts id="services-setup-end" />
+      </section>
     </div>
-    <div class="mt-6">
-      <FaqAccordion id="services-faq" items={faq} />
-    </div>
-
-    <section class="mt-16" aria-labelledby="services-list">
-      <h2 id="services-list" class="text-2xl/8 font-medium tracking-normal">AI SEO services by job</h2>
-      <div class="mt-6 grid grid-cols-1 gap-2 sm:grid-cols-2">
-        {services.map((item) => <HomeCard {...item} />)}
-      </div>
-    </section>
-
-    <section class="mt-16" aria-labelledby="services-related">
-      <h2 id="services-related" class="text-2xl/8 font-medium tracking-normal">The tools behind each job</h2>
-      <div class="mt-6 grid grid-cols-1 gap-2 sm:grid-cols-2">
-        {related.map((item) => <HomeCard {...item} />)}
-      </div>
-    </section>
   </main>
 </BaseLayout>

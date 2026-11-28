@@ -47,7 +47,7 @@ const withUnit = (value: number) => (unit ? `${formatNumber(value)} ${unit}` : f
                 <span class:list={['block truncate', on ? 'font-medium text-foreground' : 'text-foreground-muted']}>{row.label}</span>
                 {row.note ? <span class="mt-0.5 block text-xs/4 text-foreground-soft">{row.note}</span> : null}
               </span>
-              <span class="sr-only">: </span>
+              <span class="sr-only">, </span>
               <span class:list={['shrink-0 tabular-nums', on ? 'font-medium text-foreground' : 'text-foreground-muted']}>
                 {formatNumber(row.value)}{unit ? ' ' : null}
                 {unit ? <span class="text-foreground-soft">{unit}</span> : null}

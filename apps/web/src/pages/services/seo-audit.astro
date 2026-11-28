@@ -20,6 +20,7 @@ import FaqAccordion from '@/components/FaqAccordion.astro'
 import HomeCard from '@/components/HomeCard.astro'
 import LandingHero from '@/components/LandingHero.astro'
 import SectionHeading from '@/components/SectionHeading.astro'
+import SetupPrompts from '@/components/SetupPrompts.astro'
 import BaseLayout from '@/layouts/BaseLayout.astro'
 import type { SchemaBreadcrumb } from '@/lib/schema'
 
@@ -140,8 +141,8 @@ const faq = [
       <section class="site-frame" aria-labelledby="covers-heading">
         <SectionHeading
           id="covers-heading"
-          title="What a technical SEO audit should cover"
-          text="Six areas, from whether Google can reach a page to whether it is close to winning clicks. A crawl alone covers the first and third. The rest need Google's own data."
+          title="What should a technical SEO audit cover?"
+          text="Six areas, from whether Google can reach a page to whether it is close to winning clicks. A crawl alone covers the first and third, and the rest need Google's own data."
         />
         <div class="grid grid-cols-1 gap-2 sm:grid-cols-2">
           {covers.map((item) => <HomeCard {...item} />)}
@@ -151,8 +152,8 @@ const faq = [
       <section class="site-frame" aria-labelledby="google-heading">
         <SectionHeading
           id="google-heading"
-          title="Start from what Google did with each page"
-          text="A crawler can only guess whether Google will index a page. URL Inspection says what Google did. This is that answer for every URL we know on seoskill.dev."
+          title="Why start from what Google did with each page?"
+          text="Because URL Inspection says what Google did, while a crawler can only guess whether Google will index a page. This is that answer for every URL we know on seoskill.dev."
         />
         <div class="max-w-3xl">
           <CompareBars
@@ -165,7 +166,7 @@ const faq = [
         </div>
         <div class="docs-prose mt-10 max-w-3xl">
           <p>
-            Most of the 45 URLs outside the index are meant to be: old URLs
+            Most of the 45 URLs outside the index are meant to be there, such as old URLs
             that redirect, account and policy pages, and a plain text file.
             An audit that reported all 45 as errors would send you fixing
             pages that are working. Each one needs Google's reason and a live
@@ -177,7 +178,7 @@ const faq = [
       <section class="site-frame" aria-labelledby="process-heading">
         <SectionHeading
           id="process-heading"
-          title="How the audit runs"
+          title="How does the audit run?"
           text="The first run takes a couple of days of reading. After that, the same checks run every week and report what changed."
         />
         <div class="max-w-3xl">
@@ -188,8 +189,8 @@ const faq = [
       <section class="site-frame" aria-labelledby="deliverables-heading">
         <SectionHeading
           id="deliverables-heading"
-          title="What you should get from an SEO audit"
-          text="Whoever runs it, these four things let you check the work and act on it."
+          title="What should you get from an SEO audit?"
+          text="These four things, whoever runs it, because they let you check the work and act on it."
         />
         <div class="grid grid-cols-1 gap-2 sm:grid-cols-2">
           {deliverables.map((item) => <HomeCard {...item} />)}
@@ -199,8 +200,8 @@ const faq = [
       <section class="site-frame" aria-labelledby="agent-heading">
         <SectionHeading
           id="agent-heading"
-          title="Run the audit with your own agent"
-          text="SEO Skill gives Claude Code, Codex, Cursor or ChatGPT the crawl, Google's index status and your Search Console data, so the agent you already use can run the audit and fix what it finds."
+          title="Can your own agent run the audit?"
+          text="Yes. SEO Skill gives Claude Code, Codex, Cursor or ChatGPT the crawl, Google's index status and your Search Console data, so the agent you already use can run the audit and fix what it finds."
         />
         <div class="grid grid-cols-1 gap-2 sm:grid-cols-2">
           {tools.map((item) => <HomeCard {...item} />)}
@@ -221,9 +222,18 @@ const faq = [
         <SectionHeading
           id="audit-faq"
           title="Questions about SEO audit services"
-          text="What people ask before they order an audit."
+          text="These are the follow-ups people ask before they order an audit."
         />
         <FaqAccordion items={faq} id="audit-faq-list" />
+      </section>
+
+      <section class="site-frame" aria-labelledby="start-heading">
+        <SectionHeading
+          id="start-heading"
+          title="Run your first audit with your agent"
+          text="Add SEO Skill to your agent, sign in with Google and ask for a technical audit of your site, in the order the findings cost you clicks."
+        />
+        <SetupPrompts id="audit-setup-end" />
       </section>
     </div>
   </main>

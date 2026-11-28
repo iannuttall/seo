@@ -33,13 +33,22 @@ const link =
 const skill = 'Run `seo skill install` to add the SEO skill.'
 
 const sites =
-  'Run `seo sites` and ask me which site to start with. If it lists none, tell me the Google account I used needs access to a Search Console property.'
+  'Run `seo sites` and ask me which site to start with. If it lists none, tell me the Google account I used needs access to a Search Console property. Its last line shows my plan and how much usage is left: tell me that in a sentence.'
+
+// Research on SEO Skill's own DataForSEO account uses the account's plan
+// usage or free credit, and paid calls carry notices (core commands/usage.ts).
+const usage = `Research such as keywords, competitors, backlinks and AI answers works without my own key: it uses my plan's usage or my free credit. When a tool says I have used 50%, 80% or all of it, tell me in one line and offer the next step it gives, such as moving to the next plan. If a tool fails with USAGE_LIMIT, tell me research is paused and keep going with the free tools. You can pick or change my plan, buy a top-up, set auto-reload or cancel with seo_sites, but only after I say yes to that exact step and price. If it returns a Stripe link, give it to me to pay. Only add a site to the weekly site audit when I ask.`
 
 const useMcp = (restart: string) =>
-  `When it is connected, ${restart} After that, use the seoskill MCP tools for my data. Call seo_next for the site I picked and do the step it returns. Use the \`seo\` CLI only for site crawls and Bing data, which run on my machine.`
+  `When it's connected, ${restart} After that, use the seoskill MCP tools for my data. Call seo_next for the site I picked and do the step it returns. Use the \`seo\` CLI only for site crawls and Bing data, which run on my machine. ${usage}`
 
 const newChat =
   'give me a message to send afterwards that asks you to run seo_next for the site I picked.'
+
+/** The line every setup box shows under its prompt: the one-off free credit
+ * (apps/mcp/src/credit.ts). */
+export const freeCreditLine =
+  'New accounts get $1 of free research once a Search Console site is connected, with no card.'
 
 /** The full prompt, with any steps the page adds after the client's own. */
 export const promptText = (client: SetupPrompt, extraSteps: string[] = []) =>
@@ -261,7 +270,7 @@ export const taskPrompt = (
     'Use the seoskill MCP tools for this. If you do not have them yet, set up SEO Skill first with the prompt under "Set up SEO Skill" at https://seoskill.dev/index.md, then tell me to send this message again once the tools load.',
     ...(key
       ? [
-          `This needs ${key === 'dataforseo' ? 'a DataForSEO login' : 'a DataForSEO login or an Ahrefs API key'} saved on my seoskill.dev account. If a tool says the key is missing, ask me to open ${account}, open the Keys tab and save it. Never ask me to paste a key into this chat.`,
+          `This uses research data. Without my own key it runs on SEO Skill's DataForSEO account and uses my plan's usage or my free credit; with ${key === 'dataforseo' ? 'my own DataForSEO login' : 'my own DataForSEO login or Ahrefs API key'} saved on my seoskill.dev account, it runs on that instead. If a tool fails with USAGE_LIMIT, tell me and pass on the next step it gives, such as topping up at ${account} or saving my own key on its Keys tab. Never ask me to paste a key into this chat.`,
         ]
       : []),
     ...(crawl

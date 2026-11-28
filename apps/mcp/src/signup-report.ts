@@ -51,7 +51,8 @@ export async function signupReport(db: D1Database, now: Date): Promise<string> {
          (SELECT COUNT(*) FROM users) AS people,
          (SELECT COUNT(*) FROM billing WHERE paid_at >= ?1) AS paid,
          (SELECT COUNT(*) FROM billing WHERE status IN ${ACTIVE_SQL}) AS paying,
-         (SELECT COALESCE(SUM(sites), 0) FROM billing WHERE status IN ${ACTIVE_SQL}) AS sites`,
+         (SELECT COALESCE(SUM(sites), 0) FROM billing WHERE status IN ${ACTIVE_SQL}) AS sites,
+         (SELECT COUNT(*) FROM billing WHERE status IN ${ACTIVE_SQL} AND plan IS NOT NULL) AS plans`,
     )
     .bind(since)
     .first<{
@@ -60,11 +61,12 @@ export async function signupReport(db: D1Database, now: Date): Promise<string> {
       paid: number
       paying: number
       sites: number
+      plans: number
     }>()
   const from = new Date(since).toISOString().slice(0, 10)
   const to = now.toISOString().slice(0, 10)
   const head = `SEO Skill sign-ups, ${from} to ${to} (UTC): ${total?.week ?? 0}. People in total: ${total?.people ?? 0}.`
-  const paidHead = `New paid audits: ${total?.paid ?? 0}. Paying now: ${total?.paying ?? 0} ${total?.paying === 1 ? 'person' : 'people'}, ${total?.sites ?? 0} ${total?.sites === 1 ? 'site' : 'sites'}.`
+  const paidHead = `New paid audits: ${total?.paid ?? 0}. Paying now: ${total?.paying ?? 0} ${total?.paying === 1 ? 'person' : 'people'}, ${total?.sites ?? 0} ${total?.sites === 1 ? 'site' : 'sites'} on the per-site plan${total?.plans ? `, ${total.plans} on a usage plan` : ''}.`
   const [entry, client, referrer, landing, utm, paidReferrer, paidLanding] =
     await Promise.all([
       total?.week ? counts(db, 'entry', since) : [],

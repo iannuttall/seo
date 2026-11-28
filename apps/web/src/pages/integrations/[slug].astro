@@ -60,7 +60,7 @@ const connectSteps = source
         : []),
       { title: 'Read it with its limits', text: source.limit },
       ...(source.id === 'google-search-console'
-        ? [{ title: 'Free, with a paid weekly audit', text: 'Every tool is free with no usage cap. The weekly site audit is $50 a month per site: a weekly crawl, daily Google index checks, stored history, drop and return alerts, and a Monday email and webhook. Cancel any time.' }]
+        ? [{ title: 'Free, with paid plans', text: 'Every tool is free without a plan. Plans from $10 a month, with unlimited sites, add research usage and the weekly site audit: a weekly crawl, daily Google index checks, stored history, drop and return alerts, and a Monday email and webhook. Cancel any time.' }]
         : []),
     ]
   : []
@@ -80,7 +80,7 @@ const featureLink = featureLinks[id]
 
 const clientFaq = client
   ? [
-      { question: `Is SEO Skill free in ${name}?`, answer: 'Yes. Every tool your agent calls on demand is free with no usage cap. The only paid part is the weekly site audit, which runs on our servers in the background for $50 a month per site.' },
+      { question: `Is SEO Skill free in ${name}?`, answer: 'Yes. Every tool your agent calls on demand is free with no usage cap. Plans from $10 a month add the weekly site audit, which runs on our servers in the background, and research usage.' },
       { question: `Can ${name} change anything in my Search Console?`, answer: 'No. The Google sign-in asks for read-only access to Search Console and Google Analytics.' },
       { question: 'Does the server keep my search data?', answer: 'It keeps your linked Google accounts and any keys you save, encrypted. Search Console and analytics rows are fetched when your agent asks and not kept, except for sites in the paid weekly audit, where it keeps the crawls, index checks with each page\'s clicks and impressions, and the issues list.' },
       ...(client.note ? [{ question: `Which ${name} plans can add it?`, answer: client.note }] : []),

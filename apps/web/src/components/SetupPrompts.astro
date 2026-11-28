@@ -8,7 +8,7 @@ import { ArrowRight01Icon, Copy01Icon, Tick02Icon } from '@hugeicons/core-free-i
 import HugeIcon from './HugeIcon.astro'
 import { buttonBaseStyles, buttonVariants, getButtonClasses } from './ui/button'
 import { cn } from '@/lib/cn'
-import { promptText, setupPromptFor, setupPrompts } from '@/content/setup-prompts'
+import { freeCreditLine, promptText, setupPromptFor, setupPrompts } from '@/content/setup-prompts'
 
 type Props = { class?: string; id?: string; client?: string; extraSteps?: string[] }
 
@@ -102,7 +102,7 @@ const summary = (client: { agent: string; summary?: string }) =>
             data-setup-full>{client.prompt}</pre>
         </div>
         <div class="mt-2 flex flex-col gap-1 text-sm/6 sm:flex-row sm:items-start sm:justify-between sm:gap-6">
-          <p class="text-foreground-muted">{summary(client)}</p>
+          <p class="text-foreground-muted">{summary(client)} {freeCreditLine}</p>
           {client.guide.href !== here ? (
             <a
               class="inline-flex shrink-0 items-center gap-1 font-medium text-foreground no-underline hover:underline underline-offset-4"

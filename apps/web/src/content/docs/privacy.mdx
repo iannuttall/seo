@@ -17,7 +17,8 @@ lead: The hosted MCP keeps your linked accounts and any keys you save, encrypted
 | How you signed up | Written once: the sign-in path, the agent or app, and the site that sent you. No IP address or email. |
 | Sites in the weekly audit | The last two crawls, Google's index check for each known page with its clicks and impressions, alerts from the last 30 days, the weekly competitor check, and the latest two results of the weekly AI answer check for each question. Deleted when you remove the site. |
 | Internal linking tool runs | When you run it on the website, the crawl is deleted once the result is ready, and the result after 24 hours. Page text goes to TypeSafe so Jev can judge links. |
-| Payments | Stripe keeps your card. The server keeps only your Stripe ids and how many sites you pay for. |
+| Payments | Stripe keeps your card. The server keeps your Stripe ids, your plan, its status and reset date, and your usage and top-up balances. |
+| Free credit | Salted hashes of the Search Console properties of accounts that ask for it, kept after the account is deleted so the credit is given once per group of sites. A salted hash of your sign-in's network block for 30 days, whether the sign-in passed Cloudflare Turnstile, and a salted hash of a card's Stripe fingerprint if you add a card to get it. Never the sites, IP address or card themselves. |
 | Pages checked live | Fetched for the request and not kept. |
 | Usage counts | An anonymous count of each run. See below. |
 
@@ -41,12 +42,12 @@ The totals are public on the [usage stats page](/stats), and the [telemetry page
 
 - **Google** answers the Search Console, Google Analytics and URL Inspection requests.
 - **Bing** answers the Bing Webmaster Tools requests from the CLI, if you connect Bing there.
-- **The provider you choose** gets your research request and bills your account.
+- **DataForSEO** gets your research requests when they run on our account. With your own key, **the provider you choose** gets them and bills your account.
 - **Ahrefs** gets the domains in research rows for the free Domain Rating column.
 - **Clicky** answers the Clicky requests for the sites you save.
 - **Simple Analytics** answers the requests made with the API key you save.
 - **DataForSEO, TypeSafe and Ahrefs** get the site's domain, its competitors, candidate keywords and, for TypeSafe, its top 25 Search Console queries, for the weekly competitor check on paid sites. DataForSEO also gets the site's domain and up to 10 of its Search Console questions for the weekly AI answer check.
-- **Stripe** takes the payment for the weekly site audit.
+- **Stripe** takes the payments for plans and top-ups.
 - **PostShiba** sends alert and weekly summary email to your Google address.
 - **Your AI agent** sends the results to its model provider, under that provider's terms.
 - **Cloudflare** runs the hosted server and this website, stores the encrypted sign-ins and keys and the weekly audit's data, crawls pages in a browser for sites that need JavaScript, and handles the network requests.

@@ -6,6 +6,8 @@ import type { Meter } from './audit/meter.ts'
 //   internal_links_free_runs    free runs started; read for the daily limit
 //   internal_links_pages        pages its crawls fetched
 //   included_typesafe_microusd  Jev spend on SEO Skill's own TypeSafe key
+//   included_research_microusd  seo_research spend on SEO Skill's own
+//                               DataForSEO account, at DataForSEO's cost
 
 export type UsageKind =
   | 'browser_run_ms'
@@ -17,6 +19,7 @@ export type UsageKind =
   | 'internal_links_free_runs'
   | 'internal_links_pages'
   | 'included_typesafe_microusd'
+  | 'included_research_microusd'
 
 // Adds amounts to the account's rows for today (UTC), all or none, in one
 // D1 batch. Zero and negative amounts are skipped.

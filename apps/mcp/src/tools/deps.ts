@@ -8,11 +8,23 @@ import {
 } from '@seo/core/commands'
 import { auditAccess, siteIssues } from '../audit/schedule.ts'
 import { weekData } from '../audit/week.ts'
-import { billingOn, startAuditSite } from '../billing.ts'
+import {
+  billingOf,
+  billingOn,
+  buyTopUp,
+  choosePlan,
+  plansOn,
+  setAutoReload,
+  setPlanCancel,
+  startAuditSite,
+} from '../billing.ts'
 import { siteContext } from '../context.ts'
+import { settleCredit } from '../credit.ts'
 import { hostedFeedback } from '../feedback.ts'
 import { accountUrl, signInHint } from '../google.ts'
+import { includedOn, ownKey } from '../included.ts'
 import { hostedSubmitAccess } from '../indexmysite.ts'
+import { usageOf } from '../meter.ts'
 import { clientNameOf } from '../oauth.ts'
 import { siteProgress } from '../progress.ts'
 import { updateLog } from '../update-log.ts'
@@ -84,14 +96,46 @@ export function deps({
       accounts: async () => directory.accounts(),
       signIn: signInHint(env),
     },
+    // What is left of the account's paid usage, once research can run on
+    // it. Best effort: the free credit is settled first.
+    ...(includedOn(env)
+      ? {
+          usage: async () => {
+            await settleCredit(env, userId, directory).catch(() => undefined)
+            return usageOf(env, userId, ownKey(headers))
+          },
+        }
+      : {}),
     ...(audit
       ? {
           audit,
           week: () => weekData(env, userId),
         }
       : {}),
-    ...(audit || billingOn(env)
+    ...(audit || billingOn(env) || plansOn(env)
       ? { startAudit: (site) => startAuditSite(env, userId, site) }
+      : {}),
+    ...(plansOn(env)
+      ? {
+          choosePlan: (plan) => choosePlan(env, userId, plan),
+          topUp: (usd) => buyTopUp(env, userId, usd),
+          // Auto-reload only buys top-ups on an active plan, so it's only
+          // saved on one, as on the account page.
+          autoReload: async (amount, cap) => {
+            const paid = await billingOf(env, userId)
+            if (!paid?.active || paid.plan === null) {
+              throw new CommandError(
+                'INVALID_INPUT',
+                'Auto-reload needs a plan. Ask the person whether to pick one, then call seo_sites with plan.',
+              )
+            }
+            await setAutoReload(env, userId, amount, cap)
+          },
+          cancelPlan: async (cancel) => {
+            const end = await setPlanCancel(env, userId, cancel)
+            return end === null ? null : new Date(end).toISOString()
+          },
+        }
       : {}),
     ...(HOSTED_BING
       ? {

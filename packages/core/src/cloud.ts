@@ -8,6 +8,7 @@ import type { IssueStore, StoredIssue } from './commands/issues.js'
 import { bingRouter, LinkedAccounts } from './commands/linked.js'
 import type { ProgressPoint, ProgressStore } from './commands/progress.js'
 import type { ProgressRun } from './commands/progress-track.js'
+import type { Usage } from './commands/usage.js'
 import type { WeekData } from './commands/week.js'
 import { SeoError } from './errors.js'
 import { readJson } from './http/read-json.js'
@@ -148,6 +149,21 @@ export async function cloudWeek(): Promise<WeekData | null> {
     )
   }
   return result.body
+}
+
+// The linked account's paid usage for seo_sites and `seo sites`:
+// undefined when the server has no usage plans (it answers 404), null when
+// it could not be read, so a listing never fails over it.
+export async function cloudUsage(): Promise<Usage | null | undefined> {
+  const token = cloudToken()
+  if (!token) return undefined
+  const result = await call<Usage>('/account/cli/usage', { token }).catch(
+    () => null,
+  )
+  if (result?.status === 404) return undefined
+  return result?.ok && typeof result.body.empty === 'boolean'
+    ? result.body
+    : null
 }
 
 // A request to the account's issues list or business context store, with

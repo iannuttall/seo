@@ -118,7 +118,8 @@ They miss most of the long tail, and they rarely agree with each other.
 **The fix** is to start from your own data. Search Console is the source of
 truth for Google. When you do need keyword volumes or competitor data,
 [`seo research`](https://seoskill.dev/docs/research) uses your own
-DataForSEO or Ahrefs key, and it keeps those estimates apart from your real
+DataForSEO or Ahrefs key, or a [plan's usage](https://seoskill.dev/pricing)
+on the hosted server, and it keeps those estimates apart from your real
 numbers.
 
 ### #3: The agent says it's fixed when it isn't
@@ -151,7 +152,7 @@ ends with the command to run next, so your agent always knows where to go.
 | [`seo compare`](https://seoskill.dev/docs/compare) | Before and after a date, with Google updates |
 | [`seo index`](https://seoskill.dev/docs/indexing) | Google's indexing reasons for known URLs, labelled from live checks, and pages that lost their clicks |
 | [`seo submit`](https://seoskill.dev/docs/submit) | Ask Bing and others to crawl pages with IndexNow (free), or send them to Google with Index My Site (your own credits) |
-| [`seo research`](https://seoskill.dev/docs/research) | Keywords, search results, competitors, backlinks and AI answer citations from your own key |
+| [`seo research`](https://seoskill.dev/docs/research) | Keywords, search results, competitors, backlinks and AI answer citations from your own key, or a plan's usage on the hosted server |
 | [`seo data`](https://seoskill.dev/docs/data) | Raw Search Console or Bing rows, or Clicky and Simple Analytics landing pages |
 | [`seo analytics`](https://seoskill.dev/docs/analytics) | Landing pages from Google Analytics, Clicky or Simple Analytics |
 | [`seo crawl`](https://seoskill.dev/docs/crawl) | Technical issues and AI agent access across a site (CLI only) |

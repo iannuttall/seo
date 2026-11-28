@@ -9,6 +9,7 @@ import FormTextarea from '@/components/FormTextarea.astro'
 import PageHeader from '@/components/PageHeader.astro'
 import { getButtonClasses } from '@/components/ui/button'
 import Checkbox from '@/components/ui/checkbox.astro'
+import Select from '@/components/ui/select.astro'
 import BaseLayout from '@/layouts/BaseLayout.astro'
 
 const primary = getButtonClasses('default')
@@ -32,6 +33,8 @@ const tabs = [
   // For accounts with the weekly audit, or where it can be bought; removed
   // otherwise.
   { id: 'sites', label: 'Sites' },
+  // The usage plans, once they are on; removed otherwise.
+  { id: 'plan', label: 'Plan' },
   // Alert settings, and beta features for an account granted one. Named
   // Alerts unless the account has a beta feature; removed when it has
   // neither.
@@ -81,6 +84,7 @@ const keys: { name: string; label: string; type: 'text' | 'password' }[] = [
         </p>
         <form method="post" data-action="/oauth/google" class="mt-6">
           <input type="hidden" name="flow" data-flow />
+          <div data-turnstile class="mb-4" hidden></div>
           <button type="submit" class={primary}>Continue with Google</button>
         </form>
         <p class="mt-4 text-xs text-foreground-muted">
@@ -102,6 +106,7 @@ const keys: { name: string; label: string; type: 'text' | 'password' }[] = [
         </p>
         <form method="post" data-action="/account/signin" class="mt-6">
           <input type="hidden" name="link" data-link-code />
+          <div data-turnstile class="mb-4" hidden></div>
           <button type="submit" class={primary}>Sign in with Google</button>
         </form>
       </div>
@@ -609,6 +614,77 @@ const keys: { name: string; label: string; type: 'text' | 'password' }[] = [
 
       <div
         role="tabpanel"
+        id="account-panel-plan"
+        aria-labelledby="account-tab-plan"
+        data-account-panel="plan"
+        class="mt-4 flex flex-col gap-4"
+        hidden
+      >
+        <div class={panel} id="plan">
+          <h2 class={heading}>Plan</h2>
+          <p class={note} data-plan-lead></p>
+          <div class="mt-4" data-usage hidden>
+            <p class="text-sm/6 text-foreground" data-usage-text></p>
+            <div class="mt-2 h-2 overflow-hidden rounded-full bg-background" aria-hidden="true">
+              <div class="h-full rounded-full bg-primary" data-usage-bar></div>
+            </div>
+            <p class={note} data-usage-own hidden>
+              Research runs on your own DataForSEO key, so it uses none of
+              this.
+            </p>
+          </div>
+          <ul class="mt-4 grid gap-3 sm:grid-cols-2" data-plan-list></ul>
+          <p class={note} data-plan-switch hidden></p>
+          <form method="post" data-action="/account/billing/manage" class="mt-4" data-plan-billing hidden>
+            <input type="hidden" name="form" />
+            <button type="submit" class={outline}>Manage billing</button>
+          </form>
+          <p class="mt-2 text-xs/5 text-foreground-muted" data-plan-billing-note hidden>
+            Card, invoices and cancelling are in Stripe.
+          </p>
+        </div>
+
+        <div class={panel} id="credit" data-credit hidden>
+          <h2 class={heading}>Free credit</h2>
+          <p class={note} data-credit-text></p>
+          <form method="post" data-action="/account/credit/card" class="mt-4" data-credit-card hidden>
+            <input type="hidden" name="form" />
+            <button type="submit" class={outline}>Add a card to unlock your free credit</button>
+          </form>
+        </div>
+
+        <div class={panel} id="topups" data-topups hidden>
+          <h2 class={heading}>Top-ups</h2>
+          <p class={note}>
+            Used once your plan's usage runs out, and they never expire.
+            Same rate as your plan.
+          </p>
+          <p class="mt-4 text-sm/6 text-foreground" data-topup-balance></p>
+          <div class="mt-3 flex flex-wrap gap-3" data-topup-list></div>
+
+          <form method="post" data-action="/account/reload" class="mt-6 flex flex-col gap-3" id="auto-reload">
+            <input type="hidden" name="form" />
+            <h3 class="text-sm font-medium text-foreground">Auto-reload</h3>
+            <p class="-mt-2 text-sm/6 text-foreground-muted" data-reload-note></p>
+            <div class="flex flex-wrap items-end gap-3">
+              <label class="flex flex-col gap-1.5 text-sm font-medium text-foreground">
+                <span>Top up</span>
+                <Select name="amount" data-reload-amount>
+                  <option value="">Off</option>
+                </Select>
+              </label>
+              <label class="flex w-40 flex-col gap-1.5 text-sm font-medium text-foreground">
+                <span>Most a month ($)</span>
+                <FormInput name="cap" type="number" inputmode="numeric" min="10" max="1000" step="1" data-reload-cap />
+              </label>
+              <button type="submit" class={outline}>Save</button>
+            </div>
+          </form>
+        </div>
+      </div>
+
+      <div
+        role="tabpanel"
         id="account-panel-beta"
         aria-labelledby="account-tab-beta"
         data-account-panel="beta"
@@ -707,6 +783,25 @@ const keys: { name: string; label: string; type: 'text' | 'password' }[] = [
           <button type="submit" class={quiet}>Remove</button>
         </form>
       </li>
+    </template>
+    <template data-plan-card>
+      <li class="flex flex-col rounded-lg bg-background p-4">
+        <p class="text-base font-medium text-foreground" data-plan-price></p>
+        <p class="mt-1 text-sm/6 text-foreground-muted" data-plan-includes></p>
+        <p class="mt-3 text-sm font-medium text-primary" data-plan-current hidden>Your plan</p>
+        <form method="post" data-action="/account/plan" class="mt-3" data-plan-pick>
+          <input type="hidden" name="form" />
+          <input type="hidden" name="plan" data-plan-value />
+          <button type="submit" class={outline} data-plan-button></button>
+        </form>
+      </li>
+    </template>
+    <template data-topup-button>
+      <form method="post" data-action="/account/topup">
+        <input type="hidden" name="form" />
+        <input type="hidden" name="usd" data-topup-value />
+        <button type="submit" class={outline} data-topup-label></button>
+      </form>
     </template>
     <template data-beta-row>
       <li class="py-2.5" data-beta-feature>
@@ -819,6 +914,8 @@ const keys: { name: string; label: string; type: 'text' | 'password' }[] = [
     message?: string
     error?: boolean
     connect?: { client: string; host: string; flow: string }
+    // The Cloudflare Turnstile site key for the sign-in form, when set.
+    turnstile?: string
     notice?: { title: string; text: string }
     account?: {
       form: string
@@ -877,6 +974,28 @@ const keys: { name: string; label: string; type: 'text' | 'password' }[] = [
         price: number
         sites: number
         status: string | null
+        manage: boolean
+      }
+      // The usage plans, once they are on.
+      plans?: {
+        // Monthly price and included usage, in US dollars.
+        options: { price: number; included: number }[]
+        current: number | null
+        status: string | null
+        // On the old per-site plan, which a usage plan replaces.
+        perSite: boolean
+        usage: {
+          plan: number | null
+          percentLeft: number | null
+          resetsAt: string | null
+          topUpUsd: number
+          creditPercentLeft: number | null
+          creditHeld: 'card' | 'site' | null
+          ownKey: boolean
+          empty: boolean
+        }
+        topUps: number[]
+        autoReload: { amount: number | null; cap: number | null; card: boolean }
         manage: boolean
       }
       alerts?: {
@@ -1230,6 +1349,25 @@ const keys: { name: string; label: string; type: 'text' | 'password' }[] = [
       if (plan && audit.sites.length >= audit.max) {
         const label = root.querySelector('[data-audit-label]')
         if (label && audit.max) label.textContent = `Add a site (+$${plan.price} a month)`
+      } else if (
+        state.account?.plans &&
+        state.account.plans.current === null &&
+        audit.sites.length >= audit.max
+      ) {
+        // No usage plan yet: one covers every site.
+        form?.remove()
+        const full = root.querySelector('[data-audit-full]')
+        if (full) {
+          full.textContent = audit.max
+            ? `Your weekly audit covers ${audit.max} ${audit.max === 1 ? 'site' : 'sites'}. A plan covers all of them, from $${state.account.plans.options[0]?.price ?? 10} a month. `
+            : `Every plan includes the weekly audit on all your sites, from $${state.account.plans.options[0]?.price ?? 10} a month. `
+          const link = document.createElement('a')
+          link.href = '#plan'
+          link.className = 'text-foreground underline'
+          link.textContent = 'Pick a plan'
+          full.append(link)
+        }
+        show(full)
       } else if (audit.sites.length >= audit.max) {
         form?.remove()
         const full = root.querySelector('[data-audit-full]')
@@ -1591,6 +1729,123 @@ const keys: { name: string; label: string; type: 'text' | 'password' }[] = [
       } else {
         noAudit()
       }
+      // The usage plans: the plan, what is left, top-ups, auto-reload and
+      // the free credit. Without them the Plan tab goes.
+      const plans = account.plans
+      if (plans) {
+        const set = (selector: string, text: string) => {
+          const element = root.querySelector(selector)
+          if (element) element.textContent = text
+        }
+        const params = new URLSearchParams(window.location.search)
+        const usage = plans.usage
+        const money = (usd: number) => `$${usd.toFixed(2)}`
+        const on = plans.current !== null
+        set(
+          '[data-plan-lead]',
+          params.has('plan') || params.has('topup')
+            ? 'Payment received. It shows here once Stripe confirms it, usually within a minute.'
+            : plans.status === 'past_due'
+              ? 'Stripe couldn\'t take the last payment. Update your card in Manage billing to keep your plan.'
+              : on
+                ? `You're on the $${plans.current} plan: unlimited sites, the weekly audit, and research usage included each month. Each site's weekly crawl uses a little. Search Console, Google Analytics, Bing and index checks never use it.`
+                : plans.perSite
+                  ? 'You pay for the weekly audit per site. A plan covers all your sites and includes research usage, for one monthly price. It replaces your per-site plan today, and Stripe takes off what\'s left of it.'
+                  : 'Each plan covers unlimited sites, the weekly audit, and research usage each month. Each site\'s weekly crawl uses a little. Search Console, Google Analytics, Bing and index checks never use it.',
+        )
+        if (on && usage.percentLeft !== null) {
+          show(root.querySelector('[data-usage]'))
+          set(
+            '[data-usage-text]',
+            `${usage.percentLeft}% of usage left${usage.resetsAt ? `, resets on ${day(Date.parse(usage.resetsAt))}` : ''}.`,
+          )
+          const bar = root.querySelector<HTMLElement>('[data-usage-bar]')
+          if (bar) bar.style.width = `${Math.max(0, Math.min(100, usage.percentLeft))}%`
+          show(root.querySelector('[data-usage-own]'), usage.ownKey)
+        }
+        const cardRow = root.querySelector<HTMLTemplateElement>('[data-plan-card]')
+        const cardList = root.querySelector('[data-plan-list]')
+        for (const option of plans.options) {
+          const copy = cardRow?.content.cloneNode(true) as DocumentFragment
+          const price = copy.querySelector('[data-plan-price]')
+          if (price) price.textContent = `$${option.price} a month`
+          const includes = copy.querySelector('[data-plan-includes]')
+          if (includes) includes.textContent = `Includes $${option.included} of usage a month.`
+          const value = copy.querySelector<HTMLInputElement>('[data-plan-value]')
+          if (value) value.value = String(option.price)
+          const current = option.price === plans.current
+          show(copy.querySelector('[data-plan-current]'), current)
+          if (current) copy.querySelector('[data-plan-pick]')?.remove()
+          const button = copy.querySelector('[data-plan-button]')
+          if (button) {
+            button.textContent = !on
+              ? 'Pick this plan'
+              : option.price > (plans.current ?? 0)
+                ? 'Upgrade'
+                : 'Downgrade'
+          }
+          cardList?.append(copy)
+        }
+        if (on) {
+          show(root.querySelector('[data-plan-switch]'))
+          set(
+            '[data-plan-switch]',
+            'An upgrade starts today with full usage, and Stripe takes off what\'s left of this month. A downgrade starts when this month ends.',
+          )
+        }
+        show(root.querySelector('[data-plan-billing]'), plans.manage)
+        show(root.querySelector('[data-plan-billing-note]'), plans.manage)
+
+        // The free credit: what is left, or why it waits.
+        const credit =
+          usage.creditPercentLeft !== null
+            ? `${usage.creditPercentLeft}% of your free credit left. It's used before your plan's usage.`
+            : usage.creditHeld === 'card'
+              ? 'Your free credit is waiting. Add a card to unlock it: nothing is charged.'
+              : usage.creditHeld === 'site'
+                ? 'Your free credit unlocks once you connect a Search Console site on its own domain that gets search impressions.'
+                : ''
+        if (credit) {
+          show(root.querySelector('[data-credit]'))
+          set('[data-credit-text]', credit)
+          show(root.querySelector('[data-credit-card]'), usage.creditHeld === 'card')
+        }
+
+        // Top-ups and auto-reload, with a plan.
+        if (on) {
+          show(root.querySelector('[data-topups]'))
+          set('[data-topup-balance]', `Top-up balance: ${money(usage.topUpUsd)}.`)
+          const topUpRow = root.querySelector<HTMLTemplateElement>('[data-topup-button]')
+          const topUpList = root.querySelector('[data-topup-list]')
+          const amount = root.querySelector<HTMLSelectElement>('[data-reload-amount]')
+          for (const usd of plans.topUps) {
+            const copy = topUpRow?.content.cloneNode(true) as DocumentFragment
+            const value = copy.querySelector<HTMLInputElement>('[data-topup-value]')
+            if (value) value.value = String(usd)
+            const label = copy.querySelector('[data-topup-label]')
+            if (label) label.textContent = `Add $${usd}`
+            topUpList?.append(copy)
+            const option = document.createElement('option')
+            option.value = String(usd)
+            option.textContent = `$${usd}`
+            option.selected = plans.autoReload.amount === usd
+            amount?.append(option)
+          }
+          const cap = root.querySelector<HTMLInputElement>('[data-reload-cap]')
+          if (cap) cap.value = String(plans.autoReload.cap ?? 50)
+          set(
+            '[data-reload-note]',
+            plans.autoReload.card
+              ? plans.autoReload.amount
+                ? `On: $${plans.autoReload.amount} when your top-up balance runs low, up to $${plans.autoReload.cap} a month, charged to the card on your plan.`
+                : 'Buys a top-up when your balance runs low, charged to the card on your plan, up to the most you set each month.'
+              : 'Auto-reload charges the card on your plan. Add one in Manage billing first.',
+          )
+        }
+      } else {
+        root.querySelector('[data-account-tab="plan"]')?.remove()
+        root.querySelector('[data-account-panel="plan"]')?.remove()
+      }
       if (account.login) {
         show(root.querySelector('[data-login]'))
         const label = root.querySelector('[data-login-label]')
@@ -1608,6 +1863,21 @@ const keys: { name: string; label: string; type: 'text' | 'password' }[] = [
       for (const input of all<HTMLInputElement>('input[name="form"]')) {
         input.value = account.form
       }
+    }
+
+    // Cloudflare Turnstile on the connect and sign-in forms. It never stops
+    // a sign-in; the server only notes whether it passed.
+    const turnstile = state.turnstile
+      ? root.querySelector<HTMLElement>(`[data-view="${state.view}"] [data-turnstile]`)
+      : null
+    if (turnstile && state.turnstile) {
+      turnstile.classList.add('cf-turnstile')
+      turnstile.dataset.sitekey = state.turnstile
+      show(turnstile)
+      const script = document.createElement('script')
+      script.src = 'https://challenges.cloudflare.com/turnstile/v0/api.js'
+      script.async = true
+      document.head.append(script)
     }
 
     if (state.view === 'signin' && state.link) {

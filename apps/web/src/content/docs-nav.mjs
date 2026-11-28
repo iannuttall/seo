@@ -130,7 +130,7 @@ export const docsSections = [
         path: '/docs/weekly-site-audit',
         label: 'Weekly site audit',
         description:
-          'A weekly crawl, daily Google index checks and competitor keywords for $50 a month per site.',
+          'A weekly crawl, daily Google index checks and competitor keywords, on every plan from $10 a month.',
       },
       {
         path: '/docs/alerts',

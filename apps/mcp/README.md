@@ -108,7 +108,38 @@ in `progress.json` on the machine.
 
 ## Paid plan
 
-The weekly site audit is $50 a month per site (`src/billing.ts`), with
+Usage plans (`src/meter.ts`, `src/billing.ts`, `src/credit.ts`) are $10,
+$50, $100 or $200 a month per account, with unlimited sites and no seats.
+Each includes $10, $50, $100 or $200 of usage a month and the weekly site
+audit for every site the account adds. Usage pays only for DataForSEO calls
+on SEO Skill's own account (keyword, competitor, backlink and AI answer
+research, on demand or from the weekly audit), charged at what DataForSEO
+reports the call cost plus `MARKUP`, and each site's weekly audit run
+(`AUDIT_USAGE_USD`, charged when `src/audit/schedule.ts` starts it; with
+nothing left the run waits). Search Console, Google Analytics, Bing and
+index checks never use it, nor does a cached `seo_research` result. Spending takes the free credit first, then the
+plan's usage (which resets with Stripe's period), then top-ups ($10, $25 or
+$50, never expire, need an active plan). Auto-reload buys a top-up when
+top-ups run low, up to a monthly cap. With the person's own DataForSEO key
+saved, calls run on it and use none of this. People see a share left, a
+reset date and a top-up balance, never the markup or the cost: on the
+account page, in `seo_sites` and `seo sites` (`GET /account/cli/usage` for
+a linked CLI), as a notice on the paid call that first passes 50, 80 and
+100%, and as a `USAGE_LIMIT` error with next steps when nothing is left. A
+new account gets a one-off $1 free credit once a Search Console site is
+connected, once per group of sites, with the checks in `src/credit.ts`.
+Agents do everything the Plan tab does through `seo_sites`: `plan` picks
+or changes a plan (`choosePlan` in `src/billing.ts`: the first plan is a
+Checkout link for the person, later changes charge the saved card at
+once), `top_up` charges the saved card off-session (a Checkout link when
+there's no card or Stripe needs the person), `auto_reload` sets the
+reload amount and cap, and `cancel` sets or clears cancel at period end.
+The usage notices and `USAGE_LIMIT` name the next plan up for the agent to
+offer. Every on-demand tool stays free without a plan. The plans stay off, and
+everything below stays as it is, until `STRIPE_PLAN_PRICES` holds the four
+Stripe prices.
+
+The old per-site plan runs until then. The weekly site audit is $50 a month per site, with
 nothing to set: the plan is the sites you audit. Without a plan, picking a
 site on the Sites tab opens Stripe Checkout for that one site, and the
 webhook adds it once the plan is active. With a plan, adding a site past
@@ -338,7 +369,8 @@ links to the account page.
 
 ## Keys
 
-DataForSEO and Ahrefs use your own key. A TypeSafe key
+Ahrefs uses your own key. DataForSEO uses your own key when one is saved, and
+otherwise SEO Skill's account with the plan's usage (Paid plan). A TypeSafe key
 (`x-typesafe-key`) is never used by this server: a linked CLI gets it with
 the other keys, and `seo internal-links` uses it on that machine to have Jev
 classify pages and judge links. Clicky uses each site's site ID and
@@ -382,7 +414,7 @@ repository.
 
 | Tool | What it returns |
 | --- | --- |
-| `seo_sites` | Search Console and Google Analytics properties from every linked Google account, which keys are set and the saved Clicky sites. With `add`, starts the weekly site audit of a site, or returns a Stripe Checkout link for the person to pay |
+| `seo_sites` | Search Console and Google Analytics properties from every linked Google account, which keys are set, the saved Clicky sites and the plan's usage left. With `add`, starts the weekly site audit of a site, or says it needs a plan and points to the account page (the old per-site plan returns a Stripe Checkout link instead) |
 | `seo_next` | Where the site is in the SEO loop and the one step that is due, with its first jobs; with `context`, saves the site's business context |
 | `seo_report` | The main report. Without a section: the overview plus each section's count and top rows. Sections: overview, quick-wins, low-ctr, striking-distance, second-page, content-decay, cannibalization, traffic-drop, ai-queries, image-search, bing (CLI and local server only), issues and google-updates, plus weekly-audit for audited sites. Section teardown returns the brief and data for the agent to write a full teardown of a site, for any domain. With `mark` and `issues`, records what the person decided about those issues. Page sections check their top 20 URLs live and merge same-site redirects. |
 | `seo_page` | One URL: live page facts, Google index status and its queries against the previous period. The page's main content as Markdown is CLI and local server only; with detail `full` this server says how to get it. |
@@ -467,9 +499,16 @@ A small Cloudflare D1 database (`migrations/`) keeps only:
   holds its share in its `unmetered` table until it reaches D1. Metering
   only; nothing limits or charges an account from it.
 - for the paid plan: the Stripe customer and subscription ids, the open
-  Checkout session's id, the subscription status and number of sites
-  (`billing`). Card details stay
-  with Stripe.
+  Checkout session's id, the subscription status and number of sites, the
+  plan, its period end and the auto-reload setting and cap (`billing`), and
+  the plan's used usage, top-ups and free credit left (`balances`). Card
+  details stay with Stripe.
+- for the free credit (`src/credit.ts`): its state and whether the sign-in
+  passed Turnstile (`credits`), a salted hash of the sign-in's network block
+  for 30 days, and salted hashes of the account's Search Console properties
+  (`credit_sites`, kept after the account is deleted) and of a Stripe card
+  fingerprint added to get it (`credit_cards`). Never the sites, IP address
+  or card.
 - for alerts (`src/alerts`): each alert type's email and webhook switches,
   the webhook URL and its sealed signing secret (`alert_settings`), each
   alert with its site, changed URLs and delivery state for 30 days

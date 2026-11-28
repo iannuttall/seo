@@ -11,6 +11,7 @@ import {
   cloudKeys,
   cloudLinked,
   cloudProgress,
+  cloudUsage,
   cloudWeek,
 } from './cloud.js'
 import type {
@@ -107,7 +108,7 @@ export function nodeCommandDeps(options: {
     siteProgress: cloudLinked() ? linkedProgress(cloudProgress) : localProgress,
     submit: localSubmitAccess(),
     feedback: cloudFeedback,
-    ...(cloudLinked() ? { week: cloudWeek } : {}),
+    ...(cloudLinked() ? { week: cloudWeek, usage: cloudUsage } : {}),
   }
 }
 
@@ -282,6 +283,7 @@ const ERROR_CODES: Record<CommandErrorCode, SeoErrorCode> = {
   NO_DATA: 'INSUFFICIENT_DATA',
   RATE_LIMITED: 'RATE_LIMITED',
   GOOGLE_ERROR: 'PROVIDER_UNAVAILABLE',
+  USAGE_LIMIT: 'RATE_LIMITED',
   PROVIDER_ERROR: 'PROVIDER_UNAVAILABLE',
 }
 

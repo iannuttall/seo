@@ -43,12 +43,14 @@ import {
   billingOn,
   cancelBilling,
   PRICE_PER_SITE_USD,
+  plansOn,
   portalUrl,
   setPaidSites,
   startAuditSite,
 } from './billing.ts'
 import { loginUrl, newToken } from './cli.ts'
 import { importClicky, removeClickyAccount } from './clicky.ts'
+import { noteSignIn, turnstilePassed, turnstileSiteKey } from './credit.ts'
 import { directory } from './google.ts'
 import {
   indexMySiteCallback,
@@ -59,6 +61,7 @@ import {
 } from './indexmysite.ts'
 import { signInPerson } from './oauth.ts'
 import { view } from './page.ts'
+import { planAction, planState } from './plan-page.ts'
 import {
   bingSignedIn,
   bingSignInUrl,
@@ -144,6 +147,7 @@ function signInPage(env: Env, message = '', link?: string): Promise<Response> {
     view: 'signin',
     message: message || undefined,
     ...(link ? { link } : {}),
+    turnstile: turnstileSiteKey(env),
   })
 }
 
@@ -192,6 +196,7 @@ async function accountPage(
     : undefined
   const missing = extra.site && !site ? 'That site is not in your audit.' : ''
   const alerts = await alertSettings(env, userId)
+  const plans = await planState(env, userId, paid, accounts, keys)
   const shownBeta = [...beta]
     .filter((id) => !(id === 'weekly-audit' && paid?.active))
     .sort()
@@ -283,7 +288,7 @@ async function accountPage(
           }
         : {}),
       // The Sites tab: with the weekly audit, or where it can be bought.
-      ...(beta.has('weekly-audit') || billingOn(env)
+      ...(beta.has('weekly-audit') || billingOn(env) || plans
         ? {
             audit: {
               max: limit,
@@ -308,8 +313,9 @@ async function accountPage(
             },
           }
         : {}),
-      // The paid weekly audit, once billing is set up on this server.
-      ...(billingOn(env)
+      // The per-site weekly audit, once billing is set up on this server.
+      // With the usage plans on, only for an account still paying for it.
+      ...(billingOn(env) && (!plans || (paid?.active && paid.plan === null))
         ? {
             billing: {
               price: PRICE_PER_SITE_USD,
@@ -320,6 +326,8 @@ async function accountPage(
             },
           }
         : {}),
+      // The usage plans' tab, once they are on.
+      ...(plans ? { plans } : {}),
       ...(extra.token ? { token: extra.token } : {}),
       ...(extra.tab ? { tab: extra.tab } : {}),
       ...(site ? { site } : {}),
@@ -403,6 +411,8 @@ export async function account(
   if (path === '/account/signin') {
     const link = linkCode(String(data?.get('link') ?? ''))
     const next = toolPage(String(data?.get('next') ?? ''))
+    // The site tool pages' sign-in buttons carry no Turnstile widget.
+    const human = next ? undefined : await turnstilePassed(env, request, data)
     return redirect(
       googleSignInUrl(
         env,
@@ -411,6 +421,7 @@ export async function account(
           userId: null,
           ...(link ? { link } : {}),
           ...(next ? { next } : {}),
+          ...(human === undefined ? {} : { human }),
           exp: Date.now() + STATE_TTL,
         }),
       ),
@@ -620,7 +631,7 @@ export async function account(
     }
     case '/account/audit': {
       const audits = (await betaFlags(env, userId)).has('weekly-audit')
-      if (!audits && !billingOn(env)) break
+      if (!audits && !billingOn(env) && !plansOn(env)) break
       // Only a property from the picker's list: one the person's Google
       // accounts can read, from the same short-lived cache.
       const wanted = field('property')
@@ -637,6 +648,14 @@ export async function account(
       }
       const started = await startAuditSite(env, userId, property)
       if (started.status === 'checkout') return redirect(started.url)
+      if (started.status === 'plan') {
+        return accountPage(
+          env,
+          userId,
+          `Pick a plan to audit ${property}. Every plan covers all your sites.`,
+          { tab: 'plan' },
+        )
+      }
       return accountPage(
         env,
         userId,
@@ -751,7 +770,7 @@ export async function account(
       // The plan follows the sites: one fewer from the next bill, never
       // below one site (cancel is in Manage billing).
       const paid = billingOn(env) ? await billingOf(env, userId) : null
-      if (paid?.active) {
+      if (paid?.active && paid.plan === null) {
         const [limit, left] = await Promise.all([
           siteLimit(env, userId),
           auditSites(env, userId),
@@ -768,7 +787,7 @@ export async function account(
     case '/account/delete': {
       // Stop charging first: a failure here keeps the account, so the
       // person can try again rather than pay for an account that is gone.
-      if (billingOn(env)) await cancelBilling(env, userId)
+      if (billingOn(env) || plansOn(env)) await cancelBilling(env, userId)
       await removeAllAuditSites(env, userId)
       await forgetInternalLinks(env, userId)
       const accounts = await accountsOf(env, userId)
@@ -793,9 +812,27 @@ export async function account(
       )
     }
     case '/account/billing/manage': {
-      const paid = billingOn(env) ? await billingOf(env, userId) : null
+      const plans = plansOn(env)
+      const paid = billingOn(env) || plans ? await billingOf(env, userId) : null
       if (!paid?.customer) break
-      return redirect(await portalUrl(env, paid.customer))
+      return redirect(
+        await portalUrl(env, paid.customer, plans ? 'plan' : 'sites'),
+      )
+    }
+    // The Plan tab's forms (plan-page.ts).
+    case '/account/plan':
+    case '/account/topup':
+    case '/account/reload':
+    case '/account/credit/card': {
+      const done = await planAction(env, userId, path, field, () =>
+        billingOf(env, userId),
+      )
+      if (!done) break
+      if ('url' in done) return redirect(done.url)
+      return accountPage(env, userId, done.message, {
+        tab: 'plan',
+        ok: done.ok,
+      })
     }
     case '/account/signout':
       return redirect(home, cookie(env, '', 0))
@@ -831,6 +868,12 @@ export async function accountCallback(
   })
   if (!userId) {
     return signInPage(env, 'Google did not return a sign-in. Try again.')
+  }
+  // A sign-in, not a Google account added to a signed-in person. A state
+  // that skipped the sign-in page's form has no Turnstile result; one from
+  // a site tool page (no widget there) is not held against the person.
+  if (!state.userId) {
+    await noteSignIn(env, userId, request, next ? true : state.human === true)
   }
   // A newly linked Google account can read more properties.
   forgetChoices(userId)

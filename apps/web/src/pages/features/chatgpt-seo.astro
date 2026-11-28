@@ -44,11 +44,10 @@ const steps = [
 const costs = [
   { title: 'Every tool ChatGPT calls is free', text: 'There is no usage cap.' },
   {
-    title: 'Research uses your own key',
-    text: 'Keyword research and the AI answer check use your own DataForSEO or Ahrefs key, so you pay that provider directly.',
+    title: 'Research uses a plan or your own key',
+    text: 'Keyword research and the AI answer check use your plan\'s usage or your free credit, or your own DataForSEO or Ahrefs key if you save one.',
   },
-  { title: 'An AI answer check is about 7 cents', text: 'A full AI answer check is about 7 cents of DataForSEO credit.' },
-  { title: 'The weekly site audit is $50 a month', text: 'The weekly site audit is $50 a month per site.' },
+    { title: 'Plans start at $10 a month', text: 'Every plan has unlimited sites and the weekly site audit.' },
 ]
 
 const related = [
@@ -76,12 +75,12 @@ const faq = [
   {
     question: 'Does it check whether ChatGPT search cites my site?',
     answer:
-      'Yes, with your DataForSEO key. Your top AI-style questions from Search Console are asked on ChatGPT search, and a full AI answer check costs about 7 cents of DataForSEO credit.',
+      'Yes. Your top AI-style questions from Search Console are asked on ChatGPT search, using your plan\'s usage or your own DataForSEO key.',
   },
   {
     question: 'How much does ChatGPT SEO with SEO Skill cost?',
     answer:
-      'Every tool ChatGPT calls is free with no usage cap. Keyword research and the AI answer check use your own DataForSEO or Ahrefs key, and the weekly site audit is $50 a month per site.',
+      'Every tool ChatGPT calls is free with no usage cap. Keyword research and the AI answer check use a plan\'s usage or your own DataForSEO or Ahrefs key. Plans start at $10 a month, with unlimited sites, the weekly site audit and included research usage.',
   },
 ]
 ---
@@ -148,7 +147,7 @@ const faq = [
       <SplitList
         id="cost-heading"
         title="What does ChatGPT SEO with SEO Skill cost?"
-        text="Every tool ChatGPT calls is free with no usage cap. You pay your own research provider directly for keyword data."
+        text="Every tool ChatGPT calls is free without a plan. Keyword data uses a plan's usage or your own research key."
         items={costs}
       />
 

@@ -1,11 +1,11 @@
 ---
 title: Keyword and competitor research
-description: Get keyword metrics, ranked keywords, top pages, SERPs, competitors, backlinks, link gaps and AI answer checks for a site, subfolder or page from your own DataForSEO or Ahrefs key.
+description: Get keyword metrics, ranked keywords, top pages, SERPs, competitors, backlinks, link gaps and AI answer checks for a site, subfolder or page from DataForSEO or Ahrefs.
 heading: seo research
-lead: Keyword metrics, rankings, top pages, SERPs, competitors, backlinks and AI answer citations from your own DataForSEO or Ahrefs account.
+lead: Keyword metrics, rankings, top pages, SERPs, competitors, backlinks and AI answer citations from DataForSEO or Ahrefs.
 ---
 
-Use it when you need data from outside your own site: search volume for a keyword, who ranks for it, or what a competitor ranks for. You need a key from DataForSEO or Ahrefs, and each request uses your credits with them. For the hosted MCP, the [API keys guide](/docs/keys) shows how to add one. For the CLI, connect a provider once:
+Use it when you need data from outside your own site: search volume for a keyword, who ranks for it, or what a competitor ranks for. On the hosted MCP it works without a key: requests run on our DataForSEO account and use your [plan's usage](/pricing) or your free credit. With your own DataForSEO or Ahrefs key, each request uses your credits with them instead, and the [API keys guide](/docs/keys) shows how to add one. The CLI always uses your own key. Connect a provider once:
 
 ```sh
 seo providers dataforseo connect
@@ -46,7 +46,7 @@ A teardown usually starts here: the top pages show where a site's search traffic
 
 ## Run research
 
-Ask your agent. You don't need to name a provider: research uses the key you saved, and DataForSEO when you saved both.
+Ask your agent. You don't need to name a provider. Research uses the key you saved, DataForSEO when you saved both, and our DataForSEO account with your plan's usage when you saved none.
 
 ```prompt
 Show the keywords competitor.com ranks for in the UK

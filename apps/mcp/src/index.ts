@@ -13,6 +13,7 @@ import { betaFlags } from './beta.ts'
 import { stripeWebhook } from './billing.ts'
 import {
   cliStore,
+  cliUsage,
   cliWeek,
   credentials,
   finishLogin,
@@ -20,6 +21,7 @@ import {
   startLogin,
 } from './cli.ts'
 import { checkCosts, sendCostReport } from './cost-report.ts'
+import { forgetCreditIps } from './credit.ts'
 import { failureReport } from './failure-report.ts'
 import { cliFeedback } from './feedback.ts'
 import { directory } from './google.ts'
@@ -127,6 +129,9 @@ async function route(
   if (pathname === '/account/cli/week' && method === 'GET') {
     return cliWeek(request, env)
   }
+  if (pathname === '/account/cli/usage' && method === 'GET') {
+    return cliUsage(request, env)
+  }
   if (
     (pathname === '/account/cli/issues' ||
       pathname === '/account/cli/context') &&
@@ -144,7 +149,7 @@ async function route(
   if (pathname === '/account/cli/logout' && method === 'POST') {
     return logout(request, env)
   }
-  // Stripe's signed subscription events, not a form on the account page.
+  // Stripe's signed billing events, not a form on the account page.
   if (pathname === '/account/billing/webhook' && method === 'POST') {
     return stripeWebhook(request, env)
   }
@@ -243,6 +248,7 @@ export default {
       ctx.waitUntil(sendGoogleUpdateAlerts(env, controller.scheduledTime))
       ctx.waitUntil(checkCosts(env, controller.scheduledTime))
       ctx.waitUntil(deleteExpiredResearch(env, controller.scheduledTime))
+      ctx.waitUntil(forgetCreditIps(env, controller.scheduledTime))
       return
     }
     const now = new Date(controller.scheduledTime)

@@ -11,6 +11,7 @@ import type { LiveCheck } from './page-facts.js'
 import type { ProgressStore } from './progress.js'
 import type { SubmitAccess } from './submit.js'
 import type { UpdateLogStore } from './updates.js'
+import type { Usage } from './usage.js'
 import type { WeekData } from './week.js'
 
 // The twelve public commands. Each runs the same core code in the CLI, the
@@ -155,6 +156,8 @@ export type CommandErrorCode =
   | 'RATE_LIMITED'
   | 'GOOGLE_ERROR'
   | 'PROVIDER_ERROR'
+  // Nothing paid is left on the hosted server (commands/usage.ts).
+  | 'USAGE_LIMIT'
 
 export class CommandError extends Error {
   constructor(
@@ -241,8 +244,32 @@ export type CommandDeps = {
   // Sends seo feedback to the maintainer: the hosted server forwards it,
   // the CLI and the local MCP post it to the hosted server.
   feedback?: FeedbackSend
+  // The account's paid usage (commands/usage.ts): the hosted server reads
+  // its own, the CLI and the local MCP read it through a linked account.
+  // Unset where there is no account; undefined when the account's server
+  // has no usage plans; null when it could not be read.
+  usage?: () => Promise<Usage | null | undefined>
+  // Moves the account to a usage plan, on the hosted server only. With a
+  // plan and a saved card it changes at once (a lower plan from the next
+  // period); without one it returns a Stripe Checkout link to pay once.
+  choosePlan?: (plan: number) => Promise<ChoosePlan>
+  // The rest of what the account page's Plan tab does, on the hosted
+  // server only: buy a top-up (on the saved card, else a Checkout link),
+  // set auto-reload, and cancel the plan at the period end or undo that.
+  topUp?: (
+    usd: number,
+  ) => Promise<{ status: 'added' } | { status: 'checkout'; url: string }>
+  autoReload?: (amount: number | null, cap: number) => Promise<void>
+  cancelPlan?: (cancel: boolean) => Promise<string | null>
   now?: () => Date
 }
+
+// What choosing a usage plan did.
+export type ChoosePlan =
+  | { status: 'changed' | 'same'; plan: number }
+  | { status: 'scheduled'; plan: number; at: string }
+  | { status: 'checkout'; plan: number; url: string }
+  | { status: 'pending' | 'payment_failed' }
 
 // What starting the audit of a site did: started now, already running, a
 // Stripe Checkout link for the person to pay for the site, paid and about to
@@ -250,6 +277,8 @@ export type CommandDeps = {
 export type StartAudit =
   | { status: 'added' | 'exists' | 'pending' }
   | { status: 'checkout'; url: string; price: number }
+  // No usage plan yet: pick one on the account page, from price a month.
+  | { status: 'plan'; url: string; price: number }
   | { status: 'full'; limit: number }
   | { status: 'payment_failed' }
 

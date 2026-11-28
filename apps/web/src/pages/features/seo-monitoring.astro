@@ -46,8 +46,8 @@ const crawl = [
 ]
 
 const start = [
-  { title: 'Your first site opens Stripe Checkout', text: 'Your agent can give you that link, but it cannot pay for you.' },
-  { title: 'The first checks start once the plan is active', text: 'The first crawl and index checks start then, and you can cancel any time.' },
+  { title: 'A site needs a plan', text: 'From $10 a month with unlimited sites. Your agent asks which plan you want and gives you a Stripe link to pay, or you pick one on your account page.' },
+  { title: 'The first checks start once the site is added', text: 'The first crawl and index checks start then, and you can cancel any time.' },
 ]
 
 const free = [
@@ -56,7 +56,7 @@ const free = [
   { title: 'Save each week with a scheduled task', text: "The seo command keeps no history here, so a scheduled agent task that saves each week's result works well." },
   { title: 'Crawl before and after a release', text: 'After a release, crawl the site and compare it with the crawl from before.' },
   { title: 'Compare search data from the release date', text: 'Run seo compare on the release date once a week or two of Search Console data has come in. The report’s traffic drop section looks for a sudden change in daily clicks that lasted, with the date it started.', href: '/docs/compare' },
-  { title: 'Follow AI answers once a month', text: 'AI answers are not part of the weekly audit. Run the same questions through the AI visibility checker once a month and compare the two results.', href: '/features/ai-visibility-checker' },
+  { title: 'Follow AI answers once a month', text: 'Without the weekly audit, run the same questions through the AI visibility checker once a month and compare the two results.', href: '/features/ai-visibility-checker' },
 ]
 
 const related = [
@@ -70,7 +70,7 @@ const faq = [
   {
     question: 'How much does SEO monitoring cost?',
     answer:
-      'The free tools are free, with no usage cap. The weekly site audit costs $50 a month per site and runs the checks for you on our servers.',
+      'The free tools are free, with no plan needed. The weekly site audit comes with every plan, from $10 a month for unlimited sites, and runs the checks for you on our servers.',
   },
   {
     question: 'When do I get an alert?',
@@ -85,7 +85,7 @@ const faq = [
   {
     question: 'Does the weekly audit check AI answers?',
     answer:
-      'No. To follow AI answers, run the same questions through the AI visibility checker once a month and compare the two results.',
+      'Yes. Every week it asks ChatGPT search, the Gemini app, Google AI Mode and AI Overviews the same 10 questions and tells you which answers started or stopped citing you. Without the audit, run the same questions through the AI visibility checker once a month and compare the two results.',
   },
   {
     question: 'Can I monitor a site for free?',
@@ -115,7 +115,7 @@ const faq = [
         <SectionHeading
           id="ways-heading"
           title="What are the two ways to monitor a site?"
-          text="Free tools your agent runs when you ask, or the weekly site audit, which runs on our servers in the background for $50 a month per site."
+          text="Free tools your agent runs when you ask, or the weekly site audit, which runs on our servers in the background on every plan from $10 a month."
         />
         <div class="docs-prose max-w-4xl">
           <table>
@@ -126,7 +126,7 @@ const faq = [
               <tr><td>Google index</td><td>100 known URLs a run on the hosted MCP, more from the CLI, each checked live.</td><td>Up to the property's full 2,000 URL Inspection checks a day, top pages first.</td></tr>
               <tr><td>Alerts</td><td>None. Your agent reports what it finds.</td><td>Email and webhook when a page drops out of the index or comes back.</td></tr>
               <tr><td>History</td><td>Your agent keeps each result.</td><td>Kept on the server for each audited site.</td></tr>
-              <tr><td>Cost</td><td>Free, with no usage cap.</td><td>$50 a month per site.</td></tr>
+              <tr><td>Cost</td><td>Free, with no usage cap.</td><td>Every plan, from $10 a month with unlimited sites.</td></tr>
             </tbody>
           </table>
         </div>

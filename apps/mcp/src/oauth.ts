@@ -1,4 +1,5 @@
 import { agentFromClientName } from '@seo/core/hosted'
+import { noteSignIn, turnstilePassed, turnstileSiteKey } from './credit.ts'
 import { view } from './page.ts'
 import { googleSignedIn, googleSignInUrl } from './providers.ts'
 import { type Sealed, seal, sha256Base64Url, unseal } from './seal.ts'
@@ -173,6 +174,7 @@ export async function authorize(request: Request, env: Env): Promise<Response> {
   return view(env, {
     view: 'connect',
     connect: { client: client.name, host, flow },
+    turnstile: turnstileSiteKey(env),
   })
 }
 
@@ -197,8 +199,15 @@ export async function toGoogle(request: Request, env: Env): Promise<Response> {
       400,
     )
   }
+  const human = await turnstilePassed(env, request, form)
   return Response.redirect(
-    googleSignInUrl(env, await seal(env.SEAL_KEY, flow)),
+    googleSignInUrl(
+      env,
+      await seal(env.SEAL_KEY, {
+        ...flow,
+        ...(human === undefined ? {} : { human }),
+      }),
+    ),
     302,
   )
 }
@@ -283,6 +292,8 @@ export async function callback(
     )
     return Response.redirect(back.toString(), 302)
   }
+  // A flow that skipped the connect page's form has no Turnstile result.
+  await noteSignIn(env, userId, request, flow.human === true)
   back.searchParams.set(
     'code',
     await seal(env.SEAL_KEY, {

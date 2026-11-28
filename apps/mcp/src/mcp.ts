@@ -20,6 +20,7 @@ import { z } from 'zod'
 import skill from '../../../skills/seo/SKILL.md'
 import { refreshClicky } from './clicky.ts'
 import { accountUrl, openForPerson, signInHint } from './google.ts'
+import { includedOn, ownKey, runResearch } from './included.ts'
 import { researchStore } from './research-store.ts'
 import { events, send } from './telemetry.ts'
 import { deps } from './tools/deps.ts'
@@ -35,33 +36,41 @@ function sharedTool(shared: SharedTool): Tool {
     description: shared.description,
     input: shared.input,
     async run(context, input) {
-      const result = await runSharedTool(
-        shared,
-        {
-          deps: deps(context),
-          resolveSite: (site) => context.directory.resolve(site),
-          keys: async () => context.headers,
-          refreshClicky: async () => {
-            const change = await refreshClicky(context.env, context.userId)
-            if (!change) return null
-            const keys = new Headers(context.headers)
-            for (const name of change.removed) keys.delete(name)
-            for (const [name, value] of Object.entries(change.set)) {
-              keys.set(name, value)
-            }
-            return keys
+      const runWith = (keys: Headers) =>
+        runSharedTool(
+          shared,
+          {
+            deps: deps(context),
+            resolveSite: (site) => context.directory.resolve(site),
+            keys: async () => keys,
+            refreshClicky: async () => {
+              const change = await refreshClicky(context.env, context.userId)
+              if (!change) return null
+              const keys = new Headers(context.headers)
+              for (const name of change.removed) keys.delete(name)
+              for (const [name, value] of Object.entries(change.set)) {
+                keys.set(name, value)
+              }
+              return keys
+            },
+            drKey: context.env.AHREFS_DR_KEY,
+            researchStore: researchStore(context.env),
+            accounts: async () => context.directory.accounts(),
+            signIn: signInHint(context.env),
+            connect: `${accountUrl(context.env)}. Crawls, internal links and Bing run in the CLI. ${CLI_LINK}`,
           },
-          drKey: context.env.AHREFS_DR_KEY,
-          researchStore: researchStore(context.env),
-          accounts: async () => context.directory.accounts(),
-          signIn: signInHint(context.env),
-          connect: `${accountUrl(context.env)}. Crawls, internal links and Bing run in the CLI. ${CLI_LINK}`,
-        },
-        input,
-      )
-      // Research runs on the person's own key; this counts logical calls
-      // that returned, by provider: one per seo_research call, or one per
-      // serp keyword. Never per fetch, so a retry is not counted twice.
+          input,
+        )
+      // seo_research is the one shared tool that spends DataForSEO money on
+      // the keys it is given, so it alone can run on included usage.
+      const { result, included } =
+        shared.name === 'seo_research'
+          ? await runResearch(context, input, runWith)
+          : { result: await runWith(context.headers), included: false }
+      // Research on the person's own key; this counts logical calls that
+      // returned, by provider: one per seo_research call, or one per serp
+      // keyword. Never per fetch, so a retry is not counted twice. Included
+      // usage is recorded by its cost instead (included.ts).
       const { provider, action, keywords } = (input ?? {}) as {
         provider?: unknown
         action?: unknown
@@ -69,6 +78,7 @@ function sharedTool(shared: SharedTool): Tool {
       }
       if (
         shared.name === 'seo_research' &&
+        !included &&
         (provider === 'dataforseo' || provider === 'ahrefs')
       ) {
         const calls =
@@ -97,6 +107,13 @@ function savedKeys(env: Env, headers: Headers): string {
     headers.get('x-dataforseo-login') && 'dataforseo',
     headers.get('x-ahrefs-key') && 'ahrefs',
   ].filter(Boolean)
+  if (includedOn(env) && !ownKey(headers)) {
+    return `Research runs on SEO Skill's DataForSEO account and uses this account's plan usage (or its free credit); seo_sites shows what's left.${
+      saved.length
+        ? ' An Ahrefs key is saved too: seo_research without provider uses it for the actions Ahrefs offers, and provider dataforseo uses the plan usage.'
+        : ''
+    } Never quote a dollar cost for research here, including the DataForSEO prices in seo_research's description and in report guidance: they are for people with their own DataForSEO key. Say research uses the plan's usage instead. When usage runs out, seo_research returns USAGE_LIMIT with what to do next; the free tools keep working. A person with their own DataForSEO account can save its key at ${accountUrl(env)}#keys, and research then runs on it instead.`
+  }
   return saved.length
     ? `Research keys saved: ${saved.join(', ')}. seo_research with another provider needs that key saved first.`
     : `No research key is saved, so seo_research fails until the person saves a DataForSEO or Ahrefs key at ${accountUrl(env)}#keys. Ask them first.`

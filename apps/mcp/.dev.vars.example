@@ -38,3 +38,6 @@ INDEXMYSITE_CLIENT_SECRET=
 # Optional. The Amp webhook URL that seo_feedback reports go to (the
 # feedback-intake plugin). Without it seo_feedback points to GitHub issues.
 FEEDBACK_WEBHOOK_URL=
+# Optional. Cloudflare Turnstile secret for the sign-in pages (the
+# TURNSTILE_SITE_KEY var), checked before the one-off free credit is given.
+TURNSTILE_SECRET=

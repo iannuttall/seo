@@ -2,6 +2,7 @@ import type { Detail } from './present.js'
 import { dataForSeoKeys, dataForSeoTask } from './research-providers.js'
 import { PAGE_SIZE, rowsText } from './rows.js'
 import { CommandError, type CommandResult } from './types.js'
+import { INCLUDED_NOTE, onIncludedUsage } from './usage.js'
 
 // Pages on other sites that name a site or its brand, from DataForSEO's
 // content index, and whether each of those sites already links to it, from
@@ -67,6 +68,11 @@ export async function runMentions(
       keyword: `"${term}"`,
       search_mode: 'one_per_domain',
       limit: PER_TERM,
+    }).catch((error: unknown) => {
+      // The error carries what the terms before it cost too.
+      throw Object.assign(error as object, {
+        cost: cost + ((error as { cost?: number }).cost ?? 0),
+      })
     })
     cost += done.cost
     const items =
@@ -136,7 +142,7 @@ export async function runMentions(
   const named = rows.filter((row) => row.matched === target)
   const spent = Math.round(cost * 10_000) / 10_000
   const notes = [
-    `Searched DataForSEO's content index for ${terms.map((t) => `"${t}"`).join(', ')}, one page per site, leaving out ${target} and its subdomains. DataForSEO cost: $${spent}.`,
+    `Searched DataForSEO's content index for ${terms.map((t) => `"${t}"`).join(', ')}, one page per site, leaving out ${target} and its subdomains. ${onIncludedUsage(headers) ? INCLUDED_NOTE : `DataForSEO cost: $${spent}.`}`,
     rows.length
       ? `${named.length} sites name ${target}, and ${named.filter((row) => row.links !== 'yes').length} of them have no link to it in DataForSEO's backlink index.${rows.length > named.length ? ` ${rows.length - named.length} more match only a brand name, ${unlinked - named.filter((row) => row.links !== 'yes').length} of them with no link found.` : ''}`
       : `No pages in DataForSEO's content index mention ${terms.join(' or ')}. That index is a sample of the web, so a mention it hasn't crawled won't show.`,

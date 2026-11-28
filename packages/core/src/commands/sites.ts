@@ -6,6 +6,7 @@ import {
 } from '../google/api.js'
 import { table } from './present.js'
 import type { CommandResult } from './types.js'
+import { type Usage, usageLine } from './usage.js'
 
 // What the sign-ins on a surface can read: Search Console properties
 // (unverified ones left out), Google Analytics properties and Bing Webmaster
@@ -51,6 +52,9 @@ export async function runSites(input: {
   bing?: BingCall | null
   // Where to add a Google account, Bing or keys on this surface.
   connect: string
+  // The account's paid usage: null when it could not be read, left out on
+  // a surface without an account or where the server has no usage plans.
+  usage?: Usage | null
 }): Promise<CommandResult> {
   const named = input.accounts.length > 1
   const [google, bing] = await Promise.all([
@@ -142,6 +146,7 @@ export async function runSites(input: {
             ? `Bing Webmaster sites with no Search Console property here (${bingOnly.length}): ${bingOnly.map((site) => site.url).join(', ')}.`
             : `Bing Webmaster: ${bingSites.length} verified sites; the bing column shows each one.`,
     `Research keys: ${research.length ? research.join(', ') : 'none'}.`,
+    input.usage === undefined ? null : usageLine(input.usage),
     input.clicky?.length
       ? `Clicky sites (seo_data with source "clicky"): ${input.clicky.join(', ')}.`
       : null,
@@ -160,6 +165,7 @@ export async function runSites(input: {
       research,
       clicky: input.clicky ?? [],
       simpleAnalytics: Boolean(input.simpleAnalytics),
+      ...(input.usage === undefined ? {} : { usage: input.usage }),
     },
   }
 }

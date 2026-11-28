@@ -11,8 +11,9 @@ import {
   type WeekOpportunity,
 } from '@seo/core/commands'
 import { type DecisionModel, typesafeDecisionModel } from '@seo/core/hosted'
-import { ACTIVE_SQL } from '../billing.ts'
+import { ACTIVE_SQL, autoReload } from '../billing.ts'
 import { directory } from '../google.ts'
+import { charge, MARKUP, spendable } from '../meter.ts'
 import { accountsOf } from '../store.ts'
 import { addUnmetered, flushUnmetered } from '../usage.ts'
 import type { Google } from './checks.ts'
@@ -290,17 +291,50 @@ export async function topCountry(
   return { alpha3, country: ALPHA2.get(alpha3) ?? null }
 }
 
-// Whether this account's sites get the check: a paid plan, or the
-// maintainer's unlimited-sites flag. Free beta sites do not.
-export async function included(env: Env, userId: string): Promise<boolean> {
+// Who pays for this account's checks on SEO Skill's DataForSEO account:
+// 'included' in the per-site plan's price or the maintainer's
+// unlimited-sites flag, never charged; 'usage' for a usage plan, charged to
+// the account's usage (meter.ts); null for free beta sites, which do not
+// get the checks.
+export type Payer = 'included' | 'usage' | null
+
+export async function payer(env: Env, userId: string): Promise<Payer> {
   const row = await env.DB.prepare(
-    `SELECT EXISTS (SELECT 1 FROM billing WHERE user_id = ?1 AND status IN ${ACTIVE_SQL})
-       OR EXISTS (SELECT 1 FROM beta_flags WHERE user_id = ?1 AND flag = 'unlimited-sites') AS n`,
+    `SELECT EXISTS (SELECT 1 FROM beta_flags WHERE user_id = ?1 AND flag = 'unlimited-sites') AS unlimited,
+       (SELECT plan IS NOT NULL FROM billing WHERE user_id = ?1 AND status IN ${ACTIVE_SQL}) AS usage`,
   )
     .bind(userId)
-    .first<{ n: number }>()
-  return row?.n === 1
+    .first<{ unlimited: number; usage: number | null }>()
+  if (row?.unlimited === 1) return 'included'
+  if (row?.usage === 1) return 'usage'
+  return row?.usage === 0 ? 'included' : null
 }
+
+// The DataForSEO cost, in US dollars, a usage plan's account can still pay
+// for.
+export async function usageLeftUsd(env: Env, userId: string): Promise<number> {
+  return (await spendable(env, userId)) / 1_000_000 / MARKUP
+}
+
+// Charges a usage plan's account for what a check spent. Never throws: the
+// data is already paid for.
+export async function chargeCheck(
+  env: Env,
+  userId: string,
+  costUsd: number,
+): Promise<void> {
+  if (!(costUsd > 0)) return
+  try {
+    const { reload } = await charge(env, userId, costUsd)
+    if (reload) await autoReload(env, userId)
+  } catch (error) {
+    console.error('weekly check charge', error)
+  }
+}
+
+// Why a usage plan's check did not run, for the weekly summary.
+export const NO_USAGE =
+  "Not checked: this account has no usage left, so it runs again once there is more (a top-up, an upgrade or the plan's reset)"
 
 // One check when it is due. Returns when it is due next, or null when the
 // check is off on this server.
@@ -314,7 +348,8 @@ export async function runGapCheck(
   if (!env.DATAFORSEO_LOGIN || !env.DATAFORSEO_PASSWORD) return null
   const state = gapState(meter)
   if (state?.next_at && state.next_at > now) return state.next_at
-  if (!(await included(env, site.user_id))) {
+  const pays = await payer(env, site.user_id)
+  if (!pays) {
     saveState(meter, { next_at: now + DAY_MS })
     return now + DAY_MS
   }
@@ -322,6 +357,15 @@ export async function runGapCheck(
   let spent = state?.month === month ? state.spent_usd : 0
   const cap = Math.min(spent + RUN_BUDGET_USD, MONTH_BUDGET_USD)
   let partial = false
+  // A usage plan pays for each call from its usage, inside the same caps;
+  // a run that cannot pay for one live results page waits a day.
+  let usageLeft =
+    pays === 'usage' ? await usageLeftUsd(env, site.user_id) : Infinity
+  let outOfUsage = false
+  if (usageLeft < COST.serp) {
+    saveState(meter, { next_at: now + DAY_MS, blocked: NO_USAGE })
+    return now + DAY_MS
+  }
   const keys = [env.DATAFORSEO_LOGIN, env.DATAFORSEO_PASSWORD]
   // One DataForSEO task, only when its worst case fits the budget. The
   // spend is saved with the call, so an eviction never forgets it.
@@ -334,8 +378,15 @@ export async function runGapCheck(
       partial = true
       return null
     }
-    const record = (cost: number) => {
+    if (estimate > usageLeft) {
+      partial = true
+      outOfUsage = true
+      return null
+    }
+    // cost counts toward the caps; charged is what DataForSEO reported.
+    const record = async (cost: number, charged = cost) => {
       spent += cost
+      usageLeft -= cost
       meter.transaction(() => {
         saveState(meter, { month, spent_usd: spent })
         addUnmetered(
@@ -344,13 +395,17 @@ export async function runGapCheck(
           Math.round(cost * 1_000_000),
         )
       })
+      if (pays === 'usage') await chargeCheck(env, site.user_id, charged)
     }
     try {
       const done = await dataForSeoTask(keys, path, task)
-      record(done.cost)
+      await record(done.cost)
       return (done.result?.items as Record<string, unknown>[] | undefined) ?? []
     } catch (error) {
-      record((error as { cost?: number }).cost ?? estimate)
+      // The caps count the worst case when the cost is unknown; a usage
+      // plan is only charged what DataForSEO reported.
+      const reported = (error as { cost?: number }).cost
+      await record(reported ?? estimate, reported ?? 0)
       throw error
     }
   }
@@ -360,7 +415,7 @@ export async function runGapCheck(
       month,
       spent_usd: spent,
       checked_at: now,
-      blocked,
+      blocked: blocked ?? (outOfUsage ? NO_USAGE : null),
       partial: partial ? 1 : 0,
     })
     return now + WEEK_MS
@@ -678,7 +733,8 @@ export async function gapWake<S extends GapSite>(
   await flushUnmetered(env, meter, site.user_id)
   // Pushed on every wake after the first check, so a failed push is
   // repaired by the next one.
-  if (gapState(meter)?.checked_at) {
+  const pushed = gapState(meter)
+  if (pushed?.checked_at || pushed?.blocked) {
     await env.DB.prepare(
       'UPDATE audit_sites SET opportunities = ? WHERE user_id = ? AND property = ?',
     )

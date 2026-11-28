@@ -1,10 +1,10 @@
 # Terms of use
 
-Last updated: 3 November 2026
+Last updated: 28 November 2026
 
 These terms cover SEO Skill: the `seo` command-line tool and library, the
-local and hosted MCP servers, your account at seoskill.dev, the paid weekly
-site audit, and the seoskill.dev website and its free tools.
+local and hosted MCP servers, your account at seoskill.dev, its paid plans
+and weekly site audit, and the seoskill.dev website and its free tools.
 
 ## The code
 
@@ -33,17 +33,26 @@ private.
 You can delete your account at any time with **Delete everything** on the
 [account page](https://seoskill.dev/account).
 
-## The weekly site audit
+## Plans and usage
 
-The weekly site audit is a paid plan, billed monthly per site through
-Stripe, at the price shown before you pay.
+Plans are billed monthly per account through Stripe, at the price shown
+before you pay. Each plan includes an amount of usage a month for research
+on our DataForSEO account, and the weekly site audit for as many sites as
+you add.
 
 - It is month to month. Cancel at any time from **Manage billing** on the
   account page, and you are not charged again.
 - There are no refunds for a month already started.
-- Adding a site charges for the rest of the current month straight away.
-  Removing a site lowers the next bill.
+- A plan's usage resets each month. What's left doesn't carry over.
+- Top-ups are used after the plan's usage, don't expire and can only be
+  used while you have a plan. They aren't refunded.
+- Auto-reload, when you turn it on, buys a top-up when you run out, up to
+  the monthly cap you set.
+- The one-off free credit is for one new account per group of sites. We can
+  hold or remove it when it looks claimed twice.
 - Delete everything cancels the plan at once.
+
+## The weekly site audit
 
 You can only add a site that one of your Google accounts can read in
 Search Console. The audit crawls it each week as `SEOSkillBot` and follows

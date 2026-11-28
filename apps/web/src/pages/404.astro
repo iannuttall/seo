@@ -1,8 +1,11 @@
 ---
 import {
   BookOpen01Icon,
+  Calendar03Icon,
+  ChartLineData01Icon,
+  ChatGptIcon,
+  GoogleIcon,
   Home01Icon,
-  Wrench01Icon,
 } from '@hugeicons/core-free-icons'
 import HomeCard from '@/components/HomeCard.astro'
 import { getButtonClasses } from '@/components/ui/button'
@@ -14,19 +17,47 @@ const routes = [
     title: 'Home',
     text: 'Connect the hosted MCP or install the CLI.',
     href: '/',
+    link: 'Home page',
     icon: Home01Icon,
   },
   {
     title: 'Docs',
     text: 'Getting started, the eight commands and what is stored.',
     href: '/docs',
+    link: 'Docs',
     icon: BookOpen01Icon,
   },
+]
+
+// The pages people reach most from Google, after the home page and docs.
+const popular = [
   {
-    title: 'Free SEO tools',
-    text: 'Check a website, a technical file or a keyword list.',
-    href: '/tools',
-    icon: Wrench01Icon,
+    title: 'Website traffic checker',
+    text: "Any site's estimated Google traffic, its trend and the pages that bring it.",
+    href: '/tools/website-traffic-checker',
+    link: 'Traffic checker',
+    icon: ChartLineData01Icon,
+  },
+  {
+    title: 'Google algorithm update checker',
+    text: 'Every Google ranking update since 2021, next to your own clicks.',
+    href: '/tools/google-algorithm-update-checker',
+    link: 'Update checker',
+    icon: Calendar03Icon,
+  },
+  {
+    title: 'ChatGPT SEO',
+    text: 'Use ChatGPT for SEO with your real Search Console and keyword data.',
+    href: '/features/chatgpt-seo',
+    link: 'ChatGPT SEO guide',
+    icon: ChatGptIcon,
+  },
+  {
+    title: 'Google Search Console MCP',
+    text: 'Connect Search Console to your AI agent with one MCP URL.',
+    href: '/features/search-console',
+    link: 'Search Console MCP',
+    icon: GoogleIcon,
   },
 ]
 ---
@@ -51,8 +82,15 @@ const routes = [
 
     <section class="mt-14" aria-labelledby="not-found-routes">
       <h2 id="not-found-routes" class="text-2xl/8 font-medium tracking-normal">Get back to something useful</h2>
-      <div class="mt-6 grid grid-cols-1 gap-2 sm:grid-cols-3">
+      <div class="mt-6 grid grid-cols-1 gap-2 sm:grid-cols-2">
         {routes.map((route) => <HomeCard {...route} />)}
+      </div>
+    </section>
+
+    <section class="mt-14" aria-labelledby="not-found-popular">
+      <h2 id="not-found-popular" class="text-2xl/8 font-medium tracking-normal">Popular pages</h2>
+      <div class="mt-6 grid grid-cols-1 gap-2 sm:grid-cols-2">
+        {popular.map((route) => <HomeCard {...route} />)}
       </div>
     </section>
 

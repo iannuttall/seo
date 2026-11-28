@@ -42,12 +42,12 @@ export const cmsList: Cms[] = [
     lead: 'SEO Skill tells your agent which posts need work, from your own Search Console. The WordPress MCP lets it make the change. Together they close the loop without copy and paste.',
     mcp: 'WordPress.com MCP server',
     setupSteps: [
-      'Ask me to turn on MCP access in my WordPress.com account under Preferences, then AI and MCP. A self-hosted site connects through Jetpack. Wait until I say it is on.',
-      'Add the WordPress.com MCP server, https://public-api.wordpress.com/wpcom/v2/mcp/v1, next to seoskill, and wait while I sign in to WordPress.com. If you cannot add servers yourself, such as in Claude or ChatGPT on the web, tell me to add the WordPress.com connector from its directory and choose Full access.',
+      'If my site is self-hosted, check with me that it runs Jetpack, connected to WordPress.com, on a Jetpack plan that includes Jetpack AI. Without that plan, stop and tell me the free route is the MCP Adapter plugin from WordPress.org.',
+      'Add the WordPress.com MCP server, https://public-api.wordpress.com/wpcom/v2/mcp/v1, next to seoskill, and wait while I sign in to WordPress.com and choose Full access. If you cannot add servers yourself, such as in Claude or ChatGPT on the web, tell me to add the WordPress.com connector from its directory instead.',
       'Save every WordPress change as a draft for me to read, unless I say otherwise.',
     ],
     needs:
-      'A WordPress.com site, on any plan including free, or a self-hosted site connected through Jetpack (no Jetpack plan needed), per WordPress.com. Developers can also run the official MCP Adapter plugin on a self-hosted site.',
+      'A WordPress.com site, on any plan including free. A self-hosted site connects through Jetpack, on a Jetpack plan that includes Jetpack AI. Without one, the free route is the official MCP Adapter plugin.',
     canChange: [
       {
         title: 'Post and page titles and content',
@@ -102,18 +102,22 @@ export const cmsList: Cms[] = [
       {
         question: 'Does it work with self-hosted WordPress?',
         answer:
-          'Yes, through Jetpack with no paid plan, per WordPress.com. Developers can also install the WordPress MCP Adapter, which serves the abilities that plugins register.',
+          "Yes. Through Jetpack it gets the same WordPress.com MCP tools, on a Jetpack plan that includes Jetpack AI. Without a plan, the free route is the official MCP Adapter plugin. It connects desktop and coding agents with an Application Password, not Claude or ChatGPT on the web, and it only offers the abilities your plugins make public. WordPress core's own abilities read site details and don't edit posts.",
       },
     ],
-    checked: '2026-11-03',
+    checked: '2026-11-28',
     sources: [
       {
-        fact: 'Server URL, Claude Code setup',
+        fact: 'Server URL, plans, Claude Code setup',
         url: 'https://developer.wordpress.com/docs/mcp',
       },
       {
-        fact: 'Tools, plans, Jetpack sites',
+        fact: 'Tools',
         url: 'https://wordpress.com/support/mcp/mcp-capabilities/',
+      },
+      {
+        fact: 'Jetpack sites and plans',
+        url: 'https://jetpack.com/support/create-better-content-with-jetpack-ai/mcp/',
       },
       {
         fact: 'Enable MCP, read and write tools',
@@ -123,7 +127,14 @@ export const cmsList: Cms[] = [
         fact: 'Yoast SEO Abilities',
         url: 'https://yoast.com/help/how-to-setup-yoast-seo-abilities',
       },
-      { fact: 'MCP Adapter', url: 'https://github.com/WordPress/mcp-adapter' },
+      {
+        fact: 'MCP Adapter setup',
+        url: 'https://github.com/WordPress/mcp-adapter/blob/trunk/docs/getting-started/site-owners.md',
+      },
+      {
+        fact: 'Core abilities',
+        url: 'https://developer.wordpress.org/news/2026/02/from-abilities-to-ai-agents-introducing-the-wordpress-mcp-adapter/',
+      },
     ],
   },
   {

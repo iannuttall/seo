@@ -3,17 +3,21 @@
 // the setup box in the full page frame. setupClient opens the box on that
 // client's tab and setupSteps adds the page's own steps to its prompts. Pass
 // a slot to replace the setup box, such as the clicks a web chat client
-// needs, and a "note" slot for one line under the lead.
+// needs, and a "note" slot for one line under the lead. `author` shows the
+// blog's "Written by AI and Ian Nuttall" badge above the title, for pages
+// that state Ian's own opinions.
+import FounderBadge from './FounderBadge.astro'
 import SetupPrompts from './SetupPrompts.astro'
 
-type Props = { title: string; lead: string; setupId: string; setupClient?: string; setupSteps?: string[] }
+type Props = { title: string; lead: string; setupId: string; setupClient?: string; setupSteps?: string[]; author?: boolean }
 
-const { title, lead, setupId, setupClient, setupSteps } = Astro.props
+const { title, lead, setupId, setupClient, setupSteps, author = false } = Astro.props
 const hasSetup = Astro.slots.has('default')
 ---
 
 <section class="pt-4">
   <div class="site-frame flex flex-col items-center pt-14 text-center sm:pt-20">
+    {author ? <FounderBadge prefix="Written by AI and" ai /> : null}
     <h1 class="mt-4 max-w-3xl text-pretty text-4xl/tight font-medium -tracking-[0.8px] xl:text-5xl/tight xl:-tracking-[1px]">
       {title}
     </h1>

@@ -39,7 +39,7 @@ const seobotDoes = [
 
 const options = [
   { title: 'SEO Skill', text: 'Pick it if you want the model in your own agent to write, from your Search Console and research data, with every draft checked before it ships.', icon: TextCheckIcon, href: '/docs/lint', link: 'See seo lint' },
-  { title: 'Outrank', text: 'Pick it if you want more articles for the money on autopilot: $99 a month buys 30, with backlink building in the same plan.', icon: News01Icon },
+  { title: 'Outrank', text: 'Pick it if you want more articles for the money on autopilot: $99 a month buys 30.', icon: News01Icon },
   { title: 'Koala AI', text: 'Pick it if you want to steer each article yourself in an AI writer, from $25 a month, with 5,000 free words to try it.', icon: QuillWrite01Icon },
   { title: 'SEObot', text: 'Stay with it if you want under ten articles a month for the lowest entry price, or 150 to 300 a month on one site.', icon: Robot01Icon },
 ]
@@ -130,6 +130,7 @@ const faq = [
       title="SEObot alternatives"
       lead="SEObot is an AI SEO bot that writes and publishes blog articles for you on autopilot. Here is what it does well, the alternatives for each job, and how to write better pages with the agent you already use."
       setupId="seobot-alternatives-setup"
+      author
     />
 
     <div class="space-y-24 py-24 sm:space-y-32 sm:py-32">
@@ -245,8 +246,13 @@ const faq = [
             ))}
           </ul>
           <p>
-            If you turn backlinks on, read Google’s <a href="https://developers.google.com/search/docs/essentials/spam-policies" target="_blank" rel="noreferrer">spam policies</a> on
-            link schemes first, and decide for yourself.
+            I would never turn SEObot’s backlinks on, or use any link exchange.
+            Google’s <a href="https://developers.google.com/search/docs/essentials/spam-policies" target="_blank" rel="noreferrer">spam policies</a> list “excessive link exchanges” and “using
+            automated programs or services to create links to your site” as
+            link spam. In my experience, links swapped across one network form
+            a pattern that leads to every site buying and selling them, and at
+            best the links are ignored. I <a href="https://x.com/iannuttall/status/2095420271754702994" target="_blank" rel="noreferrer">explained the risk on X</a> when
+            Outrank launched its exchange.
           </p>
         </div>
       </section>

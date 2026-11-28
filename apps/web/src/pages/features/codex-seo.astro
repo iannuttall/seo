@@ -7,7 +7,115 @@ import {
   Target02Icon,
 } from '@hugeicons/core-free-icons'
 import CodeBlock from '@/components/CodeBlock.astro'
-import FeaturePage from '@/components/FeaturePage.astro'
+import FaqAccordion from '@/components/FaqAccordion.astro'
+import HomeCard from '@/components/HomeCard.astro'
+import LandingHero from '@/components/LandingHero.astro'
+import SectionHeading from '@/components/SectionHeading.astro'
+import SetupPrompts from '@/components/SetupPrompts.astro'
+import SplitList from '@/components/SplitList.astro'
+import BaseLayout from '@/layouts/BaseLayout.astro'
+import type { SchemaBreadcrumb } from '@/lib/schema'
+
+const breadcrumbs: SchemaBreadcrumb[] = [
+  { label: 'Home', href: '/' },
+  { label: 'Features', href: '/features' },
+  { label: 'Codex SEO skill' },
+]
+
+const parts = [
+  {
+    title: 'Hosted MCP',
+    icon: McpServerIcon,
+    text: 'Search Console, Google Analytics, URL Inspection, keyword research and copy checks, with nothing to install. Start here.',
+  },
+  {
+    title: 'SEO skill',
+    icon: Target02Icon,
+    text: 'Teaches Codex which tool or command answers which SEO question, and to report facts instead of guesses.',
+  },
+  {
+    title: 'seo CLI',
+    icon: ComputerTerminal01Icon,
+    text: 'Site crawls (localhost and staging too), internal links and Bing Webmaster Tools, on your machine. Add it with the skill when Codex works in the site\u2019s repository.',
+  },
+]
+
+const setup = [
+  {
+    title: 'One prompt sets everything up',
+    text: 'Codex installs the seo CLI, adds the hosted MCP server, runs the Google sign-in in your browser (read-only access to Search Console and Google Analytics), adds the skill and checks seoskill is connected.',
+  },
+  {
+    title: 'Codex asks before some steps',
+    text: 'Some steps need network access or write outside the folder, so Codex asks you to approve them.',
+  },
+  {
+    title: 'One setup covers every Codex app',
+    text: 'The Codex CLI, the IDE extension and the desktop app share this config.',
+  },
+  {
+    title: 'Name the skill with $seo',
+    text: 'Codex picks the skill up when a task matches it, and you can name it with $seo in a prompt to be sure.',
+  },
+  {
+    title: 'Codex runs the CLI for local jobs',
+    text: 'Because Codex runs shell commands, it also runs the CLI for the jobs the hosted server does not do, such as a crawl of your local build before anything ships.',
+  },
+]
+
+const example = [
+  {
+    title: 'Codex calls the SEO report',
+    text: "It gets query and page pairs at positions 1 to 4 with a click-through rate below your site's own curve (a heuristic built from your own data).",
+  },
+  {
+    title: 'It reads each page and finds the file',
+    text: 'It runs seo page on each URL to read the live title and the queries the page gets, then finds the file in your repo that sets that title.',
+    href: '/docs/page',
+  },
+  {
+    title: 'It proposes the edits',
+    text: 'You review the diff, and Codex can crawl the local build to check the new titles render.',
+  },
+  {
+    title: 'Mark the issues fixed after the deploy',
+    text: "The issues list then shows each page's clicks for the 28 and 56 days after the fix against the same days before.",
+  },
+]
+
+const cloud = [
+  {
+    title: 'Make a token',
+    text: 'Make a token on your account page and add it to the Codex environment as an environment variable named SEO_TOKEN.',
+  },
+  {
+    title: 'Use an environment variable for the token',
+    text: 'Codex removes secrets before the agent starts, so a token saved as a secret never reaches it.',
+  },
+  { title: 'Install the CLI in the setup script', text: 'Add npm i -g seo to the environment\u2019s setup script.' },
+  {
+    title: 'Turn on internet access',
+    text: "Give the agent internet access to seoskill.dev and Google's APIs, which Codex turns off by default.",
+  },
+  {
+    title: 'More options in the cloud agents guide',
+    text: 'It has the other options, including a Google service account.',
+    href: '/docs/cloud-agents',
+  },
+]
+
+const costs = [
+  { title: 'Every tool Codex calls is free', text: 'There is no usage cap.' },
+  {
+    title: 'Keyword research uses your own key',
+    text: 'It runs on your DataForSEO or Ahrefs key, so you pay that provider directly.',
+  },
+  {
+    title: 'The weekly site audit is $50 a month per site',
+    text: "This is the paid part. It crawls the site every week and checks Google's index every day.",
+    href: '/docs/weekly-site-audit',
+  },
+]
 
 const related = [
   { title: 'Codex', text: 'The two commands that add the hosted MCP to Codex, and the header option for keys.', href: '/integrations/codex', icon: McpServerIcon, link: 'Codex setup' },
@@ -16,122 +124,168 @@ const related = [
   { title: 'Striking distance keywords', text: 'Queries just off page one, quick wins, low CTR and content decay.', href: '/features/striking-distance-keywords', icon: Target02Icon, link: 'Striking distance keywords' },
   { title: 'Cloud agents', text: 'Run SEO Skill in Codex cloud and other machines that start fresh.', href: '/docs/cloud-agents', icon: Route01Icon, link: 'Cloud agents guide' },
 ]
+
+const faq = [
+  {
+    question: 'What does the SEO skill give Codex?',
+    answer:
+      'Codex can read your templates and fix a missing canonical on its own. SEO Skill adds what it cannot see: which pages lose clicks, which queries sit on page two, and whether Google has indexed the page it just changed, from your own accounts and read only.',
+  },
+  {
+    question: 'Does one setup cover the Codex CLI, IDE extension and desktop app?',
+    answer: 'Yes. All three share the same config, so one setup covers them.',
+  },
+  {
+    question: 'How do I make sure Codex uses the skill?',
+    answer: 'Codex picks the skill up when a task matches it. Name it with $seo in a prompt to be sure.',
+  },
+  {
+    question: 'Can I use SEO Skill in Codex cloud?',
+    answer:
+      "Yes. Add a token from your account page as an environment variable named SEO_TOKEN, install the CLI with npm i -g seo in the setup script, and give the agent internet access to seoskill.dev and Google's APIs.",
+    links: [{ text: 'account page', href: '/account' }],
+  },
+  {
+    question: 'What does SEO Skill cost in Codex?',
+    answer:
+      'Every tool Codex calls is free with no usage cap. Keyword research uses your own DataForSEO or Ahrefs key. The weekly site audit is $50 a month per site.',
+  },
+]
 ---
 
-<FeaturePage
-  title="Codex SEO skill"
-  metaTitle="Codex SEO skill and MCP for Search Console"
+<BaseLayout
+  title="Codex SEO skill and MCP for Search Console"
   description="Add the SEO skill, hosted MCP and seo CLI to OpenAI Codex, so it reads your Search Console, Google Analytics and keyword data and checks its own SEO work."
-  path="/features/codex-seo"
-  setupClient="codex"
-  lead="Codex already edits your site's code. Give it your Search Console, Google Analytics and keyword data, and it can pick the pages with the most clicks to gain and check its work after."
-  {related}
-  relatedHeading="Read more"
+  canonicalPath="/features/codex-seo"
+  {breadcrumbs}
+  framed={false}
 >
-  <h2>What the SEO skill gives Codex</h2>
-  <p>
-    Codex can read your templates and fix a missing canonical on its own.
-    What it cannot see is which pages lose clicks, which queries sit on page
-    two, or whether Google has indexed the page it just changed. SEO Skill
-    gives Codex those facts from your own accounts, read only, through three
-    parts you can mix:
-  </p>
-  <table>
-    <thead><tr><th>Part</th><th>What it adds in Codex</th></tr></thead>
-    <tbody>
-      <tr><td>Hosted MCP</td><td>Search Console, Google Analytics, URL Inspection, keyword research and copy checks, with nothing to install.</td></tr>
-      <tr><td>SEO skill</td><td>Teaches Codex which tool or command answers which SEO question, and to report facts rather than guesses.</td></tr>
-      <tr><td>seo CLI</td><td>Site crawls (localhost and staging too), internal links and Bing Webmaster Tools, on your machine.</td></tr>
-    </tbody>
-  </table>
-  <p>
-    Start with the hosted MCP. Add the skill and the CLI when Codex is
-    working in the site's repository.
-  </p>
+  <main data-agent-content>
+    <LandingHero
+      title="Codex SEO skill"
+      lead="Codex already edits your site's code. Give it your Search Console, Google Analytics and keyword data, and it can pick the pages with the most clicks to gain and check its work after."
+      setupId="codex-seo-setup"
+      author
+      setupClient="codex"
+    />
 
-  <h2>Set up SEO Skill in Codex with one prompt</h2>
-  <p>
-    Copy the Codex prompt at the top of this page and give it to Codex. It
-    installs the <code>seo</code> CLI, adds the hosted MCP server, runs the
-    Google sign-in in your browser (read-only access to Search Console and
-    Google Analytics), adds the skill and checks seoskill is connected. Some
-    steps need network access or write outside the folder, so Codex asks you
-    to approve them. The Codex CLI, the IDE extension and the desktop app
-    share this config, so one setup covers all three.
-  </p>
-  <p>
-    Codex picks the skill up when a task matches it, and you can name it
-    with <code>$seo</code> in a prompt to be sure. Because Codex runs shell
-    commands, it also runs the CLI for the jobs the hosted server does not
-    do, such as a crawl of your local build before anything ships:
-  </p>
-  <CodeBlock prompt value={`$seo crawl http://localhost:4321 and fix the broken links and missing titles it finds`} wrap />
+    <div class="space-y-24 py-24 sm:space-y-32 sm:py-32">
+      <section class="site-frame" aria-labelledby="parts-heading">
+        <SectionHeading
+          id="parts-heading"
+          title="What does the SEO skill give Codex?"
+          text="It gives Codex the facts it cannot see in your code: which pages lose clicks, which queries sit on page two, and whether Google has indexed the page it just changed. They come from your own accounts, read only, through three parts you can mix."
+        />
+        <div class="grid grid-cols-1 gap-2 sm:grid-cols-2 lg:grid-cols-3">
+          {parts.map((item) => <HomeCard title={item.title} text={item.text} icon={item.icon} />)}
+        </div>
+      </section>
 
-  <h2>Prompts to try in Codex</h2>
-  <table>
-    <thead><tr><th>Ask Codex</th><th>What it reads</th></tr></thead>
-    <tbody>
-      <tr><td>Run the SEO report for example.com</td><td>Clicks, impressions, CTR and position against the previous period, with each section's top rows.</td></tr>
-      <tr><td>$seo which pages have striking distance keywords?</td><td>Queries at positions 11 to 20, with the page that ranks for each.</td></tr>
-      <tr><td>Find low CTR pages and suggest titles in this repo</td><td>The low CTR section, then the template or file that sets each title.</td></tr>
-      <tr><td>Did the last Google update hit us?</td><td>The latest update's days against the days before, from your own clicks.</td></tr>
-      <tr><td>Crawl the staging build for broken links</td><td>A crawl from your machine with the CLI.</td></tr>
-    </tbody>
-  </table>
+      <SplitList
+        id="setup-heading"
+        title="How do I set up SEO Skill in Codex?"
+        text="Copy the Codex prompt from the setup box and give it to Codex. One prompt installs the CLI, adds the hosted MCP and signs you in."
+        items={setup}
+      >
+        <div class="mt-6">
+          <CodeBlock
+            label="Ask your agent"
+            prompt
+            value="$seo crawl http://localhost:4321 and fix the broken links and missing titles it finds"
+            wrap
+          />
+        </div>
+      </SplitList>
 
-  <h2>A worked example with a low CTR title</h2>
-  <p>
-    Say Codex is open in the repository for example.com. You ask:
-  </p>
-  <CodeBlock prompt value={`$seo show the low-ctr section for example.com, find the files that set the titles of the top 3 pages, and suggest new titles from their queries`} wrap />
-  <ol>
-    <li>
-      Codex calls the SEO report and gets query and page pairs at positions
-      1 to 4 with a click-through rate below your site's own curve (a
-      heuristic built from your own data).
-    </li>
-    <li>
-      It runs <a href="/docs/page">seo page</a> on each URL to read the live
-      title and the queries the page gets, then finds the file in your repo
-      that sets that title.
-    </li>
-    <li>
-      It proposes the edits. You review the diff, and Codex can crawl the
-      local build to check the new titles render.
-    </li>
-    <li>
-      After the deploy, ask Codex to mark the issues fixed. The issues list
-      then shows each page's clicks for the 28 and 56 days after the fix
-      against the same days before.
-    </li>
-  </ol>
-  <p>
-    Codex writes the change. SEO Skill supplies the evidence, and says when
-    a before and after is only timing, not proof.
-  </p>
+      <section class="site-frame" aria-labelledby="prompts-heading">
+        <SectionHeading
+          id="prompts-heading"
+          title="What can I ask Codex?"
+          text="Ask for the SEO report, striking distance keywords, low CTR titles, the last Google update or a staging crawl. Each prompt below shows what Codex reads to answer it."
+        />
+        <div class="docs-prose max-w-4xl">
+          <table>
+            <thead><tr><th>Ask Codex</th><th>What it reads</th></tr></thead>
+            <tbody>
+              <tr><td>Run the SEO report for example.com</td><td>Clicks, impressions, CTR and position against the previous period, with each section's top rows.</td></tr>
+              <tr><td>$seo which pages have striking distance keywords?</td><td>Queries at positions 11 to 20, with the page that ranks for each.</td></tr>
+              <tr><td>Find low CTR pages and suggest titles in this repo</td><td>The low CTR section, then the template or file that sets each title.</td></tr>
+              <tr><td>Did the last Google update hit us?</td><td>The latest update's days against the days before, from your own clicks.</td></tr>
+              <tr><td>Crawl the staging build for broken links</td><td>A crawl from your machine with the CLI.</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </section>
 
-  <h2>Use SEO Skill in Codex cloud</h2>
-  <p>
-    Codex cloud tasks run on a machine that starts fresh each time. Make a
-    token on your <a href="/account">account page</a>{' '}
-    and add it to the Codex environment as an environment variable named{' '}
-    <code>SEO_TOKEN</code>. Use an environment variable rather than a
-    secret: Codex removes secrets before the agent starts. Then install the
-    CLI with <code>npm i -g seo</code> in the setup script, and give the
-    agent internet access to seoskill.dev and Google's APIs, which Codex
-    turns off by default.
-  </p>
-  <p>
-    The <a href="/docs/cloud-agents">cloud agents guide</a> has the other
-    options, including a Google service account.
-  </p>
+      <SplitList
+        id="example-heading"
+        title="How does Codex fix a low CTR title?"
+        text="Codex writes the change and SEO Skill supplies the evidence. Say Codex is open in the repository for example.com and you give it the prompt below."
+        items={example}
+      >
+        <div class="mt-6">
+          <CodeBlock
+            label="Ask your agent"
+            prompt
+            value="$seo show the low-ctr section for example.com, find the files that set the titles of the top 3 pages, and suggest new titles from their queries"
+            wrap
+          />
+        </div>
+        <p class="mt-4 text-base leading-7 text-foreground-muted">
+          SEO Skill says when a before and after is only timing and falls
+          short of proof.
+        </p>
+      </SplitList>
 
-  <h2>What SEO Skill costs in Codex</h2>
-  <p>
-    Every tool Codex calls is free with no usage cap. Keyword research uses
-    your own DataForSEO or Ahrefs key, so you pay that provider directly.
-    The paid part is the <a href="/docs/weekly-site-audit">weekly site
-    audit</a>, $50 a month per site, which crawls the site every week and
-    checks Google's index every day.
-  </p>
-</FeaturePage>
+      <SplitList
+        id="cloud-heading"
+        title="Can I use SEO Skill in Codex cloud?"
+        text="Yes. Codex cloud tasks run on a machine that starts fresh each time, so give the environment a token, the CLI and internet access."
+        items={cloud}
+      >
+        <p class="mt-4 text-base leading-7 text-foreground-muted">
+          Make the token on your{' '}
+          <a class="text-foreground underline underline-offset-4" href="/account">account page</a>.
+        </p>
+      </SplitList>
+
+      <SplitList
+        id="cost-heading"
+        title="What does SEO Skill cost in Codex?"
+        text="The tools cost nothing. Every tool Codex calls is free with no usage cap, and the only paid part is the weekly site audit."
+        items={costs}
+      />
+
+      <section class="site-frame" aria-labelledby="related-heading">
+        <SectionHeading
+          id="related-heading"
+          title="Which docs go with SEO in Codex?"
+          text="Codex setup, the CLI, the reports Codex reads first and running it in the cloud."
+        />
+        <div class="grid grid-cols-1 gap-2 sm:grid-cols-2">
+          {related.map((item) => <HomeCard {...item} link={item.link ?? `${item.title} docs`} />)}
+        </div>
+      </section>
+
+      <section class="site-frame" aria-labelledby="faq-heading">
+        <div class="max-w-2xl">
+          <h2 id="faq-heading" class="text-pretty text-2xl font-medium -tracking-[0.4px] text-foreground xl:text-3xl xl:-tracking-[0.6px]">
+            Codex SEO questions
+          </h2>
+        </div>
+        <div class="mt-10">
+          <FaqAccordion items={faq} id="codex-seo-faq" />
+        </div>
+      </section>
+
+      <section class="site-frame" aria-labelledby="start-heading">
+        <SectionHeading
+          id="start-heading"
+          title="Add SEO Skill to Codex"
+          text="Give Codex the prompt below, sign in with the Google account that can read your Search Console, and ask for the SEO report for your site."
+        />
+        <SetupPrompts id="codex-seo-setup-end" client="codex" />
+      </section>
+    </div>
+  </main>
+</BaseLayout>

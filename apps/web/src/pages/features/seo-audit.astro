@@ -5,7 +5,49 @@ import {
   FileSearchIcon,
   Route01Icon,
 } from '@hugeicons/core-free-icons'
-import FeaturePage from '@/components/FeaturePage.astro'
+import CodeBlock from '@/components/CodeBlock.astro'
+import FaqAccordion from '@/components/FaqAccordion.astro'
+import HomeCard from '@/components/HomeCard.astro'
+import LandingHero from '@/components/LandingHero.astro'
+import SectionHeading from '@/components/SectionHeading.astro'
+import SetupPrompts from '@/components/SetupPrompts.astro'
+import SplitList from '@/components/SplitList.astro'
+import BaseLayout from '@/layouts/BaseLayout.astro'
+import type { SchemaBreadcrumb } from '@/lib/schema'
+
+const breadcrumbs: SchemaBreadcrumb[] = [
+  { label: 'Home', href: '/' },
+  { label: 'Features', href: '/features' },
+  { label: 'SEO audit tool' },
+]
+
+const order = [
+  {
+    title: 'Run the SEO crawler first',
+    text: 'It gives you a technical baseline. Keep the result so you can compare the next crawl after a release.',
+    href: '/features/seo-crawler',
+  },
+  {
+    title: 'Then follow the clicks',
+    text: 'Use the Google index checker and the report to see which issues line up with lost search traffic.',
+    href: '/features/google-index-checker',
+  },
+  {
+    title: 'Fix the pages that stopped getting clicks',
+    text: 'A long list of warnings matters less than the few pages that stopped getting clicks.',
+  },
+]
+
+const verdicts = [
+  {
+    title: 'A noindex tag is reported as what the page says',
+    text: 'So is a canonical that points elsewhere. It is only a problem if you did not mean it.',
+  },
+  {
+    title: 'You decide what to fix',
+    text: 'The audit gives your agent the evidence, and the decision stays with you.',
+  },
+]
 
 const related = [
   { title: 'seo crawl', text: 'Crawl the site from your machine and list technical issues.', href: '/docs/crawl', icon: Route01Icon },
@@ -15,47 +57,131 @@ const related = [
   { title: 'SEO audit service', text: 'What a technical audit should cover and what you should get from one.', href: '/services/seo-audit', icon: Route01Icon, link: 'See the SEO audit service' },
   { title: 'SEO audit checklist', text: 'Access, on-page, links and Search Console, each with a free check.', href: '/guides/seo-audit-checklist', icon: FileSearchIcon, link: 'Read the checklist' },
 ]
+
+const faq = [
+  {
+    question: 'What does an SEO audit with SEO Skill cover?',
+    answer:
+      'Four parts. The site crawl checks status codes, redirects, tags and broken internal links. A single page check shows one URL as served now, with its URL Inspection result. The index check covers pages that lost most of their clicks, and the Search Console report adds content decay, cannibalization and traffic drops.',
+  },
+  {
+    question: 'Where should an audit start?',
+    answer:
+      'With a crawl, for a technical baseline. Then use the Google index checker and the report to see which issues line up with lost search traffic.',
+  },
+  {
+    question: 'Can I check one page without installing anything?',
+    answer:
+      'Yes. The free SEO checker in your browser checks whether Google can index a single URL, then its title, headings, canonical and structured data.',
+    links: [{ text: 'SEO checker', href: '/tools/seo-checker' }],
+  },
+  {
+    question: 'Does the crawl run on the hosted MCP server?',
+    answer: 'No. The site crawl runs on your machine with the CLI.',
+  },
+  {
+    question: 'Is a noindex tag an error?',
+    answer:
+      'Only if you did not mean it. A noindex tag or a canonical that points elsewhere is reported as what the page says, and you decide what to fix.',
+  },
+]
 ---
 
-<FeaturePage
-  title="SEO audit tool for AI agents"
-  metaTitle="AI SEO audit tool for your whole website"
+<BaseLayout
+  title="AI SEO audit tool for your whole website"
   description="Run a free website SEO audit with your AI agent: a technical site crawl, single page checks, pages that lost their clicks and the Search Console report."
-  path="/features/seo-audit"
-  lead="Find the pages that are broken, blocked or losing search traffic, and give your agent enough evidence to fix the cause."
-  {related}
+  canonicalPath="/features/seo-audit"
+  {breadcrumbs}
+  framed={false}
 >
-  <h2>What an audit covers</h2>
-  <table>
-    <thead><tr><th>Part</th><th>What it checks</th></tr></thead>
-    <tbody>
-      <tr><td><a href="/docs/crawl">seo crawl</a></td><td>Status codes, redirects, titles, descriptions, canonical and robots tags, and broken internal links across the site. Runs on your machine with the CLI.</td></tr>
-      <tr><td><a href="/docs/page">seo page</a></td><td>One URL as it is served now, plus what Google URL Inspection reports for it.</td></tr>
-      <tr><td><a href="/docs/indexing">seo index</a></td><td>Pages that lost most of their clicks, checked live and with URL Inspection, so you see which ones broke or left the index.</td></tr>
-      <tr><td><a href="/docs/report">seo report</a></td><td>Search Console sections such as content decay, cannibalization and traffic drops.</td></tr>
-    </tbody>
-  </table>
+  <main data-agent-content>
+    <LandingHero
+      title="SEO audit tool for AI agents"
+      lead="Find the pages that are broken, blocked or losing search traffic, and give your agent enough evidence to fix the cause."
+      setupId="seo-audit-setup"
+      author
+    />
 
-  <p>
-    To check one page in your browser first, with no install, use the free{' '}
-    <a href="/tools/seo-checker">SEO checker</a>. It checks whether Google
-    can index a single URL, then its title, headings, canonical and
-    structured data.
-  </p>
+    <div class="space-y-24 py-24 sm:space-y-32 sm:py-32">
+      <section class="site-frame" aria-labelledby="covers-heading">
+        <SectionHeading
+          id="covers-heading"
+          title="What does an SEO audit cover?"
+          text="It covers the whole site's technical health, single pages, the pages that lost their clicks and your Search Console data. Each part is one command your agent runs."
+        />
+        <div class="docs-prose max-w-4xl">
+          <table>
+            <thead><tr><th>Part</th><th>What it checks</th></tr></thead>
+            <tbody>
+              <tr><td><a class="text-foreground underline underline-offset-4" href="/docs/crawl">seo crawl</a></td><td>Status codes, redirects, titles, descriptions, canonical and robots tags, and broken internal links across the site. Runs on your machine with the CLI.</td></tr>
+              <tr><td><a class="text-foreground underline underline-offset-4" href="/docs/page">seo page</a></td><td>One URL as it is served now, plus what Google URL Inspection reports for it.</td></tr>
+              <tr><td><a class="text-foreground underline underline-offset-4" href="/docs/indexing">seo index</a></td><td>Pages that lost most of their clicks, checked live and with URL Inspection, so you see which ones broke or left the index.</td></tr>
+              <tr><td><a class="text-foreground underline underline-offset-4" href="/docs/report">seo report</a></td><td>Search Console sections such as content decay, cannibalization and traffic drops.</td></tr>
+            </tbody>
+          </table>
+          <p>
+            To check one page in your browser first, with no install, use the
+            free{' '}
+            <a class="text-foreground underline underline-offset-4" href="/tools/seo-checker">SEO checker</a>.
+            It checks whether Google can index a single URL, then its title,
+            headings, canonical and structured data.
+          </p>
+        </div>
+      </section>
 
-  <h2>Start with a crawl, then follow the clicks</h2>
-  <p>
-    Run the <a href="/features/seo-crawler">SEO crawler</a> first to get a
-    technical baseline, and keep the result so you can compare the next crawl
-    after a release. Then use the <a href="/features/google-index-checker">Google index checker</a> and the
-    report to see which issues line up with lost search traffic. A long list
-    of warnings matters less than the few pages that stopped getting clicks.
-  </p>
+      <SplitList
+        id="order-heading"
+        title="Where should an SEO audit start?"
+        text="Start with a crawl, then follow the clicks. The crawl sets the technical baseline, and your search data shows which issues cost you traffic."
+        items={order}
+      >
+        <div class="mt-6">
+          <CodeBlock
+            label="Ask your agent"
+            prompt
+            value="Run an SEO audit of example.com. Crawl the site first, then check which of the issues line up with pages that lost search clicks, and list those pages first."
+            wrap
+          />
+        </div>
+      </SplitList>
 
-  <h2>Observations, not verdicts</h2>
-  <p>
-    A <code>noindex</code> tag or a canonical that points elsewhere is
-    reported as what the page says. It is only a problem if you did not mean
-    it. The audit gives your agent the evidence, and you decide what to fix.
-  </p>
-</FeaturePage>
+      <SplitList
+        id="verdicts-heading"
+        title="Does the audit decide what is broken?"
+        text="No. It reports what each page says, and you decide what to fix."
+        items={verdicts}
+      />
+
+      <section class="site-frame" aria-labelledby="related-heading">
+        <SectionHeading
+          id="related-heading"
+          title="Which tools and docs go with an SEO audit?"
+          text="The four commands behind the audit, the audit service and a checklist with a free check for each part."
+        />
+        <div class="grid grid-cols-1 gap-2 sm:grid-cols-2">
+          {related.map((item) => <HomeCard {...item} link={item.link ?? `${item.title} docs`} />)}
+        </div>
+      </section>
+
+      <section class="site-frame" aria-labelledby="faq-heading">
+        <div class="max-w-2xl">
+          <h2 id="faq-heading" class="text-pretty text-2xl font-medium -tracking-[0.4px] text-foreground xl:text-3xl xl:-tracking-[0.6px]">
+            SEO audit questions
+          </h2>
+        </div>
+        <div class="mt-10">
+          <FaqAccordion items={faq} id="seo-audit-faq" />
+        </div>
+      </section>
+
+      <section class="site-frame" aria-labelledby="start-heading">
+        <SectionHeading
+          id="start-heading"
+          title="Run your first SEO audit"
+          text="Add SEO Skill to your agent, sign in with the Google account that can read your Search Console, and ask it to audit your site."
+        />
+        <SetupPrompts id="seo-audit-setup-end" />
+      </section>
+    </div>
+  </main>
+</BaseLayout>

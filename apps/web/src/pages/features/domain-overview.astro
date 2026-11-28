@@ -8,8 +8,66 @@ import {
   UserSearch01Icon,
 } from '@hugeicons/core-free-icons'
 import CodeBlock from '@/components/CodeBlock.astro'
-import FeaturePage from '@/components/FeaturePage.astro'
+import FaqAccordion from '@/components/FaqAccordion.astro'
+import HomeCard from '@/components/HomeCard.astro'
+import LandingHero from '@/components/LandingHero.astro'
+import SectionHeading from '@/components/SectionHeading.astro'
+import SetupPrompts from '@/components/SetupPrompts.astro'
+import SplitList from '@/components/SplitList.astro'
 import { researchKeyStep } from '@/content/setup-prompts'
+import BaseLayout from '@/layouts/BaseLayout.astro'
+import type { SchemaBreadcrumb } from '@/lib/schema'
+
+const breadcrumbs: SchemaBreadcrumb[] = [
+  { label: 'Home', href: '/' },
+  { label: 'Features', href: '/features' },
+  { label: 'Domain overview' },
+]
+
+const setupSteps = [researchKeyStep('research')]
+
+const tally = [
+  { title: 'One page earns 75% of the traffic', text: 'The home page earns 4,990 of the 6,655 estimated visits (75%), from 161 keywords. The login page is second with 713. Every other page, help articles and templates included, earns under 160 each.' },
+  { title: 'Brand searches carry most of it', text: 'Of the 100 keywords that bring tally.so the most estimated traffic, the ones that contain "tally" bring 4,144 of 6,420 visits (65%). Leave out the bare search "tally" and the share is 56% (2,868 of 5,144), because many of its 40,500 monthly US searches look for Tally the accounting software.' },
+  { title: 'A brand name collision shows up', text: 'Tally Solutions shares 198 keywords with tally.so, which is how a domain overview shows a brand name collision.' },
+  { title: 'The biggest search it wins without its name', text: 'tally.so ranks first for "online form builder", which gets 12,100 US searches a month and sends tally.so about 1,362 estimated visits.' },
+]
+
+const closest = [
+  { title: 'Address form template', text: 'Ranks 14th for "address form", with 9,900 US searches a month and keyword difficulty 7.' },
+  { title: 'Order form templates post', text: 'Ranks 19th for "order form", with 4,400 searches and difficulty 6.' },
+  { title: 'Where we would start', text: 'Both searches have low difficulty and a page that already ranks, which is where we would start if tally.so were ours.' },
+]
+
+const links = [
+  { title: 'Huge link counts from one site', text: 'A count that large from one site usually means a site-wide link or an embedded form, where one editorial mention would send a handful. That is a heuristic, so open the site to check.' },
+  { title: 'Who links, sorted and filtered', text: 'The backlink checker goes deeper on who links to any domain.', href: '/tools/backlink-checker' },
+]
+
+const run = [
+  { title: 'Save a DataForSEO or Ahrefs key', text: 'The setup prompt at the top of this page sets up SEO Skill and asks you to save a key under Keys on your account page, never in the chat. The provider bills you directly, and every DataForSEO result says what the request cost.', href: '/docs/keys' },
+  { title: 'Four research requests and a summary', text: 'The agent runs four research requests and writes the summary.' },
+  { title: 'Follow-ups reuse the rows', text: 'Ask a follow-up in the same chat, such as "which pages rank 4th to 20th for searches with difficulty under 20?", and it reads the rows it already has. A result is kept for a day, so the next page of rows costs nothing.' },
+  { title: 'A domain, a section or one page', text: 'A domain is the whole site with its subdomains. Add a trailing slash to read one section, such as example.com/blog/, or give a full URL to read one page.' },
+]
+
+const ownSite = [
+  { title: 'About 15 times too low for the US', text: 'Search Console recorded 47 clicks from the US for the 30 days from 10 October to 8 November 2026, and 490 from every country.' },
+  { title: 'Normal for a small or new site', text: 'The provider only counts keywords in its own database, so small and new sites come out low.' },
+  { title: 'Read each site in the right place', text: "Read a competitor's estimate against another estimate from the same provider, and read your own site in Search Console. Your agent keeps the two apart." },
+]
+
+const checks = [
+  { title: 'The brand share', text: 'A site whose traffic is mostly its own name is hard to take traffic from and easy to overrate as an SEO competitor. Ask for the share with and without brand keywords, as in the tally.so run.' },
+  { title: 'How many pages carry the traffic', text: "When one page earns most of it, the site's search strategy is that page. When the traffic is spread across hundreds of guides, the site wins with content, and the top pages list tells you which topics." },
+  { title: 'Keywords in positions 4 to 20 with low difficulty', text: 'Those are the searches the site is closest to winning, and the same searches are open to you.' },
+  { title: 'Whether the competitor list makes sense', text: "A name collision, a single off-topic guide or Google's own products can fill the top of the list. The SEO competitor analysis page shows how to go from the overview to competitor pages, SERPs and link gaps.", href: '/features/seo-competitor-analysis' },
+]
+
+const limits = [
+  { title: 'Compare sites within one provider', text: 'DataForSEO and Ahrefs count keywords and traffic differently, and their totals for one site can differ tenfold.' },
+  { title: 'An empty list is missing data', text: 'An empty list means the provider has nothing for that site in its database. It does not mean the site has no traffic or links.' },
+]
 
 const related = [
   { title: 'Website traffic checker', text: 'Estimated monthly Google traffic for any domain, with twelve months of history, in your browser.', href: '/tools/website-traffic-checker', icon: ChartLineData01Icon, link: 'Free tool' },
@@ -19,219 +77,262 @@ const related = [
   { title: 'seo research', text: 'Every research action, its inputs and how to run it from the CLI.', href: '/docs/research', icon: SearchList01Icon },
   { title: 'API keys', text: 'Add a DataForSEO or Ahrefs key to the hosted MCP or the CLI.', href: '/docs/keys', icon: Key01Icon },
 ]
+
+const faq = [
+  {
+    question: 'What is a domain overview?',
+    answer:
+      "A summary of one website's search footprint. It shows how much search traffic the site gets, where that traffic lands, who it competes with in Google and how strong its links are.",
+  },
+  {
+    question: 'Where do the numbers come from?',
+    answer:
+      'From your own DataForSEO or Ahrefs key, and the provider bills you directly. When the site is yours, your agent can also read your Search Console, which is the only number in the overview that is not an estimate.',
+  },
+  {
+    question: 'How much does a domain overview cost?',
+    answer:
+      'About $0.10 an overview with DataForSEO. The tally.so overview took four requests and cost $0.10 in total, and a result is kept for a day, so the next page of rows costs nothing.',
+  },
+  {
+    question: 'How accurate is the traffic estimate?',
+    answer:
+      'It is a provider estimate, and it is weakest for small or new sites. DataForSEO estimated seoskill.dev at 3 US visits a month while Search Console recorded 47 US clicks over 30 days, about 15 times more.',
+  },
+  {
+    question: 'Does SEO Skill show paid search data?',
+    answer:
+      'No. It covers organic search traffic, keywords, top pages, competitors, backlinks and Domain Rating. Semrush Domain Overview has paid search data and a traffic history chart in one place.',
+  },
+  {
+    question: 'Can I run an overview of one section or page?',
+    answer:
+      'Yes. A domain is the whole site with its subdomains. Add a trailing slash to read one section, such as example.com/blog/, or give a full URL to read one page.',
+  },
+]
 ---
 
-<FeaturePage
-  title="Domain overview"
-  metaTitle="Domain overview and domain analysis for any site"
+<BaseLayout
+  title="Domain overview and domain analysis for any site"
   description="Get a domain overview of any website in your AI agent, with its estimated search traffic, top pages, competitors, backlinks and Domain Rating."
-  path="/features/domain-overview"
-  setupSteps={[researchKeyStep('research')]}
-  lead="Ask your agent for an overview of any domain. It shows the estimated search traffic, the keywords and pages that earn it, the sites it competes with in Google, and how strong its links are. For your own site, it sets those estimates beside your real Search Console clicks."
-  {related}
-  relatedHeading="Read more"
+  canonicalPath="/features/domain-overview"
+  {breadcrumbs}
+  framed={false}
 >
-  <h2>What a domain overview shows</h2>
-  <p>
-    A domain overview is a summary of one website's search footprint. It
-    shows how much search traffic the site gets, where that traffic lands,
-    who it competes with in Google and how strong its links are. It is the first thing to
-    run on a competitor, a site you might buy or a client you are about to
-    pitch.
-  </p>
-  <p>SEO Skill builds the overview from five pieces of research data:</p>
-  <table>
-    <thead><tr><th>Part</th><th>What it answers</th></tr></thead>
-    <tbody>
-      <tr><td>Ranked keywords</td><td>How many searches the site ranks for, its estimated monthly search traffic, and which keywords bring the most.</td></tr>
-      <tr><td>Top pages</td><td>Which pages earn that traffic, and how many keywords each page ranks for in first place, second or third, and fourth to tenth.</td></tr>
-      <tr><td>Competitors</td><td>The domains that rank for the same keywords, with how many they share.</td></tr>
-      <tr><td>Backlinks</td><td>How many sites link to it, and which ones.</td></tr>
-      <tr><td>Domain Rating</td><td>How strong its link profile is, from 0 to 100, by <a href="https://ahrefs.com" target="_blank" rel="noreferrer">Ahrefs</a>.</td></tr>
-    </tbody>
-  </table>
-  <p>
-    The numbers come from your own DataForSEO or Ahrefs key. When the site
-    is yours, your agent can also read your Search Console, which is the
-    only number in the overview that is not an estimate.
-  </p>
+  <main data-agent-content>
+    <LandingHero
+      title="Domain overview"
+      lead="Ask your agent for an overview of any domain. It shows the estimated search traffic, the keywords and pages that earn it, the sites it competes with in Google, and how strong its links are. For your own site, it sets those estimates beside your real Search Console clicks."
+      setupId="domain-overview-setup"
+      author
+      {setupSteps}
+    />
 
-  <h2>Tally.so earns about 6,655 estimated US visits a month, 75% on one page</h2>
-  <p>
-    We ran a domain overview on tally.so, the free online form builder, with
-    DataForSEO for the US on 11 November 2026. DataForSEO estimates tally.so
-    gets 6,655 visits a month from Google, from 824 ranking keywords and 130
-    ranking pages. Its Domain Rating is 92. The four requests cost $0.10 in
-    total.
-  </p>
-  <p>
-    The home page earns 4,990 of those 6,655 estimated visits (75%), from 161
-    keywords. The login page is second with 713. Every other page, help
-    articles and templates included, earns under 160 each.
-  </p>
-  <p>
-    Brand searches carry most of it. Of the 100 keywords that bring tally.so
-    the most estimated traffic, the ones that contain "tally" bring 4,144 of
-    6,420 visits (65%). Leave out the bare search "tally" and the share is
-    56% (2,868 of 5,144), because many of its 40,500 monthly US searches look
-    for Tally the accounting software. Tally Solutions shares 198 keywords
-    with tally.so, which is how a domain overview shows a brand name
-    collision.
-  </p>
-  <p>
-    The biggest search tally.so wins without its name is "online form
-    builder". It ranks first for that search, which gets 12,100 US
-    searches a month and sends tally.so about 1,362 estimated visits.
-  </p>
+    <div class="space-y-24 py-24 sm:space-y-32 sm:py-32">
+      <section class="site-frame" aria-labelledby="what-heading">
+        <SectionHeading
+          id="what-heading"
+          title="What does a domain overview show?"
+          text="It shows how much search traffic one website gets, where that traffic lands, who it competes with in Google and how strong its links are. It is the first thing to run on a competitor, a site you might buy or a client you are about to pitch."
+        />
+        <div class="docs-prose max-w-4xl">
+          <p>SEO Skill builds the overview from five pieces of research data.</p>
+          <table>
+            <thead><tr><th>Part</th><th>What it answers</th></tr></thead>
+            <tbody>
+              <tr><td>Ranked keywords</td><td>How many searches the site ranks for, its estimated monthly search traffic, and which keywords bring the most.</td></tr>
+              <tr><td>Top pages</td><td>Which pages earn that traffic, and how many keywords each page ranks for in first place, second or third, and fourth to tenth.</td></tr>
+              <tr><td>Competitors</td><td>The domains that rank for the same keywords, with how many they share.</td></tr>
+              <tr><td>Backlinks</td><td>How many sites link to it, and which ones.</td></tr>
+              <tr><td>Domain Rating</td><td>How strong its link profile is, from 0 to 100, by <a href="https://ahrefs.com" target="_blank" rel="noreferrer">Ahrefs</a>.</td></tr>
+            </tbody>
+          </table>
+          <p>
+            The numbers come from your own DataForSEO or Ahrefs key. When the site
+            is yours, your agent can also read your Search Console, which is the
+            only number in the overview that is not an estimate.
+          </p>
+        </div>
+      </section>
 
-  <h3>Tally's closest search competitors are Jotform and Typeform</h3>
-  <p>
-    DataForSEO counted 8,900 domains that share at least one ranking keyword
-    with tally.so. These were the 5 form and survey tools with the most
-    shared keywords, with each site's Domain Rating by Ahrefs. Google.com
-    also shares 430, through Google Forms.
-  </p>
-  <table>
-    <thead><tr><th>Domain</th><th>Shared keywords (DR)</th></tr></thead>
-    <tbody>
-      <tr><td>jotform.com</td><td>479 (DR 94)</td></tr>
-      <tr><td>typeform.com</td><td>373 (DR 93)</td></tr>
-      <tr><td>forms.app</td><td>307 (DR 84)</td></tr>
-      <tr><td>surveymonkey.com</td><td>236 (DR 92)</td></tr>
-      <tr><td>fillout.com</td><td>227 (DR 89)</td></tr>
-    </tbody>
-  </table>
-  <p>
-    Jotform ranks for 203,187 keywords against Tally's 824, so the overlap
-    tells you where Tally competes, not that the two are the same size.
-  </p>
+      <SplitList
+        id="tally-heading"
+        title="What does a domain overview of tally.so show?"
+        text="About 6,655 estimated US visits a month from Google, 75% of them on one page. We ran it on tally.so, the free online form builder, with DataForSEO for the US. It found 824 ranking keywords, 130 ranking pages and a Domain Rating of 92, and the four requests cost $0.10 in total."
+        items={tally}
+      >
+        <p class="mt-4 text-base leading-7 text-foreground-muted">
+          Domain Rating on this page is Domain Rating by{' '}
+          <a class="text-foreground underline underline-offset-4" href="https://ahrefs.com" target="_blank" rel="noreferrer">Ahrefs</a>.
+        </p>
+      </SplitList>
 
-  <h3>Two template pages sit just off page one for big searches</h3>
-  <p>
-    The most useful rows in the tally.so overview were not the winners.
-    Tally's address form template ranks 14th for "address form" (9,900 US
-    searches a month, keyword difficulty 7), and its order form templates
-    post ranks 19th for "order form" (4,400 searches, difficulty 6). Both
-    searches have low difficulty and a page that already ranks, which is
-    where we would start if tally.so were ours.
-  </p>
+      <section class="site-frame" aria-labelledby="competitors-heading">
+        <SectionHeading
+          id="competitors-heading"
+          title="Who are tally.so's closest search competitors?"
+          text="Jotform and Typeform. DataForSEO counted 8,900 domains that share at least one ranking keyword with tally.so, and these were the 5 form and survey tools with the most shared keywords."
+        />
+        <div class="docs-prose max-w-4xl">
+          <p>
+            Each site is shown with its{' '}
+            <a href="https://ahrefs.com" target="_blank" rel="noreferrer">Domain Rating by Ahrefs</a>.
+            Google.com also shares 430, through Google Forms.
+          </p>
+          <table>
+            <thead><tr><th>Domain</th><th>Shared keywords (DR)</th></tr></thead>
+            <tbody>
+              <tr><td>jotform.com</td><td>479 (DR 94)</td></tr>
+              <tr><td>typeform.com</td><td>373 (DR 93)</td></tr>
+              <tr><td>forms.app</td><td>307 (DR 84)</td></tr>
+              <tr><td>surveymonkey.com</td><td>236 (DR 92)</td></tr>
+              <tr><td>fillout.com</td><td>227 (DR 89)</td></tr>
+            </tbody>
+          </table>
+          <p>
+            Jotform ranks for 203,187 keywords against Tally's 824, so the overlap
+            tells you where Tally competes. It says nothing about the two being
+            the same size.
+          </p>
+        </div>
+      </section>
 
-  <h3>53,295 sites link to tally.so</h3>
-  <p>
-    DataForSEO lists 53,295 referring domains for tally.so. Several of the
-    strongest send tens of thousands of links each, such as audiotool.com
-    with 172,596 links. A count that large from one site usually means a
-    site-wide link or an embedded form rather than one editorial mention
-    (a heuristic, so open the site to check). For who links, sorted and
-    filtered, the <a href="/tools/backlink-checker">backlink checker</a>{' '}
-    goes deeper.
-  </p>
+      <SplitList
+        id="closest-heading"
+        title="Which searches is tally.so closest to winning?"
+        text="Two template pages that sit just off page one for big searches. They were the most useful rows in the tally.so overview, more useful than the searches it already wins."
+        items={closest}
+      />
 
-  <h2>Run a domain overview in your agent</h2>
-  <p>
-    Copy the prompt for your agent at the top of this page. It sets up SEO
-    Skill and asks you to save a <a href="/docs/keys">DataForSEO or Ahrefs key</a> under Keys on your account page,
-    never in the chat. The provider bills you directly, and every DataForSEO result says what the request cost. Then ask for the overview in plain words:
-  </p>
-  <CodeBlock prompt value={`Give me a domain overview of example.com in the US: estimated search traffic, top keywords and pages, top 5 search competitors, backlinks and Domain Rating. Say how much of the traffic comes from brand searches.`} wrap />
-  <p>
-    The agent runs four research requests and writes the summary. Ask a
-    follow-up in the same chat, such as "which pages rank 4th to 20th for
-    searches with difficulty under 20?", and it reads the rows it already
-    has. A result is kept for a day, so the next page of rows costs nothing.
-  </p>
-  <p>In a terminal, the same data comes from <code>seo research</code>:</p>
-  <CodeBlock value={`seo research ranked_keywords --target example.com --country us
-seo research top_pages --target example.com --country us
-seo research competitors --target example.com --country us
-seo research backlinks --target example.com`} />
-  <p>
-    A domain is the whole site with its subdomains. Add a trailing slash to
-    read one section, such as <code>example.com/blog/</code>, or give a full
-    URL to read one page.
-  </p>
+      <SplitList
+        id="links-heading"
+        title="How many sites link to tally.so?"
+        text="53,295, according to DataForSEO's count of referring domains. Several of the strongest send tens of thousands of links each, such as audiotool.com with 172,596 links."
+        items={links}
+      />
 
-  <h2>Set the estimate beside your own Search Console clicks</h2>
-  <p>
-    For a site you own, the estimate is the weakest number on the screen.
-    On 11 November 2026, DataForSEO estimated seoskill.dev at 3 US visits a
-    month from 43 keywords. Search Console recorded 47 clicks from the US
-    for the 30 days from 10 October to 8 November 2026, and 490 from every
-    country. The estimate was about 15 times too low for the US.
-  </p>
-  <p>
-    That gap is normal for a small or new site, because the provider only
-    counts keywords in its own database. So read a competitor's estimate
-    against another estimate from the same provider, and read your own site
-    in Search Console. Your agent keeps the two apart:
-  </p>
-  <CodeBlock prompt value={`Run a domain overview of example.com, then compare the estimated traffic with my Search Console clicks for the last 28 days by country, and list the pages Search Console shows that the estimate misses.`} wrap />
-  <p>
-    In a terminal, the <a href="/docs/report">SEO report</a> gives the Search
-    Console side for the same site:
-  </p>
-  <CodeBlock value={`seo report --site example.com`} wrap />
+      <SplitList
+        id="run-heading"
+        title="How do I run a domain overview in my agent?"
+        text="Ask for it in plain words once SEO Skill is set up and a DataForSEO or Ahrefs key is saved. In a terminal, the same data comes from seo research."
+        items={run}
+      >
+        <div class="mt-6 space-y-4">
+          <CodeBlock
+            label="Ask your agent"
+            prompt
+            value="Give me a domain overview of example.com in the US: estimated search traffic, top keywords and pages, top 5 search competitors, backlinks and Domain Rating. Say how much of the traffic comes from brand searches."
+            wrap
+          />
+          <CodeBlock
+            label="Or run it in a terminal"
+            value={'seo research ranked_keywords --target example.com --country us\nseo research top_pages --target example.com --country us\nseo research competitors --target example.com --country us\nseo research backlinks --target example.com'}
+          />
+        </div>
+      </SplitList>
 
-  <h2>4 things to check in any domain overview</h2>
-  <p>
-    First, the brand share. A site whose traffic is mostly its own name is
-    hard to take traffic from and easy to overrate as an SEO competitor.
-    Ask for the share with and without brand keywords, as in the tally.so
-    run.
-  </p>
-  <p>
-    Second, how many pages carry the traffic. When one page earns most of
-    it, the site's search strategy is that page. When the traffic is spread
-    across hundreds of guides, the site wins with content, and the top pages
-    list tells you which topics.
-  </p>
-  <p>
-    Third, the keywords in positions 4 to 20 with low difficulty. Those are
-    the searches the site is closest to winning, and the same searches are
-    open to you.
-  </p>
-  <p>
-    Fourth, whether the competitor list makes sense. A name collision, a
-    single off-topic guide or Google's own products can fill the top of the
-    list. The <a href="/features/seo-competitor-analysis">SEO competitor
-    analysis</a> page shows how to go from the overview to competitor pages,
-    SERPs and link gaps.
-  </p>
+      <SplitList
+        id="own-site-heading"
+        title="How does the estimate compare with my own Search Console clicks?"
+        text="For a site you own, the estimate is the weakest number on the screen. When we ran it, DataForSEO estimated seoskill.dev at 3 US visits a month from 43 keywords."
+        items={ownSite}
+      >
+        <div class="mt-6 space-y-4">
+          <CodeBlock
+            label="Ask your agent"
+            prompt
+            value="Run a domain overview of example.com, then compare the estimated traffic with my Search Console clicks for the last 28 days by country, and list the pages Search Console shows that the estimate misses."
+            wrap
+          />
+          <p class="text-base leading-7 text-foreground-muted">
+            In a terminal, the{' '}
+            <a class="text-foreground underline underline-offset-4" href="/docs/report">SEO report</a>{' '}
+            gives the Search Console side for the same site.
+          </p>
+          <CodeBlock label="Or run it in a terminal" value="seo report --site example.com" wrap />
+        </div>
+      </SplitList>
 
-  <h2>SEO Skill and Semrush Domain Overview compared</h2>
-  <p>
-    <a href="https://www.semrush.com/kb/254-domain-overview" target="_blank" rel="noreferrer">Semrush Domain Overview</a>{' '}
-    shows a domain's organic and paid traffic, backlinks, Authority Score and
-    AI visibility on one screen, with history. A free Semrush account gets 10
-    requests a day, and the SEO plan was $139 a month in November 2026,
-    according to <a href="https://www.semrush.com/prices" target="_blank" rel="noreferrer">Semrush's pricing page</a>.
-  </p>
-  <table>
-    <thead><tr><th>Question</th><th>SEO Skill</th></tr></thead>
-    <tbody>
-      <tr><td>What it covers</td><td>Organic search traffic, keywords, top pages, competitors, backlinks and Domain Rating. No paid search data.</td></tr>
-      <tr><td>Where it runs</td><td>In your agent, or as a command in your terminal.</td></tr>
-      <tr><td>Your own site</td><td>Search Console clicks beside the estimate, kept apart.</td></tr>
-      <tr><td>What it costs</td><td>Your own DataForSEO or Ahrefs usage, about $0.10 an overview with DataForSEO.</td></tr>
-    </tbody>
-  </table>
-  <p>
-    If you need paid search data or a traffic history chart in one place,
-    Semrush does that and SEO Skill does not. For a free twelve-month
-    traffic trend of any domain, use the{' '}
-    <a href="/tools/website-traffic-checker">website traffic checker</a>, and
-    to compare the authority of several sites, the{' '}
-    <a href="/tools/domain-rating-checker">Domain Rating checker</a>. SEO
-    Skill suits you if you want the overview inside the agent that will plan
-    and write the pages, next to your own Search Console.
-  </p>
+      <SplitList
+        id="checks-heading"
+        title="What should I check in any domain overview?"
+        text="Start with the brand share, then see how the traffic spreads across pages, which searches the site is close to winning, and whether its competitors are real ones."
+        items={checks}
+      />
 
-  <h2>What a domain overview cannot prove</h2>
-  <p>
-    Every number in a domain overview of someone else's site is a provider
-    estimate. DataForSEO and Ahrefs count keywords and traffic differently,
-    and their totals for one site can differ tenfold, so compare sites within
-    one provider. An empty list means the provider has nothing for that site
-    in its database, not that the site has no traffic or links.
-  </p>
-</FeaturePage>
+      <section class="site-frame" aria-labelledby="semrush-heading">
+        <SectionHeading
+          id="semrush-heading"
+          title="How does SEO Skill compare with Semrush Domain Overview?"
+          text="Semrush puts more on one screen, including paid search and history. SEO Skill puts the overview inside your agent, next to your own Search Console, for the cost of your own provider usage."
+        />
+        <div class="docs-prose max-w-4xl">
+          <p>
+            <a href="https://www.semrush.com/kb/254-domain-overview" target="_blank" rel="noreferrer">Semrush Domain Overview</a>{' '}
+            shows a domain's organic and paid traffic, backlinks, Authority Score
+            and AI visibility on one screen, with history. A free Semrush account
+            gets 10 requests a day, and the SEO plan is $139 a month, according
+            to <a href="https://www.semrush.com/prices" target="_blank" rel="noreferrer">Semrush's pricing page</a>.
+          </p>
+          <table>
+            <thead><tr><th>Question</th><th>SEO Skill</th></tr></thead>
+            <tbody>
+              <tr><td>What it covers</td><td>Organic search traffic, keywords, top pages, competitors, backlinks and Domain Rating. No paid search data.</td></tr>
+              <tr><td>Where it runs</td><td>In your agent, or as a command in your terminal.</td></tr>
+              <tr><td>Your own site</td><td>Search Console clicks beside the estimate, kept apart.</td></tr>
+              <tr><td>What it costs</td><td>Your own DataForSEO or Ahrefs usage, about $0.10 an overview with DataForSEO.</td></tr>
+            </tbody>
+          </table>
+          <p>
+            If you need paid search data or a traffic history chart in one place,
+            Semrush does that and SEO Skill does not. For a free twelve-month
+            traffic trend of any domain, use the{' '}
+            <a href="/tools/website-traffic-checker">website traffic checker</a>, and
+            to compare the authority of several sites, the{' '}
+            <a href="/tools/domain-rating-checker">Domain Rating checker</a>. SEO
+            Skill suits you if you want the overview inside the agent that will
+            plan and write the pages, next to your own Search Console.
+          </p>
+        </div>
+      </section>
+
+      <SplitList
+        id="limits-heading"
+        title="What can a domain overview not prove?"
+        text="Anything exact about someone else's site. Every number in an overview of a site you do not own is a provider estimate."
+        items={limits}
+      />
+
+      <section class="site-frame" aria-labelledby="related-heading">
+        <SectionHeading
+          id="related-heading"
+          title="Which tools and docs go with a domain overview?"
+          text="Check traffic, Domain Rating and backlinks for free in your browser, or go deeper into competitors with your agent."
+        />
+        <div class="grid grid-cols-1 gap-2 sm:grid-cols-2">
+          {related.map((item) => <HomeCard {...item} link={item.link ?? `${item.title} docs`} />)}
+        </div>
+      </section>
+
+      <section class="site-frame" aria-labelledby="faq-heading">
+        <div class="max-w-2xl">
+          <h2 id="faq-heading" class="text-pretty text-2xl font-medium -tracking-[0.4px] text-foreground xl:text-3xl xl:-tracking-[0.6px]">
+            Domain overview questions
+          </h2>
+        </div>
+        <div class="mt-10">
+          <FaqAccordion items={faq} id="domain-overview-faq" />
+        </div>
+      </section>
+
+      <section class="site-frame" aria-labelledby="start-heading">
+        <SectionHeading
+          id="start-heading"
+          title="Run your first domain overview"
+          text="Add SEO Skill to your agent, save a DataForSEO or Ahrefs key on your account page, and ask for an overview of a competitor."
+        />
+        <SetupPrompts id="domain-overview-setup-end" extraSteps={setupSteps} />
+      </section>
+    </div>
+  </main>
+</BaseLayout>

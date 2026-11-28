@@ -8,14 +8,14 @@ const { title, text, items, id } = Astro.props
 ---
 
 <section class="site-frame grid gap-8 sm:grid-cols-[1fr_1.15fr] sm:items-start" aria-labelledby={id}>
-  <div class="sm:sticky sm:top-24">
+  <div class="min-w-0 sm:sticky sm:top-24">
     <h2 id={id} class="text-pretty text-2xl font-medium -tracking-[0.4px] text-foreground xl:text-3xl xl:-tracking-[0.6px]">
       {title}
     </h2>
     <p class="mt-4 text-base leading-7 text-foreground-muted">{text}</p>
     <slot />
   </div>
-  <ul class="divide-y divide-border rounded-lg bg-muted px-6">
+  <ul class="min-w-0 divide-y divide-border rounded-lg bg-muted px-6">
     {
       items.map((item) =>
         item.href ? (

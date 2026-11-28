@@ -1,12 +1,21 @@
 ---
-import {
-  ComputerTerminal01Icon,
-  FileSearchIcon,
-  Link01Icon,
-  Route01Icon,
-} from '@hugeicons/core-free-icons'
+import { ComputerTerminal01Icon, FileSearchIcon, Link01Icon, Route01Icon } from '@hugeicons/core-free-icons'
 import CodeBlock from '@/components/CodeBlock.astro'
-import FeaturePage from '@/components/FeaturePage.astro'
+import FaqAccordion from '@/components/FaqAccordion.astro'
+import HomeCard from '@/components/HomeCard.astro'
+import LandingHero from '@/components/LandingHero.astro'
+import SectionHeading from '@/components/SectionHeading.astro'
+import SetupPrompts from '@/components/SetupPrompts.astro'
+import BaseLayout from '@/layouts/BaseLayout.astro'
+import type { SchemaBreadcrumb } from '@/lib/schema'
+
+const title = 'Free SEO crawler for any site'
+
+const breadcrumbs: SchemaBreadcrumb[] = [
+  { label: 'Home', href: '/' },
+  { label: 'Features', href: '/features' },
+  { label: title },
+]
 
 const related = [
   { title: 'seo crawl', text: 'Every crawl option: modes, page limits, output formats and the AI agent checks.', href: '/docs/crawl', icon: Route01Icon },
@@ -14,94 +23,260 @@ const related = [
   { title: 'seo page', text: 'One URL: what it serves now, its Google index status and its queries.', href: '/docs/page', icon: FileSearchIcon },
   { title: 'CLI', text: 'Install the CLI and run any command from your terminal.', href: '/docs/cli', icon: ComputerTerminal01Icon },
 ]
+
+const faq = [
+  {
+    question: 'Is the SEO crawler free?',
+    answer:
+      'Yes. The crawl runs on your machine, free, as often as you like. The only paid option is the weekly site audit ($50 a month per site), which crawls the site every week on the hosted server and emails you what changed.',
+  },
+  {
+    question: 'Do I need an account or a Google sign-in to crawl?',
+    answer:
+      'No. The crawler is part of the seo CLI, and you do not need to connect Google or save a key to crawl, so your agent can point it at any site.',
+  },
+  {
+    question: 'How many pages does a crawl check?',
+    answer:
+      'The crawl stops at 500 pages unless you raise the page limit, up to 10,000. For a big site, start with a quick pass over the sitemap that checks status codes and redirects.',
+  },
+  {
+    question: 'Does the crawler respect robots.txt?',
+    answer:
+      'Yes, by default. Staging sites often block every crawler in robots.txt, so add --no-robots to crawl one anyway.',
+  },
+  {
+    question: 'Can it crawl a site behind a login?',
+    answer:
+      'No. The crawler sends no password or cookie, so a staging site behind a login only shows it the login page.',
+  },
+  {
+    question: 'Are my crawls saved?',
+    answer:
+      'Nothing is saved for you. Write the result to a file to keep it. Pages are cached on your machine between crawls, and --refresh fetches every page again.',
+  },
+]
 ---
 
-<FeaturePage
-  title="Free SEO crawler for any site"
-  description="A free SEO crawler that runs on your machine with no sign-in. Crawl any site, including localhost and staging, for broken links, redirects, titles, canonicals and noindex tags."
-  path="/features/seo-crawler"
-  lead="Crawl a site from your own machine and get a ranked list of broken pages, redirects, missing titles and stray noindex tags. It is free, needs no account, and works on a local or staging build before you ship."
-  {related}
+<BaseLayout
+  title={title}
+  description="A free SEO crawler that runs on your machine with no sign-in. Crawl any site, including localhost and staging, for broken links, redirects and noindex tags."
+  canonicalPath="/features/seo-crawler"
+  {breadcrumbs}
+  framed={false}
 >
-  <h2>Crawl a site with one prompt</h2>
-  <p>
-    The crawler is part of the <code>seo</code> CLI. You do not need to
-    connect Google or save a key to crawl, so your agent can point it at
-    any site. Ask:
-  </p>
-  <CodeBlock prompt value="Crawl https://example.com with the seo CLI (install it with npm i -g seo if seo --version fails) and tell me what to fix first" wrap />
-  <p>
-    The crawl fetches a lot of pages, so it always runs on your machine. If
-    your agent is connected to the hosted MCP, it is told to use the CLI for
-    the crawl. The command it runs is <code>seo crawl https://example.com</code>.
-  </p>
+  <main data-agent-content>
+    <LandingHero
+      title={title}
+      lead="Crawl a site from your own machine and get a ranked list of broken pages, redirects, missing titles and stray noindex tags. It is free, needs no account, and works on a local or staging build before you ship."
+      setupId="seo-crawler-setup"
+      author
+    />
 
-  <h2>Crawl a local or staging build</h2>
-  <p>
-    Anything your machine can reach can be crawled, including a dev server.
-    Start your site locally and crawl it before the release goes out:
-  </p>
-  <pre><code>seo crawl http://localhost:4321</code></pre>
-  <p>
-    Staging sites often block every crawler in robots.txt. The crawler
-    respects robots.txt by default, so it finds almost nothing there. Add <code>--no-robots</code> to crawl it anyway. The
-    crawler sends no password or cookie, so a staging site behind a login
-    only shows it the login page.
-  </p>
-  <p>
-    To stop a release when the crawl finds serious problems, add <code>--fail-on high</code>. The command then exits with an error when
-    there is a high severity issue, which a CI step or a deploy script can
-    check.
-  </p>
+    <div class="space-y-24 py-24 sm:space-y-32 sm:py-32">
+      <section class="site-frame grid gap-8 sm:grid-cols-[1fr_1.15fr] sm:items-start" aria-labelledby="prompt-heading">
+        <div class="min-w-0 sm:sticky sm:top-24">
+          <h2 id="prompt-heading" class="text-pretty text-2xl font-medium -tracking-[0.4px] text-foreground xl:text-3xl xl:-tracking-[0.6px]">
+            How do I crawl a site with one prompt?
+          </h2>
+          <p class="mt-4 text-base leading-7 text-foreground-muted">
+            Ask your agent to crawl it with the <code>seo</code> CLI. The
+            crawler is part of the CLI, and you do not need to connect Google or
+            save a key to crawl, so your agent can point it at any site.
+          </p>
+          <div class="mt-6">
+            <CodeBlock
+              label="Ask your agent"
+              prompt
+              value="Crawl https://example.com with the seo CLI (install it with npm i -g seo if seo --version fails) and tell me what to fix first"
+              wrap
+            />
+          </div>
+        </div>
+        <div class="min-w-0 rounded-lg bg-muted p-6 text-base leading-7 text-foreground-muted">
+          <p>
+            The crawl fetches a lot of pages, so it always runs on your machine.
+            If your agent is connected to the hosted MCP, it is told to use the
+            CLI for the crawl.
+          </p>
+          <p class="mt-4">The command it runs is <code>seo crawl https://example.com</code>.</p>
+        </div>
+      </section>
 
-  <h2>What the crawler checks</h2>
-  <table>
-    <thead><tr><th>Area</th><th>What it reports</th></tr></thead>
-    <tbody>
-      <tr><td>Status codes</td><td>Pages that return errors, and pages that redirect.</td></tr>
-      <tr><td>Internal links</td><td>Links on your pages that land on a broken URL.</td></tr>
-      <tr><td>Titles and headings</td><td>Missing or duplicate titles and meta descriptions, and pages with no H1.</td></tr>
-      <tr><td>Indexing tags</td><td>Canonical tags, robots meta tags and noindex, as each page serves them.</td></tr>
-      <tr><td>Page basics</td><td>The viewport tag, the page language and Open Graph tags for link previews.</td></tr>
-      <tr><td>AI agents</td><td>Which AI bots your robots.txt allows, whether <code>/llms.txt</code> works, and whether pages have a Markdown copy.</td></tr>
-    </tbody>
-  </table>
+      <section class="site-frame grid gap-8 sm:grid-cols-[1fr_1.15fr] sm:items-start" aria-labelledby="local-heading">
+        <div class="min-w-0 sm:sticky sm:top-24">
+          <h2 id="local-heading" class="text-pretty text-2xl font-medium -tracking-[0.4px] text-foreground xl:text-3xl xl:-tracking-[0.6px]">
+            Can I crawl a local or staging build?
+          </h2>
+          <p class="mt-4 text-base leading-7 text-foreground-muted">
+            Yes. Anything your machine can reach can be crawled, including a dev
+            server. Start your site locally and crawl it before the release goes
+            out.
+          </p>
+          <CodeBlock value="seo crawl http://localhost:4321" />
+        </div>
+        <ul class="divide-y divide-border rounded-lg bg-muted px-6">
+          <li class="py-4">
+            <h3 class="text-base leading-7 font-medium text-foreground">Staging sites that block crawlers</h3>
+            <p class="text-base leading-7 text-foreground-muted">
+              Staging sites often block every crawler in robots.txt. The crawler
+              respects robots.txt by default, so it finds almost nothing there.
+              Add <code>--no-robots</code> to crawl it anyway.
+            </p>
+          </li>
+          <li class="py-4">
+            <h3 class="text-base leading-7 font-medium text-foreground">Sites behind a login</h3>
+            <p class="text-base leading-7 text-foreground-muted">
+              The crawler sends no password or cookie, so a staging site behind
+              a login only shows it the login page.
+            </p>
+          </li>
+          <li class="py-4">
+            <h3 class="text-base leading-7 font-medium text-foreground">Stop a release on serious problems</h3>
+            <p class="text-base leading-7 text-foreground-muted">
+              Add <code>--fail-on high</code>. The command then exits with an
+              error when there is a high severity issue, which a CI step or a
+              deploy script can check.
+            </p>
+          </li>
+        </ul>
+      </section>
 
-  <h2>Read the results</h2>
-  <p>
-    Fixes come first, ranked by severity, each with the URLs that show the
-    problem. Below them is a list to review before changing anything. A
-    noindex tag or a canonical pointing elsewhere is reported as what the
-    page says, because it is only a problem if you did not mean it.
-  </p>
-  <p>
-    The crawl stops at 500 pages unless you raise <code>--max-pages</code> (up to 10,000). For a big site, start with a quick pass over the sitemap
-    that checks status codes and redirects without reading every page:
-  </p>
-  <pre><code>seo crawl --sitemap-url https://example.com/sitemap.xml --health</code></pre>
+      <section class="site-frame" aria-labelledby="checks-heading">
+        <SectionHeading
+          id="checks-heading"
+          title="What does the SEO crawler check?"
+          text="It checks what each page serves, from status codes and internal links to indexing tags and what AI agents can read."
+        />
+        <div class="docs-prose max-w-4xl">
+          <table>
+            <thead><tr><th>Area</th><th>What it reports</th></tr></thead>
+            <tbody>
+              <tr><td>Status codes</td><td>Pages that return errors, and pages that redirect.</td></tr>
+              <tr><td>Internal links</td><td>Links on your pages that land on a broken URL.</td></tr>
+              <tr><td>Titles and headings</td><td>Missing or duplicate titles and meta descriptions, and pages with no H1.</td></tr>
+              <tr><td>Indexing tags</td><td>Canonical tags, robots meta tags and noindex, as each page serves them.</td></tr>
+              <tr><td>Page basics</td><td>The viewport tag, the page language and Open Graph tags for link previews.</td></tr>
+              <tr><td>AI agents</td><td>Which AI bots your robots.txt allows, whether <code>/llms.txt</code> works, and whether pages have a Markdown copy.</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </section>
 
-  <h2>Keep or share a crawl</h2>
-  <p>
-    Nothing is saved for you. Write the result to a file when you want to
-    keep it or hand it to someone: an HTML report, a CSV of issues or pages,
-    Markdown tickets, or JSON for your agent.
-  </p>
-  <pre><code>seo crawl https://example.com --format html --output crawl.html</code></pre>
-  <p>
-    Pages are cached on your machine between crawls. After a deploy, add <code>--refresh</code> so every page is fetched again.
-  </p>
+      <section class="site-frame grid gap-8 sm:grid-cols-[1fr_1.15fr] sm:items-start" aria-labelledby="results-heading">
+        <div class="min-w-0 sm:sticky sm:top-24">
+          <h2 id="results-heading" class="text-pretty text-2xl font-medium -tracking-[0.4px] text-foreground xl:text-3xl xl:-tracking-[0.6px]">
+            How do I read the crawl results?
+          </h2>
+          <p class="mt-4 text-base leading-7 text-foreground-muted">
+            Start with the fixes, which come first, ranked by severity, each
+            with the URLs that show the problem. Below them is a list to review
+            before changing anything.
+          </p>
+        </div>
+        <div class="min-w-0 rounded-lg bg-muted p-6 text-base leading-7 text-foreground-muted">
+          <p>
+            A noindex tag or a canonical pointing elsewhere is reported as what
+            the page says, because it is only a problem if you did not mean it.
+          </p>
+          <p class="mt-4">
+            The crawl stops at 500 pages unless you raise{' '}
+            <code>--max-pages</code> (up to 10,000). For a big site, start with a
+            quick pass over the sitemap that checks status codes and redirects
+            without reading every page.
+          </p>
+          <CodeBlock value="seo crawl --sitemap-url https://example.com/sitemap.xml --health" wrap class="[&_pre]:!bg-background" />
+        </div>
+      </section>
 
-  <h2>From a crawl to an SEO audit</h2>
-  <p>
-    A crawl shows what your pages say. It cannot tell you what Google did
-    with them, or which issues cost you clicks. The <a href="/features/seo-audit">SEO audit tool</a> puts the crawl next to
-    Google's index status and your Search Console data, and the <a href="/features/google-index-checker">Google index checker</a> asks
-    Google about each page directly.
-  </p>
-  <p>
-    The crawl on your machine is free, as often as you like. If you would
-    rather not run it yourself, the weekly site audit ($50 a month per site)
-    crawls the site every week on the hosted server and emails you what
-    changed.
-  </p>
-</FeaturePage>
+      <section class="site-frame grid gap-8 sm:grid-cols-[1fr_1.15fr] sm:items-start" aria-labelledby="keep-heading">
+        <div class="min-w-0 sm:sticky sm:top-24">
+          <h2 id="keep-heading" class="text-pretty text-2xl font-medium -tracking-[0.4px] text-foreground xl:text-3xl xl:-tracking-[0.6px]">
+            How do I keep or share a crawl?
+          </h2>
+          <p class="mt-4 text-base leading-7 text-foreground-muted">
+            Write the result to a file. Nothing is saved for you, so write a
+            file when you want to keep the crawl or hand it to someone.
+          </p>
+          <CodeBlock value="seo crawl https://example.com --format html --output crawl.html" wrap />
+        </div>
+        <ul class="divide-y divide-border rounded-lg bg-muted px-6">
+          <li class="py-4">
+            <h3 class="text-base leading-7 font-medium text-foreground">Pick a file format</h3>
+            <p class="text-base leading-7 text-foreground-muted">
+              The crawl writes an HTML report, a CSV of issues or pages,
+              Markdown tickets, or JSON for your agent.
+            </p>
+          </li>
+          <li class="py-4">
+            <h3 class="text-base leading-7 font-medium text-foreground">Refresh the cache after a deploy</h3>
+            <p class="text-base leading-7 text-foreground-muted">
+              Pages are cached on your machine between crawls. After a deploy,
+              add <code>--refresh</code> so every page is fetched again.
+            </p>
+          </li>
+        </ul>
+      </section>
+
+      <section class="site-frame grid gap-8 sm:grid-cols-[1fr_1.15fr] sm:items-start" aria-labelledby="audit-heading">
+        <div class="min-w-0 sm:sticky sm:top-24">
+          <h2 id="audit-heading" class="text-pretty text-2xl font-medium -tracking-[0.4px] text-foreground xl:text-3xl xl:-tracking-[0.6px]">
+            How does a crawl become an SEO audit?
+          </h2>
+          <p class="mt-4 text-base leading-7 text-foreground-muted">
+            Put the crawl next to what Google did with your pages. A crawl shows
+            what your pages say. It cannot tell you what Google did with them,
+            or which issues cost you clicks.
+          </p>
+        </div>
+        <div class="min-w-0 rounded-lg bg-muted p-6 text-base leading-7 text-foreground-muted">
+          <p>
+            The{' '}
+            <a class="text-foreground underline underline-offset-4" href="/features/seo-audit">SEO audit tool</a>{' '}
+            puts the crawl next to Google's index status and your Search Console
+            data, and the{' '}
+            <a class="text-foreground underline underline-offset-4" href="/features/google-index-checker">Google index checker</a>{' '}
+            asks Google about each page directly.
+          </p>
+          <p class="mt-4">
+            The crawl on your machine is free, as often as you like. If you
+            would rather not run it yourself, the weekly site audit ($50 a month
+            per site) crawls the site every week on the hosted server and emails
+            you what changed.
+          </p>
+        </div>
+      </section>
+
+      <section class="site-frame" aria-labelledby="related-heading">
+        <SectionHeading
+          id="related-heading"
+          title="Which docs go with the SEO crawler?"
+          text="Every crawl option, internal link suggestions, the one URL check and the CLI the crawler runs in."
+        />
+        <div class="grid grid-cols-1 gap-2 sm:grid-cols-2">
+          {related.map((item) => <HomeCard {...item} link={`${item.title} docs`} />)}
+        </div>
+      </section>
+
+      <section class="site-frame" aria-labelledby="faq-heading">
+        <div class="max-w-2xl">
+          <h2 id="faq-heading" class="text-pretty text-2xl font-medium -tracking-[0.4px] text-foreground xl:text-3xl xl:-tracking-[0.6px]">
+            SEO crawler questions
+          </h2>
+        </div>
+        <div class="mt-10">
+          <FaqAccordion items={faq} id="seo-crawler-faq" />
+        </div>
+      </section>
+
+      <section class="site-frame" aria-labelledby="start-heading">
+        <SectionHeading
+          id="start-heading"
+          title="Crawl your first site"
+          text="Add SEO Skill to your agent and ask it to crawl your site and tell you what to fix first. The crawl needs no Google sign-in."
+        />
+        <SetupPrompts id="seo-crawler-setup-end" />
+      </section>
+    </div>
+  </main>
+</BaseLayout>

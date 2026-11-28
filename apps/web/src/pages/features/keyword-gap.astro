@@ -6,7 +6,98 @@ import {
   UserSearch01Icon,
 } from '@hugeicons/core-free-icons'
 import CodeBlock from '@/components/CodeBlock.astro'
-import FeaturePage from '@/components/FeaturePage.astro'
+import FaqAccordion from '@/components/FaqAccordion.astro'
+import HomeCard from '@/components/HomeCard.astro'
+import LandingHero from '@/components/LandingHero.astro'
+import SectionHeading from '@/components/SectionHeading.astro'
+import SetupPrompts from '@/components/SetupPrompts.astro'
+import SplitList from '@/components/SplitList.astro'
+import BaseLayout from '@/layouts/BaseLayout.astro'
+import type { SchemaBreadcrumb } from '@/lib/schema'
+
+const title = 'Keyword gap analysis'
+
+const breadcrumbs: SchemaBreadcrumb[] = [
+  { label: 'Home', href: '/' },
+  { label: 'Features', href: '/features' },
+  { label: title },
+]
+
+const how = [
+  {
+    title: 'It reads each competitor’s ranked keywords',
+    text: 'From your DataForSEO or Ahrefs key, up to 1,000 per site.',
+  },
+  {
+    title: 'It reads your side',
+    text: 'Your own Search Console queries for a site you own, or your ranked keywords from the same provider.',
+  },
+  {
+    title: 'It compares the lists',
+    text: 'And sorts the result into missing and weak searches.',
+  },
+  {
+    title: 'You choose the rules',
+    text: 'Because the agent does the join, you decide what counts as the top 10, which brand searches to drop and how many competitors must rank before a search counts. Ask it to show the rows behind any keyword it lists.',
+  },
+]
+
+const method = [
+  {
+    title: 'Fathom’s full ranked keyword list',
+    text: 'All 757 of Fathom’s ranked keywords.',
+  },
+  {
+    title: 'The top 1,000 for each competitor',
+    text: 'By estimated traffic. Plausible ranks for 1,510 in DataForSEO’s US database, Simple Analytics for 4,203. Each 1,000-row read cost $0.13.',
+  },
+  {
+    title: 'Provider data in place of Search Console',
+    text: 'We used Fathom’s provider list because we don’t have its Search Console. On your own site, use your queries instead.',
+  },
+  {
+    title: 'The weak pile is often the faster win',
+    text: 'Fathom already has a page Google shows. "Is google analytics free" (880 searches) has Fathom 31st and Plausible 8th. "Free website analytics" (480) has Fathom 14th and Simple Analytics 2nd.',
+  },
+]
+
+const groups = [
+  {
+    title: 'The biggest group was a guide to backlinks',
+    text: 'Plausible’s guide to backlinks had 95 searches with 25,480 combined monthly searches, 39% of the 66,030 missing in total.',
+  },
+  {
+    title: 'That group is a gap only on paper',
+    text: 'A guide to backlinks brings an analytics company SEO readers, who are unlikely buyers, so we would drop it.',
+  },
+  {
+    title: 'The next group is the real content gap',
+    text: 'Simple Analytics’ home page, with 44 searches such as "web analytics service". Fathom has no page aimed at people comparing analytics services.',
+  },
+  {
+    title: 'Raw gap totals overstate the work',
+    text: 'Read the groups, drop the ones that don’t fit what you sell, and the list gets short enough to act on.',
+  },
+]
+
+const limits = [
+  {
+    title: 'Estimates and measurements stay apart',
+    text: 'A competitor’s positions and volumes are provider estimates, and your Search Console numbers are measurements, so the agent lists them side by side and never adds one to the other.',
+  },
+  {
+    title: 'A gap shows where a competitor ranks',
+    text: 'It shows that a competitor ranks where you don’t. Whether the search would bring you customers is a separate question.',
+  },
+  {
+    title: 'Large competitors are capped at 1,000 keywords',
+    text: 'When a competitor has more than 1,000 ranked keywords, searches outside its top 1,000 by estimated traffic are not in the comparison, and the result says how many it read.',
+  },
+  {
+    title: 'Missing means Search Console did not return it',
+    text: 'Search Console hides rare queries for privacy, so a search missing from your rows may still have shown your site once or twice.',
+  },
+]
 
 const related = [
   { title: 'SEO competitor analysis', text: 'Who your search competitors are, the pages that earn their traffic and the sites that link to them.', href: '/features/seo-competitor-analysis', icon: UserSearch01Icon, link: 'SEO competitor analysis' },
@@ -14,163 +105,252 @@ const related = [
   { title: 'seo data', text: 'Your Search Console queries and pages as raw rows, for your side of the gap.', href: '/docs/data', icon: Database01Icon },
   { title: 'Competitor keyword research', text: 'Look up what any domain ranks for in your browser, with no account.', href: '/tools/competitor-keyword-research', icon: UserGroupIcon, link: 'Free tool' },
 ]
+
+const faq = [
+  {
+    question: 'What is a keyword gap?',
+    answer:
+      'A search your competitors rank for and you don’t. A keyword gap analysis lists them in two piles: missing, where a competitor is in the top 10 and you don’t rank at all, and weak, where you rank below 10th.',
+  },
+  {
+    question: 'What is the difference between a keyword gap and a content gap?',
+    answer:
+      'A content gap analysis is the same comparison grouped by page. It groups the missing searches by the competitor page that wins them, so each group becomes a page to write or a section to add.',
+  },
+  {
+    question: 'Does SEO Skill have a keyword gap button?',
+    answer:
+      'No. Your agent does the comparison itself, so you choose the rules, such as which brand searches to drop and how many competitors must rank before a search counts. Ask it to show the rows behind any keyword it lists.',
+  },
+  {
+    question: 'What do I need to run a keyword gap?',
+    answer:
+      'The hosted MCP server or the CLI, a DataForSEO or Ahrefs key, and Google connected for your own Search Console.',
+    links: [{ text: 'DataForSEO or Ahrefs key', href: '/docs/keys' }],
+  },
+  {
+    question: 'How much does a keyword gap cost?',
+    answer:
+      'In the Fathom example, each 1,000-row read of a competitor’s ranked keywords cost $0.13 with DataForSEO. Your own Search Console queries cost nothing to read.',
+  },
+  {
+    question: 'Should I act on every search in the gap?',
+    answer:
+      'No. Raw gap totals overstate the work. In the Fathom example, 39% of the missing search volume came from one off-topic guide. Group the searches by page, drop the groups that don’t fit what you sell, and check the SERP before you write anything.',
+  },
+]
 ---
 
-<FeaturePage
-  title="Keyword gap analysis"
-  metaTitle="Keyword gap and content gap analysis with your agent"
+<BaseLayout
+  title="Keyword gap and content gap analysis with your agent"
   description="Find the searches your competitors rank for and you don't. Your agent compares their ranked keywords with your Search Console queries, with a worked example."
-  path="/features/keyword-gap"
-  lead="A keyword gap is a search your competitors rank for and you don't. Your agent finds them by pulling each competitor's ranked keywords and comparing them with yours, and it shows every list it compared."
-  {related}
-  relatedHeading="Read more"
+  canonicalPath="/features/keyword-gap"
+  {breadcrumbs}
+  framed={false}
 >
-  <h2>What a keyword gap analysis is</h2>
-  <p>
-    A keyword gap analysis compares the searches your competitors rank for
-    with the searches you rank for, and lists the difference. Most tools
-    sort the result into two piles:
-  </p>
-  <table>
-    <thead><tr><th>Gap</th><th>What it means</th></tr></thead>
-    <tbody>
-      <tr><td>Missing</td><td>A competitor ranks in the top 10 and you don't rank at all.</td></tr>
-      <tr><td>Weak</td><td>You rank, but below 10th, and a competitor is in the top 10.</td></tr>
-    </tbody>
-  </table>
-  <p>
-    A content gap analysis is the same comparison grouped by page. Instead of
-    single keywords, it groups the missing searches by the competitor page
-    that wins them, so each group becomes a page to write or a section to
-    add. Run the keyword gap first, and the content gap falls out of it.
-  </p>
+  <main data-agent-content>
+    <LandingHero
+      {title}
+      lead="A keyword gap is a search your competitors rank for and you don't. Your agent finds them by pulling each competitor's ranked keywords and comparing them with yours, and it shows every list it compared."
+      setupId="keyword-gap-setup"
+      author
+    />
 
-  <h2>How your agent runs a keyword gap</h2>
-  <p>
-    SEO Skill has no single keyword gap button. Your agent does the
-    comparison itself, in three moves you can see:
-  </p>
-  <ol>
-    <li>It reads each competitor's ranked keywords from your DataForSEO or Ahrefs key, up to 1,000 per site.</li>
-    <li>
-      It reads your side: your own Search Console queries for a site you
-      own, or your ranked keywords from the same provider.
-    </li>
-    <li>It compares the lists and sorts the result into missing and weak searches.</li>
-  </ol>
-  <p>
-    Because the agent does the join, you choose the rules: what counts as
-    the top 10, which brand searches to drop, how many competitors must rank
-    before a search counts. Ask it to show the rows behind any keyword it
-    lists.
-  </p>
+    <div class="space-y-24 py-24 sm:space-y-32 sm:py-32">
+      <section class="site-frame" aria-labelledby="what-heading">
+        <SectionHeading
+          id="what-heading"
+          title="What is a keyword gap analysis?"
+          text="It compares the searches your competitors rank for with the searches you rank for, and lists the difference. Most tools sort the result into two piles."
+        />
+        <div class="docs-prose max-w-4xl">
+          <table>
+            <thead><tr><th>Gap</th><th>What it means</th></tr></thead>
+            <tbody>
+              <tr><td>Missing</td><td>A competitor ranks in the top 10 and you don't rank at all.</td></tr>
+              <tr><td>Weak</td><td>You rank, but below 10th, and a competitor is in the top 10.</td></tr>
+            </tbody>
+          </table>
+        </div>
+        <p class="mt-6 max-w-2xl text-base leading-7 text-foreground-muted">
+          A content gap analysis is the same comparison grouped by page.
+          Instead of single keywords, it groups the missing searches by the
+          competitor page that wins them, so each group becomes a page to
+          write or a section to add. Run the keyword gap first, and the
+          content gap falls out of it.
+        </p>
+      </section>
 
-  <h2>Fathom is missing 415 searches Plausible or Simple Analytics win</h2>
-  <p>
-    We ran a keyword gap for usefathom.com, the privacy-first analytics
-    product, against plausible.io and simpleanalytics.com, with DataForSEO
-    for the US on 11 November 2026. After dropping 47 brand searches, 455
-    searches had at least one of the two competitors in the top 10. Fathom
-    was missing from 415 of them and ranked below 10th for the other 40.
-  </p>
-  <p>
-    The method: Fathom's full list of 757 ranked keywords, and the top 1,000
-    by estimated traffic for each competitor (Plausible ranks for 1,510 in
-    DataForSEO's US database, Simple Analytics for 4,203). Each 1,000-row
-    read cost $0.13. We used Fathom's provider list because we don't have
-    its Search Console; on your own site, use your queries instead.
-  </p>
-  <p>These missing searches fit an analytics product:</p>
-  <table>
-    <thead><tr><th>Search (US searches, KD)</th><th>Who ranks in the top 10</th></tr></thead>
-    <tbody>
-      <tr><td>web analytics service (2,900, KD 37)</td><td>Simple Analytics, 7th</td></tr>
-      <tr><td>website analytics service (1,300, KD 42)</td><td>Simple Analytics, 2nd</td></tr>
-      <tr><td>google analytics alternatives (590, KD 18)</td><td>Plausible, 2nd</td></tr>
-      <tr><td>custom dimensions (390, KD 13)</td><td>Plausible, 5th</td></tr>
-      <tr><td>what is a good bounce rate (390, KD 25)</td><td>Plausible, 5th</td></tr>
-      <tr><td>does duckduckgo track you (390, KD 16)</td><td>Simple Analytics, 5th</td></tr>
-    </tbody>
-  </table>
-  <p>
-    The weak pile is often the faster win, because Fathom already has a page
-    Google shows. "Is google analytics free" (880 searches) has Fathom 31st
-    and Plausible 8th. "Free website analytics" (480) has Fathom 14th and
-    Simple Analytics 2nd.
-  </p>
+      <SplitList
+        id="how-heading"
+        title="How does my agent run a keyword gap?"
+        text="It does the comparison itself, in three moves you can see. SEO Skill has no single keyword gap button."
+        items={how}
+      />
 
-  <h2>39% of Fathom's missing search volume came from one off-topic guide</h2>
-  <p>
-    Grouping the 415 missing searches by the competitor page that ranks
-    turns the keyword gap into a content gap. The biggest group was
-    Plausible's guide to backlinks: 95 searches with 25,480 combined monthly
-    searches, 39% of the 66,030 missing in total.
-  </p>
-  <p>
-    That group is a gap only on paper. A guide to backlinks brings an
-    analytics company SEO readers, not buyers, so we would drop it. The next
-    group, Simple Analytics' home page with 44 searches such as "web
-    analytics service", is the real content gap: Fathom has no page aimed at
-    people comparing analytics services.
-  </p>
-  <p>
-    Raw gap totals overstate the work. Read the groups, drop the ones that
-    don't fit what you sell, and the list gets short enough to act on.
-  </p>
+      <section class="site-frame" aria-labelledby="example-heading">
+        <SectionHeading
+          id="example-heading"
+          title="How many searches was Fathom missing?"
+          text="415 that Plausible or Simple Analytics win. Of 455 searches with at least one of the two in the top 10, Fathom was missing from 415 and ranked below 10th for the other 40."
+        />
+        <p class="mb-6 max-w-2xl text-base leading-7 text-foreground-muted">
+          We ran a keyword gap for usefathom.com, the privacy-first analytics
+          product, against plausible.io and simpleanalytics.com, with
+          DataForSEO for the US, after dropping 47 brand searches. These
+          missing searches fit an analytics product.
+        </p>
+        <div class="docs-prose max-w-4xl">
+          <table>
+            <thead><tr><th>Search (US searches, KD)</th><th>Who ranks in the top 10</th></tr></thead>
+            <tbody>
+              <tr><td>web analytics service (2,900, KD 37)</td><td>Simple Analytics, 7th</td></tr>
+              <tr><td>website analytics service (1,300, KD 42)</td><td>Simple Analytics, 2nd</td></tr>
+              <tr><td>google analytics alternatives (590, KD 18)</td><td>Plausible, 2nd</td></tr>
+              <tr><td>custom dimensions (390, KD 13)</td><td>Plausible, 5th</td></tr>
+              <tr><td>what is a good bounce rate (390, KD 25)</td><td>Plausible, 5th</td></tr>
+              <tr><td>does duckduckgo track you (390, KD 16)</td><td>Simple Analytics, 5th</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </section>
 
-  <h2>Run a keyword gap analysis in 4 steps</h2>
-  <p>
-    You need the hosted MCP server or the CLI, a{' '}
-    <a href="/docs/keys">DataForSEO or Ahrefs key</a>, and Google connected
-    for your own Search Console. The setup commands are at the top of this
-    page.
-  </p>
+      <SplitList
+        id="method-heading"
+        title="How was the Fathom gap worked out?"
+        text="From provider ranked keyword lists for all three sites. The list shows what we read and what the weak pile showed."
+        items={method}
+      />
 
-  <h3>1. Pick 2 or 3 real competitors</h3>
-  <CodeBlock prompt value={`Who are the SEO competitors of example.com in the US? Leave out publishers and keep sites that sell what I sell.`} wrap />
-  <p>
-    Compare against sites that win the searches your buyers make. The{' '}
-    <a href="/features/seo-competitor-analysis">SEO competitor analysis</a>{' '}
-    page shows how to find them and why the first names on the list are
-    often publishers.
-  </p>
+      <SplitList
+        id="groups-heading"
+        title="Why did one guide make up 39% of Fathom's missing search volume?"
+        text="Because grouping the 415 missing searches by the competitor page that ranks put most of the volume on one off-topic guide. That grouping turns the keyword gap into a content gap."
+        items={groups}
+      />
 
-  <h3>2. Pull each competitor's ranked keywords</h3>
-  <CodeBlock value={`seo research ranked_keywords --target example.org --country us
-seo research ranked_keywords --target example.net --country us`} />
-  <p>
-    Each read returns the keyword, the position, monthly searches, the
-    ranking page and difficulty, sorted by estimated traffic. To compare one
-    section, end the target with a slash, such as{' '}
-    <code>example.org/blog/</code>.
-  </p>
+      <SplitList
+        id="step-1-heading"
+        title="Step 1: which competitors should I compare?"
+        text="Two or three sites that win the searches your buyers make. The first names on a competitor list are often publishers, so ask your agent to leave them out."
+        items={[
+          {
+            title: 'Finding your real competitors',
+            text: 'The SEO competitor analysis page shows how to find them and why the first names on the list are often publishers.',
+            href: '/features/seo-competitor-analysis',
+          },
+          {
+            title: 'What you need first',
+            text: 'The hosted MCP server or the CLI, a DataForSEO or Ahrefs key, and Google connected for your own Search Console.',
+            href: '/docs/keys',
+          },
+        ]}
+      >
+        <div class="mt-6">
+          <CodeBlock label="Ask your agent" prompt value="Who are the SEO competitors of example.com in the US? Leave out publishers and keep sites that sell what I sell." wrap />
+        </div>
+      </SplitList>
 
-  <h3>3. Pull your own queries from Search Console</h3>
-  <CodeBlock value={`seo data --site example.com --dimensions query`} wrap />
-  <p>
-    Your side should be the searches Google actually showed your site
-    for. Search Console hides rare queries for privacy, so a search missing from your rows may still have shown your site once or
-    twice. Treat "missing" as "Search Console did not return it for these
-    dates".
-  </p>
+      <SplitList
+        id="step-2-heading"
+        title="Step 2: how do I pull each competitor's ranked keywords?"
+        text="Ask for ranked keywords for each competitor. Each read returns the keyword, the position, monthly searches, the ranking page and difficulty, sorted by estimated traffic."
+        items={[
+          {
+            title: 'Compare one section',
+            code: 'example.org/blog/',
+            text: 'End the target with a slash to read one section of a competitor’s site.',
+          },
+        ]}
+      >
+        <div class="mt-6">
+          <CodeBlock
+            label="Or run it in a terminal"
+            value={`seo research ranked_keywords --target example.org --country us
+seo research ranked_keywords --target example.net --country us`}
+          />
+        </div>
+      </SplitList>
 
-  <h3>4. Ask the agent to compare and group</h3>
-  <CodeBlock prompt value={`Compare example.org's and example.net's ranked keywords with my Search Console queries for example.com. List searches where a competitor is in the top 10 and I'm missing or below 10th. Drop brand searches, group by the competitor page that ranks, and keep my clicks apart from the competitors' estimates.`} wrap />
-  <p>
-    That is the whole keyword gap analysis. Then ask for the SERP on the
-    groups you keep, to check who else ranks before you write anything.
-    For the sites that link to the same competitors, run a{' '}
-    <a href="/features/backlink-gap">backlink gap analysis</a>.
-  </p>
+      <SplitList
+        id="step-3-heading"
+        title="Step 3: where does my side of the gap come from?"
+        text="Your own Search Console queries. Your side should be the searches Google actually showed your site for."
+        items={[
+          {
+            title: 'Rare queries are hidden',
+            text: 'Search Console hides rare queries for privacy, so a search missing from your rows may still have shown your site once or twice. Treat "missing" as "Search Console did not return it for these dates".',
+          },
+        ]}
+      >
+        <div class="mt-6">
+          <CodeBlock label="Or run it in a terminal" value="seo data --site example.com --dimensions query" wrap />
+        </div>
+      </SplitList>
 
-  <h2>What a keyword gap list cannot prove</h2>
-  <p>
-    A competitor's positions and volumes are provider estimates, and your
-    Search Console numbers are measurements, so the agent lists them side by
-    side and never adds one to the other. A gap shows that a competitor
-    ranks where you don't, not that the search would bring you customers.
-    When a competitor has more than 1,000 ranked keywords, searches outside
-    its top 1,000 by estimated traffic are not in the comparison, and the
-    result says how many it read.
-  </p>
-</FeaturePage>
+      <SplitList
+        id="step-4-heading"
+        title="Step 4: how do I compare and group the lists?"
+        text="Ask your agent in one prompt. That is the whole keyword gap analysis."
+        items={[
+          {
+            title: 'Check the SERP before you write',
+            text: 'Ask for the SERP on the groups you keep, to check who else ranks before you write anything.',
+          },
+          {
+            title: 'Sites that link to the same competitors',
+            text: 'Run a backlink gap analysis.',
+            href: '/features/backlink-gap',
+          },
+        ]}
+      >
+        <div class="mt-6">
+          <CodeBlock
+            label="Ask your agent"
+            prompt
+            value="Compare example.org's and example.net's ranked keywords with my Search Console queries for example.com. List searches where a competitor is in the top 10 and I'm missing or below 10th. Drop brand searches, group by the competitor page that ranks, and keep my clicks apart from the competitors' estimates."
+            wrap
+          />
+        </div>
+      </SplitList>
+
+      <SplitList
+        id="limits-heading"
+        title="What can't a keyword gap list prove?"
+        text="It can't prove that a search would bring you customers. It shows where competitors rank and you don't, from estimates set beside your own measurements."
+        items={limits}
+      />
+
+      <section class="site-frame" aria-labelledby="related-heading">
+        <SectionHeading
+          id="related-heading"
+          title="Which tools and docs go with a keyword gap?"
+          text="Competitor analysis and keyword research for the competitor side, your own Search Console rows for your side, and a free tool for any domain."
+        />
+        <div class="grid grid-cols-1 gap-2 sm:grid-cols-2">
+          {related.map((item) => <HomeCard {...item} link={item.link ?? `${item.title} docs`} />)}
+        </div>
+      </section>
+
+      <section class="site-frame" aria-labelledby="faq-heading">
+        <div class="max-w-2xl">
+          <h2 id="faq-heading" class="text-pretty text-2xl font-medium -tracking-[0.4px] text-foreground xl:text-3xl xl:-tracking-[0.6px]">
+            Keyword gap questions
+          </h2>
+        </div>
+        <div class="mt-10">
+          <FaqAccordion items={faq} id="keyword-gap-faq" />
+        </div>
+      </section>
+
+      <section class="site-frame" aria-labelledby="start-heading">
+        <SectionHeading
+          id="start-heading"
+          title="Run your first keyword gap"
+          text="Add SEO Skill to your agent, save a DataForSEO or Ahrefs key on your account page, connect Google, and name two or three competitors."
+        />
+        <SetupPrompts id="keyword-gap-setup-end" />
+      </section>
+    </div>
+  </main>
+</BaseLayout>

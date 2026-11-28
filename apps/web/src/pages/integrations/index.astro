@@ -3,6 +3,7 @@
 // setup box and section headings. Lists the data sources, the AI clients,
 // and an example agent run built from real tool calls.
 import { Tick02Icon } from '@hugeicons/core-free-icons'
+import FounderBadge from '@/components/FounderBadge.astro'
 import HomeCard from '@/components/HomeCard.astro'
 import HugeIcon from '@/components/HugeIcon.astro'
 import SectionHeading from '@/components/SectionHeading.astro'
@@ -31,6 +32,7 @@ const run = [
   <main data-agent-content>
     <section class="pt-4">
       <div class="site-frame flex flex-col items-center pt-14 text-center sm:pt-20">
+        <FounderBadge prefix="Written by AI and" ai />
         <h1 class="mt-4 max-w-3xl text-pretty text-4xl/tight font-medium -tracking-[0.8px] xl:text-5xl/tight xl:-tracking-[1px]">
           Turn your AI agent into an SEO analyst
         </h1>

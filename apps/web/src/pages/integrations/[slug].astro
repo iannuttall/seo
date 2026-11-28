@@ -94,7 +94,7 @@ const clientFaq = client
     {
       source ? (
         hosted ? (
-          <LandingHero {title} {lead} setupId="integration-setup" setupSteps={sourceSetupSteps(source)}>
+          <LandingHero {title} {lead} setupId="integration-setup" setupSteps={sourceSetupSteps(source)} author>
             {featureLink ? (
               <p slot="note" class="mt-4 max-w-2xl text-pretty text-base leading-7 text-foreground-muted">
                 {featureLink.before}
@@ -104,13 +104,13 @@ const clientFaq = client
             ) : null}
           </LandingHero>
         ) : (
-          <LandingHero {title} {lead} setupId="integration-setup" setupSteps={sourceSetupSteps(source)} />
+          <LandingHero {title} {lead} setupId="integration-setup" setupSteps={sourceSetupSteps(source)} author />
         )
       ) : (
         client && setupPromptFor(client.id) ? (
-          <LandingHero {title} {lead} setupId="integration-setup" setupClient={client.id} />
+          <LandingHero {title} {lead} setupId="integration-setup" setupClient={client.id} author />
         ) : (
-          <LandingHero {title} {lead} setupId="integration-setup">
+          <LandingHero {title} {lead} setupId="integration-setup" author>
             <p slot="note" class="mt-4 max-w-2xl text-pretty text-base leading-7 text-foreground-muted">
             {name} adds connectors in its own settings, not from a prompt. Give this prompt to a coding agent, or follow the steps below in {name}.
           </p>

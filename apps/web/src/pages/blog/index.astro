@@ -17,6 +17,7 @@ const posts = await getBlogPosts()
 >
   <main data-agent-content>
     <PageHeader
+      author
       title="Blog"
       description="Practical guides to getting found in Google and AI answers, built on real search data."
     />
@@ -25,6 +26,8 @@ const posts = await getBlogPosts()
       posts.length === 0 ? (
         <p class="rounded-lg bg-muted p-6 text-foreground-muted">No posts are published yet.</p>
       ) : (
+        <>
+        <h2 class="sr-only">Every post on the blog</h2>
         <div class="grid grid-cols-1 gap-2 sm:grid-cols-2">
           {posts.map((post) => (
             <HomeCard
@@ -36,6 +39,7 @@ const posts = await getBlogPosts()
             />
           ))}
         </div>
+        </>
       )
     }
   </main>

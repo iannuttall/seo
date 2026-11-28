@@ -13,6 +13,7 @@ import {
 } from '@hugeicons/core-free-icons'
 import CodeBlock from '@/components/CodeBlock.astro'
 import FaqAccordion from '@/components/FaqAccordion.astro'
+import FounderBadge from '@/components/FounderBadge.astro'
 import HomeCard from '@/components/HomeCard.astro'
 import SectionHeading from '@/components/SectionHeading.astro'
 import SetupPrompts from '@/components/SetupPrompts.astro'
@@ -167,7 +168,7 @@ const faq = [
 
 <BaseLayout
   title="Free redirect checker for 301, 302 and redirect chains"
-  description="Trace every redirect a URL takes, with the status code, Location and time of each hop, find chains and loops, or check up to 200 old URLs against the pages they should reach. Free, with no account."
+  description="Trace every redirect a URL takes, with each hop's status code and time, find chains and loops, or check up to 200 old URLs after a migration."
   canonicalPath="/tools/redirect-checker"
   {breadcrumbs}
   framed={false}
@@ -175,6 +176,7 @@ const faq = [
   <main data-agent-content>
     <section class="pt-4">
       <div class="site-frame flex flex-col items-center pt-14 text-center sm:pt-20">
+        <FounderBadge prefix="Written by AI and" ai />
         <h1 class="mt-4 max-w-3xl text-pretty text-4xl/tight font-medium -tracking-[0.8px] xl:text-5xl/tight xl:-tracking-[1px]">
           Redirect checker
         </h1>

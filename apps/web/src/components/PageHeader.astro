@@ -1,12 +1,17 @@
 ---
+// `author` shows the "Written by AI and Ian Nuttall" badge above the title,
+// as LandingHero does on landing pages.
+import FounderBadge from './FounderBadge.astro'
+
 type Props = {
   title: string
   description?: string
   bordered?: boolean
   class?: string
+  author?: boolean
 }
 
-const { title, description, bordered = false, class: className } = Astro.props
+const { title, description, bordered = false, class: className, author = false } = Astro.props
 const hasActions = Astro.slots.has('actions')
 ---
 
@@ -18,6 +23,7 @@ const hasActions = Astro.slots.has('actions')
   ]}
 >
   <div class="flex max-w-2xl flex-col gap-3">
+    {author ? <div><FounderBadge prefix="Written by AI and" ai align="start" /></div> : null}
     <h1 class="text-pretty text-2xl font-medium tracking-normal text-foreground xl:text-3xl">
       {title}
     </h1>

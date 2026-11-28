@@ -1,12 +1,12 @@
 ---
 title: Astro SEO guide for static sites on Cloudflare
-description: Set up Astro SEO the way a production site does it. Static pages on Cloudflare, one layout for titles, canonicals and JSON-LD, Markdown copies for agents, sitemaps, redirects and build checks.
+description: Set up Astro SEO the way a production site does it, with one layout for titles, canonicals and JSON-LD, Markdown copies for agents and build checks.
 heading: Astro SEO
 lead: Build every page at deploy time, put every head tag in one layout, and let the build fail before a broken page goes live. This is the setup, with the code to copy.
 checked: '2026-11-03'
 ---
 
-Astro is a very good fit for search because it ships plain HTML by default. Most Astro SEO problems come from the parts around the pages: a head tag one template forgot, a sitemap that lists pages that no longer exist, a moved URL that now returns 404. The setup below closes those gaps, and it is the same one that runs the sites this page was written from (seoskill.dev included).
+Astro is a very good fit for search because it ships plain HTML by default. Most Astro SEO problems come from the parts around the pages, such as a head tag one template forgot, a sitemap that lists pages that no longer exist, a moved URL that now returns 404. The setup below closes those gaps, and it is the same one that runs the sites this page was written from (seoskill.dev included).
 
 Every example uses `example.com`. Swap in your own domain.
 
@@ -127,7 +127,7 @@ const graph = assembleGraph([
 </html>
 ```
 
-The JSON-LD is one `@graph` per page. The site, the publisher and the page are separate pieces that point at each other by `@id`, so a crawler can walk from any page to the site that owns it. Add a piece only when the page shows that thing: a `FAQPage` when the questions are on the page, an `Article` when it is an article. The <a href="https://github.com/iannuttall/seo-graph/blob/main/AGENTS.md" target="_blank" rel="noreferrer">seo-graph AGENTS.md</a> has the right pieces for most kinds of site, which is handy when you ask an agent to add one.
+The JSON-LD is one `@graph` per page. The site, the publisher and the page are separate pieces that point at each other by `@id`, so a crawler can walk from any page to the site that owns it. Add a piece only when the page shows that thing, such as a `FAQPage` when the questions are on the page, an `Article` when it is an article. The <a href="https://github.com/iannuttall/seo-graph/blob/main/AGENTS.md" target="_blank" rel="noreferrer">seo-graph AGENTS.md</a> has the right pieces for most kinds of site, which is handy when you ask an agent to add one.
 
 A page then needs only its own words:
 
@@ -336,14 +336,14 @@ Don't use `noindex`, on a single page or the whole site. A `noindex` left on by 
 
 Every case where it seems useful has a better answer:
 
-- A page that should not exist yet: don't build it.
-- A page that was removed: let it return 404, or 301 it to its replacement.
-- A staging or preview site: put it behind Cloudflare Access, so nobody reaches it without signing in.
-- Thin pages from a data set: don't generate a page for a row with nothing useful to say.
+- Don't build a page that should not exist yet.
+- Let a removed page return 404, or 301 it to its replacement.
+- Put a staging or preview site behind Cloudflare Access, so nobody reaches it without signing in.
+- Don't generate a page from a data set for a row with nothing useful to say.
 
 ## Return real 404s
 
-A missing page must answer with a 404 status, not a 200 page that says "not found". Google calls that a soft 404, and it wastes crawling on pages that have nothing in them. Add `src/pages/404.astro`, built with your normal layout so a lost visitor can still navigate:
+A missing page must answer with a 404 status, not a 200 page that says "not found". Google calls that a soft 404, and it wastes crawling on pages that have nothing in them. Add `src/pages/404.astro`, built with your normal layout so a lost visitor can still find their way to the rest of the site:
 
 ```astro
 ---
@@ -427,7 +427,7 @@ Run the sitemap and the check as part of the build, in `package.json`:
 }
 ```
 
-Cloudflare's Git builds stop when the build command fails, so a page with no H1, a stray `noindex` or a missing sharing image never reaches production. Add a rule each time something slips through: the check grows with the site.
+Cloudflare's Git builds stop when the build command fails, so a page with no H1, a stray `noindex` or a missing sharing image never reaches production. Add a rule each time something slips through, and the check grows with the site.
 
 ## Crawl the built site before you deploy
 

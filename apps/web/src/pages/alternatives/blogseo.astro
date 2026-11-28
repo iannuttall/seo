@@ -1,0 +1,315 @@
+---
+import {
+  AiChat02Icon,
+  Calendar03Icon,
+  News01Icon,
+  PlugSocketIcon,
+  QuillWrite01Icon,
+  Robot01Icon,
+  SearchList01Icon,
+  TextCheckIcon,
+} from '@hugeicons/core-free-icons'
+import BeforeAfter from '@/components/blog/BeforeAfter.astro'
+import PlanSteps from '@/components/blog/PlanSteps.astro'
+import CodeBlock from '@/components/CodeBlock.astro'
+import FaqAccordion from '@/components/FaqAccordion.astro'
+import HomeCard from '@/components/HomeCard.astro'
+import LandingHero from '@/components/LandingHero.astro'
+import SectionHeading from '@/components/SectionHeading.astro'
+import SetupPrompts from '@/components/SetupPrompts.astro'
+import BaseLayout from '@/layouts/BaseLayout.astro'
+import type { SchemaBreadcrumb } from '@/lib/schema'
+
+// Every BlogSEO fact below comes from blogseo.io's own homepage, pricing
+// page, integrations page and docs (backlinks, WordPress, Shopify, HubSpot).
+// Re-read them before changing a price or a plan. The page names other SEO
+// tools but does not link to them.
+
+const breadcrumbs: SchemaBreadcrumb[] = [
+  { label: 'Home', href: '/' },
+  { label: 'Alternatives', href: '/alternatives' },
+  { label: 'BlogSEO alternatives' },
+]
+
+const blogseoDoes = [
+  { title: 'An article a day', text: 'It crawls your site, finds keywords, plans a content calendar and writes about one article a day on the $97 plan, 30 a month.', icon: Calendar03Icon },
+  { title: 'Publishes to 23+ platforms', text: 'WordPress, Shopify, Webflow, Wix, Framer, Ghost, HubSpot, Contentful, Strapi, Drupal and more, a custom webhook, or a hosted blog on a subdomain.', icon: PlugSocketIcon },
+  { title: 'Drafts or manual publish', text: 'Auto-publish is a setting. Turn it off, or send articles as drafts where the CMS has them, and nothing goes live until you push it.', icon: TextCheckIcon },
+  { title: 'Search Console built in', text: 'Connect Search Console and it tracks clicks and positions per article, and checks new topics against pages you already have.', icon: News01Icon },
+]
+
+const options = [
+  { title: 'SEO Skill', text: 'Pick it if you want your own agent to write each post from your Search Console data, checked with seo lint and approved by you before it ships.', icon: TextCheckIcon, href: '/docs/lint', link: 'See seo lint' },
+  { title: 'Outrank', text: 'Pick it if you want the same article-a-day autopilot with a refresh step for articles that slipped: $99 a month for 30.', icon: News01Icon, href: '/alternatives/outrank', link: 'Outrank alternatives' },
+  { title: 'SEObot', text: 'Pick it if you want fewer autopilot articles for less: $49 a month buys 9, and it refunds that plan if you are not happy after the first article.', icon: Robot01Icon, href: '/alternatives/seobot', link: 'SEObot alternatives' },
+  { title: 'BlogSEO', text: 'Stay with it if you want 15 or 30 articles a month in one price, on a CMS few other tools reach, and you will read each one before it publishes.', icon: QuillWrite01Icon },
+]
+
+const month = {
+  before: {
+    label: 'A month on BlogSEO',
+    html: '<ul class="list-disc space-y-2 pl-5"><li>30 articles on the Ambition plan, one a day, on topics from its own keyword research.</li><li>Auto-publish sends each one live on its date, unless you turn it off or ask for drafts.</li><li>Up to 15 exchange links a month (17 if you convert your AI credits) go into other members’ articles for you, on sites you cannot directly pick.</li><li>In HubSpot, edits you make there are overwritten the next time you click Sync to CMS in BlogSEO.</li></ul>',
+  },
+  after: {
+    label: 'A month with your own agent',
+    html: '<ul class="list-disc space-y-2 pl-5"><li>Your agent starts from a ranked list: posts Search Console shows just off page one, and searches with impressions but no page that answers them.</li><li>It writes or rewrites each one from its own brief, in your CMS or codebase, in your voice.</li><li><code>seo lint</code> reads every draft and you approve it. No links go on your site that you did not add.</li><li>Each fixed post’s clicks 28 and 56 days later sit next to the days before.</li></ul>',
+  },
+}
+
+// A real brief from seoskill.dev's own Search Console, against what an
+// article tool starts from.
+const brief = {
+  before: {
+    label: 'What an article tool starts from',
+    html: '<p><strong>Your URL.</strong> The tool crawls your site, picks keywords from its own research and adds a new article to the calendar each day.</p><p>The posts you already have only come into it when a new topic might compete with them.</p>',
+  },
+  after: {
+    label: 'The brief SEO Skill gives your agent',
+    html: '<p><strong>Page:</strong> /blog/ai-crawler-user-agents</p><ul class="list-disc space-y-1 pl-5"><li>“gptbot user agent”: position 19, 20 impressions in 28 days, 0 clicks</li></ul><p><strong>Change:</strong> put the GPTBot user agent string in the first lines and in a heading, so the searcher gets it without scrolling.</p><p><strong>Check:</strong> run seo lint on the new section, then compare the page’s clicks 28 and 56 days after the fix.</p>',
+  },
+}
+
+const steps = [
+  { title: 'Pick the post from your own data', body: 'Your agent reads your Search Console for posts just off page one and searches that bring impressions but no page that answers them.' },
+  { title: 'Check demand and who ranks now', body: 'With your DataForSEO or Ahrefs key it adds volumes and the top pages, and it can ask ChatGPT, Gemini and Google’s AI answers which sites they cite.' },
+  { title: 'Write it with the model you already use', body: 'The agent drafts or rewrites the post from the brief, in your CMS through its own MCP server or in your codebase.' },
+  { title: 'Lint it, then read it', body: '`seo lint` flags the lines that read as AI-written with a fix for each. You read the result and approve it.' },
+  { title: 'See what the change did', body: 'Mark the post fixed, and its Search Console clicks 28 and 56 days later sit next to the days before.' },
+]
+
+const rows = [
+  { label: 'How many posts', blogseo: '15 a month for $59, or 30 for $97', ours: 'As many as your data supports, one brief each' },
+  { label: 'Who writes', blogseo: 'BlogSEO, with GPT and Claude models (45+ available)', ours: 'The model in your own agent, such as Claude Code, Codex or Cursor' },
+  { label: 'What it decides from', blogseo: 'Its crawl of your site and its own keyword research', ours: 'Your Search Console, plus your own DataForSEO or Ahrefs key and AI answer checks' },
+  { label: 'Who reads it first', blogseo: 'You, if you turn auto-publish off or use drafts', ours: 'seo lint, then you, before anything ships' },
+  { label: 'Links to your site', blogseo: 'Exchange links from sites it matches, which you cannot directly pick', ours: 'Only the links you or your agent add' },
+  { label: 'Price', blogseo: '$59 or $97 a month, less billed yearly', ours: 'Free. Research data bills your own provider account' },
+]
+
+const before = [
+  'Auto-publish sends articles straight to your live blog. On Shopify, which has no draft state for blog posts, BlogSEO’s docs say to keep manual publish on if you want to read them first.',
+  'In HubSpot, sync is one way: BlogSEO never pulls your HubSpot edits back, and a later sync overwrites the post with BlogSEO’s version.',
+  'The backlink exchange places links to your site inside other members’ articles. Its docs say you cannot directly control which sites link to you, and a link costs credits equal to the linking site’s Domain Rating, 10 at least.',
+  'The exchange is a paid feature, included with backlink credits in both plans and disabled during the 3-day free trial.',
+  'Extra article languages are $29 a month each, AI visibility tracking is $89 a month per site, and premium backlinks are $149 a month per site.',
+]
+
+const faq = [
+  {
+    question: 'What is BlogSEO?',
+    answer:
+      'BlogSEO (blogseo.io) is an AI blogging tool from Paris. It crawls your site, researches keywords, writes about one article a day and publishes it to your CMS, and it builds backlinks through an exchange with other customers. Plans are $59 a month for 15 articles and $97 for 30.',
+  },
+  {
+    question: 'What is the best BlogSEO alternative?',
+    answer:
+      'It depends who you want deciding and writing. For the same autopilot with a refresh step, look at Outrank. For fewer articles at a lower price, look at SEObot. To have your own agent write posts on topics your Search Console data picks, check each one with seo lint and wait for your approval, use SEO Skill.',
+  },
+  {
+    question: 'Is there a free BlogSEO alternative?',
+    answer:
+      'SEO Skill is free, and its CLI and seo lint are open source. It does not write articles itself: the agent you already pay for writes them, and SEO Skill gives it the data and checks the copy. Research such as search volumes runs on your own DataForSEO or Ahrefs account.',
+  },
+  {
+    question: 'How much does BlogSEO cost?',
+    answer:
+      'BlogSEO’s pricing page lists the Starter plan at $59 a month for 15 articles and the Ambition plan at $97 a month for 30, or $45 and $74.08 a month billed yearly. Both start with a 3-day free trial. Add-ons cost $29 a month per extra language, $89 for AI visibility tracking and $149 for premium backlinks.',
+  },
+  {
+    question: 'Are BlogSEO backlinks safe?',
+    answer:
+      'We don’t think so, and we would never use them, or any link exchange. BlogSEO’s docs say its algorithm keeps the links non-reciprocal so they avoid spam detection. Google’s spam policies list excessive link exchanges and links made by automated services as link spam, whatever the pattern looks like.',
+  },
+  {
+    question: 'Can I review BlogSEO articles before they go live?',
+    answer:
+      'Yes. Turn auto-publish off and push each article yourself, or send articles as drafts on CMSs that have them, such as WordPress, HubSpot and BigCommerce. Shopify has no draft state for blog posts, so there the docs say to keep manual publish on.',
+  },
+]
+---
+
+<BaseLayout
+  title="BlogSEO alternatives: AI blogging with a person deciding"
+  description="BlogSEO alternatives compared on who writes, who picks the topics, who reads each post first and which links land on your site."
+  canonicalPath="/alternatives/blogseo"
+  {breadcrumbs}
+  framed={false}
+>
+  <main data-agent-content>
+    <LandingHero
+      title="BlogSEO alternatives"
+      lead="BlogSEO writes an AI article a day, publishes it to your CMS and swaps backlinks with other customers. Here is what it does well, the alternatives for each job, and how to write each post from your own search data with the agent you already use."
+      setupId="blogseo-alternatives-setup"
+      author
+    />
+
+    <div class="space-y-24 py-24 sm:space-y-32 sm:py-32">
+      <section class="site-frame" aria-labelledby="blogseo-heading">
+        <SectionHeading
+          id="blogseo-heading"
+          title="What does BlogSEO do well?"
+          text="It publishes to 23+ platforms and keeps a blog publishing every day. These four points come from BlogSEO’s own pages."
+        />
+        <div class="grid grid-cols-1 gap-2 sm:grid-cols-2">
+          {blogseoDoes.map((item) => <HomeCard {...item} />)}
+        </div>
+      </section>
+
+      <section class="site-frame" aria-labelledby="options-heading">
+        <SectionHeading
+          id="options-heading"
+          title="Which BlogSEO alternative fits your job?"
+          text="The one that matches who picks the topics and who reads each post before it goes live."
+        />
+        <div class="grid grid-cols-1 gap-2 sm:grid-cols-2">
+          {options.map((item) => <HomeCard {...item} />)}
+        </div>
+      </section>
+
+      <section class="site-frame" aria-labelledby="month-heading">
+        <SectionHeading
+          id="month-heading"
+          title="What changes when a person decides each post?"
+          text="The topics come from your own search data, nothing ships unread, and no links land on your site that you did not add. Thirty posts a month can still be fine when each one is picked and checked."
+        />
+        <div class="max-w-3xl">
+          <BeforeAfter
+            before={month.before}
+            after={month.after}
+            title="The same month, two ways to work"
+            caption="BlogSEO’s side comes from its own pricing page and docs."
+          />
+        </div>
+        <div class="docs-prose max-w-3xl">
+          <p>
+            Google’s guidance on <a href="https://developers.google.com/search/docs/fundamentals/using-gen-ai-content" target="_blank" rel="noreferrer">using generative AI content</a> says it is
+            “critical to manually factcheck and review all AI-generated content”
+            before publishing. Its <a href="https://developers.google.com/search/docs/fundamentals/creating-helpful-content" target="_blank" rel="noreferrer">helpful content guidance</a> asks
+            whether you are publishing on many topics “in hopes that some of it
+            might perform well”. A daily calendar made from keyword research can
+            drift there fast, because the next slot needs a topic whether or not
+            your customers search for it.
+          </p>
+        </div>
+      </section>
+
+      <section class="site-frame" aria-labelledby="brief-heading">
+        <SectionHeading
+          id="brief-heading"
+          title="What should your agent know before it writes a post?"
+          text="The post to change, the searches it already shows for, and what to change, all from your own Search Console. That brief is worth more than a keyword list."
+        />
+        <div class="max-w-3xl">
+          <BeforeAfter
+            before={brief.before}
+            after={brief.after}
+            title="The same blog, two starting points"
+            caption="A real brief from seoskill.dev’s own Search Console, for a post on page two."
+          />
+        </div>
+        <div class="docs-prose max-w-3xl">
+          <p>
+            SEO Skill finds these as <a href="/features/striking-distance-keywords">striking distance keywords and quick wins</a>, and
+            keeps a list for each site, so the next session starts where the
+            last one stopped. The <a href="/guides/blog-seo">blog SEO guide</a> covers
+            what else to check on each post, and where each setting lives in your
+            CMS.
+          </p>
+        </div>
+      </section>
+
+      <section class="site-frame" aria-labelledby="own-agent-heading">
+        <SectionHeading
+          id="own-agent-heading"
+          title="How do you run a blog with your own agent?"
+          text="Give the agent you already use a brief from your search data, let it write, and check every draft before you approve it. SEO Skill supplies the data and the checks."
+        />
+        <div class="max-w-3xl">
+          <PlanSteps {steps} />
+        </div>
+        <div class="docs-prose max-w-3xl">
+          <p>Connect SEO Skill with the prompt at the top of this page, then ask:</p>
+          <CodeBlock prompt value="Find the blog posts on example.com that rank just off page one in Search Console, pick the one with the most impressions, rewrite it to answer those searches better, then check the new copy with seo lint, fix every error and show me the result before you change anything." wrap />
+          <p>
+            No agent to hand? Paste a draft into the free <a href="/tools/seo-content-checker">SEO content checker</a> for
+            its headings, title, description, link text and copy, with a fix
+            for each line.
+          </p>
+        </div>
+      </section>
+
+      <section class="site-frame" aria-labelledby="compare-heading">
+        <SectionHeading
+          id="compare-heading"
+          title="How does BlogSEO compare with SEO Skill?"
+          text="BlogSEO picks, writes, publishes and links for you on a calendar. SEO Skill gives your own agent the data and the checks, and you approve what ships."
+        />
+        <div class="docs-prose max-w-4xl">
+          <table>
+            <thead>
+              <tr><th></th><th>BlogSEO</th><th>SEO Skill</th></tr>
+            </thead>
+            <tbody>
+              {rows.map((row) => (
+                <tr><th scope="row">{row.label}</th><td>{row.blogseo}</td><td>{row.ours}</td></tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      </section>
+
+      <section class="site-frame" aria-labelledby="before-heading">
+        <SectionHeading
+          id="before-heading"
+          title="What should you check before you buy BlogSEO?"
+          text="How publishing, CMS sync, backlinks and add-ons work. Each point comes from BlogSEO’s own pricing page and docs."
+        />
+        <div class="docs-prose max-w-3xl">
+          <ul>
+            {before.map((item) => <li>{item}</li>)}
+          </ul>
+          <p>
+            I would never use BlogSEO’s exchange, or any link exchange.
+            Its docs say the network is built so the links “avoid search engine
+            spam detection by design”. Google’s <a href="https://developers.google.com/search/docs/essentials/spam-policies" target="_blank" rel="noreferrer">spam policies</a> list “excessive link exchanges” and “using
+            automated programs or services to create links to your site” as
+            link spam, however the pattern is drawn. In my experience, links
+            swapped across one network lead back to every site in it, and at
+            best they are ignored. I <a href="https://x.com/iannuttall/status/2095420271754702994" target="_blank" rel="noreferrer">explained the risk on X</a> when
+            Outrank launched its exchange, and the same applies here.
+          </p>
+        </div>
+      </section>
+
+      <section class="site-frame" aria-labelledby="blogseo-faq">
+        <SectionHeading
+          id="blogseo-faq"
+          title="Questions about BlogSEO alternatives"
+          text="Price, backlinks, reviewing posts first, and free options."
+        />
+        <FaqAccordion id="blogseo-faq-list" items={faq} />
+      </section>
+
+      <section class="site-frame" aria-labelledby="more-heading">
+        <SectionHeading
+          id="more-heading"
+          title="Where can you read more on blog SEO with your agent?"
+          text="On these pages, which cover blog SEO in each CMS and compare the other article bots."
+        />
+        <div class="grid grid-cols-1 gap-2 sm:grid-cols-2">
+          <HomeCard title="Blog SEO guide" text="What to check on every post, where each setting lives in eight CMSs, and how your agent picks the next post from Search Console." icon={SearchList01Icon} href="/guides/blog-seo" link="Read the guide" />
+          <HomeCard title="Outrank alternatives" text="Outrank compared with writing in your own agent, with what seo lint catches in one unreviewed paragraph." icon={AiChat02Icon} href="/alternatives/outrank" link="Outrank alternatives" />
+        </div>
+      </section>
+
+      <section class="site-frame" aria-labelledby="start-heading">
+        <SectionHeading
+          id="start-heading"
+          title="Write your next post with your own agent"
+          text="Add SEO Skill to your agent and sign in with Google. Then ask which posts are closest to page one, and have the agent rewrite and lint the first one for you to approve."
+        />
+        <SetupPrompts id="blogseo-setup-end" />
+      </section>
+    </div>
+  </main>
+</BaseLayout>

@@ -6,7 +6,8 @@
 // multi-line string in an `export const` so its indentation survives.
 // Both sides share one grid cell and the inactive one is only made
 // invisible, so the taller side sets the height and switching never moves
-// the page.
+// the page. Pass `sides` instead for more than two tabs, such as one per
+// CMS; the tabs wrap onto a second line on phones.
 import Exhibit from './Exhibit.astro'
 
 type Side = {
@@ -17,25 +18,27 @@ type Side = {
 }
 
 type Props = {
-  before: Side
-  after: Side
+  before?: Side
+  after?: Side
+  sides?: Side[]
   title?: string
   caption?: string
 }
 
-const { before, after, title, caption } = Astro.props
+const { before, after, sides: given, title, caption } = Astro.props
 // The Markdown copy for agents makes a code block only from <pre><code>, so
 // a bare <pre> gets its <code>. Without it the exhibit's escaped tags turn
 // into real markup in that copy.
 const coded = (html?: string) =>
   html?.replace(/<pre>(?!\s*<code)([\s\S]*?)<\/pre>/g, '<pre><code>$1</code></pre>')
-const sides = [before, after].map((side) => ({ ...side, html: coded(side.html) }))
+const many = (given?.length ?? 0) > 2
+const sides = (given ?? [before, after].filter((side): side is Side => Boolean(side))).map((side) => ({ ...side, html: coded(side.html) }))
 const id = `before-after-${Math.random().toString(36).slice(2, 8)}`
 ---
 
 <Exhibit title={title} caption={caption}>
   <div data-before-after>
-    <div class="flex w-full gap-1 rounded-lg bg-background p-1 sm:inline-flex sm:w-auto" role="tablist" aria-label={title ?? 'Compare two states'}>
+    <div class:list={['flex w-full gap-1 rounded-lg bg-background p-1 sm:inline-flex sm:w-auto', many && 'flex-wrap']} role="tablist" aria-label={title ?? 'Compare two states'}>
       {
         sides.map((side, index) => (
           <button
@@ -45,7 +48,7 @@ const id = `before-after-${Math.random().toString(36).slice(2, 8)}`
             aria-controls={`${id}-panel-${index}`}
             aria-selected={index === 0 ? 'true' : 'false'}
             tabindex={index === 0 ? 0 : -1}
-            class="ba-tab flex-1 rounded-md px-3 py-1.5 text-sm/5 text-foreground-muted transition-colors hover:text-foreground focus-visible:outline-none focus-visible:ring-[3px] focus-visible:ring-ring/20 sm:flex-none"
+            class:list={['ba-tab rounded-md px-3 py-1.5 text-sm/5 text-foreground-muted transition-colors hover:text-foreground focus-visible:outline-none focus-visible:ring-[3px] focus-visible:ring-ring/20 sm:flex-none', !many && 'flex-1']}
             data-tab
           >
             {side.label}

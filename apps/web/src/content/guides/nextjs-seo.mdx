@@ -4,6 +4,32 @@ description: "Next.js SEO with the App Router in Next.js 16: prerendered pages, 
 heading: Next.js SEO
 lead: Prerender the pages you want found, set every head tag through the Metadata API, and check the build before it ships. Tested on Next.js 16.4 with the App Router.
 checked: '2026-11-03'
+framework: Next.js
+prompts:
+  - title: Check what is prerendered
+    text: Run next build and list every route I want in search that is not prerendered
+  - title: Crawl the local build
+    text: Build my Next.js site with SITE_URL=http://localhost:3000, start it and crawl it for broken links, redirects and missing tags
+  - title: Check the 404s
+    text: Request three made-up URLs on example.com and tell me which return a 404 status and which return 200
+  - title: Check the sitemap index
+    text: Check that the sitemap index for example.com lists every sitemap file and that every URL in them returns 200
+  - title: Check Google's view
+    text: Which pages on example.com does Search Console say are not indexed, and why?
+faq:
+  - question: Is Next.js good for SEO?
+    answer: Yes, when the pages you want found are prerendered and every head tag goes through the Metadata API. Most problems come from defaults, such as a canonical set in a layout, a split sitemap with no index, or a notFound() call that answers 200.
+  - question: Why does my Next.js 404 page return a 200 status?
+    answer: The response had already started streaming when notFound() ran, so the status was sent as 200. Call it before any Suspense boundary or loading.tsx in that route renders, or list every page in generateStaticParams with dynamicParams turned off.
+  - question: Does Next.js write a sitemap index?
+    answer: No. generateSitemaps splits a sitemap into numbered files but does not write an index that lists them, so write the index as a route of its own.
+  - question: Is a 308 redirect as good as a 301 for SEO?
+    answer: Google treats a 308 the same as a 301. permanent true in next.config.ts answers with 308. Set statusCode instead if something else in your stack expects a 301.
+  - question: Can SEO Skill check my Next.js site before it ships?
+    answer: Yes. The seo CLI crawls a local build with no sign-in and lists broken links, redirects, titles, canonicals and what AI agents can read.
+    links:
+      - text: seo CLI
+        href: /docs/crawl
 ---
 
 Next.js gives you most of what search needs, but several defaults are easy to get wrong: a canonical set in a layout, a sitemap split with no index, a `notFound()` that answers 200 because the page had already started streaming. This guide covers each one, with code that was built and tested with `next build` and `next start`.
@@ -28,9 +54,9 @@ export const getGuide = (slug: string) => guides.find((guide) => guide.slug === 
 
 The `@/` imports below need `"paths": { "@/*": ["./*"] }` in `tsconfig.json`, which `create-next-app` sets for you.
 
-## Prerender every page you want found
+## Which Next.js pages should be prerendered?
 
-A prerendered page is HTML before anyone asks for it, so crawlers never wait on data or a failed render. For dynamic routes, list every page in `generateStaticParams` and turn off `dynamicParams`, so a slug you did not list gets a 404 instead of being rendered on request:
+Every page you want found. A prerendered page is HTML before anyone asks for it, so crawlers never wait on data or a failed render. For dynamic routes, list every page in `generateStaticParams` and turn off `dynamicParams`, so a slug you did not list gets a 404 instead of being rendered on request:
 
 ```tsx
 export const dynamicParams = false
@@ -42,9 +68,9 @@ export function generateStaticParams() {
 
 Both exports go in the page file, shown in full in the next section. `next build` prints each route with its mode. A `○` or `●` next to a page means it was prerendered. Anything else is rendered on request, so check that route if it is a page you want in search. The <a href="https://nextjs.org/docs/app/api-reference/functions/generate-static-params" target="_blank" rel="noreferrer">generateStaticParams reference</a> covers routes with more than one segment.
 
-## Set titles, descriptions and canonicals with the Metadata API
+## How do I set titles, descriptions and canonicals in Next.js?
 
-Put the site-wide parts in the root layout: `metadataBase`, so every other URL can be a path, and a title template:
+With the Metadata API. Put the site-wide parts in the root layout: `metadataBase`, so every other URL can be a path, and a title template:
 
 ```tsx
 // app/layout.tsx
@@ -124,9 +150,9 @@ Two rules from the <a href="https://nextjs.org/docs/app/api-reference/functions/
 
 The `types` entry adds `<link rel="alternate" type="text/markdown">` to the page, which tells agents where its Markdown copy lives. The copy itself is further down.
 
-## Add one JSON-LD graph per page
+## How do I add JSON-LD in Next.js?
 
-Next.js recommends a plain `<script>` tag in the page, with `<` escaped so a value in your data can't close the tag. A connected graph (site, publisher and page pointing at each other by `@id`) is easier to build with <a href="https://www.npmjs.com/package/@iannuttall/seo-graph-core" target="_blank" rel="noreferrer">@iannuttall/seo-graph-core</a>, which has no framework dependency and runs in Next.js:
+Add one JSON-LD graph per page. Next.js recommends a plain `<script>` tag in the page, with `<` escaped so a value in your data can't close the tag. A connected graph (site, publisher and page pointing at each other by `@id`) is easier to build with <a href="https://www.npmjs.com/package/@iannuttall/seo-graph-core" target="_blank" rel="noreferrer">@iannuttall/seo-graph-core</a>, which has no framework dependency and runs in Next.js:
 
 ```sh
 npm i @iannuttall/seo-graph-core
@@ -136,9 +162,9 @@ In the page file above, `makeIds` gives each piece a stable `@id`, and `assemble
 
 Add a piece only for what the page shows. The <a href="https://nextjs.org/docs/app/guides/json-ld" target="_blank" rel="noreferrer">Next.js JSON-LD guide</a> explains the escaping, and you can test the output in Google's Rich Results Test.
 
-## Draw an Open Graph image for each page
+## How do I make an Open Graph image for each page?
 
-An `opengraph-image.tsx` file next to the page draws its sharing image with `ImageResponse`. With `generateStaticParams` the images are drawn during the build, one per page:
+Add an `opengraph-image.tsx` file. That file next to the page draws its sharing image with `ImageResponse`. With `generateStaticParams` the images are drawn during the build, one per page:
 
 ```tsx
 // app/guides/[slug]/opengraph-image.tsx
@@ -167,9 +193,9 @@ export default async function Image({ params }: { params: Promise<{ slug: string
 
 Next.js adds the `og:image` tag for you, so leave `images` out of the page's `openGraph`. `ImageResponse` supports flexbox and a subset of CSS; the <a href="https://nextjs.org/docs/app/getting-started/metadata-and-og-images" target="_blank" rel="noreferrer">metadata and OG images guide</a> lists what works.
 
-## Split sitemaps and write the index yourself
+## Does Next.js write a sitemap index?
 
-`generateSitemaps` splits a sitemap into numbered files, but it does not write a sitemap index that lists them. Without one, you have to submit every file to Search Console by hand. Put the split sitemap in its own folder and write the index as a route:
+No, so write the index yourself. `generateSitemaps` splits a sitemap into numbered files, but it does not write a sitemap index that lists them. Without one, you have to submit every file to Search Console by hand. Put the split sitemap in its own folder and write the index as a route:
 
 ```ts
 // app/sitemaps/sitemap.ts
@@ -210,9 +236,9 @@ export async function GET() {
 
 The examples in the Next.js docs set `lastModified: new Date()`. Leave it out unless you have the real date each page changed. Google uses `lastmod` only when it is consistently accurate, and the build time is not when a page changed.
 
-## Keep robots open and add Content-Signal
+## What should robots.txt say in Next.js?
 
-`app/robots.ts` writes `robots.txt`. Since Next.js 16.3, the `other` field passes extra lines through, which is how you add <a href="https://contentsignals.org/" target="_blank" rel="noreferrer">Content-Signal</a>:
+Keep it open and add Content-Signal. `app/robots.ts` writes `robots.txt`. Since Next.js 16.3, the `other` field passes extra lines through, which is how you add <a href="https://contentsignals.org/" target="_blank" rel="noreferrer">Content-Signal</a>:
 
 ```ts
 // app/robots.ts
@@ -232,9 +258,9 @@ export default function robots(): MetadataRoute.Robots {
 
 Don't disallow paths to keep pages out of search, and don't use `robots: { index: false }` in metadata. A blocked page can still be indexed from links, and a `noindex` left on by mistake takes a long time to recover from. Don't build pages you don't want found, and put staging behind a sign-in.
 
-## Return real 404s
+## How do I return real 404s in Next.js?
 
-With `dynamicParams = false`, an unknown slug returns a 404 status. When you check for a missing record inside the page, call `notFound()` before the response starts streaming, which means before any `Suspense` boundary or `loading.tsx` in that route renders. After streaming starts, the status is already sent as 200, and Next.js can only add a `noindex` tag, which Google may report as a soft 404. The <a href="https://nextjs.org/docs/app/api-reference/file-conventions/loading" target="_blank" rel="noreferrer">loading.js reference</a> explains when streaming begins.
+Call `notFound()` before the response starts streaming. With `dynamicParams = false`, an unknown slug returns a 404 status. When you check for a missing record inside the page, make that call before any `Suspense` boundary or `loading.tsx` in that route renders, because that is when streaming starts. After streaming starts, the status is already sent as 200, and Next.js can only add a `noindex` tag, which Google may report as a soft 404. The <a href="https://nextjs.org/docs/app/api-reference/file-conventions/loading" target="_blank" rel="noreferrer">loading.js reference</a> explains when streaming begins.
 
 Add `app/not-found.tsx` so a lost visitor still sees your navigation:
 
@@ -250,7 +276,7 @@ export default function NotFound() {
 }
 ```
 
-## Redirect moved URLs
+## How do I redirect moved URLs in Next.js?
 
 Add redirects in `next.config.ts`. `permanent: true` answers with 308, which Google treats the same as 301. If something else in your stack expects a 301, set `statusCode` instead (one or the other, not both):
 
@@ -272,9 +298,9 @@ export default config
 
 Redirects, rewrites and headers need the Next.js server, so they do nothing with `output: 'export'`. On a static export, add them to your host's redirect file instead.
 
-## Serve Markdown copies to AI agents
+## How do I serve Markdown copies to AI agents?
 
-Agents read Markdown more cheaply than HTML. Serve a copy of each page at the same path with `.md` on the end, from the same content as the page. A route handler renders it, and a rewrite maps the `.md` address to it:
+Serve a copy of each page at the same path with `.md` on the end, from the same content as the page, because agents read Markdown more cheaply than HTML. A route handler renders it, and a rewrite maps the `.md` address to it:
 
 ```ts
 // app/md/[...slug]/route.ts
@@ -326,9 +352,9 @@ export function GET() {
 
 Some agents ask for Markdown at the normal page URL with `Accept: text/markdown`. You could answer them with a rewrite that matches the header, but in our test `next start` replaced the `Vary` header on the HTML page, so a shared cache could hand Markdown to a browser. Do that check in front of the cache instead, such as with the Cloudflare URL Rewrite Rules in the [Astro SEO guide](/guides/astro-seo), or rely on the `.md` links.
 
-## Crawl the build before it ships
+## How do I check a Next.js build before it ships?
 
-Build with your local address as the site URL, so canonicals and Markdown links point at the copy you are crawling, and start it:
+Crawl it. Build with your local address as the site URL, so canonicals and Markdown links point at the copy you are crawling, and start it:
 
 ```sh
 SITE_URL=http://localhost:3000 npm run build && npm run start
@@ -344,7 +370,7 @@ It reports missing titles, canonicals, Open Graph tags and structured data page 
 
 ## Sources
 
-Read and tested on 3 November 2026 with Next.js 16.4.4:
+Tested with Next.js 16.4.4:
 
 - <a href="https://nextjs.org/docs/app/api-reference/functions/generate-metadata" target="_blank" rel="noreferrer">generateMetadata and the Metadata object</a>
 - <a href="https://nextjs.org/docs/app/api-reference/functions/generate-static-params" target="_blank" rel="noreferrer">generateStaticParams</a>

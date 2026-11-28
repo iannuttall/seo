@@ -1,8 +1,15 @@
 ---
+// The framework guides in the landing layout: the hero and setup box, a list
+// of what the setup covers, the tested guide itself, prompts, the FAQ and a
+// closing setup section. The guide's own H2s fill the list, so it can't go
+// out of date when a section is added.
 import type { CollectionEntry } from 'astro:content'
 import { getCollection, render } from 'astro:content'
-import Breadcrumbs from '@/components/Breadcrumbs.astro'
-import PageHeader from '@/components/PageHeader.astro'
+import FaqAccordion from '@/components/FaqAccordion.astro'
+import LandingHero from '@/components/LandingHero.astro'
+import SectionHeading from '@/components/SectionHeading.astro'
+import SetupPrompts from '@/components/SetupPrompts.astro'
+import SplitList from '@/components/SplitList.astro'
 import { docsMdxComponents } from '@/components/docs/mdx'
 import BaseLayout from '@/layouts/BaseLayout.astro'
 import type { SchemaBreadcrumb } from '@/lib/schema'
@@ -15,12 +22,16 @@ export async function getStaticPaths() {
 type Props = { entry: CollectionEntry<'guides'> }
 
 const { entry } = Astro.props
-const { Content } = await render(entry)
+const { Content, headings } = await render(entry)
+const { framework, prompts, faq } = entry.data
 const breadcrumbs: SchemaBreadcrumb[] = [
   { label: 'Home', href: '/' },
   { label: 'Guides', href: '/guides' },
   { label: entry.data.heading },
 ]
+const sections = headings
+  .filter((heading) => heading.depth === 2 && heading.text !== 'Sources')
+  .map((heading) => ({ title: heading.text, href: `#${heading.slug}` }))
 ---
 
 <BaseLayout
@@ -30,12 +41,49 @@ const breadcrumbs: SchemaBreadcrumb[] = [
   {breadcrumbs}
   schemaType="TechArticle"
   dateModified={entry.data.checked}
+  framed={false}
 >
   <main data-agent-content>
-    <Breadcrumbs {breadcrumbs} />
-    <PageHeader author title={entry.data.heading} description={entry.data.lead} />
-    <article class="docs-prose min-w-0">
-      <Content components={docsMdxComponents} />
-    </article>
+    <LandingHero title={entry.data.heading} lead={entry.data.lead} setupId={`${entry.id}-setup`} author />
+
+    <div class="space-y-24 py-24 sm:space-y-32 sm:py-32">
+      <SplitList
+        id="covers-heading"
+        title={`What does the ${framework} SEO setup cover?`}
+        text="Every part of the setup that a search engine or AI agent reads, in the order you build it, each with the code to copy."
+        items={sections}
+      />
+
+      <article class="site-frame docs-prose min-w-0">
+        <Content components={docsMdxComponents} />
+      </article>
+
+      <SplitList
+        id="prompts-heading"
+        title={`How do I check my ${framework} site with an AI agent?`}
+        text={`Ask it. With SEO Skill, your agent crawls the build, reads Search Console and checks each part of this setup on your own ${framework} site.`}
+        items={prompts}
+      />
+
+      <section class="site-frame" aria-labelledby="faq-heading">
+        <div class="max-w-2xl">
+          <h2 id="faq-heading" class="text-pretty text-2xl font-medium -tracking-[0.4px] text-foreground xl:text-3xl xl:-tracking-[0.6px]">
+            {framework} SEO questions
+          </h2>
+        </div>
+        <div class="mt-10">
+          <FaqAccordion items={faq} id={`${entry.id}-faq`} />
+        </div>
+      </section>
+
+      <section class="site-frame" aria-labelledby="start-heading">
+        <SectionHeading
+          id="start-heading"
+          title={`Check your ${framework} site with your agent`}
+          text="Add SEO Skill to your agent, sign in with the Google account that can read your Search Console, and ask it to crawl your build."
+        />
+        <SetupPrompts id={`${entry.id}-setup-end`} />
+      </section>
+    </div>
   </main>
 </BaseLayout>

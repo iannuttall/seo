@@ -398,7 +398,7 @@ export function auditCrawlRequests(
 
 export function auditCrawlPages(
   pages: CrawlPageSnapshot[],
-  opts: { startUrl?: string } = {},
+  opts: { startUrl?: string; sitemapUrls?: ReadonlySet<string> } = {},
 ): CrawlIssue[] {
   const issues: CrawlIssue[] = []
   const duplicateTitles = metadataDuplicates(pages, (page) => page.title)
@@ -444,10 +444,16 @@ export function auditCrawlPages(
       continue
     }
     if (page.status >= 400) {
+      const inSitemap = opts.sitemapUrls?.has(page.url) ?? false
       issues.push(
-        issue('client_error', page, String(page.status), {
-          status: page.status,
-        }),
+        issue(
+          'client_error',
+          page,
+          inSitemap
+            ? `${page.status}, and the sitemap still lists it`
+            : String(page.status),
+          { status: page.status, ...(inSitemap ? { inSitemap } : {}) },
+        ),
       )
       if (
         isBrokenLinkStatus(page.status) &&

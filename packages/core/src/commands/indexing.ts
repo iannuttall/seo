@@ -180,6 +180,12 @@ export function labelOf(e: Evidence): { label: IndexingLabel; why: string } {
   const via = `It ${now}`
 
   if (end === 404 || end === 410) {
+    if (status.robots_txt === 'DISALLOWED') {
+      return {
+        label: 'fix',
+        why: `${via}, but robots.txt blocked Google at its last check, so Google cannot see the ${end} and drop the page from its index. Allow it in robots.txt.`,
+      }
+    }
     if (pointers.length) {
       return { label: 'fix', why: `${via}, and ${pointers.join(' and ')}.` }
     }
@@ -692,7 +698,7 @@ export function indexingText(
       .map(([label, text]) => `${label}, ${text}`)
       .join(
         '; ',
-      )}. Rules: a same-host 302 or 307 is fix; a 404 or 410 that the sitemap or a referring page on this site points to is fix; a sitemap URL that redirects or that Google does not index is fix; any other page that redirects to the home page is check, because Google treats that as a soft 404; a URL outside the sitemap (such as an http:// or host variant) that permanently redirects to a page declaring itself canonical is expected; a 401 with a WWW-Authenticate header is expected, and a 401 or 403 on a sign-in path is expected by heuristic; "Crawled - currently not indexed", "Discovered - currently not indexed" and a Google canonical that differs from the declared one are check. Referring pages are as of Google's last crawl. Live checks are server responses, so a browser-only HSTS "307 Internal Redirect" never shows here.`,
+      )}. Rules: a same-host 302 or 307 is fix; a 404 or 410 that robots.txt blocks Google from crawling is fix; a 404 or 410 that the sitemap or a referring page on this site points to is fix; a sitemap URL that redirects or that Google does not index is fix; any other page that redirects to the home page is check, because Google treats that as a soft 404; a URL outside the sitemap (such as an http:// or host variant) that permanently redirects to a page declaring itself canonical is expected; a 401 with a WWW-Authenticate header is expected, and a 401 or 403 on a sign-in path is expected by heuristic; "Crawled - currently not indexed", "Discovered - currently not indexed" and a Google canonical that differs from the declared one are check. Referring pages are as of Google's last crawl. Live checks are server responses, so a browser-only HSTS "307 Internal Redirect" never shows here.`,
   )
   if (!page.summary && more) lines.push(`More rows: ${page.more(end)}.`)
   return lines

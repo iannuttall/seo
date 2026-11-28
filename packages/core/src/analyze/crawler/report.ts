@@ -885,6 +885,8 @@ export function createCrawlReport(input: {
   analyticsConnection?: AnalyticsConnection
   dataSources?: CrawlReportDataSources
   sitemapDiscovery?: CrawlSitemapDiscovery
+  // Page URLs the sitemaps listed, to say which error pages they still list.
+  sitemapUrls?: ReadonlySet<string>
   externalLinkVerification?: CrawlExternalLinkVerification
   siteChecks?: CrawlSiteChecks
   status?: CrawlReport['status']
@@ -919,7 +921,10 @@ export function createCrawlReport(input: {
   const issues = [
     ...(input.issues ?? [
       ...auditCrawlRequests(requests),
-      ...auditCrawlPages(safePagesWithLinks, { startUrl: config.url }),
+      ...auditCrawlPages(safePagesWithLinks, {
+        startUrl: config.url,
+        sitemapUrls: input.sitemapUrls,
+      }),
     ]),
     ...(input.additionalIssues ?? []),
   ]

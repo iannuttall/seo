@@ -90,6 +90,17 @@ test('labels Google reasons from the URL Inspection payload and live checks', ()
       label: 'expected',
     },
     {
+      url: 'https://example.com/removed',
+      status: inspection({
+        verdict: 'NEUTRAL',
+        coverageState: 'Blocked by robots.txt',
+        robotsTxtState: 'DISALLOWED',
+      }),
+      live: still(page('https://example.com/removed', { status: 404 })),
+      inSitemap: false,
+      label: 'fix',
+    },
+    {
       url: 'https://example.com/retired',
       status: inspection({
         verdict: 'FAIL',
@@ -219,6 +230,7 @@ test('labels Google reasons from the URL Inspection payload and live checks', ()
   assert.deepEqual(
     rows.map((row) => `${row.reason} ${row.url}`),
     [
+      'Blocked by robots.txt https://example.com/removed',
       'Blocked due to unauthorized request (401) https://example.com/mcp',
       'Crawled - currently not indexed https://example.com/b',
       'Excluded by ‘noindex’ tag https://example.com/c',

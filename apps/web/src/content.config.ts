@@ -28,6 +28,15 @@ export const collections = {
       heading: z.string(),
       lead: z.string(),
       checked: z.string(),
+      framework: z.string(),
+      prompts: z.array(z.object({ title: z.string(), text: z.string() })),
+      faq: z.array(
+        z.object({
+          question: z.string(),
+          answer: z.string(),
+          links: z.array(z.object({ text: z.string(), href: z.string() })).optional(),
+        }),
+      ),
     }),
   }),
   // Blog posts at /blog/<file name>. Dates are YYYY-MM-DD, and a post goes

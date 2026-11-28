@@ -4,15 +4,41 @@ description: Set up Astro SEO the way a production site does it, with one layout
 heading: Astro SEO
 lead: Build every page at deploy time, put every head tag in one layout, and let the build fail before a broken page goes live. This is the setup, with the code to copy.
 checked: '2026-11-03'
+framework: Astro
+prompts:
+  - title: Crawl the local build
+    text: Build my Astro site with SITE_URL=http://localhost:8788, serve it with Wrangler and crawl it for broken links, redirects and missing tags
+  - title: Check the head tags
+    text: Check every built page in dist for a title, a description, one H1 and a canonical, and list any that miss one
+  - title: Check the sitemap
+    text: Check that every URL in the sitemap index for example.com returns 200 and is the page's own canonical
+  - title: Check what agents read
+    text: Check that each page on example.com has a Markdown copy that loads and that every link in llms.txt works
+  - title: Check Google's view
+    text: Which pages on example.com does Search Console say are not indexed, and why?
+faq:
+  - question: Is Astro good for SEO?
+    answer: Yes. Astro ships plain HTML by default, so with static output a crawler gets the full page on the first request, with no rendering step to fail. Most problems come from the parts around the pages, such as head tags, sitemaps and redirects.
+  - question: How do I add a sitemap to an Astro site?
+    answer: This setup writes its own sitemap index after the build, with up to 5,000 URLs per file, from the list of pages that were actually built. A URL is in the sitemap only if the page exists, and Search Console reports each file on its own.
+  - question: Should I use Astro's redirects option?
+    answer: Not in a static build without an adapter. There Astro writes an HTML page with a meta refresh tag instead of an HTTP redirect. A 301 in Cloudflare's _redirects file is the clearer signal.
+  - question: How do I keep a staging site out of Google?
+    answer: Put it behind Cloudflare Access, so nobody reaches it without signing in. A noindex tag left on by mistake can drop the live site from Google, so leave noindex out.
+  - question: Can SEO Skill check my Astro site before it deploys?
+    answer: Yes. The seo CLI crawls a local or staging build with no sign-in, and --fail-on medium makes it exit with an error in CI when it finds a medium or high issue.
+    links:
+      - text: seo CLI
+        href: /docs/crawl
 ---
 
 Astro is a very good fit for search because it ships plain HTML by default. Most Astro SEO problems come from the parts around the pages, such as a head tag one template forgot, a sitemap that lists pages that no longer exist, a moved URL that now returns 404. The setup below closes those gaps, and it is the same one that runs the sites this page was written from (seoskill.dev included).
 
 Every example uses `example.com`. Swap in your own domain.
 
-## Build static pages and serve them from Cloudflare
+## Should an Astro site be static for SEO?
 
-Static output means every page exists as an HTML file before anyone asks for it. Crawlers get the full page on the first request, with no rendering step to fail. Start with this config:
+Yes: build every page at deploy time and serve the files from Cloudflare. Static output means every page exists as an HTML file before anyone asks for it. Crawlers get the full page on the first request, with no rendering step to fail. Start with this config:
 
 ```js
 // astro.config.mjs
@@ -44,9 +70,9 @@ Serve the `dist` folder with <a href="https://developers.cloudflare.com/workers/
 
 `drop-trailing-slash` sends `/about/` to `/about`, so each page has one address. `404-page` serves your `404.html` with a real 404 status for any path that has no file. Static assets are served without running a Worker, so pages stay fast and cost nothing to serve. If you later need an API, add a Worker and route only `/api/*` to it with `run_worker_first`, and leave the pages on the assets path.
 
-## Put every head tag in one root layout
+## Where should the head tags live in Astro?
 
-One layout owns the title, description, canonical, Open Graph tags and the JSON-LD for every page. A page passes its title and description, and nothing else can forget a tag. Install the schema builders:
+In one root layout. That layout owns the title, description, canonical, Open Graph tags and the JSON-LD for every page. A page passes its title and description, and nothing else can forget a tag. Install the schema builders:
 
 ```sh
 npm i @iannuttall/seo-graph-core
@@ -147,9 +173,9 @@ import Base from '../../layouts/Base.astro'
 </Base>
 ```
 
-## Add Markdown copies and llms.txt for agents
+## How do I give AI agents Markdown copies and llms.txt?
 
-AI agents read Markdown far more cheaply than HTML. `agentMarkdown()` from <a href="https://www.npmjs.com/package/@iannuttall/seo-graph-astro" target="_blank" rel="noreferrer">@iannuttall/seo-graph-astro</a> turns each built page into a `.md` copy at build time, links it from the page with `rel="alternate"`, and writes `llms.txt`:
+Generate them from the built pages, because AI agents read Markdown far more cheaply than HTML. `agentMarkdown()` from <a href="https://www.npmjs.com/package/@iannuttall/seo-graph-astro" target="_blank" rel="noreferrer">@iannuttall/seo-graph-astro</a> turns each built page into a `.md` copy at build time, links it from the page with `rel="alternate"`, and writes `llms.txt`:
 
 ```sh
 npm i @iannuttall/seo-graph-astro
@@ -188,9 +214,9 @@ After a build, `dist` holds:
 
 List signed-in pages in `excludePaths` so they get no copy. A copy could show an agent what a signed-out visitor cannot see.
 
-## Serve Markdown when an agent asks for it
+## How do I serve Markdown when an agent asks for it?
 
-Some agents request the normal page URL with `Accept: text/markdown`. You can answer them without running any code, using two Cloudflare <a href="https://developers.cloudflare.com/rules/transform/url-rewrite/" target="_blank" rel="noreferrer">URL Rewrite Rules</a> on the zone. A rewrite changes which file is served, not the address, and it runs before the static assets, so pages stay on the free path.
+Add two Cloudflare URL Rewrite Rules, so the answer needs no code. Some agents request the normal page URL with `Accept: text/markdown`, and the rules send them the Markdown copy. The rules are <a href="https://developers.cloudflare.com/rules/transform/url-rewrite/" target="_blank" rel="noreferrer">URL Rewrite Rules</a> set on the zone. A rewrite changes which file is served, not the address, and it runs before the static assets, so pages stay on the free path.
 
 This script prints both rules from the build's own page list, so a rule can never rewrite a path you did not build:
 
@@ -228,9 +254,9 @@ curl -sI -H 'Accept: text/markdown' https://example.com/about
 
 You should see `content-type: text/markdown`. On a local preview you will get HTML instead, because the rules live on the Cloudflare zone, not in `dist`.
 
-## Draw sharing images at build time with Takumi
+## How do I make a sharing image for every page?
 
-Every page should have its own Open Graph image, and the cheapest way is to draw them all during the build. <a href="https://takumi.kane.tw/docs/" target="_blank" rel="noreferrer">Takumi</a> renders HTML and CSS to PNG with no headless browser. This integration reads each built page's H1 and writes the image to the path its `og:image` names:
+Draw them all during the build with Takumi, which is the cheapest way to give every page its own Open Graph image. <a href="https://takumi.kane.tw/docs/" target="_blank" rel="noreferrer">Takumi</a> renders HTML and CSS to PNG with no headless browser. This integration reads each built page's H1 and writes the image to the path its `og:image` names:
 
 ```sh
 npm i takumi-js
@@ -273,9 +299,9 @@ export const ogImages = (): AstroIntegration => ({
 
 Add it to `integrations` in `astro.config.mjs` with `import { ogImages } from './src/integrations/og-images.ts'` and `ogImages()`. Takumi has a built-in font for Latin text. To use your brand font, pass its file through the `fonts` option of `render`. Because the card is drawn from the H1, it always matches the page, and a renamed page gets a new card on the next deploy.
 
-## Write a sitemap index with 5,000 URLs per file
+## How big should each sitemap file be?
 
-Google accepts up to 50,000 URLs in one sitemap, per its <a href="https://developers.google.com/search/docs/crawling-indexing/sitemaps/build-sitemap" target="_blank" rel="noreferrer">sitemap guide</a>. Smaller files are easier to work with. Search Console reports each file on its own, so when one section has a problem you can see which. This script writes a sitemap index and files of 5,000 from `agent-routes.json`, so a URL is in the sitemap only if the page was built:
+Use 5,000 URLs per file, listed in one sitemap index. Google accepts up to 50,000 URLs in one sitemap, per its <a href="https://developers.google.com/search/docs/crawling-indexing/sitemaps/build-sitemap" target="_blank" rel="noreferrer">sitemap guide</a>. Smaller files are easier to work with. Search Console reports each file on its own, so when one section has a problem you can see which. This script writes a sitemap index and files of 5,000 from `agent-routes.json`, so a URL is in the sitemap only if the page was built:
 
 ```js
 // scripts/sitemaps.mjs
@@ -308,9 +334,9 @@ There is no `lastmod`. Google says it uses it only when it is consistently and v
 
 For larger sites, split the files by section (one set for guides, one for tools) so each section's indexing shows up separately in Search Console.
 
-## Keep robots.txt open and state Content-Signal
+## What should robots.txt say?
 
-A robots.txt that blocks a path cannot remove a page from Google. It only stops Google reading it. Keep it open, point to the sitemap, and say how AI systems may use your content with <a href="https://contentsignals.org/" target="_blank" rel="noreferrer">Content-Signal</a>:
+Keep it open, point to the sitemap and state Content-Signal. A robots.txt that blocks a path cannot remove a page from Google. It only stops Google reading it. <a href="https://contentsignals.org/" target="_blank" rel="noreferrer">Content-Signal</a> says how AI systems may use your content:
 
 ```txt
 User-agent: *
@@ -330,9 +356,9 @@ Save it as `public/robots.txt`. `search` covers search results, `ai-input` cover
 
 `Vary: Accept` tells caches that one URL can return HTML or Markdown. It is needed once the rewrite rules above are on.
 
-## Leave noindex out
+## Should an Astro site use noindex?
 
-Don't use `noindex`, on a single page or the whole site. A `noindex` left on by mistake drops pages from Google, and they come back slowly after you remove it. The build check below fails on it so it can't ship by accident.
+No, not on a single page or the whole site. A `noindex` left on by mistake drops pages from Google, and they come back slowly after you remove it. The build check below fails on it so it can't ship by accident.
 
 Every case where it seems useful has a better answer:
 
@@ -341,9 +367,9 @@ Every case where it seems useful has a better answer:
 - Put a staging or preview site behind Cloudflare Access, so nobody reaches it without signing in.
 - Don't generate a page from a data set for a row with nothing useful to say.
 
-## Return real 404s
+## How do I return real 404s in Astro?
 
-A missing page must answer with a 404 status, not a 200 page that says "not found". Google calls that a soft 404, and it wastes crawling on pages that have nothing in them. Add `src/pages/404.astro`, built with your normal layout so a lost visitor can still find their way to the rest of the site:
+Add a `404.astro` page, so a missing page answers with a 404 status, not a 200 page that says "not found". Google calls that a soft 404, and it wastes crawling on pages that have nothing in them. Put it at `src/pages/404.astro`, built with your normal layout so a lost visitor can still find their way to the rest of the site:
 
 ```astro
 ---
@@ -359,9 +385,9 @@ import Base from '../layouts/Base.astro'
 
 With `not_found_handling` set to `404-page`, Cloudflare serves this file with a 404 status for every path that has no file. In dynamic routes, return only the entries that exist from `getStaticPaths()`, so a missing entry has no file and gets the 404. Never redirect missing pages to the home page; Google treats that as a soft 404 too.
 
-## Redirect moved URLs with 301s
+## How do I redirect moved URLs?
 
-When a page moves, send the old URL to the new one with a permanent redirect, so links and search results keep working. Put the redirects in `public/_redirects`, which Cloudflare reads from the built assets:
+With 301s in `public/_redirects`. When a page moves, send the old URL to the new one with a permanent redirect, so links and search results keep working. Cloudflare reads that file from the built assets:
 
 ```txt
 /old-guide /guides/first-guide 301
@@ -374,9 +400,9 @@ Astro's `redirects` option is less useful here. In a static build without an ada
 
 Redirect to the closest page, one hop, and keep the redirect for as long as the old URL gets links or traffic. A redirect chain (old to older to new) is worth fixing when you find one.
 
-## Fail the build when a page breaks a rule
+## How do I stop a broken page from going live?
 
-Checks only help if they stop a deploy. This script reads `dist` after the build and exits with an error when a page breaks one of the rules above:
+Make the build fail, because checks only help if they stop a deploy. This script reads `dist` after the build and exits with an error when a page breaks one of the rules above:
 
 ```js
 // scripts/check-dist.mjs
@@ -429,9 +455,9 @@ Run the sitemap and the check as part of the build, in `package.json`:
 
 Cloudflare's Git builds stop when the build command fails, so a page with no H1, a stray `noindex` or a missing sharing image never reaches production. Add a rule each time something slips through, and the check grows with the site.
 
-## Crawl the built site before you deploy
+## Why crawl the built site before you deploy?
 
-The check reads files. A crawl reads the site the way a search engine does, following links and requests. Build with your local address as the site URL, so canonicals and Markdown links point at the copy you are crawling, then serve it with Wrangler:
+A crawl catches what a file check misses. The check reads files. A crawl reads the site the way a search engine does, following links and requests. Build with your local address as the site URL, so canonicals and Markdown links point at the copy you are crawling, then serve it with Wrangler:
 
 ```sh
 SITE_URL=http://localhost:8788 npm run build && npx wrangler dev --port 8788
@@ -449,7 +475,7 @@ It lists broken links, redirects, titles, canonicals and what AI agents can read
 
 ## Sources
 
-Read and tested on 3 November 2026 with Astro 7.4, @iannuttall/seo-graph-astro 0.0.12 and takumi-js 2.19:
+Tested with Astro 7.4, @iannuttall/seo-graph-astro 0.0.12 and takumi-js 2.19:
 
 - <a href="https://docs.astro.build/en/guides/routing/" target="_blank" rel="noreferrer">Astro routing and redirects</a>
 - <a href="https://github.com/iannuttall/seo-graph" target="_blank" rel="noreferrer">seo-graph source and AGENTS.md</a>
